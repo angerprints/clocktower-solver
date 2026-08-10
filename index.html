@@ -1,0 +1,1910 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clocktower Solver — Trouble Brewing</title>
+
+<!-- Added to a home screen it opens without browser chrome, which is
+     most of what makes it feel like an app. iOS looks for its own touch
+     icon rather than reading the manifest, so both are here. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png" type="image/png">
+<meta name="theme-color" content="#2B2242">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Clocktower">
+<meta name="description" content="A visual grimoire from the players' side
+  of the table: enter what everyone claims and what they say they learned,
+  and it enumerates every world still consistent with all of it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --stone:#332E52;
+  --stone-deep:#241F3C;
+  --parchment:#F6EDD8;
+  --parchment-2:#E9DBBB;
+  --parchment-3:#DCCBA4;
+  --ink:#2E2617;
+  --ink-soft:#6B5B3E;
+  --gold:#9C7F4E;
+  --gold-bright:#C9A961;
+  --crimson:#8E1B22;
+  --crimson-deep:#6A1116;
+  --good:#1F5C8B;
+  --evil:#9E2126;
+  --lie:#6B3FA0;
+  /* The webfonts are the only thing still fetched from anywhere, and
+     they fall back rather than fail: offline the page is Georgia, which
+     reads perfectly well. Nothing about the solving depends on them. */
+  --display:"Cinzel", "Trajan Pro", Georgia, serif;
+  --body:"EB Garamond", Georgia, "Times New Roman", serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  min-height:100vh;
+  font-family:var(--body);
+  font-size:16px;
+  color:var(--parchment);
+  background:
+    radial-gradient(130% 85% at 50% -10%, rgba(146,134,204,.30), transparent 62%),
+    radial-gradient(90% 70% at 50% 110%, rgba(0,0,0,.55), transparent 60%),
+    repeating-linear-gradient(114deg, rgba(255,255,255,.016) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(21deg, rgba(0,0,0,.05) 0 3px, transparent 3px 9px),
+    var(--stone);
+  background-attachment:fixed;
+}
+h1,h2,h3,.disp{font-family:var(--display);font-weight:600;letter-spacing:.04em;margin:0}
+
+/* ---------- shared surfaces ---------- */
+.parchment{
+  background:linear-gradient(160deg,var(--parchment) 0%,var(--parchment-2) 70%,var(--parchment-3) 100%);
+  border:1px solid var(--gold);
+  color:var(--ink);
+  box-shadow:0 3px 14px rgba(0,0,0,.45), inset 0 0 44px rgba(160,126,72,.14);
+}
+.rule{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:10px 0}
+
+/* ---------- header ---------- */
+header{
+  display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;
+  padding:12px 22px;
+  background:linear-gradient(180deg,var(--crimson) 0%,var(--crimson-deep) 100%);
+  border-bottom:2px solid var(--gold);
+  box-shadow:0 4px 18px rgba(0,0,0,.5);
+}
+header h1{font-size:23px;color:#F6E7C3;text-shadow:0 1px 0 rgba(0,0,0,.5)}
+header .sub{font-family:var(--body);font-size:13px;color:#E3BFA4;letter-spacing:.06em;font-style:italic}
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+
+.field{display:flex;flex-direction:column;gap:3px}
+.field > span{font-family:var(--display);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+header .field > span{color:#E9C7A8}
+
+select,input[type=text],input[type=number]{
+  font-family:var(--body);font-size:15px;color:var(--ink);
+  background:linear-gradient(#FBF4E2,#EFE2C4);
+  border:1px solid var(--gold);border-radius:2px;padding:5px 8px;min-width:0;
+}
+select:focus,input:focus,button:focus-visible{outline:2px solid var(--gold-bright);outline-offset:1px}
+
+button{
+  font-family:var(--display);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  background:linear-gradient(#F3E7CB,#DCC79A);color:var(--ink);
+  border:1px solid var(--gold);border-radius:2px;padding:7px 13px;cursor:pointer;
+  transition:filter .13s;
+}
+button:hover{filter:brightness(1.06)}
+button.primary{
+  background:linear-gradient(#B8353B,#7C161C);color:#F8E9C8;border-color:#4E0E12;
+  text-shadow:0 1px 0 rgba(0,0,0,.4);padding:9px 22px;font-size:13px;
+}
+button.ghost{background:none;border-color:transparent;color:var(--ink-soft);padding:3px 6px;font-size:11px}
+button.ghost:hover{color:var(--crimson)}
+
+/* ---------- layout ---------- */
+main{
+  display:grid;grid-template-columns:342px minmax(0,1fr) 312px;
+  gap:16px;padding:16px 18px 30px;align-items:start;
+}
+.stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+
+/* Three drawers down the left. Shut, a drawer is just its title bar, so
+   the column stays short enough to sit beside the dial on a narrow
+   screen instead of pushing it off the bottom. */
+.drawer{padding:0;overflow:hidden}
+.drawer-head{
+  display:flex;align-items:center;gap:9px;width:100%;
+  padding:11px 14px;background:none;border:0;cursor:pointer;text-align:left;
+  font-family:var(--display);letter-spacing:.04em;
+}
+.drawer-head:hover{background:rgba(0,0,0,.035)}
+.drawer-head h2{margin:0;flex:1}
+.drawer-head .caret{
+  font-size:11px;color:var(--crimson-deep);transition:transform .16s ease;
+  transform:rotate(-90deg);display:inline-block;
+}
+.drawer.open .drawer-head .caret{transform:rotate(0)}
+.drawer-head .count{
+  font-family:var(--body);font-size:12px;font-style:italic;
+  letter-spacing:0;color:var(--ink-soft);
+}
+.drawer-body{display:none;padding:0 14px 13px}
+.drawer.open .drawer-body{display:block}
+.pane{border-radius:3px;padding:13px 14px}
+.pane-title{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+}
+.pane-title h2{font-size:15px;color:var(--crimson-deep)}
+.hint{font-size:13.5px;line-height:1.5;color:var(--ink-soft);font-style:italic}
+
+/* ---------- ledger ---------- */
+.ledger-scroll{max-height:calc(100vh - 190px);overflow-y:auto;padding-right:3px}
+.night-head{
+  display:flex;justify-content:space-between;align-items:center;
+  margin:12px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--gold);
+}
+.night-head span{font-family:var(--display);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--crimson-deep)}
+.night-head .quiet{font-family:var(--body);font-size:12.5px;letter-spacing:0;text-transform:none;
+  font-style:italic;color:var(--ink-soft);cursor:pointer;display:flex;gap:5px;align-items:center}
+.night-head .quiet input{accent-color:var(--crimson);margin:0}
+.night-head .quiet.on{color:var(--crimson-deep);font-style:normal}
+.card{
+  background:rgba(255,252,242,.62);border:1px solid var(--parchment-3);
+  border-left:3px solid var(--crimson);border-radius:2px;padding:7px 8px;margin-bottom:6px;
+}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px}
+.card-type{font-family:var(--display);font-size:11.5px;letter-spacing:.05em;color:var(--ink)}
+.card-body{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.card-body select,.card-body input{font-size:13px;padding:3px 6px}
+.tag{font-family:var(--display);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.note{margin-top:5px;font-size:12.5px;font-style:italic}
+.note .warn{color:var(--crimson)}
+.note .relay{color:var(--lie)}
+.empty{color:var(--ink-soft);font-style:italic;font-size:13px;padding:2px 0}
+
+/* ---------- the dial ---------- */
+.board{display:flex;flex-direction:column;align-items:center;gap:14px}
+.dial{position:relative;width:min(640px,100%);aspect-ratio:1;--gauge:76px}
+/* The overflow menu. Kept to the things pressed once a game, so the one
+   pressed every few minutes is not competing with them. */
+.more{position:relative}
+.more-menu{
+  position:absolute;right:0;top:calc(100% + 6px);z-index:50;
+  background:var(--parchment);border:1px solid rgba(90,20,24,.35);
+  border-radius:3px;padding:5px;min-width:150px;
+  box-shadow:0 8px 22px rgba(0,0,0,.45);display:flex;flex-direction:column;
+}
+/* A class rule beats the browser's own [hidden] rule, so setting
+   display here quietly stopped the attribute working and the menu
+   never shut. Anything given a display needs this said explicitly. */
+.more-menu[hidden]{display:none}
+.more-menu button{
+  width:100%;text-align:left;background:none;border:0;
+  padding:7px 9px;border-radius:2px;color:var(--ink);
+}
+.more-menu button:hover{background:rgba(0,0,0,.06)}
+.dial svg.face{position:absolute;inset:0;width:100%;height:100%}
+.centre{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:210px;text-align:center;pointer-events:none;
+}
+.centre .count{font-family:var(--display);font-size:50px;line-height:1;color:#F3E3BE;text-shadow:0 2px 6px rgba(0,0,0,.7)}
+.centre .count.none{color:#E9959A}
+.centre .cap{font-family:var(--display);font-size:10px;letter-spacing:.19em;text-transform:uppercase;color:#B9AEDC;margin-top:7px}
+.centre .legal{font-size:13px;font-style:italic;color:#8E86B8;margin-top:2px}
+.centre .est{font-family:var(--display);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:#E2C98A;margin-top:4px}
+.margin{opacity:.72;font-size:11.5px}
+
+/* The seat box is exactly the token, and everything written under it
+   hangs off the bottom without being part of it. Before, the label was
+   inside the box and `translate(-50%,-50%)` centred token *and* label on
+   the ring — so a seat carrying a label sat higher than one without, and
+   on a phone, where only the selected seat shows its label, that one
+   token visibly jumped out of the circle. */
+.seat{
+  position:absolute;transform:translate(-50%,-50%);
+  width:var(--gauge);text-align:center;cursor:pointer;
+}
+.seat .plate{
+  position:absolute;left:50%;top:calc(100% + 5px);
+  transform:translateX(-50%);
+}
+.gauge{
+  width:var(--gauge);height:var(--gauge);margin:0 auto;border-radius:50%;
+  background:conic-gradient(var(--lie) calc(var(--lie-pct)*1%), rgba(255,255,255,.13) 0);
+  display:grid;place-items:center;transition:transform .12s;
+}
+.seat:hover .gauge{transform:scale(1.05)}
+.ring{
+  width:calc(var(--gauge) * .83);height:calc(var(--gauge) * .83);
+  border-radius:50%;
+  background:conic-gradient(var(--evil) calc(var(--evil-pct)*1%), rgba(255,255,255,.16) 0);
+  display:grid;place-items:center;
+}
+.token{
+  width:calc(var(--gauge) * .67);height:calc(var(--gauge) * .67);
+  border-radius:50%;
+  background:radial-gradient(circle at 34% 28%,#FBF3DE,#DFCDA4);
+  border:1px solid var(--gold);
+  display:grid;place-items:center;
+  font-family:var(--display);font-size:calc(var(--gauge) * .24);
+  color:var(--ink);box-shadow:0 2px 6px rgba(0,0,0,.5);
+}
+/* Once the numbers are clear enough, the token takes the colour of the
+   side it is probably on — the game's own blue and red — and the seat
+   number moves to the name line, where it is still there for the ledger. */
+.token.faction{
+  background:radial-gradient(circle at 34% 28%,#fff,var(--face));
+  color:var(--face-ink);font-size:calc(var(--gauge) * .27);
+}
+.check{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px}
+.check input{width:16px;height:16px;accent-color:var(--crimson)}
+.seat-no{
+  font-family:var(--display);font-size:11px;letter-spacing:.08em;
+  color:#C9A961;margin-right:1px;
+}
+.seat.selected .token{box-shadow:0 0 0 3px var(--gold-bright),0 2px 8px rgba(0,0,0,.6)}
+.seat.dead .gauge{filter:grayscale(.75);opacity:.45}
+.seat.dead .name::after{content:" †";color:var(--crimson)}
+.seat.judged .name::after{content:" ⚖";color:#E2C98A}
+/* Everything written under a token sits on its own plate. The dial's
+   guide circles and ticks pass right through this band — a seat at the
+   bottom of the dial pushes its label across the rim, one at the top
+   pushes it across the inner circle — and no radius avoids both, because
+   the labels hang downward in screen space rather than outward from the
+   centre. So they stop showing through instead. */
+.plate{
+  display:inline-block;padding:3px 7px 4px;border-radius:3px;
+  background:rgba(22,17,34,.62);
+  box-shadow:0 1px 6px rgba(22,17,34,.45);
+  max-width:112px;
+}
+.name{font-size:14px;font-weight:500;color:#F4E9CD;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.claim{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.claim.said{color:#CFC6EA}
+.claim.empty{color:#7E76A8;font-style:italic}
+.claim.guess{color:#E2C98A;font-style:italic}
+.pct{font-size:13px;margin-top:1px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.pct .up{color:#F0A0A4} .pct .down{color:#8FC4E8}
+.badge{
+  position:absolute;top:-2px;left:50%;
+  transform:translateX(calc(var(--gauge) * .4));
+  font-family:var(--display);font-size:8px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 5px;border-radius:2px;white-space:nowrap;border:1px solid rgba(0,0,0,.35);
+}
+.badge.you{background:var(--gold-bright);color:#2A1F08}
+.badge.known{background:var(--good);color:#EAF3FA}
+.wake-mark{font-size:12px;font-style:italic;color:#A8A0CE;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.band{font-family:var(--display);font-size:10px;letter-spacing:.06em;color:#E2C98A;
+  text-shadow:0 1px 3px rgba(0,0,0,.8)}
+/* A tag on the seat, and the card it opens. The card sits over
+   everything rather than in the dial, so a long one does not shove the
+   circle about. */
+.bubble{
+  position:absolute;top:-6px;left:-10px;z-index:3;
+  width:clamp(17px, calc(var(--gauge) * .27), 22px);
+  height:clamp(17px, calc(var(--gauge) * .27), 22px);
+  padding:0;border-radius:50%;
+  background:var(--parchment);color:var(--crimson-deep);
+  border:1px solid rgba(90,20,24,.45);cursor:pointer;
+  font-family:var(--display);font-size:11px;line-height:1;
+  box-shadow:0 1px 4px rgba(0,0,0,.35);
+}
+.bubble:hover{background:#fff}
+#bubble-pop{
+  position:fixed;z-index:60;max-width:330px;max-height:60vh;overflow:auto;
+  background:var(--parchment);color:var(--ink);
+  border:1px solid rgba(90,20,24,.35);border-radius:3px;
+  padding:11px 13px;box-shadow:0 8px 26px rgba(0,0,0,.4);font-size:13.5px;
+}
+#bubble-pop .bub-head{
+  display:flex;justify-content:space-between;align-items:baseline;
+  gap:10px;margin-bottom:6px;
+}
+#bubble-pop .bub-head b{font-family:var(--display);letter-spacing:.04em}
+.bub-row{margin:3px 0 7px;line-height:1.5}
+.read-mark{font-size:12px;font-style:italic;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.read-mark.up{color:#E88A8F} .read-mark.down{color:#87BEE4}
+
+.legend{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;
+  font-family:var(--display);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:#B7ADD8}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+
+/* ---------- timeline ---------- */
+.timeline{width:min(640px,100%);border-radius:3px;padding:9px 11px}
+.tl-track{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pip{
+  font-family:var(--display);font-size:11px;letter-spacing:.08em;
+  padding:4px 11px;border:1px solid var(--gold);border-radius:2px;cursor:pointer;
+  background:linear-gradient(#F7EFDC,#E6D6B2);color:var(--ink);
+}
+.pip.on{background:linear-gradient(#B8353B,#7C161C);color:#F8E9C8;border-color:#4E0E12}
+.pip.est{border-style:dashed}
+.lookup{margin-top:8px}
+.lookup .row{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;padding:1px 0}
+.lookup .row span:last-child{font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.dirty{color:var(--crimson);font-size:12.5px;font-style:italic}
+
+/* ---------- inspector ---------- */
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0}
+.metric{background:rgba(255,252,242,.6);border:1px solid var(--parchment-3);border-radius:2px;padding:7px 8px;text-align:center}
+.metric b{display:block;font-family:var(--display);font-size:19px;line-height:1.15}
+.metric span{font-family:var(--display);font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft)}
+.bar-row{margin-bottom:7px;font-size:13.5px}
+.bar-row .lab{display:flex;justify-content:space-between;gap:8px}
+.bar{height:5px;background:var(--parchment-3);border-radius:3px;overflow:hidden;margin-top:2px}
+.bar i{display:block;height:100%;background:var(--gold)}
+.spark{width:100%;height:64px;display:block;margin-top:4px}
+
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;margin:6px 0 0;
+  background:linear-gradient(90deg,var(--good) 0%,var(--parchment-3) 46%,var(--parchment-3) 54%,var(--evil) 100%);
+  border:1px solid var(--gold);outline:none;
+}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+  background:linear-gradient(#FBF3DE,#DFCDA4);border:1px solid var(--gold);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;
+  background:linear-gradient(#FBF3DE,#DFCDA4);border:1px solid var(--gold);cursor:pointer}
+.scale{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:4px;
+  font-family:var(--display);font-size:9px;letter-spacing:.11em;text-transform:uppercase}
+.scale .g{color:var(--good)} .scale .e{color:var(--evil)} .scale .now{color:var(--ink);font-size:10px}
+
+footer{padding:0 18px 40px}
+.err{background:#F6DCDC;border:1px solid var(--crimson);color:#5C1014;padding:9px 12px;border-radius:2px;margin-bottom:12px;font-size:14px}
+.samples{font-size:13px;color:var(--ink-soft);line-height:1.75}
+.samples div{white-space:nowrap;overflow-x:auto}
+
+@media (max-width:1180px){
+  main{grid-template-columns:minmax(0,1fr) 312px}
+  .stack{grid-column:1 / -1;order:3}
+  .ledger-scroll{max-height:none}
+}
+@media (max-width:820px){
+  main{grid-template-columns:minmax(0,1fr)}
+  /* The drawers go above the board here: shut they cost a title bar
+     each, and open they are what you came to read. */
+  .stack{order:0}
+
+  /* The token size is not set here — it is worked out from the dial, so
+     it fits whatever the screen and the seat count are. What a narrow
+     screen does change is that only the seat you are on carries its
+     writing; the rest is in the inspector below, which is where you are
+     looking anyway. */
+  .plate{display:none}
+  .seat.selected .plate{display:inline-block;max-width:130px}
+  .bubble{font-size:9px;top:-4px;left:-6px}
+  .badge{font-size:9px}
+  .wake-mark,.read-mark,.band{display:none}
+  .seat.selected .wake-mark,.seat.selected .read-mark{display:block}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <div>
+    <h1>Clocktower Solver</h1>
+    <div class="sub"><span id="script-name">&hellip;</span> &middot; 5&ndash;15 players
+      &nbsp;<button class="ghost" id="pick-script" style="color:#F0D9A8">change</button></div>
+  </div>
+  <div class="controls">
+    <label class="field"><span>Players</span><select id="count"></select></label>
+    <button id="shake" title="Re-solve across the plausible range of every judgement call, and show how much each seat depends on one.">How much is guesswork?</button>
+    <div class="more">
+      <button id="more">&hellip;</button>
+      <div class="more-menu" id="more-menu" hidden>
+        <button id="save">Save to a file</button>
+        <button id="load">Open a file</button>
+        <button id="reset">Clear game</button>
+      </div>
+    </div>
+    <button class="primary" id="solve">Solve</button>
+  </div>
+</header>
+
+<section id="script-panel" class="pane parchment" hidden
+         style="margin:14px 18px 0;border-radius:3px">
+  <div class="pane-title"><h2>Which script are you playing?</h2>
+    <button class="ghost" id="close-script">close</button></div>
+  <div class="rule"></div>
+  <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end">
+    <label class="field"><span>Published</span><select id="built-in"></select></label>
+    <label class="field"><span>Or open a script file</span>
+      <input type="file" id="script-file" accept=".json,application/json"></label>
+    <button id="use-custom">Use the ticked characters</button>
+  </div>
+  <div id="fabled-box" hidden style="margin-top:10px">
+    <div class="tag">On the table</div>
+    <div id="fabled-list" style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px"></div>
+  </div>
+  <div class="hint" style="margin-top:6px">A script file is the JSON a
+    Storyteller hands round — the same one the official app reads. Tick
+    characters below to build one by hand instead.</div>
+  <div class="rule"></div>
+  <div id="catalogue" style="columns:3;column-gap:22px"></div>
+</section>
+
+<div id="bubble-pop" hidden></div>
+
+<main>
+  <div class="stack">
+
+    <section class="pane parchment drawer open" id="drawer-ledger">
+      <button class="drawer-head" data-drawer="ledger">
+        <span class="caret">▾</span><h2>Information</h2>
+        <span class="count" id="count-ledger"></span>
+      </button>
+      <div class="drawer-body">
+        <label class="field"><span>Add</span><select id="new-type"></select></label>
+        <div class="hint" style="margin-top:6px">Pick a type, then press + on the night it belongs to.</div>
+        <div class="rule"></div>
+        <div class="ledger-scroll" id="rows"></div>
+      </div>
+    </section>
+
+    <section class="pane parchment drawer" id="drawer-notes">
+      <button class="drawer-head" data-drawer="notes">
+        <span class="caret">▾</span><h2>Notes</h2>
+        <span class="count" id="count-notes"></span>
+      </button>
+      <div class="drawer-body">
+        <div class="hint">Yours, not the solver's. Nothing typed here changes
+          a single number.</div>
+        <div class="rule"></div>
+        <div id="notes-days"></div>
+      </div>
+    </section>
+
+    <section class="pane parchment drawer" id="drawer-timeline">
+      <button class="drawer-head" data-drawer="timeline">
+        <span class="caret">▾</span><h2>Timeline</h2>
+        <span class="count" id="tl-dirty"></span>
+      </button>
+      <div class="drawer-body">
+        <div class="tl-track" id="tl-track"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <section class="board">
+    <div class="dial" id="dial">
+      <svg class="face" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="47.5" fill="none" stroke="rgba(201,169,97,.30)" stroke-width=".5"/>
+        <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(201,169,97,.18)" stroke-width=".4"/>
+        <g id="ticks" stroke="rgba(201,169,97,.45)" stroke-width=".5"></g>
+      </svg>
+      <div class="centre">
+        <div class="count" id="count-worlds">&mdash;</div>
+        <div class="cap" id="count-cap">not solved yet</div>
+        <div class="legal" id="count-legal"></div>
+        <div class="est" id="count-est"></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><i style="background:var(--evil)"></i>inner ring &middot; evil</span>
+      <span><i style="background:var(--lie)"></i>outer ring &middot; lying</span>
+    </div>
+
+  </section>
+
+  <aside class="pane parchment">
+    <h2 id="insp-title">No seat selected</h2>
+    <p class="hint" id="insp-hint">Click a seat on the dial to set its name, claim and status.</p>
+    <div id="insp-form" hidden>
+      <div class="rule"></div>
+      <label class="field" style="margin-bottom:10px"><span>Name</span><input type="text" id="f-name" placeholder="Who is sitting here?"></label>
+      <label class="field" style="margin-bottom:6px"><span>Claimed role</span><select id="f-claim"></select></label>
+      <label class="field" style="margin-bottom:6px"><span>What they said about waking</span><select id="f-wake"></select></label>
+      <div class="hint" id="wake-note"></div>
+      <div class="lookup" id="wake-look"></div>
+      <label class="field" style="margin-bottom:4px"><span>How sure are you?</span><select id="f-cert"></select></label>
+      <div class="hint" id="cert-note"></div>
+      <div class="field" style="margin-top:10px">
+        <span>Your read</span>
+        <input type="range" id="f-read" min="-3" max="3" step="1">
+        <div class="scale"><b class="g">&#9664; good</b><span class="now" id="read-val">no read</span><b class="e">evil &#9654;</b></div>
+      </div>
+      <div class="hint" id="read-note" style="margin-top:4px"></div>
+      <label class="check" style="margin-top:9px">
+        <input type="checkbox" id="f-suspect">
+        <span>Their information might be wrong</span></label>
+      <div class="hint">A suspicion about what they were told, not about
+        their side &mdash; a Drunk is a good player being wrong. The ledger
+        then says which of their readings hold up.</div>
+      <label class="field" style="margin-top:10px"><span>What happened</span>
+        <select id="f-death"></select></label>
+      <div class="hint" id="death-note"></div>
+      <div id="f-events"></div>
+    </div>
+    <div id="insp-read" hidden></div>
+  </aside>
+</main>
+
+<footer>
+  <div id="script-note"></div>
+  <div id="error"></div>
+  <div id="samples"></div>
+</footer>
+
+<script type="module">
+// The solver runs here, on this device. `app.py` is a convenience for
+// running it from a laptop, not a requirement: nothing below asks a
+// server for an answer.
+import * as solver from "./api.mjs";
+
+// Keep a copy on the device, so it opens with nothing behind it.
+//
+// Only on a secure origin — https or localhost — because that is the
+// only place a browser will register one. Over plain http at a LAN
+// address, which is how a phone reaches a laptop today, this quietly
+// does nothing and the page carries on needing the laptop. Registering
+// is attempted rather than gated on a check, because the browser's own
+// answer is the accurate one.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {
+      // Not a secure origin, or the file is not being served. Neither is
+      // worth interrupting anybody over: everything works, it just is
+      // not kept for later.
+    });
+  });
+}
+
+const $ = s => document.querySelector(s);
+
+const SCHEMA = {
+  Washerwoman:  [["a","player"],["b","player"],["role","role:townsfolk"]],
+  Librarian:    [["a","playerOrNone"],["b","player"],["role","role:outsiders"]],
+  Investigator: [["a","player"],["b","player"],["role","role:minions"]],
+  Chef:         [["count","number"]],
+  Empath:       [["count","number"]],
+  FortuneTeller:[["a","player"],["b","player"],["yes","bool:Demon|Nothing"]],
+  Undertaker:   [["target","player"],["role","role:all"]],
+  Ravenkeeper:  [["target","player"],["role","role:all"]],
+  SlayerShot:   [["target","player"],["died","bool:They died|Nothing happened"]],
+  VirginNomination:[["nominator","player"],["triggered","bool:Nominator died|Nothing happened"]],
+  GrandmotherInfo: [["target","player"],["role","role:all"]],
+  ChambermaidInfo: [["a","player"],["b","player"],["count","number"]],
+  GamblerGuess:    [["target","player"],["role","role:all"]],
+  CourtierChoice:  [["role","role:all"]],
+};
+const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
+  GrandmotherInfo:"Grandmother", ChambermaidInfo:"Chambermaid",
+  GamblerGuess:"Gambler", CourtierChoice:"Courtier" };
+const DAY_EVENTS   = ["SlayerShot","VirginNomination"];
+const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin" };
+const TYPE_LABEL   = { SlayerShot:"Slayer shot",
+  VirginNomination:"Virgin nomination", GrandmotherInfo:"Grandmother",
+  ChambermaidInfo:"Chambermaid", GamblerGuess:"Gambler guess",
+  CourtierChoice:"Courtier choice" };
+const sourceRole = t => SOURCE_ROLE[t] || t;
+const typeLabel  = t => TYPE_LABEL[t] || label(t);
+
+let META = null;
+let SCRIPT = null;         // the characters in the bag for this game
+let S = load() || blank(7);
+let RESULT = null;        // the snapshot currently on the dial
+let viewing = null;       // index into S.history, null = latest
+let dirty = false;
+let SHAKE = null;          // per-seat bands from the last guesswork check
+let selected = null;
+
+const SAVE_VERSION = 1;
+
+function blank(n){
+  return {n, players:Array.from({length:15},()=>({name:"",claim:"",events:[],certainty:"",read:0,wake:"",suspect:false})),
+          infos:[], quiet:[], history:[], fabled:[], notes:{},
+          open:["ledger"],
+          // The script travels with the game. A board saved on a custom
+          // script has to stay readable once that file is long gone.
+          script: SCRIPT ? {name:SCRIPT.name, author:SCRIPT.author,
+                            characters:SCRIPT.characters}
+                         : {name:"Trouble Brewing", author:"", characters:null}};
+}
+
+function saveToFile(){
+  const doc = {format:"clocktower-solver-game", version:SAVE_VERSION,
+               saved:new Date().toISOString(),
+               script:{name:SCRIPT.name, author:SCRIPT.author,
+                       characters:SCRIPT.characters,
+                       fabled:(SCRIPT.fabled||[]).map(f=>f.key)},
+               game:S};
+  const blob = new Blob([JSON.stringify(doc, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (SCRIPT.name.replace(/[^\w]+/g,"-").toLowerCase() || "game")
+             + "-night-" + currentNight() + ".json";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+function loadFromFile(){
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = ".json,application/json";
+  input.onchange = () => {
+    const file = input.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      let doc;
+      try { doc = JSON.parse(reader.result); }
+      catch(e){ alert("That file is not readable JSON."); return; }
+      if(doc.format !== "clocktower-solver-game" || !doc.game){
+        alert("That is not a saved game. To open a script instead, use "
+            + "“change” beside the script name."); return;
+      }
+      if(doc.script && doc.script.characters){
+        // Fabled sit on the script as well as in the game, so a save has
+        // to carry both or the ticks come back with nothing to tick.
+        const chars = doc.script.characters.concat(doc.script.fabled||[]);
+        if(!await applyScript({characters:chars, name:doc.script.name,
+                               author:doc.script.author||""})) return;
+      }
+      S = doc.game;
+      S.script = doc.script || S.script;
+      selected=null; RESULT=null; SHAKE=null; viewing=null; dirty=true;
+      drawTypes(); draw(); save();
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+function save(){ try{ localStorage.setItem("botc-grimoire", JSON.stringify(S)); }catch(e){} }
+function load(){
+  try{
+    const raw=localStorage.getItem("botc-grimoire"); if(!raw) return null;
+    const s=JSON.parse(raw); if(!s.players||!s.n) return null;
+    s.history = s.history || [];
+    s.quiet = s.quiet || [];
+    s.fabled = s.fabled || [];
+    s.notes = s.notes || {};
+    s.open = s.open || ["ledger"];
+    s.script = s.script || {name:"Trouble Brewing", author:"", characters:null};
+    s.players.forEach(p=>{
+      if(p.certainty===undefined) p.certainty="";
+      if(p.read===undefined) p.read=0;
+      if(p.wake===undefined) p.wake="";
+      if(p.suspect===undefined) p.suspect=false;
+      // Older saves kept a status, a list of extra deaths and a list of
+      // returns in three places, and the status code itself has changed
+      // twice. One list now, in the order things happened — and the old
+      // codes are translated on the way in, before anything is dropped.
+      if(p.events===undefined){
+        let was = p.death || "";
+        if(was === "N1") was = "";                 // nobody dies night one
+        if(/^[DE]\d$/.test(was)) was = "X" + was.slice(1);
+        p.events = [];
+        if(was) p.events.push(was);
+        (p.died || []).forEach(c => p.events.push(c));
+        (p.raised || []).forEach(c => p.events.push("R" + c.slice(1)));
+      }
+      delete p.death; delete p.died; delete p.raised;
+    });
+    (s.infos||[]).forEach(r=>{
+      if(r.type==="VirginTrigger"){ r.type="VirginNomination"; r.triggered=true; }
+      if(r.reporter!==undefined && r.reporter!=="") r.player=r.reporter;
+      delete r.reporter;
+      if(r.trust===undefined) r.trust=0;
+    });
+    return s;
+  }catch(e){ return null; }
+}
+
+// Deferred to the end of this module rather than run here. The answer
+// arrives immediately now that the solver is local, and `boot` reaches
+// for things declared further down — which a `const` will not allow
+// before its own line. The fetch that used to sit here hid that by
+// being slow.
+Promise.resolve().then(() => {
+  META = solver.meta();
+  SCRIPT = (S.script && S.script.characters) ? null : META.script;
+  if(SCRIPT) return boot();
+  return applyScript({json:null, characters:S.script.characters,
+                      name:S.script.name, author:S.script.author})
+           .then(boot);
+});
+
+async function applyScript(request){
+  request = Object.assign({n_players: S.n}, request);
+  const data = solver.loadScript(request);
+  if(data.error){ alert(data.error); return false; }
+  SCRIPT = data.script;
+  // A saved game carries its own script, so it stays readable after the
+  // custom one it was played on has been forgotten.
+  S.script = { name:SCRIPT.name, author:SCRIPT.author,
+               characters:SCRIPT.characters };
+  return true;
+}
+
+function boot(){
+  const c=$("#count");
+  for(let i=5;i<=15;i++){
+    const [t,o,mi,d]=META.setup[String(i)];
+    const el=document.createElement("option");
+    el.value=i; el.textContent=`${i} players — ${t}/${o}/${mi}/${d}`;
+    c.appendChild(el);
+  }
+  c.value=S.n;
+
+  drawTypes();
+
+  const ticks=$("#ticks");
+  for(let i=0;i<12;i++){
+    const a=(i*30-90)*Math.PI/180, r1=47.5, r2=i%3===0?42.5:45.2;
+    const l=document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1",50+r1*Math.cos(a)); l.setAttribute("y1",50+r1*Math.sin(a));
+    l.setAttribute("x2",50+r2*Math.cos(a)); l.setAttribute("y2",50+r2*Math.sin(a));
+    ticks.appendChild(l);
+  }
+
+  $("#pick-script").onclick = () => {
+    $("#script-panel").hidden = !$("#script-panel").hidden;
+    drawCatalogue();
+  };
+  $("#close-script").onclick = () => { $("#script-panel").hidden = true; };
+  const bi=$("#built-in"); bi.innerHTML="";
+  bi.appendChild(opt("", "— pick one —"));
+  (META.built_in||[]).forEach(n=>bi.appendChild(opt(n,n)));
+  bi.onchange = async e => {
+    if(!e.target.value) return;
+    if(await applyScript({name:e.target.value})){ afterScriptChange(); }
+  };
+  $("#script-file").onchange = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      if(await applyScript({json:reader.result})){ afterScriptChange(); }
+    };
+    reader.readAsText(file);
+  };
+  $("#use-custom").onclick = async () => {
+    const ticked = [...document.querySelectorAll("#catalogue input:checked")]
+                     .map(b=>b.value);
+    if(ticked.length < 4){ alert("A script needs at least a few characters."); return; }
+    if(await applyScript({characters:ticked, name:"Custom script"})){
+      afterScriptChange();
+    }
+  };
+  document.querySelectorAll(".drawer-head").forEach(head => {
+    head.onclick = () => toggleDrawer(head.dataset.drawer);
+  });
+  // Which drawers were open travels with the game, so reopening a board
+  // puts you back where you were looking.
+  DRAWERS.forEach(name => {
+    $("#drawer-" + name).classList.toggle("open",
+      (S.open || ["ledger"]).includes(name));
+  });
+  if(isOpen("notes")) drawNotes();
+  $("#save").onclick = () => { $("#more-menu").hidden = true; saveToFile(); };
+  $("#load").onclick = () => { $("#more-menu").hidden = true; loadFromFile(); };
+
+  c.onchange = async e => {
+    S.n=+e.target.value; if(selected>=S.n) selected=null;
+    // Whether the bag is deep enough depends on the table size.
+    await applyScript({characters:SCRIPT.characters, name:SCRIPT.name,
+                       author:SCRIPT.author});
+    drawTypes(); touch(); draw(); save();
+  };
+  $("#reset").onclick = () => {
+    $("#more-menu").hidden = true;
+    if(confirm("Clear all names, claims, information and history?")){
+      S=blank(S.n); selected=null; RESULT=null; viewing=null; dirty=false; draw(); save();
+    }
+  };
+  window.addEventListener("resize", () => drawSeats());
+  $("#solve").onclick = doSolve;
+  // Save, Open and Clear are pressed once a game between them. They were
+  // sitting beside Solve, which is pressed every few minutes.
+  $("#more").onclick = ev => {
+    ev.stopPropagation();
+    const menu = $("#more-menu");
+    menu.hidden = !menu.hidden;
+  };
+  document.addEventListener("click", () => { $("#more-menu").hidden = true; });
+  document.addEventListener("keydown", ev => {
+    if(ev.key === "Escape") $("#more-menu").hidden = true;
+  });
+  document.addEventListener("click", ev => {
+    if(!ev.target.closest("#bubble-pop") && !ev.target.closest(".bubble"))
+      closeBubble();
+  });
+  document.addEventListener("keydown", ev => {
+    if(ev.key === "Escape") closeBubble();
+  });
+  $("#shake").onclick = doSensitivity;
+
+  $("#f-name").oninput  = e => { S.players[selected].name=e.target.value; drawSeats(); drawLedger(); save(); };
+  $("#f-claim").onchange= e => { S.players[selected].claim=e.target.value; touch(); draw(); save(); };
+  $("#f-death").onchange = e => {
+    const p = S.players[selected], day = currentNight();
+    // One thing per seat per day: choosing again replaces today's entry
+    // rather than stacking a second one on top of it.
+    p.events = (p.events || []).filter(c => +c.slice(1) !== day);
+    if(e.target.value) p.events.push(e.target.value);
+    $("#death-note").textContent = deathNote(e.target.value);
+    touch(); draw(); save();
+  };
+  $("#f-wake").onchange = e => {
+    S.players[selected].wake=e.target.value;
+    $("#wake-note").textContent=wakeNote(e.target.value);
+    touch(); draw(); save();
+  };
+  $("#f-cert").onchange = e => {
+    const v=e.target.value;
+    if(v==="self") S.players.forEach((p,i)=>{ if(i!==selected && p.certainty==="self") p.certainty=""; });
+    S.players[selected].certainty=v; touch(); draw(); save();
+  };
+  $("#f-read").oninput  = e => {
+    S.players[selected].read=+e.target.value;
+    $("#read-val").textContent=readWord(+e.target.value);
+    $("#read-note").textContent=readNote(+e.target.value);
+    touch(); drawSeats(); save();
+  };
+
+  draw();
+}
+
+/* ---------- helpers ---------- */
+function afterScriptChange(){
+  // Claims and readings from the old script may not exist on the new one.
+  S.players.forEach(p=>{
+    if(p.claim && !SCRIPT.characters.includes(idOf(p.claim))) p.claim="";
+  });
+  S.infos = S.infos.filter(r=>(SCRIPT.info_types||[]).includes(r.type));
+  const offered = (SCRIPT.fabled||[]).map(f=>f.key);
+  S.fabled = S.fabled.filter(k=>offered.includes(k));
+  $("#script-panel").hidden = true;
+  drawTypes(); touch(); draw(); save();
+}
+
+const idOf = key => (key||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+
+function drawCatalogue(){
+  const box=$("#catalogue"); box.innerHTML="";
+  let team=null;
+  (META.catalogue||[]).forEach(c=>{
+    if(c.team!==team){
+      team=c.team;
+      const h=document.createElement("div"); h.className="tag";
+      h.style.cssText="margin:8px 0 3px;break-inside:avoid";
+      h.textContent=team; box.appendChild(h);
+    }
+    const row=document.createElement("label");
+    row.style.cssText="display:block;font-size:13.5px;break-inside:avoid";
+    row.title = c.modelled ? "" : "In the bag and claimable, but its ability "
+                                + "is not reasoned about: " + c.note;
+    const b=document.createElement("input");
+    b.type="checkbox"; b.value=c.id;
+    b.checked = (SCRIPT.characters||[]).includes(c.id);
+    row.appendChild(b);
+    row.appendChild(document.createTextNode(
+      " " + c.name + (c.modelled ? "" : " *")));
+    box.appendChild(row);
+  });
+}
+
+function drawFabled(){
+  // Not dealt to anybody: the Storyteller puts one out and everyone sees
+  // it. So it is ticked rather than deduced — what it *did* stays hidden.
+  const box=$("#fabled-box"), list=$("#fabled-list");
+  const offered = SCRIPT.fabled || [];
+  box.hidden = offered.length === 0;
+  list.innerHTML = "";
+  offered.forEach(f=>{
+    const lab=document.createElement("label");
+    lab.className="quiet"+(S.fabled.includes(f.key)?" on":"");
+    lab.title = f.note;
+    const b=document.createElement("input");
+    b.type="checkbox"; b.checked = S.fabled.includes(f.key);
+    b.onchange = e => {
+      S.fabled = e.target.checked ? [...S.fabled, f.key]
+                                  : S.fabled.filter(k=>k!==f.key);
+      touch(); drawFabled(); save();
+    };
+    lab.appendChild(b);
+    lab.appendChild(document.createTextNode(" " + f.name));
+    list.appendChild(lab);
+  });
+}
+
+let notesShowing = 0;          // how many days the notes last drew
+
+// The left column is three drawers. Only what you are using needs to be
+// on screen, which is what makes the page survive a narrow one.
+const DRAWERS = ["ledger", "notes", "timeline"];
+const isOpen = name =>
+  $("#drawer-" + name).classList.contains("open");
+
+function openDrawer(name){
+  const panel = $("#drawer-" + name);
+  panel.classList.add("open");
+  if(name === "notes") drawNotes();
+  panel.scrollIntoView({behavior: "smooth", block: "nearest"});
+  save();
+}
+
+function toggleDrawer(name){
+  const panel = $("#drawer-" + name);
+  panel.classList.toggle("open");
+  if(name === "notes" && isOpen(name)) drawNotes();
+  S.open = DRAWERS.filter(isOpen);
+  save();
+}
+
+function drawDrawerCounts(){
+  const rows = S.infos.length;
+  $("#count-ledger").textContent = rows ? `${rows} recorded` : "";
+  const written = Object.values(S.notes || {}).filter(t => t.trim()).length;
+  $("#count-notes").textContent = written ? `${written} days written` : "";
+}
+
+function drawNotes(){
+  // One page per day the game has actually reached. The ledger offers a
+  // night ahead because you record tonight's readings as they come in;
+  // notes are about the day you are standing in, so they stop there.
+  const box = $("#notes-days");
+  const today = currentNight();
+  notesShowing = today;
+  box.innerHTML = "";
+  for(let d = today; d >= 1; d--){          // newest first, like a diary
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "margin-bottom:12px";
+
+    const tag = document.createElement("div");
+    tag.className = "tag";
+    tag.textContent = d === today ? `Day ${d} — today` : `Day ${d}`;
+    if(d === today) tag.style.color = "var(--crimson-deep)";
+
+    const field = document.createElement("textarea");
+    field.rows = d === today ? 4 : 2;
+    field.style.cssText = "width:100%;font-family:var(--body);"
+      + "font-size:14px;padding:6px;background:rgba(0,0,0,.04);"
+      + "border:1px solid rgba(0,0,0,.15);border-radius:2px";
+    field.placeholder = d === today
+      ? "Who said what, and what you make of it."
+      : "";
+    field.value = (S.notes && S.notes[d]) || "";
+    field.oninput = e => {
+      S.notes = S.notes || {};
+      S.notes[d] = e.target.value;
+      save();                     // stored with the game, read by nobody
+    };
+
+    wrap.appendChild(tag); wrap.appendChild(field); box.appendChild(wrap);
+  }
+}
+
+
+function drawTypes(){
+  // A reading only exists if the character that produces it is in the bag.
+  const nt=$("#new-type"); nt.innerHTML="";
+  (SCRIPT.info_types||[]).forEach(k=>{
+    const o=document.createElement("option"); o.value=k; o.textContent=typeLabel(k);
+    nt.appendChild(o);
+  });
+  $("#script-name").textContent = SCRIPT.name
+    + (S.fabled.length ? " + " + S.fabled.join(", ") : "");
+  drawFabled();
+  $("#script-note").innerHTML = mastermindNote() + (SCRIPT.complaints||[]).map(c=>
+    `<div class="warn">${esc(c.characters.join(", ") || "This script")}: ${esc(c.text)}</div>`
+  ).join("");
+}
+
+function label(r){ return (SCRIPT.display && SCRIPT.display[r]) || r; }
+function allRoles(pool){
+  if(pool==="townsfolk") return SCRIPT.townsfolk;
+  if(pool==="outsiders") return SCRIPT.outsiders;
+  if(pool==="minions")   return SCRIPT.minions;
+  return [...SCRIPT.townsfolk,...SCRIPT.outsiders,...SCRIPT.minions,...SCRIPT.demons];
+}
+function seatName(i){ return S.players[i].name || `Seat ${i+1}`; }
+function claimantOf(role){
+  const hits=[]; for(let i=0;i<S.n;i++) if(S.players[i].claim===role) hits.push(i);
+  return hits.length===1 ? hits[0] : null;
+}
+function currentNight(){
+  // The day the game has reached: the furthest night any ledger row,
+  // quiet night or recorded event mentions.
+  let day = S.infos.reduce((m, r) => Math.max(m, r.night || 1), 1);
+  (S.quiet || []).forEach(n => { day = Math.max(day, +n); });
+  S.players.forEach(p => (p.events || []).forEach(
+    c => { day = Math.max(day, +c.slice(1)); }));
+  return day;
+}
+
+// What has happened to this seat, asked once so nothing has to pick
+// apart phase codes in three different places.
+const eventsOf = p => p.events || [];
+const eventOn = (p, day) => eventsOf(p).find(c => +c.slice(1) === day);
+const executedOn = (p, day) => {
+  const c = eventOn(p, day);
+  return !!c && (c[0] === "X" || c[0] === "S");
+};
+function standing(p){
+  // Alive unless the last thing that happened put them down.
+  const sorted = [...eventsOf(p)].sort((a, b) => (+a.slice(1)) - (+b.slice(1)));
+  let up = true;
+  sorted.forEach(c => { up = (c[0] === "S") ? up : (c[0] === "R"); });
+  return sorted.length ? up : true;
+}
+
+// Something changed since the last solve. Keep the numbers on screen -
+// stale figures with a warning beat an empty board mid-conversation.
+function touch(){ dirty=true; SHAKE=null; drawTimeline(); }
+
+const READ_WORDS=["sure good","strongly good","leaning good","no read","leaning evil","strongly evil","sure evil"];
+const readWord = v => READ_WORDS[Math.max(-3,Math.min(3,v))+3];
+const WAKE_FITS = {
+  never:"Ravenkeeper, Virgin, Slayer, Soldier, Mayor, Recluse or Saint.",
+  first:"Washerwoman, Librarian, Investigator or Chef.",
+  every:"Empath, Fortune Teller, Undertaker, Monk or Butler.",
+  other:"Undertaker or Monk.",
+  sometimes:"Undertaker or Ravenkeeper.",
+};
+function wakeNote(v){
+  if(!v) return "A soft claim — \u201cI don\u2019t wake\u201d, \u201conly the first night\u201d — narrows the good roles without naming one.";
+  return "Fits " + WAKE_FITS[v] + " Evil is never held to this: they know what they are and will say whatever suits the bluff.";
+}
+
+function wakeLookup(said, seat){
+  if(!said) return "";
+  const fits = (SCRIPT.wake_roles && SCRIPT.wake_roles[said]) || [];
+  const live = RESULT && RESULT.rows[seat] ? new Map(RESULT.rows[seat].roles) : null;
+  const rows = fits.map(r => [label(r), live ? (live.get(label(r)) || 0) : null])
+                   .sort((a,b) => (b[1]||0) - (a[1]||0));
+  return `<div class="tag">could be</div>` + rows.map(([name, pc]) =>
+    `<div class="row"><span>${esc(name)}</span><span>${
+      pc===null ? "&mdash;" : pc.toFixed(0)+"%"}</span></div>`).join("");
+}
+
+function readNote(v){
+  if(!v) return "No read. Nothing about this seat is nudged either way.";
+  const side=v>0?"evil":"good";
+  return `Reading them ${side}. Multiplies the odds they are ${side} by ${Math.pow(2,Math.abs(v))}× — a nudge, never a verdict.`;
+}
+function deathNote(d){
+  if(!d) return "";
+  if(d[0]==="X") return "The town chose this death, so it says nothing about their team by itself — but the game carried on, so this seat was not the Saint.";
+  if(d[0]==="S") return "Executed and still standing. The day ended, but nothing died — so the Undertaker learns nothing, and the Saint's condition never fired.";
+  if(d[0]==="D") return "A daytime death outside an execution says nothing on its own about their team.";
+  if(d[0]==="R") return "Back on their feet. Record the death that came first as well — it will be listed above with this.";
+  const n=+d.slice(1), keep=Math.min(1,0.05*Math.max(n-1,1));
+  return `The Demon kills good players, so a night ${n} victim is unlikely to be evil — worlds where they are keep ${(keep*100).toFixed(0)}% of their weight. The discount fades as the nights go on.`;
+}
+function short(v){
+  if(v >= 1e12) return (v/1e12).toFixed(1)+"T";
+  if(v >= 1e9)  return (v/1e9).toFixed(1)+"B";
+  if(v >= 1e6)  return (v/1e6).toFixed(1)+"M";
+  return v.toLocaleString();
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ---------- drawing ---------- */
+function draw(){
+  drawSeats(); drawInspector(); drawLedger(); drawTimeline(); drawCentre();
+  drawDrawerCounts();
+  // A new night can arrive while the notes are open; the day it adds
+  // should be there to write in without closing and reopening. Only
+  // when the count actually changes, though — rebuilding the boxes
+  // under somebody mid-sentence would take the cursor with it.
+  if(isOpen("notes") && notesShowing !== currentNight()) drawNotes();
+}
+
+function drawCentre(){
+  if(!RESULT){
+    $("#count-worlds").textContent="—"; $("#count-worlds").className="count";
+    $("#count-cap").textContent="not solved yet"; $("#count-legal").textContent="";
+    return;
+  }
+  const big = RESULT.valid >= 1e6;
+  $("#count-worlds").textContent = big ? short(RESULT.valid) : RESULT.valid.toLocaleString();
+  $("#count-worlds").className="count"+(RESULT.valid?"":" none");
+  $("#count-cap").textContent=RESULT.valid?"worlds remain":"no world fits";
+  $("#count-legal").textContent=`of ${RESULT.sampled?"about ":""}${
+    RESULT.legal>=1e6?short(RESULT.legal):RESULT.legal.toLocaleString()} legal setups`;
+  $("#count-est").textContent = RESULT.sampled
+    ? `estimated from ${Math.round(RESULT.ess).toLocaleString()} effective samples`
+    : "";
+}
+
+function prevSnapshot(){
+  const idx = viewing===null ? S.history.length-1 : viewing;
+  return idx>0 ? S.history[idx-1] : null;
+}
+
+// What is attached to a seat: everything it has said, and — when it has
+// claimed nothing — what its wake statement still allows it to be. The
+// second is the useful half: it lives in a lookup table you otherwise
+// have to go and find.
+function bubbleFor(seat){
+  const p = S.players[seat];
+  const mine = S.infos
+    .map((r, i) => [r, i])
+    .filter(([r]) => (r.player === seat) || relaysTo(r) === seat);
+  const wake = !p.claim && p.wake ? p.wake : "";
+  const events = eventsOf(p);
+  if(!mine.length && !wake && !events.length) return null;
+  return {rows: mine, wake, events};
+}
+
+// A reading spoken by one seat but sourced from another — somebody
+// passing on what the Empath told them.
+function relaysTo(rec){
+  const claimant = claimantOf(sourceRole(rec.type));
+  return (claimant !== null && claimant !== rec.player) ? claimant : -1;
+}
+
+function bubbleText(seat){
+  const got = bubbleFor(seat);
+  if(!got) return "";
+  const bits = [];
+  if(got.rows.length){
+    bits.push(`<div class="tag">what this seat has said</div>`);
+    got.rows.forEach(([r, i]) => {
+      const relayed = r.player !== seat;
+      bits.push(`<div class="bub-row"><b>${esc(typeLabel(r.type))}</b>
+        ${DAY_EVENTS.includes(r.type) ? "day" : "night"} ${r.night || 1}
+        ${relayed ? `<span class="hint">— passed on by ${
+          esc(seatName(r.player))}</span>` : ""}
+        <div class="hint">${esc(describeRow(r))}</div></div>`);
+    });
+  }
+  if(got.wake){
+    const fits = (SCRIPT.wake_roles && SCRIPT.wake_roles[got.wake]) || [];
+    bits.push(`<div class="tag" style="margin-top:8px">claims nothing, but
+      says it woke ${esc(WAKE_SAID[got.wake] || got.wake)}</div>`);
+    bits.push(`<div class="bub-row">${
+      fits.length
+        ? "On this script that leaves " + fits.map(r => esc(label(r))).join(", ")
+          + "."
+        : "Nothing on this script wakes like that."}
+      <div class="hint">Evil is never held to it — they know what they are
+      and will say whatever suits the bluff.</div></div>`);
+  }
+  if(got.events.length){
+    bits.push(`<div class="tag" style="margin-top:8px">what happened</div>`);
+    bits.push(`<div class="bub-row">${
+      [...got.events].sort((a, b) => (+a.slice(1)) - (+b.slice(1)))
+        .map(eventWords).join("<br>")}</div>`);
+  }
+  return bits.join("");
+}
+
+// One line saying what a reading actually was, in the words the game
+// uses. Stitching the raw field values together gave "Empath night 1 · 1",
+// which is not a sentence anybody wants to read mid-game.
+function describeRow(r){
+  const who = i => esc(seatName(i));
+  const role = k => esc(label(k));
+  switch(r.type){
+    case "Empath":
+      return `${r.count} evil neighbour${r.count === 1 ? "" : "s"}`;
+    case "Chef":
+      return `${r.count} pair${r.count === 1 ? "" : "s"} of evil sitting together`;
+    case "Washerwoman":
+    case "Librarian":
+    case "Investigator":
+      return r.a === "" ? "nobody — none in play"
+                        : `${who(r.a)} or ${who(r.b)} is the ${role(r.role)}`;
+    case "FortuneTeller":
+      return `${who(r.a)} and ${who(r.b)} — ${r.yes ? "one is the Demon" : "neither"}`;
+    case "Undertaker":
+      return `the seat executed yesterday was the ${role(r.role)}`;
+    case "Ravenkeeper":
+      return `${who(r.target)} is the ${role(r.role)}`;
+    case "GrandmotherInfo":
+      return `${who(r.target)} is the ${role(r.role)} — the grandchild`;
+    case "ChambermaidInfo":
+      return `${who(r.a)} and ${who(r.b)} — ${r.count} of them woke`;
+    case "GamblerGuess":
+      return `guessed ${who(r.target)} was the ${role(r.role)}`;
+    case "CourtierChoice":
+      return `named the ${role(r.role)}`;
+    case "SlayerShot":
+      return `shot ${who(r.target)} — ${r.died ? "they died" : "nothing happened"}`;
+    case "VirginNomination":
+      return `${who(r.nominator)} nominated — ${
+        r.triggered ? "and died on the spot" : "nothing happened"}`;
+    default:
+      return "";
+  }
+}
+
+const WAKE_SAID = {
+  never:"never", first:"only the first night", every:"every night",
+  other:"every night but the first", sometimes:"only sometimes",
+};
+
+function tokenFace(i, row){
+  const guess = factionGuess(row);
+  if(!guess)
+    return `<div class="token">${i + 1}</div>`;
+  return `<div class="token faction" title="${guess.name} — ${
+    guess.pct.toFixed(0)}% across every character on that team"
+    style="--face:${guess.face};--face-ink:${guess.ink}">${guess.letter}</div>`;
+}
+
+function openBubble(seat, at){
+  const pop = $("#bubble-pop");
+  pop.innerHTML = `<div class="bub-head"><b>${esc(seatName(seat))}</b>
+    <button class="ghost" id="bub-close">close</button></div>`
+    + bubbleText(seat);
+  pop.hidden = false;
+  // Placed against the tag, then nudged back inside the window.
+  const box = pop.getBoundingClientRect();
+  const x = Math.min(Math.max(8, at.left - box.width / 2),
+                     window.innerWidth - box.width - 8);
+  const y = at.bottom + box.height + 12 > window.innerHeight
+    ? Math.max(8, at.top - box.height - 8)
+    : at.bottom + 8;
+  pop.style.left = x + "px";
+  pop.style.top = y + "px";
+  $("#bub-close").onclick = closeBubble;
+}
+
+function closeBubble(){ $("#bubble-pop").hidden = true; }
+
+// A token showing which side of the table a seat is probably on, rather
+// than its number — but only once the numbers actually say so. A seat at
+// forty percent evil is not a Minion, and drawing one there would have
+// the dial asserting something the solver does not believe.
+// Chosen by looking at what the numbers actually do. A seat that has
+// merely *claimed* a Townsfolk sits at about 71% Townsfolk on a
+// nine-player board, and an Outsider claim at 60% — so anything lower
+// than this would turn every token the moment claims were entered, and
+// the dial would be repeating what the seats said rather than telling
+// you anything. Readings that genuinely confirm somebody push it to the
+// high eighties.
+const FACTION_SURE = 85;      // the leading faction needs this much
+const FACTION_LEAD = 40;      // and this much clear of the next one
+
+const FACTIONS = {
+  townsfolk: {letter:"T", name:"Townsfolk", ink:"#123A5E", face:"#BBD7EE"},
+  outsider:  {letter:"O", name:"Outsider",  ink:"#14454A", face:"#B4DAD4"},
+  minion:    {letter:"M", name:"Minion",    ink:"#5C1014", face:"#EFB3B3"},
+  demon:     {letter:"D", name:"Demon",     ink:"#3D0A0C", face:"#DE9296"},
+};
+
+function factionOf(role){
+  if(!SCRIPT) return null;
+  if(SCRIPT.townsfolk.includes(role)) return "townsfolk";
+  if(SCRIPT.outsiders.includes(role)) return "outsider";
+  if(SCRIPT.minions.includes(role))   return "minion";
+  if(SCRIPT.demons.includes(role))    return "demon";
+  return null;
+}
+
+// Which faction this seat looks like, or nothing if it is still open.
+function factionGuess(row){
+  if(!row || !row.roles || !row.roles.length) return null;
+  const share = {};
+  row.roles.forEach(([role, pct]) => {
+    const f = factionOf(role);
+    if(f) share[f] = (share[f] || 0) + pct;
+  });
+  const ranked = Object.entries(share).sort((a, b) => b[1] - a[1]);
+  if(!ranked.length) return null;
+  const [top, best] = ranked[0];
+  const next = ranked.length > 1 ? ranked[1][1] : 0;
+  if(best < FACTION_SURE || best - next < FACTION_LEAD) return null;
+  return {key: top, pct: best, ...FACTIONS[top]};
+}
+
+// The circle stays put. It was made to turn so the selected seat came
+// to your thumb, and that read as a trick rather than a help: the table
+// shifting under you costs more than the reach saves.
+
+// How big a token can be here. Two things bound it, and both were
+// previously guessed at with a breakpoint: it has to fit between its
+// neighbours on the ring, and it has to stay inside the guide circles
+// rather than being cut through by one. On a 390px screen the fixed
+// 76px token overran the outer circle by 13px, which is what made the
+// dial look wrong on a phone.
+const SEAT_RADIUS = 41;          // where the seats sit, in % of the dial
+const RIM_RADIUS  = 47.5;        // the outer guide circle
+const HUB_RADIUS  = 30;          // the inner one
+
+function sizeSeats(dial){
+  const width = dial.clientWidth || 640;
+  const ring = SEAT_RADIUS / 100 * width;
+  const between = 2 * Math.PI * ring / Math.max(S.n, 1);   // arc per seat
+  const outward = (RIM_RADIUS - SEAT_RADIUS) / 100 * width * 2;
+  const inward  = (SEAT_RADIUS - HUB_RADIUS) / 100 * width * 2;
+  const gauge = Math.max(28, Math.min(76, between * 0.86, outward, inward));
+  dial.style.setProperty("--gauge", gauge.toFixed(1) + "px");
+}
+
+function drawSeats(){
+  const dial=$("#dial");
+  sizeSeats(dial);
+  dial.querySelectorAll(".seat").forEach(el=>el.remove());
+  closeBubble();                  // the seats it pointed at are going
+  const prev=prevSnapshot();
+  for(let i=0;i<S.n;i++){
+    const ang=(i*360/S.n-90)*Math.PI/180, R=41;
+    const p=S.players[i];
+    const row=RESULT && RESULT.rows[i] ? RESULT.rows[i] : null;
+    const evil=row?row.evil_pct:0, lie=row?row.lying_pct:0;
+    const rd=+p.read||0;
+    const mark=p.claim ? (p.certainty||"") : "";
+
+    let delta="";
+    if(row && prev && prev.rows[i]){
+      const d=evil-prev.rows[i].evil_pct;
+      if(Math.abs(d)>=1) delta=` <span class="${d>0?"up":"down"}">${d>0?"▲":"▼"}${Math.abs(d).toFixed(0)}</span>`;
+    }
+
+    const el=document.createElement("div");
+    // Raised is not dead, and a seat with extra deaths recorded is dead
+    // only if it has not come back since.
+    const died = !standing(p);
+    el.className="seat"+(selected===i?" selected":"")+(died?" dead":"")
+      +(eventsOf(p).some(c=>c[0]==="S"||c[0]==="X")?" judged":"")
+      +(mark==="self"?" you":"")+(mark==="confirmed"?" known":"");
+    el.style.left=(50+R*Math.cos(ang))+"%";
+    el.style.top =(50+R*Math.sin(ang))+"%";
+    el.innerHTML=`
+      ${bubbleFor(i) ? '<button class="bubble" data-seat="'+i+'">\u2026</button>' : ""}
+      ${mark==="self"?'<div class="badge you">you</div>':""}
+      ${mark==="confirmed"?'<div class="badge known">sure</div>':""}
+      <div class="gauge" style="--lie-pct:${lie.toFixed(1)}">
+        <div class="ring" style="--evil-pct:${evil.toFixed(1)}">${tokenFace(i, row)}</div>
+      </div>
+      <div class="plate">
+      <div class="name"><span class="seat-no">${i+1}</span>${
+        S.players[i].name ? " " + esc(S.players[i].name) : ""}</div>
+      <div class="claim ${p.claim?"said":(row&&row.roles.length?"guess":"empty")}">${
+        p.claim ? esc(label(p.claim))
+                : (row&&row.roles.length ? esc(row.roles[0][0])+" "+row.roles[0][1].toFixed(0)+"%?" : "no claim")}</div>
+      ${row?`<div class="pct" style="color:${evil<25?"#8FC4E8":"#F0A0A4"}">${evil.toFixed(0)}% evil${
+        row.margin>0?`<span class="margin"> ±${row.margin.toFixed(0)}</span>`:""}${delta}</div>`:""}
+      ${SHAKE&&SHAKE[i]&&SHAKE[i].swing>4?`<div class="band">${
+        SHAKE[i].low.toFixed(0)}–${SHAKE[i].high.toFixed(0)}%</div>`:""}
+      ${p.wake?`<div class="wake-mark">${esc(META.wake_labels[p.wake].toLowerCase())}</div>`:""}
+      ${rd?`<div class="read-mark ${rd>0?"up":"down"}">read ${rd>0?"+":"−"}${Math.abs(rd)}</div>`:""}
+      </div>`;
+    el.onclick=()=>{ selected=i; draw(); };
+    const tag = el.querySelector(".bubble");
+    if(tag) tag.onclick = ev => {
+      ev.stopPropagation();       // reading a seat is not selecting it
+      openBubble(i, tag.getBoundingClientRect());
+    };
+    dial.appendChild(el);
+  }
+}
+
+// What can happen to a seat, and when. Only the day the game has
+// actually reached is offered — recording a death on day five while the
+// table is on day two is a mis-entry, not a choice, and a flat list of
+// thirty options invited it.
+function dayOptions(day){
+  const out = [];
+  if(day > 1) out.push(["N"+day, `Died night ${day}`]);
+  out.push(["X"+day, `Executed today, died`]);
+  out.push(["S"+day, `Executed today, survived`]);
+  out.push(["D"+day, `Died today, not executed`]);
+  if(day > 1) out.push(["R"+day, `Raised night ${day}`]);
+  return out;
+}
+
+const EVENT_WORDS = {
+  N: d => `died night ${d}`,
+  X: d => `executed day ${d}, died`,
+  S: d => `executed day ${d}, survived`,
+  D: d => `died day ${d}, not executed`,
+  R: d => `raised night ${d}`,
+};
+const eventWords = code =>
+  (EVENT_WORDS[code[0]] || (d => code))(code.slice(1));
+
+function drawEvents(p){
+  const day = currentNight();
+  const ds = $("#f-death"); ds.innerHTML = "";
+  ds.appendChild(opt("", `Nothing on day ${day}`));
+  dayOptions(day).forEach(([v, label]) => ds.appendChild(opt(v, label)));
+  // Anything already recorded for today is what the control shows.
+  const here = (p.events || []).find(c => +c.slice(1) === day);
+  ds.value = here || "";
+
+  // Everything that has happened to this seat, oldest first, each one
+  // removable — so a mistake on day two is still fixable on day four
+  // without anybody typing a phase code.
+  const box = $("#f-events"); box.innerHTML = "";
+  const sorted = [...(p.events || [])].sort(
+    (a, b) => (+a.slice(1)) - (+b.slice(1)));
+  if(!sorted.length) return;
+  const tag = document.createElement("div");
+  tag.className = "tag"; tag.style.marginTop = "8px";
+  tag.textContent = "so far";
+  box.appendChild(tag);
+  sorted.forEach(code => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;"
+      + "font-size:13.5px;padding:2px 0";
+    const label = document.createElement("span");
+    label.style.flex = "1";
+    label.textContent = eventWords(code);
+    const drop = document.createElement("button");
+    drop.className = "ghost"; drop.textContent = "remove";
+    drop.onclick = () => {
+      p.events = (p.events || []).filter(c => c !== code);
+      touch(); draw(); save();
+    };
+    row.appendChild(label); row.appendChild(drop);
+    box.appendChild(row);
+  });
+}
+
+function drawInspector(){
+  const form=$("#insp-form"), read=$("#insp-read");
+  if(selected===null){
+    form.hidden=true; read.hidden=true;
+    $("#insp-title").textContent="No seat selected";
+    $("#insp-hint").textContent="Click a seat on the dial to set its name, claim and status.";
+    return;
+  }
+  const p=S.players[selected];
+  $("#insp-title").textContent=`Seat ${selected+1} — ${seatName(selected)}`;
+  $("#insp-hint").textContent="Seats run clockwise; seat 1 and the last seat are neighbours.";
+  form.hidden=false;
+  $("#f-name").value=p.name;
+
+  const cs=$("#f-claim"); cs.innerHTML="";
+  cs.appendChild(opt("","No claim yet"));
+  [["Townsfolk",SCRIPT.townsfolk],["Outsiders",SCRIPT.outsiders],
+   ["Minions",SCRIPT.minions],["Demons",SCRIPT.demons]].forEach(([g,list])=>{
+    const grp=document.createElement("optgroup"); grp.label=g;
+    list.forEach(r=>grp.appendChild(opt(r,label(r))));
+    cs.appendChild(grp);
+  });
+  cs.value=p.claim||"";
+
+  const ws=$("#f-wake"); ws.innerHTML="";
+  ws.appendChild(opt("","Nothing said"));
+  META.wake_patterns.forEach(k=>ws.appendChild(opt(k, META.wake_labels[k])));
+  ws.value=p.wake||"";
+  $("#wake-note").textContent=wakeNote(p.wake||"");
+
+  const ce=$("#f-cert"); ce.innerHTML="";
+  ce.appendChild(opt("","Only their claim"));
+  ce.appendChild(opt("self","This seat is me"));
+  ce.appendChild(opt("confirmed","Role is confirmed"));
+  ce.appendChild(opt("hiding","Might be hiding an Outsider"));
+  ce.appendChild(opt("unsure","Claim not trusted"));
+  ce.value=p.certainty||""; ce.disabled=!p.claim;
+  $("#cert-note").textContent = !p.claim ? "Pick a claimed role first."
+    : p.certainty==="self" ? "You can see your own token, so this role is yours — unless the Storyteller made you the Drunk, which you would not know."
+    : p.certainty==="confirmed" ? "Taken as certain, and not the Drunk. Use it for mechanical proof, like a Virgin that triggered."
+    : p.certainty==="hiding" ? "Also allows a good player covering up — an Outsider claiming somebody else's role. That is the good lie people actually tell, and it stays cheap to search."
+    : p.certainty==="unsure" ? "The claim is set aside — this seat could hold any role. Slow: it multiplies the search, so use it on one or two seats at most."
+    : "Treated as a normal claim: could be true, could be the Drunk, could be a bluff.";
+
+  $("#wake-look").innerHTML = wakeLookup(p.wake||"", selected);
+
+  $("#f-read").value=+p.read||0;
+  $("#f-suspect").checked = !!p.suspect;
+  $("#read-val").textContent=readWord(+p.read||0);
+  $("#read-note").textContent=readNote(+p.read||0);
+
+  drawEvents(p);
+  $("#death-note").textContent = deathNote(eventOn(p, currentNight()) || "");
+
+  if(RESULT && RESULT.rows[selected]){
+    const r=RESULT.rows[selected];
+    read.hidden=false;
+    read.innerHTML=`<div class="rule"></div>
+      <div class="metrics">
+        <div class="metric"><b style="color:var(--evil)">${r.evil_pct.toFixed(0)}%${
+          r.margin>0?`<span class="margin"> ±${r.margin.toFixed(0)}</span>`:""}</b><span>evil</span></div>
+        <div class="metric"><b style="color:var(--crimson-deep)">${r.demon_pct.toFixed(0)}%</b><span>demon</span></div>
+        <div class="metric"><b style="color:var(--lie)">${r.lying_pct.toFixed(0)}%</b><span>lying</span></div>
+        <div class="metric"><b style="color:var(--ink-soft)">${r.drunk_pct.toFixed(0)}%</b><span>drunk</span></div>
+      </div>`
+      + r.roles.map(([role,pc])=>`<div class="bar-row">
+          <div class="lab"><span>${esc(role)}</span><span>${pc.toFixed(0)}%</span></div>
+          <div class="bar"><i style="width:${pc}%"></i></div></div>`).join("")
+      + sparkline(selected);
+  } else { read.hidden=true; }
+}
+
+function sparkline(seat){
+  const h=S.history;
+  if(h.length<2) return "";
+  const W=278,H=64,pad=6;
+  const pts=(key,col)=>{
+    const d=h.map((s,i)=>{
+      const x=pad+i*(W-2*pad)/(h.length-1);
+      const y=H-pad-((s.rows[seat]?s.rows[seat][key]:0)/100)*(H-2*pad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+    return `<polyline points="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>`;
+  };
+  return `<div class="rule"></div>
+    <div class="tag">how this seat has moved</div>
+    <svg class="spark" viewBox="0 0 ${W} ${H}">
+      <rect x="0" y="0" width="${W}" height="${H}" fill="rgba(255,252,242,.5)" stroke="var(--parchment-3)"/>
+      ${pts("lying_pct","var(--lie)")}${pts("evil_pct","var(--evil)")}
+    </svg>`;
+}
+
+/* ---------- timeline ---------- */
+function drawTimeline(){
+  const track=$("#tl-track"); track.innerHTML="";
+  if(!S.history.length){
+    track.innerHTML='<span class="empty">Solve at the start of each night to build a history.</span>';
+  } else {
+    S.history.forEach((snap,i)=>{
+      const b=document.createElement("button");
+      const live = viewing===null ? i===S.history.length-1 : i===viewing;
+      b.className="pip"+(live?" on":"")+(snap.sampled?" est":"");
+      b.textContent=(snap.sampled?"~":"")+snap.label;
+      b.title=snap.sampled
+        ? `${short(snap.valid)} worlds, estimated — solve again later for an exact answer`
+        : `${snap.valid.toLocaleString()} worlds, counted exactly`;
+      b.onclick=()=>{ viewing=(i===S.history.length-1)?null:i; RESULT=S.history[i]; draw(); };
+      track.appendChild(b);
+    });
+    if(viewing!==null){
+      const back=document.createElement("button");
+      back.className="ghost"; back.textContent="back to latest";
+      back.onclick=()=>{ viewing=null; RESULT=S.history[S.history.length-1]; draw(); };
+      track.appendChild(back);
+    }
+  }
+  const warn = $("#tl-dirty");
+  warn.textContent = dirty ? "edited since the last solve" : "";
+  warn.style.color = dirty ? "var(--crimson)" : "";
+}
+
+/* ---------- ledger ---------- */
+function addInfo(night){
+  const type=$("#new-type").value;
+  const claimant=claimantOf(sourceRole(type));
+  const rec={type, night, trust:0,
+             player: claimant!==null?claimant:(selected===null?0:selected)};
+  SCHEMA[type].forEach(([k,t])=>{
+    rec[k] = t.startsWith("role:") ? allRoles(t.split(":")[1])[0]
+           : t.startsWith("bool:") ? false : 0;
+  });
+  if(type==="VirginNomination"||type==="SlayerShot") rec[SCHEMA[type][1][0]]=true;
+  S.infos.push(rec); touch(); drawLedger(); save();
+}
+
+function blameLine(night){
+  // What each body that night looks like it came from. Derived every
+  // solve from the deaths and the claims; nothing here was typed in.
+  const got = RESULT && RESULT.blame && RESULT.blame[String(night)];
+  if(!got) return "";
+  const bits = [];
+  Object.keys(got).forEach(seat => {
+    const causes = Object.entries(got[seat]).sort((a,b)=>b[1]-a[1]);
+    if(causes.length < 2) return;      // only one thing it could have been
+    bits.push(`${esc(seatName(+seat))}: ` + causes.map(
+      ([name, share]) => `${esc(name)} ${Math.round(share*100)}%`).join(", "));
+  });
+  if(!bits.length) return "";
+  return `what killed them &mdash; ${bits.join(" &middot; ")}`;
+}
+
+function drawLedger(){
+  const box=$("#rows"); box.innerHTML="";
+  const columns=Math.min(8, currentNight()+1);
+  for(let n=1;n<=columns;n++){
+    const head=document.createElement("div"); head.className="night-head";
+    const t=document.createElement("span"); t.textContent=`Night ${n}`;
+    head.appendChild(t);
+
+    if(n>1){
+      // "Nobody died" is some of the strongest information in the game.
+      const on=S.quiet.includes(n);
+      const lab=document.createElement("label");
+      lab.className="quiet"+(on?" on":"");
+      lab.title="Something stopped the kill: the Monk guarding, or the Demon choosing the Soldier.";
+      const box2=document.createElement("input");
+      box2.type="checkbox"; box2.checked=on;
+      box2.onchange=e=>{
+        S.quiet = e.target.checked ? [...S.quiet, n].sort((a,b)=>a-b)
+                                   : S.quiet.filter(x=>x!==n);
+        touch(); drawLedger(); save();
+      };
+      lab.appendChild(box2);
+      lab.appendChild(document.createTextNode("nobody died"));
+      head.appendChild(lab);
+    }
+
+    const add=document.createElement("button");
+    add.className="ghost"; add.textContent="+ add"; add.title="Add the selected type here";
+    add.onclick=()=>addInfo(n);
+    head.appendChild(add);
+    box.appendChild(head);
+    const blamed = blameLine(n);
+    if(blamed){
+      const note=document.createElement("div");
+      note.className="hint"; note.style.margin="2px 0 6px";
+      note.innerHTML=blamed;
+      box.appendChild(note);
+    }
+
+    const here=S.infos.map((r,i)=>[r,i]).filter(([r])=>(r.night||1)===n);
+    if(!here.length){
+      const e=document.createElement("div"); e.className="empty"; e.textContent="nothing yet";
+      box.appendChild(e);
+    }
+    here.forEach(([rec,idx])=>box.appendChild(infoCard(rec,idx)));
+  }
+}
+
+// What became of a reading, across every world that survived.
+//
+// Four outcomes rather than true or false, because two of them are
+// neither: a seat handed the wrong token said something that was never
+// theirs to get right, and a reading nobody in a world could have
+// produced was made up by whoever announced it. Both are the speaker
+// being wrong without lying, which is the distinction the table cares
+// about most.
+const VERDICT_WORDS = {
+  "held": "holds up",
+  "excused": "would have to be wrong",
+  "made up": "was never theirs — wrong token",
+  "invented": "nobody here could have said it",
+  "spent": "the ability was already used",
+};
+const VERDICT_COLOUR = {
+  "held": "#1E6B3A", "excused": "var(--crimson-deep)",
+  "made up": "#6B4E1E", "invented": "#6B4E1E", "spent": "var(--ink-soft)",
+};
+
+function readingVerdict(idx){
+  const all = RESULT && RESULT.readings;
+  if(!all) return null;
+  const got = all.find(r => r.index === idx);
+  if(!got || !Object.keys(got.shares || {}).length) return null;
+
+  const ranked = Object.entries(got.shares).sort((a, b) => b[1] - a[1]);
+  const box = document.createElement("div");
+  box.style.cssText = "margin:5px 0 2px;font-size:12.5px;line-height:1.6";
+  ranked.forEach(([mark, share]) => {
+    if(share < 0.005) return;
+    const line = document.createElement("div");
+    line.style.color = VERDICT_COLOUR[mark] || "var(--ink)";
+    line.textContent = `${Math.round(share * 100)}% ${
+      VERDICT_WORDS[mark] || mark}`;
+    box.appendChild(line);
+  });
+  return box.children.length ? box : null;
+}
+
+function infoCard(rec, idx){
+  const card=document.createElement("div"); card.className="card";
+
+  const head=document.createElement("div"); head.className="card-head";
+  const name=document.createElement("span"); name.className="card-type";
+  name.textContent=typeLabel(rec.type)+(DAY_EVENTS.includes(rec.type)?"  (day)":"");
+  const del=document.createElement("button");
+  del.className="ghost"; del.textContent="\u00d7"; del.title="Remove";
+  del.onclick=()=>{ S.infos.splice(idx,1); touch(); drawLedger(); save(); };
+  head.appendChild(name); head.appendChild(del);
+  card.appendChild(head);
+
+  const verdict = readingVerdict(idx);
+  if(verdict) card.appendChild(verdict);
+
+  const body=document.createElement("div"); body.className="card-body";
+  body.appendChild(tag(SPEAKER_LABEL[rec.type]||"said by"));
+  body.appendChild(playerSel(rec,"player"));
+  SCHEMA[rec.type].forEach(([k,t])=>{
+    if(t==="player" && rec.type==="Undertaker" && k==="target")
+      body.appendChild(executedSel(rec, (rec.night||2)-1));
+    else if(t==="player") body.appendChild(playerSel(rec,k));
+    else if(t==="playerOrNone") body.appendChild(playerSel(rec,k,true));
+    else if(t==="number") body.appendChild(num(rec,k,0,15));
+    else if(t.startsWith("role:")) body.appendChild(roleSel(rec,k,t.split(":")[1]));
+    else if(t.startsWith("bool:")) body.appendChild(boolSel(rec,k,t.split(":")[1]));
+  });
+  card.appendChild(body);
+
+  const note=document.createElement("div"); note.className="note";
+  const src=sourceRole(rec.type), speaker=S.players[rec.player];
+  if(rec.type==="VirginNomination"){
+    if(rec.triggered && standing(S.players[rec.nominator]))
+      note.innerHTML=`<span class="warn">mark seat ${rec.nominator+1} as executed that day</span>`;
+  } else if(rec.type==="SlayerShot"){
+    if(rec.died && standing(S.players[rec.target]))
+      note.innerHTML=`<span class="warn">mark seat ${rec.target+1} as died that day</span>`;
+  } else if(["Undertaker","Ravenkeeper"].includes(rec.type) && (rec.night||1)<2){
+    note.innerHTML=`<span class="warn">nothing has died yet on night 1</span>`;
+  } else if(rec.type==="Undertaker"
+            && S.players.findIndex(p=>eventOn(p,(rec.night||2)-1)==="X"+((rec.night||2)-1))<0){
+    note.innerHTML=`<span class="warn">mark whoever was executed on day ${
+      (rec.night||2)-1} first</span>`;
+  } else if(speaker.claim!==src){
+    const who=claimantOf(src);
+    if(who!==null && who!==rec.player){
+      note.innerHTML=`<span class="relay">relaying ${esc(seatName(who))}'s info</span> `;
+      const fix=document.createElement("button");
+      fix.className="ghost"; fix.textContent="no, it was theirs";
+      fix.onclick=()=>{ rec.player=who; touch(); drawLedger(); save(); };
+      note.appendChild(fix);
+    } else {
+      note.innerHTML=`<span class="relay">from an unclaimed ${esc(label(src))}</span>`;
+    }
+  }
+  if(note.innerHTML) card.appendChild(note);
+  return card;
+}
+
+const TRUST_WORDS = {"-3":"not at all","-2":"barely","-1":"a little","0":"—",
+                     "1":"somewhat","2":"strongly","3":"completely"};
+function trustSel(rec){
+  const s=document.createElement("select");
+  s.title="How far you believe the reading itself, separately from whoever "
+        + "said it. Matters most when nobody has claimed the role it came from.";
+  for(let v=3;v>=-3;v--) s.appendChild(opt(v, TRUST_WORDS[String(v)]));
+  s.value = rec.trust||0;
+  s.onchange=e=>{ rec.trust=+e.target.value; touch(); drawLedger(); save(); };
+  return s;
+}
+
+function tag(t){ const d=document.createElement("span"); d.className="tag"; d.textContent=t; return d; }
+function opt(v,t){ const o=document.createElement("option"); o.value=v; o.textContent=t; return o; }
+function bind(el,rec,key,cast){ el.onchange=e=>{ rec[key]=cast(e.target.value); touch(); drawLedger(); save(); }; return el; }
+
+function executedSel(rec, day){
+  // Only the seat the town executed and killed that day is offerable.
+  const who = S.players.findIndex(p => eventOn(p, day) === "X" + day);
+  const s=document.createElement("select");
+  if(who < 0){
+    s.appendChild(opt("", `nobody was executed on day ${day}`));
+    s.disabled = true;
+  } else {
+    s.appendChild(opt(who, `${who+1}. ${seatName(who)}`));
+    s.value = who;
+    if(rec.target !== who){ rec.target = who; }
+  }
+  s.onchange=e=>{ rec.target=+e.target.value; touch(); drawLedger(); save(); };
+  return s;
+}
+
+function playerSel(rec,key,allowNone){
+  if(rec[key]!=="none" && (rec[key]==null || rec[key]>=S.n)) rec[key]=0;
+  const s=document.createElement("select");
+  if(allowNone) s.appendChild(opt("none","— nobody —"));
+  for(let i=0;i<S.n;i++) s.appendChild(opt(i,`${i+1}. ${seatName(i)}`));
+  s.value = rec[key]==="none" ? "none" : rec[key];
+  return bind(s,rec,key,v=>v==="none"?"none":+v);
+}
+function roleSel(rec,key,pool){
+  const s=document.createElement("select");
+  allRoles(pool).forEach(r=>s.appendChild(opt(r,label(r))));
+  s.value=rec[key]; return bind(s,rec,key,v=>v);
+}
+function boolSel(rec,key,labels){
+  const [yes,no]=labels.split("|");
+  const s=document.createElement("select");
+  s.appendChild(opt("1",yes)); s.appendChild(opt("0",no));
+  s.value=rec[key]?"1":"0"; return bind(s,rec,key,v=>v==="1");
+}
+function num(rec,key,min,max){
+  const n=document.createElement("input");
+  n.type="number"; n.min=min; n.max=max; n.value=rec[key]; n.style.width="62px";
+  n.oninput=e=>{ rec[key]=+e.target.value; touch(); save(); };
+  return n;
+}
+
+function mastermindNote(){
+  const got = RESULT && RESULT.mastermind;
+  if(!got || !got.length) return "";
+  return got.map(h => `<div class="hint" style="color:var(--crimson-deep)">
+    <b>Day ${h.day} could be a Mastermind day.</b> ${esc(seatName(h.seat))}
+    was executed, and there is a ${h.demon_pct}% chance they were the Demon
+    when it happened &mdash; in which case play carries on for one more day
+    and evil wins if a good player is executed today.</div>`).join("");
+}
+
+function nothingFits(d){
+  let out = `<div class="err"><b>Nothing fits.</b> `;
+  if(!d){
+    out += `A good player is lying, an entry is wrong, or a rule is not modelled yet.`;
+    return out + `</div>`;
+  }
+  if(d.bag){
+    out += esc(d.bag);
+  } else if(d.culprits && d.culprits.length){
+    out += `Removing any one of these would let a world through, so that is `
+         + `where to look first:<ul style="margin:6px 0 0 18px">`
+         + d.culprits.map(c=>`<li>${esc(c.label)}</li>`).join("")
+         + `</ul>`;
+  } else if(!d.complete){
+    out += `The search for a culprit was too large to finish, so there is `
+         + `no shortlist. A good player is lying, or an entry is wrong.`;
+  } else {
+    out += `No single entry accounts for it — removing any one of them still `
+         + `leaves nothing. That usually means two entries disagree, or a `
+         + `good player is lying.`;
+    (d.unsupported||[]).forEach(u=>{
+      out += `<div style="margin-top:8px"><b>Could this be a ${esc(u.name)} game?</b> `
+           + `${esc(u.why)} ${esc(u.signal||"")} The solver will not try to `
+           + `answer one — it is raising the possibility, not claiming it.</div>`;
+    });
+  }
+  return out + `</div>`;
+}
+
+/* ---------- how much of this is guesswork ---------- */
+async function doSensitivity(){
+  const btn=$("#shake"); const was=btn.textContent;
+  btn.disabled=true; btn.textContent="working…";
+  $("#error").innerHTML="";
+  try{
+    // Solved here like everything else. It re-solves the board a
+    // dozen times over, so give the browser a moment to paint the
+    // waiting state first.
+    await new Promise(done => setTimeout(done, 0));
+    const data = solver.guessworkFor({
+      n_players:S.n, allow_good_lies:false,
+      players:S.players.slice(0,S.n), infos:S.infos,
+      quiet_nights:S.quiet, script:S.script, fabled:S.fabled });
+    if(data.error){ $("#error").innerHTML=`<div class="err">${esc(data.error)}</div>`; return; }
+    SHAKE=data.rows; draw();
+    $("#samples").innerHTML=`<div class="pane parchment">
+      <h2 style="font-size:14px;color:var(--crimson-deep)">How much is guesswork</h2>
+      <div class="rule"></div>
+      <div class="hint" style="margin-bottom:8px">Each seat re-solved across the plausible
+      range of every judgement call. A narrow band means the evidence decided it; a wide one
+      means one of my guesses did, and it says which.</div>
+      ${data.rows.map(r=>`<div class="bar-row"><div class="lab">
+        <span>Seat ${r.player+1}</span>
+        <span>${r.evil_pct.toFixed(0)}% &nbsp; <b style="color:${
+          r.swing>10?"var(--crimson)":"var(--ink-soft)"}">${r.low.toFixed(0)}–${r.high.toFixed(0)}%</b>
+        ${r.swing>4?` <span style="color:var(--ink-soft);font-style:italic">${esc(r.driver)}</span>`:""}</span>
+      </div></div>`).join("")}</div>`;
+  }catch(e){
+    $("#error").innerHTML=`<div class="err">Could not reach the solver.</div>`;
+  }finally{ btn.disabled=false; btn.textContent=was; }
+}
+
+/* ---------- solving ---------- */
+async function doSolve(){
+  $("#error").innerHTML=""; $("#samples").innerHTML="";
+  $("#count-cap").textContent="working…";
+  const payload={ n_players:S.n, allow_good_lies:false,
+                  players:S.players.slice(0,S.n), infos:S.infos,
+                  quiet_nights:S.quiet, script:S.script, fabled:S.fabled };
+  try{
+    // Solved here rather than asked for. A big board takes a moment, so
+    // yield to the browser first — otherwise the "solving" state never
+    // gets painted and the page just freezes.
+    await new Promise(done => setTimeout(done, 0));
+    const data = solver.solveBoard(payload);
+    if(data.error){
+      $("#error").innerHTML=`<div class="err">${esc(data.error)}</div>`;
+      drawCentre(); return;
+    }
+
+    const snap={ label:`Night ${currentNight()}`, valid:data.valid, legal:data.legal,
+                 rows:data.rows, sampled:!!data.sampled, ess:data.ess||0 };
+    const last=S.history[S.history.length-1];
+    if(last && last.label===snap.label) S.history[S.history.length-1]=snap;
+    else S.history.push(snap);
+    if(S.history.length>12) S.history.shift();
+
+    RESULT=snap; viewing=null; dirty=false;
+
+    if(!data.valid){
+      $("#error").innerHTML = nothingFits(data.diagnosis);
+    } else {
+      $("#samples").innerHTML=`<div class="pane parchment"><h2 style="font-size:14px;color:var(--crimson-deep)">Most plausible worlds</h2>
+        <div class="rule"></div>
+        <div class="samples">${data.samples.map(w=>`<div>${w.map((r,i)=>`${i+1}=${esc(r)}`).join("  ·  ")}</div>`).join("")}</div></div>`;
+    }
+    draw(); save();
+  }catch(e){
+    $("#error").innerHTML=`<div class="err">Could not reach the solver. Is app.py still running?</div>`;
+    drawCentre();
+  }
+}
+</script>
