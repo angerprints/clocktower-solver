@@ -13,7 +13,16 @@
 // laptop awake. Real offline needs https, which means hosting it or
 // wrapping it.
 
-const VERSION = "clocktower-v1";
+// Stamped by `tools/build_site.py` from the contents of everything
+// shipped. It has to change whenever any of them does, and this is the
+// only thing that makes an update reach anybody:
+//
+// A browser decides whether to reinstall a worker by comparing the bytes
+// of *this file* with the copy it already has. Everything below is
+// cache-first, so with a fixed version string a changed page is never
+// fetched, never installed and never activated — the old copy is served
+// for ever and the update looks like it failed to upload.
+const VERSION = "clocktower-cda6aa359c49";
 
 // Listed rather than discovered. A service worker that caches whatever it
 // happens to see ends up with half an application and no way to tell.

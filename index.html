@@ -555,7 +555,23 @@ import * as solver from "./api.mjs";
 // answer is the accurate one.
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {
+    navigator.serviceWorker.register("sw.js").then(reg => {
+      // Ask on every launch. Without this a phone can sit on an old copy
+      // for a day or more, because browsers check for a new worker on
+      // their own schedule.
+      reg.update().catch(() => {});
+      // And when one arrives, take it now rather than on some later
+      // launch — a fresh page paired with a stale solver module is the
+      // one state worse than being out of date.
+      reg.addEventListener("updatefound", () => {
+        const arriving = reg.installing;
+        if(!arriving) return;
+        arriving.addEventListener("statechange", () => {
+          if(arriving.state === "installed" && navigator.serviceWorker.controller)
+            location.reload();
+        });
+      });
+    }).catch(() => {
       // Not a secure origin, or the file is not being served. Neither is
       // worth interrupting anybody over: everything works, it just is
       // not kept for later.
