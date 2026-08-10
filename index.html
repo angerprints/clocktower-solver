@@ -142,6 +142,13 @@ main{
 
 /* ---------- ledger ---------- */
 .ledger-scroll{max-height:calc(100vh - 190px);overflow-y:auto;padding-right:3px}
+/* The line opening a night, above that night's readings — and the one
+   closing off the day beneath them. Between them the ledger reads as the
+   game happened rather than as a list of claims. */
+.night-open{
+  margin:2px 0 8px;font-size:13px;font-style:italic;
+  color:var(--crimson-deep);
+}
 /* The line closing off a day, under that night's readings. */
 .day-foot{
   display:flex;align-items:center;gap:8px;
@@ -1052,6 +1059,36 @@ function currentNight(){
   return day;
 }
 
+/** Who the night took, and who it gave back.
+ *
+ * Nothing here is new information — it is all on the seats already — but
+ * it is on the seats one at a time, and the night is when it matters
+ * together. Returns nothing on a night where neither happened, because
+ * the header already carries the "nobody died" tick.
+ */
+function nightOpener(night){
+  const gone = [], back = [];
+  S.players.slice(0, S.n).forEach((p, seat) => {
+    (p.events || []).forEach(code => {
+      if(+code.slice(1) !== night) return;
+      if(code[0] === "N") gone.push(seat);
+      if(code[0] === "R") back.push(seat);
+    });
+  });
+  if(!gone.length && !back.length) return null;
+
+  const line = document.createElement("div");
+  line.className = "night-open";
+  const names = xs => xs.map(seatName).join(" and ");
+  const said = [];
+  if(gone.length)
+    said.push(`${esc(names(gone))} ${gone.length > 1 ? "were" : "was"} found dead`);
+  if(back.length)
+    said.push(`${esc(names(back))} ${back.length > 1 ? "are" : "is"} back`);
+  line.textContent = said.join("; ");
+  return line;
+}
+
 /** Days the town got through without executing anybody.
  *
  * Which happens more often than not, and is otherwise unrecordable — the
@@ -1681,7 +1718,14 @@ function drawLedger(){
       box.appendChild(note);
     }
 
-    // Everything for this night, then the day that follows it.
+    // What the night itself did, before anything anybody learned from
+    // it. The same idea as the line closing off the day: the ledger
+    // should read as the game happened, and a reading about night three
+    // means something different once you can see who was not there to
+    // hear it.
+    const opened = nightOpener(n);
+    if(opened) box.appendChild(opened);
+
     const here=S.infos.map((r,i)=>[r,i]).filter(([r])=>(r.night||1)===n);
     if(!here.length){
       const e=document.createElement("div"); e.className="empty"; e.textContent="nothing yet";
