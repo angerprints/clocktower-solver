@@ -240,6 +240,7 @@ function readBoard(payload) {
     state: new GameState({
       nPlayers: n, script, claims, certainties, reads, wakes, suspects,
       deaths, resurrections, executions, quietNights: quiet,
+      daysDone: (payload.days_done || []).map(Number),
       fabled: scripts.fabledInPlay(script, payload.fabled || []),
       infos, names: (payload.players || []).map(s => s.name || ""),
     }),

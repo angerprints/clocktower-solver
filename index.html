@@ -142,6 +142,14 @@ main{
 
 /* ---------- ledger ---------- */
 .ledger-scroll{max-height:calc(100vh - 190px);overflow-y:auto;padding-right:3px}
+/* The line closing off a day, under that night's readings. */
+.day-foot{
+  display:flex;align-items:center;gap:8px;
+  margin:2px 0 12px;padding-top:6px;
+  border-top:1px dashed rgba(0,0,0,.14);
+  font-size:13px;color:var(--ink-soft);
+}
+.day-foot.settled{color:var(--crimson-deep);font-style:italic}
 .night-head{
   display:flex;justify-content:space-between;align-items:center;
   margin:12px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--gold);
@@ -598,7 +606,7 @@ const SAVE_VERSION = 1;
 
 function blank(n){
   return {n, players:Array.from({length:15},()=>({name:"",claim:"",events:[],certainty:"",read:0,wake:"",suspect:false})),
-          infos:[], quiet:[], history:[], fabled:[], notes:{},
+          infos:[], quiet:[], done:[], history:[], fabled:[], notes:{},
           open:["ledger"],
           // The script travels with the game. A board saved on a custom
           // script has to stay readable once that file is long gone.
@@ -661,6 +669,7 @@ function load(){
     s.quiet = s.quiet || [];
     s.fabled = s.fabled || [];
     s.notes = s.notes || {};
+    s.done = s.done || [];
     s.open = s.open || ["ledger"];
     s.script = s.script || {name:"Trouble Brewing", author:"", characters:null};
     s.players.forEach(p=>{
@@ -1012,7 +1021,34 @@ function currentNight(){
   (S.quiet || []).forEach(n => { day = Math.max(day, +n); });
   S.players.forEach(p => (p.events || []).forEach(
     c => { day = Math.max(day, +c.slice(1)); }));
+
+  // A day ends when the town has decided. Whether somebody was executed
+  // or nobody was, that day is finished and the game is on the next one.
+  //
+  // Without this the counter stuck: recording an execution on day two
+  // left it *at* day two, so the only statuses on offer were day two's
+  // and there was no way to reach day three without inventing a reading
+  // for night three first.
+  S.players.forEach(p => (p.events || []).forEach(c => {
+    if(c[0] === "X" || c[0] === "S") day = Math.max(day, +c.slice(1) + 1);
+  }));
+  (S.done || []).forEach(d => { day = Math.max(day, +d + 1); });
   return day;
+}
+
+/** Days the town got through without executing anybody.
+ *
+ * Which happens more often than not, and is otherwise unrecordable — the
+ * board had no way to say "that day finished" except by somebody dying
+ * in it.
+ */
+function dayIsDone(day){ return (S.done || []).includes(day); }
+
+function markDayDone(day, done){
+  S.done = (S.done || []).filter(d => d !== day);
+  if(done) S.done.push(day);
+  S.done.sort((a, b) => a - b);
+  touch(); draw(); save();
 }
 
 // What has happened to this seat, asked once so nothing has to pick
@@ -1629,12 +1665,38 @@ function drawLedger(){
       box.appendChild(note);
     }
 
+    // Everything for this night, then the day that follows it.
     const here=S.infos.map((r,i)=>[r,i]).filter(([r])=>(r.night||1)===n);
     if(!here.length){
       const e=document.createElement("div"); e.className="empty"; e.textContent="nothing yet";
       box.appendChild(e);
     }
     here.forEach(([rec,idx])=>box.appendChild(infoCard(rec,idx)));
+
+    // The day that follows, which the ledger had no way to record. An
+    // execution ends a day; so does the town deciding not to. Either way
+    // the game moves on, and until this existed the only way to say so
+    // was for somebody to die.
+    const day=document.createElement("div");
+    day.className="day-foot";
+    const who=S.players.findIndex(p=>eventOn(p,n)&&"XS".includes(eventOn(p,n)[0]));
+    if(who>=0){
+      day.classList.add("settled");
+      const code=eventOn(S.players[who],n);
+      day.textContent=`Day ${n}: ${esc(seatName(who))} was executed`
+        +(code[0]==="S"?" and lived":"");
+    } else {
+      const lab=document.createElement("label");
+      lab.className="quiet"+(dayIsDone(n)?" on":"");
+      lab.title="The day ended with no execution, which is how most days end. Ticking it moves the game on.";
+      const box3=document.createElement("input");
+      box3.type="checkbox"; box3.checked=dayIsDone(n);
+      box3.onchange=e=>markDayDone(n, e.target.checked);
+      lab.appendChild(box3);
+      lab.appendChild(document.createTextNode(`day ${n}: nobody executed`));
+      day.appendChild(lab);
+    }
+    box.appendChild(day);
   }
 }
 
@@ -1847,7 +1909,8 @@ async function doSensitivity(){
     const data = solver.guessworkFor({
       n_players:S.n, allow_good_lies:false,
       players:S.players.slice(0,S.n), infos:S.infos,
-      quiet_nights:S.quiet, script:S.script, fabled:S.fabled });
+      quiet_nights:S.quiet, days_done:S.done,
+      script:S.script, fabled:S.fabled });
     if(data.error){ $("#error").innerHTML=`<div class="err">${esc(data.error)}</div>`; return; }
     SHAKE=data.rows; draw();
     $("#samples").innerHTML=`<div class="pane parchment">
@@ -1873,7 +1936,8 @@ async function doSolve(){
   $("#count-cap").textContent="working…";
   const payload={ n_players:S.n, allow_good_lies:false,
                   players:S.players.slice(0,S.n), infos:S.infos,
-                  quiet_nights:S.quiet, script:S.script, fabled:S.fabled };
+                  quiet_nights:S.quiet, days_done:S.done,
+                  script:S.script, fabled:S.fabled };
   try{
     // Solved here rather than asked for. A big board takes a moment, so
     // yield to the browser first — otherwise the "solving" state never

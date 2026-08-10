@@ -33,6 +33,10 @@ export class GameState {
     this.wakes = opts.wakes || {};
     this.executions = {...(opts.executions || {})};
     this.quietNights = new Set(opts.quietNights || []);
+    // Days the town got through without executing anybody. No world is
+    // ruled out by it, but it says the game *reached* that day, which
+    // bounds how long a lineage can run.
+    this.daysDone = new Set(opts.daysDone || []);
     this.infos = opts.infos || [];
     this.names = opts.names || [];
 
@@ -154,6 +158,7 @@ export class GameState {
     for (const phases of Object.values(this.resurrections || {}))
       phases.forEach(consider);
     for (const night of this.quietNights) consider(`N${night}`);
+    for (const day of this.daysDone) consider(`D${day}`);
     for (const info of this.infos) consider(`N${info.night}`);
     return latest;
   }
