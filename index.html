@@ -902,6 +902,26 @@ function boot(){
     touch(); drawSeats(); save();
   };
 
+  $("#f-suspect").onchange = e => {
+    S.players[selected].suspect = e.target.checked;
+    touch(); drawSeats(); save();
+  };
+
+  // Ticked against whichever day the game has reached, so nobody types a
+  // day number — the same way a death is recorded.
+  const dayTick = (id, field) => {
+    $(id).onchange = e => {
+      const day = currentNight();
+      const p = S.players[selected];
+      p[field] = (p[field] || []).filter(d => d !== day);
+      if(e.target.checked) p[field].push(day);
+      p[field].sort((a, b) => a - b);
+      touch(); drawLedger(); drawSeats(); save();
+    };
+  };
+  dayTick("#f-voted", "voted");
+  dayTick("#f-nominated", "nominated");
+
   draw();
 }
 
