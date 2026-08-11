@@ -38,6 +38,9 @@ const INFO_SOURCES = {
   VirginNomination: "Virgin", GrandmotherInfo: "Grandmother",
   ChambermaidInfo: "Chambermaid", GamblerGuess: "Gambler",
   CourtierChoice: "Courtier",
+  ClockmakerInfo: "Clockmaker", DreamerInfo: "Dreamer",
+  MathematicianInfo: "Mathematician",
+  FlowergirlInfo: "Flowergirl", TownCrierInfo: "TownCrier",
 };
 
 // --------------------------------------------------------------------
@@ -155,11 +158,16 @@ function readBoard(payload) {
   if (!scripts.isPlayable(script))
     return {error: "This script has no Townsfolk, no Minions or no Demon, " +
                    "so there is no game to solve."};
-  const short = scripts.tooSmallFor(script, n);
-  if (short.length)
-    return {error: complaintsAbout(script, n)[0]};
+  // A script short of a team is a *complaint*, not a refusal. The panel
+  // says so when the script is chosen, and the board still solves —
+  // every bag it can make is short of that team and the search says so
+  // by finding fewer worlds, which is more use than a wall.
+  //
+  // This refused instead, and nothing noticed because the corpus check
+  // had its own copy of this reader without the check in it.
 
   const claims = {}, certainties = {}, reads = {}, wakes = {}, suspects = {};
+  const votes = {}, nominations = {};
   const deaths = {}, resurrections = {}, executions = {};
 
   const players = payload.players || [];
@@ -176,6 +184,10 @@ function readBoard(payload) {
     if (seat.certainty) certainties[i] = seat.certainty;
     if (seat.read) reads[i] = Number(seat.read);
     if (seat.suspect) suspects[i] = true;
+    for (const day of seat.voted || [])
+      (votes[day] = votes[day] || new Set()).add(i);
+    for (const day of seat.nominated || [])
+      (nominations[day] = nominations[day] || new Set()).add(i);
     if (seat.wake) wakes[i] = seat.wake;
 
     const events = [...asList(seat.events)];
@@ -241,6 +253,7 @@ function readBoard(payload) {
       nPlayers: n, script, claims, certainties, reads, wakes, suspects,
       deaths, resurrections, executions, quietNights: quiet,
       daysDone: (payload.days_done || []).map(Number),
+      votes, nominations,
       fabled: scripts.fabledInPlay(script, payload.fabled || []),
       infos, names: (payload.players || []).map(s => s.name || ""),
     }),
@@ -297,8 +310,14 @@ function whyNothingFits(state) {
   return out;
 }
 
-/** Answer a board, in the shape the page has always been handed. */
-export function solveBoard(payload) {
+/** Answer a board, in the shape the page has always been handed.
+ *
+ * `maxWorlds` is where sampling begins. The page leaves it alone and
+ * gets an estimate on a board too big to walk; the corpus check raises
+ * it, because a sampled answer and an exact one cannot be compared and
+ * the point there is to compare them.
+ */
+export function solveBoard(payload, {maxWorlds = EXACT_LIMIT} = {}) {
   const read = readBoard(payload);
   if (read.error) return {error: read.error};
   const state = read.state;

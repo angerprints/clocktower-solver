@@ -157,6 +157,11 @@ main{
   font-size:13px;color:var(--ink-soft);
 }
 .day-foot.settled{color:var(--crimson-deep);font-style:italic}
+/* What the table did that day, under the line that closes it. */
+.day-acts{
+  margin:-8px 0 12px;padding-left:2px;
+  font-size:12.5px;color:var(--ink-soft);
+}
 .night-head{
   display:flex;justify-content:space-between;align-items:center;
   margin:12px 0 6px;padding-bottom:3px;border-bottom:1px solid var(--gold);
@@ -525,6 +530,15 @@ footer{padding:0 18px 40px}
         <div class="scale"><b class="g">&#9664; good</b><span class="now" id="read-val">no read</span><b class="e">evil &#9654;</b></div>
       </div>
       <div class="hint" id="read-note" style="margin-top:4px"></div>
+      <div class="rule"></div>
+      <div class="hint" id="day-acts-note"></div>
+      <label class="check"><input type="checkbox" id="f-voted">
+        <span>Voted today</span></label>
+      <label class="check"><input type="checkbox" id="f-nominated">
+        <span>Nominated today</span></label>
+      <div class="hint">Only the Flowergirl and the Town Crier ask about
+        these, and only about the day just gone.</div>
+      <div class="rule"></div>
       <label class="check" style="margin-top:9px">
         <input type="checkbox" id="f-suspect">
         <span>Their information might be wrong</span></label>
@@ -602,11 +616,20 @@ const SCHEMA = {
   GrandmotherInfo: [["target","player"],["role","role:all"]],
   ChambermaidInfo: [["a","player"],["b","player"],["count","number"]],
   GamblerGuess:    [["target","player"],["role","role:all"]],
+  ClockmakerInfo:  [["count","number"]],
+  MathematicianInfo: [["count","number"]],
+  FlowergirlInfo:  [["voted","bool:The Demon voted|The Demon did not"]],
+  TownCrierInfo:   [["nominated","bool:A Minion nominated|No Minion did"]],
+  DreamerInfo:     [["target","player"],["good_role","role:good"],
+                    ["evil_role","role:evil"]],
   CourtierChoice:  [["role","role:all"]],
 };
 const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   GrandmotherInfo:"Grandmother", ChambermaidInfo:"Chambermaid",
-  GamblerGuess:"Gambler", CourtierChoice:"Courtier" };
+  GamblerGuess:"Gambler", CourtierChoice:"Courtier",
+  ClockmakerInfo:"Clockmaker", DreamerInfo:"Dreamer",
+  MathematicianInfo:"Mathematician",
+  FlowergirlInfo:"Flowergirl", TownCrierInfo:"TownCrier" };
 const DAY_EVENTS   = ["SlayerShot","VirginNomination"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin" };
 const TYPE_LABEL   = { SlayerShot:"Slayer shot",
@@ -628,7 +651,8 @@ let selected = null;
 const SAVE_VERSION = 1;
 
 function blank(n){
-  return {n, players:Array.from({length:15},()=>({name:"",claim:"",events:[],certainty:"",read:0,wake:"",suspect:false})),
+  return {n, players:Array.from({length:15},()=>({name:"",claim:"",events:[],certainty:"",read:0,wake:"",suspect:false,
+   voted:[],nominated:[]})),
           infos:[], quiet:[], done:[], history:[], fabled:[], notes:{},
           open:["ledger"],
           // The script travels with the game. A board saved on a custom
@@ -700,6 +724,8 @@ function load(){
       if(p.read===undefined) p.read=0;
       if(p.wake===undefined) p.wake="";
       if(p.suspect===undefined) p.suspect=false;
+      if(!Array.isArray(p.voted)) p.voted=[];
+      if(!Array.isArray(p.nominated)) p.nominated=[];
       // Older saves kept a status, a list of extra deaths and a list of
       // returns in three places, and the status code itself has changed
       // twice. One list now, in the order things happened — and the old
@@ -1030,6 +1056,10 @@ function allRoles(pool){
   if(pool==="townsfolk") return SCRIPT.townsfolk;
   if(pool==="outsiders") return SCRIPT.outsiders;
   if(pool==="minions")   return SCRIPT.minions;
+  // A Dreamer is shown one of each side, so it needs the two sides as
+  // pools rather than the four teams.
+  if(pool==="good")      return [...SCRIPT.townsfolk,...SCRIPT.outsiders];
+  if(pool==="evil")      return [...SCRIPT.minions,...SCRIPT.demons];
   return [...SCRIPT.townsfolk,...SCRIPT.outsiders,...SCRIPT.minions,...SCRIPT.demons];
 }
 function seatName(i){ return S.players[i].name || `Seat ${i+1}`; }
@@ -1057,6 +1087,29 @@ function currentNight(){
   }));
   (S.done || []).forEach(d => { day = Math.max(day, +d + 1); });
   return day;
+}
+
+/** Who voted and who nominated on a given day.
+ *
+ * Nothing here is new — it is ticked on the seats — but it is ticked one
+ * seat at a time, and the day is when it matters together.
+ */
+function dayActs(day){
+  const voted = [], nominated = [];
+  S.players.slice(0, S.n).forEach((p, seat) => {
+    if((p.voted || []).includes(day)) voted.push(seat);
+    if((p.nominated || []).includes(day)) nominated.push(seat);
+  });
+  if(!voted.length && !nominated.length) return null;
+
+  const line = document.createElement("div");
+  line.className = "day-acts";
+  const names = xs => xs.map(seatName).join(", ");
+  const said = [];
+  if(nominated.length) said.push(`${esc(names(nominated))} nominated`);
+  if(voted.length) said.push(`${esc(names(voted))} voted`);
+  line.textContent = said.join("; ");
+  return line;
 }
 
 /** Who the night took, and who it gave back.
@@ -1576,6 +1629,10 @@ function drawInspector(){
 
   $("#f-read").value=+p.read||0;
   $("#f-suspect").checked = !!p.suspect;
+  const day = currentNight();
+  $("#f-voted").checked = (p.voted || []).includes(day);
+  $("#f-nominated").checked = (p.nominated || []).includes(day);
+  $("#day-acts-note").textContent = `Day ${day}`;
   $("#read-val").textContent=readWord(+p.read||0);
   $("#read-note").textContent=readNote(+p.read||0);
 
@@ -1757,6 +1814,12 @@ function drawLedger(){
       day.appendChild(lab);
     }
     box.appendChild(day);
+
+    // Who voted and who nominated that day. Only the Flowergirl and the
+    // Town Crier ask, but the ledger is where the day is written down,
+    // so it belongs beside the execution rather than hidden on a seat.
+    const acts = dayActs(n);
+    if(acts) box.appendChild(acts);
   }
 }
 

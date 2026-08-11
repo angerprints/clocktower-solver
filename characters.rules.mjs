@@ -117,6 +117,18 @@ survivesExecutionRule(function aSoberSailorWalksAway(world, state, day, seat) {
 // What kills
 // --------------------------------------------------------------------
 
+// Demons with a kill rule of their own. A Demon not named here kills the
+// ordinary way, which is the right default: an unmodelled Demon that
+// cannot kill would make every board it appears on impossible, while an
+// unmodelled Demon that kills once a night is merely incomplete.
+export const KILLS_ITS_OWN_WAY = new Set();
+
+/** Say that these Demons are handled by a rule of their own. */
+export const killsItsOwnWay = (...names) =>
+  names.forEach(n => KILLS_ITS_OWN_WAY.add(n));
+
+killsItsOwnWay("Zombuul", "Pukka", "Shabaloth", "Po");
+
 /** The one cause Trouble Brewing has.
  *
  * Fires every night from the second, whether or not anybody wants it to,
@@ -128,7 +140,15 @@ causeRule(function theDemonKills(world, state, night) {
   const demon = world.demonAt(phase);
   if (demon === null) return [];
   // Each Demon that kills differently has its own rule below.
-  if (world.roleAt(demon, phase) !== "Imp") return [];
+  // Each Demon that kills differently has its own rule below, and says
+  // so by registering its name. Everything else kills the ordinary way.
+  //
+  // This used to name the Imp instead, which quietly meant "no Demon on
+  // any script but Trouble Brewing and Bad Moon Rising can kill at all".
+  // Recording a night death on a third script made every world
+  // impossible — an ordinary board reading as a contradiction, which is
+  // much worse than a Demon whose special trick is not modelled yet.
+  if (KILLS_ITS_OWN_WAY.has(world.roleAt(demon, phase))) return [];
   if (!state.aliveSet(phase).has(demon)) return [];
   return [new Cause("Demon", DEMON, allSeats(state),
                     {capacity: 1, mustFire: true})];

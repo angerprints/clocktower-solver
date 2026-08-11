@@ -110,4 +110,5 @@ export const BUILT_IN = Object.fromEntries(
 
 export const TROUBLE_BREWING = BUILT_IN["Trouble Brewing"];
 export const BAD_MOON_RISING = BUILT_IN["Bad Moon Rising"];
+export const SECTS_AND_VIOLETS = BUILT_IN["Sects & Violets"];
 export const DEFAULT = TROUBLE_BREWING;

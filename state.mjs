@@ -37,6 +37,10 @@ export class GameState {
     // ruled out by it, but it says the game *reached* that day, which
     // bounds how long a lineage can run.
     this.daysDone = new Set(opts.daysDone || []);
+    // Who voted, and who nominated, on each day. Only the Flowergirl and
+    // the Town Crier ask, but a day is where the answer lives.
+    this.votes = opts.votes || {};
+    this.nominations = opts.nominations || {};
     this.infos = opts.infos || [];
     this.names = opts.names || [];
 

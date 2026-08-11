@@ -11,7 +11,8 @@
 // statement has been checked.
 
 import {CHARACTERS} from "./catalogue.mjs";
-import {TEAM, evilRegistrations, registersAsRole} from "./roles.mjs";
+import {TEAM, evilRegistrations, isEvil, registersAsRole} from "./roles.mjs";
+import {sourcesOn} from "./impairment.mjs";
 import {possibleCounts} from "./waking.mjs";
 
 const DEMONS = new Set(Object.entries(TEAM)
@@ -208,6 +209,147 @@ export const Ravenkeeper = define("Ravenkeeper", "Ravenkeeper",
     return registersAsRole(w.roleAt(this.target, `N${this.night}`), this.role);
   });
 
+// --- Sects & Violets ---------------------------------------------------
+
+/** Could this seat have shown as a Minion, if the Storyteller liked? */
+const couldBeMinion = (w, seat, phase) =>
+  w.teamAt(seat, phase) === "minion" ||
+  CHARACTERS[w.roleAt(seat, phase)].registers.includes("minion");
+
+/** Is there no way for this seat to have shown as anything else?
+ *
+ * A Spy is a Minion that registers as good, so it can nominate without
+ * the Town Crier hearing a thing. Nobody else on these scripts can.
+ */
+const mustBeMinion = (w, seat, phase) =>
+  w.teamAt(seat, phase) === "minion" &&
+  !CHARACTERS[w.roleAt(seat, phase)].registers.some(t => t !== "minion");
+
+/** Whether the Demon voted during the day just gone.
+ *
+ * Asked on the night after, so a reading on night three is about day
+ * two. Read off the Demon at that day rather than off the deal, because
+ * after a handover the question is about whoever held it then.
+ */
+export const FlowergirlInfo = define("FlowergirlInfo", "Flowergirl",
+  function (w, s) {
+    const day = this.night - 1;
+    if (day < 1) return false;         // there was no day before the first
+    const demon = w.demonAt(`D${day}`);
+    if (demon === null) return !this.voted;
+    const who = (s.votes || {})[day];
+    const voted = !!who && (who.has ? who.has(demon) : who.includes(demon));
+    return voted === !!this.voted;
+  });
+
+/** Whether a Minion nominated during the day just gone.
+ *
+ * A "yes" needs only one nominator who could have shown as a Minion —
+ * the Storyteller chooses how anybody registers. A "no" is the harder
+ * claim: every nominator has to have been able to show as something
+ * else.
+ */
+export const TownCrierInfo = define("TownCrierInfo", "TownCrier",
+  function (w, s) {
+    const day = this.night - 1;
+    if (day < 1) return false;
+    const phase = `D${day}`;
+    const raw = (s.nominations || {})[day];
+    const who = !raw ? [] : (raw.has ? [...raw] : raw);
+    if (this.nominated) return who.some(x => couldBeMinion(w, x, phase));
+    return !who.some(x => mustBeMinion(w, x, phase));
+  });
+
+/** How many seats could have been impaired on this night.
+ *
+ * A range rather than a number, because the solver never decides where a
+ * Poisoner went unless something forces it. What it does know is the
+ * shape: whoever is *always* impaired — anybody holding somebody else's
+ * token, or a whole table a Minstrel has silenced — plus at most one seat
+ * per source that has to land somewhere.
+ *
+ * Every count between the two is reachable, since a source that can hit
+ * a fresh seat can also hit one already taken.
+ */
+export function possibleImpairmentCounts(world, state, night) {
+  const always = new Set();
+  const movable = [];
+  for (const source of sourcesOn(world, state, night)) {
+    if (source.freeForEveryone()) for (const seat of source.seats) always.add(seat);
+    else movable.push(source);
+  }
+  let most = always.size;
+  for (const source of movable) {
+    let fresh = 0;
+    for (const seat of source.seats) if (!always.has(seat)) fresh += 1;
+    most += Math.min(source.capacity, fresh);
+  }
+  return [always.size, Math.min(most, state.nPlayers)];
+}
+
+/** How many abilities went wrong tonight.
+ *
+ * A reading about the solver's own workings rather than about the table,
+ * and the only one of its kind.
+ *
+ * Two approximations, both the permissive kind — they rule out numbers
+ * that cannot happen and never rule out a world that could. It checks
+ * the count is *reachable* rather than forcing the plan to produce it;
+ * and it uses the night's own span, where "since dawn" straddles the day
+ * before and tonight.
+ */
+export const MathematicianInfo = define("MathematicianInfo", "Mathematician",
+  function (w, s) {
+    // It can only count what the solver knows how to break. A script
+    // with characters still to be built may have ways to go wrong that
+    // nothing here has heard of, and ruling out a number on that basis
+    // would throw away worlds that really happened.
+    if (s.script.keys.some(k => !CHARACTERS[k].modelled)) return true;
+    const [low, high] = possibleImpairmentCounts(w, s, this.night);
+    return low <= this.count && this.count <= high;
+  });
+
+/** How many steps from the Demon to its nearest Minion.
+ *
+ * Around the circle, the shorter way, and the nearest Minion when there
+ * is more than one — so a Minion sitting beside the Demon is 1.
+ *
+ * First night only, which is why the dead never come into it. Read off
+ * the true Demon and the true Minions rather than off how anybody
+ * registers: it is the Storyteller counting seats, not a character
+ * reading anybody.
+ */
+export const ClockmakerInfo = define("ClockmakerInfo", "Clockmaker",
+  function (w) {
+    const phase = `N${this.night}`;
+    const demon = w.demonAt(phase);
+    if (demon === null) return false;
+    const n = w.roles.length;
+    let nearest = null;
+    for (let m = 0; m < n; m++) {
+      if (w.teamAt(m, phase) !== "minion") continue;
+      const steps = Math.min((m - demon + n) % n, (demon - m + n) % n);
+      if (nearest === null || steps < nearest) nearest = steps;
+    }
+    return nearest !== null && nearest === this.count;
+  });
+
+/** One good character and one evil one, and the target is one of them.
+ *
+ * Two constraints rather than one, which is what makes it strong: the
+ * pair has to be one of each side, *and* the seat asked about has to be
+ * one of the two. The Storyteller picks which is true and never says, so
+ * this holds whichever way round it was.
+ */
+export const DreamerInfo = define("DreamerInfo", "Dreamer",
+  function (w) {
+    // One of each side, or the reading is not a Dreamer's at all.
+    if (isEvil(this.good_role) || !isEvil(this.evil_role)) return false;
+    const actual = w.roleAt(this.target, `N${this.night}`);
+    return registersAsRole(actual, this.good_role) ||
+           registersAsRole(actual, this.evil_role);
+  });
+
 // --- Bad Moon Rising ---------------------------------------------------
 
 /** Shown a good player and the character they hold.
@@ -308,6 +450,8 @@ export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
   Undertaker, Ravenkeeper, GrandmotherInfo, ChambermaidInfo, GamblerGuess,
   CourtierChoice, VirginNomination, SlayerShot,
+  ClockmakerInfo, DreamerInfo, MathematicianInfo,
+  FlowergirlInfo, TownCrierInfo,
 };
 
 /** Build a reading from the shape the page posts. */

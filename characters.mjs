@@ -331,19 +331,293 @@ export const DATA = {
    "modelled": false,
    "note": "it changes how the game is won rather than what happens on the board — no deaths, no readings, nothing to reason about. What it does do is let play carry on after the Demon is executed, and that much is modelled"
   },
-  "Noble": {
-   "id": "noble",
-   "name": "Noble",
+  "Clockmaker": {
+   "id": "clockmaker",
+   "name": "Clockmaker",
    "team": "townsfolk",
    "wake": [
     "first"
    ],
-   "modelled": false,
-   "note": "its first-night reading is not checked"
+   "nights": "first"
   },
-  "Clockmaker": {
-   "id": "clockmaker",
-   "name": "Clockmaker",
+  "Dreamer": {
+   "id": "dreamer",
+   "name": "Dreamer",
+   "team": "townsfolk",
+   "wake": [
+    "every"
+   ],
+   "chooses": true,
+   "nights": "every"
+  },
+  "SnakeCharmer": {
+   "id": "snakecharmer",
+   "name": "Snake Charmer",
+   "team": "townsfolk",
+   "wake": [
+    "every"
+   ],
+   "modelled": false,
+   "note": "choosing the Demon swaps character and side both ways, and leaves the new Snake Charmer poisoned for the rest of the game",
+   "chooses": true,
+   "nights": "every"
+  },
+  "Mathematician": {
+   "id": "mathematician",
+   "name": "Mathematician",
+   "team": "townsfolk",
+   "wake": [
+    "every"
+   ],
+   "nights": "every"
+  },
+  "Flowergirl": {
+   "id": "flowergirl",
+   "name": "Flowergirl",
+   "team": "townsfolk",
+   "wake": [
+    "other"
+   ],
+   "nights": "other"
+  },
+  "TownCrier": {
+   "id": "towncrier",
+   "name": "Town Crier",
+   "team": "townsfolk",
+   "wake": [
+    "other"
+   ],
+   "nights": "other"
+  },
+  "Oracle": {
+   "id": "oracle",
+   "name": "Oracle",
+   "team": "townsfolk",
+   "wake": [
+    "other"
+   ],
+   "modelled": false,
+   "note": "how many of the dead are evil",
+   "nights": "other"
+  },
+  "Savant": {
+   "id": "savant",
+   "name": "Savant",
+   "team": "townsfolk",
+   "wake": [
+    "never"
+   ],
+   "modelled": false,
+   "note": "two statements a day, one true and one false — and under a Vortox both are false"
+  },
+  "Seamstress": {
+   "id": "seamstress",
+   "name": "Seamstress",
+   "team": "townsfolk",
+   "wake": [
+    "never",
+    "sometimes"
+   ],
+   "modelled": false,
+   "note": "once per game: whether two players share a side",
+   "chooses": true,
+   "nights": "conditional"
+  },
+  "Philosopher": {
+   "id": "philosopher",
+   "name": "Philosopher",
+   "team": "townsfolk",
+   "wake": [
+    "never",
+    "sometimes"
+   ],
+   "modelled": false,
+   "note": "once per game it gains another character's ability, and drunks whoever already had it",
+   "chooses": true,
+   "nights": "conditional"
+  },
+  "Artist": {
+   "id": "artist",
+   "name": "Artist",
+   "team": "townsfolk",
+   "wake": [
+    "never"
+   ],
+   "modelled": false,
+   "note": "once per game, a yes-or-no question to the Storyteller"
+  },
+  "Juggler": {
+   "id": "juggler",
+   "name": "Juggler",
+   "team": "townsfolk",
+   "wake": [
+    "never",
+    "sometimes"
+   ],
+   "modelled": false,
+   "note": "guesses in the day and learns that night how many were right",
+   "nights": "conditional"
+  },
+  "Sage": {
+   "id": "sage",
+   "name": "Sage",
+   "team": "townsfolk",
+   "wake": [
+    "never",
+    "sometimes"
+   ],
+   "modelled": false,
+   "note": "killed by the Demon, it learns two players, one of them the Demon",
+   "nights": "conditional"
+  },
+  "Mutant": {
+   "id": "mutant",
+   "name": "Mutant",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ],
+   "modelled": false,
+   "note": "it may be executed for claiming to be an Outsider, which is a Storyteller's choice and leaves no other mark"
+  },
+  "Sweetheart": {
+   "id": "sweetheart",
+   "name": "Sweetheart",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ],
+   "modelled": false,
+   "note": "somebody is drunk from when it dies, and nobody is told who"
+  },
+  "Barber": {
+   "id": "barber",
+   "name": "Barber",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ],
+   "modelled": false,
+   "note": "if it died today the Demon may swap two players' characters"
+  },
+  "Klutz": {
+   "id": "klutz",
+   "name": "Klutz",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ],
+   "modelled": false,
+   "note": "on dying it must choose a player, and good loses if that player is evil — a win condition rather than a board"
+  },
+  "EvilTwin": {
+   "id": "eviltwin",
+   "name": "Evil Twin",
+   "team": "minion",
+   "wake": [
+    "first"
+   ],
+   "modelled": false,
+   "note": "it and one good player know each other, and good cannot win while both live",
+   "nights": "first"
+  },
+  "Witch": {
+   "id": "witch",
+   "name": "Witch",
+   "team": "minion",
+   "wake": [
+    "every"
+   ],
+   "modelled": false,
+   "note": "whoever it cursed dies if they nominate",
+   "chooses": true,
+   "nights": "every"
+  },
+  "Cerenovus": {
+   "id": "cerenovus",
+   "name": "Cerenovus",
+   "team": "minion",
+   "wake": [
+    "every"
+   ],
+   "modelled": false,
+   "note": "it makes somebody claim a character on pain of execution, which is a social constraint rather than a board one",
+   "chooses": true,
+   "nights": "every"
+  },
+  "PitHag": {
+   "id": "pithag",
+   "name": "Pit-Hag",
+   "team": "minion",
+   "wake": [
+    "every"
+   ],
+   "modelled": false,
+   "note": "it turns a player into a character not in play, on any night and for no reason the table sees",
+   "chooses": true,
+   "nights": "every"
+  },
+  "FangGu": {
+   "id": "fanggu",
+   "name": "Fang Gu",
+   "team": "demon",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "setup": [
+    {
+     "townsfolk": -1,
+     "outsider": 1
+    }
+   ],
+   "modelled": false,
+   "note": "killing an Outsider makes them the Fang Gu instead, and it dies in their place",
+   "chooses": true,
+   "nights": "other"
+  },
+  "Vigormortis": {
+   "id": "vigormortis",
+   "name": "Vigormortis",
+   "team": "demon",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "modelled": false,
+   "note": "Minions it kills keep their abilities, and each drunks a neighbouring Townsfolk",
+   "chooses": true,
+   "nights": "other"
+  },
+  "NoDashii": {
+   "id": "nodashii",
+   "name": "No Dashii",
+   "team": "demon",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "modelled": false,
+   "note": "its two nearest Townsfolk are poisoned all game",
+   "chooses": true,
+   "nights": "other"
+  },
+  "Vortox": {
+   "id": "vortox",
+   "name": "Vortox",
+   "team": "demon",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "modelled": false,
+   "note": "Townsfolk abilities yield false information, and evil wins on any day nobody is executed",
+   "chooses": true,
+   "nights": "other"
+  },
+  "Noble": {
+   "id": "noble",
+   "name": "Noble",
    "team": "townsfolk",
    "wake": [
     "first"
@@ -519,17 +793,6 @@ export const DATA = {
    "chooses": true,
    "nights": "conditional"
   },
-  "Artist": {
-   "id": "artist",
-   "name": "Artist",
-   "team": "townsfolk",
-   "wake": [
-    "never",
-    "sometimes"
-   ],
-   "modelled": false,
-   "note": "its question is not modelled"
-  },
   "Ogre": {
    "id": "ogre",
    "name": "Ogre",
@@ -662,6 +925,33 @@ export const DATA = {
    "Pukka",
    "Shabaloth",
    "Po"
+  ],
+  "Sects & Violets": [
+   "Clockmaker",
+   "Dreamer",
+   "SnakeCharmer",
+   "Mathematician",
+   "Flowergirl",
+   "TownCrier",
+   "Oracle",
+   "Savant",
+   "Seamstress",
+   "Philosopher",
+   "Artist",
+   "Juggler",
+   "Sage",
+   "Mutant",
+   "Sweetheart",
+   "Barber",
+   "Klutz",
+   "EvilTwin",
+   "Witch",
+   "Cerenovus",
+   "PitHag",
+   "FangGu",
+   "Vigormortis",
+   "NoDashii",
+   "Vortox"
   ]
  },
  "setup": {
