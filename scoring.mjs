@@ -15,7 +15,8 @@ import {explainNight} from "./deaths.mjs";
 import {planNight, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {ABSENT, ARBITRARY, TEAM, abilityState, isEvil} from "./roles.mjs";
+import {ABSENT, ARBITRARY, INVERTED, TEAM, abilityState, isEvil}
+  from "./roles.mjs";
 import {Timeline, change} from "./worlds.mjs";
 import {inBag, survivalsOf} from "./characters.rules.mjs";
 
@@ -110,11 +111,79 @@ export function possibleTimelines(world, state, cap = 48) {
   return stories;
 }
 
-/** The Imp kills itself and a Minion takes over. */
+// The Demon may swap two players when a Barber dies, and mostly does
+// not — a deliberate play with a cost, not the default.
+export const BARBER_SWAP_PENALTY = 0.15;
+
+/** The Barber died today, so tonight the Demon may swap two players.
+ *
+ * Characters only — a swapped player keeps their side, so a good player
+ * can end up holding a Minion's character. Rare, legal, and the reason
+ * `Change` keeps its two halves separate.
+ *
+ * Anchored to the Barber's death. A "may", so doing nothing comes first,
+ * because it is what usually happened.
+ */
+transitionRule(function aBarberLetsTheDemonSwapTwo(world, state) {
+  if (!inBag(state, "Barber")) return [[[], 1.0]];
+  const barber = world.find("Barber");
+  if (barber === null) return [[[], 1.0]];
+
+  const stories = [[[], 1.0]];
+  for (const phase of state.diedAt(barber)) {
+    const day = parseInt(phase.slice(1), 10);
+    const night = "NDEX".indexOf(phase[0].toUpperCase()) > 0
+      ? `N${day + 1}` : `N${day}`;
+    if (phaseIndex(night) > phaseIndex(state.finalPhase())) continue;
+    for (let first = 0; first < state.nPlayers; first++)
+      for (let second = first + 1; second < state.nPlayers; second++) {
+        const a = world.roleAt(first, night), b = world.roleAt(second, night);
+        if (a === b) continue;
+        stories.push([[change(night, first, b), change(night, second, a)],
+                      BARBER_SWAP_PENALTY]);
+      }
+  }
+  return stories;
+});
+
+// Demons that hand the star on when they kill themselves. The Imp is the
+// only one in print, and saying so out loud matters: this used to be
+// offered to *every* Demon dying at night, so a Zombuul or a Fang Gu
+// that fell to a Slayer or an Assassin could quietly pass to a Minion
+// and the game carried on. Good had actually won.
+export const STARPASSES = new Set(["Imp"]);
+
+/** The Imp kills itself and a Minion takes over.
+ *
+ * Only the Imp. Every other Demon dying at night is the end of it —
+ * unless that Demon has a rule of its own, like the Fang Gu jumping into
+ * an Outsider.
+ */
 heirRule(function aMinionCatchesTheStar(view, state, phase, character) {
-  if (phase[0].toUpperCase() !== "N") return [];
+  if (phase[0].toUpperCase() !== "N" || !STARPASSES.has(character)) return [];
   return starpassHeirs(view, state, phase)
     .map(seat => change(phase, seat, character));
+});
+
+/** The Fang Gu killed an Outsider, and they took its place.
+ *
+ * Not a death and a replacement: the Outsider *lives*, turns evil and
+ * becomes the Fang Gu, and the old one dies instead. So the table sees
+ * exactly one body — the Demon's own seat — which is why this belongs
+ * with the handovers rather than with the kills.
+ *
+ * Once per game, so it is offered only while the star is still where it
+ * was dealt.
+ */
+heirRule(function anOutsiderBecomesTheFangGu(view, state, phase, character) {
+  if (character !== "FangGu" || phase[0].toUpperCase() !== "N") return [];
+  if (view.demonAt(phase) !== view.demonAt("N1")) return [];
+  const alive = state.aliveSet(phase);
+  const out = [];
+  for (let seat = 0; seat < state.nPlayers; seat++)
+    if (alive.has(seat) && view.teamAt(seat, phase) === "outsider")
+      out.push(change(phase, seat, "FangGu", "evil"));
+  return out;
 });
 
 /** The Demon killed in daylight, with her standing by. */
@@ -153,12 +222,21 @@ export function demonLineages(world, state, cap = 24) {
 
   const found = [];
 
-  const walk = (view, holder, soFar) => {
+  const walk = (view, holder, soFar, after = -1, held = new Set()) => {
     if (found.length >= cap) return;
     // The first time they went down. A Demon raised afterwards is
     // somebody else's problem to model; the star passed when it fell.
     const phases = state.diedAt(holder);
     const phase = phases.length ? phases[0] : null;
+    // A handover cannot happen *earlier* than the one before it, and no
+    // seat can hold the star twice. Both were true by construction until
+    // a Barber let the Demon swap characters around, and the walk went
+    // round for ever. The same phase is fine: a Shabaloth kills twice, so
+    // the Demon and its heir can fall together.
+    if (phase !== null && (phaseIndex(phase) < after || held.has(holder))) {
+      found.push(soFar);
+      return;
+    }
     if (phase === null) {
       found.push(soFar);                  // they held it to the end
       return;
@@ -178,13 +256,66 @@ export function demonLineages(world, state, cap = 24) {
     for (const move of moves) {
       if (move.seat === null) continue;
       const grown = [...soFar, move];
-      walk(new Timeline(world, grown), move.seat, grown);
+      walk(new Timeline(world, grown), move.seat, grown,
+           phaseIndex(phase), new Set([...held, holder]));
     }
   };
 
   walk(world, start, []);
   return found;
 }
+
+/** Recorded creations, applied from the night they happened.
+ *
+ * The side is carried over rather than taken from the new character: a
+ * Townsfolk turned into the Poisoner keeps its own side and gains the
+ * ability, which is what makes a good Poisoner possible.
+ */
+transitionRule(function aPitHagMakesSomebodyElse(world, state) {
+  const made = state.infos.filter(
+    i => i.sourceRole === "PitHag" && i.role);
+  if (!made.length) return [[[], 1.0]];
+  const changes = made.map(info => {
+    const phase = `N${info.night}`;
+    const side = world.evilAt(info.target, phase) ? "evil" : "good";
+    return change(phase, info.target, info.role, side);
+  });
+  return [[changes, 1.0]];
+});
+
+/** Choosing the Demon swaps character and side, both ways.
+ *
+ * The only handover where the star moves *sideways* rather than on: the
+ * Snake Charmer becomes the Demon, and the Demon becomes a good Snake
+ * Charmer — poisoned from that moment for the rest of the game.
+ *
+ * Applied from the *day* after, not the night itself. The swap happens
+ * because the ability worked, so it was still the Snake Charmer when it
+ * did; writing the change at the night made the speaker stop holding
+ * that character at the moment its row is attributed, and the row read
+ * as invented.
+ */
+transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
+  const swaps = state.infos.filter(
+    i => i.sourceRole === "SnakeCharmer" && i.swapped);
+  if (!swaps.length) return [[[], 1.0]];
+
+  let stories = [[[], 1.0]];
+  for (const info of swaps) {
+    const phase = `N${info.night}`;
+    const charmer = world.findAt("SnakeCharmer", phase);
+    const demon = world.demonAt(phase);
+    if (charmer === null || demon === null || charmer === demon) continue;
+    if (info.target !== demon) continue;   // they pointed at somebody else
+    const after = `D${info.night}`;
+    stories = stories.map(([changes, cost]) => [
+      [...changes,
+       change(after, charmer, world.roleAt(demon, phase), "evil"),
+       change(after, demon, "SnakeCharmer", "good")],
+      cost]);
+  }
+  return stories;
+});
 
 /** The Demon dying, as a transition rule.
  *
@@ -286,6 +417,31 @@ function plainFailures(world, state, outcome = {}) {
   // *working*. A poisoned or drunk Saint is executed and the game carries
   // on, so an execution that killed somebody does not rule the Saint out;
   // it says something had to have stopped them.
+  // A day that ended with nobody executed, and the game carried on.
+  //
+  // Evil wins on the spot if a Vortox is working when that happens, so
+  // play continuing says there was not one — that day. Per day rather
+  // than per game, because a Pit-Hag can bring one along later.
+  for (const day of [...state.daysDone].sort((a, b) => a - b)) {
+    if ((state.executions || {})[day] !== undefined) continue;
+    const vortox = world.findAt("Vortox", `D${day}`);
+    if (vortox === null || !state.aliveSet(`D${day}`).has(vortox)) continue;
+    fail(day, vortox);
+  }
+
+  // Two deaths that name a character nobody chose to reveal, and the one
+  // who did it has to have been working.
+  for (const [day, ] of Object.entries(state.witchDeaths || {})) {
+    const witch = world.findAt("Witch", `N${day}`);
+    if (witch === null || !state.aliveSet(`N${day}`).has(witch)) return null;
+    (working[day] = working[day] || new Set()).add(witch);
+  }
+  for (const [day, ] of Object.entries(state.madnessExecutions || {})) {
+    const who = world.findAt("Cerenovus", `N${day}`);
+    if (who === null || !state.aliveSet(`N${day}`).has(who)) return null;
+    (working[day] = working[day] || new Set()).add(who);
+  }
+
   for (const day of Object.keys(state.executions || {}).map(Number)) {
     const seat = state.executionDeath(day);
     if (seat === null) continue;
@@ -340,13 +496,35 @@ function plainFailures(world, state, outcome = {}) {
     let seat = seats[idx];
     if (seat === null) {
       seat = world.findAt(role, phase);
+      if (seat === null)
+        // Nobody holds it — but a Philosopher may be working it.
+        for (const [who, [taken, since]]
+             of Object.entries(state.philosophies()))
+          if (taken === role && world.roleAt(+who, phase) === "Philosopher"
+              && phaseIndex(phase) >= phaseIndex(since)) {
+            seat = +who;
+            break;
+          }
       if (seat === null) {
         const at = world.believes.indexOf(role);
         seat = at === -1 ? null : at;
       }
     }
+    // A Philosopher works two abilities at once, so a seat holding one
+    // may be the source of the other's readings from the night it took
+    // them.
+    let gained = null;
+    const took = state.philosophies()[seat];
+    if (took) gained = [took[0], took[1],
+                        phaseIndex(phase) >= phaseIndex(took[1])];
+    // A Vortox in play makes every Townsfolk ability yield something
+    // false. Alive, because a dead Demon does nothing; its own
+    // droisoning is left to the plan rather than decided here.
+    const vortox = world.findAt("Vortox", phase);
+    const vortoxed = vortox !== null && state.aliveSet(phase).has(vortox);
     const held = seat === null ? ABSENT
-                               : abilityState(world, seat, role, phase);
+                               : abilityState(world, seat, role, phase,
+                                              gained, vortoxed);
     if (held === ABSENT) {
       invented *= inventionCost(info);    // no such source in this world
       outcome[idx] = INVENTED;
@@ -358,6 +536,31 @@ function plainFailures(world, state, outcome = {}) {
       outcome[idx] = INVENTED;
       return;
     }
+    if (held === INVERTED && !info.weighed(state)) {
+      // A row that says nothing goes on saying nothing. Left as written,
+      // this would read its default "true" as a claim and demand the
+      // Vortox had been droisoned.
+      outcome[idx] = HELD;
+      return;
+    }
+
+    if (held === INVERTED) {
+      // It had to come out false. A reading that is *true* means the
+      // Vortox itself was not working that night, which the plan can pay
+      // for like any other droisoning.
+      //
+      // A false one is left alone rather than charged for — an
+      // approximation worth naming: on a night mixing true and false
+      // readings this takes the Vortox as droisoned and does not
+      // additionally charge the false ones. Permissive, which keeps
+      // worlds that happened rather than ruling them out.
+      if (info.holds(world, state, null, seat)) {
+        fail(info.night, vortox);
+        outcome[idx] = EXCUSED;
+      } else outcome[idx] = HELD;
+      return;
+    }
+
     if (info.type === "FortuneTeller") {
       // Whether it held depends on where the red herring was, which is
       // settled later. Left open until then.

@@ -41,6 +41,11 @@ const INFO_SOURCES = {
   ClockmakerInfo: "Clockmaker", DreamerInfo: "Dreamer",
   MathematicianInfo: "Mathematician",
   FlowergirlInfo: "Flowergirl", TownCrierInfo: "TownCrier",
+  OracleInfo: "Oracle", SeamstressInfo: "Seamstress",
+  JugglerInfo: "Juggler", SavantInfo: "Savant", ArtistInfo: "Artist",
+  SageInfo: "Sage", KlutzChoice: "Klutz",
+  EvilTwinPair: "EvilTwin", PhilosopherChoice: "Philosopher",
+  SnakeCharmerChoice: "SnakeCharmer", PitHagChoice: "PitHag",
 };
 
 // --------------------------------------------------------------------
@@ -71,7 +76,8 @@ export function scriptMeta(script, nPlayers = null) {
     // play, so the solver is told rather than working it out.
     fabled: script.fabled.map(k => ({key: k, name: show(k)})),
     unmodelled: scripts.unmodelled(script)
-      .map(c => ({key: c.key, name: c.name, note: c.note})),
+      .map(c => ({key: c.key, name: c.name, note: c.note,
+                  handled: c.handled || "fully", settled: !!c.settled})),
   };
 }
 
@@ -168,6 +174,7 @@ function readBoard(payload) {
 
   const claims = {}, certainties = {}, reads = {}, wakes = {}, suspects = {};
   const votes = {}, nominations = {};
+  const witchDeaths = {}, madnessExecutions = {};
   const deaths = {}, resurrections = {}, executions = {};
 
   const players = payload.players || [];
@@ -206,6 +213,15 @@ function readBoard(payload) {
                          `town only executes once a day.`};
         executions[day] = i;
         if (kind === "X") (deaths[i] = deaths[i] || []).push(`D${day}`);
+      } else if (kind === "W") {
+        // Dropped dead as they nominated: a Witch is about.
+        witchDeaths[day] = i;
+        (deaths[i] = deaths[i] || []).push(`D${day}`);
+      } else if (kind === "M") {
+        // Executed for breaking madness: a Cerenovus is about.
+        madnessExecutions[day] = i;
+        executions[day] = i;
+        (deaths[i] = deaths[i] || []).push(`D${day}`);
       } else if (kind === "R") {
         (resurrections[i] = resurrections[i] || []).push(`N${day}`);
       } else {
@@ -232,7 +248,10 @@ function readBoard(payload) {
     // exceptions: the Ravenkeeper is woken *by* dying, a Slayer shot and
     // a Virgin nomination happen in daylight, and a Gambler that guessed
     // wrong is dead *because* it acted.
-    const actedAnyway = ["Ravenkeeper", "SlayerShot", "VirginNomination",
+    // The Sage and the Klutz are woken *by* dying, the same as the
+    // Ravenkeeper.
+    const actedAnyway = ["Ravenkeeper", "SageInfo", "KlutzChoice",
+                         "SlayerShot", "VirginNomination",
                          "GamblerGuess"];
     const speaker = Number(row.player || 0);
     const night = Number(row.night || 1);
@@ -253,7 +272,7 @@ function readBoard(payload) {
       nPlayers: n, script, claims, certainties, reads, wakes, suspects,
       deaths, resurrections, executions, quietNights: quiet,
       daysDone: (payload.days_done || []).map(Number),
-      votes, nominations,
+      votes, nominations, witchDeaths, madnessExecutions,
       fabled: scripts.fabledInPlay(script, payload.fabled || []),
       infos, names: (payload.players || []).map(s => s.name || ""),
     }),

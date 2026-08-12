@@ -97,6 +97,27 @@ export function tooSmallFor(script, nPlayers) {
 export const unmodelled = script =>
   script.keys.map(k => CHARACTERS[k]).filter(c => !c.modelled);
 
+/** How far each character is reasoned about, in three groups.
+ *
+ * "Recorded but not weighed" and "not built yet" look the same from the
+ * outside and are completely different things: a Savant is finished —
+ * its pair of statements can be anything at all, so the words are kept
+ * and shown and that is as far as it will ever go — while a Vortox is
+ * simply not started. One list tells somebody the wrong thing about
+ * both.
+ */
+export function handling(script) {
+  const out = {recorded: [], coming: [], "nothing to read": []};
+  for (const key of script.keys) {
+    const c = CHARACTERS[key];
+    if (c.modelled) continue;
+    if (c.handled === "partly") out.recorded.push(c);
+    else if (c.settled) out["nothing to read"].push(c);
+    else out.coming.push(c);
+  }
+  return out;
+}
+
 export const isPlayable = script =>
   !!(script.townsfolk.length && script.minions.length && script.demons.length);
 

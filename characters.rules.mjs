@@ -47,6 +47,134 @@ function acting(world, state, key, night) {
 const anyDiedAt = (state, phase) =>
   Object.keys(state.deaths || {}).some(who => state.diedAt(who).includes(phase));
 
+/** The nearest Townsfolk each way round the circle.
+ *
+ * By *team*, not by side: a Townsfolk can be evil, and this skips
+ * Outsiders and Minions rather than skipping the evil. The dead are not
+ * skipped either — a dead Townsfolk is still the nearest one.
+ */
+function nearestTownsfolk(world, state, seat, phase) {
+  const n = state.nPlayers;
+  const out = new Set();
+  for (const step of [1, -1])
+    for (let gap = 1; gap < n; gap++) {
+      const other = (seat + step * gap + n * n) % n;
+      if (other === seat) break;
+      if (world.teamAt(other, phase) === "townsfolk") { out.add(other); break; }
+    }
+  return out;
+}
+
+/** Whoever became the Snake Charmer by the swap, from then on.
+ *
+ * The new Demon is untouched; it is the *new Snake Charmer* — the old
+ * Demon — that is poisoned, and permanently. Free, because nothing had
+ * to go right for it.
+ */
+sourceRule(function aSwappedSnakeCharmerIsPoisonedForGood(world, state, night) {
+  if (!inBag(state, "SnakeCharmer")) return [];
+  const out = [];
+  for (const info of state.infos) {
+    if (info.sourceRole !== "SnakeCharmer" || !info.swapped) continue;
+    // From the day after the swap, which is when it took effect.
+    if (phaseIndex(`N${night}`) < phaseIndex(`D${info.night}`)) continue;
+    const seat = world.findAt("SnakeCharmer", `N${night}`);
+    if (seat === null) continue;
+    out.push(new Source("Snake Charmer", new Set([seat]),
+                        {capacity: 1, cost: 1.0, repeatCost: 1.0}));
+  }
+  return out;
+});
+
+/** Its two nearest Townsfolk, all game.
+ *
+ * Nothing is chosen and nothing is lucky, so this costs nothing. It
+ * moves as the table changes shape, and stops the moment the No Dashii
+ * does.
+ */
+sourceRule(function aNoDashiiPoisonsItsTownsfolkNeighbours(world, state, night) {
+  if (!inBag(state, "NoDashii")) return [];
+  const phase = `N${night}`;
+  const seat = world.findAt("NoDashii", phase);
+  if (seat === null || !state.aliveSet(phase).has(seat)) return [];
+  const hit = nearestTownsfolk(world, state, seat, phase);
+  if (!hit.size) return [];
+  return [new Source("No Dashii", hit,
+                     {capacity: hit.size, cost: 1.0, repeatCost: 1.0})];
+});
+
+/** Every Minion it killed keeps its ability and drunks a neighbour.
+ *
+ * A Townsfolk beside the dead Minion, and the Storyteller chooses which
+ * — so the reach is both neighbours and the capacity is one per corpse.
+ * Stops when the Vigormortis does.
+ */
+sourceRule(function aVigormortisPoisonsBesideItsDeadMinions(world, state, night) {
+  if (!inBag(state, "Vigormortis")) return [];
+  const phase = `N${night}`;
+  const seat = world.findAt("Vigormortis", phase);
+  if (seat === null || !state.aliveSet(phase).has(seat)) return [];
+  const out = [];
+  for (let who = 0; who < state.nPlayers; who++) {
+    if (world.teamAt(who, phase) !== "minion") continue;
+    const gone = state.diedAt(who);
+    if (!gone.length) continue;
+    const first = gone.reduce((a, b) => phaseIndex(a) <= phaseIndex(b) ? a : b);
+    if (phaseIndex(first) > phaseIndex(phase)) continue;
+    const beside = nearestTownsfolk(world, state, who, phase);
+    if (beside.size)
+      out.push(new Source("Vigormortis", beside,
+                          {capacity: 1, cost: 1.0, repeatCost: 1.0}));
+  }
+  return out;
+});
+
+/** Taking an ability drunks whoever already had it.
+ *
+ * Only while the Philosopher lives — unlike the Sweetheart, this one
+ * switches off again. And only when somebody actually holds the chosen
+ * character: it may take one nobody has, and then it drunks nobody.
+ */
+sourceRule(function aPhilosopherDrunksWhoeverHadIt(world, state, night) {
+  if (!inBag(state, "Philosopher")) return [];
+  const phase = `N${night}`;
+  const out = [];
+  for (const [who, [taken, since]]
+       of Object.entries(state.philosophies())) {
+    const seat = Number(who);
+    if (phaseIndex(phase) < phaseIndex(since)) continue;
+    if (world.roleAt(seat, phase) !== "Philosopher") continue;
+    if (!state.aliveSet(phase).has(seat)) continue;   // it stops with them
+    const had = world.findAt(taken, phase);
+    if (had === null || had === seat) continue;
+    out.push(new Source("Philosopher", new Set([had]),
+                        {capacity: 1, cost: 1.0, repeatCost: 1.0}));
+  }
+  return out;
+});
+
+/** From the night it dies, one player is drunk for good.
+ *
+ * Any death does it, and the Storyteller never says who — so the reach
+ * is everybody and it never turns off again. That last part is what
+ * makes it different from a Poisoner: a seat it landed on is impaired
+ * for the rest of the game.
+ *
+ * Free rather than priced: the Storyteller picks, and picking somebody
+ * is not a coincidence that needs paying for.
+ */
+sourceRule(function aSweetheartLeavesSomebodyDrunk(world, state, night) {
+  if (!inBag(state, "Sweetheart")) return [];
+  const seat = world.find("Sweetheart");
+  if (seat === null) return [];
+  const gone = state.diedAt(seat);
+  if (!gone.length) return [];
+  const first = gone.reduce((a, b) => phaseIndex(a) <= phaseIndex(b) ? a : b);
+  if (phaseIndex(first) > phaseIndex(`N${night}`)) return [];
+  return [new Source("Sweetheart", allSeats(state),
+                     {capacity: 1, cost: 1.0, repeatCost: 1.0})];
+});
+
 // The Poisoner goes in first, before anything below it. Registration
 // order decides which arrangement an impairment plan settles on when two
 // cost the same, so it is part of the behaviour rather than a detail.
@@ -212,6 +340,26 @@ causeRule(function aPoKillsNoneOrThree(world, state, night) {
   const quiet = !anyDiedAt(state, `N${night - 1}`);
   return [new Cause("Demon", DEMON, allSeats(state),
                     {capacity: quiet ? 3 : 1, mustFire: false})];
+});
+
+/** A Demon was created, so tonight's deaths are the Storyteller's.
+ *
+ * Nought to everybody, and no shield touches them — the same shape as
+ * the Assassin, and for the same reason: the rule says deaths *are*
+ * arbitrary rather than that somebody kills.
+ *
+ * These are the Pit-Hag's, not the Demon's, so a grandchild lost to one
+ * leaves the Grandmother standing and a Soldier is no safer than anyone.
+ */
+causeRule(function aPitHagMakingADemonMakesDeathsArbitrary(world, state, night) {
+  if (!inBag(state, "PitHag")) return [];
+  const made = state.infos.some(
+    i => i.sourceRole === "PitHag" && i.role && i.night === night &&
+         CHARACTERS[i.role] && CHARACTERS[i.role].team === "demon");
+  if (!made) return [];
+  return [new Cause("Pit-Hag", OTHER, allSeats(state),
+                    {capacity: state.nPlayers, cost: 1.0,
+                     unstoppable: true})];
 });
 
 /** A second way to die at night, and not the Demon's.

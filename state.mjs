@@ -41,6 +41,11 @@ export class GameState {
     // the Town Crier ask, but a day is where the answer lives.
     this.votes = opts.votes || {};
     this.nominations = opts.nominations || {};
+    // Two things the table sees plainly, each giving away a character
+    // nobody chose to reveal: a seat dropping dead as it nominates is a
+    // Witch, a seat executed for breaking madness is a Cerenovus.
+    this.witchDeaths = opts.witchDeaths || {};
+    this.madnessExecutions = opts.madnessExecutions || {};
     this.infos = opts.infos || [];
     this.names = opts.names || [];
 
@@ -110,6 +115,18 @@ export class GameState {
     for (let p = 0; p < this.nPlayers; p++) if (this._alive(p, at)) out.push(p);
     this._aliveCache.set(phase, out);
     return out;
+  }
+
+  /** Which character each Philosopher took, and from when. */
+  philosophies() {
+    if (!this._philosophies) {
+      const got = {};
+      for (const info of this.infos)
+        if (info.sourceRole === "Philosopher" && info.role)
+          got[info.player] = [info.role, `N${info.night}`];
+      this._philosophies = got;
+    }
+    return this._philosophies;
   }
 
   aliveSet(phase) {

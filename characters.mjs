@@ -153,7 +153,8 @@ export const DATA = {
     "sometimes"
    ],
    "believes": true,
-   "nights": "conditional"
+   "nights": "conditional",
+   "impairs": true
   },
   "Recluse": {
    "id": "recluse",
@@ -183,7 +184,8 @@ export const DATA = {
     "every"
    ],
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "impairs": true
   },
   "Spy": {
    "id": "spy",
@@ -329,7 +331,9 @@ export const DATA = {
     "never"
    ],
    "modelled": false,
-   "note": "it changes how the game is won rather than what happens on the board — no deaths, no readings, nothing to reason about. What it does do is let play carry on after the Demon is executed, and that much is modelled"
+   "note": "it changes how the game is won rather than what happens on the board — no deaths, no readings, nothing to reason about. What it does do is let play carry on after the Demon is executed, and that much is modelled",
+   "handled": "not",
+   "settled": true
   },
   "Clockmaker": {
    "id": "clockmaker",
@@ -357,10 +361,9 @@ export const DATA = {
    "wake": [
     "every"
    ],
-   "modelled": false,
-   "note": "choosing the Demon swaps character and side both ways, and leaves the new Snake Charmer poisoned for the rest of the game",
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "impairs": true
   },
   "Mathematician": {
    "id": "mathematician",
@@ -396,8 +399,6 @@ export const DATA = {
    "wake": [
     "other"
    ],
-   "modelled": false,
-   "note": "how many of the dead are evil",
    "nights": "other"
   },
   "Savant": {
@@ -408,7 +409,8 @@ export const DATA = {
     "never"
    ],
    "modelled": false,
-   "note": "two statements a day, one true and one false — and under a Vortox both are false"
+   "note": "its pair of statements is kept but not weighed: they can be anything at all, and checking arbitrary claims about a board is a different program from this one",
+   "handled": "partly"
   },
   "Seamstress": {
    "id": "seamstress",
@@ -418,8 +420,6 @@ export const DATA = {
     "never",
     "sometimes"
    ],
-   "modelled": false,
-   "note": "once per game: whether two players share a side",
    "chooses": true,
    "nights": "conditional"
   },
@@ -431,10 +431,9 @@ export const DATA = {
     "never",
     "sometimes"
    ],
-   "modelled": false,
-   "note": "once per game it gains another character's ability, and drunks whoever already had it",
    "chooses": true,
-   "nights": "conditional"
+   "nights": "conditional",
+   "impairs": true
   },
   "Artist": {
    "id": "artist",
@@ -444,7 +443,8 @@ export const DATA = {
     "never"
    ],
    "modelled": false,
-   "note": "once per game, a yes-or-no question to the Storyteller"
+   "note": "its question is kept but not weighed — whatever the player thought to ask, which can be trivial or impossible",
+   "handled": "partly"
   },
   "Juggler": {
    "id": "juggler",
@@ -454,8 +454,6 @@ export const DATA = {
     "never",
     "sometimes"
    ],
-   "modelled": false,
-   "note": "guesses in the day and learns that night how many were right",
    "nights": "conditional"
   },
   "Sage": {
@@ -466,8 +464,6 @@ export const DATA = {
     "never",
     "sometimes"
    ],
-   "modelled": false,
-   "note": "killed by the Demon, it learns two players, one of them the Demon",
    "nights": "conditional"
   },
   "Mutant": {
@@ -478,7 +474,9 @@ export const DATA = {
     "never"
    ],
    "modelled": false,
-   "note": "it may be executed for claiming to be an Outsider, which is a Storyteller's choice and leaves no other mark"
+   "note": "madness leaves no mark on the board: being executed for breaking it looks like any other execution. If the table knows that is what happened, mark the seat as confirmed",
+   "handled": "not",
+   "settled": true
   },
   "Sweetheart": {
    "id": "sweetheart",
@@ -487,8 +485,7 @@ export const DATA = {
    "wake": [
     "never"
    ],
-   "modelled": false,
-   "note": "somebody is drunk from when it dies, and nobody is told who"
+   "impairs": true
   },
   "Barber": {
    "id": "barber",
@@ -496,9 +493,7 @@ export const DATA = {
    "team": "outsider",
    "wake": [
     "never"
-   ],
-   "modelled": false,
-   "note": "if it died today the Demon may swap two players' characters"
+   ]
   },
   "Klutz": {
    "id": "klutz",
@@ -506,9 +501,7 @@ export const DATA = {
    "team": "outsider",
    "wake": [
     "never"
-   ],
-   "modelled": false,
-   "note": "on dying it must choose a player, and good loses if that player is evil — a win condition rather than a board"
+   ]
   },
   "EvilTwin": {
    "id": "eviltwin",
@@ -517,8 +510,6 @@ export const DATA = {
    "wake": [
     "first"
    ],
-   "modelled": false,
-   "note": "it and one good player know each other, and good cannot win while both live",
    "nights": "first"
   },
   "Witch": {
@@ -528,8 +519,6 @@ export const DATA = {
    "wake": [
     "every"
    ],
-   "modelled": false,
-   "note": "whoever it cursed dies if they nominate",
    "chooses": true,
    "nights": "every"
   },
@@ -541,9 +530,11 @@ export const DATA = {
     "every"
    ],
    "modelled": false,
-   "note": "it makes somebody claim a character on pain of execution, which is a social constraint rather than a board one",
+   "note": "madness is a social constraint and leaves no mark of its own. What the table *can* see is somebody executed for breaking it, and marking that death says a Cerenovus is about — which is the only handle there is",
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "handled": "not",
+   "settled": true
   },
   "PitHag": {
    "id": "pithag",
@@ -552,10 +543,9 @@ export const DATA = {
    "wake": [
     "every"
    ],
-   "modelled": false,
-   "note": "it turns a player into a character not in play, on any night and for no reason the table sees",
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "impairs": true
   },
   "FangGu": {
    "id": "fanggu",
@@ -571,8 +561,6 @@ export const DATA = {
      "outsider": 1
     }
    ],
-   "modelled": false,
-   "note": "killing an Outsider makes them the Fang Gu instead, and it dies in their place",
    "chooses": true,
    "nights": "other"
   },
@@ -584,10 +572,9 @@ export const DATA = {
     "every",
     "first"
    ],
-   "modelled": false,
-   "note": "Minions it kills keep their abilities, and each drunks a neighbouring Townsfolk",
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "impairs": true
   },
   "NoDashii": {
    "id": "nodashii",
@@ -597,10 +584,9 @@ export const DATA = {
     "every",
     "first"
    ],
-   "modelled": false,
-   "note": "its two nearest Townsfolk are poisoned all game",
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "impairs": true
   },
   "Vortox": {
    "id": "vortox",
@@ -610,8 +596,6 @@ export const DATA = {
     "every",
     "first"
    ],
-   "modelled": false,
-   "note": "Townsfolk abilities yield false information, and evil wins on any day nobody is executed",
    "chooses": true,
    "nights": "other"
   },
@@ -623,7 +607,8 @@ export const DATA = {
     "first"
    ],
    "modelled": false,
-   "note": "its first-night reading is not checked"
+   "note": "its first-night reading is not checked",
+   "handled": "not"
   },
   "Grandmother": {
    "id": "grandmother",
@@ -642,7 +627,8 @@ export const DATA = {
     "every"
    ],
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "impairs": true
   },
   "Exorcist": {
    "id": "exorcist",
@@ -664,7 +650,8 @@ export const DATA = {
     "other"
    ],
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "impairs": true
   },
   "Courtier": {
    "id": "courtier",
@@ -675,7 +662,8 @@ export const DATA = {
     "first",
     "sometimes"
    ],
-   "nights": "conditional"
+   "nights": "conditional",
+   "impairs": true
   },
   "Professor": {
    "id": "professor",
@@ -713,7 +701,8 @@ export const DATA = {
    "team": "townsfolk",
    "wake": [
     "never"
-   ]
+   ],
+   "impairs": true
   },
   "Chambermaid": {
    "id": "chambermaid",
@@ -756,7 +745,8 @@ export const DATA = {
    "wake": [
     "never"
    ],
-   "alignment_open": true
+   "alignment_open": true,
+   "impairs": true
   },
   "Tinker": {
    "id": "tinker",
@@ -791,7 +781,8 @@ export const DATA = {
     "demon"
    ],
    "chooses": true,
-   "nights": "conditional"
+   "nights": "conditional",
+   "impairs": true
   },
   "Ogre": {
    "id": "ogre",
@@ -801,7 +792,8 @@ export const DATA = {
     "first"
    ],
    "modelled": false,
-   "note": "it turns evil on the first night, which is a change of side the solver would have to be told about"
+   "note": "it turns evil on the first night, which is a change of side the solver would have to be told about",
+   "handled": "not"
   },
   "Atheist": {
    "id": "atheist",
@@ -811,7 +803,8 @@ export const DATA = {
     "never"
    ],
    "modelled": false,
-   "note": "with an Atheist in play the Storyteller may break the rules, so there may be no legal world at all"
+   "note": "with an Atheist in play the Storyteller may break the rules, so there may be no legal world at all",
+   "handled": "not"
   },
   "Legion": {
    "id": "legion",
@@ -821,7 +814,8 @@ export const DATA = {
     "never"
    ],
    "modelled": false,
-   "note": "most of the table is evil, so every team count the search prunes on is wrong"
+   "note": "most of the table is evil, so every team count the search prunes on is wrong",
+   "handled": "not"
   },
   "Riot": {
    "id": "riot",
@@ -831,7 +825,8 @@ export const DATA = {
     "never"
    ],
    "modelled": false,
-   "note": "every Minion is a Demon, and days work differently"
+   "note": "every Minion is a Demon, and days work differently",
+   "handled": "not"
   },
   "Marionette": {
    "id": "marionette",
@@ -851,7 +846,9 @@ export const DATA = {
    ],
    "modelled": false,
    "note": "it believes it is a good character, like the Drunk, but the machinery for that is still tied to the Drunk alone",
-   "nights": "conditional"
+   "nights": "conditional",
+   "impairs": true,
+   "handled": "not"
   },
   "Sentinel": {
    "id": "sentinel",

@@ -124,9 +124,28 @@ export const ABSENT = "absent";
  * statement has been checked — so a poisoned seat looks GENUINE at this
  * point and is excused afterwards.
  */
-export function abilityState(world, seat, role, phase) {
-  if (world.roleAt(seat, phase) === role) return GENUINE;
+export function abilityState(world, seat, role, phase, gained = null,
+                             vortoxed = false) {
+  if (world.roleAt(seat, phase) === role) {
+    // A Vortox does not droison anybody: abilities work, and what they
+    // *yield* is false. Not a weaker GENUINE but a stronger one — a
+    // poisoned Empath may be told anything, a Vortox'd one must be told
+    // something that is not so.
+    //
+    // Read off what the seat *is*: a Drunk holding a Townsfolk token is
+    // an Outsider, so a Vortox leaves it alone.
+    if (vortoxed && TEAM[role] === "townsfolk") return INVERTED;
+    return GENUINE;
+  }
   if (believesAnother(world.roleAt(seat, phase)) &&
       world.believes[seat] === role) return ARBITRARY;
+  // A Philosopher keeps its own character and gains another's ability,
+  // so a seat can be working two at once. `gained` is
+  // (role, from, has-it-arrived) for that seat.
+  if (gained !== null) {
+    const [taken, , arrived] = gained;
+    if (taken === role && arrived &&
+        world.roleAt(seat, phase) === "Philosopher") return GENUINE;
+  }
   return ABSENT;
 }

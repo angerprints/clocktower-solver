@@ -158,6 +158,22 @@ main{
 }
 .day-foot.settled{color:var(--crimson-deep);font-style:italic}
 /* What the table did that day, under the line that closes it. */
+.free{
+  width:100%;padding:6px 8px;border:1px solid var(--gold);border-radius:4px;
+  background:rgba(255,255,255,.35);font:inherit;font-size:13px;color:var(--ink);
+}
+.guesses{display:flex;flex-direction:column;gap:5px}
+.guess{display:flex;gap:5px;align-items:center}
+.guess select{flex:1;min-width:0}
+.guess .x{
+  border:1px solid var(--gold);background:transparent;color:var(--ink-soft);
+  border-radius:4px;width:26px;height:26px;cursor:pointer;line-height:1;
+}
+.add-guess{
+  align-self:flex-start;border:1px dashed var(--gold);background:transparent;
+  color:var(--ink-soft);border-radius:4px;padding:4px 9px;cursor:pointer;
+  font:inherit;font-size:12.5px;
+}
 .day-acts{
   margin:-8px 0 12px;padding-left:2px;
   font-size:12.5px;color:var(--ink-soft);
@@ -618,6 +634,21 @@ const SCHEMA = {
   GamblerGuess:    [["target","player"],["role","role:all"]],
   ClockmakerInfo:  [["count","number"]],
   MathematicianInfo: [["count","number"]],
+  OracleInfo:      [["count","number"]],
+  SageInfo:        [["a","player"],["b","player"]],
+  EvilTwinPair:    [["a","player"],["b","player"]],
+  PhilosopherChoice: [["role","role:good"]],
+  SnakeCharmerChoice: [["target","player"],
+                       ["swapped","bool:We swapped|Nothing happened"]],
+  PitHagChoice:    [["target","player"],["role","role:all"]],
+  KlutzChoice:     [["target","player"]],
+  SeamstressInfo:  [["a","player"],["b","player"],
+                    ["same","bool:Same side|Different sides"]],
+  JugglerInfo:     [["guesses","guesses"],["count","number"]],
+  SavantInfo:      [["first","text:First thing you were told"],
+                    ["second","text:Second thing"]],
+  ArtistInfo:      [["question","text:What you asked"],
+                    ["answer","bool:Yes|No"]],
   FlowergirlInfo:  [["voted","bool:The Demon voted|The Demon did not"]],
   TownCrierInfo:   [["nominated","bool:A Minion nominated|No Minion did"]],
   DreamerInfo:     [["target","player"],["good_role","role:good"],
@@ -629,7 +660,12 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   GamblerGuess:"Gambler", CourtierChoice:"Courtier",
   ClockmakerInfo:"Clockmaker", DreamerInfo:"Dreamer",
   MathematicianInfo:"Mathematician",
-  FlowergirlInfo:"Flowergirl", TownCrierInfo:"TownCrier" };
+  FlowergirlInfo:"Flowergirl", TownCrierInfo:"TownCrier",
+  OracleInfo:"Oracle", SeamstressInfo:"Seamstress", JugglerInfo:"Juggler",
+  SavantInfo:"Savant", ArtistInfo:"Artist",
+  SageInfo:"Sage", KlutzChoice:"Klutz",
+  EvilTwinPair:"EvilTwin", PhilosopherChoice:"Philosopher",
+  SnakeCharmerChoice:"SnakeCharmer", PitHagChoice:"PitHag" };
 const DAY_EVENTS   = ["SlayerShot","VirginNomination"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin" };
 const TYPE_LABEL   = { SlayerShot:"Slayer shot",
@@ -952,16 +988,45 @@ function drawCatalogue(){
     }
     const row=document.createElement("label");
     row.style.cssText="display:block;font-size:13.5px;break-inside:avoid";
-    row.title = c.modelled ? "" : "In the bag and claimable, but its ability "
-                                + "is not reasoned about: " + c.note;
+    // Three marks rather than one, because "not built yet" and "built as
+    // far as it will ever go" are different things to know before
+    // trusting an answer.
+    row.title = c.modelled ? ""
+      : c.handled === "partly"
+        ? "What it says is written down and shown, but not weighed: "
+          + c.note
+      : c.settled
+        ? "Nothing it does leaves a mark the solver could read: " + c.note
+        : "In the bag and claimable, but its ability is not reasoned "
+          + "about yet: " + c.note;
     const b=document.createElement("input");
     b.type="checkbox"; b.value=c.id;
     b.checked = (SCRIPT.characters||[]).includes(c.id);
     row.appendChild(b);
     row.appendChild(document.createTextNode(
-      " " + c.name + (c.modelled ? "" : " *")));
+      " " + c.name + (c.modelled ? ""
+        : c.handled === "partly" ? " \u00b0"     // recorded, not weighed
+        : c.settled ? " \u2013"                  // nothing to read
+        : " *")));                                // not built yet
     box.appendChild(row);
   });
+
+  // What the marks beside the names mean. Three of them, because "not
+  // built yet" and "as far as it goes" are different things to know.
+  const kinds = [];
+  if(box.textContent.includes("*"))
+    kinds.push("* its ability is not reasoned about yet");
+  if(box.textContent.includes("\u00b0"))
+    kinds.push("\u00b0 what it says is written down but not weighed");
+  if(box.textContent.includes("\u2013"))
+    kinds.push("\u2013 nothing it does leaves a mark to read");
+  if(kinds.length){
+    const key=document.createElement("div");
+    key.className="hint";
+    key.style.cssText="margin-top:10px;break-inside:avoid";
+    key.textContent=kinds.join("  \u00b7  ");
+    box.appendChild(key);
+  }
 }
 
 function drawFabled(){
@@ -1549,6 +1614,8 @@ function dayOptions(day){
   out.push(["X"+day, `Executed today, died`]);
   out.push(["S"+day, `Executed today, survived`]);
   out.push(["D"+day, `Died today, not executed`]);
+  out.push(["W"+day, `Died while nominating`]);
+  out.push(["M"+day, `Executed for breaking madness`]);
   if(day > 1) out.push(["R"+day, `Raised night ${day}`]);
   return out;
 }
@@ -1734,7 +1801,10 @@ function addInfo(night){
              player: claimant!==null?claimant:(selected===null?0:selected)};
   SCHEMA[type].forEach(([k,t])=>{
     rec[k] = t.startsWith("role:") ? allRoles(t.split(":")[1])[0]
-           : t.startsWith("bool:") ? false : 0;
+           : t.startsWith("bool:") ? false
+           : t.startsWith("text:") ? ""
+           : t === "guesses" ? []
+           : 0;
   });
   if(type==="VirginNomination"||type==="SlayerShot") rec[SCHEMA[type][1][0]]=true;
   S.infos.push(rec); touch(); drawLedger(); save();
@@ -1909,6 +1979,8 @@ function infoCard(rec, idx){
     else if(t==="number") body.appendChild(num(rec,k,0,15));
     else if(t.startsWith("role:")) body.appendChild(roleSel(rec,k,t.split(":")[1]));
     else if(t.startsWith("bool:")) body.appendChild(boolSel(rec,k,t.split(":")[1]));
+    else if(t.startsWith("text:")) body.appendChild(freeText(rec,k,t.slice(5)));
+    else if(t==="guesses") body.appendChild(guessList(rec,k));
   });
   card.appendChild(body);
 
@@ -1993,6 +2065,56 @@ function boolSel(rec,key,labels){
   s.appendChild(opt("1",yes)); s.appendChild(opt("0",no));
   s.value=rec[key]?"1":"0"; return bind(s,rec,key,v=>v==="1");
 }
+/** A line of writing, kept but not solved.
+ *
+ * The Savant's two statements and the Artist's question are whatever the
+ * player thought to say. Checking arbitrary claims about a board is a
+ * different program from this one, so the words are stored and shown and
+ * the solver does not pretend to weigh them.
+ */
+function freeText(rec,key,placeholder){
+  const i=document.createElement("input");
+  i.type="text"; i.className="free"; i.placeholder=placeholder;
+  i.value=rec[key]||"";
+  i.oninput=()=>{ rec[key]=i.value; touch(); save(); };
+  return i;
+}
+
+/** The Juggler's guesses: up to five seats, each with a character.
+ *
+ * A list rather than five fixed slots, because a Juggler usually guesses
+ * fewer than five and ten empty dropdowns would be worse than useless.
+ */
+function guessList(rec,key){
+  const box=document.createElement("div"); box.className="guesses";
+  const rows=()=> Array.isArray(rec[key]) ? rec[key] : (rec[key]=[]);
+
+  const redraw=()=>{
+    box.innerHTML="";
+    rows().forEach((g,i)=>{
+      const line=document.createElement("div"); line.className="guess";
+      line.appendChild(playerSel(g,"player"));
+      line.appendChild(roleSel(g,"role","all"));
+      const del=document.createElement("button");
+      del.className="x"; del.textContent="\u00d7"; del.title="Remove";
+      del.onclick=()=>{ rows().splice(i,1); touch(); redraw(); drawLedger(); save(); };
+      line.appendChild(del);
+      box.appendChild(line);
+    });
+    if(rows().length<5){
+      const add=document.createElement("button");
+      add.className="add-guess"; add.textContent="+ guess";
+      add.onclick=()=>{
+        rows().push({player:0, role:allRoles("all")[0]});
+        touch(); redraw(); drawLedger(); save();
+      };
+      box.appendChild(add);
+    }
+  };
+  redraw();
+  return box;
+}
+
 function num(rec,key,min,max){
   const n=document.createElement("input");
   n.type="number"; n.min=min; n.max=max; n.value=rec[key]; n.style.width="62px";

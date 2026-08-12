@@ -13,6 +13,7 @@
 import {CHARACTERS} from "./catalogue.mjs";
 import {TEAM, evilRegistrations, isEvil, registersAsRole} from "./roles.mjs";
 import {sourcesOn} from "./impairment.mjs";
+import {phaseIndex} from "./phases.mjs";
 import {possibleCounts} from "./waking.mjs";
 
 const DEMONS = new Set(Object.entries(TEAM)
@@ -84,11 +85,31 @@ class Info {
   sourceSeat(state) {
     if (state.claims[this.player] === this.constructor.sourceRole)
       return this.player;
+    // A Philosopher speaking a reading it gained is not relaying — it is
+    // the source. Without this the row is handed to whoever claims that
+    // character, and the Philosopher's own information ends up judged
+    // against a seat that never said it.
+    const took = state.philosophies()[this.player];
+    if (took && took[0] === this.constructor.sourceRole &&
+        phaseIndex(`N${this.night}`) >= phaseIndex(took[1]))
+      return this.player;
     const holders = Object.entries(state.claims)
       .filter(([, role]) => role === this.constructor.sourceRole)
       .map(([seat]) => Number(seat));
     return holders.length === 1 ? holders[0] : null;
   }
+
+  /** Is this row's content actually checked?
+   *
+   * Nearly always. The exceptions are rows that are *kept* rather than
+   * solved — a Savant's pair, an Artist's question — and the
+   * Mathematician on a script whose droison sources are not all built.
+   *
+   * It matters because those rows answer `holds` with true by default,
+   * and under a Vortox "true" is a claim: it would mean the Vortox was
+   * not working. A row that says nothing must go on saying nothing.
+   */
+  weighed() { return true; }
 
   get sourceRole() { return this.constructor.sourceRole; }
 
@@ -260,6 +281,168 @@ export const TownCrierInfo = define("TownCrierInfo", "TownCrier",
     return !who.some(x => mustBeMinion(w, x, phase));
   });
 
+/** How many of the dead are evil.
+ *
+ * The Empath's question asked of the other half of the table. Counted by
+ * how a seat *registers*, so a dead Recluse may be shown either way.
+ */
+export const OracleInfo = define("OracleInfo", "Oracle",
+  function (w, s) {
+    const phase = `N${this.night}`;
+    const alive = s.aliveSet(phase);
+    const dead = w.roles.map((_r, p) => p).filter(p => !alive.has(p));
+    return possibleEvilCounts(w, dead, phase).has(this.count);
+  });
+
+/** Whether two players are the same side.
+ *
+ * Once per game, and strong: it splits the table in one reading. By
+ * registration, so a Recluse may read either way.
+ */
+export const SeamstressInfo = define("SeamstressInfo", "Seamstress",
+  function (w) {
+    const phase = `N${this.night}`;
+    for (const first of evilRegistrations(w.roleAt(this.a, phase)))
+      for (const second of evilRegistrations(w.roleAt(this.b, phase)))
+        if ((first === second) === !!this.same) return true;
+    return false;
+  });
+
+/** How many of the day's guesses were right.
+ *
+ * Guessed publicly during the day, answered that night, so the row sits
+ * on the night the number arrived and carries the guesses with it.
+ * Matched by registration, so guessing "Recluse" at a seat the
+ * Storyteller was showing as a Minion can be wrong even though the seat
+ * really is the Recluse.
+ */
+export const JugglerInfo = define("JugglerInfo", "Juggler",
+  function (w) {
+    const phase = `D${this.night - 1}`;
+    let right = 0;
+    // The page sends {player, role} and the tests hand over [seat, role].
+    // Both are read here rather than normalised on the way in, so a row
+    // loaded from an old save still means what it meant when it was
+    // written.
+    for (const guess of this.guesses || []) {
+      const [who, role] = Array.isArray(guess)
+        ? guess : [guess.player, guess.role];
+      if (role && registersAsRole(w.roleAt(Number(who), phase), role))
+        right += 1;
+    }
+    return right === this.count;
+  });
+
+/** Two statements, one true and one false — written down, not solved.
+ *
+ * A Savant's pair can be anything from "the Demon sits beside an
+ * Outsider" to "no Minion has yet chosen a man", and checking arbitrary
+ * claims about a board is a different program from this one.
+ *
+ * Not nothing, though: recording one is still somebody claiming to have
+ * visited the Storyteller, so a world with no Savant pays for the claim.
+ */
+export const SavantInfo = define("SavantInfo", "Savant", () => true,
+                                 {weighed: () => false});
+
+/** A yes-or-no question — the question kept, the answer not solved. */
+export const ArtistInfo = define("ArtistInfo", "Artist", () => true,
+                                 {weighed: () => false});
+
+/** Two seats that know each other, one good and one evil.
+ *
+ * Set on the first night, so that is where it is read. One of the pair
+ * is the Evil Twin itself and the other is good.
+ */
+export const EvilTwinPair = define("EvilTwinPair", "EvilTwin",
+  function (w) {
+    const first = w.roleAt(this.a, "N1"), second = w.roleAt(this.b, "N1");
+    if (first !== "EvilTwin" && second !== "EvilTwin") return false;
+    return isEvil(first) !== isEvil(second);
+  });
+
+/** A seat that became a character it was not dealt.
+ *
+ * Recorded rather than searched for, and that is the whole design: a
+ * Pit-Hag acts on any night, on any seat, for no reason the table sees.
+ * But when it *is* known it is known loudly, and from then on that seat
+ * answers as something else.
+ *
+ * The character has to have been **not in play**, read off the true
+ * assignment rather than the tokens — a Drunk holding the Fortune Teller
+ * token does not stop a real one being made. The **side does not move**:
+ * a Townsfolk turned into the Poisoner is a good Poisoner. And the new
+ * character starts **that night**, which is why the first-night readings
+ * read their own night rather than night one.
+ */
+export const PitHagChoice = define("PitHagChoice", "PitHag",
+  function (w) {
+    const phase = `N${this.night}`;
+    if (w.roleAt(this.target, phase) !== this.role) return false;
+    if (this.night > 1) {
+      const earlier = `N${this.night - 1}`;
+      for (let p = 0; p < w.roles.length; p++)
+        if (p !== this.target && w.roleAt(p, earlier) === this.role)
+          return false;
+    }
+    return true;
+  });
+
+/** Who the Snake Charmer pointed at, and whether anything happened.
+ *
+ * Recorded rather than guessed, because the outcome is visible: choose
+ * the Demon while working and you swap characters *and* sides with it,
+ * which the table finds out about at once. Choose anybody else and
+ * nothing happens — which is worth a lot, since it says that seat was
+ * not the Demon.
+ */
+export const SnakeCharmerChoice = define("SnakeCharmerChoice", "SnakeCharmer",
+  function (w) {
+    const phase = `N${this.night}`;
+    if (this.swapped)
+      // Checked *after* the swap, and from the day it took effect: the
+      // seat pointed at is now holding the Snake Charmer's character.
+      return w.roleAt(this.target, `D${this.night}`) === "SnakeCharmer";
+    // Nothing happened, so either they were not the Demon or the Snake
+    // Charmer was not working — and the second is somebody else's excuse.
+    return w.demonAt(phase) !== this.target;
+  });
+
+/** The night a Philosopher took somebody else's ability.
+ *
+ * It does not *become* that character — it keeps its own, and the chosen
+ * one may be sitting elsewhere at the same time. So this is an overlay:
+ * from this night on, that seat also acts as the chosen character.
+ *
+ * Choosing is the whole of it; there is no answer to be wrong about.
+ * What it gained is checked wherever those readings are.
+ */
+export const PhilosopherChoice = define("PhilosopherChoice", "Philosopher",
+  function () { return !isEvil(this.role); });
+
+/** Killed by the Demon, it learns two players, one of them the killer.
+ *
+ * No misregistration here, unlike almost every other reading: it is
+ * shown *the Demon that killed it*, so a Recluse being shown as the
+ * Demon cannot fill the pair.
+ */
+export const SageInfo = define("SageInfo", "Sage",
+  function (w) {
+    const demon = w.demonAt(`N${this.night}`);
+    return demon !== null && (demon === this.a || demon === this.b);
+  });
+
+/** Who the Klutz pointed at on dying.
+ *
+ * Good loses on the spot if that player is evil, so a board where the
+ * game carried on says they were not — while it was working. Same shape
+ * as the Saint being executed while poisoned.
+ */
+export const KlutzChoice = define("KlutzChoice", "Klutz",
+  function (w) {
+    return !w.evilAt(this.target, `N${this.night}`);
+  });
+
 /** How many seats could have been impaired on this night.
  *
  * A range rather than a number, because the solver never decides where a
@@ -304,9 +487,17 @@ export const MathematicianInfo = define("MathematicianInfo", "Mathematician",
     // with characters still to be built may have ways to go wrong that
     // nothing here has heard of, and ruling out a number on that basis
     // would throw away worlds that really happened.
-    if (s.script.keys.some(k => !CHARACTERS[k].modelled)) return true;
+    if (s.script.keys.some(k => CHARACTERS[k].impairs &&
+                                !CHARACTERS[k].modelled)) return true;
     const [low, high] = possibleImpairmentCounts(w, s, this.night);
     return low <= this.count && this.count <= high;
+  }, {
+    // Silent on a script it cannot account for, and silence has to
+    // survive a Vortox.
+    weighed(state) {
+      return !state.script.keys.some(k => CHARACTERS[k].impairs &&
+                                          !CHARACTERS[k].modelled);
+    },
   });
 
 /** How many steps from the Demon to its nearest Minion.
@@ -452,6 +643,9 @@ export const KINDS = {
   CourtierChoice, VirginNomination, SlayerShot,
   ClockmakerInfo, DreamerInfo, MathematicianInfo,
   FlowergirlInfo, TownCrierInfo,
+  OracleInfo, SeamstressInfo, JugglerInfo, SavantInfo, ArtistInfo,
+  SageInfo, KlutzChoice, EvilTwinPair, PhilosopherChoice,
+  SnakeCharmerChoice, PitHagChoice,
 };
 
 /** Build a reading from the shape the page posts. */
