@@ -361,6 +361,32 @@ export const EvilTwinPair = define("EvilTwinPair", "EvilTwin",
     return isEvil(first) !== isEvil(second);
   });
 
+// Four declared choices whose value is entirely in what follows from
+// them. None has an answer to be wrong about — the deduction is drawn by
+// the death and impairment rules — but recording the choice is the only
+// way those rules can know where it landed.
+const declaredChoice = (name, role) => define(name, role, () => true);
+
+/** Who the Moonchild pointed at on learning it died.
+ *
+ * Only a good target dies, so a seat that died the next day reads good
+ * and one that did not reads evil.
+ */
+export const MoonchildChoice = declaredChoice("MoonchildChoice", "Moonchild");
+
+/** Which seat the Exorcist named.
+ *
+ * Naming the Demon stops it waking, so a quiet night is explained by it
+ * — and that makes the named seat likelier to be the Demon.
+ */
+export const ExorcistChoice = declaredChoice("ExorcistChoice", "Exorcist");
+
+/** The two the Innkeeper protected: both safe, one of them drunk. */
+export const InnkeeperChoice = declaredChoice("InnkeeperChoice", "Innkeeper");
+
+/** Who the Sailor chose: one of the two of them is drunk. */
+export const SailorChoice = declaredChoice("SailorChoice", "Sailor");
+
 /** A seat that became a character it was not dealt.
  *
  * Recorded rather than searched for, and that is the whole design: a
@@ -646,6 +672,7 @@ export const KINDS = {
   OracleInfo, SeamstressInfo, JugglerInfo, SavantInfo, ArtistInfo,
   SageInfo, KlutzChoice, EvilTwinPair, PhilosopherChoice,
   SnakeCharmerChoice, PitHagChoice,
+  MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
 };
 
 /** Build a reading from the shape the page posts. */

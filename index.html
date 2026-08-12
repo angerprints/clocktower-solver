@@ -641,6 +641,10 @@ const SCHEMA = {
   SnakeCharmerChoice: [["target","player"],
                        ["swapped","bool:We swapped|Nothing happened"]],
   PitHagChoice:    [["target","player"],["role","role:all"]],
+  MoonchildChoice: [["target","player"]],
+  ExorcistChoice:  [["target","player"]],
+  InnkeeperChoice: [["a","player"],["b","player"]],
+  SailorChoice:    [["target","player"]],
   KlutzChoice:     [["target","player"]],
   SeamstressInfo:  [["a","player"],["b","player"],
                     ["same","bool:Same side|Different sides"]],
@@ -665,15 +669,26 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   SavantInfo:"Savant", ArtistInfo:"Artist",
   SageInfo:"Sage", KlutzChoice:"Klutz",
   EvilTwinPair:"EvilTwin", PhilosopherChoice:"Philosopher",
-  SnakeCharmerChoice:"SnakeCharmer", PitHagChoice:"PitHag" };
+  SnakeCharmerChoice:"SnakeCharmer", PitHagChoice:"PitHag",
+  MoonchildChoice:"Moonchild", ExorcistChoice:"Exorcist",
+  InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor" };
 const DAY_EVENTS   = ["SlayerShot","VirginNomination"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin" };
+// A few readings are named for the *act* rather than the character,
+// because that is what the table saw: a Slayer shot, a Gambler's guess.
+// Everything else is just the character, and is worked out rather than
+// listed — a hand-kept table meant every new reading arrived reading
+// "ClockmakerInfo" until somebody noticed.
 const TYPE_LABEL   = { SlayerShot:"Slayer shot",
-  VirginNomination:"Virgin nomination", GrandmotherInfo:"Grandmother",
-  ChambermaidInfo:"Chambermaid", GamblerGuess:"Gambler guess",
-  CourtierChoice:"Courtier choice" };
+  VirginNomination:"Virgin nomination", GamblerGuess:"Gambler guess",
+  CourtierChoice:"Courtier choice", SnakeCharmerChoice:"Snake Charmer",
+  PhilosopherChoice:"Philosopher", PitHagChoice:"Pit-Hag",
+  KlutzChoice:"Klutz", EvilTwinPair:"Evil Twin",
+  MoonchildChoice:"Moonchild", ExorcistChoice:"Exorcist",
+  InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor" };
 const sourceRole = t => SOURCE_ROLE[t] || t;
-const typeLabel  = t => TYPE_LABEL[t] || label(t);
+const typeLabel  = t =>
+  TYPE_LABEL[t] || label(sourceRole(t)) || label(t.replace(/Info$/, ""));
 
 let META = null;
 let SCRIPT = null;         // the characters in the bag for this game
@@ -1436,6 +1451,61 @@ function describeRow(r){
     case "VirginNomination":
       return `${who(r.nominator)} nominated — ${
         r.triggered ? "and died on the spot" : "nothing happened"}`;
+
+    // Bad Moon Rising's declared choices. None has an answer to be wrong
+    // about; the value is entirely in what follows, so the wording says
+    // what was chosen and lets the board say the rest.
+    case "MoonchildChoice":
+      return `pointed at ${who(r.target)} on dying`;
+    case "ExorcistChoice":
+      return `named ${who(r.target)}`;
+    case "InnkeeperChoice":
+      return `protected ${who(r.a)} and ${who(r.b)} — one of them is drunk`;
+    case "SailorChoice":
+      return `chose ${who(r.target)} — one of the two of them is drunk`;
+
+    // Sects & Violets.
+    case "ClockmakerInfo":
+      return `${r.count} step${r.count === 1 ? "" : "s"} from the Demon to `
+           + `its nearest Minion`;
+    case "DreamerInfo":
+      return `${who(r.target)} is the ${role(r.good_role)} or the `
+           + `${role(r.evil_role)}`;
+    case "OracleInfo":
+      return `${r.count} of the dead ${r.count === 1 ? "is" : "are"} evil`;
+    case "SeamstressInfo":
+      return `${who(r.a)} and ${who(r.b)} — ${
+        r.same ? "the same side" : "different sides"}`;
+    case "JugglerInfo": {
+      const gs = (r.guesses || []).map(g =>
+        `${who(g.player)} as the ${role(g.role)}`);
+      return `${gs.join(", ") || "no guesses"} — ${r.count} right`;
+    }
+    case "SavantInfo":
+      return `${r.first || "?"} · ${r.second || "?"} — one of these is true`;
+    case "ArtistInfo":
+      return `asked "${r.question || "?"}" — ${r.answer ? "yes" : "no"}`;
+    case "SageInfo":
+      return `${who(r.a)} or ${who(r.b)} killed it`;
+    case "KlutzChoice":
+      return `pointed at ${who(r.target)} on dying`;
+    case "EvilTwinPair":
+      return `${who(r.a)} and ${who(r.b)} are twins — one of each side`;
+    case "PhilosopherChoice":
+      return `took the ${role(r.role)}`;
+    case "SnakeCharmerChoice":
+      return `chose ${who(r.target)} — ${
+        r.swapped ? "and they swapped" : "nothing happened"}`;
+    case "PitHagChoice":
+      return `${who(r.target)} became the ${role(r.role)}`;
+    case "MathematicianInfo":
+      return `${r.count} ability${r.count === 1 ? "" : "s"} went wrong`;
+    case "FlowergirlInfo":
+      return `the Demon ${r.voted ? "voted" : "did not vote"} yesterday`;
+    case "TownCrierInfo":
+      return `a Minion ${r.nominated ? "nominated" : "did not nominate"} `
+           + `yesterday`;
+
     default:
       return "";
   }

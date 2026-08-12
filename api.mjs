@@ -46,6 +46,8 @@ const INFO_SOURCES = {
   SageInfo: "Sage", KlutzChoice: "Klutz",
   EvilTwinPair: "EvilTwin", PhilosopherChoice: "Philosopher",
   SnakeCharmerChoice: "SnakeCharmer", PitHagChoice: "PitHag",
+  MoonchildChoice: "Moonchild", ExorcistChoice: "Exorcist",
+  InnkeeperChoice: "Innkeeper", SailorChoice: "Sailor",
 };
 
 // --------------------------------------------------------------------
@@ -107,7 +109,8 @@ export function meta() {
                   modelled: c.modelled, note: c.note}))
       .sort((a, b) => a.team.localeCompare(b.team) ||
                       a.name.localeCompare(b.name)),
-    built_in: Object.keys(scripts.BUILT_IN).sort(),
+    // In the order they were published, not by name.
+    built_in: Object.keys(scripts.BUILT_IN),
     script: scriptMeta(scripts.DEFAULT),
   };
 }

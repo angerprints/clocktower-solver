@@ -47,6 +47,22 @@ function acting(world, state, key, night) {
 const anyDiedAt = (state, phase) =>
   Object.keys(state.deaths || {}).some(who => state.diedAt(who).includes(phase));
 
+/** What a declared choice named on this night, if it was recorded.
+ *
+ * Null when nothing was written down — which is not the same as an empty
+ * answer: it means "nobody said", and the rule falls back to reaching
+ * everybody rather than reaching nobody.
+ */
+function chosen(state, role, night, fields = ["target"]) {
+  for (const info of state.infos) {
+    if (info.sourceRole !== role || info.night !== night) continue;
+    const got = fields.map(f => info[f])
+                      .filter(v => v !== undefined && v !== null);
+    if (got.length) return new Set(got);
+  }
+  return null;
+}
+
 /** The nearest Townsfolk each way round the circle.
  *
  * By *team*, not by side: a Townsfolk can be evil, and this skips
@@ -435,8 +451,12 @@ causeRule(function aMoonchildTakesSomebodyWithIt(world, state, night) {
     return [];
   const good = new Set([...state.aliveSet(phase)]
     .filter(seat => !world.evilAt(seat, phase)));
-  if (!good.size) return [];
-  return [new Cause("Moonchild", OTHER, good, {capacity: 1})];
+  // Recorded, it points somewhere in particular.
+  const picked = chosen(state, "Moonchild", night);
+  const aimed = picked === null ? good
+    : new Set([...good].filter(x => picked.has(x)));
+  if (!aimed.size) return [];
+  return [new Cause("Moonchild", OTHER, aimed, {capacity: 1})];
 });
 
 /** Guessing wrong kills you, and nothing else.
@@ -571,6 +591,9 @@ immunityRule(function anExorcistSendsTheDemonToBed(
   if (!inBag(state, "Exorcist") || kind !== DEMON || night < 2) return [];
   const exorcist = acting(world, state, "Exorcist", night);
   if (exorcist === null) return [];
+  // Recorded, it only stops the Demon if it named the seat holding it.
+  const named = chosen(state, "Exorcist", night);
+  if (named !== null && !named.has(world.demonAt(`N${night}`))) return [];
   return [shield("Exorcist", {needs: exorcist, chosen: true})];
 });
 
@@ -622,7 +645,12 @@ sourceRule(function aSailorDrunksOneOfTwo(world, state, night) {
     if (hit === seat) return 0.6;        // the usual half of the coin
     return world.evilAt(hit, phase) ? PRIORS.SAILOR_ON_EVIL_PENALTY : 0.6;
   };
-  return [new Source("Sailor", state.aliveSet(phase),
+  // It is one of two: the Sailor, or whoever it chose. Recorded, that is
+  // a pair rather than the whole table.
+  const picked = chosen(state, "Sailor", night);
+  const reach = picked === null ? state.aliveSet(phase)
+                                : new Set([seat, ...picked]);
+  return [new Source("Sailor", reach,
                      {capacity: 1, cost: price, repeatCost: price})];
 });
 
@@ -694,6 +722,9 @@ sourceRule(function anInnkeeperDrunksOneOfTheTwoItGuards(world, state, night) {
   if (!inBag(state, "Innkeeper") || night < 2) return [];
   const seat = acting(world, state, "Innkeeper", night);
   if (seat === null) return [];
-  return [new Source("Innkeeper", state.aliveSet(`N${night}`),
+  // One of the two it protected, and it does not choose which.
+  const picked = chosen(state, "Innkeeper", night, ["a", "b"]);
+  const reach = picked === null ? state.aliveSet(`N${night}`) : picked;
+  return [new Source("Innkeeper", reach,
                      {capacity: 1, cost: 0.5, repeatCost: 0.5})];
 });
