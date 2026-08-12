@@ -221,7 +221,8 @@ function readBoard(payload) {
         witchDeaths[day] = i;
         (deaths[i] = deaths[i] || []).push(`D${day}`);
       } else if (kind === "M") {
-        // Executed for breaking madness: a Cerenovus is about.
+        // Executed for breaking ceremadness: a Cerenovus is about, and
+        // only a Cerenovus — which is why the status says so.
         madnessExecutions[day] = i;
         executions[day] = i;
         (deaths[i] = deaths[i] || []).push(`D${day}`);

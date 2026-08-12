@@ -530,7 +530,7 @@ export const DATA = {
     "every"
    ],
    "modelled": false,
-   "note": "madness is a social constraint and leaves no mark of its own. What the table *can* see is somebody executed for breaking it, and marking that death says a Cerenovus is about — which is the only handle there is",
+   "note": "madness is a social constraint and leaves no mark of its own. What the table *can* see is somebody executed for breaking ceremadness, and marking that death says a Cerenovus is about — which is the only handle there is",
    "chooses": true,
    "nights": "every",
    "handled": "not",

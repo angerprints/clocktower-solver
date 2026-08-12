@@ -43,7 +43,7 @@ export class GameState {
     this.nominations = opts.nominations || {};
     // Two things the table sees plainly, each giving away a character
     // nobody chose to reveal: a seat dropping dead as it nominates is a
-    // Witch, a seat executed for breaking madness is a Cerenovus.
+    // Witch, a seat executed for breaking ceremadness is a Cerenovus.
     this.witchDeaths = opts.witchDeaths || {};
     this.madnessExecutions = opts.madnessExecutions || {};
     this.infos = opts.infos || [];
