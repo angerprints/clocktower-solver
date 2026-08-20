@@ -145,7 +145,12 @@ export function abilityState(world, seat, role, phase, gained = null,
   if (gained !== null) {
     const [taken, , arrived] = gained;
     if (taken === role && arrived &&
-        world.roleAt(seat, phase) === "Philosopher") return GENUINE;
+        world.roleAt(seat, phase) === "Philosopher") {
+      // A Vortox reaches a gained ability the same as any other: the
+      // choice to take it is untouched, what it yields is not.
+      if (vortoxed && TEAM[role] === "townsfolk") return INVERTED;
+      return GENUINE;
+    }
   }
   return ABSENT;
 }

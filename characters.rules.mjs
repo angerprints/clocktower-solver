@@ -169,6 +169,28 @@ sourceRule(function aPhilosopherDrunksWhoeverHadIt(world, state, night) {
   return out;
 });
 
+/** A Pukka poisons on one night and that poison kills on the next.
+ *
+ * The kill rule already demands the victim was poisoned the night before
+ * and nothing provided that poison, so **every Pukka board was
+ * impossible**. It went unnoticed because a board is only impossible
+ * once a death is recorded on the right night, and no test or corpus
+ * board had one.
+ *
+ * Priced like the Poisoner, and for the same reason: it reaches the
+ * whole table, so leaving it free would let it excuse *any* reading at
+ * no cost — which it duly did.
+ */
+sourceRule(function aPukkaPoisonsWhoeverItWillKill(world, state, night) {
+  if (!inBag(state, "Pukka")) return [];
+  const phase = `N${night}`;
+  const seat = world.findAt("Pukka", phase);
+  if (seat === null || !state.aliveSet(phase).has(seat)) return [];
+  return [new Source("Pukka", state.aliveSet(phase),
+                     {capacity: 1, cost: PRIORS.POISON_HIT_PENALTY,
+                      repeatCost: PRIORS.POISON_REPEAT_PENALTY})];
+});
+
 /** From the night it dies, one player is drunk for good.
  *
  * Any death does it, and the Storyteller never says who — so the reach

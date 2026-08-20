@@ -265,7 +265,11 @@ function readBoard(payload) {
                      `they never woke to learn this. Only the Ravenkeeper ` +
                      `learns anything as it goes.`};
     try {
-      infos.push(makeInfo(row));
+      const made = makeInfo(row);
+      // Whether the table later agreed this reading was right. Evidence
+      // that its source is who they claim, and it accumulates.
+      made.confirmed = !!row.confirmed;
+      infos.push(made);
     } catch (err) {
       return {error: String(err.message || err)};
     }

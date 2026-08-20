@@ -111,6 +111,15 @@ class Info {
    */
   weighed() { return true; }
 
+  /** Is this row a *choice* the seat made, rather than information?
+   *
+   * A Vortox makes Townsfolk abilities yield false information — and a
+   * choice is not information. Nobody told a Philosopher what it took.
+   * The consequences still land: a Philosopher that took the Town Crier
+   * gets that ability and *that* reading is inverted.
+   */
+  get isAChoice() { return !!this.constructor.isAChoice; }
+
   get sourceRole() { return this.constructor.sourceRole; }
 
   holds() { throw new Error("not implemented"); }
@@ -484,7 +493,14 @@ export function possibleImpairmentCounts(world, state, night) {
   const always = new Set();
   const movable = [];
   for (const source of sourcesOn(world, state, night)) {
-    if (source.freeForEveryone()) for (const seat of source.seats) always.add(seat);
+    // Free *and* reaching everybody it touches — a Drunk holding
+    // somebody else's token, a Minstrel silencing the table. A free
+    // source that still has to *pick* is a different thing: a
+    // Vigormortis poisons one of the two Townsfolk beside a dead Minion
+    // and the Storyteller chooses which. Counting its whole reach as
+    // certainly impaired said two where the answer was one.
+    if (source.freeForEveryone() && source.capacity >= source.seats.size)
+      for (const seat of source.seats) always.add(seat);
     else movable.push(source);
   }
   let most = always.size;
@@ -662,6 +678,27 @@ export const ChambermaidInfo = define("ChambermaidInfo", "Chambermaid",
   function (w, s) {
     return possibleCounts(w, s, [this.a, this.b], this.night).has(this.count);
   });
+
+
+// A Vortox falsifies information, not choices. Nobody told a Philosopher
+// what it took, a Courtier which character to name, a Klutz where to
+// point or a Gambler what to guess — so there is nothing about these
+// rows for a Vortox to make false.
+//
+// The consequences still land: a Philosopher that took the Town Crier
+// gets that ability and *that* reading is inverted, a Gambler that
+// guesses wrong still dies, a Snake Charmer that chose the Vortox still
+// swaps character and alignment with it.
+PhilosopherChoice.isAChoice = true;
+SnakeCharmerChoice.isAChoice = true;
+PitHagChoice.isAChoice = true;
+CourtierChoice.isAChoice = true;
+KlutzChoice.isAChoice = true;
+GamblerGuess.isAChoice = true;
+MoonchildChoice.isAChoice = true;
+ExorcistChoice.isAChoice = true;
+InnkeeperChoice.isAChoice = true;
+SailorChoice.isAChoice = true;
 
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,

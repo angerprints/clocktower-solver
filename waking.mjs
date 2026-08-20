@@ -70,6 +70,10 @@ condition("Professor", (world, state, seat, night) => {
 /** Only on nights it can actually kill — which is nights after a day
  * when nobody died. */
 condition("Zombuul", (world, state, seat, night) => {
+  // Except the first night, when it wakes like every other Demon to
+  // learn its Minions and its bluffs. The killing schedule is a separate
+  // question from the waking one.
+  if (night === 1) return true;
   if (night < 2) return false;
   for (const who of Object.keys(state.deaths || {}))
     if (state.diedAt(who).includes(`D${night - 1}`)) return false;
@@ -92,7 +96,19 @@ const believer = (world, state, seat, night) => {
 condition("Drunk", believer);
 condition("Marionette", believer);
 
-/** Did somebody holding this character wake for it on this night? */
+/** Did somebody holding this character wake for it on this night?
+ *
+ * A Demon is the awkward case. Its `nights` says "other", because that
+ * is when it *kills* — but it also wakes on the first night to learn its
+ * Minions and its bluffs, and a Chambermaid sitting beside one counts
+ * that. Reading the single word said every Demon slept through night
+ * one, which made a Chambermaid who correctly counted two into a board
+ * with no legal world at all.
+ *
+ * The `wake` set is the honest answer, except that "every" does not
+ * bother to list "first" — so that is checked separately, or every
+ * Empath and Poisoner sleeps through night one instead.
+ */
 export function wokeAs(world, state, seat, night, role) {
   const when = CHARACTERS[role].nights;
   if (when === CONDITIONAL) {
@@ -100,9 +116,10 @@ export function wokeAs(world, state, seat, night, role) {
     return rule ? !!rule(world, state, seat, night) : false;
   }
   if (when === NEVER) return false;
-  if (when === FIRST) return night === 1;
-  if (when === OTHER) return night >= 2;
-  return true;                                   // every night
+  if (night === 1)
+    return when === EVERY || (CHARACTERS[role].wake || []).includes(FIRST);
+  if (when === FIRST) return false;
+  return true;                                   // "other" and "every"
 }
 
 /** Did this seat wake for its own ability on this night?

@@ -46,6 +46,10 @@ export const PRIORS = {
   // deliberate risk.
   FABRICATED_INFO_PENALTY: 0.4,
   INFO_TRUST_STEP: 2.0,
+  // What one confirmed reading is worth, as an odds multiplier on its
+  // source really being that character. Evidence, not proof — a Spy
+  // reading the grimoire can feed a Minion true information all game.
+  CONFIRMED_READING_STEP: 2.5,
 
   // Sinking a kill into a corpse fakes protection, which is exactly what
   // a Demon bluffing Soldier or Monk wants.

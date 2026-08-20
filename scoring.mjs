@@ -536,6 +536,12 @@ function plainFailures(world, state, outcome = {}) {
       outcome[idx] = INVENTED;
       return;
     }
+    // A Vortox falsifies information, not choices.
+    if (held === INVERTED && info.isAChoice) {
+      outcome[idx] = HELD;
+      return;
+    }
+
     if (held === INVERTED && !info.weighed(state)) {
       // A row that says nothing goes on saying nothing. Left as written,
       // this would read its default "true" as a claim and demand the

@@ -1867,7 +1867,7 @@ function drawTimeline(){
 function addInfo(night){
   const type=$("#new-type").value;
   const claimant=claimantOf(sourceRole(type));
-  const rec={type, night, trust:0,
+  const rec={type, night, trust:0, confirmed:false,
              player: claimant!==null?claimant:(selected===null?0:selected)};
   SCHEMA[type].forEach(([k,t])=>{
     rec[k] = t.startsWith("role:") ? allRoles(t.split(":")[1])[0]
@@ -2052,6 +2052,28 @@ function infoCard(rec, idx){
     else if(t.startsWith("text:")) body.appendChild(freeText(rec,k,t.slice(5)));
     else if(t==="guesses") body.appendChild(guessList(rec,k));
   });
+  // Did the table later agree this reading was right?
+  //
+  // Not the same as believing the *speaker*: this says the content
+  // checked out. An Undertaker whose readings keep matching what was
+  // later established is more likely to be the Undertaker — evidence
+  // rather than proof, since a Spy reading the grimoire can feed a
+  // Minion true information all game. Ticks accumulate.
+  //
+  // Not offered on the rows that are already proof: a Virgin that
+  // triggered and a Slayer that fired settle a character outright, and a
+  // softer nudge on top would be saying less than the board already
+  // says.
+  // How far you believe the reading *happened*, separately from whether
+  // it was right. Matters most when nobody has claimed the character it
+  // came from — somebody relays "the Empath said 2" and no seat has
+  // claimed Empath, so did an Empath say it at all?
+  //
+  // Defined since the beginning and never called, so every reading has
+  // sat at neutral. The solver behind it was tested the whole time.
+  body.appendChild(tag("believe it"));
+  body.appendChild(trustSel(rec));
+  if(!PROOF_ROWS.includes(rec.type)) body.appendChild(confirmedBox(rec));
   card.appendChild(body);
 
   const note=document.createElement("div"); note.className="note";
@@ -2086,6 +2108,25 @@ function infoCard(rec, idx){
 
 const TRUST_WORDS = {"-3":"not at all","-2":"barely","-1":"a little","0":"—",
                      "1":"somewhat","2":"strongly","3":"completely"};
+// Rows that are proof rather than evidence. A Virgin that triggered and
+// a Slayer that fired establish a character outright; there is nothing
+// for a confirmation to add.
+const PROOF_ROWS = ["VirginNomination", "SlayerShot"];
+
+function confirmedBox(rec){
+  const label=document.createElement("label");
+  label.className="check inline";
+  label.title="Tick when the table has established this reading was "
+            + "right. Evidence that the speaker really is who they claim, "
+            + "and it builds up over several readings.";
+  const box=document.createElement("input");
+  box.type="checkbox"; box.checked=!!rec.confirmed;
+  box.onchange=e=>{ rec.confirmed=e.target.checked; touch(); drawLedger(); save(); };
+  const text=document.createElement("span"); text.textContent="checked out";
+  label.appendChild(box); label.appendChild(text);
+  return label;
+}
+
 function trustSel(rec){
   const s=document.createElement("select");
   s.title="How far you believe the reading itself, separately from whoever "

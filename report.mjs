@@ -68,8 +68,29 @@ export function isLying(world, state, p) {
 }
 
 /** Everything that makes a world plausible except the poison story. */
+/** What the table's confirmations are worth to a world.
+ *
+ * A reading the players later agreed was *right* is evidence that its
+ * source really is that character. It multiplies rather than settling
+ * anything: four confirmed rows from one seat compound, and no pile of
+ * them reaches certainty, because a Spy reading the grimoire can feed a
+ * Minion true information all game.
+ */
+export function confirmedBoost(world, state) {
+  let got = 1.0;
+  for (const info of state.infos) {
+    if (!info.confirmed) continue;
+    const seat = info.sourceSeat(state);
+    if (seat === null || seat === undefined) continue;
+    const source = info.sourceRole;
+    if (source && world.roleAt(seat, `N${info.night}`) === source)
+      got *= PRIORS.CONFIRMED_READING_STEP;
+  }
+  return got;
+}
+
 export function priorWeight(world, state) {
-  let w = 1.0;
+  let w = confirmedBoost(world, state);
   const reads = state.reads || {};
   const suspects = state.suspects || {};
 
