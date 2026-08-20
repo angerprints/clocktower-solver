@@ -226,8 +226,18 @@ export function demonLineages(world, state, cap = 24) {
     if (found.length >= cap) return;
     // The first time they went down. A Demon raised afterwards is
     // somebody else's problem to model; the star passed when it fell.
+    // A seat that stopped being the Demon before it died hands nothing
+    // on. A Snake Charmer swap moves the Demon to the charmer's seat and
+    // leaves a *good* Snake Charmer behind — and when the new Demon
+    // later kills that seat, this walk was still tracking it as the
+    // holder, looked for an heir, found none, and declared the whole
+    // world impossible.
     const phases = state.diedAt(holder);
     const phase = phases.length ? phases[0] : null;
+    if (phase !== null) {
+      const held = view.roleAt(holder, phase);
+      if (held && TEAM[held] !== "demon") { found.push(soFar); return; }
+    }
     // A handover cannot happen *earlier* than the one before it, and no
     // seat can hold the star twice. Both were true by construction until
     // a Barber let the Demon swap characters around, and the walk went
