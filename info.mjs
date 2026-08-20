@@ -11,7 +11,7 @@
 // statement has been checked.
 
 import {CHARACTERS} from "./catalogue.mjs";
-import {TEAM, evilRegistrations, isEvil, registersAsRole} from "./roles.mjs";
+import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./roles.mjs";
 import {sourcesOn} from "./impairment.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {possibleCounts} from "./waking.mjs";
@@ -289,6 +289,23 @@ export const TownCrierInfo = define("TownCrierInfo", "TownCrier",
     if (this.nominated) return who.some(x => couldBeMinion(w, x, phase));
     return !who.some(x => mustBeMinion(w, x, phase));
   });
+
+/** Whether a Minion really nominated, as against could have.
+ *
+ * `holds` allows for registration both ways — a Spy may be shown as a
+ * Townsfolk, so "no Minion nominated" is a legal thing to say on a day
+ * one did. Right for legality, wrong for truth, and a Vortox needs
+ * truth: a reading made false by registration is already false.
+ */
+TownCrierInfo.prototype.isTrue = function (w, s) {
+  const day = this.night - 1;
+  if (day < 1) return false;
+  const phase = `D${day}`;
+  const raw = (s.nominations || {})[day];
+  const who = !raw ? [] : (raw.has ? [...raw] : raw);
+  const really = who.some(x => TEAM[w.roleAt(x, phase)] === "minion");
+  return this.nominated ? really : !really;
+};
 
 /** How many of the dead are evil.
  *
@@ -582,6 +599,20 @@ export const DreamerInfo = define("DreamerInfo", "Dreamer",
     return registersAsRole(actual, this.good_role) ||
            registersAsRole(actual, this.evil_role);
   });
+
+/** Whether a Dreamer's reading was *true*, as against merely legal.
+ *
+ * A Vortox falsifies what an ability yields, and misregistration is the
+ * mechanic that lets a Storyteller give false information legally — a
+ * Spy shown as the Slayer is still a Spy, so that reading is already
+ * false and a Vortox may produce it. `holds` answers "could this have
+ * been said"; this answers "was it so".
+ */
+DreamerInfo.prototype.isTrue = function (w) {
+  const actual = w.roleAt(this.target, `N${this.night}`);
+  return isReallyRole(actual, this.good_role) ||
+         isReallyRole(actual, this.evil_role);
+};
 
 // --- Bad Moon Rising ---------------------------------------------------
 

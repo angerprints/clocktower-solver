@@ -116,8 +116,14 @@ export function wokeAs(world, state, seat, night, role) {
     return rule ? !!rule(world, state, seat, night) : false;
   }
   if (when === NEVER) return false;
-  if (night === 1)
+  if (night === 1) {
+    // Being shown the other evil players is not waking for your own
+    // ability, so a Chambermaid does not count it. A Baron says "first
+    // night" honestly — its `wake` set is what a player could truthfully
+    // claim — and yet it has no night ability at all.
+    if (when === NEVER) return false;
     return when === EVERY || (CHARACTERS[role].wake || []).includes(FIRST);
+  }
   if (when === FIRST) return false;
   return true;                                   // "other" and "every"
 }

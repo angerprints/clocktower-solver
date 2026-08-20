@@ -94,10 +94,26 @@ export function evilRegistrations(role, side = null) {
 }
 
 /** Can `actual` show up as `claimed` in character information? */
+/** Can `actual` show up as `claimed` in character info?
+ *
+ * **Legality, not truth.** Misregistration is the mechanic that lets a
+ * Storyteller give false information legally — a Spy shown as the Slayer
+ * is still a Spy, and the reading is still false. It does not become
+ * true by being permitted.
+ *
+ * Most callers want this one. The Vortox wants `isReallyRole`, because
+ * it falsifies what an ability *yields*, and a misregistered reading is
+ * already false.
+ */
 export function registersAsRole(actual, claimed) {
   if (actual === claimed) return true;
   if (!TEAM[claimed]) return false;
   return CHARACTERS[actual].registers.includes(TEAM[claimed]);
+}
+
+/** Is this seat *actually* that character? The other half of the above. */
+export function isReallyRole(actual, claimed) {
+  return actual === claimed;
 }
 
 /** Could a seat holding this character honestly describe waking so?

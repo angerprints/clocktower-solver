@@ -514,6 +514,8 @@ implicationRule(function aGrandmotherGrieves(world, state, night, victim, kind) 
     if (info.sourceRole !== "Grandmother" || info.target !== victim) continue;
     const seat = info.player;
     if (world.roleAt(seat, `N${night}`) !== "Grandmother") continue;
+    // A Grandmother already dead cannot die again of grief.
+    if (!state.aliveSet(`N${night}`).has(seat)) continue;
     out.push(implication(seat, seat));
   }
   return out;

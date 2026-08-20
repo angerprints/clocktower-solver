@@ -570,7 +570,15 @@ function plainFailures(world, state, outcome = {}) {
       // readings this takes the Vortox as droisoned and does not
       // additionally charge the false ones. Permissive, which keeps
       // worlds that happened rather than ruling them out.
-      if (info.holds(world, state, null, seat)) {
+      // Truth, not legality. Misregistration lets a Storyteller give
+      // false information *legally* — a Spy shown as the Slayer is still
+      // a Spy, so that reading is already false and a Vortox may produce
+      // it freely. `holds` answers "could this have been said", which is
+      // right nearly everywhere and wrong here.
+      const wasTrue = info.isTrue
+        ? info.isTrue(world, state, seat)
+        : info.holds(world, state, null, seat);
+      if (wasTrue) {
         fail(info.night, vortox);
         outcome[idx] = EXCUSED;
       } else outcome[idx] = HELD;
