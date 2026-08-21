@@ -305,6 +305,55 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
  * that character at the moment its row is attributed, and the row read
  * as invented.
  */
+/** Could this seat have shown as good, if the Storyteller liked?
+ *
+ * Registration, not truth. A Spy is evil and registers as good, so the
+ * Storyteller may hand it the Farmer on that basis — and it stays evil.
+ */
+function couldBeGood(world, seat, phase) {
+  if (!world.evilAt(seat, phase)) return true;
+  const regs = CHARACTERS[world.roleAt(seat, phase)].registers || [];
+  return regs.includes("townsfolk") || regs.includes("outsider");
+}
+
+/** It died in the night, so somebody good becomes the Farmer.
+ *
+ * **Any** night death does it, not only the Demon's, and not an
+ * execution. "Nothing happened" stays among the answers and is the
+ * droisoned case — whether a seat was droisoned is chosen by the
+ * impairment plan, which runs after transitions are settled.
+ *
+ * It chains, so every seat holding the character is considered rather
+ * than the first: `findAt` returns the Farmer that was *dealt*, and that
+ * seat goes on being a Farmer in the base world after it dies.
+ */
+transitionRule(function aFarmerHandsItOn(world, state) {
+  if (!inBag(state, "Farmer")) return [[[], 1.0]];
+  let stories = [[[], 1.0]];
+  const latest = phaseIndex(state.finalPhase());
+  for (let night = 1; phaseIndex(`N${night}`) <= latest; night++) {
+    const phase = `N${night}`;
+    const grown = [];
+    for (const [changes, cost] of stories) {
+      const view = changes.length ? new Timeline(world, changes) : world;
+      const holders = [];
+      for (let p = 0; p < state.nPlayers; p++)
+        if (view.roleAt(p, phase) === "Farmer" &&
+            state.diedAt(p).includes(phase)) holders.push(p);
+      if (!holders.length) { grown.push([changes, cost]); continue; }
+      const seat = holders[0];
+      const heirs = [...state.aliveSet(phase)]
+        .filter(p => p !== seat && couldBeGood(view, p, phase));
+      grown.push([changes, cost]);
+      for (const heir of heirs)
+        grown.push([[...changes, new Change(`D${night}`, heir, "Farmer", null)],
+                    cost]);
+    }
+    stories = grown.slice(0, 48);
+  }
+  return stories;
+});
+
 transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
   const swaps = state.infos.filter(
     i => i.sourceRole === "SnakeCharmer" && i.swapped);
@@ -547,15 +596,8 @@ function plainFailures(world, state, outcome = {}) {
       return;
     }
     // A Vortox falsifies information, not choices.
-    if (held === INVERTED && info.isAChoice) {
-      outcome[idx] = HELD;
-      return;
-    }
-
-    if (held === INVERTED && !info.weighed(state)) {
-      // A row that says nothing goes on saying nothing. Left as written,
-      // this would read its default "true" as a claim and demand the
-      // Vortox had been droisoned.
+    // One question, asked in one place: does a Vortox reach this row?
+    if (held === INVERTED && !info.isInformation(state)) {
       outcome[idx] = HELD;
       return;
     }
@@ -594,7 +636,15 @@ function plainFailures(world, state, outcome = {}) {
       // poisoning the messenger changes nothing.
       fail(info.night, seat);
       outcome[idx] = EXCUSED;
-    } else outcome[idx] = HELD;
+    } else {
+      outcome[idx] = HELD;
+      // **A droisoned character cannot misregister.** Registration is a
+      // plain ability and a plain ability simply does not function, so a
+      // row that held only by somebody misregistering forbids that seat
+      // from having been droisoned that night.
+      for (const who of (info.leanedOn ? info.leanedOn(world, state, seat) : []))
+        (working[info.night] || (working[info.night] = new Set())).add(who);
+    }
   });
   if (invented === null) return null;     // a hard fact did not hold
 

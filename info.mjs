@@ -120,6 +120,33 @@ class Info {
    */
   get isAChoice() { return !!this.constructor.isAChoice; }
 
+  /** Does a Vortox reach this row?
+   *
+   * **A Vortox falsifies information roles and nothing else.** Asking
+   * that character by character got it wrong twice — a Philosopher's
+   * choice was inverted when nothing had told it anything, and a Snake
+   * Charmer's swap was flipped so a charmer claimed to have swapped with
+   * a seat it never touched. So it is one question, answered here.
+   */
+  /** Seats this reading needed to *misregister* to hold.
+   *
+   * **A droisoned character cannot misregister.** A Storyteller chooses
+   * freely what a droisoned *information* role yields, because the
+   * information is arbitrary — but registration is a plain ability, and
+   * a plain ability simply does not function. A poisoned Recluse is a
+   * Recluse and shows as one.
+   *
+   * `holds` cannot decide this: whether a seat was droisoned is chosen
+   * by the impairment plan, which settles afterwards. So a row says what
+   * it leaned on, and those seats are forbidden from being droisoned
+   * that night.
+   */
+  leanedOn() { return []; }
+
+  isInformation(state) {
+    return !this.isAChoice && this.weighed(state);
+  }
+
   get sourceRole() { return this.constructor.sourceRole; }
 
   holds() { throw new Error("not implemented"); }
@@ -135,13 +162,47 @@ const define = (name, sourceRole, holds, extra = {}) => {
   return cls;
 };
 
+/** Did this seat have to misregister to match what it was shown as?
+ *
+ * True only when it is *not* that character and could show as one. A
+ * seat that really is what it was called leaned on nothing.
+ */
+const misregistered = (w, seat, phase, claimed) => {
+  if (seat === null || seat === undefined) return false;
+  const actual = w.roleAt(seat, phase);
+  return actual !== claimed && registersAsRole(actual, claimed);
+};
+
+/** Whether one of the pair really *is* that character.
+ *
+ * Legality allows registration; truth does not. A Spy shown as the
+ * Slayer is still a Spy, so the reading is false — and a Vortox may
+ * produce it freely, because falsifying is exactly its job.
+ */
+const pairIsTrue = function (w) {
+  const phase = `N${this.night}`;
+  return [this.a, this.b].some(
+    who => who !== null && who !== undefined &&
+           w.roleAt(who, phase) === this.role);
+};
+
+/** What a two-seat reading leaned on, shared by all three of them. */
+const pairLeanedOn = function (w) {
+  const phase = `N${this.night}`;
+  for (const who of [this.a, this.b])
+    if (who !== null && who !== undefined &&
+        w.roleAt(who, phase) === this.role) return [];
+  return [this.a, this.b].filter(
+    who => misregistered(w, who, phase, this.role));
+};
+
 // --- the first night ------------------------------------------------
 
 export const Washerwoman = define("Washerwoman", "Washerwoman",
   function (w) {
     return registersAsRole(w.roleAt(this.a, "N1"), this.role) ||
            registersAsRole(w.roleAt(this.b, "N1"), this.role);
-  });
+  }, {leanedOn: pairLeanedOn, isTrue: pairIsTrue});
 
 /** Could this character avoid being counted as an Outsider?
  *
@@ -165,13 +226,13 @@ export const Librarian = define("Librarian", "Librarian",
         canShowAsSomethingElse(w.roleAt(p, "N1")));
     return registersAsRole(w.roleAt(this.a, "N1"), this.role) ||
            registersAsRole(w.roleAt(this.b, "N1"), this.role);
-  });
+  }, {leanedOn: pairLeanedOn, isTrue: pairIsTrue});
 
 export const Investigator = define("Investigator", "Investigator",
   function (w) {
     return registersAsRole(w.roleAt(this.a, "N1"), this.role) ||
            registersAsRole(w.roleAt(this.b, "N1"), this.role);
-  });
+  }, {leanedOn: pairLeanedOn, isTrue: pairIsTrue});
 
 export const Chef = define("Chef", "Chef",
   function (w) {
@@ -232,11 +293,31 @@ export const Undertaker = define("Undertaker", "Undertaker",
     const day = this.night - 1;
     if (s.executionDeath(day) !== this.target) return false;
     return registersAsRole(w.roleAt(this.target, `D${day}`), this.role);
+  }, {
+    /** Whether the executed seat really was that character. */
+    isTrue(w) {
+      return w.roleAt(this.target, `D${this.night - 1}`) === this.role;
+    },
+    /** Read at the day of the execution, when the seat had to be showing
+     * as what the Undertaker was told. */
+    leanedOn(w) {
+      return misregistered(w, this.target, `D${this.night - 1}`, this.role)
+        ? [this.target] : [];
+    },
   });
 
 export const Ravenkeeper = define("Ravenkeeper", "Ravenkeeper",
   function (w) {
     return registersAsRole(w.roleAt(this.target, `N${this.night}`), this.role);
+  }, {
+    /** Whether that seat really was that character. */
+    isTrue(w) {
+      return w.roleAt(this.target, `N${this.night}`) === this.role;
+    },
+    leanedOn(w) {
+      return misregistered(w, this.target, `N${this.night}`, this.role)
+        ? [this.target] : [];
+    },
   });
 
 // --- Sects & Violets ---------------------------------------------------

@@ -107,6 +107,14 @@ export const DATA = {
     "never"
    ]
   },
+  "Farmer": {
+   "id": "farmer",
+   "name": "Farmer",
+   "team": "townsfolk",
+   "wake": [
+    "never"
+   ]
+  },
   "Slayer": {
    "id": "slayer",
    "name": "Slayer",
