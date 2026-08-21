@@ -485,6 +485,27 @@ causeRule(function aMoonchildTakesSomebodyWithIt(world, state, night) {
  *
  * It reaches exactly one seat — its own — so it can never account for
  * anybody else's death. */
+/** Its pick was droisoned, so it dies — and nothing else does.
+ *
+ * Reaches exactly its own seat, like the Gambler's. Whether it *did*
+ * fall is not decided here: that depends on whether the seat it picked
+ * was impaired, which the impairment plan settles later.
+ *
+ * Not a Demon kill, so a Soldier or a Monk is no help. A Tea Lady is,
+ * because her neighbours cannot die at all.
+ */
+causeRule(function anAcrobatMayFall(world, state, night) {
+  if (!inBag(state, "Acrobat") || night < 2) return [];
+  const phase = `N${night}`;
+  const seat = world.findAt("Acrobat", phase);
+  if (seat === null || !state.aliveSet(phase).has(seat)) return [];
+  const picked = state.infos.some(
+    i => i.sourceRole === "Acrobat" && i.night === night);
+  if (!picked) return [];
+  return [cause("Acrobat", OTHER, new Set([seat]), {capacity: 1,
+                                                   mustFire: false})];
+});
+
 causeRule(function aGamblerMayLose(world, state, night) {
   if (!inBag(state, "Gambler") || night < 2) return [];
   const seat = acting(world, state, "Gambler", night);

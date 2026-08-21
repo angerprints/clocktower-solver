@@ -18,7 +18,8 @@ export const DATA = {
    "wake": [
     "first"
    ],
-   "nights": "first"
+   "nights": "first",
+   "first_night": 33
   },
   "Librarian": {
    "id": "librarian",
@@ -27,7 +28,8 @@ export const DATA = {
    "wake": [
     "first"
    ],
-   "nights": "first"
+   "nights": "first",
+   "first_night": 34
   },
   "Investigator": {
    "id": "investigator",
@@ -36,7 +38,8 @@ export const DATA = {
    "wake": [
     "first"
    ],
-   "nights": "first"
+   "nights": "first",
+   "first_night": 35
   },
   "Chef": {
    "id": "chef",
@@ -45,7 +48,8 @@ export const DATA = {
    "wake": [
     "first"
    ],
-   "nights": "first"
+   "nights": "first",
+   "first_night": 36
   },
   "Empath": {
    "id": "empath",
@@ -54,7 +58,9 @@ export const DATA = {
    "wake": [
     "every"
    ],
-   "nights": "every"
+   "nights": "every",
+   "first_night": 37,
+   "other_night": 53
   },
   "FortuneTeller": {
    "id": "fortuneteller",
@@ -64,7 +70,9 @@ export const DATA = {
     "every"
    ],
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "first_night": 38,
+   "other_night": 54
   },
   "Undertaker": {
    "id": "undertaker",
@@ -75,7 +83,8 @@ export const DATA = {
     "other",
     "sometimes"
    ],
-   "nights": "conditional"
+   "nights": "conditional",
+   "other_night": 55
   },
   "Monk": {
    "id": "monk",
@@ -86,7 +95,8 @@ export const DATA = {
     "other"
    ],
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "other_night": 12
   },
   "Ravenkeeper": {
    "id": "ravenkeeper",
@@ -97,7 +107,8 @@ export const DATA = {
     "sometimes"
    ],
    "chooses": true,
-   "nights": "conditional"
+   "nights": "conditional",
+   "other_night": 52
   },
   "Virgin": {
    "id": "virgin",
@@ -107,13 +118,26 @@ export const DATA = {
     "never"
    ]
   },
+  "Acrobat": {
+   "id": "acrobat",
+   "name": "Acrobat",
+   "team": "townsfolk",
+   "wake": [
+    "every",
+    "other"
+   ],
+   "chooses": true,
+   "nights": "other",
+   "other_night": 39
+  },
   "Farmer": {
    "id": "farmer",
    "name": "Farmer",
    "team": "townsfolk",
    "wake": [
     "never"
-   ]
+   ],
+   "other_night": 48
   },
   "Slayer": {
    "id": "slayer",
@@ -147,7 +171,9 @@ export const DATA = {
     "every"
    ],
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "first_night": 39,
+   "other_night": 67
   },
   "Drunk": {
    "id": "drunk",
@@ -193,7 +219,9 @@ export const DATA = {
    ],
    "chooses": true,
    "nights": "every",
-   "impairs": true
+   "impairs": true,
+   "first_night": 17,
+   "other_night": 7
   },
   "Spy": {
    "id": "spy",
@@ -206,7 +234,9 @@ export const DATA = {
     "outsider",
     "townsfolk"
    ],
-   "nights": "every"
+   "nights": "every",
+   "first_night": 49,
+   "other_night": 68
   },
   "ScarletWoman": {
    "id": "scarletwoman",
@@ -216,7 +246,8 @@ export const DATA = {
     "first",
     "sometimes"
    ],
-   "nights": "conditional"
+   "nights": "conditional",
+   "other_night": 19
   },
   "Baron": {
    "id": "baron",
@@ -241,7 +272,8 @@ export const DATA = {
     "first"
    ],
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "other_night": 24
   },
   "Godfather": {
    "id": "godfather",
@@ -262,7 +294,9 @@ export const DATA = {
     }
    ],
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "first_night": 21,
+   "other_night": 37
   },
   "DevilsAdvocate": {
    "id": "devilsadvocate",
@@ -272,7 +306,9 @@ export const DATA = {
     "every"
    ],
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "first_night": 22,
+   "other_night": 13
   },
   "Assassin": {
    "id": "assassin",
@@ -284,7 +320,8 @@ export const DATA = {
     "sometimes"
    ],
    "chooses": true,
-   "nights": "conditional"
+   "nights": "conditional",
+   "other_night": 36
   },
   "Zombuul": {
    "id": "zombuul",
@@ -296,7 +333,8 @@ export const DATA = {
     "sometimes"
    ],
    "chooses": true,
-   "nights": "conditional"
+   "nights": "conditional",
+   "other_night": 25
   },
   "Pukka": {
    "id": "pukka",
@@ -307,7 +345,9 @@ export const DATA = {
     "first"
    ],
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "first_night": 28,
+   "other_night": 26
   },
   "Shabaloth": {
    "id": "shabaloth",
@@ -318,7 +358,8 @@ export const DATA = {
     "first"
    ],
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "other_night": 27
   },
   "Po": {
    "id": "po",
@@ -329,7 +370,8 @@ export const DATA = {
     "first"
    ],
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "other_night": 28
   },
   "Mastermind": {
    "id": "mastermind",
@@ -350,7 +392,8 @@ export const DATA = {
    "wake": [
     "first"
    ],
-   "nights": "first"
+   "nights": "first",
+   "first_night": 41
   },
   "Dreamer": {
    "id": "dreamer",
@@ -360,7 +403,9 @@ export const DATA = {
     "every"
    ],
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "first_night": 42,
+   "other_night": 56
   },
   "SnakeCharmer": {
    "id": "snakecharmer",
@@ -371,7 +416,9 @@ export const DATA = {
    ],
    "chooses": true,
    "nights": "every",
-   "impairs": true
+   "impairs": true,
+   "first_night": 20,
+   "other_night": 11
   },
   "Mathematician": {
    "id": "mathematician",
@@ -380,7 +427,9 @@ export const DATA = {
    "wake": [
     "every"
    ],
-   "nights": "every"
+   "nights": "every",
+   "first_night": 52,
+   "other_night": 71
   },
   "Flowergirl": {
    "id": "flowergirl",
@@ -389,7 +438,8 @@ export const DATA = {
    "wake": [
     "other"
    ],
-   "nights": "other"
+   "nights": "other",
+   "other_night": 57
   },
   "TownCrier": {
    "id": "towncrier",
@@ -398,7 +448,8 @@ export const DATA = {
    "wake": [
     "other"
    ],
-   "nights": "other"
+   "nights": "other",
+   "other_night": 58
   },
   "Oracle": {
    "id": "oracle",
@@ -407,7 +458,8 @@ export const DATA = {
    "wake": [
     "other"
    ],
-   "nights": "other"
+   "nights": "other",
+   "other_night": 59
   },
   "Savant": {
    "id": "savant",
@@ -429,7 +481,9 @@ export const DATA = {
     "sometimes"
    ],
    "chooses": true,
-   "nights": "conditional"
+   "nights": "conditional",
+   "first_night": 43,
+   "other_night": 60
   },
   "Philosopher": {
    "id": "philosopher",
@@ -441,7 +495,9 @@ export const DATA = {
    ],
    "chooses": true,
    "nights": "conditional",
-   "impairs": true
+   "impairs": true,
+   "first_night": 2,
+   "other_night": 2
   },
   "Artist": {
    "id": "artist",
@@ -462,7 +518,8 @@ export const DATA = {
     "never",
     "sometimes"
    ],
-   "nights": "conditional"
+   "nights": "conditional",
+   "other_night": 61
   },
   "Sage": {
    "id": "sage",
@@ -472,7 +529,8 @@ export const DATA = {
     "never",
     "sometimes"
    ],
-   "nights": "conditional"
+   "nights": "conditional",
+   "other_night": 42
   },
   "Mutant": {
    "id": "mutant",
@@ -493,7 +551,8 @@ export const DATA = {
    "wake": [
     "never"
    ],
-   "impairs": true
+   "impairs": true,
+   "other_night": 41
   },
   "Barber": {
    "id": "barber",
@@ -501,7 +560,8 @@ export const DATA = {
    "team": "outsider",
    "wake": [
     "never"
-   ]
+   ],
+   "other_night": 40
   },
   "Klutz": {
    "id": "klutz",
@@ -518,7 +578,8 @@ export const DATA = {
    "wake": [
     "first"
    ],
-   "nights": "first"
+   "nights": "first",
+   "first_night": 23
   },
   "Witch": {
    "id": "witch",
@@ -528,7 +589,9 @@ export const DATA = {
     "every"
    ],
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "first_night": 24,
+   "other_night": 14
   },
   "Cerenovus": {
    "id": "cerenovus",
@@ -542,7 +605,9 @@ export const DATA = {
    "chooses": true,
    "nights": "every",
    "handled": "not",
-   "settled": true
+   "settled": true,
+   "first_night": 25,
+   "other_night": 15
   },
   "PitHag": {
    "id": "pithag",
@@ -553,7 +618,8 @@ export const DATA = {
    ],
    "chooses": true,
    "nights": "every",
-   "impairs": true
+   "impairs": true,
+   "other_night": 16
   },
   "FangGu": {
    "id": "fanggu",
@@ -570,7 +636,8 @@ export const DATA = {
     }
    ],
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "other_night": 29
   },
   "Vigormortis": {
    "id": "vigormortis",
@@ -582,7 +649,8 @@ export const DATA = {
    ],
    "chooses": true,
    "nights": "other",
-   "impairs": true
+   "impairs": true,
+   "other_night": 32
   },
   "NoDashii": {
    "id": "nodashii",
@@ -594,7 +662,8 @@ export const DATA = {
    ],
    "chooses": true,
    "nights": "other",
-   "impairs": true
+   "impairs": true,
+   "other_night": 30
   },
   "Vortox": {
    "id": "vortox",
@@ -605,7 +674,8 @@ export const DATA = {
     "first"
    ],
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "other_night": 31
   },
   "Noble": {
    "id": "noble",
@@ -616,7 +686,8 @@ export const DATA = {
    ],
    "modelled": false,
    "note": "its first-night reading is not checked",
-   "handled": "not"
+   "handled": "not",
+   "first_night": 44
   },
   "Grandmother": {
    "id": "grandmother",
@@ -625,7 +696,9 @@ export const DATA = {
    "wake": [
     "first"
    ],
-   "nights": "first"
+   "nights": "first",
+   "first_night": 40,
+   "other_night": 51
   },
   "Sailor": {
    "id": "sailor",
@@ -636,7 +709,9 @@ export const DATA = {
    ],
    "chooses": true,
    "nights": "every",
-   "impairs": true
+   "impairs": true,
+   "first_night": 11,
+   "other_night": 4
   },
   "Exorcist": {
    "id": "exorcist",
@@ -647,7 +722,8 @@ export const DATA = {
     "other"
    ],
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "other_night": 21
   },
   "Innkeeper": {
    "id": "innkeeper",
@@ -659,7 +735,8 @@ export const DATA = {
    ],
    "chooses": true,
    "nights": "other",
-   "impairs": true
+   "impairs": true,
+   "other_night": 9
   },
   "Courtier": {
    "id": "courtier",
@@ -671,7 +748,9 @@ export const DATA = {
     "sometimes"
    ],
    "nights": "conditional",
-   "impairs": true
+   "impairs": true,
+   "first_night": 19,
+   "other_night": 8
   },
   "Professor": {
    "id": "professor",
@@ -682,7 +761,8 @@ export const DATA = {
     "sometimes"
    ],
    "chooses": true,
-   "nights": "conditional"
+   "nights": "conditional",
+   "other_night": 43
   },
   "Gambler": {
    "id": "gambler",
@@ -693,7 +773,8 @@ export const DATA = {
     "other"
    ],
    "chooses": true,
-   "nights": "other"
+   "nights": "other",
+   "other_night": 10
   },
   "Gossip": {
    "id": "gossip",
@@ -701,7 +782,8 @@ export const DATA = {
    "team": "townsfolk",
    "wake": [
     "never"
-   ]
+   ],
+   "other_night": 38
   },
   "Minstrel": {
    "id": "minstrel",
@@ -720,7 +802,9 @@ export const DATA = {
     "every"
    ],
    "chooses": true,
-   "nights": "every"
+   "nights": "every",
+   "first_night": 51,
+   "other_night": 70
   },
   "Pacifist": {
    "id": "pacifist",
@@ -762,7 +846,8 @@ export const DATA = {
    "team": "outsider",
    "wake": [
     "never"
-   ]
+   ],
+   "other_night": 49
   },
   "Moonchild": {
    "id": "moonchild",
@@ -771,7 +856,8 @@ export const DATA = {
    "wake": [
     "never"
    ],
-   "chooses": true
+   "chooses": true,
+   "other_night": 50
   },
   "Lunatic": {
    "id": "lunatic",
@@ -790,7 +876,9 @@ export const DATA = {
    ],
    "chooses": true,
    "nights": "conditional",
-   "impairs": true
+   "impairs": true,
+   "first_night": 8,
+   "other_night": 20
   },
   "Ogre": {
    "id": "ogre",
@@ -823,7 +911,8 @@ export const DATA = {
    ],
    "modelled": false,
    "note": "most of the table is evil, so every team count the search prunes on is wrong",
-   "handled": "not"
+   "handled": "not",
+   "other_night": 23
   },
   "Riot": {
    "id": "riot",
@@ -856,7 +945,8 @@ export const DATA = {
    "note": "it believes it is a good character, like the Drunk, but the machinery for that is still tied to the Drunk alone",
    "nights": "conditional",
    "impairs": true,
-   "handled": "not"
+   "handled": "not",
+   "first_night": 12
   },
   "Sentinel": {
    "id": "sentinel",
