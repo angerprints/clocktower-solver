@@ -50,6 +50,28 @@ condition("ScarletWoman", (world, state, seat, night) =>
   world.demonAt(`N${night}`) === seat && world.demonAt("N1") !== seat);
 
 /** Every night until it names a character, then never again. */
+/** Every night, believing it is the Demon.
+ *
+ * Missing entirely, and `nights === "conditional"` is checked before the
+ * night-one branch — so a character without a rule here silently never
+ * wakes at all. Found by a Chambermaid counting two where the solver
+ * could only reach one.
+ */
+condition("Lunatic", () => true);
+
+/** The night it chooses, and thereafter on its gained schedule. */
+condition("Philosopher", () => true);
+
+/** Answered on the night after the day it guessed, and never again. */
+condition("Juggler", (world, state, seat, night) => night === 2);
+
+/** Once a game, and the simulator spends it on the first night. */
+condition("Seamstress", (world, state, seat, night) => night === 1);
+
+/** Only if the Demon killed it tonight. */
+condition("Sage", (world, state, seat, night) =>
+  state.diedAt(seat).includes(`N${night}`));
+
 condition("Courtier", (world, state, seat, night) => {
   for (const info of state.infos)
     if (info.sourceRole === "Courtier" && info.player === seat)
@@ -58,14 +80,14 @@ condition("Courtier", (world, state, seat, night) => {
 });
 
 /** From the second night until it raises somebody. */
-condition("Professor", (world, state, seat, night) => {
-  if (night < 2) return false;
-  for (const phases of Object.values(state.resurrections || {}))
-    for (const phase of phases)
-      if (phase[0].toUpperCase() === "N" &&
-          parseInt(phase.slice(1), 10) < night) return false;  // spent
-  return true;
-});
+/** Once a game, so only on the night it spends it.
+ *
+ * Returning true every night had a Chambermaid counting a Professor that
+ * had raised nobody. Nothing on the record says which night it used, so
+ * this says no unless something else does — which keeps the count honest
+ * rather than inventing a wake.
+ */
+condition("Professor", () => false);
 
 /** Only on nights it can actually kill — which is nights after a day
  * when nobody died. */
@@ -155,11 +177,31 @@ export function uncertain(world, state, seat, night) {
 }
 
 /** Every value "how many of these woke" could have taken. */
+// Woken to be *told* something rather than to do anything.
+//
+// A Lunatic is shown a Demon's night and made to choose victims who never
+// die — it wakes, and none of it is its own ability working. A
+// Chambermaid does not count it, for the same reason it does not count a
+// Baron being shown the other evil players.
+//
+// `woke` answers two questions at once: *did this seat wake*, which
+// decides what a player could honestly claim, and *did its own ability
+// fire*, which is what a Chambermaid asks. They agree for almost every
+// character, which is why the difference went unnoticed.
+export const SHOWN_NOT_ACTING = new Set(
+  ["Lunatic", "Spy", "EvilTwin", "Marionette"]);
+
+/** What a Chambermaid counts — narrower than `woke`. */
+export function wokeForOwnAbility(world, state, seat, night) {
+  if (!woke(world, state, seat, night)) return false;
+  return !SHOWN_NOT_ACTING.has(world.roleAt(seat, `N${night}`));
+}
+
 export function possibleCounts(world, state, seats, night) {
   let fixed = 0, openEnded = 0;
   for (const seat of seats) {
     if (uncertain(world, state, seat, night)) openEnded += 1;
-    else if (woke(world, state, seat, night)) fixed += 1;
+    else if (wokeForOwnAbility(world, state, seat, night)) fixed += 1;
   }
   const out = new Set();
   for (let extra = 0; extra <= openEnded; extra++) out.add(fixed + extra);
