@@ -346,7 +346,7 @@ transitionRule(function aFarmerHandsItOn(world, state) {
         .filter(p => p !== seat && couldBeGood(view, p, phase));
       grown.push([changes, cost]);
       for (const heir of heirs)
-        grown.push([[...changes, new Change(`D${night}`, heir, "Farmer", null)],
+        grown.push([[...changes, change(`D${night}`, heir, "Farmer", null)],
                     cost]);
     }
     stories = grown.slice(0, 48);

@@ -395,9 +395,14 @@ TownCrierInfo.prototype.isTrue = function (w, s) {
  */
 export const OracleInfo = define("OracleInfo", "Oracle",
   function (w, s) {
+    // Including whoever fell tonight. The Oracle reads at slot 59 and a
+    // Demon kills at 24, so by the time it counts, tonight's victim is
+    // dead — while `aliveSet` reports who was alive at the *start* of
+    // the night, which is a different question.
     const phase = `N${this.night}`;
     const alive = s.aliveSet(phase);
-    const dead = w.roles.map((_r, p) => p).filter(p => !alive.has(p));
+    const dead = w.roles.map((_r, p) => p)
+      .filter(p => !alive.has(p) || s.diedAt(p).includes(phase));
     return possibleEvilCounts(w, dead, phase).has(this.count);
   });
 
