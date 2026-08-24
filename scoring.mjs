@@ -361,9 +361,13 @@ transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
 
   let stories = [[[], 1.0]];
   for (const info of swaps) {
+    // Who *acted*, which is the board as it stood when the night began —
+    // not after the swap this rule is about to write. The swap is dated
+    // at the night now that it is immediate.
     const phase = `N${info.night}`;
-    const charmer = world.findAt("SnakeCharmer", phase);
-    const demon = world.demonAt(phase);
+    const began = info.night > 1 ? `E${info.night - 1}` : phase;
+    const charmer = world.findAt("SnakeCharmer", began);
+    const demon = world.demonAt(began);
     if (charmer === null || demon === null || charmer === demon) continue;
     if (info.target !== demon) continue;   // they pointed at somebody else
     const after = `D${info.night}`;
@@ -554,7 +558,11 @@ function plainFailures(world, state, outcome = {}) {
     const phase = `N${info.night}`;
     let seat = seats[idx];
     if (seat === null) {
-      seat = world.findAt(role, phase);
+      // Who acted, not who holds the character now — a swap dated at
+      // this night would otherwise find the seat it ended up at.
+      const began = info.night > 1 ? `E${info.night - 1}` : phase;
+      seat = world.findAt(role, began);
+      if (seat === null) seat = world.findAt(role, phase);
       if (seat === null)
         // Nobody holds it — but a Philosopher may be working it.
         for (const [who, [taken, since]]
@@ -581,9 +589,21 @@ function plainFailures(world, state, outcome = {}) {
     // droisoning is left to the plan rather than decided here.
     const vortox = world.findAt("Vortox", phase);
     const vortoxed = vortox !== null && state.aliveSet(phase).has(vortox);
-    const held = seat === null ? ABSENT
-                               : abilityState(world, seat, role, phase,
-                                              gained, vortoxed);
+    // Judged at the moment it acted. A Snake Charmer swap is dated at
+    // the night, so at `phase` the charmer no longer holds the character
+    // — and its own row was charged as invented, putting a world where
+    // the swap really happened at 0.4 against 1.0 for one where it could
+    // not.
+    const acted = info.night > 1 ? `E${info.night - 1}` : phase;
+    let held;
+    if (seat !== null && world.roleAt(seat, phase) !== role
+        && world.roleAt(seat, acted) === role) {
+      held = abilityState(world, seat, role, acted, gained, vortoxed);
+    } else {
+      held = seat === null ? ABSENT
+                           : abilityState(world, seat, role, phase,
+                                          gained, vortoxed);
+    }
     if (held === ABSENT) {
       invented *= inventionCost(info);    // no such source in this world
       outcome[idx] = INVENTED;
