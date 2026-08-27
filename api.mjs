@@ -30,7 +30,12 @@ import {OffScript} from "./worlds.mjs";
 
 // Which reading each character produces. A row only makes sense on a
 // script that has the character behind it.
-const INFO_SOURCES = {
+export const INFO_SOURCES = {
+  // The experimental ones. These reached the Python table and not this
+  // one, so the characters could be *ticked* onto a script and then had
+  // no reading to enter — which is the same "done in the model, not
+  // usable" gap the Acrobat had before, in a second place.
+  Acrobat: "Acrobat", Balloonist: "Balloonist", Alsaahir: "Alsaahir",
   Washerwoman: "Washerwoman", Librarian: "Librarian",
   Investigator: "Investigator", Chef: "Chef", Empath: "Empath",
   FortuneTeller: "FortuneTeller", Undertaker: "Undertaker",
