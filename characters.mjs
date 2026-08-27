@@ -118,6 +118,33 @@ export const DATA = {
     "never"
    ]
   },
+  "Alsaahir": {
+   "id": "alsaahir",
+   "name": "Alsaahir",
+   "team": "townsfolk",
+   "wake": [
+    "never"
+   ]
+  },
+  "Balloonist": {
+   "id": "balloonist",
+   "name": "Balloonist",
+   "team": "townsfolk",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "setup": [
+    {
+     "townsfolk": -1,
+     "outsider": 1
+    },
+    {}
+   ],
+   "nights": "every",
+   "first_night": 45,
+   "other_night": 62
+  },
   "Acrobat": {
    "id": "acrobat",
    "name": "Acrobat",

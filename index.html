@@ -624,6 +624,19 @@ const SCHEMA = {
   Investigator: [["a","player"],["b","player"],["role","role:minions"]],
   Chef:         [["count","number"]],
   Empath:       [["count","number"]],
+  // The Balloonist is shown a *player* and never told the type, so the
+  // ledger takes a seat and nothing else. What the row means lives in
+  // the chain of them, not in any one.
+  Balloonist:   [["target","player"]],
+  // Both of these were built in the solver, the walk and the simulator
+  // and never reached here — so a character could pass its forty-game
+  // gate and still be unusable, because nobody could type its reading
+  // in. "Done" now means done as far as the ledger.
+  Acrobat:      [["target","player"]],
+  // A daytime guess at the whole evil team. Two lists and whether it
+  // won, because naming the Demon as a Minion is a failed guess.
+  Alsaahir:     [["demons","players"],["minions","players"],
+                 ["won","bool:Good won|Nothing happened"]],
   FortuneTeller:[["a","player"],["b","player"],["yes","bool:Demon|Nothing"]],
   Undertaker:   [["target","player"],["role","role:all"]],
   Ravenkeeper:  [["target","player"],["role","role:all"]],
@@ -1425,6 +1438,17 @@ function describeRow(r){
   switch(r.type){
     case "Empath":
       return `${r.count} evil neighbour${r.count === 1 ? "" : "s"}`;
+    case "Alsaahir":
+      return r.won
+        ? `guessed the evil team and won`
+        : `guessed the evil team and nothing happened`;
+    case "Acrobat":
+      return `chose ${who(r.target)}`;
+    case "Balloonist":
+      // No type, because the Balloonist is not told one. "A different
+      // character type from last night" is the whole content, and it
+      // only bites against the night before.
+      return `saw ${who(r.target)}, a different character type than the night before`;
     case "Chef":
       return `${r.count} pair${r.count === 1 ? "" : "s"} of evil sitting together`;
     case "Washerwoman":

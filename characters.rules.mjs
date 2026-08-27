@@ -375,9 +375,19 @@ causeRule(function aShabalothKillsTwice(world, state, night) {
 causeRule(function aPoKillsNoneOrThree(world, state, night) {
   if (!inBag(state, "Po") || night < 2) return [];
   if (acting(world, state, "Po", night) === null) return [];
-  const quiet = !anyDiedAt(state, `N${night - 1}`);
+  // A Po charges by taking **nobody**, and then takes three.
+  //
+  // This asked whether *anybody* died last night, which is a different
+  // question: a Tinker that simply went, an Acrobat that fell, a Gambler
+  // that guessed wrong all die without the Po lifting a finger. One of
+  // those on the charging night offered a capacity of one against a
+  // record of three, and the board had no legal world.
+  //
+  // Whether the Po killed cannot be read off the deaths, because the
+  // deaths are what is being explained. A capacity is a ceiling, so
+  // three covers taking one and the search decides.
   return [new Cause("Demon", DEMON, allSeats(state),
-                    {capacity: quiet ? 3 : 1, mustFire: false})];
+                    {capacity: 3, mustFire: false})];
 });
 
 /** A Demon was created, so tonight's deaths are the Storyteller's.
