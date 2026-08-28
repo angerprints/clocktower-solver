@@ -513,22 +513,6 @@ export const SailorChoice = declaredChoice("SailorChoice", "Sailor");
  * character starts **that night**, which is why the first-night readings
  * read their own night rather than night one.
  */
-/** A seat was handed a character it was not dealt, and says so.
- *
- * Provenance rather than a claim: "I became the Farmer on night two" is
- * a different statement from "I am the Farmer", and the speaker knows
- * which they are making.
- *
- * `was` is what they claimed before — for the ledger to read, not for
- * the search, which derives the dealt role itself.
- */
-export const BecameInfo = define("BecameInfo", null,
-  function (w) {
-    const after = `D${this.night}`;
-    return w.roleAt(this.player, after) === this.role
-        && w.roles[this.player] !== this.role;
-  });
-
 export const PitHagChoice = define("PitHagChoice", "PitHag",
   function (w) {
     const phase = `N${this.night}`;
@@ -592,6 +576,44 @@ export const SageInfo = define("SageInfo", "Sage",
  * game carried on says they were not — while it was working. Same shape
  * as the Saint being executed while poisoned.
  */
+// The experimental four, named as the ledger names them.
+//
+// None of these existed here at all. Three of them shipped, and the
+// moment anybody entered one and pressed Solve the whole solve died with
+// "Unknown kind of reading" — the Python side had them, the JavaScript
+// side did not, and the hosted page runs the JavaScript.
+export const Acrobat = define("Acrobat", "Acrobat",
+  function (w) { return true; });          // the walk judges the death
+
+export const Balloonist = define("Balloonist", "Balloonist",
+  function (w) { return true; });          // the chain is judged as a whole
+
+export const Alsaahir = define("Alsaahir", "Alsaahir",
+  function (w) {
+    const phase = `D${this.night}`;
+    const demons = new Set(), minions = new Set();
+    for (let p = 0; p < w.roles.length; p++) {
+      const team = TEAM[w.roleAt(p, phase)];
+      if (team === "demon") demons.add(p);
+      else if (team === "minion") minions.add(p);
+    }
+    const same = (a, b) => a.size === b.length
+      && b.every(x => a.has(x));
+    const exact = same(demons, this.demons || [])
+               && same(minions, this.minions || []);
+    if (this.won) return exact;
+    if (w.roleAt(this.player, phase) !== "Alsaahir") return true;
+    return !exact;
+  });
+
+/** A seat was handed a character it was not dealt, and says so. */
+export const Became = define("Became", null,
+  function (w) {
+    const after = `D${this.night}`;
+    return w.roleAt(this.player, after) === this.role
+        && w.roles[this.player] !== this.role;
+  });
+
 export const KlutzChoice = define("KlutzChoice", "Klutz",
   function (w) {
     return !w.evilAt(this.target, `N${this.night}`);
@@ -825,7 +847,9 @@ export const ChambermaidInfo = define("ChambermaidInfo", "Chambermaid",
 PhilosopherChoice.isAChoice = true;
 SnakeCharmerChoice.isAChoice = true;
 PitHagChoice.isAChoice = true;
-BecameInfo.isAChoice = true;
+Became.isAChoice = true;
+Acrobat.isAChoice = true;
+Alsaahir.isAChoice = true;
 CourtierChoice.isAChoice = true;
 KlutzChoice.isAChoice = true;
 GamblerGuess.isAChoice = true;
@@ -842,7 +866,8 @@ export const KINDS = {
   FlowergirlInfo, TownCrierInfo,
   OracleInfo, SeamstressInfo, JugglerInfo, SavantInfo, ArtistInfo,
   SageInfo, KlutzChoice, EvilTwinPair, PhilosopherChoice,
-  SnakeCharmerChoice, PitHagChoice, BecameInfo,
+  SnakeCharmerChoice, PitHagChoice,
+  Acrobat, Balloonist, Alsaahir, Became,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
 };
 
