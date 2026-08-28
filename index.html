@@ -589,7 +589,7 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=14901beaf1a6";
+import * as solver from "./api.mjs?v=f8f30336e2fd";
 
 // Keep a copy on the device, so it opens with nothing behind it.
 //
@@ -699,6 +699,10 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   SnakeCharmerChoice:"SnakeCharmer", PitHagChoice:"PitHag",
   MoonchildChoice:"Moonchild", ExorcistChoice:"Exorcist",
   InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor" };
+// Not produced by a character, so it has no source role to be labelled
+// with — and falling back to the type name printed "Became" as though it
+// were a character somebody claimed.
+TYPE_LABEL.Became = "Claim changed";
 const DAY_EVENTS   = ["SlayerShot","VirginNomination"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin" };
 // A few readings are named for the *act* rather than the character,
@@ -713,6 +717,10 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   KlutzChoice:"Klutz", EvilTwinPair:"Evil Twin",
   MoonchildChoice:"Moonchild", ExorcistChoice:"Exorcist",
   InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor" };
+// Not produced by a character, so it has no source role to be labelled
+// with — and falling back to the type name printed "Became" as though it
+// were a character somebody claimed.
+TYPE_LABEL.Became = "Claim changed";
 const sourceRole = t => SOURCE_ROLE[t] || t;
 const typeLabel  = t =>
   TYPE_LABEL[t] || label(sourceRole(t)) || label(t.replace(/Info$/, ""));
@@ -953,7 +961,17 @@ function boot(){
   $("#shake").onclick = doSensitivity;
 
   $("#f-name").oninput  = e => { S.players[selected].name=e.target.value; drawSeats(); drawLedger(); save(); };
-  $("#f-claim").onchange= e => { S.players[selected].claim=e.target.value; touch(); draw(); save(); };
+  $("#f-claim").onchange= e => {
+    const p = S.players[selected];
+    // Remember what they were claiming before this edit.
+    //
+    // Nothing kept it, so "became this" had nothing to name and the
+    // ledger showed an empty box. Stored on the seat at the moment the
+    // dropdown moves, which is the only moment the old value still
+    // exists — a second later it is gone.
+    if(p.claim && p.claim !== e.target.value) p.wasClaim = p.claim;
+    p.claim = e.target.value; touch(); draw(); save();
+  };
 
   // Records that the token changed hands. Takes the night from the last
   // night played and the previous claim from what is on the seat now, so
@@ -962,12 +980,19 @@ function boot(){
     const p = S.players[selected];
     if(!p || !p.claim){ alert("Set the claimed role first."); return; }
     const night = Math.max(1, (S.done||[]).length ? Math.max(...S.done) : 1);
-    const was = (S.infos||[]).filter(r=>r.type==="Became" && r.player===selected)
-                  .sort((a,b)=>b.night-a.night)[0];
+    // What they claimed before: the last handover if there was one, and
+    // otherwise the value remembered when the dropdown last moved.
+    const earlier = (S.infos||[]).filter(
+        r=>r.type==="Became" && r.player===selected)
+      .sort((a,b)=>b.night-a.night)[0];
+    const was = earlier ? earlier.role : (p.wasClaim||"");
+    if(was === p.claim){
+      alert("Change the claimed role first, then record that it changed hands.");
+      return;
+    }
     S.infos = S.infos || [];
     S.infos.push({type:"Became", night, player:selected,
-                  role:p.claim, was: was ? was.role : (p.wasClaim||"")});
-    p.wasClaim = p.claim;
+                  role:p.claim, was});
     touch(); draw(); save();
   };
   $("#f-death").onchange = e => {
@@ -1470,8 +1495,8 @@ function describeRow(r){
       return `${r.count} evil neighbour${r.count === 1 ? "" : "s"}`;
     case "Became":
       return r.was
-        ? `claimed ${role(r.was)} until now, and claims ${role(r.role)} from this night`
-        : `became the ${role(r.role)} this night`;
+        ? `claimed ${role(r.was)} until now, ${role(r.role)} from here on`
+        : `claims ${role(r.role)} from here on — was claiming nothing before`;
     case "Alsaahir":
       return r.won
         ? `guessed the evil team and won`
