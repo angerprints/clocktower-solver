@@ -589,7 +589,7 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=f8f30336e2fd";
+import * as solver from "./api.mjs?v=ed63f59a1b80";
 
 // Keep a copy on the device, so it opens with nothing behind it.
 //
@@ -699,10 +699,6 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   SnakeCharmerChoice:"SnakeCharmer", PitHagChoice:"PitHag",
   MoonchildChoice:"Moonchild", ExorcistChoice:"Exorcist",
   InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor" };
-// Not produced by a character, so it has no source role to be labelled
-// with — and falling back to the type name printed "Became" as though it
-// were a character somebody claimed.
-TYPE_LABEL.Became = "Claim changed";
 const DAY_EVENTS   = ["SlayerShot","VirginNomination"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin" };
 // A few readings are named for the *act* rather than the character,
