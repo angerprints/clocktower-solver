@@ -589,7 +589,7 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=5572716ac316";
+import * as solver from "./api.mjs?v=5a1c9e481aa6";
 
 // Keep a copy on the device, so it opens with nothing behind it.
 //
@@ -1817,6 +1817,24 @@ function drawEvents(p){
   });
 }
 
+// What a seat we know nothing about would read.
+//
+// Shown beside the evil figure because the number alone misleads. One
+// seat claiming Chef reads 76 per cent, which looks like an accusation —
+// and the eight silent seats drop from 22 to 15 to pay for it. Nothing
+// is invented; probability moves, and the table still totals two evil
+// players out of nine.
+//
+// The claimant is high because claiming a specific character allows two
+// honest options against five bluffs. That is real evidence about a
+// solo unsupported claim, and reads as a verdict without the base rate
+// beside it.
+function baseRate(){
+  const n = S.n, row = (META.setup||{})[String(n)];
+  if(!row) return null;
+  return 100 * (row[2] + row[3]) / n;
+}
+
 function drawInspector(){
   const form=$("#insp-form"), read=$("#insp-read");
   // Only where the script holds something that hands a token on. On a
@@ -1889,7 +1907,8 @@ function drawInspector(){
     read.innerHTML=`<div class="rule"></div>
       <div class="metrics">
         <div class="metric"><b style="color:var(--evil)">${r.evil_pct.toFixed(0)}%${
-          r.margin>0?`<span class="margin"> ±${r.margin.toFixed(0)}</span>`:""}</b><span>evil</span></div>
+          r.margin>0?`<span class="margin"> ±${r.margin.toFixed(0)}</span>`:""}</b><span>evil${
+          baseRate()!==null?` &middot; base ${baseRate().toFixed(0)}%`:""}</span></div>
         <div class="metric"><b style="color:var(--crimson-deep)">${r.demon_pct.toFixed(0)}%</b><span>demon</span></div>
         <div class="metric"><b style="color:var(--lie)">${r.lying_pct.toFixed(0)}%</b><span>lying</span></div>
         <div class="metric"><b style="color:var(--ink-soft)">${r.drunk_pct.toFixed(0)}%</b><span>drunk</span></div>
