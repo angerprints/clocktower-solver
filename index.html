@@ -589,7 +589,7 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=ed63f59a1b80";
+import * as solver from "./api.mjs?v=e622d6fe6472";
 
 // Keep a copy on the device, so it opens with nothing behind it.
 //
@@ -2177,6 +2177,11 @@ function infoCard(rec, idx){
             && S.players.findIndex(p=>eventOn(p,(rec.night||2)-1)==="X"+((rec.night||2)-1))<0){
     note.innerHTML=`<span class="warn">mark whoever was executed on day ${
       (rec.night||2)-1} first</span>`;
+  } else if(rec.type==="Became"){
+    // Nothing to say. Every other reading is produced by a character and
+    // the note asks whether the speaker claims to be it; a claim change
+    // has no such character, so `src` was the type name and it read
+    // "from an unclaimed Became".
   } else if(speaker.claim!==src){
     const who=claimantOf(src);
     if(who!==null && who!==rec.player){
