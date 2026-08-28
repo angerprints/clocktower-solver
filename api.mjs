@@ -30,11 +30,20 @@ import {OffScript} from "./worlds.mjs";
 
 // Which reading each character produces. A row only makes sense on a
 // script that has the character behind it.
+// Characters that put a token in front of somebody who was dealt
+// another one. A Philosopher is not here: it gains an ability and keeps
+// its character.
+const HANDS_ON = ["Farmer", "PitHag", "SnakeCharmer"];
+
 export const INFO_SOURCES = {
   // The experimental ones. These reached the Python table and not this
   // one, so the characters could be *ticked* onto a script and then had
   // no reading to enter — which is the same "done in the model, not
   // usable" gap the Acrobat had before, in a second place.
+  // No source character: it is the speaker saying where their character
+  // came from. Offered whenever the script has something that can be
+  // handed on.
+  Became: null,
   Acrobat: "Acrobat", Balloonist: "Balloonist", Alsaahir: "Alsaahir",
   Washerwoman: "Washerwoman", Librarian: "Librarian",
   Investigator: "Investigator", Chef: "Chef", Empath: "Empath",
@@ -75,8 +84,15 @@ export function scriptMeta(script, nPlayers = null) {
         k => !CHARACTERS[k].believes && WAKE[k].includes(pat))])),
     // A reading only exists if the character that produces it is in the
     // bag.
+    // A reading only exists if the character that produces it is in the
+    // bag — except "Became", which has no producing character. It is the
+    // speaker saying where their own character came from, so it is
+    // offered whenever the script holds anything that can hand one on.
     info_types: Object.entries(INFO_SOURCES)
-      .filter(([, source]) => keys.includes(source)).map(([name]) => name),
+      .filter(([, source]) => source === null
+                ? HANDS_ON.some(k => keys.includes(k))
+                : keys.includes(source))
+      .map(([name]) => name),
     complaints: complaintsAbout(script, nPlayers),
     playable: scripts.isPlayable(script),
     // Shown as checkboxes rather than dealt: the table knows which are in

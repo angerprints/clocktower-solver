@@ -513,6 +513,22 @@ export const SailorChoice = declaredChoice("SailorChoice", "Sailor");
  * character starts **that night**, which is why the first-night readings
  * read their own night rather than night one.
  */
+/** A seat was handed a character it was not dealt, and says so.
+ *
+ * Provenance rather than a claim: "I became the Farmer on night two" is
+ * a different statement from "I am the Farmer", and the speaker knows
+ * which they are making.
+ *
+ * `was` is what they claimed before — for the ledger to read, not for
+ * the search, which derives the dealt role itself.
+ */
+export const BecameInfo = define("BecameInfo", null,
+  function (w) {
+    const after = `D${this.night}`;
+    return w.roleAt(this.player, after) === this.role
+        && w.roles[this.player] !== this.role;
+  });
+
 export const PitHagChoice = define("PitHagChoice", "PitHag",
   function (w) {
     const phase = `N${this.night}`;
@@ -809,6 +825,7 @@ export const ChambermaidInfo = define("ChambermaidInfo", "Chambermaid",
 PhilosopherChoice.isAChoice = true;
 SnakeCharmerChoice.isAChoice = true;
 PitHagChoice.isAChoice = true;
+BecameInfo.isAChoice = true;
 CourtierChoice.isAChoice = true;
 KlutzChoice.isAChoice = true;
 GamblerGuess.isAChoice = true;
@@ -825,7 +842,7 @@ export const KINDS = {
   FlowergirlInfo, TownCrierInfo,
   OracleInfo, SeamstressInfo, JugglerInfo, SavantInfo, ArtistInfo,
   SageInfo, KlutzChoice, EvilTwinPair, PhilosopherChoice,
-  SnakeCharmerChoice, PitHagChoice,
+  SnakeCharmerChoice, PitHagChoice, BecameInfo,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
 };
 

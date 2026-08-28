@@ -535,6 +535,15 @@ footer{padding:0 18px 40px}
       <div class="rule"></div>
       <label class="field" style="margin-bottom:10px"><span>Name</span><input type="text" id="f-name" placeholder="Who is sitting here?"></label>
       <label class="field" style="margin-bottom:6px"><span>Claimed role</span><select id="f-claim"></select></label>
+      <!-- Two entry points rather than a popup. Editing the claim above
+           corrects a note; this records that the token actually changed
+           hands, and the click already says which was meant. Hidden
+           unless the script holds something that can hand one on. -->
+      <div id="became-wrap" hidden style="margin:-2px 0 8px">
+        <button class="ghost" id="f-became" style="font-size:12.5px;padding:3px 8px">
+          became this mid-game</button>
+        <span class="hint" style="font-size:11.5px;margin-left:6px">files a ledger row</span>
+      </div>
       <label class="field" style="margin-bottom:6px"><span>What they said about waking</span><select id="f-wake"></select></label>
       <div class="hint" id="wake-note"></div>
       <div class="lookup" id="wake-look"></div>
@@ -580,7 +589,7 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=6db8dccb124f";
+import * as solver from "./api.mjs?v=b3a8d73bf2ef";
 
 // Keep a copy on the device, so it opens with nothing behind it.
 //
@@ -632,6 +641,11 @@ const SCHEMA = {
   // and never reached here — so a character could pass its forty-game
   // gate and still be unusable, because nobody could type its reading
   // in. "Done" now means done as far as the ledger.
+  // Where a seat's character came from, rather than what it is. The
+  // player is the speaker, so it is asked first; `was` is what they
+  // claimed before and is for reading rather than for the search.
+  Became:       [["player","player"],["role","role:all"],
+                 ["was","role:all"]],
   Acrobat:      [["target","player"]],
   // A daytime guess at the whole evil team. Two lists and whether it
   // won, because naming the Demon as a Minion is a failed guess.
@@ -940,6 +954,22 @@ function boot(){
 
   $("#f-name").oninput  = e => { S.players[selected].name=e.target.value; drawSeats(); drawLedger(); save(); };
   $("#f-claim").onchange= e => { S.players[selected].claim=e.target.value; touch(); draw(); save(); };
+
+  // Records that the token changed hands. Takes the night from the last
+  // night played and the previous claim from what is on the seat now, so
+  // the only thing left to choose is already chosen.
+  $("#f-became").onclick = () => {
+    const p = S.players[selected];
+    if(!p || !p.claim){ alert("Set the claimed role first."); return; }
+    const night = Math.max(1, (S.done||[]).length ? Math.max(...S.done) : 1);
+    const was = (S.infos||[]).filter(r=>r.type==="Became" && r.player===selected)
+                  .sort((a,b)=>b.night-a.night)[0];
+    S.infos = S.infos || [];
+    S.infos.push({type:"Became", night, player:selected,
+                  role:p.claim, was: was ? was.role : (p.wasClaim||"")});
+    p.wasClaim = p.claim;
+    touch(); draw(); save();
+  };
   $("#f-death").onchange = e => {
     const p = S.players[selected], day = currentNight();
     // One thing per seat per day: choosing again replaces today's entry
@@ -1438,6 +1468,10 @@ function describeRow(r){
   switch(r.type){
     case "Empath":
       return `${r.count} evil neighbour${r.count === 1 ? "" : "s"}`;
+    case "Became":
+      return r.was
+        ? `claimed ${role(r.was)} until now, and claims ${role(r.role)} from this night`
+        : `became the ${role(r.role)} this night`;
     case "Alsaahir":
       return r.won
         ? `guessed the evil team and won`
@@ -1764,6 +1798,11 @@ function drawEvents(p){
 
 function drawInspector(){
   const form=$("#insp-form"), read=$("#insp-read");
+  // Only where the script holds something that hands a token on. On a
+  // plain Trouble Brewing there is nothing to record, so the control
+  // does not appear at all.
+  const wrap=$("#became-wrap");
+  if(wrap) wrap.hidden = !((META.script||{}).info_types||[]).includes("Became");
   if(selected===null){
     form.hidden=true; read.hidden=true;
     $("#insp-title").textContent="No seat selected";
