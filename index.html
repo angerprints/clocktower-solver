@@ -589,7 +589,7 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=b3a8d73bf2ef";
+import * as solver from "./api.mjs?v=14901beaf1a6";
 
 // Keep a copy on the device, so it opens with nothing behind it.
 //
@@ -1802,7 +1802,10 @@ function drawInspector(){
   // plain Trouble Brewing there is nothing to record, so the control
   // does not appear at all.
   const wrap=$("#became-wrap");
-  if(wrap) wrap.hidden = !((META.script||{}).info_types||[]).includes("Became");
+  // `SCRIPT` is the script actually loaded; `META.script` is only the
+  // default one, so reading that hid the button on every custom script —
+  // which is every script with a Farmer on it.
+  if(wrap) wrap.hidden = !((SCRIPT||{}).info_types||[]).includes("Became");
   if(selected===null){
     form.hidden=true; read.hidden=true;
     $("#insp-title").textContent="No seat selected";
