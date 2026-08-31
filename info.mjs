@@ -582,6 +582,17 @@ export const SageInfo = define("SageInfo", "Sage",
 // moment anybody entered one and pressed Solve the whole solve died with
 // "Unknown kind of reading" — the Python side had them, the JavaScript
 // side did not, and the hosted page runs the JavaScript.
+/** Three players, exactly one evil **by registration**. */
+export const Noble = define("Noble", "Noble",
+  function (w) {
+    const phase = `N${this.night}`;
+    const opts = [this.a, this.b, this.c].map(
+      p => evilRegistrations(w.roleAt(p, phase)));
+    for (const x of opts[0]) for (const y of opts[1]) for (const z of opts[2])
+      if (Number(x) + Number(y) + Number(z) === 1) return true;
+    return false;
+  });
+
 export const Acrobat = define("Acrobat", "Acrobat",
   function (w) { return true; });          // the walk judges the death
 
@@ -867,7 +878,7 @@ export const KINDS = {
   OracleInfo, SeamstressInfo, JugglerInfo, SavantInfo, ArtistInfo,
   SageInfo, KlutzChoice, EvilTwinPair, PhilosopherChoice,
   SnakeCharmerChoice, PitHagChoice,
-  Acrobat, Balloonist, Alsaahir, Became,
+  Noble, Acrobat, Balloonist, Alsaahir, Became,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
 };
 

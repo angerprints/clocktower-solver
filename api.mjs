@@ -44,6 +44,7 @@ export const INFO_SOURCES = {
   // came from. Offered whenever the script has something that can be
   // handed on.
   Became: null,
+  Noble: "Noble",
   Acrobat: "Acrobat", Balloonist: "Balloonist", Alsaahir: "Alsaahir",
   Washerwoman: "Washerwoman", Librarian: "Librarian",
   Investigator: "Investigator", Chef: "Chef", Empath: "Empath",

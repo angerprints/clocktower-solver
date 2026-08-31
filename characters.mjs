@@ -711,9 +711,7 @@ export const DATA = {
    "wake": [
     "first"
    ],
-   "modelled": false,
-   "note": "its first-night reading is not checked",
-   "handled": "not",
+   "nights": "first",
    "first_night": 44
   },
   "Grandmother": {

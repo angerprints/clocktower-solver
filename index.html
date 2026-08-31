@@ -589,7 +589,7 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=5a1c9e481aa6";
+import * as solver from "./api.mjs?v=e25cdb5f8497";
 
 // Keep a copy on the device, so it opens with nothing behind it.
 //
@@ -646,6 +646,7 @@ const SCHEMA = {
   // claimed before and is for reading rather than for the search.
   Became:       [["player","player"],["role","role:all"],
                  ["was","role:all"]],
+  Noble:        [["a","player"],["b","player"],["c","player"]],
   Acrobat:      [["target","player"]],
   // A daytime guess at the whole evil team. Two lists and whether it
   // won, because naming the Demon as a Minion is a failed guess.
@@ -1489,6 +1490,8 @@ function describeRow(r){
   switch(r.type){
     case "Empath":
       return `${r.count} evil neighbour${r.count === 1 ? "" : "s"}`;
+    case "Noble":
+      return `${who(r.a)}, ${who(r.b)} and ${who(r.c)} — exactly one is evil`;
     case "Became":
       return r.was
         ? `claimed ${role(r.was)} until now, ${role(r.role)} from here on`
