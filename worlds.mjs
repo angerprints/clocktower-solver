@@ -135,6 +135,19 @@ export class Timeline {
     return null;
   }
 
+  /** Which seat is the Demon now — the last to have become one.
+   *
+   * Tracked through the changes rather than read off the board, because
+   * **holding a demon character is not the same as being the Demon**. A
+   * handover leaves the old character where it was: an executed Imp
+   * still holds the Imp when the Scarlet Woman inherits, so two seats
+   * hold one and the board cannot say which is which.
+   *
+   * A Snake Charmer swap is tracked here too, because the swap grants
+   * the charmer the Demon's *character* — a change with a demon role in
+   * it. That only failed while the swap was copying the wrong character;
+   * the tracking was never the fault.
+   */
   demonAt(phase) {
     const here = phaseIndex(phase);
     let seat = this.world.demonAt(phase);

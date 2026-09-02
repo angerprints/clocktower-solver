@@ -383,7 +383,14 @@ export function solveBoard(payload, {maxWorlds = EXACT_LIMIT} = {}) {
 
   let result;
   try {
-    result = analyze(state, !!payload.allow_good_lies, EXACT_LIMIT);
+    // The caller's ceiling, not the default.
+    //
+    // `solveBoard` takes a `maxWorlds` and then passed `EXACT_LIMIT`
+    // anyway, so raising it did nothing at all — the conformance dump
+    // asked for room to enumerate and got 40,000 regardless. One board
+    // sampled here and not in Python, and the two answers differed by
+    // three points of sampling noise on a board where no rule differs.
+    result = analyze(state, !!payload.allow_good_lies, maxWorlds);
   } catch (err) {
     if (err instanceof OffScript) return {error: err.message};
     throw err;

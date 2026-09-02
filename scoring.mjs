@@ -81,7 +81,29 @@ export function starpassHeirs(world, state, phase) {
 // stories nothing is asking for.
 
 export const TRANSITION_RULES = [];
-export const transitionRule = fn => (TRANSITION_RULES.push(fn), fn);
+
+// The slot each rule's character acts at, so the rules run in the order
+// the night ran.
+//
+// **Order matters.** Each rule sees the previous ones' work and appends
+// its own changes, and `roleAt` takes the last change at a phase — so
+// the sequence the rules run in *is* the sequence of the night.
+//
+// They ran Barber, Pit-Hag, Farmer, Snake Charmer — slots 40, 16, 48 and
+// 11, almost exactly backwards.
+const ACTS_AT = {
+  aSnakeCharmerTakesTheStar: 11,
+  aPitHagMakesSomebodyElse: 16,
+  aBarberLetsTheDemonSwapTwo: 40,
+  aFarmerHandsItOn: 48,
+  demonHandovers: 99,                    // a death, so after everything
+};
+
+export const transitionRule = fn => (
+  TRANSITION_RULES.push(fn),
+  TRANSITION_RULES.sort((a, b) =>
+    (ACTS_AT[a.name] ?? 50) - (ACTS_AT[b.name] ?? 50)),
+  fn);
 
 export const HEIR_RULES = [];
 export const heirRule = fn => (HEIR_RULES.push(fn), fn);
@@ -373,7 +395,13 @@ transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
     const after = `D${info.night}`;
     stories = stories.map(([changes, cost]) => [
       [...changes,
-       change(after, charmer, world.roleAt(demon, phase), "evil"),
+       // The character the Demon held **when the swap happened**, at
+       // slot 11 — not whatever it holds by the end of the night. Read
+       // at `phase` this took the board after the rules that run first,
+       // so on a night with a Pit-Hag the charmer was handed the
+       // Pit-Hag's gift instead of the Demon's character and the Demon
+       // vanished from the board.
+       change(after, charmer, world.roleAt(demon, began), "evil"),
        change(after, demon, "SnakeCharmer", "good")],
       cost]);
   }
