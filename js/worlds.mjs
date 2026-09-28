@@ -445,6 +445,19 @@ function branches(nPlayers, claims, certainties, allowGoodLies, forced,
 // The search
 // --------------------------------------------------------------------
 
+/** Does every character sit where the setup says it must? The Marionette
+ * neighbours the Demon; the catalogue holds the rule (`beside`). See
+ * worlds.py. */
+export function seatedLegally(roles) {
+  const n = roles.length;
+  for (let seat = 0; seat < n; seat++) {
+    const team = CHARACTERS[roles[seat]].beside;
+    if (team && TEAM[roles[(seat + n - 1) % n]] !== team &&
+        TEAM[roles[(seat + 1) % n]] !== team) return false;
+  }
+  return true;
+}
+
 /** Hand every legal assignment to `emit`, one at a time.
  *
  * A callback rather than a generator: generators cost about a third of
@@ -473,6 +486,7 @@ export function eachWorld(nPlayers, claims, opts = {}, emit) {
       if (k === order.length) {
         // This bag's characters have to have actually landed.
         for (const need of required) if (!used.has(need)) return;
+        if (!seatedLegally(roles)) return;   // dealt to seats it cannot sit in
         if (emit(new World([...roles], [...believes])) === false) stop = true;
         return;
       }
@@ -604,6 +618,7 @@ export function dive(setup, nPlayers, rng) {
   }
 
   for (const role of required) if (!used.has(role)) return null;
+  if (!seatedLegally(roles)) return null;   // a dead end, like any other
   return {world: new World(roles, believes), standsFor};
 }
 

@@ -56,7 +56,9 @@ class TheCatalogue(SolverTest):
         self.assertEqual(sorted(evil_registrations("Recluse")), [False, True])
 
     def test_unmodelled_characters_admit_it(self):
-        for key in ("Artist", "Ogre", "Marionette"):
+        # The Ogre and the Marionette stood here until phase 2 built
+        # them; the Mutant and the Cerenovus are next in line.
+        for key in ("Artist", "Mutant", "Cerenovus"):
             with self.subTest(character=key):
                 self.assertFalse(CHARACTERS[key].modelled)
                 self.assertTrue(CHARACTERS[key].note)
@@ -129,7 +131,10 @@ class ReadingAScriptFile(SolverTest):
 
     def test_it_says_which_abilities_it_cannot_reason_about(self):
         kinds = {c["kind"]: c for c in self.script.complaints()}
-        self.assertIn("unmodelled", kinds)
+        # Nothing on Easter Trouble is unbuilt any more: the Ogre and the
+        # Marionette came off this list in phase 2 (28.09.2026), and all
+        # that is left to say is that the Artist is recorded, not weighed.
+        self.assertNotIn("unmodelled", kinds)
         # The Grandmother came off this list when it was implemented.
         # The Clockmaker came off this list when Sects & Violets arrived
         # and its reading was actually checked. The Artist came off it
@@ -138,8 +143,6 @@ class ReadingAScriptFile(SolverTest):
         # The Noble came off this list when its first-night reading was
         # actually checked — three players, exactly one evil **by
         # registration**, so a Spy may sit among the two good ones.
-        self.assertEqual(sorted(kinds["unmodelled"]["characters"]),
-                         ["Marionette", "Ogre"])
         self.assertEqual(kinds["recorded"]["characters"], ["Artist"])
 
     def test_a_character_nobody_knows_is_reported_not_dropped_silently(self):
@@ -593,7 +596,8 @@ class HowFarEachCharacterIsReasonedAbout(SolverTest):
         # and every one of them got built, which is the nicest way for a
         # test to keep failing. Nothing on the published scripts is
         # unbuilt now, so the example comes from the experimental pile.
-        for key in ("Savant", "Mutant", "Marionette"):
+        # The Marionette was the third until phase 2 built it.
+        for key in ("Savant", "Mutant", "Cerenovus"):
             with self.subTest(character=key):
                 self.assertFalse(CHARACTERS[key].modelled)
 

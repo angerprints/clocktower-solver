@@ -999,8 +999,13 @@ class SeamstressInfo(Info):
         phase = f"N{self.night}"
         # Every way the pair could have registered, and whether any of
         # them gives the answer that was heard.
-        for first in evil_registrations(w.role_at(self.a, phase)):
-            for second in evil_registrations(w.role_at(self.b, phase)):
+        # By the seat's side as it stands, like the Empath and the Chef:
+        # a Pit-Hag's good Poisoner or an Ogre that turned is not the
+        # side its character was printed on.
+        for first in evil_registrations(w.role_at(self.a, phase),
+                                        w.alignment_at(self.a, phase)):
+            for second in evil_registrations(w.role_at(self.b, phase),
+                                             w.alignment_at(self.b, phase)):
                 if (first == second) == self.same:
                     return True
         return False
@@ -1166,6 +1171,25 @@ class SailorChoice(Info):
 
     target: int = 0
     source_role = "Sailor"
+
+    def holds(self, w, s, rh, seat=None):
+        return True
+
+
+@dataclass
+class OgreChoice(Info):
+    """Who the Ogre picked on its first night.
+
+    It takes that player's side for the rest of the game and is never
+    told which — so the seat saying this cannot know what it means, and
+    the solver can. The row records the choice; `an_ogre_picks_a_side`
+    turns it into a side. From anybody but the Ogre it moves nothing.
+    """
+
+    is_a_choice = True
+
+    target: int = 0
+    source_role = "Ogre"
 
     def holds(self, w, s, rh, seat=None):
         return True
@@ -1369,7 +1393,8 @@ class NobleInfo(Info):
 
     def holds(self, w, s, rh, seat=None):
         phase = f"N{self.night}"
-        options = [evil_registrations(w.role_at(p, phase))
+        options = [evil_registrations(w.role_at(p, phase),
+                                      w.alignment_at(p, phase))
                    for p in (self.a, self.b, self.c)]
         return any(x + y + z == 1
                    for x in options[0]

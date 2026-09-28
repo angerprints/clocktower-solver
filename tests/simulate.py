@@ -241,6 +241,17 @@ def deal(n, rng, script=None):
     chosen += picked_minions
     chosen += picked_demons
 
+    # The Marionette thinks it is a good character — a Townsfolk or an
+    # Outsider nobody holds — and is never told otherwise. Worked out
+    # from the tokens left over, the same way the Drunk's is.
+    if "Marionette" in picked_minions:
+        from botc.catalogue import CHARACTERS as _C
+        unused = spare[tf:] + [o for o in outsiders
+                               if o not in picked_outsiders
+                               and not _C[o].believes]
+        if unused:
+            believes_for["Marionette"] = rng.choice(unused)
+
     order = list(range(n))
     rng.shuffle(order)
     roles = [None] * n
@@ -248,6 +259,18 @@ def deal(n, rng, script=None):
     for seat, role in zip(order, chosen):
         roles[seat] = role
         believes[seat] = believes_for.get(role)
+
+    # "[You neighbour the Demon]": if the shuffle put it elsewhere, it
+    # trades seats with whoever sits beside the Demon. Written from the
+    # rule rather than from the solver's catalogue field on purpose.
+    if "Marionette" in roles:
+        m = roles.index("Marionette")
+        demon = next(i for i in range(n) if TEAM[roles[i]] == "demon")
+        beside = [(demon - 1) % n, (demon + 1) % n]
+        if m not in beside:
+            swap = rng.choice(beside)
+            roles[m], roles[swap] = roles[swap], roles[m]
+            believes[m], believes[swap] = believes[swap], believes[m]
     return roles, believes
 
 
@@ -431,6 +454,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         heard += [row for row in honest_info(d, night, rng)
                   if d.role_at(row.player, f"N{night}") not in CHOOSES_EARLY]
 
+        # The Ogre picks late on its first night, after every reading.
+        if night == 1:
+            _ogre_picks(d, heard, rng)
+
         if night < nights:
             # The day happens first: nominations, then votes, then the
             # execution that follows from them.
@@ -448,6 +475,29 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 d.deaths[executed] = f"E{night}"
 
     return d, heard
+
+
+def _ogre_picks(d, heard, rng):
+    """The Ogre points at somebody and takes their side, unknowing.
+
+    "Even if drunk or poisoned", so nothing here asks whether it works.
+    The jinx says a Spy and a Recluse register as evil to it. Its new
+    side counts from the first day, since it acts after the night's
+    readings. It announces whom it chose about half the time — which is
+    the only way anybody could ever learn it.
+    """
+    from botc.catalogue import CHARACTERS
+    from botc.info import OgreChoice
+    ogre = d.seat_of("Ogre")
+    if ogre is None:
+        return
+    target = rng.choice([p for p in range(d.n) if p != ogre])
+    role = d.role_at(target, "N1")
+    if d.side_at(target, "N1") == "evil" \
+            or {"minion", "demon"} & CHARACTERS[role].registers:
+        d.side_changes.append(("D1", ogre, "Ogre", "evil"))
+    if rng.random() < 0.5:
+        heard.append(OgreChoice(1, ogre, target=target))
 
 
 def _moonchild_takes_one(d, night, heard, rng):
@@ -1761,7 +1811,11 @@ def _for_role(d, seat, role, night, rng):
 
     if role == "Empath":
         nb = _neighbours(d, seat, night)
-        return Empath(night, seat, count=sum(1 for p in nb if is_evil(d.roles[p])))
+        # By the side the seat is on tonight, not the character it was
+        # dealt: an Ogre that picked an evil player is evil from day one.
+        return Empath(night, seat,
+                      count=sum(1 for p in nb
+                                if d.side_at(p, f"N{night}") == "evil"))
 
     if role == "FortuneTeller":
         others = [p for p in d.alive_at(f"N{night}")
@@ -2064,7 +2118,7 @@ def _for_role(d, seat, role, night, rng):
         if len(others) < 2:
             return None
         a, b = sorted(rng.sample(others, 2))
-        same = is_evil(d.roles[a]) == is_evil(d.roles[b])
+        same = d.side_at(a, "N1") == d.side_at(b, "N1")
         return SeamstressInfo(night, seat, a=a, b=b, same=same)
 
     if role == "Sage" and d.deaths.get(seat) == f"N{night}":

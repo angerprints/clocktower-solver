@@ -223,6 +223,9 @@ _ACTS_AT = {"a_snake_charmer_takes_the_star": 11,
             "a_pit_hag_makes_somebody_else": 16,
             "a_barber_lets_the_demon_swap_two": 40,
             "a_farmer_hands_it_on": 48,
+            # Late on the first night, after every information role: an
+            # Empath or Noble on night one still sees the Ogre as good.
+            "an_ogre_picks_a_side": 60,
             "demon_handovers": 99}      # a death, so after everything
 
 
@@ -475,6 +478,65 @@ def a_farmer_hands_it_on(world, state):
                               cost))
         stories = grown[:48]
     return stories
+
+
+def _evil_to_the_ogre(view, seat, phase):
+    """Would this seat hand an Ogre the evil side?
+
+    Its true side — and the jinx on top: "the Spy and the Recluse
+    register as evil to the Ogre". Not a Storyteller's choice as with
+    other readings: the Recluse *does* register evil here. Asked of the
+    catalogue rather than by name, so any character that can register as
+    a Minion or Demon counts.
+    """
+    if view.evil_at(seat, phase):
+        return True
+    return bool({"minion", "demon"}
+                & CHARACTERS[view.role_at(seat, phase)].registers)
+
+
+@transition_rule
+def an_ogre_picks_a_side(world, state):
+    """On its first night the Ogre takes the side of whoever it chose.
+
+    "Even if drunk or poisoned", so nothing can stop it, and it is never
+    told which side it landed on — an evil Ogre plays exactly like a good
+    one. Only the side moves, never the character: `Change` with no role.
+
+    Written from the first **day**, not the night. The Ogre acts late on
+    night one, after the Empath, the Noble and the Grandmother, so their
+    first readings still see it good.
+
+    Two stories when the choice was not written down. Staying good costs
+    nothing; turning evil is weighed by the table — evil seats against
+    good ones, with the Recluse counted as evil — because an Ogre that
+    points at somebody at random lands on each side about that often.
+    When the Ogre said whom it chose, and it really is the Ogre in this
+    world, there is one story and no weighing.
+    """
+    if not _in_bag(state, "Ogre"):
+        return [((), 1.0)]
+    ogre = world.find_at("Ogre", "N1")
+    if ogre is None:
+        return [((), 1.0)]
+    turn = (Change("D1", ogre, None, "evil"),)
+
+    picked = [info for info in state.infos
+              if getattr(info, "source_role", None) == "Ogre"
+              and info.player == ogre]
+    if picked:
+        target = picked[0].target
+        if target == ogre:
+            return []                     # "not yourself"
+        return [(turn, 1.0)] if _evil_to_the_ogre(world, target, "N1") \
+            else [((), 1.0)]
+
+    others = [p for p in range(state.n_players) if p != ogre]
+    evil = sum(1 for p in others if _evil_to_the_ogre(world, p, "N1"))
+    good = len(others) - evil
+    if good == 0:
+        return [(turn, 1.0)]
+    return [((), 1.0), (turn, min(1.0, evil / good))]
 
 
 @transition_rule
@@ -2509,7 +2571,7 @@ def a_balloonist_chain_fits(world, state):
     return True
 
 
-def best_story(world, state, outcome=None):
+def best_story(world, state, outcome=None, viable=None):
     """The cheapest account of this world: (cost, changes).
 
     (None, ()) means nothing explains it. The changes come back as well
@@ -2517,13 +2579,17 @@ def best_story(world, state, outcome=None):
     the Demon" has a different answer than the deal gives.
 
     `outcome`, if given, is filled with what became of each reading under
-    the story that won.
+    the story that won. `viable`, if given, is filled with every story
+    that fits, as (cost, changes) — see `_story_shares`.
     """
     stories = possible_timelines(world, state)
     if not stories:
         return None, ()
     if stories == [((), 1.0)]:
-        return _explain(world, state, outcome), ()
+        cost = _explain(world, state, outcome)
+        if viable is not None and cost is not None:
+            viable.append((cost, ()))
+        return cost, ()
 
     best, best_changes, best_marks = None, (), None
     for changes, weight in stories:
@@ -2533,11 +2599,50 @@ def best_story(world, state, outcome=None):
         if cost is None:
             continue
         cost *= weight
+        if viable is not None:
+            viable.append((cost, changes))
         if best is None or cost > best:
             best, best_changes, best_marks = cost, changes, marks
     if outcome is not None and best_marks:
         outcome.update(best_marks)
     return best, best_changes
+
+
+def _report_phase(state):
+    """The moment the report describes: now, but never before day one.
+
+    Nobody reads the board during the first night. What the table learns
+    that night is only said out loud on day one, and by then the Ogre has
+    picked its side and a Snake Charmer's swap has happened. Asking at
+    "N1" showed a fresh board with every Ogre good, because its change is
+    written from the first day. `final_phase` itself stays as it is: the
+    rules use it to know how far the game went, and that is a different
+    question.
+    """
+    now = state.final_phase()
+    return now if phase_index(now) >= phase_index("D1") else "D1"
+
+
+def _story_shares(world, viable):
+    """Each fitting story as (view, share of the world's weight).
+
+    **A world weighs what its best story costs** — that is unchanged, and
+    it is what every count and every comparison between worlds rests on.
+    What changes is who gets the credit inside it. Only the best story
+    used to be tallied, so an Ogre that may have turned evil showed as
+    plainly good whenever staying good cost nothing, and after a starpass
+    the likeliest heir took the whole of "who is the Demon now" while the
+    others got none.
+
+    So the weight is split across the stories in proportion to what each
+    costs. An Ogre beside two evil seats out of six turns evil in a third
+    of its stories' weight, which is what a random pick would do.
+    """
+    total = sum(cost for cost, _changes in viable)
+    if total <= 0:
+        return []
+    return [(Timeline(world, changes) if changes else world, cost / total)
+            for cost, changes in viable]
 
 
 def explanation_cost(world, state):
@@ -3161,7 +3266,7 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
         return estimate(state, allow_good_lies, dives, keep_samples, rng)
 
     n = state.n_players
-    now = state.final_phase()
+    now = _report_phase(state)
     acc = _accumulator(n)
     legal = valid = 0
     total = 0.0
@@ -3193,7 +3298,8 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
             # and nothing like a fair sample — and go looking instead.
             return estimate(state, allow_good_lies, dives, keep_samples, rng)
         outcome = {}
-        cost, changes = best_story(world, state, outcome)
+        viable = []
+        cost, changes = best_story(world, state, outcome, viable)
         if cost is None:
             continue
         view = Timeline(world, changes) if changes else world
@@ -3203,15 +3309,17 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
         for idx, mark in outcome.items():
             told[idx][mark] += wt
         total += wt
-        _tally(acc, world, view, state, wt, n, now)
+        for story, share in _story_shares(world, viable):
+            _tally(acc, world, story, state, wt * share, n, now)
+            for day, seat in executed:
+                if story.demon_at(f"D{day}") == seat:
+                    hanged[seat] += wt * share
         # Blame is a share rather than a count, so a spread of worlds
         # settles it as well as all of them — and working it out for
         # every world on a full script trebled the cost of a solve.
+        # It follows the best story, like the readings' outcomes above.
         if valid % blame_stride == 0:
             _tally_blame(blame, view, state, wt * blame_stride)
-        for day, seat in executed:
-            if view.demon_at(f"D{day}") == seat:
-                hanged[seat] += wt
 
         if len(best) < keep_samples:
             best.append((wt, world))
@@ -3341,7 +3449,7 @@ def estimate(state, allow_good_lies=False, dives=25_000, keep_samples=8,
     of the search the walk happened to like.
     """
     n = state.n_players
-    now = state.final_phase()
+    now = _report_phase(state)
     rng = rng or random.Random()
     acc = _accumulator(n)
     total = 0.0
@@ -3361,16 +3469,17 @@ def estimate(state, allow_good_lies=False, dives=25_000, keep_samples=8,
             continue                      # a dead end still counts as a walk
         legal_sum += stands_for
 
-        cost, changes = best_story(world, state)
+        viable = []
+        cost, changes = best_story(world, state, viable=viable)
         if cost is None:
             continue
-        view = Timeline(world, changes) if changes else world
         valid_sum += stands_for
 
         weight = stands_for * prior_weight(world, state) * cost
         total += weight
         sq += weight * weight
-        _tally(acc, world, view, state, weight, n, now)
+        for story, share in _story_shares(world, viable):
+            _tally(acc, world, story, state, weight * share, n, now)
 
         if len(best) < keep_samples:
             best.append((weight, world))

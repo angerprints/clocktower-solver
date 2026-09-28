@@ -110,6 +110,11 @@ class Character(NamedTuple):
     # by the Storyteller and shown to everybody, and they are in play
     # without anybody holding them.
     seated: bool = True
+    # A setup rule about *where* this character sits: the team one of its
+    # two neighbours has to hold when the tokens are dealt. The Marionette
+    # neighbours the Demon. Only the deal — a Demon that moves on later
+    # does not move the Marionette with it.
+    beside: str = ""
 
 
 def _handled(self):
@@ -260,10 +265,11 @@ _UNMODELLED = [
     _c("Lunatic", "lunatic", "Lunatic", "outsider", set(WAKE_PATTERNS),
        believes=True, believes_from=("demon",), nights="conditional",
        chooses=True),
-    _c("Ogre", "ogre", "Ogre", "outsider", {FIRST},
-       handled=NOT,
-       note="it turns evil on the first night, which is a change of side "
-            "the solver would have to be told about"),
+    # Takes the side of whoever it picks on night one, and never learns
+    # which: `an_ogre_picks_a_side` in the solver moves the side, the
+    # character stays. It points at somebody, so a Goon notices.
+    _c("Ogre", "ogre", "Ogre", "outsider", {FIRST}, nights="first",
+       chooses=True),
     # Named in limits.py as characters the solver will not reason about.
     # They still belong here, so a script can contain one and be told.
     _c("Atheist", "atheist", "Atheist", "townsfolk", {NEVER},
@@ -280,9 +286,8 @@ _UNMODELLED = [
 
     _c("Marionette", "marionette", "Marionette", "minion",
        set(WAKE_PATTERNS), believes=True,
-       believes_from=("townsfolk", "outsider"), handled=NOT,
-       note="it believes it is a good character, like the Drunk, but the "
-            "machinery for that is still tied to the Drunk alone", nights="conditional"),
+       believes_from=("townsfolk", "outsider"), beside="demon",
+       nights="conditional"),
 ]
 
 
@@ -427,13 +432,25 @@ def _night_order():
     path = _p.Path(__file__).resolve().parent.parent / "data" / "roles.json"
     if not path.exists():
         return {}
-    out = {}
+    out = dict(_NOT_IN_THE_FILE)
     for entry in json.loads(path.read_text()):
         got = entry.get("id")
         if got:
             out[got] = (int(entry.get("firstNight") or 0),
                         int(entry.get("otherNight") or 0))
     return out
+
+
+# Characters newer than the vendored file. Checked on 28.09.2026: the
+# upstream file is byte-for-byte the one in data/, and it has no Ogre.
+#
+# The Ogre acts late on the first night, after the Spy (49) and before
+# the General (50) in the official order. There is no whole number in
+# between, so it shares the General's slot — nothing on any script here
+# holds both, and the file wins the moment a refresh brings the real one.
+_NOT_IN_THE_FILE = {
+    "ogre": (50, 0),
+}
 
 
 _ORDER = _night_order()

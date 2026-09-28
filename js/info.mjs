@@ -416,8 +416,11 @@ export const OracleInfo = define("OracleInfo", "Oracle",
 export const SeamstressInfo = define("SeamstressInfo", "Seamstress",
   function (w) {
     const phase = `N${this.night}`;
-    for (const first of evilRegistrations(w.roleAt(this.a, phase)))
-      for (const second of evilRegistrations(w.roleAt(this.b, phase)))
+    // By the seat's side as it stands, like the Empath and the Chef.
+    for (const first of evilRegistrations(w.roleAt(this.a, phase),
+                                          w.alignmentAt(this.a, phase)))
+      for (const second of evilRegistrations(w.roleAt(this.b, phase),
+                                             w.alignmentAt(this.b, phase)))
         if ((first === second) === !!this.same) return true;
     return false;
   });
@@ -500,6 +503,9 @@ export const InnkeeperChoice = declaredChoice("InnkeeperChoice", "Innkeeper");
 
 /** Who the Sailor chose: one of the two of them is drunk. */
 export const SailorChoice = declaredChoice("SailorChoice", "Sailor");
+
+/** Who the Ogre picked on its first night: it takes that side, unknowing. */
+export const OgreChoice = declaredChoice("OgreChoice", "Ogre");
 
 /** A seat that became a character it was not dealt.
  *
@@ -589,7 +595,7 @@ export const Noble = define("Noble", "Noble",
   function (w) {
     const phase = `N${this.night}`;
     const opts = [this.a, this.b, this.c].map(
-      p => evilRegistrations(w.roleAt(p, phase)));
+      p => evilRegistrations(w.roleAt(p, phase), w.alignmentAt(p, phase)));
     for (const x of opts[0]) for (const y of opts[1]) for (const z of opts[2])
       if (Number(x) + Number(y) + Number(z) === 1) return true;
     return false;
@@ -870,6 +876,7 @@ MoonchildChoice.isAChoice = true;
 ExorcistChoice.isAChoice = true;
 InnkeeperChoice.isAChoice = true;
 SailorChoice.isAChoice = true;
+OgreChoice.isAChoice = true;
 
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
@@ -882,6 +889,7 @@ export const KINDS = {
   SnakeCharmerChoice, PitHagChoice,
   Noble, Acrobat, Balloonist, Alsaahir, Became,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
+  OgreChoice,
 };
 
 /** Build a reading from the shape the page posts. */

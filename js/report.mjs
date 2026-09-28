@@ -8,10 +8,11 @@
 import {CHARACTERS} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
 import {TEAM, believesAnother, isEvil, show, wakeFits} from "./roles.mjs";
-import {bestStory, explanationCost, forcedRoles, nightDeaths,
+import {bestStory, storyShares, explanationCost, forcedRoles, nightDeaths,
         worldConsistent} from "./scoring.mjs";
 import {PRIORS} from "./priors.mjs";
 import {Rng} from "./rng.mjs";
+import {phaseIndex} from "./phases.mjs";
 import {Timeline, eachWorld, sampleWorlds} from "./worlds.mjs";
 
 // The tunable priors live in `priors.mjs` and are read from there at the
@@ -228,6 +229,34 @@ function readingsFrom(state, told) {
 }
 
 /** Add one world's account of each night death to the running totals. */
+/** The moment the report describes: now, but never before day one —
+ * nobody reads the board during the first night, and by day one the Ogre
+ * has picked its side. See solver.py. */
+function reportPhase(state) {
+  const now = state.finalPhase();
+  return phaseIndex(now) >= phaseIndex("D1") ? now : "D1";
+}
+
+/** One story's share of a world, added to the per-seat totals.
+ *
+ * Character and side are read from the *timeline* at the moment the game
+ * has reached, because after a handover the useful answer to "who is the
+ * Demon" is who holds it now, not who was dealt it. Lying is read from
+ * the deal, since a claim is about the whole game.
+ */
+function tallySeats(perSeat, world, view, state, wt, now) {
+  const demon = view.demonAt(now);
+  for (let p = 0; p < perSeat.length; p++) {
+    const seat = perSeat[p];
+    const role = view.roleAt(p, now);
+    seat.roles[role] = (seat.roles[role] || 0) + wt;
+    if (view.evilAt(p, now)) seat.evil += wt;
+    if (p === demon) seat.demon += wt;
+    if (believesAnother(role)) seat.drunk += wt;
+    if (isLying(world, state, p)) seat.lying += wt;
+  }
+}
+
 function tallyBlame(into, view, state, weight) {
   for (const [nightKey, victims] of Object.entries(nightDeaths(state))) {
     const night = Number(nightKey);
@@ -294,7 +323,7 @@ export function pilotSize(state, allowGoodLies = false, walks = 1500,
 export function estimate(state, allowGoodLies = false, dives = 25000,
                          keepSamples = 8, rng = null) {
   const n = state.nPlayers;
-  const now = state.finalPhase();
+  const now = reportPhase(state);
   rng = rng || new Rng((Math.random() * 2 ** 32) >>> 0);
 
   let total = 0.0, sq = 0.0, legalSum = 0.0, validSum = 0.0, walked = 0;
@@ -313,7 +342,7 @@ export function estimate(state, allowGoodLies = false, dives = 25000,
     legalSum += standsFor;
 
     const outcome = {};
-    const {cost, changes} = bestStory(world, state, outcome);
+    const {cost, changes, viable} = bestStory(world, state, outcome);
     if (cost === null) return;
     const view = changes.length ? new Timeline(world, changes) : world;
     validSum += standsFor;
@@ -324,16 +353,8 @@ export function estimate(state, allowGoodLies = false, dives = 25000,
     for (const [idx, mark] of Object.entries(outcome))
       told[idx][mark] = (told[idx][mark] || 0) + wt;
 
-    const demon = view.demonAt(now);
-    for (let p = 0; p < n; p++) {
-      const seat = perSeat[p];
-      const role = view.roleAt(p, now);
-      seat.roles[role] = (seat.roles[role] || 0) + wt;
-      if (view.evilAt(p, now)) seat.evil += wt;
-      if (p === demon) seat.demon += wt;
-      if (believesAnother(role)) seat.drunk += wt;
-      if (isLying(world, state, p)) seat.lying += wt;
-    }
+    for (const [story, part] of storyShares(world, viable))
+      tallySeats(perSeat, world, story, state, wt * part, now);
     tallyBlame(blame, view, state, wt);
 
     if (best.length < keepSamples) {
@@ -381,7 +402,7 @@ export function analyze(state, allowGoodLies = false,
   if (pilotSize(state, allowGoodLies) > maxWorlds)
     return estimate(state, allowGoodLies, dives, keepSamples, rng);
   const n = state.nPlayers;
-  const now = state.finalPhase();
+  const now = reportPhase(state);
   let legal = 0, valid = 0, total = 0.0, truncated = false;
   const best = [];
   const blame = {};
@@ -411,7 +432,7 @@ export function analyze(state, allowGoodLies = false,
       return false;
     }
     const outcome = {};
-    const {cost, changes} = bestStory(world, state, outcome);
+    const {cost, changes, viable} = bestStory(world, state, outcome);
     if (cost === null) return true;
     const view = changes.length ? new Timeline(world, changes) : world;
 
@@ -421,23 +442,13 @@ export function analyze(state, allowGoodLies = false,
     for (const [idx, mark] of Object.entries(outcome))
       told[idx][mark] = (told[idx][mark] || 0) + wt;
 
-    // Character and side are read from the *timeline* at the moment the
-    // game has reached, because after a handover the useful answer to
-    // "who is the Demon" is who holds it now, not who was dealt it.
-    // Lying is read from the deal, since a claim is about the whole game.
-    const demon = view.demonAt(now);
-    for (let p = 0; p < n; p++) {
-      const seat = perSeat[p];
-      const role = view.roleAt(p, now);
-      seat.roles[role] = (seat.roles[role] || 0) + wt;
-      if (view.evilAt(p, now)) seat.evil += wt;
-      if (p === demon) seat.demon += wt;
-      if (believesAnother(role)) seat.drunk += wt;
-      if (isLying(world, state, p)) seat.lying += wt;
+    for (const [story, part] of storyShares(world, viable)) {
+      tallySeats(perSeat, world, story, state, wt * part, now);
+      for (const [day, seat] of executed)
+        if (story.demonAt(`D${day}`) === seat) hanged[seat] += wt * part;
     }
+    // Blame follows the best story, like the readings' outcomes above.
     tallyBlame(blame, view, state, wt);
-    for (const [day, seat] of executed)
-      if (view.demonAt(`D${day}`) === seat) hanged[seat] += wt;
 
     if (best.length < keepSamples) {
       best.push([wt, world]);

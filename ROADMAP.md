@@ -109,11 +109,22 @@ Dazu ein Fehler, den ich beim Beheben selbst eingebaut und wieder entfernt habe:
 
 **Gegenrichtung noch offen:** Ob die Engine Regelfehler hat, die der Solver findet. In 440 Partien hat keine einzige Abweichung auf einen Fehler der Engine gezeigt. Alle Treffer lagen beim Solver oder in der Brücke.
 
-### Phase 2 — Deine Skripte vollständig · *als Nächstes*
+### Phase 2 — Deine Skripte vollständig · *läuft*
 
-1. **Ogre** und **Marionette**, weil sie auf deinem eigenen Skript stehen.
+1. **Ogre** und **Marionette** · *erledigt am 28.09.2026.* Easter Trouble ist bis auf den Artist vollständig.
 2. **Mastermind** (BMR), dann **Mutant**, **Cerenovus**, **Savant** (S&V). Danach sind alle drei Grundskripte komplett.
 3. Artist bleibt „aufgezeichnet": Seine Frage ist frei formuliert und lässt sich nicht als Regel prüfen.
+
+**Ogre.** Er wählt in der ersten Nacht einen Spieler und bekommt dessen wahre Gesinnung, auch betrunken oder vergiftet, ohne es zu erfahren. Spion und Einsiedler zählen für ihn als böse (Jinx). Er handelt spät in der Nacht, also sehen Empath, Adliger und Großmutter ihn in Nacht 1 noch als gut. Ab Tag 1 zählt die neue Seite. Neue Protokollzeile „Ogre wählte X": Dann steht seine Seite fest, sofern der Sprecher wirklich der Ogre ist. Ohne diese Zeile wiegt „böse geworden" so viel wie das Verhältnis böser zu guten Sitzen.
+
+**Marionette.** Die Technik für „glaubt, jemand anderes zu sein" war schon allgemein, der Hinweis im Katalog war veraltet. Gefehlt hat nur die Aufbauregel „sitzt neben dem Dämon". Sie steht jetzt als Feld `beside` im Katalog und wird in der Suche und in der Stichprobe geprüft.
+
+**Nebenbei zwei Verbesserungen, die mehr als den Ogre betreffen:**
+
+- *Jede passende Geschichte zählt anteilig.* Bisher bekam die beste Geschichte einer Welt das ganze Gewicht. Ein Ogre, der böse geworden sein könnte, stand dadurch als gut da, sobald „gut geblieben" nichts kostete. Jetzt wird das Gewicht einer Welt nach dem Gewicht ihrer Geschichten aufgeteilt. Das Gewicht der Welt selbst bleibt gleich. Im Korpus ändern sich 11 von 142 Brettern: alle Ogre-Sitze (das leere Easter-Brett 40 → 55 % böse), der Barbier-Tausch, und ein Brett, auf dem Mastermind und Scharlachrote Frau gleich gut passten. Dort gewann vorher zufällig die erste Geschichte.
+- *Adliger und Näherin lesen die aktuelle Seite*, wie Empath und Koch schon vorher. Ein guter Giftmischer vom Pit-Hag las sich für sie noch als böse.
+
+Geprüft mit dem eigenen Simulator, der beide Charaktere nach seiner eigenen Lesart der Regeln spielt: 500 Easter-Partien, keine verwirft die Wahrheit. In 34 der 66 Partien mit bösem Ogre ist „Ogre böse" die beste Geschichte, die neue Regel wird also wirklich gebraucht. Die Engine deines Spiels kennt nur Trouble Brewing und kann hier nicht mitprüfen.
 
 ### Phase 3 — Gemeinsames Regelwissen für das Spiel
 

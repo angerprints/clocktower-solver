@@ -96,6 +96,7 @@ const ACTS_AT = {
   aPitHagMakesSomebodyElse: 16,
   aBarberLetsTheDemonSwapTwo: 40,
   aFarmerHandsItOn: 48,
+  anOgrePicksASide: 60,                  // late on night one
   demonHandovers: 99,                    // a death, so after everything
 };
 
@@ -374,6 +375,42 @@ transitionRule(function aFarmerHandsItOn(world, state) {
     stories = grown.slice(0, 48);
   }
   return stories;
+});
+
+/** Would this seat hand an Ogre the evil side? Its true side, and the
+ * jinx: the Spy and the Recluse register as evil to the Ogre. */
+function evilToTheOgre(view, seat, phase) {
+  if (view.evilAt(seat, phase)) return true;
+  const regs = CHARACTERS[view.roleAt(seat, phase)].registers || [];
+  return regs.includes("minion") || regs.includes("demon");
+}
+
+/** On its first night the Ogre takes the side of whoever it chose, even
+ * if drunk or poisoned, and never learns which. Written from the first
+ * day: it acts after the night's information roles. Unrecorded, turning
+ * evil is weighed evil seats against good ones. See solver.py.
+ */
+transitionRule(function anOgrePicksASide(world, state) {
+  if (!inBag(state, "Ogre")) return [[[], 1.0]];
+  const ogre = world.findAt("Ogre", "N1");
+  if (ogre === null || ogre === undefined) return [[[], 1.0]];
+  const turn = [change("D1", ogre, null, "evil")];
+
+  const picked = state.infos.filter(
+    i => i.sourceRole === "Ogre" && i.player === ogre);
+  if (picked.length) {
+    const target = picked[0].target;
+    if (target === ogre) return [];      // "not yourself"
+    return evilToTheOgre(world, target, "N1") ? [[turn, 1.0]] : [[[], 1.0]];
+  }
+
+  let evil = 0, good = 0;
+  for (let p = 0; p < state.nPlayers; p++) {
+    if (p === ogre) continue;
+    if (evilToTheOgre(world, p, "N1")) evil++; else good++;
+  }
+  if (good === 0) return [[turn, 1.0]];
+  return [[[], 1.0], [turn, Math.min(1.0, evil / good)]];
 });
 
 transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
@@ -865,23 +902,39 @@ export function rowOutcomes(world, state) {
  */
 export function bestStory(world, state, outcome = null) {
   const stories = possibleTimelines(world, state);
-  if (!stories.length) return {cost: null, changes: []};
-  if (stories.length === 1 && !stories[0][0].length)
-    return {cost: explainOne(world, state, outcome), changes: []};
+  if (!stories.length) return {cost: null, changes: [], viable: []};
+  if (stories.length === 1 && !stories[0][0].length) {
+    const cost = explainOne(world, state, outcome);
+    return {cost, changes: [], viable: cost === null ? [] : [[cost, []]]};
+  }
 
   let best = null, bestChanges = [], bestMarks = null;
+  const viable = [];
   for (const [changes, weight] of stories) {
     const view = changes.length ? new Timeline(world, changes) : world;
     const marks = outcome ? {} : null;
     const cost = explainOne(view, state, marks);
     if (cost === null) continue;
     const got = cost * weight;
+    viable.push([got, changes]);
     if (best === null || got > best) {
       best = got; bestChanges = changes; bestMarks = marks;
     }
   }
   if (outcome && bestMarks) Object.assign(outcome, bestMarks);
-  return {cost: best, changes: bestChanges};
+  return {cost: best, changes: bestChanges, viable};
+}
+
+/** Each fitting story as [view, share of the world's weight]. A world
+ * weighs what its best story costs; the credit inside it is split across
+ * its stories by what each costs, so an Ogre that may have turned evil
+ * and a starpass with several heirs are counted as the odds say rather
+ * than all-or-nothing. See solver.py. */
+export function storyShares(world, viable) {
+  const total = viable.reduce((sum, [cost]) => sum + cost, 0);
+  if (total <= 0) return [];
+  return viable.map(([cost, changes]) =>
+    [changes.length ? new Timeline(world, changes) : world, cost / total]);
 }
 
 /** How much explaining this world needs, as a multiplier, or null. */

@@ -130,6 +130,8 @@ def build_info(d):
     if kind == "SailorChoice":
         return I.SailorChoice(night, player, trust,
                               target=_int(d, "target"))
+    if kind == "OgreChoice":
+        return I.OgreChoice(night, player, trust, target=_int(d, "target"))
     if kind == "PitHagChoice":
         return I.PitHagChoice(night, player, trust, target=_int(d, "target"),
                               role=d["role"])
@@ -592,6 +594,7 @@ INFO_SOURCES = {
     "SnakeCharmerChoice": "SnakeCharmer", "PitHagChoice": "PitHag",
     "MoonchildChoice": "Moonchild", "ExorcistChoice": "Exorcist",
     "InnkeeperChoice": "Innkeeper", "SailorChoice": "Sailor",
+    "OgreChoice": "Ogre",
 }
 
 

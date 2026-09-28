@@ -589,7 +589,7 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=5a34a5cc6b36";
+import * as solver from "./api.mjs?v=7f220b8468a7";
 
 // Keep a copy on the device, so it opens with nothing behind it.
 //
@@ -673,6 +673,7 @@ const SCHEMA = {
   ExorcistChoice:  [["target","player"]],
   InnkeeperChoice: [["a","player"],["b","player"]],
   SailorChoice:    [["target","player"]],
+  OgreChoice:      [["target","player"]],
   KlutzChoice:     [["target","player"]],
   SeamstressInfo:  [["a","player"],["b","player"],
                     ["same","bool:Same side|Different sides"]],
@@ -699,7 +700,7 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   EvilTwinPair:"EvilTwin", PhilosopherChoice:"Philosopher",
   SnakeCharmerChoice:"SnakeCharmer", PitHagChoice:"PitHag",
   MoonchildChoice:"Moonchild", ExorcistChoice:"Exorcist",
-  InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor" };
+  InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor", OgreChoice:"Ogre" };
 const DAY_EVENTS   = ["SlayerShot","VirginNomination"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin" };
 // A few readings are named for the *act* rather than the character,
@@ -713,7 +714,7 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   PhilosopherChoice:"Philosopher", PitHagChoice:"Pit-Hag",
   KlutzChoice:"Klutz", EvilTwinPair:"Evil Twin",
   MoonchildChoice:"Moonchild", ExorcistChoice:"Exorcist",
-  InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor" };
+  InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor", OgreChoice:"Ogre" };
 // Not produced by a character, so it has no source role to be labelled
 // with — and falling back to the type name printed "Became" as though it
 // were a character somebody claimed.
@@ -1545,6 +1546,8 @@ function describeRow(r){
       return `protected ${who(r.a)} and ${who(r.b)} — one of them is drunk`;
     case "SailorChoice":
       return `chose ${who(r.target)} — one of the two of them is drunk`;
+    case "OgreChoice":
+      return `chose ${who(r.target)} — and took their side, unknowing`;
 
     // Sects & Violets.
     case "ClockmakerInfo":

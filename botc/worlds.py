@@ -546,6 +546,28 @@ def _prune(options, count, target, look, order, k, used):
     return [o for o in options if verdict[TEAM[o[0]]]]
 
 
+def seated_legally(roles):
+    """Does every character sit where the setup says it must?
+
+    The bag decides *which* characters are dealt; this decides whether
+    they could have been dealt to *these seats*. The Marionette is the
+    one that asks: it neighbours the Demon. The catalogue holds the rule
+    (`beside`), so the next character with a seating rule is a line
+    there rather than a new branch here.
+
+    Asked of the finished deal, not seat by seat during the search. The
+    neighbour may be the last seat filled, and a check halfway through
+    would have to know which seats are still empty.
+    """
+    n = len(roles)
+    for seat, role in enumerate(roles):
+        team = CHARACTERS[role].beside
+        if team and not any(TEAM[roles[(seat + step) % n]] == team
+                            for step in (-1, 1)):
+            return False
+    return True
+
+
 def iter_worlds(n_players, claims, certainties=None, allow_good_lies=False,
                 forced=None, wakes=None, script=None, fabled=()):
     """Yield every legal role assignment for n seats.
@@ -569,6 +591,8 @@ def iter_worlds(n_players, claims, certainties=None, allow_good_lies=False,
             if k == len(order):
                 if not required <= used:
                     return                # this bag's characters never landed
+                if not seated_legally(roles):
+                    return                # dealt to seats it cannot sit in
                 yield World(tuple(roles), tuple(believes))
                 return
             i = order[k]
@@ -654,6 +678,10 @@ def dive(setup, n_players, rng):
         roles[i], believes[i] = role, belief
 
     if not required <= used:
+        return None
+    # A dead end like any other: counting it as a walk that found nothing
+    # keeps the estimate unbiased for the worlds that do sit legally.
+    if not seated_legally(roles):
         return None
     return World(tuple(roles), tuple(believes)), stands_for
 

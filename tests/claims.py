@@ -33,7 +33,7 @@ own job — and the two would agree because they share an assumption,
 rather than because the solver is right.
 """
 
-from botc.roles import OUTSIDERS, TEAM, TOWNSFOLK, is_evil
+from botc.roles import OUTSIDERS, TEAM, TOWNSFOLK, is_evil, knows_what_it_is
 
 # How often a good player says something untrue. Most tables have one.
 GOOD_LIE_CHANCE = 0.10
@@ -114,7 +114,10 @@ def claims_for(deal, rng, script=None):
         role = deal.roles[seat]
         honest = deal.apparent(seat)        # what a Drunk thinks it is
 
-        if is_evil(role):
+        # A Marionette is evil and does not know it, so it claims the
+        # token it was handed like any good player — only the knowing
+        # evil bluff.
+        if is_evil(role) and knows_what_it_is(role):
             # The team knows each other and divides the three between
             # them, so two Minions do not walk in claiming the same
             # thing. Taking one each is the whole reason there are three.

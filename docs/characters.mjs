@@ -912,9 +912,9 @@ export const DATA = {
    "wake": [
     "first"
    ],
-   "modelled": false,
-   "note": "it turns evil on the first night, which is a change of side the solver would have to be told about",
-   "handled": "not"
+   "chooses": true,
+   "nights": "first",
+   "first_night": 50
   },
   "Atheist": {
    "id": "atheist",
@@ -966,12 +966,10 @@ export const DATA = {
     "townsfolk",
     "outsider"
    ],
-   "modelled": false,
-   "note": "it believes it is a good character, like the Drunk, but the machinery for that is still tied to the Drunk alone",
    "nights": "conditional",
    "impairs": true,
-   "handled": "not",
-   "first_night": 12
+   "first_night": 12,
+   "beside": "demon"
   },
   "Sentinel": {
    "id": "sentinel",

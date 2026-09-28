@@ -63,6 +63,7 @@ export const INFO_SOURCES = {
   SnakeCharmerChoice: "SnakeCharmer", PitHagChoice: "PitHag",
   MoonchildChoice: "Moonchild", ExorcistChoice: "Exorcist",
   InnkeeperChoice: "Innkeeper", SailorChoice: "Sailor",
+  OgreChoice: "Ogre",
 };
 
 // --------------------------------------------------------------------

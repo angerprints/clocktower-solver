@@ -1077,3 +1077,81 @@ class TheSimulatorCanMoveCharactersAround(SolverTest):
             truth = World(tuple(deal.roles), tuple(deal.believes))
             with self.subTest(roles=deal.roles):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
+
+
+class EasterTroublePlaysAndSolves(SolverTest):
+    """The script with the Ogre and the Marionette, played and solved.
+
+    The simulator decides the Ogre's side from its own reading of the
+    rule — the true side of whoever it picked, the Spy and the Recluse
+    counting as evil — and never asks the solver. A board the solver then
+    calls impossible is one of the two getting the rule wrong.
+    """
+
+    EASTER = [
+        "noble", "washerwoman", "librarian", "clockmaker", "grandmother",
+        "slayer", "artist", "empath", "fortuneteller", "monk", "undertaker",
+        "ravenkeeper", "virgin", "mayor", "ogre", "saint", "recluse",
+        "drunk", "poisoner", "spy", "scarletwoman", "marionette", "baron",
+        "imp"]
+
+    def played(self, count=120, nights=3):
+        from botc import scripts
+        from botc.info import GameState
+        easter = scripts.from_ids("Easter Trouble", self.EASTER)
+        for seed in range(count):
+            rng = random.Random(seed)
+            n = [7, 8, 9, 10, 11][seed % 5]
+            deal, heard = simulate.play(n, rng, nights=nights, script=easter)
+            claims, wakes, _notes = C.claims_for(deal, rng, script=easter)
+            state = GameState(n_players=n, script=easter, claims=claims,
+                              wakes=wakes, deaths=dict(deal.deaths),
+                              infos=list(heard), votes=dict(deal.votes),
+                              nominations=dict(deal.nominations))
+            yield seed, deal, state
+
+    def test_no_board_is_impossible(self):
+        import botc.solver as S
+        from botc.worlds import World
+        for seed, deal, state in self.played():
+            truth = World(tuple(deal.roles), tuple(deal.believes))
+            with self.subTest(seed=seed, roles=deal.roles):
+                self.assertIsNotNone(S.explanation_cost(truth, state))
+
+    def test_an_ogre_turns_and_the_solver_follows(self):
+        """Not merely tolerated: on some boards only an evil Ogre
+        explains what the Empath said, and the best story says so."""
+        import botc.solver as S
+        from botc.worlds import World
+        turned = followed = 0
+        for _seed, deal, state in self.played():
+            if not deal.side_changes:
+                continue
+            turned += 1
+            truth = World(tuple(deal.roles), tuple(deal.believes))
+            _cost, changes = S.best_story(truth, state)
+            followed += bool(changes)
+        self.assertGreater(turned, 5, "hardly any Ogre turned evil")
+        self.assertGreater(followed, 0,
+                           "no board needed the Ogre to have turned")
+
+    def test_the_marionette_sits_beside_the_demon_holding_a_spare_token(self):
+        found = 0
+        for seed, deal, state in self.played():
+            if "Marionette" not in deal.roles:
+                continue
+            found += 1
+            m = deal.roles.index("Marionette")
+            n = deal.n
+            beside = {TEAM[deal.roles[(m - 1) % n]],
+                      TEAM[deal.roles[(m + 1) % n]]}
+            with self.subTest(seed=seed):
+                self.assertIn("demon", beside)
+                self.assertIn(TEAM[deal.believes[m]],
+                              ("townsfolk", "outsider"))
+                self.assertNotIn(deal.believes[m], deal.roles)
+        self.assertGreater(found, 0, "no Marionette dealt")
+
+
+if __name__ == "__main__":
+    unittest.main()

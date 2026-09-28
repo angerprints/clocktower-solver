@@ -106,5 +106,38 @@ class ClaimsPrune(SolverTest):
         self.assertLess(pinned, plain)
 
 
+
+class TheMarionetteNeighboursTheDemon(SolverTest):
+    """"[You neighbour the Demon]" is a setup rule, like the bag. Checked
+    on the finished deal, in the search and in the random walk alike."""
+
+    def test_no_world_seats_it_anywhere_else(self):
+        from botc import scripts
+        from botc.worlds import iter_worlds, seated_legally
+        easter = scripts.from_ids("Easter Trouble", [
+            "noble", "washerwoman", "librarian", "clockmaker", "grandmother",
+            "slayer", "artist", "empath", "fortuneteller", "monk",
+            "undertaker", "ravenkeeper", "virgin", "mayor", "ogre", "saint",
+            "recluse", "drunk", "poisoner", "spy", "scarletwoman",
+            "marionette", "baron", "imp"])
+        claims = dict(enumerate(["Noble", "Washerwoman", "Clockmaker",
+                                 "Grandmother", "Artist", "Empath", "Monk",
+                                 "Ogre", "Saint"]))
+        found = 0
+        for w in iter_worlds(9, claims, script=easter):
+            if "Marionette" not in w.roles:
+                continue
+            found += 1
+            seat = w.roles.index("Marionette")
+            beside = {TEAM[w.roles[(seat - 1) % 9]],
+                      TEAM[w.roles[(seat + 1) % 9]]}
+            self.assertIn("demon", beside)
+        self.assertGreater(found, 0, "no Marionette world to look at")
+        # And the rule itself, both ways round.
+        self.assertTrue(seated_legally(("Marionette", "Imp", "Chef")))
+        self.assertFalse(seated_legally(("Marionette", "Chef", "Empath",
+                                         "Imp", "Monk")))
+
+
 if __name__ == "__main__":
     unittest.main()

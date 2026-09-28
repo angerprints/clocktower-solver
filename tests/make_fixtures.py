@@ -364,6 +364,31 @@ def handmade():
         "recluse", "saint", "poisoner", "spy", "imp"])
     yield board("custom-7-narrow", small, TB9[:5] + ["Recluse", "Saint"])
 
+    # Easter Trouble, the script with the Ogre and the Marionette. The
+    # Ogre turns evil from day one, so an Empath beside it can read 0 on
+    # the first night and 1 on the second without anybody poisoned; the
+    # Marionette believes it is good and sits beside the Demon.
+    easter = scripts.from_ids("Easter Trouble", [
+        "noble", "washerwoman", "librarian", "clockmaker", "grandmother",
+        "slayer", "artist", "empath", "fortuneteller", "monk", "undertaker",
+        "ravenkeeper", "virgin", "mayor", "ogre", "saint", "recluse",
+        "drunk", "poisoner", "spy", "scarletwoman", "marionette", "baron",
+        "imp"])
+    EASTER9 = ["Noble", "Washerwoman", "Clockmaker", "Grandmother",
+               "Empath", "Ogre", "Monk", "Undertaker", "Saint"]
+    yield board("easter-9-plain", easter, EASTER9)
+    yield board("easter-9-ogre-turns", easter, EASTER9, infos=[
+        {"type": "Empath", "night": 1, "player": 4, "count": 0},
+        {"type": "Empath", "night": 2, "player": 4, "count": 1}],
+        quiet_nights=[2], days_done=[1])
+    yield board("easter-9-ogre-chose", easter, EASTER9, infos=[
+        {"type": "OgreChoice", "night": 1, "player": 5, "target": 6},
+        {"type": "Empath", "night": 2, "player": 4, "count": 1}],
+        quiet_nights=[2], days_done=[1])
+    yield board("easter-9-noble", easter, EASTER9, infos=[
+        {"type": "Noble", "night": 1, "player": 0, "a": 4, "b": 5,
+         "c": 6}])
+
 
 def generated(how_many=60):
     """Random boards, so the corpus covers combinations nobody chose."""
