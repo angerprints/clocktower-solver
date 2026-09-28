@@ -727,10 +727,20 @@ def the_demon_kills(world, state, night):
         return []
     if demon not in state.alive_set(f"N{night}"):
         return []                         # it was not standing to do it
+    # The Demon may have been stopped at its source — a poisoned Imp kills
+    # nobody — but only offered when something tonight could reach it.
+    # Offered blindly it was a dead end on every quiet night of a board
+    # with no Poisoner, and `_night_accounts` keeps only the first 24
+    # combinations: five quiet nights of dead ends crowded out the one
+    # real story, an Imp aiming at corpses, and a legal game read as
+    # impossible.
+    reachable = any(demon in source.seats
+                    for source in impairment.sources_on(world, state, night))
     return [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON,
         seats=frozenset(range(state.n_players)),   # a corpse is a valid aim
-        capacity=1, must_fire=True)]
+        capacity=1, must_fire=True,
+        actor=demon if reachable else None)]
 
 
 @death_causes.immunity_rule

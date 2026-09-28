@@ -27,7 +27,7 @@ export const OTHER = "other";     // anything else that kills at night
 export class Cause {
   constructor(name, kind, seats, {
     capacity = 1, cost = 1.0, mustFire = false, unstoppable = false,
-    victimImpairedAt = null,
+    victimImpairedAt = null, actor = null,
   } = {}) {
     this.name = name;
     this.kind = kind;
@@ -45,6 +45,10 @@ export class Cause {
     // the victim has to have been the one it poisoned — a demand on a
     // night that has already been explained.
     this.victimImpairedAt = victimImpairedAt;
+    // The seat whose ability this is. A must-fire cause that killed nobody
+    // may have been stopped at its source — a poisoned Imp kills nobody —
+    // and one that did kill had a working source. See deaths.py.
+    this.actor = actor;
   }
 }
 
@@ -261,8 +265,19 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
     const grown = [];
     for (const acc of settled) {
       if (acc.used[cause.name] > 0) {
-        grown.push(acc);          // it did the killing; nothing to explain
+        // It did the killing, so there is nothing to explain — except
+        // that whoever did it was working.
+        if (cause.actor !== null) {
+          if (acc.impaired.has(cause.actor)) continue;
+          grown.push({...acc, working: new Set([...acc.working, cause.actor])});
+        } else {
+          grown.push(acc);
+        }
         continue;
+      }
+      if (cause.actor !== null && !acc.working.has(cause.actor)) {
+        // Stopped at its source: the killer was droisoned.
+        grown.push({...acc, impaired: new Set([...acc.impaired, cause.actor])});
       }
       for (const target of [...cause.seats].sort((a, b) => a - b)) {
         for (const s of shieldsOn(world, state, night, target, cause.kind)) {

@@ -55,6 +55,14 @@ class Cause(NamedTuple):
     # Seats that die as a consequence, given who this one killed.
     # Called with (victim) and returns further seats.
     implies: object = None
+    # The seat whose ability this is, when it has one. A must-fire cause
+    # that killed nobody may then have been stopped at its **source**: a
+    # poisoned Imp kills nobody, which is a quiet night as legal as a
+    # Monk's. Without this the only explanation on offer was a shield on
+    # the victim, and a Poisoner that hit its own Demon made the whole
+    # board impossible. And the other way round: a cause that did kill
+    # had a working source.
+    actor: int = None
 
 
 CAUSE_RULES = []
@@ -300,9 +308,18 @@ def _account_for(world, state, night, causes, directly, followed,
         grown = []
         for cost, impaired, working, used, before in settled:
             if used[cause.name] > 0:
-                # It did the killing, so there is nothing to explain.
+                # It did the killing, so there is nothing to explain —
+                # except that whoever did it was working.
+                if cause.actor is not None:
+                    if cause.actor in impaired:
+                        continue
+                    working = working | {cause.actor}
                 grown.append((cost, impaired, working, used, before))
                 continue
+            if cause.actor is not None and cause.actor not in working:
+                # Stopped at its source: the killer was droisoned.
+                grown.append((cost, impaired | {cause.actor}, working,
+                              used, before))
             for target in sorted(cause.seats):
                 for shield in shields_on(world, state, night, target,
                                          cause.kind):
