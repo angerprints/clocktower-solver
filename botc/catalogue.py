@@ -1,0 +1,461 @@
+"""Every character the solver knows about, and what it knows about them.
+
+A character's team, its night schedule and how it misregisters belong to
+the character, not to the script it appears on. A *script* is only a
+selection: a name and a set of characters. So the facts live here once,
+and `Script` in `scripts.py` picks from them.
+
+`modelled` is the honest flag. A character can be in the catalogue —
+enough to fill a team slot and be claimed — without its ability being
+implemented. Those are named to the person using the tool rather than
+quietly ignored, because a Grandmother whose reading is never checked
+looks exactly like a Grandmother who has not spoken yet.
+"""
+
+from typing import NamedTuple
+
+# What waking up feels like from the seat. See `wake_fits`.
+NEVER = "never"
+FIRST = "first"
+EVERY = "every"
+OTHER = "other"
+SOMETIMES = "sometimes"
+WAKE_PATTERNS = [NEVER, FIRST, EVERY, OTHER, SOMETIMES]
+
+WAKE_LABELS = {
+    NEVER: "Never wakes",
+    FIRST: "Only the first night",
+    EVERY: "Every night",
+    OTHER: "Every night but the first",
+    SOMETIMES: "Only sometimes",
+}
+
+
+# How far a character is reasoned about.
+FULLY = "fully"
+PARTLY = "partly"
+NOT = "not"
+
+
+class Character(NamedTuple):
+    key: str            # how the solver names it: "FortuneTeller"
+    id: str             # how scripts name it: "fortuneteller"
+    name: str           # how a person names it: "Fortune Teller"
+    team: str           # townsfolk / outsider / minion / demon
+    wake: frozenset     # what an honest holder could say about waking
+    # Where in the night this character acts, or 0 for a night it does
+    # not. Two numbers because the first night is a different order: a
+    # Washerwoman acts then and never again, and the Demon learning its
+    # Minions has a slot that later nights do not have.
+    #
+    # Taken from `data/roles.json` and **not renumbered** — the gaps are
+    # the point. A character added later drops into its true position
+    # without disturbing anything around it.
+    #
+    # This is what makes an Imp starpassing to an Assassin work: the Imp
+    # acts at 24 and the Assassin at 36, so by the time the Assassin's
+    # slot arrives that seat is holding the Imp and the ability is gone.
+    first_night: int = 0
+    other_night: int = 0
+    registers: frozenset = frozenset()   # teams it may *also* register as
+    setup: tuple = ()   # ways it shifts the bag, e.g. the Baron
+    believes: bool = False   # the holder thinks they are somebody else
+    # Which teams the token they were handed can come from. The Drunk is
+    # always given a Townsfolk; the Marionette thinks it is any good
+    # character, so either side of good.
+    believes_from: tuple = ("townsfolk",)
+    # How far this character is reasoned about. Three states rather than
+    # two, because "not built yet" and "built as far as it ever will be"
+    # are different things and the script panel should not pretend
+    # otherwise. A Savant sitting in the same list as an unstarted Demon
+    # tells somebody the wrong thing about both.
+    #
+    #   FULLY   the ability is reasoned about
+    #   PARTLY  what it says is recorded and shown, but not weighed —
+    #           because its content can be anything at all
+    #   NOT     nothing is done with it, and the note says why
+    handled: str = FULLY
+    # Is this as far as it goes? A Mutant leaves nothing on the board to
+    # read, so it is finished at NOT — unlike a character nobody has got
+    # to yet. PARTLY is always settled; that is what it means.
+    settled: bool = False
+    note: str = ""           # what is missing, when something is
+    # Can this character stop somebody else's ability working? Only the
+    # Mathematician asks, and it asks for a narrow reason: its number is
+    # the size of the impairment set, so an *unmodelled* character that
+    # droisons means the solver cannot know how much went wrong and must
+    # say nothing. An unmodelled character that only produces
+    # information it cannot check — a Savant, an Artist — costs it
+    # nothing, and used to silence it anyway.
+    impairs: bool = False
+    # Does this character deliberately point at a player at night? That
+    # is what a Goon reacts to — not being looked at, being *chosen*. A
+    # Courtier names a character rather than a player and never triggers
+    # one; a Grandmother is shown somebody by the Storyteller rather than
+    # choosing them.
+    chooses: bool = False
+    # Can this seat genuinely be on either side, as opposed to merely
+    # reading as the other one? A Recluse is good and reads evil; a Goon
+    # that turned really is evil while it lasts. The two are different
+    # questions and only the second changes which team somebody is on.
+    alignment_open: bool = False
+    # When the holder is actually woken *for their own ability*, which is
+    # a different question from `wake` above. `wake` is forgiving — it is
+    # what somebody could honestly claim, and a Courtier's honest answer
+    # depends on when they spent it. This is the fact, and the Chambermaid
+    # needs the fact. "conditional" means it depends on the board, and a
+    # rule in `waking.py` works it out.
+    nights: str = "never"
+    # Does this take a seat? The Fabled do not — they are put on the table
+    # by the Storyteller and shown to everybody, and they are in play
+    # without anybody holding them.
+    seated: bool = True
+
+
+def _handled(self):
+    """Is this character reasoned about at all?
+
+    Kept because a dozen places ask it and all of them mean the same
+    thing: can the solver be trusted about this ability. Recording what
+    somebody said without weighing it does not count.
+    """
+    return self.handled == FULLY
+
+
+Character.modelled = property(_handled)
+
+
+def _c(key, id_, name, team, wake, **kw):
+    return Character(key, id_, name, team, frozenset(wake), **kw)
+
+
+# --------------------------------------------------------------------------
+# Trouble Brewing
+# --------------------------------------------------------------------------
+_TB = [
+    _c("Washerwoman", "washerwoman", "Washerwoman", "townsfolk", {FIRST}, nights="first"),
+    _c("Librarian", "librarian", "Librarian", "townsfolk", {FIRST}, nights="first"),
+    _c("Investigator", "investigator", "Investigator", "townsfolk", {FIRST}, nights="first"),
+    _c("Chef", "chef", "Chef", "townsfolk", {FIRST}, nights="first"),
+    _c("Empath", "empath", "Empath", "townsfolk", {EVERY}, nights="every"),
+    _c("FortuneTeller", "fortuneteller", "Fortune Teller", "townsfolk", {EVERY}, nights="every", chooses=True),
+    _c("Undertaker", "undertaker", "Undertaker", "townsfolk",
+       {OTHER, EVERY, SOMETIMES}, nights="conditional"),
+    _c("Monk", "monk", "Monk", "townsfolk", {OTHER, EVERY}, nights="other", chooses=True),
+    _c("Ravenkeeper", "ravenkeeper", "Ravenkeeper", "townsfolk",
+       {NEVER, SOMETIMES}, nights="conditional", chooses=True),
+    _c("Virgin", "virgin", "Virgin", "townsfolk", {NEVER}),
+
+    # Experimental. Guesses the whole evil team in daylight; if it is
+    # exactly right, good wins. No night action at all — the only other
+    # character here shaped like that is the Slayer.
+    _c("Alsaahir", "alsaahir", "Alsaahir", "townsfolk", {NEVER}),
+
+    # Experimental. Shown a player each night whose character *type*
+    # differs from the one shown the night before — never told the type.
+    #
+    # The setup is the Godfather's shape: the Storyteller **may** add an
+    # Outsider, and it is not knowable which they did. Hence two options,
+    # one of them no change at all.
+    _c("Balloonist", "balloonist", "Balloonist", "townsfolk",
+       {EVERY, FIRST}, nights="every",
+       setup=({"townsfolk": -1, "outsider": 1}, {})),
+
+    # Experimental. Picks somebody each night and dies if they are
+    # droisoned — which makes it the only character whose death is
+    # evidence *about the impairment plan* rather than about the board.
+    _c("Acrobat", "acrobat", "Acrobat", "townsfolk", {EVERY, OTHER},
+       nights="other", chooses=True),
+
+    # Experimental. Dies at night and hands the character on.
+    #
+    # Never wakes: being told you are the new Farmer is a *game rule* —
+    # you learn any character you are given — not the Farmer's ability
+    # doing something to you. So a Chambermaid does not count it.
+    _c("Farmer", "farmer", "Farmer", "townsfolk", {NEVER}),
+    _c("Slayer", "slayer", "Slayer", "townsfolk", {NEVER}),
+    _c("Soldier", "soldier", "Soldier", "townsfolk", {NEVER}),
+    _c("Mayor", "mayor", "Mayor", "townsfolk", {NEVER}),
+
+    _c("Butler", "butler", "Butler", "outsider", {EVERY}, nights="every", chooses=True),
+    _c("Drunk", "drunk", "Drunk", "outsider", set(WAKE_PATTERNS),
+       believes=True, nights="conditional"),
+    _c("Recluse", "recluse", "Recluse", "outsider", {NEVER},
+       registers=frozenset({"minion", "demon"})),
+    _c("Saint", "saint", "Saint", "outsider", {NEVER}),
+
+    _c("Poisoner", "poisoner", "Poisoner", "minion", {EVERY}, nights="every", chooses=True),
+    _c("Spy", "spy", "Spy", "minion", {EVERY},
+       registers=frozenset({"townsfolk", "outsider"}), nights="every"),
+    _c("ScarletWoman", "scarletwoman", "Scarlet Woman", "minion",
+       {FIRST, SOMETIMES}, nights="conditional"),
+    _c("Baron", "baron", "Baron", "minion", {FIRST},
+       setup=({"townsfolk": -2, "outsider": 2},)),
+
+    _c("Imp", "imp", "Imp", "demon", {FIRST, EVERY}, nights="other", chooses=True),
+
+    _c("Godfather", "godfather", "Godfather", "minion", {FIRST, EVERY},
+       nights="every", chooses=True,
+       setup=({"townsfolk": 1, "outsider": -1},
+              {"townsfolk": -1, "outsider": 1})),
+    _c("DevilsAdvocate", "devilsadvocate", "Devil's Advocate", "minion",
+       {EVERY}, nights="every", chooses=True),
+    _c("Assassin", "assassin", "Assassin", "minion",
+       {FIRST, EVERY, SOMETIMES}, nights="conditional", chooses=True),
+    _c("Zombuul", "zombuul", "Zombuul", "demon", {FIRST, EVERY, SOMETIMES},
+       nights="conditional", chooses=True),
+    _c("Pukka", "pukka", "Pukka", "demon", {FIRST, EVERY}, nights="every",
+       chooses=True),
+    _c("Shabaloth", "shabaloth", "Shabaloth", "demon", {FIRST, EVERY},
+       nights="other", chooses=True),
+    _c("Po", "po", "Po", "demon", {FIRST, EVERY}, nights="other",
+       chooses=True),
+
+    _c("Mastermind", "mastermind", "Mastermind", "minion", {NEVER},
+       handled=NOT, settled=True,
+       note="it changes how the game is won rather than what happens on "
+            "the board — no deaths, no readings, nothing to reason about. "
+            "What it does do is let play carry on after the Demon is "
+            "executed, and that much is modelled"),
+]
+
+
+# --------------------------------------------------------------------------
+# Known, but not yet reasoned about
+# --------------------------------------------------------------------------
+# Enough to fill a team slot, be claimed, and be counted. Their abilities
+# do nothing, which the tool says out loud rather than leaving to be
+# discovered.
+_UNMODELLED = [
+    # Three players, exactly one evil **by registration** — so a Spy can
+    # sit among the two good ones and a Recluse can be the evil one.
+    _c("Noble", "noble", "Noble", "townsfolk", {FIRST}, nights="first"),
+    _c("Grandmother", "grandmother", "Grandmother", "townsfolk", {FIRST}, nights="first"),
+    _c("Sailor", "sailor", "Sailor", "townsfolk", {EVERY}, nights="every", chooses=True),
+    _c("Exorcist", "exorcist", "Exorcist", "townsfolk", {OTHER, EVERY}, nights="other", chooses=True),
+    _c("Innkeeper", "innkeeper", "Innkeeper", "townsfolk", {OTHER, EVERY}, nights="other", chooses=True),
+    # Once per game, then they stop being woken. Which pattern an honest
+    # holder reports depends on when they spent it: the first night only,
+    # every night if they never did, somewhere in between otherwise.
+    _c("Courtier", "courtier", "Courtier", "townsfolk",
+       {FIRST, EVERY, SOMETIMES}, nights="conditional"),
+    _c("Professor", "professor", "Professor", "townsfolk",
+       {OTHER, SOMETIMES}, nights="conditional", chooses=True),
+    _c("Gambler", "gambler", "Gambler", "townsfolk", {OTHER, EVERY}, nights="other", chooses=True),
+    _c("Gossip", "gossip", "Gossip", "townsfolk", {NEVER}),
+    _c("Minstrel", "minstrel", "Minstrel", "townsfolk", {NEVER}),
+    _c("Chambermaid", "chambermaid", "Chambermaid", "townsfolk", {EVERY},
+       nights="every", chooses=True),
+    _c("Pacifist", "pacifist", "Pacifist", "townsfolk", {NEVER}),
+    _c("TeaLady", "tealady", "Tea Lady", "townsfolk", {NEVER}),
+    _c("Fool", "fool", "Fool", "townsfolk", {NEVER}),
+
+    _c("Goon", "goon", "Goon", "outsider", {NEVER}, alignment_open=True),
+    _c("Tinker", "tinker", "Tinker", "outsider", {NEVER}),
+    _c("Moonchild", "moonchild", "Moonchild", "outsider", {NEVER},
+       chooses=True),
+    # Believes it is the Demon rather than a Townsfolk, which is the same
+    # machinery pointed somewhere new — and it means the holder bluffs
+    # like the Demon would, because as far as they know they are it.
+    _c("Lunatic", "lunatic", "Lunatic", "outsider", set(WAKE_PATTERNS),
+       believes=True, believes_from=("demon",), nights="conditional",
+       chooses=True),
+    _c("Ogre", "ogre", "Ogre", "outsider", {FIRST},
+       handled=NOT,
+       note="it turns evil on the first night, which is a change of side "
+            "the solver would have to be told about"),
+    # Named in limits.py as characters the solver will not reason about.
+    # They still belong here, so a script can contain one and be told.
+    _c("Atheist", "atheist", "Atheist", "townsfolk", {NEVER},
+       handled=NOT,
+       note="with an Atheist in play the Storyteller may break the rules, "
+            "so there may be no legal world at all"),
+    _c("Legion", "legion", "Legion", "demon", {NEVER},
+       handled=NOT,
+       note="most of the table is evil, so every team count the search "
+            "prunes on is wrong"),
+    _c("Riot", "riot", "Riot", "demon", {NEVER},
+       handled=NOT,
+       note="every Minion is a Demon, and days work differently"),
+
+    _c("Marionette", "marionette", "Marionette", "minion",
+       set(WAKE_PATTERNS), believes=True,
+       believes_from=("townsfolk", "outsider"), handled=NOT,
+       note="it believes it is a good character, like the Drunk, but the "
+            "machinery for that is still tied to the Drunk alone", nights="conditional"),
+]
+
+
+# --------------------------------------------------------------------------
+# Fabled
+# --------------------------------------------------------------------------
+# Not dealt to anybody. The Storyteller puts one on the table and everyone
+# can see it, so whether it is in play is public — but what it *did* is
+# not, which is the whole point of the Sentinel.
+_FABLED = [
+    # An extra Outsider replaces a Townsfolk and a missing one is
+    # replaced by a Townsfolk. The table still seats the same people, so
+    # a shift that only moved one number would deal a game of the wrong
+    # size — which is exactly what it did until somebody asked.
+    _c("Sentinel", "sentinel", "Sentinel", "fabled", {NEVER}, seated=False,
+       setup=({"townsfolk": 1, "outsider": -1},
+              {},
+              {"townsfolk": -1, "outsider": 1})),
+]
+
+
+# --------------------------------------------------------------------------
+# Sects & Violets
+# --------------------------------------------------------------------------
+# The script where information stops being merely unreliable and starts
+# being wrong. A Vortox does not droison anybody — protection works as
+# normal — it makes Townsfolk abilities *yield false information*, which
+# constrains a world in the opposite direction from poison: a poisoned
+# Empath may be told anything, a Vortox'd one must be told something that
+# is not so.
+#
+# Everything here is dealt and can be claimed. What each one *does* is
+# added a few at a time; until then it says so rather than pretending.
+_SV = [
+    _c("Clockmaker", "clockmaker", "Clockmaker", "townsfolk", {FIRST},
+       nights="first"),
+    _c("Dreamer", "dreamer", "Dreamer", "townsfolk", {EVERY},
+       nights="every", chooses=True),
+    _c("SnakeCharmer", "snakecharmer", "Snake Charmer", "townsfolk",
+       {EVERY}, nights="every", chooses=True),
+    _c("Mathematician", "mathematician", "Mathematician", "townsfolk",
+       {EVERY}, nights="every"),
+    _c("Flowergirl", "flowergirl", "Flowergirl", "townsfolk", {OTHER},
+       nights="other"),
+    _c("TownCrier", "towncrier", "Town Crier", "townsfolk", {OTHER},
+       nights="other"),
+    _c("Oracle", "oracle", "Oracle", "townsfolk", {OTHER},
+       nights="other"),
+    _c("Savant", "savant", "Savant", "townsfolk", {NEVER},
+       handled=PARTLY,
+       note="its pair of statements is kept but not weighed: they can be "
+            "anything at all, and checking arbitrary claims about a "
+            "board is a different program from this one"),
+    _c("Seamstress", "seamstress", "Seamstress", "townsfolk",
+       {NEVER, SOMETIMES}, nights="conditional", chooses=True),
+    _c("Philosopher", "philosopher", "Philosopher", "townsfolk",
+       {NEVER, SOMETIMES}, nights="conditional", chooses=True),
+    _c("Artist", "artist", "Artist", "townsfolk", {NEVER},
+       handled=PARTLY,
+       note="its question is kept but not weighed — whatever the player "
+            "thought to ask, which can be trivial or impossible"),
+    _c("Juggler", "juggler", "Juggler", "townsfolk", {NEVER, SOMETIMES},
+       nights="conditional"),
+    _c("Sage", "sage", "Sage", "townsfolk", {NEVER, SOMETIMES},
+       nights="conditional"),
+
+    _c("Mutant", "mutant", "Mutant", "outsider", {NEVER},
+       handled=NOT, settled=True,
+       note="madness leaves no mark on the board: being executed for "
+            "breaking it looks like any other execution. If the table "
+            "knows that is what happened, mark the seat as confirmed"),
+    _c("Sweetheart", "sweetheart", "Sweetheart", "outsider", {NEVER}),
+    _c("Barber", "barber", "Barber", "outsider", {NEVER}),
+    _c("Klutz", "klutz", "Klutz", "outsider", {NEVER}),
+
+    _c("EvilTwin", "eviltwin", "Evil Twin", "minion", {FIRST},
+       nights="first"),
+    _c("Witch", "witch", "Witch", "minion", {EVERY}, nights="every",
+       chooses=True),
+    _c("Cerenovus", "cerenovus", "Cerenovus", "minion", {EVERY},
+       nights="every", chooses=True, handled=NOT, settled=True,
+       note="madness is a social constraint and leaves no mark of its "
+            "own. What the table *can* see is somebody executed for "
+            "breaking ceremadness, and marking that death says a "
+            "Cerenovus is about — which is the only handle there is"),
+    _c("PitHag", "pithag", "Pit-Hag", "minion", {EVERY}, nights="every",
+       chooses=True),
+
+    _c("FangGu", "fanggu", "Fang Gu", "demon", {FIRST, EVERY},
+       nights="other", chooses=True,
+       setup=({"townsfolk": -1, "outsider": 1},)),
+    _c("Vigormortis", "vigormortis", "Vigormortis", "demon",
+       {FIRST, EVERY}, nights="other", chooses=True),
+    _c("NoDashii", "nodashii", "No Dashii", "demon", {FIRST, EVERY},
+       nights="other", chooses=True),
+    _c("Vortox", "vortox", "Vortox", "demon", {FIRST, EVERY},
+       nights="other", chooses=True),
+]
+
+
+# Who can stop somebody else's ability working.
+#
+# Only the Mathematician asks, and for a narrow reason: its number is the
+# size of the impairment set, so an *unmodelled* character that droisons
+# means the solver cannot know how much went wrong and has to say
+# nothing. An unmodelled character that only produces information it
+# cannot check — a Savant, an Artist — costs it nothing, and a guard
+# written as "any unmodelled character at all" would silence the
+# Mathematician for good on a script that has one.
+#
+# Listed here rather than set on each entry, so the whole set can be read
+# at once and nothing is missed by being spelled differently.
+IMPAIRS = frozenset({
+    # Handed the wrong token, and impaired every night of the game.
+    "Drunk", "Marionette", "Lunatic",
+    # Trouble Brewing and Bad Moon Rising.
+    "Poisoner", "Sailor", "Goon", "Courtier", "Minstrel", "Innkeeper",
+    # Sects & Violets.
+    "Philosopher", "NoDashii", "Vigormortis", "Sweetheart", "SnakeCharmer",
+    # It can create any of the above.
+    "PitHag",
+})
+
+CHARACTERS = {c.key: c for c in _TB + _SV + _UNMODELLED + _FABLED}
+CHARACTERS = {k: c._replace(impairs=k in IMPAIRS)
+              for k, c in CHARACTERS.items()}
+
+
+def _night_order():
+    """Where each character acts, from `data/roles.json`.
+
+    Read rather than written down here, because it is somebody else's
+    data and hand-copying a hundred and thirty pairs of numbers is a way
+    to introduce errors that nothing would catch.
+
+    A character the file does not know keeps zero, which means "does not
+    act" — safe, and visible, since a character that should act and does
+    not will show up the moment a game is played.
+    """
+    import json
+    import pathlib as _p
+    path = _p.Path(__file__).resolve().parent.parent / "data" / "roles.json"
+    if not path.exists():
+        return {}
+    out = {}
+    for entry in json.loads(path.read_text()):
+        got = entry.get("id")
+        if got:
+            out[got] = (int(entry.get("firstNight") or 0),
+                        int(entry.get("otherNight") or 0))
+    return out
+
+
+_ORDER = _night_order()
+CHARACTERS = {
+    k: c._replace(first_night=_ORDER.get(c.id, (0, 0))[0],
+                  other_night=_ORDER.get(c.id, (0, 0))[1])
+    for k, c in CHARACTERS.items()}
+BY_ID = {c.id: c for c in CHARACTERS.values()}
+
+
+def normalise(name):
+    """Turn anything a script might write into a catalogue id."""
+    return "".join(ch for ch in str(name).lower() if ch.isalnum())
+
+
+def lookup(name):
+    """Find a character by id, key or display name. None if unknown."""
+    wanted = normalise(name)
+    got = BY_ID.get(wanted)
+    if got is not None:
+        return got
+    for character in CHARACTERS.values():
+        if wanted in (normalise(character.key), normalise(character.name)):
+            return character
+    return None

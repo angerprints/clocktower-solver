@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+games/
+tests/harness/.*_body.mjs
+venv/
+.venv/

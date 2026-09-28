@@ -1,0 +1,2396 @@
+"""Deal a real game, then ask what everybody honestly learned.
+
+This is the oracle the solver gets checked against. It knows the answer,
+so if the solver ever throws away the world this produced, the solver is
+wrong — no argument, no tuning discussion.
+
+Deliberately independent of `botc.solver`: it re-derives what each
+character sees from the seating and the roles, so a shared misreading of
+a rule cannot hide in both.
+"""
+
+import random
+
+from botc.info import (registers_as_role,
+                       Chef, ChambermaidInfo, ClockmakerInfo, CourtierChoice,
+                       AcrobatChoice, AlsaahirGuess, ArtistInfo,
+                       NobleInfo,
+                       BalloonistInfo,
+                       DreamerInfo,
+                       ExorcistChoice, InnkeeperChoice,
+                       MoonchildChoice, SailorChoice, Empath, EvilTwinPair,
+                       FlowergirlInfo, JugglerInfo, KlutzChoice,
+                       PhilosopherChoice, PitHagChoice,
+                       SnakeCharmerChoice,
+                       MathematicianInfo, TownCrierInfo,
+                       OracleInfo, SavantInfo,
+                       SageInfo, SeamstressInfo,
+                       FortuneTeller, GamblerGuess, GameState,
+                       GrandmotherInfo, Investigator, Librarian, Ravenkeeper,
+                       Undertaker, Washerwoman)
+from botc.roles import (DEMONS, MINIONS, OUTSIDERS, SETUP, TEAM, TOWNSFOLK,
+                        evil_registrations,
+                        is_evil)
+from botc.info import phase_index
+from botc.worlds import World
+
+
+class Deal:
+    """One dealt game: the true world plus everything that happened."""
+
+    def __init__(self, roles, believes, red_herring, poisoned, deaths, seed):
+        self.roles = list(roles)
+        self.believes = list(believes)
+        self.red_herring = red_herring
+        self.poisoned = dict(poisoned)      # {night: seat}
+        self.deaths = dict(deaths)          # {seat: phase}
+        self.seed = seed
+        # Who held the Demon, and from when. A starpass or a Scarlet Woman
+        # taking over appends to this, so a seat's character is a function
+        # of time and not just of the deal.
+        self.handovers = []                 # [(phase, seat)]
+        # Every character change, not only the Demon's. A handover is one
+        # of these; so is a Pit-Hag creation and a Snake Charmer swap.
+        self.changes = []                   # [(phase, seat, role)]
+        # Seats poisoned for the rest of the game — a swapped Snake
+        # Charmer, and nothing else yet.
+        self.perma_poisoned = set()
+        # {seat: the character a Philosopher took}. Not a change of
+        # character, so it cannot live in `changes`.
+        self.philosophies = {}
+        self.side_changes = []              # [(phase, seat, role, side)]
+        # State a Demon carries between nights. A Pukka's poison kills on
+        # the night after it lands; a Po that took nobody takes three the
+        # next time.
+        self.pukka_poisoned = None
+        self.pukka_history = {}             # night -> (came due, freshly hit)
+        self.po_charged = False
+        self.demon_aimed = {}               # night -> who the Demon aimed at
+        self.monk_guarded = {}              # night -> who the Monk kept safe
+        self.cursed = {}                    # night -> who a Witch aimed at
+        self.exorcised = {}                 # night -> who an Exorcist named
+        self.balloonist_last = {}           # seat -> who it was shown last
+        self.exorcised_last = {}            # seat -> its previous target
+        self.sailor_drunk = {}              # night -> which of the two
+        self.innkeeper_guarded = {}         # night -> the pair kept safe
+        self.innkeeper_drunk = {}           # night -> which of them is drunk
+        # What the table did in daylight. Only a Flowergirl and a Town
+        # Crier ask, but the day is where the answer lives.
+        self.votes = {}                     # {day: {seat, ...}}
+        self.nominations = {}               # {day: {seat, ...}}
+        self.tally = {}                     # {day: {nominee: votes}}
+
+    def demon_at(self, phase):
+        """The seat holding the Demon at this phase."""
+        from botc.info import phase_index
+        here = phase_index(phase)
+        # Whichever Demon holds it *at this phase*, not whichever was
+        # dealt one. Two bugs have lived here: the name was hardcoded to
+        # "Imp", so every Bad Moon Rising and Sects & Violets game
+        # reported no Demon at all; and it read the deal rather than the
+        # changes, so a Demon that swapped away with a Snake Charmer went
+        # on killing from a seat that was no longer the Demon.
+        seat = next((i for i in range(len(self.roles))
+                     if TEAM[self.role_at(i, phase)] == "demon"), None)
+        for when, heir in self.handovers:
+            if phase_index(when) <= here:
+                seat = heir
+        return seat
+
+    def role_at(self, seat, phase):
+        """The character this seat held at this phase.
+
+        Everything before the first change is just the deal. After one,
+        whatever it became — which is what an Undertaker or a Ravenkeeper
+        would learn about them.
+
+        Handovers used to be the only kind, and the heir was assumed to
+        be an Imp. A Philosopher, a Snake Charmer and a Pit-Hag all move
+        characters around without a Demon dying, so changes are recorded
+        as (phase, seat, role) and a handover is just one of them.
+        """
+        from botc.info import phase_index
+        here = phase_index(phase)
+        role = self.roles[seat]
+        for when, who, became in self.changes:
+            if who == seat and phase_index(when) <= here:
+                role = became
+        return role
+
+    def side_at(self, seat, phase):
+        """Which side this seat was on at this phase.
+
+        Almost always the side its character sits on — but not after a
+        Snake Charmer swap, where a Demon becomes a *good* Snake Charmer,
+        or a Pit-Hag creation, where a Townsfolk turned into the Poisoner
+        keeps its own side.
+        """
+        from botc.info import phase_index
+        from botc.roles import is_evil
+        here = phase_index(phase)
+        side = "evil" if is_evil(self.roles[seat]) else "good"
+        for when, who, _became, moved in self.side_changes:
+            if who == seat and phase_index(when) <= here:
+                side = moved
+        return side
+
+    @property
+    def n(self):
+        return len(self.roles)
+
+    def world(self):
+        return World(tuple(self.roles), tuple(self.believes))
+
+    def apparent(self, seat):
+        """The character this seat believes they are."""
+        return self.believes[seat] or self.roles[seat]
+
+    def seat_of(self, role):
+        return self.roles.index(role) if role in self.roles else None
+
+    def alive_at(self, phase):
+        from botc.info import phase_index
+        here = phase_index(phase)
+        return [p for p in range(self.n)
+                if self.deaths.get(p) is None
+                or phase_index(self.deaths[p]) >= here]
+
+    def working(self, seat, night):
+        """Is this seat's ability actually doing anything tonight?
+
+        Asked of `droisoned_at`, which is the one place that knows every
+        way of going wrong. This used to check the Drunk and the Poisoner
+        and nothing else, so a No Dashii's neighbour, a Vigormortis's,
+        a Sweetheart's, a Philosopher's, a swapped Snake Charmer and a
+        whole table a Minstrel had silenced were all "working".
+        
+        Two functions answering the same question differently is how a
+        Demon killed straight through its own silencing: the kill asked
+        `working`, which said yes, while `droisoned_at` said no.
+        """
+        return seat not in droisoned_at(self, night)
+
+
+def deal(n, rng, script=None):
+    """A random legal setup for n seats, from a script.
+
+    The script argument is the whole reason the other two published
+    scripts can be dealt at all: everything here used to read the
+    module-level Trouble Brewing lists, so every game the simulator ever
+    produced was Trouble Brewing whatever anybody asked for.
+
+    Setup changers are handled by name rather than by rule, because there
+    are only a few and each moves the bag differently. A Baron adds two
+    Outsiders and drops two Townsfolk; a Godfather moves one either way;
+    a Fang Gu adds one Outsider.
+    """
+    from botc import scripts as script_mod
+    script = script or script_mod.TROUBLE_BREWING
+    townsfolk = list(script.townsfolk)
+    outsiders = list(script.outsiders)
+    minions = list(script.minions)
+    demons = list(script.demons)
+
+    tf, out, mi, de = SETUP[n]
+
+    # One setup changer at most, chosen before the bag is filled — which
+    # is how the Storyteller does it.
+    changer = None
+    movers = [k for k in ("Baron", "Godfather", "FangGu") if k in minions
+              or k in demons]
+    if movers and rng.random() < 0.25:
+        changer = rng.choice(movers)
+        if changer == "Baron" and tf >= 2 and out + 2 <= len(outsiders):
+            tf, out = tf - 2, out + 2
+        elif changer == "Godfather" and out + 1 <= len(outsiders) and tf >= 1:
+            tf, out = tf - 1, out + 1
+        elif changer == "FangGu" and out + 1 <= len(outsiders) and tf >= 1:
+            tf, out = tf - 1, out + 1
+        else:
+            changer = None
+
+    if changer in ("Baron", "Godfather"):
+        rest = [m for m in minions if m != changer]
+        picked_minions = [changer] + rng.sample(rest, mi - 1)
+        picked_demons = list(rng.sample(demons, de))
+    elif changer == "FangGu":
+        picked_minions = rng.sample(minions, mi)
+        rest = [d for d in demons if d != "FangGu"]
+        picked_demons = ["FangGu"] + list(rng.sample(rest, de - 1))
+    else:
+        # A setup changer that is not chosen must stay out of the bag:
+        # its change is mandatory, so it cannot sit in a bag that did not
+        # make room for it.
+        rest = [m for m in minions if m not in ("Baron", "Godfather")]
+        picked_minions = rng.sample(rest, mi) if len(rest) >= mi \
+            else rng.sample(minions, mi)
+        spare_demons = [d for d in demons if d != "FangGu"]
+        picked_demons = list(rng.sample(spare_demons, de)) \
+            if len(spare_demons) >= de else list(rng.sample(demons, de))
+
+    picked_outsiders = rng.sample(outsiders, out)
+    spare = list(townsfolk)
+    rng.shuffle(spare)
+
+    chosen, believes_for = [], {}
+    for o in picked_outsiders:
+        chosen.append(o)
+        if o == "Drunk":
+            believes_for[o] = spare.pop()      # a token nobody else can hold
+    chosen += spare[:tf]
+    chosen += picked_minions
+    chosen += picked_demons
+
+    order = list(range(n))
+    rng.shuffle(order)
+    roles = [None] * n
+    believes = [None] * n
+    for seat, role in zip(order, chosen):
+        roles[seat] = role
+        believes[seat] = believes_for.get(role)
+    return roles, believes
+
+
+def _heir(d, phase, rng):
+    """Who catches the Demon when it dies at this phase.
+
+    The Scarlet Woman takes it whenever her own condition holds — alive,
+    with five or more players left. Otherwise the Storyteller passes the
+    star to any living Minion.
+    """
+    alive = [p for p in d.alive_at(phase) if p != d.demon_at(phase)]
+    minions = [m for m in alive if TEAM[d.role_at(m, phase)] == "minion"]
+    if not minions:
+        return None
+    sw = [m for m in minions if d.roles[m] == "ScarletWoman"]
+    if sw and len(d.alive_at(phase)) >= 5:
+        return sw[0]
+    return rng.choice(minions)
+
+
+def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
+         script=None):
+    """Deal a game and play it out, returning (deal, everything heard).
+
+    The order inside a night matters. In Trouble Brewing the Poisoner
+    goes first and the Demon kills before the Empath and the Fortune
+    Teller wake, so the night's victim is already dead when those two
+    read the table.
+
+    `script` decides the bag and, through it, which characters can wake
+    at all. What each one *learns* is added a script at a time — asking
+    for one whose characters are not built yet gives a legal game with
+    very little said in it, which is honest and not much use.
+    """
+    from botc import scripts as script_mod
+    script = script or script_mod.TROUBLE_BREWING
+    roles, believes = deal(n, rng, script)
+    good = [p for p in range(n) if not is_evil(roles[p])]
+    # Only when there is a Fortune Teller to have one. The red herring is
+    # *that character's* — the Storyteller picks a good player who will
+    # register as the Demon to it — so a board without one should not
+    # have a red herring at all.
+    red_herring = rng.choice(good) if "FortuneTeller" in roles else None
+    poisoner = roles.index("Poisoner") if "Poisoner" in roles else None
+
+    d = Deal(roles, believes, red_herring, {}, {}, None)
+    d.script = script
+    heard = []
+
+    for night in range(1, nights + 1):
+        living = d.alive_at(f"N{night}")
+        # A Poisoner that catches the star stops being one. The seat was
+        # worked out at deal time and never checked again, so a Poisoner
+        # promoted to Imp went on poisoning as well as killing — and the
+        # solver rightly called those boards impossible, because a Demon
+        # poisons nobody.
+        if (poisoner is not None and poisoner in living
+                and d.demon_at(f"N{night}") != poisoner):
+            d.poisoned[night] = rng.choice(living)
+
+        # A Monk guards somebody from the Demon; a Witch curses somebody
+        # who dies if they nominate. Neither is announced, so neither has
+        # a row — they are hidden choices the Storyteller writes down,
+        # like the Poisoner's.
+        #
+        # Both were dealt and never acted, which meant the night-walk's
+        # rules for them had nothing to check against.
+        _monk_guards(d, night, rng)
+        _witch_curses(d, night, rng)
+
+        # Choices made before the Demon swings — an Innkeeper's guard, a
+        # Monk's, a Sailor's drunk. By slot they are at 9, 12 and 4, so
+        # they must exist before any kill is worked out.
+        #
+        # This sat after the kills at first, which is worth recording:
+        # `_protected` was asked whether a seat was guarded while the
+        # guard was still `None`, so it always said no and the Innkeeper
+        # protected nobody. The rule was right and the moment was wrong.
+        heard += early_choices(d, night, rng)
+
+        # A Pukka poisons on the *first* night and kills from the
+        # second, so it is the one Demon that acts before anybody else
+        # does. Skipping night one entirely put its poison a night late
+        # and left night two with nobody dying — a board the solver
+        # rightly called impossible.
+        if night == 1 and d.roles[d.demon_at("N1") or 0] == "Pukka":
+            _demon_kills(d, night, rng)
+
+        if night > 1:
+            demon = d.demon_at(f"N{night}")
+            heir = _heir(d, f"N{night}", rng)
+            if heir is not None and rng.random() < starpass_chance:
+                # The Imp kills itself and the star passes on. This always
+                # leaves a body, so it can never make a night quiet.
+                d.deaths[demon] = f"N{night}"
+                d.handovers.append((f"N{night}", heir))
+                d.changes.append((f"N{night}", heir, d.roles[demon]))
+            else:
+                aimed = _demon_kills(d, night, rng)
+                # What it *aimed* at, kept for the replay: a Shabaloth
+                # kill sunk into a corpse leaves no body, so reading the
+                # deaths back gives an incomplete assignment.
+                d.demon_aimed[night] = list(aimed)
+                for victim in aimed:
+                    d.deaths[victim] = f"N{night}"
+                    # A Grandmother whose grandchild the Demon takes goes
+                    # with it. The simulator dealt Bad Moon Rising games
+                    # without this and produced boards the solver called
+                    # impossible — correctly, since a living Grandmother
+                    # beside a dead grandchild is not a legal world.
+                    for info in heard:
+                        if type(info).__name__ != "GrandmotherInfo":
+                            continue
+                        if info.target != victim:
+                            continue
+                        gran = info.player
+                        if d.role_at(gran, f"N{night}") == "Grandmother" \
+                                and gran in d.alive_at(f"N{night}") \
+                                and d.poisoned.get(night) != gran:
+                            d.deaths[gran] = f"N{night}"
+
+        # Board-changing steps run **before** the readings, because by
+        # slot they happen before every character that reads.
+        #
+        #     Acrobat 39   Barber 40   Farmer 48
+        #     Empath 53   Oracle 59   Mathematician 71
+        #
+        # They used to run after, and it cost a real bug: a Barber swap
+        # recorded at N2 made a seat a Pit-Hag *after* the Mathematician
+        # had counted, and because a change is stamped with a phase and
+        # not a slot, it back-dated to the start of the night. The
+        # Mathematician's row was then computed against a board that no
+        # longer existed.
+        #
+        # Worth naming as a class: **a phase is not an instant.** `N2`
+        # covers seventy-odd slots, so two things on the same night are
+        # indistinguishable to `phase_index`. Ordering the code is the
+        # cheap fix; the night-walk is the real one, because it holds one
+        # state and moves forward through it.
+        # These are the night's own consequences, so they happen on every
+        # night including the last. The guard below is for the *day* that
+        # follows, and a day after the final night never comes.
+        #
+        # Sitting under that guard meant an Acrobat never fell on the
+        # last night, a Moonchild never took anybody, and a Tinker never
+        # went — eight of thirty-eight acrobat nights disagreed with the
+        # night-walk because of it.
+        if True:
+            # An Acrobat whose pick turned out droisoned falls. The rule
+            # is "are *or become* droisoned tonight", so this waits for
+            # the night's droisoning to be settled.
+            # A Moonchild that died in daylight named somebody; if they
+            # are good, they die tonight. Acts at 50, after the Demon, so
+            # it can add a body the Demon did not take.
+            #
+            # A Tinker may simply go, and the Storyteller decides when.
+            # Both were dealt and never acted at all.
+            _moonchild_takes_one(d, night, heard, rng)
+            _tinker_may_go(d, night, rng)
+
+            _acrobat_may_fall(d, night, heard, rng)
+
+            # A Farmer that fell in the night hands the character on.
+            # Done after every death is recorded, because it fires on
+            # *any* night death — a Gossip kill, an Assassin, a Pukka's
+            # poison — not only the Demon's.
+            _farmer_hands_it_on(d, night, rng)
+
+            # A Barber that died today lets the Demon swap two players
+            # tonight — characters only, so a swapped player keeps their
+            # own side and a good seat can end up holding a Minion's
+            # character.
+            #
+            # The solver has modelled this since the Barber went in and
+            # the simulator never fired it, so no played game ever
+            # contained one. Found by somebody reading a transcript and
+            # asking why a Barber execution on day 1 produced nothing on
+            # night 2.
+            _barber_swap(d, night, rng)
+
+        heard += [row for row in honest_info(d, night, rng)
+                  if d.role_at(row.player, f"N{night}") not in CHOOSES_EARLY]
+
+        if night < nights:
+            # The day happens first: nominations, then votes, then the
+            # execution that follows from them.
+            # A public guess at the evil team, before the day's business.
+            # If it lands, good wins and the game stops there — so the
+            # record ends rather than running on, which is the same rule
+            # that stopped a Pit-Hag unmaking the Demon and the game
+            # carrying on for two more nights.
+            if _alsaahir_guesses(d, night, rng, heard):
+                break
+
+            _hold_a_day(d, night, rng)
+            executed = _execute(d, night, rng, allow_takeover)
+            if executed is not None:
+                d.deaths[executed] = f"E{night}"
+
+    return d, heard
+
+
+def _moonchild_takes_one(d, night, heard, rng):
+    """Named in daylight, and tonight a good player they named dies.
+
+    Fires on the night after the Moonchild died by day. A droisoned
+    Moonchild names nobody worth acting on — its ability was not working
+    when it chose.
+    """
+    phase = f"N{night}"
+    day = night - 1
+    for seat in range(d.n):
+        if d.role_at(seat, phase) != "Moonchild":
+            continue
+        if d.deaths.get(seat) not in (f"D{day}", f"E{day}"):
+            continue
+        if not d.working(seat, day):
+            continue
+        others = [p for p in d.alive_at(phase) if p != seat]
+        if not others:
+            continue
+        target = rng.choice(others)
+        heard.append(MoonchildChoice(night, seat, target=target))
+        if d.side_at(target, phase) == "good" \
+                and not _kept_alive_by_a_tea_lady(d, target, phase):
+            d.deaths.setdefault(target, phase)
+
+
+def _tinker_may_go(d, night, rng):
+    """It dies when the Storyteller says, which is not often."""
+    phase = f"N{night}"
+    for seat in range(d.n):
+        if d.role_at(seat, phase) != "Tinker":
+            continue
+        if seat not in d.alive_at(phase):
+            continue
+        if rng.random() < 0.15 and not _kept_alive_by_a_tea_lady(
+                d, seat, phase):
+            d.deaths.setdefault(seat, phase)
+
+
+def _witch_curses(d, night, rng):
+    """Whoever it points at dies if they nominate tomorrow.
+
+    Acts at 14. Nothing happens tonight — the curse is a day matter — but
+    the aim is taken now, which is why the walk records it at the slot
+    rather than at the moment it bites.
+
+    Stops once only one player is left alive besides the Witch, and a
+    droisoned Witch curses nobody.
+    """
+    phase = f"N{night}"
+    witch = next((p for p in range(d.n)
+                  if d.role_at(p, phase) == "Witch"
+                  and p in d.alive_at(phase)), None)
+    if witch is None or not d.working(witch, night):
+        return
+    others = [p for p in d.alive_at(phase) if p != witch]
+    if len(others) >= 2:
+        d.cursed[night] = rng.choice(others)
+
+
+def _monk_guards(d, night, rng):
+    """A Monk keeps one player safe from the Demon tonight.
+
+    Acts at slot 12, before every Demon, which is the whole point: the
+    Demon arrives later and finds the seat protected.
+
+    A droisoned Monk guards nobody — a plain ability does not function.
+    """
+    if night < 2:
+        return
+    phase = f"N{night}"
+    monk = next((p for p in range(d.n)
+                 if d.role_at(p, phase) == "Monk"
+                 and p in d.alive_at(phase)), None)
+    if monk is None or not d.working(monk, night):
+        return
+    others = [p for p in d.alive_at(phase) if p != monk]
+    if others:
+        d.monk_guarded[night] = rng.choice(others)
+
+
+def _acrobat_may_fall(d, night, heard, rng):
+    """An Acrobat whose pick was droisoned tonight dies.
+
+    A droisoned Acrobat does not: a plain ability simply does not
+    function. And a Tea Lady beside it keeps it alive, because her
+    neighbours cannot die at all — which by the rules counts as an
+    ability *prevented*, and so as one that went wrong.
+    """
+    # The pick is made **here**, not read out of `heard`.
+    #
+    # An Acrobat acts at slot 39: after the Demon at 24, before the
+    # readings at 53. Its row used to come from `honest_info`, which runs
+    # later — so this scanned `heard` for a row that did not exist yet
+    # and never killed anybody. Thirty of thirty-eight nights agreed with
+    # the night-walk and the eight that did not were all this.
+    #
+    # Sitting between the two passes is the honest place for it, and the
+    # cost is that it makes its own choice rather than being handed one.
+    phase = f"N{night}"
+    droisoned = droisoned_at(d, night)
+    for seat in range(d.n):
+        if d.role_at(seat, phase) != "Acrobat" or night < 2:
+            continue
+        if seat not in d.alive_at(phase):
+            continue
+        others = [p for p in range(d.n) if p != seat]
+        if not others:
+            continue
+        row = AcrobatChoice(night, seat, target=rng.choice(others))
+        heard.append(row)
+        if seat not in d.alive_at(phase):
+            continue
+        if not d.working(seat, night):
+            continue                      # droisoned: it does not function
+        if row.target not in droisoned:
+            continue                      # the pick was fine
+        if _kept_alive_by_a_tea_lady(d, seat, phase):
+            continue                      # prevented, not failed
+        d.deaths.setdefault(seat, phase)
+
+
+def _kept_alive_by_a_tea_lady(d, seat, phase):
+    """Both her living neighbours good, so neither of them **can die**.
+
+    Full stop, and it does not matter where the death comes from — a
+    Demon, a Gambler's wrong guess, an Acrobat's droisoned pick, a Tinker
+    simply going. Settled at the table.
+
+    This was reached only by the Acrobat, so a Tinker died beside a
+    working Tea Lady and the solver — which applies her shield to every
+    cause — had to demand she was impaired, with nothing able to impair
+    her. That board had no legal world.
+    """
+    from botc.roles import TEAM
+    for lady in range(d.n):
+        if d.role_at(lady, phase) != "TeaLady":
+            continue
+        if lady not in d.alive_at(phase) or not d.working(
+                lady, int(phase[1:])):
+            continue
+        around = []
+        for step in (1, -1):
+            for gap in range(1, d.n):
+                other = (lady + step * gap) % d.n
+                if other == lady:
+                    break
+                if other in d.alive_at(phase):
+                    around.append(other)
+                    break
+        if seat in around and len(around) >= 2 \
+                and all(d.side_at(p, phase) == "good" for p in around):
+            return True
+    return False
+
+
+def _farmer_hands_it_on(d, night, rng):
+    """A Farmer that died tonight makes somebody else the Farmer.
+
+    Any night death does it, not only the Demon's. Not an execution, and
+    not while droisoned — a droisoned *information* role yields whatever
+    the Storyteller likes, because the information is arbitrary, but a
+    plain ability simply does not function, and handing the character on
+    is a plain ability.
+
+    Chosen by **registration**: a Spy registers as good, so a Spy may be
+    made the Farmer, and it stays evil. An evil Farmer is a real thing.
+
+    It chains, because the new Farmer is a new instance — so this looks
+    at whoever holds the character now rather than at whoever was dealt
+    it.
+    """
+    from botc.catalogue import CHARACTERS
+    phase = f"N{night}"
+    holders = [p for p in range(d.n)
+               if d.role_at(p, phase) == "Farmer"
+               and d.deaths.get(p) == phase]
+    for seat in holders:
+        if not d.working(seat, night):
+            continue                      # droisoned: it does not function
+        def good_enough(p):
+            role = d.role_at(p, phase)
+            if not is_evil(role):
+                return True
+            return bool({"townsfolk", "outsider"}
+                        & CHARACTERS[role].registers)
+        heirs = [p for p in d.alive_at(phase)
+                 if p != seat and good_enough(p)]
+        if not heirs:
+            continue
+        # From the day after, like every change that follows an ability
+        # working: the Farmer was still the Farmer when it did.
+        d.changes.append((f"D{night}", rng.choice(heirs), "Farmer"))
+
+
+def _barber_swap(d, night, rng):
+    """If a Barber died yesterday, the Demon may swap two seats tonight.
+
+    Characters move and sides do not, which is the whole point of it: a
+    good player can wake up holding the Poisoner's character and still be
+    good.
+    """
+    yesterday = night - 1
+    if yesterday < 1:
+        return
+    died = [p for p in range(d.n)
+            if d.role_at(p, f"N{night}") == "Barber"
+            and d.deaths.get(p) in (f"D{yesterday}", f"E{yesterday}",
+                                    f"N{yesterday}")]
+    if not died or rng.random() > 0.5:
+        return                              # a "may", and usually not
+    living = sorted(d.alive_at(f"N{night}"))
+    if len(living) < 2:
+        return
+    a, b = rng.sample(living, 2)
+    phase = f"N{night}"
+    got_a = d.role_at(a, phase)
+    got_b = d.role_at(b, phase)
+    d.changes.append((phase, a, got_b))
+    d.changes.append((phase, b, got_a))
+
+
+def _alsaahir_guesses(d, day, rng, heard):
+    """A public guess at the whole evil team, once in the day.
+
+    It need not guess every day, and mostly should not — the wiki
+    suggests waiting a few days to hide the role. So this guesses
+    sometimes, and mostly wrongly, which is the interesting case: a
+    failed guess rules out that exact configuration.
+
+    A droisoned Alsaahir simply does not work, so its guess does nothing
+    even when right.
+
+    Named by **character type at the time of the guess**, alive or dead.
+    A Fang Gu that jumped leaves two Demons to name — the corpse and the
+    seat that inherited — and a Pit-Hag can make a Minion that is good.
+    """
+    phase = f"D{day}"
+    for seat in range(d.n):
+        if d.role_at(seat, phase) != "Alsaahir":
+            continue
+        if seat not in d.alive_at(phase):
+            continue
+        if rng.random() > 0.35:
+            continue                      # most days it says nothing
+        real_d, real_m = set(), set()
+        for p in range(d.n):
+            team = TEAM[d.role_at(p, phase)]
+            if team == "demon":
+                real_d.add(p)
+            elif team == "minion":
+                real_m.add(p)
+        if rng.random() < 0.25 and real_d:
+            demons, minions = real_d, real_m      # a correct guess
+        else:
+            pool = [p for p in range(d.n) if p != seat]
+            demons = set(rng.sample(pool, min(len(real_d) or 1, len(pool))))
+            rest = [p for p in pool if p not in demons]
+            minions = set(rng.sample(rest, min(len(real_m), len(rest))))
+        won = (d.working(seat, day)
+               and demons == real_d and minions == real_m)
+        heard.append(AlsaahirGuess(day, seat, demons=frozenset(demons),
+                                   minions=frozenset(minions), won=won))
+        return won
+    return False
+
+
+def _hold_a_day(d, day, rng):
+    """Nominations and votes, and the execution that follows from them.
+
+    An execution used to appear from nowhere: a seat chosen at random,
+    with no nomination and no vote behind it. That was the least
+    realistic thing here, and it made two characters unmodellable — a
+    Flowergirl asks whether the Demon voted and a Town Crier whether a
+    Minion nominated, and neither question has an answer on a board where
+    nobody did either.
+
+    Kept simple on purpose. Two or three nominations, everybody votes or
+    does not with a coin weighted by how suspicious the nominee is, and
+    whoever draws most votes goes up. Evil votes a little less for its
+    own, which is the one piece of strategy worth having: it is what
+    makes a Flowergirl's answer mean anything.
+    """
+    phase = f"E{day}"
+    living = sorted(d.alive_at(phase))
+    if len(living) < 3:
+        return
+    how_many = min(len(living), rng.randint(1, 3))
+    nominators = rng.sample(living, how_many)
+
+    tally = {}
+    for who in nominators:
+        nominee = rng.choice([p for p in living if p != who] or [who])
+        d.nominations.setdefault(day, set()).add(who)
+        votes = set()
+        for voter in living:
+            # Evil is a shade less willing to put its own up, which is
+            # the whole reason a Flowergirl's answer carries anything.
+            chance = 0.45
+            if is_evil(d.roles[voter]) and is_evil(d.roles[nominee]):
+                chance = 0.2
+            if rng.random() < chance:
+                votes.add(voter)
+        if votes:
+            d.votes.setdefault(day, set()).update(votes)
+        tally[nominee] = max(tally.get(nominee, 0), len(votes))
+    d.tally[day] = tally
+
+
+def _execute(d, day, rng, allow_takeover=False):
+    """The town executes somebody.
+
+    Never the Saint — that ends the game, and a finished game is not what
+    we are testing. The Demon can go, but only when the Scarlet Woman is
+    standing by to take over; otherwise good would have won there.
+
+    Who goes up comes from the day's voting when there was one, so the
+    execution is the *consequence* of the day rather than a coin flip.
+    """
+    phase = f"E{day}"
+    demon = d.demon_at(phase)
+    # The Saint it is *now*. A Pit-Hag can make one mid-game, and reading
+    # the deal let the town execute it — which ends the game, and the
+    # record then ran on for two more days.
+    #
+    # Fifth time the deal has been mistaken for the timeline. The sweep
+    # after the fourth missed this one because it is in the *day*, and I
+    # only looked at the night.
+    living = [p for p in d.alive_at(phase)
+              if d.role_at(p, phase) != "Saint"]
+    heir = _heir(d, phase, rng)
+    takeover = (allow_takeover and heir is not None
+                and d.roles[heir] == "ScarletWoman"
+                and len(d.alive_at(phase)) >= 5)
+    if not takeover:
+        living = [p for p in living if p != demon]
+    if not living:
+        return None
+    tally = d.tally.get(day) or {}
+    ranked = [seat for seat, count in
+              sorted(tally.items(), key=lambda kv: -kv[1])
+              if seat in living and count]
+    if ranked:
+        # Most votes goes up. A tie is broken by whoever was nominated
+        # first, which is what a Storyteller does.
+        victim = ranked[0]
+    else:
+        if rng.random() >= 0.8:
+            return None
+        victim = rng.choice(living)
+    if victim == demon:
+        d.handovers.append((phase, heir))
+        d.changes.append((phase, heir, d.roles[victim]))
+    return victim
+
+
+def simulate(n, rng, nights=1):
+    """Backwards-compatible single return for the night-one checks."""
+    return play(n, rng, nights)[0]
+
+
+def _alive(deaths, n, phase):
+    from botc.info import phase_index
+    here = phase_index(phase)
+    return [p for p in range(n)
+            if deaths.get(p) is None or phase_index(deaths[p]) >= here]
+
+
+# Sects & Violets: started.
+#
+# Six readings are in — Clockmaker, Dreamer, Oracle, Seamstress, Sage,
+# Klutz — and the **Vortox inverts them**, which is the thing that makes
+# this script different from the other two: it is not a droisoning, the
+# ability works and what it yields is false. `_make_false` turns a true
+# reading into a false one by its shape: any wrong number for a count,
+# *neither* of the two for a pair, the opposite for a yes or no.
+#
+# That took twenty games from three impossible boards to none. Two of ten
+# measured still rule the true Demon out, and both are the *search* not
+# reaching the true world rather than the solver rejecting it — the world
+# explains the board perfectly (cost 1.0) and is simply never generated.
+#
+# One is the known Townsfolk-lie gap. The other is not yet understood:
+# every seat's true character is individually admitted by its own claim,
+# the softclaims are truthful, and the bag is legal (a Fang Gu game with
+# three Outsiders) — so something about the combination excludes it, and
+# tracing it ran out of memory on a nine-seat search with good lies
+# allowed. Reproduce with seed 8 on Sects & Violets.
+#
+# Not yet produced: Mathematician, Flowergirl, Town Crier, Juggler,
+# Savant, Artist, Evil Twin, Philosopher, Snake Charmer, Pit-Hag. Ten of
+# sixteen, and several need the day recorded rather than the night.
+
+
+# Bad Moon Rising: done, and it found two bugs in the *solver*.
+#
+# All four Demons kill in their own way, the Grandmother grieves, and the
+# Chambermaid counts by the `wake` set. Of twenty-five games, the number
+# the solver called impossible went nine, three, two, then **none**.
+#
+# The last two were not the simulator at all:
+#
+#   * A **Pukka's** kill demanded its victim was poisoned the night
+#     before and nothing provided that poison, so every Pukka board was
+#     impossible. Unnoticed because a board only breaks once a death is
+#     recorded on the right night, and no corpus board had one.
+#   * **Every Demon wakes on night one** to learn its Minions, and the
+#     waking check read `nights` — which says "other", describing when it
+#     *kills*. A Chambermaid beside a Demon counted two and the solver
+#     said no world could produce that.
+#
+# Still to do: Sects & Violets, where none of the seventeen good
+# characters can be resolved yet.
+
+
+def _living_beside(d, seat, phase):
+    """The nearest living player on each side, going round the circle."""
+    alive = d.alive_at(phase)
+    out = []
+    for step in (1, -1):
+        for gap in range(1, d.n):
+            other = (seat + step * gap) % d.n
+            if other == seat:
+                break
+            if other in alive:
+                out.append(other)
+                break
+    return out
+
+
+def _protected(d, night, target):
+    """Would the kill be stopped before it landed?
+
+    Shared by every Demon, because none of them cares which one is
+    swinging: a sober Soldier is safe, a Monk can guard somebody else.
+    """
+    phase = f"N{night}"
+    if d.role_at(target, phase) == "Soldier" \
+            and d.believes[target] is None \
+            and d.poisoned.get(night) != target:
+        return True
+
+    # An Innkeeper keeps two players safe. The docstring above has
+    # promised a Monk since this was written and neither was here — the
+    # Innkeeper was dealt twenty-four times across a hundred and eighty
+    # games and never acted at all, so nothing ever tested it.
+    #
+    # A droisoned Innkeeper protects nobody: a plain ability simply does
+    # not function.
+    # A Tea Lady keeps both her living neighbours alive, if both are
+    # good. Always on rather than aimed: she chooses nobody, so a
+    # neighbour who died means she was not working.
+    #
+    # The solver has modelled her since she went in and the simulator
+    # never did — a Demon killed straight through her, and the board had
+    # no legal world because nothing could explain why she failed.
+    for lady in range(d.n):
+        if d.role_at(lady, phase) != "TeaLady" or lady not in d.alive_at(phase):
+            continue
+        if not d.working(lady, night):
+            continue
+        around = _living_beside(d, lady, phase)
+        if len(around) < 2 or target not in around:
+            continue
+        if all(d.side_at(p, phase) == "good" for p in around):
+            return True
+
+    # An Exorcist that named the Demon stops it killing at all tonight.
+    if d.exorcised.get(night) is not None:
+        demon = d.demon_at(phase)
+        if demon is not None and d.exorcised[night] == demon:
+            exo = next((p for p in range(d.n)
+                        if d.role_at(p, phase) == "Exorcist"
+                        and p in d.alive_at(phase)), None)
+            if exo is not None and d.working(exo, night):
+                return True
+
+    if d.monk_guarded.get(night) == target:
+        monk = next((p for p in range(d.n)
+                     if d.role_at(p, phase) == "Monk"
+                     and p in d.alive_at(phase)), None)
+        if monk is not None and d.working(monk, night):
+            return True
+
+    pair = d.innkeeper_guarded.get(night)
+    if pair and target in pair:
+        keeper = next((p for p in range(d.n)
+                       if d.role_at(p, phase) == "Innkeeper"
+                       and p in d.alive_at(phase)), None)
+        if keeper is not None and d.working(keeper, night):
+            return True
+
+    return False
+
+
+def _demon_kills(d, night, rng):
+    """Who dies tonight, as a list, because not every Demon takes one.
+
+    Each Bad Moon Rising Demon kills in its own way and the simulator
+    used to kill like an Imp regardless — which produced boards the
+    solver called impossible, correctly, since a Pukka that kills the
+    night it poisons is not a legal game.
+
+    What each one does is derived here rather than read from the solver,
+    the same as every other rule in this file: a shared misreading that
+    lives in both is exactly what this is meant to catch.
+    """
+    phase = f"N{night}"
+    demon = d.demon_at(phase)
+    living = d.alive_at(phase)
+    if demon is None or demon not in living:
+        return []
+    # The Demon it is *now*, not the one this seat was dealt.
+    #
+    # A Snake Charmer that swaps takes the Demon's character, so a seat
+    # dealt a Snake Charmer can be holding a Zombuul by night two — and
+    # reading `d.roles` gave it the generic kill instead of the
+    # Zombuul's. It killed on a night after an execution, which a Zombuul
+    # may not do, and the solver rightly refused the board.
+    #
+    # Same mistake as `demon_at` had twice: the deal is not the timeline.
+    kind = d.role_at(demon, phase)
+
+    # A droisoned Demon kills nobody. Its ability is a plain one and
+    # simply does not function — the same rule that keeps a droisoned
+    # Farmer from handing the character on.
+    #
+    # Never checked here, so a Demon killed straight through its own
+    # poisoning. It went unseen until a Minstrel silenced the whole table
+    # and three seats still died on that night; before the Acrobat there
+    # was no reason to look at a night where the Demon was impaired.
+    if not d.working(demon, night):
+        return []
+    others = [p for p in living if p != demon]
+
+    # The Monk guards, whoever is swinging.
+    monk = d.roles.index("Monk") if "Monk" in d.roles else None
+    guarded = None
+    if monk is not None and monk in living and d.believes[monk] is None \
+            and d.poisoned.get(night) != monk and rng.random() < 0.3:
+        guarded = rng.choice([p for p in living if p != monk] or [monk])
+
+    def take(pool):
+        """One kill from a pool, or nothing if it was stopped.
+
+        **Never itself.** A Demon does not choose its own seat, and no
+        rule anywhere lets it — but the pool was simply everyone living,
+        so a Po taking three when only two were alive reached for itself.
+
+        The board then had no legal world at all: a Demon that dies needs
+        an heir, and with no Scarlet Woman and no living Minion there was
+        none. `demon_lineages` returned nothing, no timeline could be
+        built, and every world died — which looked like a Snake Charmer
+        problem because that was the first row added when the board
+        tipped over.
+
+        Asked here because there are four Demons with their own kill
+        rules and every one of them draws from a pool.
+        """
+        pool = [p for p in pool if p != demon]
+        if not pool:
+            return None
+        target = rng.choice(pool)
+        if target == guarded or _protected(d, night, target):
+            return None
+        return target
+
+    if kind == "Pukka":
+        # Poisons on one night and that poison kills on the next, so it
+        # starts a night earlier than anybody else and its victim dies a
+        # night late.
+        out = []
+        stale = d.pukka_poisoned
+        if stale is not None and stale in living:
+            out.append(stale)
+        fresh = [p for p in others if p != stale]
+        d.pukka_poisoned = rng.choice(fresh) if fresh else None
+        # Kept per night as well as carried forward. A replay has to be
+        # told which seat's poison came due tonight, and the running
+        # value is overwritten before anybody can ask.
+        d.pukka_history[night] = (stale, d.pukka_poisoned)
+        if d.pukka_poisoned is not None:
+            d.poisoned.setdefault(night, d.pukka_poisoned)
+        return out
+
+    if kind == "Zombuul":
+        # Only on a day when nobody died, and it survives its own first
+        # death — which the deaths record rather than this.
+        day = night - 1
+        if day >= 1 and any(at in (f"N{day}", f"D{day}", f"E{day}")
+                            for at in d.deaths.values()):
+            return []
+        got = take(others)
+        return [got] if got is not None else []
+
+    if kind == "Shabaloth":
+        # Two a night, and either may be sunk into somebody already dead,
+        # so the table often sees one body.
+        out = []
+        for _ in range(2):
+            pool = [p for p in others if p not in out]
+            got = take(pool)
+            if got is not None:
+                out.append(got)
+        return out
+
+    if kind == "Po":
+        # It may take nobody, and then three the following night.
+        if d.po_charged:
+            d.po_charged = False
+            out = []
+            for _ in range(3):
+                pool = [p for p in others if p not in out]
+                got = take(pool)
+                if got is not None:
+                    out.append(got)
+            return out
+        if rng.random() < 0.3:
+            d.po_charged = True
+            return []
+        got = take(others)
+        return [got] if got is not None else []
+
+    got = take(others)
+    return [got] if got is not None else []
+
+
+def _demon_kill(d, night, rng):
+    """One victim, for the callers that still expect a single seat."""
+    demon = d.demon_at(f"N{night}")
+    living = d.alive_at(f"N{night}")
+    if demon not in living:
+        return None
+    targets = [p for p in living if p != demon]
+    if not targets:
+        return None
+    target = rng.choice(targets)
+
+    monk = d.roles.index("Monk") if "Monk" in d.roles else None
+    monk_works = (monk is not None and monk in living
+                  and d.believes[monk] is None
+                  and d.poisoned.get(night) != monk)
+    if monk_works and rng.random() < 0.3 and target != monk:
+        return None                             # the Monk guarded them
+
+    if d.role_at(target, f"N{night}") == "Soldier" \
+            and d.believes[target] is None \
+            and d.poisoned.get(night) != target:
+        return None                             # a sober Soldier survives
+    return target
+
+
+# --------------------------------------------------------------------------
+# What each character honestly learns
+# --------------------------------------------------------------------------
+
+# Characters whose ability fires *because* they died. Everybody else
+# stays silent on the night they are killed.
+ON_DEATH = frozenset({"Ravenkeeper", "Sage", "Klutz"})
+
+
+def _conditionally_woke(d, seat, role, night):
+    """Did a character that wakes *sometimes* wake tonight?
+
+    This was a thirty per cent coin, which is wrong for every character
+    it covers: whether an Undertaker wakes is not luck, it is whether
+    anybody was executed yesterday. A mixed script put a Philosopher
+    holding the Chambermaid next to an Undertaker on a night after an
+    execution, and the simulator said nobody woke while the solver knew
+    somebody had.
+
+    Derived here rather than asked of the solver, as everything in this
+    file is — but derived from the facts rather than from a die.
+    """
+    from botc.info import phase_index
+    if role == "Undertaker":
+        return any(at == f"E{night - 1}" for at in d.deaths.values())
+    if role == "Ravenkeeper":
+        return d.deaths.get(seat) == f"N{night}"
+    if role == "Zombuul":
+        # Only on a night after a day when nobody died — and it wakes on
+        # the first night regardless, like every Demon.
+        if night == 1:
+            return True
+        day = night - 1
+        return not any(at in (f"N{day}", f"D{day}", f"E{day}")
+                       for at in d.deaths.values())
+    if role in ("Courtier", "Philosopher", "Sage", "Klutz", "Juggler",
+                "Seamstress", "Artist", "Savant"):
+        # Once-a-game characters: they woke on the night they used it,
+        # which the simulator records by having produced a row.
+        return False
+    if role == "Assassin":
+        return False                      # once, and the row would say
+    return False
+
+
+def _droisoned_info(d, seat, night, rng):
+    """What a droisoned seat was told, which is the Storyteller's choice.
+
+    Read off what the seat *believes* it is: a Drunk holding a Fortune
+    Teller token wakes when a Fortune Teller wakes and hears a Fortune
+    Teller's kind of answer. Nobody tells it otherwise.
+
+    Mostly false, and sometimes true by accident — a Storyteller handing
+    out only lies would be a Storyteller with a tell.
+    """
+    if d.deaths.get(seat) is not None and _died_before(d, seat, night):
+        return None
+    apparent = d.apparent(seat)
+    if apparent == d.roles[seat] and d.believes[seat] is None:
+        # Poisoned rather than drunk: it is still its own character and
+        # wakes on its own schedule.
+        apparent = d.roles[seat]
+    made = _for_role(d, seat, apparent, night, rng)
+    if made is None:
+        return None
+    # A quarter of the time the lie happens to be the truth. The rest of
+    # the time it is not.
+    if rng.random() < 0.75:
+        made = _make_false(d, made, night, rng)
+    return made
+
+
+def _in_night_order(d, night):
+    """The seats, in the order their characters act tonight.
+
+    Seat order is arbitrary and was what this used. The real order is in
+    `data/roles.json`: a Poisoner acts at 7 and an Acrobat at 39, so the
+    Acrobat can be poisoned before it chooses — and the Imp at 24 acts
+    before the Assassin at 36, so a starpass to an Assassin costs it the
+    night, because by slot 36 that seat is holding the Imp.
+    
+    Read off what each seat *believes* it is, since that is the schedule
+    it experiences: a Drunk holding a Fortune Teller token acts in the
+    Fortune Teller's slot.
+
+    A seat with no slot keeps its place at the end. It does not act at
+    night, so where it sits does not matter — but dropping it would lose
+    the ones whose ability fires on their own death.
+    """
+    from botc.catalogue import CHARACTERS
+    field = "first_night" if night == 1 else "other_night"
+
+    def slot(seat):
+        what = d.apparent(seat)
+        got = getattr(CHARACTERS[what], field, 0) if what in CHARACTERS else 0
+        return (got if got else 10_000, seat)
+
+    return sorted(range(d.n), key=slot)
+
+
+# Characters whose row is a *choice* they make early, not information
+# they are told late. Their slots sit before every Demon, so the choice
+# has to exist before the kills are worked out — an Innkeeper at 9 cannot
+# be asked who it protected after the Po at 28 has already swung.
+#
+# `honest_info` was one pass over everything, which meant choices that
+# must precede the night were made in the same breath as readings that
+# must follow it. Splitting them is the fix; ordering alone was not
+# enough.
+# Kept deliberately narrow: only the ones whose choice has to exist
+# before a Demon swings, because something later depends on it.
+#
+# A first attempt listed every character that chooses, which swept in the
+# Gambler — whose *death* follows from its guess, so moving it early
+# changed who was alive when the Demon picked — and the Chambermaid,
+# which is not early at all but sits at slot 70. Being wrong about that
+# turned one impossible board into five.
+# The Snake Charmer is here because its swap changes *who the Demon is*,
+# and that has to be settled before the Demon acts.
+CHOOSES_EARLY = frozenset({"Innkeeper", "Sailor", "Monk", "Exorcist",
+                           "SnakeCharmer"})
+
+
+def early_choices(d, night, rng):
+    """The choices made before the Demon acts, in slot order."""
+    out = []
+    # Who *held* the character when the pass began.
+    #
+    # A Snake Charmer swap is written at `N{night}` now that it is
+    # immediate — and `role_at` then reports the board *after* it, so the
+    # charmer's own row was filed under the seat the character ended up
+    # at rather than the seat that acted. Three nights of rows attributed
+    # to the old Demon.
+    #
+    # A row belongs to whoever acted, and that is the board as it stood
+    # when this pass started. The board afterwards is a different
+    # question — the same distinction that made the swap look wrong when
+    # written at the night in the first place.
+    before = {seat: d.role_at(seat, f"N{night}") for seat in range(d.n)}
+    for seat in _in_night_order(d, night):
+        role = before[seat]
+        if role not in CHOOSES_EARLY:
+            continue
+        if seat not in d.alive_at(f"N{night}"):
+            continue
+        made = _for_role(d, seat, role, night, rng)
+        if made is not None:
+            out.append(made)
+    return out
+
+
+def honest_info(d, night, rng):
+    """Every reading the working characters would truthfully get.
+
+    Seats that are drunk or poisoned are left out — their information is
+    whatever the Storyteller invented, so there is no honest version.
+    """
+    out = []
+    for seat in _in_night_order(d, night):
+        if not d.working(seat, night):
+            # A droisoned seat is not silent. It wakes on the schedule of
+            # the character it *believes* it is and is told something —
+            # whatever the Storyteller likes, which is mostly false and
+            # occasionally true by accident.
+            #
+            # Leaving them out entirely was worse than it looks: a Drunk
+            # that says nothing reads as a seat with nothing to prove,
+            # while a Drunk that talks confidently and turns out wrong is
+            # exactly what draws suspicion at a real table. Their absence
+            # removed the main source of honestly-wrong information —
+            # which is the thing the calibration run was trying to
+            # measure.
+            made = _droisoned_info(d, seat, night, rng)
+            if made is not None:
+                out.append(made)
+            continue
+        # Already acted in the early pass, so not again here.
+        #
+        # `early_choices` filters on `CHOOSES_EARLY` and this did not, so
+        # every early chooser acted **twice** a night. Invisible for most
+        # of them — an Innkeeper simply guarded a second pair — but a
+        # Snake Charmer swap is not idempotent: it swapped, then swapped
+        # the same pair straight back, leaving four changes on one night
+        # and a board with no legal world.
+        #
+        # It also produced two rows for one character, which is the
+        # cheaper thing to have noticed.
+        if d.role_at(seat, f"N{night}") in CHOOSES_EARLY:
+            continue
+        if d.deaths.get(seat) is not None and _died_before(d, seat, night):
+            continue
+        # The Demon kills before the Empath, Undertaker and Fortune Teller
+        # wake, so tonight's victim hears nothing. The Ravenkeeper is the
+        # exception - dying is the whole trigger.
+        # Dying tonight is the trigger for some characters, not a reason
+        # to stay silent. A Ravenkeeper learns a character, a Sage learns
+        # two players one of whom killed it, a Klutz points at somebody.
+        # Only the Ravenkeeper was listed, so a Sage killed by the Demon
+        # said nothing at all.
+        role_now = d.role_at(seat, f"N{night}")
+        if (d.deaths.get(seat) == f"N{night}"
+                and role_now not in ON_DEATH):
+            continue
+        # The character it holds *now*, not the one it was dealt. A
+        # Pit-Hag turns somebody into the Sage and the Sage should then
+        # act like one; a Philosopher gains an ability and should use it.
+        # Reading `d.roles[seat]` meant every mid-game change was
+        # invisible to the very seat it happened to.
+        role = role_now
+        made = _for_role(d, seat, role, night, rng)
+        # A Philosopher that took an ability uses it. Gaining one is not
+        # a character change — it stays the Philosopher and works two at
+        # once — so `role_at` does not see it and the seat said nothing
+        # but its own choice, night after night.
+        if made is None and role == "Philosopher":
+            took = d.philosophies.get(seat)
+            if took:
+                made = _for_role(d, seat, took, night, rng)
+        if made is None:
+            continue
+        # A Vortox makes every *Townsfolk* ability yield something false.
+        # Not a droisoning — the ability works and what it produces is a
+        # lie, which is a stronger claim than poison and constrains the
+        # world the other way.
+        # A Vortox falsifies information, not choices — so a row that
+        # records what a seat *did* passes through untouched, and only
+        # what an ability *yielded* is inverted.
+        #
+        # `_make_false` was flipping every boolean by name, `swapped`
+        # among them: a Snake Charmer that chose an ordinary player came
+        # out claiming it had swapped with them, which is a thing that
+        # cannot happen and made the board unreadable.
+        if (TEAM[role] == "townsfolk" and _vortox_working(d, night)
+                and not getattr(made, "is_a_choice", False)):
+            made = _make_false(d, made, night, rng)
+            if made is None:
+                continue
+        out.append(made)
+    return out
+
+
+def droisoned_at(d, night):
+    """Everybody whose ability is not working tonight, by any cause.
+
+    Not just the Poisoner. Sects & Violets droisons four other ways and
+    every one of them is standing — a No Dashii poisons its two nearest
+    Townsfolk all game, a Vigormortis poisons beside each Minion it
+    killed, a Sweetheart from the night it dies, a Philosopher whoever
+    already had the ability it took.
+
+    The Mathematician counts exactly this set, which is why it is worth
+    deriving once rather than guessing at the call site. Counting only
+    the Poisoner made it say nought while a No Dashii was quietly
+    poisoning two, and the solver rightly called the board impossible.
+    """
+    from botc.roles import TEAM
+    phase = f"N{night}"
+    living = d.alive_at(phase)
+    out = set()
+
+    # Handed the wrong token: wrong every night of the game.
+    for p in range(d.n):
+        if d.believes[p] is not None:
+            out.add(p)
+
+    if d.poisoned.get(night) is not None:
+        out.add(d.poisoned[night])
+
+    # A swapped Snake Charmer is poisoned for the rest of the game.
+    #
+    # `perma_poisoned` was written when the swap happened and read in
+    # exactly one place — the Snake Charmer's own rule, to stop it
+    # swapping twice. `droisoned_at` never consulted it, so every other
+    # question about that seat said it was working.
+    #
+    # Fifth droison source found missing from here, after the Minstrel,
+    # the Philosopher, the Innkeeper and the Sailor. The rule stands:
+    # anything that droisons belongs *here*, not merely where it happened.
+    # ...but only from the night the swap happened, not before it.
+    #
+    # `perma_poisoned` is the state at the *end* of the game. Handing it
+    # over whole marked a seat droisoned on the very night it was
+    # swapped, so the Demon could not act on the night it stopped being
+    # one. The swap is in `changes` with the phase it happened at, which
+    # is where the date comes from.
+    #
+    # Second time this exact mistake has been made — the first was in
+    # `hidden_from`, fixed the same way. A set that means "by the end"
+    # is not an answer to "on this night".
+    for p in getattr(d, "perma_poisoned", ()):
+        if p not in living:
+            continue
+        since = next((at for at, seat, role in d.changes
+                      if seat == p and role == "SnakeCharmer"), None)
+        if since is None or phase_index(since) < phase_index(phase):
+            out.add(p)
+
+    # An Innkeeper drunks one of the two it protects, and a Sailor one of
+    # itself and its target. Both were recorded and neither was in this
+    # list, so a Demon the Innkeeper had drunked went on killing — and
+    # the night-walk, which does honour it, refused a kill the record
+    # showed.
+    #
+    # Third and fourth droison sources found missing from here, after the
+    # Minstrel and the Philosopher. Worth a standing check: anything that
+    # droisons must be *here*, not merely recorded where it happened.
+    got = d.innkeeper_drunk.get(night)
+    if got is not None:
+        keeper = next((p for p in range(d.n)
+                       if d.role_at(p, phase) == "Innkeeper"
+                       and p in living), None)
+        if keeper is not None and keeper not in out:
+            out.add(got)
+    got = d.sailor_drunk.get(night)
+    if got is not None:
+        sailor = next((p for p in range(d.n)
+                       if d.role_at(p, phase) == "Sailor"
+                       and p in living), None)
+        if sailor is not None and sailor not in out:
+            out.add(got)
+
+    # A Philosopher that took an ability drunks whoever really holds that
+    # character, for the rest of the game. Never in this list, so a
+    # Mathematician standing beside one counted nought where the answer
+    # was one — and the solver, which does model it, refused the board.
+    for seat, took in (getattr(d, "philosophies", None) or {}).items():
+        if d.role_at(seat, phase) != "Philosopher":
+            continue                      # no longer the one who took it
+        if seat not in living:
+            continue
+        for other in range(d.n):
+            if other != seat and d.role_at(other, phase) == took:
+                out.add(other)
+
+    # A Minstrel silences the whole table for the night after a Minion is
+    # executed. Never modelled here, and the Acrobat is what exposed it —
+    # an Acrobat that lived forbids its pick being droisoned, and the
+    # solver knew the table was silenced when the simulator did not.
+    day = night - 1
+    if day >= 1:
+        minstrel = next((p for p in range(d.n)
+                         if d.role_at(p, phase) == "Minstrel"
+                         and p in living), None)
+        if minstrel is not None:
+            executed = [p for p, at in d.deaths.items()
+                        if at == f"E{day}" and TEAM[d.role_at(p, f"D{day}")]
+                        == "minion"]
+            if executed:
+                out |= {p for p in range(d.n) if p != minstrel}
+
+    def nearest_townsfolk(seat):
+        got = set()
+        for step in (1, -1):
+            for gap in range(1, d.n):
+                other = (seat + step * gap) % d.n
+                if other == seat:
+                    break
+                if TEAM[d.role_at(other, phase)] == "townsfolk":
+                    got.add(other)
+                    break
+        return got
+
+    for seat in range(d.n):
+        role = d.roles[seat]
+        if role == "NoDashii" and seat in living:
+            out |= nearest_townsfolk(seat)
+        elif role == "Sweetheart":
+            gone = d.deaths.get(seat)
+            if gone and phase_index(gone) <= phase_index(phase):
+                # Somebody, and the Storyteller never says who — the
+                # simulator has to pick, so it picks the seat after.
+                out.add((seat + 1) % d.n)
+        elif role == "Vigormortis" and seat in living:
+            for other in range(d.n):
+                if TEAM[d.role_at(other, phase)] != "minion":
+                    continue
+                gone = d.deaths.get(other)
+                # The poison triggers and registers on the night the
+                # Vigormortis killed, not the night after. Settled by
+                # asking rather than by reasoning: it was a real
+                # disagreement between the simulator and the solver, and
+                # the solver had it right.
+                #
+                # The tempting argument for the other reading — a
+                # Mathematician counts abilities that went wrong *since
+                # dawn*, and a Townsfolk poisoned at 3am has not used an
+                # ability while poisoned yet — is simply not how the
+                # poison works. It registers when it lands.
+                if gone and phase_index(gone) <= phase_index(phase):
+                    beside = sorted(nearest_townsfolk(other))
+                    if beside:
+                        out.add(beside[0])
+    return out
+
+
+def _vortox_working(d, night):
+    """Is a Vortox in play, alive, and not droisoned itself?"""
+    phase = f"N{night}"
+    seat = d.demon_at(phase)
+    if seat is None or d.role_at(seat, f"N{night}") != "Vortox":
+        return False
+    return seat in d.alive_at(phase) and d.poisoned.get(night) != seat
+
+
+def _make_false(d, info, night, rng):
+    """Turn a true reading into a false one, by its shape.
+
+    Any wrong number for a count; *neither* of the two for a pair; the
+    opposite for a yes or no. Returns None when there is no false version
+    to give, which should not happen but is better than inventing one.
+    """
+    kind = type(info).__name__
+
+    if hasattr(info, "count") and info.count is not None:
+        wrong = [n for n in range(0, d.n) if n != info.count]
+        info.count = rng.choice(wrong)
+        return info
+
+    # Every yes-or-no field, by name. A single `yes` was enough until
+    # the Flowergirl and the Town Crier arrived with their own booleans
+    # and quietly came through a Vortox unchanged — the reading stayed
+    # true, and the solver rightly called the board impossible.
+    # `swapped` and `triggered` are deliberately not here: they record
+    # what happened, not what somebody was told, and a Vortox does not
+    # reach them.
+    for field in ("yes", "voted", "nominated", "same", "answer"):
+        if getattr(info, field, None) is not None:
+            setattr(info, field, not getattr(info, field))
+            return info
+
+    if kind == "Undertaker" and getattr(info, "role", None):
+        # A Vortox makes it name the wrong character.
+        #
+        # There was no case for a row that carries a *role*, so an
+        # Undertaker on a Vortox board announced the truth and the solver
+        # rightly refused the game. Found on a board where a Philosopher
+        # was working the ability, which is why it looked like a
+        # Philosopher problem — it is not, a plain Undertaker was always
+        # wrong here too.
+        wrong = [k for k in d.script.keys if k != info.role]
+        if not wrong:
+            return None
+        return type(info)(info.night, info.player, role=rng.choice(wrong))
+
+    if kind == "NobleInfo":
+        # A Vortox makes it false, and false here means the three shown
+        # were **not** exactly one evil by registration — none of them,
+        # or two, or all three.
+        #
+        # It has no count to spoil and no role to swap, so the generic
+        # paths above walked straight past it and left a true reading on
+        # a Vortox board. The solver rightly refused the whole game.
+        phase = f"N{night}"
+
+        def could(p):
+            return sorted(evil_registrations(d.role_at(p, phase)))
+
+        evil = [p for p in range(d.n) if could(p) == [True]]
+        good = [p for p in range(d.n) if could(p) == [False]]
+        if len(good) >= 3:
+            picked = rng.sample(good, 3)          # nobody evil: false
+        elif len(evil) >= 2 and good:
+            picked = rng.sample(evil, 2) + [rng.choice(good)]
+        elif len(evil) >= 3:
+            picked = rng.sample(evil, 3)
+        else:
+            return None                           # cannot be made false
+        rng.shuffle(picked)
+        return NobleInfo(info.night, info.player,
+                         a=picked[0], b=picked[1], c=picked[2])
+
+    if kind == "DreamerInfo":
+        # Neither of the two is what the seat really is.
+        #
+        # Only that. An earlier version also excluded everything the seat
+        # could *register* as, to stop a Spy being shown as the Slayer —
+        # and that was wrong on the rules. Misregistration makes
+        # information **legal, not true**: the seat is still a Spy, so
+        # showing it as the Slayer is already false and a Vortox may
+        # produce it freely.
+        #
+        # It did paper over something real, which is written up at
+        # `registers_as_role` in info.py: the solver asks one question
+        # where there are two.
+        real = d.role_at(info.target, f"N{night}")
+        good = [k for k in d.script.townsfolk + d.script.outsiders
+                if k != real]
+        evil = [k for k in d.script.minions + d.script.demons if k != real]
+        if not good or not evil:
+            return None
+        info.good_role, info.evil_role = rng.choice(good), rng.choice(evil)
+        return info
+
+
+
+    if kind == "SageInfo":
+        # Neither of the two is the Demon that killed it.
+        demon = d.demon_at(f"N{night}")
+        others = [p for p in range(d.n) if p not in (info.player, demon)]
+        if len(others) < 2:
+            return None
+        info.a, info.b = sorted(rng.sample(others, 2))
+        return info
+
+    if kind == "GrandmotherInfo":
+        # A false character for her grandchild, but still a *good* one.
+        # Seeing only good characters is what a Grandmother's ability
+        # does, and a Vortox falsifies what an ability yields without
+        # changing what kind of thing it yields.
+        real = d.role_at(info.target, f"N{night}")
+        spare = [k for k in d.script.townsfolk + d.script.outsiders
+                 if k != real]
+        if not spare:
+            return None
+        info.role = rng.choice(spare)
+        return info
+
+    if kind in ("Washerwoman", "Librarian", "Investigator"):
+        # A Librarian told *nobody* has no pair to alter, and returning
+        # it unchanged left a **true** reading on a Vortox board — which
+        # is the one thing a Vortox forbids. The false version of "no
+        # Outsiders in play" is naming a pair, so build one.
+        if info.a is None or info.b is None:
+            others = [p for p in range(d.n) if p != info.player]
+            if len(others) < 2 or not d.script.outsiders:
+                return None               # nothing false can be said
+            a, b = sorted(rng.sample(others, 2))
+            info.a, info.b = a, b
+            info.role = rng.choice(list(d.script.outsiders))
+            return info
+        # Neither of the pair is the character named.
+        pool = {"Washerwoman": d.script.townsfolk,
+                "Librarian": d.script.outsiders,
+                "Investigator": d.script.minions}[kind]
+        spare = [k for k in pool if k not in (d.roles[info.a], d.roles[info.b])]
+        if not spare:
+            return None
+        info.role = rng.choice(spare)
+        return info
+
+    # Anything with no false version worth inventing — a Savant's pair,
+    # an Artist's question — is left alone rather than mangled.
+    return info
+
+
+def _died_before(d, seat, night):
+    from botc.info import phase_index
+    return phase_index(d.deaths[seat]) < phase_index(f"N{night}")
+
+
+def _for_role(d, seat, role, night, rng):
+    if night == 1:
+        # What the seat holds *now*, not what it was dealt.
+        #
+        # A Snake Charmer acts at first-night slot 20 and a Washerwoman
+        # reads at 33, so a swap has already happened when she is shown
+        # her pair — and reading `d.roles` showed her a character that
+        # seat no longer held. The solver then had to poison her to
+        # explain it, and an Empath beside the swapped seat had nothing
+        # consistent left to sit on.
+        #
+        # Ninth place the deal has been mistaken for the timeline.
+        here = f"N{night}"
+        if role == "Washerwoman":
+            return _pair_info(d, seat, night, rng, Washerwoman,
+                              lambda p: TEAM[d.role_at(p, here)] == "townsfolk",
+                              team="townsfolk")
+        if role == "Investigator":
+            return _pair_info(d, seat, night, rng, Investigator,
+                              lambda p: TEAM[d.role_at(p, here)] == "minion",
+                              team="minion")
+        if role == "Librarian":
+            outsiders = [p for p in range(d.n) if TEAM[d.roles[p]] == "outsider"]
+            if not outsiders:
+                return Librarian(1, seat, a=None, b=None, role="")
+            return _pair_info(d, seat, night, rng, Librarian,
+                              lambda p: TEAM[d.roles[p]] == "outsider",
+                              team="outsider")
+        if role == "Chef":
+            pairs = sum(1 for i in range(d.n)
+                        if is_evil(d.roles[i]) and is_evil(d.roles[(i + 1) % d.n]))
+            return Chef(1, seat, count=pairs)
+
+    if role == "Noble" and night == 1:
+        # Three players, exactly one evil **by registration** — two who
+        # register good and one who registers evil. The Storyteller is
+        # choosing among registrations, so a Spy may sit among the good
+        # two and a Recluse may be the evil one.
+        #
+        # The Noble may be shown itself, which is legal and useless.
+        phase = "N1"
+        # Whether a seat *could* be shown as evil, then a coin for the
+        # ones that may go either way — a Recluse the Storyteller chose
+        # to mark, a Spy it chose to hide.
+        def shown_evil(p):
+            opts = sorted(evil_registrations(d.role_at(p, phase)))
+            return rng.choice(opts) if len(opts) > 1 else opts[0]
+        evil = [p for p in range(d.n) if shown_evil(p)]
+        good = [p for p in range(d.n) if p not in evil]
+        if not evil or len(good) < 2:
+            return None
+        # **Three different players.** The two good ones are drawn from
+        # the seats that are not the evil one, so the same seat cannot
+        # appear twice — it named one seat twice and gave only two
+        # distinct players, which is not a reading the card allows.
+        one = rng.choice(evil)
+        rest = [p for p in good if p != one]
+        if len(rest) < 2:
+            return None
+        picked = [one] + rng.sample(rest, 2)
+        rng.shuffle(picked)
+        return NobleInfo(1, seat, a=picked[0], b=picked[1], c=picked[2])
+
+    if role == "Balloonist":
+        # A player whose character *type* differs from the one shown last
+        # night — and the Balloonist is never told the type.
+        #
+        # Registration is what makes this work: a Recluse counts as
+        # Outsider, Minion or Demon, so the Storyteller has room. The
+        # shown player may be alive or dead, good or evil.
+        #
+        # A droisoned Balloonist may be shown the same type, and that
+        # player still becomes "the previous" for the night after — which
+        # is the part of the card easiest to get wrong.
+        from botc.catalogue import CHARACTERS
+        phase = f"N{night}"
+        last = d.balloonist_last.get(seat)
+
+        def types(p, when):
+            """What that seat could have been shown as, **then**.
+
+            Not now. A seat shown on night one may have swapped into a
+            Demon by night two, and what the Balloonist saw was the
+            character it held when the token was pointed at. Comparing
+            against what it has since become let a townsfolk follow a
+            townsfolk, and the solver — which asks at the night shown —
+            called the board impossible.
+
+            Taken on my own reading rather than a ruling: the card says
+            "a different character type than last night", and last
+            night's type is what it was last night. Reversible if the
+            table says otherwise.
+            """
+            r = d.role_at(p, when)
+            return {TEAM[r]} | set(CHARACTERS[r].registers)
+
+        others = [p for p in range(d.n) if p != seat]
+        if last is not None and d.working(seat, night):
+            was, shown_at = last
+            others = [p for p in others
+                      if types(p, phase) - types(was, shown_at)]
+        if not others:
+            return None
+        shown = rng.choice(others)
+        d.balloonist_last[seat] = (shown, phase)
+        return BalloonistInfo(night, seat, target=shown)
+
+    if role == "Empath":
+        nb = _neighbours(d, seat, night)
+        return Empath(night, seat, count=sum(1 for p in nb if is_evil(d.roles[p])))
+
+    if role == "FortuneTeller":
+        others = [p for p in d.alive_at(f"N{night}")
+                  if p != seat and d.deaths.get(p) != f"N{night}"]
+        if len(others) < 2:
+            return None
+        a, b = rng.sample(others, 2)
+        demon = d.demon_at(f"N{night}")
+        # A Recluse registers as the Demon whenever the Storyteller
+        # likes, so a Fortune Teller can ping on one — which is the whole
+        # reason a Recluse is a nuisance to its own team, and something
+        # the simulator never produced.
+        recluse = [p for p in (a, b) if d.roles[p] == "Recluse"]
+        yes = (demon in (a, b) or d.red_herring in (a, b)
+               or (bool(recluse) and rng.random() < 0.35))
+        return FortuneTeller(night, seat, a=a, b=b, yes=yes)
+
+    # --- Sects & Violets ------------------------------------------------
+
+    if role == "Clockmaker" and night == 1:
+        # Steps from the Demon to its nearest Minion, the shorter way
+        # round the circle.
+        demon = d.demon_at("N1")
+        gaps = [min((m - demon) % d.n, (demon - m) % d.n)
+                for m in range(d.n) if TEAM[d.roles[m]] == "minion"]
+        if not gaps:
+            return None
+        return ClockmakerInfo(1, seat, count=min(gaps))
+
+    if role == "Dreamer":
+        # One good character and one evil, and the target really is one
+        # of them. Which of the two is true is the Storyteller's choice
+        # and it never says.
+        others = [p for p in range(d.n) if p != seat]
+        if not others:
+            return None
+        target = rng.choice(others)
+        # One good character and one evil, and — while the Dreamer is
+        # sober and healthy — one of them is what the target really is.
+        # The Storyteller chooses the other freely.
+        #
+        # This read `d.apparent(target)`, which is what the *target*
+        # believes it is. A Drunk holding a Monk token would be shown as
+        # the Monk, and the reading would be false while nothing was
+        # wrong with the Dreamer. What a seat believes is not what it is.
+        real = d.role_at(target, f"N{night}")
+        pool_good = [k for k in d.script.townsfolk + d.script.outsiders
+                     if k != real]
+        pool_evil = [k for k in d.script.minions + d.script.demons
+                     if k != real]
+        if is_evil(real):
+            evil_shown = real
+            good_shown = rng.choice(pool_good) if pool_good else real
+        else:
+            good_shown = real
+            evil_shown = rng.choice(pool_evil) if pool_evil else real
+        return DreamerInfo(night, seat, target=target,
+                           good_role=good_shown, evil_role=evil_shown)
+
+    if role == "Mathematician" and night > 1:
+        # How many abilities went wrong since dawn. The simulator knows
+        # exactly, because it is the thing that decides the droisoning —
+        # which is the one reading here that is easier for the simulator
+        # than for the solver.
+        return MathematicianInfo(night, seat,
+                                 count=len(droisoned_at(d, night)))
+
+    if role == "Juggler" and night == 2:
+        # Guessed publicly on the first day, answered the night after —
+        # so the row sits on night two and carries the guesses with it.
+        others = [p for p in range(d.n) if p != seat]
+        if len(others) < 2:
+            return None
+        how_many = rng.randint(1, min(5, len(others)))
+        picked = rng.sample(others, how_many)
+        guesses, right = [], 0
+        for who in picked:
+            # Mostly a guess at what they claim, sometimes a wild one.
+            if rng.random() < 0.5:
+                said = d.apparent(who)
+            else:
+                said = rng.choice(list(d.script.townsfolk))
+            guesses.append({"player": who, "role": said})
+            # A guess counts if the seat **registers** as what was said,
+            # not only if it holds it exactly.
+            #
+            # A Spy registers as any Townsfolk, so guessing "Washerwoman"
+            # at a Spy is a right guess the Storyteller may allow. This
+            # counted only exact matches, so the number it announced was
+            # lower than the solver could reach — and the board had no
+            # legal world, because no impairment can make a Juggler
+            # *undercount*.
+            if registers_as_role(d.role_at(who, f"D{night - 1}"), said):
+                right += 1
+        return JugglerInfo(night, seat, guesses=tuple(guesses), count=right)
+
+    if role == "Savant" and night == 1:
+        # Two statements a day, one true and one false — and the content
+        # can be anything at all, which is why the solver keeps the words
+        # and does not weigh them. The simulator says something shaped
+        # like a Savant statement and no more.
+        return SavantInfo(night, seat,
+                          first=_savant_line(d, rng, True),
+                          second=_savant_line(d, rng, False))
+
+    if role == "Artist" and night == 1:
+        # One yes-or-no question, once a game. Also kept and not weighed.
+        who = rng.choice([p for p in range(d.n) if p != seat])
+        return ArtistInfo(night, seat,
+                          question=f"is seat {who + 1} evil?",
+                          answer=is_evil(d.roles[who]))
+
+    if role == "EvilTwin" and night == 1:
+        # It and one good player know each other. Recorded from the evil
+        # side, since that is the seat that always knows.
+        # Somebody else, and good *now* rather than in the deal.
+        #
+        # A Pit-Hag can make a good seat the Evil Twin, and reading
+        # `d.roles` still called that seat good — so it picked itself as
+        # its own twin and the row named one seat twice. The deal is not
+        # the timeline; this is the fourth place that has caught me.
+        phase = f"N{night}"
+        good = [p for p in range(d.n)
+                if p != seat and d.side_at(p, phase) == "good"]
+        if not good:
+            return None
+        return EvilTwinPair(1, seat, a=seat, b=rng.choice(good))
+
+    # NOTE: the Acrobat is not here. It acts at slot 39, between the
+    # Demon and the readings, so its pick is made in `_acrobat_may_fall`
+    # where the night's consequences are settled — not in this pass,
+    # which runs later and would hand it a row after it was needed.
+
+    if role == "SnakeCharmer":
+        # It points at somebody every night. Choosing the Demon while
+        # working swaps character *and* side both ways — the charmer
+        # becomes the Demon, the Demon becomes a good Snake Charmer,
+        # poisoned for the rest of the game.
+        #
+        # The swap is recorded as a change from the *day after*, because
+        # the ability worked and so the seat was still the Snake Charmer
+        # when it did.
+        phase = f"N{night}"
+        others = [p for p in d.alive_at(phase) if p != seat]
+        if not others:
+            return None
+        target = rng.choice(others)
+        demon = d.demon_at(phase)
+        # `working` is the one place that answers this, and this asked
+        # its own narrower question instead — the Poisoner and the
+        # perma-poisoned, and nothing else.
+        #
+        # So a **Drunk** that believed it was the Snake Charmer performed
+        # a real swap: it took the Imp's character, the Imp took a
+        # character the Drunk never held, and the board had no legal
+        # world at all. A droisoned charmer does not function, and the
+        # Drunk is droisoned for the whole game.
+        #
+        # Sixth thing found asking a narrower question than `working`.
+        working = d.working(seat, night)
+        swapped = target == demon and working and demon is not None
+        if swapped:
+            # **Immediately**, not from the day after.
+            #
+            # A Snake Charmer acts at slot 11 and every Demon at 24 or
+            # later, so the swap has already happened by the time the
+            # night's kill is made — and the seat that kills is the
+            # charmer's, now holding the Demon. The old Demon is a
+            # poisoned good Snake Charmer and kills nobody.
+            #
+            # Recording it at `D{night}` had the old Demon killing on the
+            # night it stopped being one. The night-walk, which does the
+            # swap at 11 and then looks up the Demon fresh, disagreed —
+            # and was right.
+            after = f"N{night}"
+            became = d.role_at(demon, phase)
+            d.changes.append((after, seat, became))
+            d.changes.append((after, demon, "SnakeCharmer"))
+            d.side_changes.append((after, seat, became, "evil"))
+            d.side_changes.append((after, demon, "SnakeCharmer", "good"))
+            # The new Snake Charmer — the old Demon — is poisoned from
+            # now on, and never recovers.
+            d.perma_poisoned.add(demon)
+        return SnakeCharmerChoice(night, seat, target=target,
+                                  swapped=swapped)
+
+    if role == "PitHag":
+        # It turns somebody into a character not in play, **from the
+        # second night**. The card is "each night*", and the asterisk is
+        # the whole difference.
+        #
+        # This said "on any night" and fired on the first, which put a
+        # change at N1 that no reading could sit beside: a Dreamer read a
+        # seat the same night and the two were impossible together. Two
+        # of the four remaining gate boards were this.
+        #
+        # `first_night = 0` in the vendored data says so plainly, and was
+        # sitting there unread — the catalogue has the number and the
+        # simulator never asked for it.
+        if night < 2:
+            return None
+        if rng.random() > 0.25:
+            return None
+        phase = f"N{night}"
+        living = [p for p in d.alive_at(phase) if p != seat]
+        if not living:
+            return None
+        in_play = {d.role_at(p, phase) for p in range(d.n)}
+        in_play |= {b for b in d.believes if b}
+        spare = [k for k in (d.script.townsfolk + d.script.outsiders
+                             + d.script.minions) if k not in in_play]
+        if not spare:
+            return None
+        # Never the Demon, unless what it becomes is also a Demon.
+        #
+        # A Pit-Hag turning the Demon into a Clockmaker leaves the game
+        # with no Demon at all — good has won, and the record should stop
+        # rather than carry on for two more nights. The solver noticed
+        # before I did: with no Demon, the guard that keeps the town from
+        # executing it did nothing, the ex-Demon was executed, and the
+        # board had no legal world.
+        #
+        # Creating a *new* Demon is a real and interesting play, and the
+        # solver already models the arbitrary deaths it causes. It is
+        # left in; only the game-ending case is kept out.
+        demon = d.demon_at(phase)
+        choosable = [p for p in living if p != demon] or living
+        target = rng.choice(choosable)
+        if target == demon:
+            spare = [k for k in spare if TEAM[k] == "demon"]
+            if not spare:
+                return None
+        became = rng.choice(spare)
+        # The side does not move: a Townsfolk turned into the Poisoner is
+        # a *good* Poisoner.
+        d.changes.append((phase, target, became))
+        return PitHagChoice(night, seat, target=target, role=became)
+
+    if role == "Philosopher" and night == 1:
+        # It takes a good character's ability, once a game. Not a change
+        # of character — it stays the Philosopher and works two at once —
+        # so this records the choice and nothing else. The gained
+        # readings are the solver's business.
+        pool = [k for k in d.script.townsfolk + d.script.outsiders
+                if k != "Philosopher"]
+        if not pool:
+            return None
+        took = rng.choice(pool)
+        d.philosophies[seat] = took
+        return PhilosopherChoice(night, seat, role=took)
+
+    if role == "Flowergirl" and night > 1:
+        # Whether the Demon voted during the day just gone.
+        day = night - 1
+        demon = d.demon_at(f"D{day}")
+        voted = demon is not None and demon in d.votes.get(day, set())
+        return FlowergirlInfo(night, seat, voted=voted)
+
+    if role == "TownCrier" and night > 1:
+        # Whether a Minion nominated during the day just gone.
+        day = night - 1
+        # What they held *that day*, not what they were dealt. A Pit-Hag
+        # can make a Minion mid-game, and a Snake Charmer swap moves a
+        # character between seats.
+        #
+        # Seventh place the deal has been mistaken for the timeline, and
+        # the second found by the night-walk deriving an answer
+        # independently and disagreeing.
+        who = d.nominations.get(day, set())
+        said = any(TEAM[d.role_at(p, f"D{day}")] == "minion" for p in who)
+        return TownCrierInfo(night, seat, nominated=said)
+
+    if role == "Oracle" and night > 1:
+        # Counted by side *now*, not by what they were dealt. A Pit-Hag
+        # creation, a Snake Charmer swap and a Goon that turned all move
+        # a seat's side, and reading `d.roles` missed every one.
+        #
+        # Sixth place the deal has been mistaken for the timeline, and
+        # this one was found by the night-walk deriving the answer
+        # independently and disagreeing.
+        # Including tonight's victim. The Oracle reads at slot 59 and
+        # the Demon kills at 24, so whoever fell tonight is dead by the
+        # time it counts — and `alive_at` reports the state at the
+        # *start* of the night, which is a different question.
+        #
+        # Found by the night-walk deriving the count independently and
+        # disagreeing. It is the kind of error that only shows once
+        # something knows what order things happen in.
+        phase = f"N{night}"
+        dead = [p for p in range(d.n)
+                if p not in d.alive_at(phase) or d.deaths.get(p) == phase]
+        return OracleInfo(night, seat,
+                          count=sum(1 for p in dead
+                                    if d.side_at(p, phase) == "evil"))
+
+    if role == "Seamstress" and night == 1:
+        # Once a game, and the simulator uses it on the first night so
+        # every game that has one produces the reading.
+        others = [p for p in range(d.n) if p != seat]
+        if len(others) < 2:
+            return None
+        a, b = sorted(rng.sample(others, 2))
+        same = is_evil(d.roles[a]) == is_evil(d.roles[b])
+        return SeamstressInfo(night, seat, a=a, b=b, same=same)
+
+    if role == "Sage" and d.deaths.get(seat) == f"N{night}":
+        # Killed by the Demon, it learns two players and one is the
+        # killer — the *specific* Demon, so no misregistration here.
+        demon = d.demon_at(f"N{night}")
+        if demon is None:
+            return None
+        others = [p for p in range(d.n) if p not in (seat, demon)]
+        if not others:
+            return None
+        a, b = sorted([demon, rng.choice(others)])
+        return SageInfo(night, seat, a=a, b=b)
+
+    if role == "Klutz" and d.deaths.get(seat) == f"N{night}":
+        # On dying it points at somebody, and good loses if they are
+        # evil — so a game that carried on means it pointed at a good
+        # player. Which is what a Klutz that is working does.
+        good = [p for p in range(d.n)
+                if p != seat and not is_evil(d.roles[p])]
+        if not good:
+            return None
+        return KlutzChoice(night, seat, target=rng.choice(good))
+
+    # --- Bad Moon Rising ------------------------------------------------
+
+    if role == "Grandmother" and night == 1:
+        # A good player and their character, and from then on that seat
+        # is her grandchild: if the Demon kills them, she goes too.
+        others = [p for p in range(d.n)
+                  if p != seat and not is_evil(d.roles[p])]
+        if not others:
+            return None
+        child = rng.choice(others)
+        return GrandmotherInfo(1, seat, target=child,
+                               role=d.roles[child])
+
+    if role == "Chambermaid":
+        # How many of two chosen players woke for their own ability
+        # tonight. Read off the catalogue rather than re-derived, since
+        # "did this character wake" is exactly what the catalogue is for.
+        from botc.catalogue import CHARACTERS
+        others = [p for p in d.alive_at(f"N{night}") if p != seat]
+        if len(others) < 2:
+            return None
+        a, b = sorted(rng.sample(others, 2))
+        # Derived here rather than asked of the solver, like every other
+        # rule in this file — the point of the simulator is that a shared
+        # misreading shows up as an impossible board instead of agreeing
+        # with itself.
+        #
+        # But derived from the same *facts*. The rule is "woke for its
+        # own ability tonight", and there are three ways to be counted
+        # and one trap:
+        #
+        #   * `nights` says never — a Barber, a Baron — and it does not
+        #     count, whatever its `wake` set claims. That set is what a
+        #     *player* could honestly say, and a Baron truthfully says
+        #     "first night" because it is shown the other evil players.
+        #     Being shown your team is not your ability working.
+        #   * "every" includes the first night, though its wake set does
+        #     not bother to say so.
+        #   * "other" means from the second — except a Demon, which also
+        #     wakes on the first to learn its Minions, and *that* is its
+        #     own ability.
+        woke = 0
+        for p in (a, b):
+            what = d.apparent(p)             # a Drunk wakes on its token
+            char = CHARACTERS[what]
+            when, patterns = char.nights, char.wake
+            # Woken to be *told* something rather than to do anything.
+            # A Lunatic is shown a Demon's night and made to choose
+            # victims who never die; a Spy is shown the grimoire; an Evil
+            # Twin is shown its twin. All of them wake and none of it is
+            # their own ability working, so a Chambermaid does not count
+            # them — the same rule as a Baron being shown its team.
+            if what in ("Lunatic", "Spy", "EvilTwin", "Marionette"):
+                continue
+            if when == "never":
+                continue
+            if night == 1:
+                if when == "every" or "first" in patterns:
+                    woke += 1
+            elif when in ("every", "other"):
+                woke += 1
+            elif when == "conditional" and _conditionally_woke(d, p, what,
+                                                               night):
+                woke += 1
+        return ChambermaidInfo(night, seat, a=a, b=b, count=woke)
+
+    if role == "Gambler" and night > 1:
+        # It names somebody and a character, and dies if it guessed
+        # wrong. Recorded either way, since the guess is public.
+        others = [p for p in d.alive_at(f"N{night}") if p != seat]
+        if not others:
+            return None
+        target = rng.choice(others)
+        # Mostly a real guess at what they claim to be, sometimes wild.
+        guess = (d.apparent(target) if rng.random() < 0.6
+                 else rng.choice(list(d.script.townsfolk)))
+        # And it dies if it guessed wrong, which the comment above has
+        # claimed since the Gambler went in while the code did nothing
+        # about it. A wrong guess and a living Gambler is not a legal
+        # board, and the solver said so the first time a mixed script put
+        # one in front of it.
+        #
+        # A droisoned Gambler is a different matter: its ability is not
+        # working, so the Storyteller decides, and here it survives.
+        if d.working(seat, night) \
+                and d.role_at(target, f"N{night}") != guess \
+                and not _kept_alive_by_a_tea_lady(d, seat, f"N{night}"):
+            d.deaths.setdefault(seat, f"N{night}")
+        return GamblerGuess(night, seat, target=target, role=guess)
+
+    if role == "Exorcist" and night > 1:
+        # Names somebody, and if it is the Demon that Demon does not kill
+        # tonight. Acts at 21, before every Demon, which is what lets it
+        # work at all — and it may not name the same seat two nights
+        # running.
+        #
+        # Dealt and never acting until now, which the night-walk's own
+        # `untold` warning is what found: an Exorcist on the board that
+        # the walk was told nothing about.
+        others = [p for p in d.alive_at(f"N{night}") if p != seat]
+        others = [p for p in others if p != d.exorcised_last.get(seat)]
+        if not others:
+            return None
+        target = rng.choice(others)
+        d.exorcised_last[seat] = target
+        d.exorcised[night] = target
+        return ExorcistChoice(night, seat, target=target)
+
+    if role == "Sailor":
+        # Points at somebody every night; one of the two of them is drunk
+        # until dusk, and the Storyteller chooses which. A sober Sailor
+        # cannot die at night, which the deaths already handle.
+        #
+        # Never fired before: dealt twenty-eight times across a hundred
+        # and eighty games and it acted in none of them, so the walk's
+        # rule for it had never been checked against anything.
+        others = [p for p in d.alive_at(f"N{night}") if p != seat]
+        if not others:
+            return None
+        target = rng.choice(others)
+        drunk = rng.choice([seat, target])
+        d.sailor_drunk.setdefault(night, drunk)
+        return SailorChoice(night, seat, target=target)
+
+    if role == "Innkeeper" and night > 1:
+        # Two players are safe from the Demon tonight, and one of them is
+        # drunk. Same story: dealt twenty-four times, never acted.
+        others = [p for p in d.alive_at(f"N{night}") if p != seat]
+        if len(others) < 2:
+            return None
+        a, b = sorted(rng.sample(others, 2))
+        d.innkeeper_guarded.setdefault(night, (a, b))
+        d.innkeeper_drunk.setdefault(night, rng.choice([a, b]))
+        return InnkeeperChoice(night, seat, a=a, b=b)
+
+    if role == "Courtier" and night == 1:
+        # Three days and nights of drunkenness for whoever holds the
+        # character it names. Used once, and the table hears which.
+        named = rng.choice(list(d.script.townsfolk) + list(d.script.minions))
+        return CourtierChoice(night, seat, role=named)
+
+    if role == "Undertaker" and night > 1:
+        executed = [p for p, ph in d.deaths.items()
+                    if ph == f"E{night - 1}"]
+        if executed:
+            when = f"E{night - 1}"
+            return Undertaker(night, seat, target=executed[0],
+                              role=d.role_at(executed[0], when))
+
+    if role == "Ravenkeeper" and d.deaths.get(seat) == f"N{night}":
+        others = [p for p in range(d.n) if p != seat]
+        pick = rng.choice(others)
+        return Ravenkeeper(night, seat, target=pick,
+                           role=d.role_at(pick, f"N{night}"))
+    return None
+
+
+def _neighbours(d, seat, night):
+    """The nearest living seat each way, worked out independently of the
+    solver so a shared misreading cannot hide.
+
+    The Demon has already killed by the time the Empath wakes, so
+    tonight's victim does not count as a neighbour.
+    """
+    alive = [p for p in d.alive_at(f"N{night}")
+             if d.deaths.get(p) != f"N{night}"]
+    if seat not in alive or len(alive) < 3:
+        return [p for p in alive if p != seat]
+    i = alive.index(seat)
+    return [alive[(i - 1) % len(alive)], alive[(i + 1) % len(alive)]]
+
+
+def _registers_as(role, team):
+    """Could the Storyteller show this character as that team?
+
+    A Spy is a Minion that may be shown as a Townsfolk or an Outsider; a
+    Recluse is an Outsider that may be shown as a Minion or the Demon.
+    Everybody else is what they are.
+    """
+    from botc.catalogue import CHARACTERS
+    return TEAM[role] == team or team in CHARACTERS[role].registers
+
+
+def _shown_as(d, seat, team, rng):
+    """A character the Storyteller could show this seat as, for that team.
+
+    A Recluse shown to an Investigator is not shown *as the Recluse* — it
+    is shown as some Minion, and which one is the Storyteller's choice.
+    Returning the true character would have produced a reading no legal
+    world explains: "seat 4 is the Recluse" from a character that only
+    ever names Minions.
+    """
+    from botc.catalogue import CHARACTERS
+    role = d.roles[seat]
+    if TEAM[role] == team:
+        return role
+    # Misregistering. Pick something of the right team that is not
+    # already in play, since a Storyteller pointing at a character
+    # somebody else really holds is asking to be caught.
+    pool = {"townsfolk": TOWNSFOLK, "outsider": OUTSIDERS,
+            "minion": MINIONS, "demon": DEMONS}[team]
+    spare = [k for k in pool if k not in d.roles]
+    return rng.choice(spare or pool)
+
+
+def _savant_line(d, rng, true_one):
+    """Something shaped like a Savant statement.
+
+    Deliberately shallow: a Savant's pair can be anything from "the Demon
+    sits beside an Outsider" to "no Minion has yet chosen a man", the
+    solver keeps the words without weighing them, and inventing something
+    cleverer here would be inventing something nobody reads.
+    """
+    from botc.roles import TEAM
+    demon = d.demon_at("N1")
+    outsiders = sum(1 for r in d.roles if TEAM[r] == "outsider")
+    if true_one:
+        return rng.choice([
+            f"there are {outsiders} outsiders in play",
+            f"the demon is not seat {(demon + 2) % d.n + 1}",
+        ])
+    return rng.choice([
+        f"there are {outsiders + 1} outsiders in play",
+        f"the demon is seat {(demon + 2) % d.n + 1}",
+    ])
+
+
+def _pair_info(d, seat, night, rng, cls, matches, team=None,
+               misregister=0.35):
+    """Two players, one of whom is shown as something.
+
+    `team` is what the reading is looking for. When it is given, seats
+    that could *register* as that team are candidates too — which is the
+    whole of misregistration, and the simulator produced none of it until
+    now. Every game it dealt was one where the Storyteller had told the
+    plain truth, which is the easy half of the problem.
+    """
+    honest = [p for p in range(d.n) if p != seat and matches(p)]
+    liars = []
+    if team is not None:
+        liars = [p for p in range(d.n)
+                 if p != seat and p not in honest
+                 and _registers_as(d.roles[p], team)]
+
+    # Prefer the truth, but take the lie often enough to matter.
+    if liars and (not honest or rng.random() < misregister):
+        shown = rng.choice(liars)
+    elif honest:
+        shown = rng.choice(honest)
+    else:
+        return None
+
+    others = [p for p in range(d.n) if p != seat and p != shown]
+    if not others:
+        return None
+    a, b = sorted([shown, rng.choice(others)])
+    role = d.roles[shown] if team is None else _shown_as(d, shown, team, rng)
+    return cls(night, seat, a=a, b=b, role=role)
+
+
+# --------------------------------------------------------------------------
+# Turning a dealt game into what the table would enter
+# --------------------------------------------------------------------------
+
+def relay_some(d, infos, rng, chance=0.4):
+    """Hand some readings to another good player to announce.
+
+    Information dumping is ordinary play, and it is where the seat a
+    reading belongs to stops being the seat that says it.
+    """
+    good = [p for p in range(d.n) if not is_evil(d.roles[p])]
+    out = []
+    for info in infos:
+        movable = [p for p in good
+                   if p != info.player and d.deaths.get(p) is None]
+        if movable and rng.random() < chance and not info.hard():
+            info.player = rng.choice(movable)
+        out.append(info)
+    return out
+
+
+def table_view(d, infos, rng, bluff_pool=None):
+    """The GameState a player would build watching this game.
+
+    Good players claim what they believe they are. Evil players claim a
+    character that is not in play, which is what the Storyteller hands
+    them to bluff with.
+    """
+    in_play = set(d.roles) | {b for b in d.believes if b}
+    spare = [t for t in TOWNSFOLK if t not in in_play]
+    rng.shuffle(spare)
+
+    claims = {}
+    for seat in range(d.n):
+        if is_evil(d.roles[seat]):
+            claims[seat] = spare.pop() if spare else "Mayor"
+        else:
+            claims[seat] = d.apparent(seat)
+
+    # The day comes through too. This predates the simulator having
+    # nominations and votes at all, and without them a reading about the
+    # day before refers to a day the state thinks nobody voted on.
+    return GameState(n_players=d.n, claims=claims, deaths=dict(d.deaths),
+                     infos=list(infos), votes=dict(d.votes),
+                     nominations=dict(d.nominations))

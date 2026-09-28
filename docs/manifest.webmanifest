@@ -1,0 +1,26 @@
+{
+  "name": "Clocktower Solver",
+  "short_name": "Clocktower",
+  "description": "A visual grimoire from the players' side of the table. Enter what everyone claims and what they say they learned, and it enumerates every world still consistent with all of it.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1E182F",
+  "theme_color": "#2B2242",
+  "categories": ["games", "utilities"],
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
