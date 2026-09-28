@@ -11,7 +11,7 @@
 import {CHARACTERS} from "./catalogue.mjs";
 import {DEMON, OTHER, Cause, causeRule, immunityRule, implication,
         implicationRule, shield} from "./deaths.mjs";
-import {Source, makePoisonerRule, sourceRule} from "./impairment.mjs";
+import {Source, makePoisonerRule, sourceRule, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 
@@ -316,8 +316,15 @@ causeRule(function theDemonKills(world, state, night) {
   // much worse than a Demon whose special trick is not modelled yet.
   if (KILLS_ITS_OWN_WAY.has(world.roleAt(demon, phase))) return [];
   if (!state.aliveSet(phase).has(demon)) return [];
+  // Stopped at its source only when something tonight could reach it —
+  // offered blindly it crowded the real story out of the first 24
+  // accounts. See the_demon_kills in solver.py.
+  const reachable = sourcesOn(world, state, night)
+    .some(source => source.seats.has(demon));
   return [new Cause("Demon", DEMON, allSeats(state),
-                    {capacity: 1, mustFire: true})];
+                    {capacity: 1, mustFire: true,
+                     actor: reachable ? demon : null,
+                     actorCost: PRIORS.DEMON_POISONED_PENALTY})];
 });
 
 /** A Zombuul is dead on the board before it is dead in fact.

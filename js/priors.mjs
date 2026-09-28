@@ -55,6 +55,9 @@ export const PRIORS = {
   // a Demon bluffing Soldier or Monk wants.
   SUNK_KILL_PENALTY: 0.45,
 
+  // A Poisoner hitting its own Demon: legal, rare. Settled at the table.
+  DEMON_POISONED_PENALTY: 0.05,
+
   // A Gossip only kills when what it said that day was true.
   GOSSIP_KILL_PENALTY: 0.4,
   // A Tinker goes when the Storyteller feels like it.
@@ -78,6 +81,7 @@ export const PRIOR_RANGES = {
   POISON_REPEAT_PENALTY: [0.50, 0.90],
   FABRICATED_INFO_PENALTY: [0.20, 0.70],
   SUNK_KILL_PENALTY: [0.25, 0.70],
+  DEMON_POISONED_PENALTY: [0.02, 0.15],
   READ_ODDS_STEP: [1.5, 3.0],
 };
 

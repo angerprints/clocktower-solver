@@ -63,6 +63,9 @@ class Cause(NamedTuple):
     # board impossible. And the other way round: a cause that did kill
     # had a working source.
     actor: int = None
+    # What it costs to explain a quiet night by stopping the actor. A
+    # Poisoner hitting its own Demon is legal and rare; see solver.py.
+    actor_cost: float = 1.0
 
 
 CAUSE_RULES = []
@@ -318,7 +321,8 @@ def _account_for(world, state, night, causes, directly, followed,
                 continue
             if cause.actor is not None and cause.actor not in working:
                 # Stopped at its source: the killer was droisoned.
-                grown.append((cost, impaired | {cause.actor}, working,
+                grown.append((cost * cause.actor_cost,
+                              impaired | {cause.actor}, working,
                               used, before))
             for target in sorted(cause.seats):
                 for shield in shields_on(world, state, night, target,

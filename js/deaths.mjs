@@ -27,7 +27,7 @@ export const OTHER = "other";     // anything else that kills at night
 export class Cause {
   constructor(name, kind, seats, {
     capacity = 1, cost = 1.0, mustFire = false, unstoppable = false,
-    victimImpairedAt = null, actor = null,
+    victimImpairedAt = null, actor = null, actorCost = 1.0,
   } = {}) {
     this.name = name;
     this.kind = kind;
@@ -49,6 +49,7 @@ export class Cause {
     // may have been stopped at its source — a poisoned Imp kills nobody —
     // and one that did kill had a working source. See deaths.py.
     this.actor = actor;
+    this.actorCost = actorCost;
   }
 }
 
@@ -277,7 +278,8 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
       }
       if (cause.actor !== null && !acc.working.has(cause.actor)) {
         // Stopped at its source: the killer was droisoned.
-        grown.push({...acc, impaired: new Set([...acc.impaired, cause.actor])});
+        grown.push({...acc, cost: acc.cost * cause.actorCost,
+                    impaired: new Set([...acc.impaired, cause.actor])});
       }
       for (const target of [...cause.seats].sort((a, b) => a - b)) {
         for (const s of shieldsOn(world, state, night, target, cause.kind)) {

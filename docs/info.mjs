@@ -276,7 +276,9 @@ export const FortuneTeller = define("FortuneTeller", "FortuneTeller",
     const phase = `N${this.night}`;
     // Looking for the Demon specifically, not for evil — so a Goon that
     // has turned is nothing to it.
-    const hardDemon = pair.includes(w.demonAt(phase));
+    // Any seat holding a Demon character, dead or alive — a dead Demon
+    // still gets the nod. See FortuneTeller in info.py.
+    const hardDemon = pair.some(x => TEAM[w.roleAt(x, phase)] === "demon");
     const recluse = pair.some(x => w.roleAt(x, phase) === "Recluse");
     const herring = pair.includes(rh);
     if (this.yes) return hardDemon || recluse || herring;

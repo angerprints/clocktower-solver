@@ -84,19 +84,32 @@ git push                        # nach ein bis zwei Minuten ist die Seite aktuel
 
 Kein ZIP mehr, kein Hochladen von Hand. Ein Container-Reset kostet nichts mehr, weil alles auf GitHub liegt.
 
-### Phase 1 — Der unabhängige Schiedsrichter · *als Nächstes*
+### Phase 1 — Der unabhängige Schiedsrichter · *erledigt am 28.09.2026*
 
-Eine Brücke: Partien aus der Engine des Spiels werden zu Brettern für botc-solver.
+`tools/engine_bridge.py` macht aus jeder Partie der Engine in `J:\dev\clocktower` ein Brett und aus ihrer Austeilung die wahre Welt. Die Engine wird dabei nur gelesen, nie verändert.
+
+Zwei Modi: **grimoire** (jeder Sitz ehrlich, auch gestörte Information) prüft die Regeln, **tisch** (nur öffentliche Behauptungen, Böse bluffen) prüft das Werkzeug so, wie man es benutzt.
 
 ```
-Messung:   N Engine-Partien, TB, 5 bis 9 Spieler
-Frage:     Wie oft verwirft botc-solver die wahre Welt?
-Jeder Treffer ist ein Regelfehler in einem der beiden Projekte.
+Ergebnis nach den Korrekturen:
+  grimoire   300 Partien, 5 bis 9 Spieler, alle Komplexitäten   0 verworfen
+  tisch      140 Partien mit bluffenden Bots                    0 verworfen
 ```
 
-Einmal pro Partie gerechnet, also 127 ms pro Partie, kein Tempo-Problem.
+**Vier Regelfehler im Solver gefunden**, alle in Python und JavaScript behoben:
 
-### Phase 2 — Deine Skripte vollständig
+1. **Ein vergifteter Dämon tötet niemanden.** Eine ruhige Nacht konnte der Solver nur mit einem Schild vor dem Opfer erklären. Ein Giftmischer, der den eigenen Imp trifft, machte das Brett unmöglich. Jetzt trägt der Kill des Dämons seinen Täter. Gewichtet mit 0,05, weil das an deinem Tisch selten vorkommt. Damit bleibt ein behaupteter Mönch nach einer ruhigen Nacht zu 99,5 % echt statt vorher zu 100 %.
+2. **Hat der Dämon getötet, muss er funktioniert haben.** Die Gegenrichtung von 1.
+3. **Die Wahrsagerin bekommt auch für einen toten Dämon ein Nicken.** Der Solver fragte, wer in dieser Nacht als Dämon handelt. Nach einer Übernahme durch die Scharlachrote Frau war ein wahres „Ja" auf den hingerichteten Imp für ihn unmöglich.
+4. **Eine Sweetheart macht *einen* Spieler betrunken, nicht alle.** Die Planung der Störungen behandelte jede kostenlose Quelle so, als träfe sie jeden, den sie erreichen kann. Das stimmt für den Trunkenbold und den Minnesänger. Sweetheart, Vigormortis und Goon wählen aber genau einen. Nach dem Tod einer Sweetheart galt deshalb die ganze Stadt als betrunken, und „der Dämon hat funktioniert" (Punkt 2) war unmöglich. Aufgefallen ist das an vier S&V-Partien des eigenen Simulators, nicht an der Engine. Punkt 2 hat den alten Fehler nur sichtbar gemacht. Das Brett, das im ersten Commit von 268 auf 76 Welten fiel, hat wieder 268. Die 76 waren dieser Fehler, keine Erkenntnis.
+
+Dazu ein Fehler, den ich beim Beheben selbst eingebaut und wieder entfernt habe: Die neue Erklärung für ruhige Nächte ohne Giftquelle verdrängte in der auf 24 Kombinationen begrenzten Suche die echte Geschichte.
+
+**Offene Designfrage:** Der Solver nimmt an, dass das Spiel weiterläuft. Stirbt der Dämon ohne Nachfolger oder wird eine funktionierende Heilige hingerichtet, ist das Brett für ihn unmöglich, obwohl das Spiel einfach vorbei ist. Während einer Partie stimmt die Annahme. Wer ein fertiges Spiel nachträglich eingibt, bekommt „unmöglich". Die Brücke schneidet deshalb das Spielende ab.
+
+**Gegenrichtung noch offen:** Ob die Engine Regelfehler hat, die der Solver findet. In 440 Partien hat keine einzige Abweichung auf einen Fehler der Engine gezeigt. Alle Treffer lagen beim Solver oder in der Brücke.
+
+### Phase 2 — Deine Skripte vollständig · *als Nächstes*
 
 1. **Ogre** und **Marionette**, weil sie auf deinem eigenen Skript stehen.
 2. **Mastermind** (BMR), dann **Mutant**, **Cerenovus**, **Savant** (S&V). Danach sind alle drei Grundskripte komplett.

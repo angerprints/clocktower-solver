@@ -323,7 +323,8 @@ causeRule(function theDemonKills(world, state, night) {
     .some(source => source.seats.has(demon));
   return [new Cause("Demon", DEMON, allSeats(state),
                     {capacity: 1, mustFire: true,
-                     actor: reachable ? demon : null})];
+                     actor: reachable ? demon : null,
+                     actorCost: PRIORS.DEMON_POISONED_PENALTY})];
 });
 
 /** A Zombuul is dead on the board before it is dead in fact.

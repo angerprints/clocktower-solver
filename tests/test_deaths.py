@@ -7,6 +7,17 @@ from botc.solver import (explanation_cost, scarlet_woman_takes_over,  # noqa: E4
                          starpass_heirs, in_play, world_weight,
                          _night_accounts)
 from botc.worlds import World                      # noqa: E402
+from botc.solver import (DEMON_POISONED_PENALTY,     # noqa: E402
+                         POISON_HIT_PENALTY)
+
+# What is left of a quiet night when nothing guards and nothing lies dead:
+# a Poisoner that hit its own Demon, which a poisoned Imp's kill does not
+# survive. Legal and rare — settled at the table. Before the engine found
+# it this explanation did not exist, and every such board was impossible.
+ONLY_POISON = POISON_HIT_PENALTY * DEMON_POISONED_PENALTY
+# How sure a quiet night makes the table of its protector, now that the
+# Demon may have been poisoned instead: near proof rather than proof.
+NEAR_PROOF = 99.0
 
 TWELVE = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath",
           "FortuneTeller", "Undertaker", "Monk", "Ravenkeeper", "Slayer",
@@ -106,18 +117,19 @@ class NobodyDied(SolverTest):
         before = share(twelve(), "Monk")
         after = share(twelve(quiet_nights={2}), "Monk")
         self.assertRises(before, after)
-        self.assertPct(after, 100.0, 0.01,
-                       "with no Soldier claimed, only the Monk is left")
+        self.assertGreater(after, NEAR_PROOF,
+                           "with no Soldier claimed, only the Monk is left "
+                           "— or a Poisoner that hit its own Demon")
 
     def test_it_clears_the_seat_that_claimed_the_protector(self):
-        self.assertPct(solved(twelve(quiet_nights={2}))[1][7]["evil_pct"],
-                       0.0, 0.01)
+        self.assertLess(solved(twelve(quiet_nights={2}))[1][7]["evil_pct"],
+                        100.0 - NEAR_PROOF)
 
     def test_a_soldier_explains_it_just_as_well(self):
         claims = dict(enumerate(TWELVE))
         claims[7] = "Soldier"
         state = game(12, claims=claims, quiet_nights={2})
-        self.assertPct(share(state, "Soldier"), 100.0, 0.01)
+        self.assertGreater(share(state, "Soldier"), NEAR_PROOF)
 
     def test_a_dead_monk_is_no_guard_but_is_a_target(self):
         """Killing the Monk removes the guard and supplies a corpse at the
@@ -137,8 +149,9 @@ class NobodyDied(SolverTest):
     def test_a_quiet_night_demands_the_guard_was_working(self):
         """It does not name who was impaired — it says who was not.
 
-        The guard is the only explanation, so the world is asking that
-        nothing stopped it. That demand goes to the impairment plan,
+        The guard is one explanation, so that world is asking that nothing
+        stopped it. The other is the Imp itself being poisoned, priced
+        rare. That demand goes to the impairment plan,
         which has to satisfy every other night's failures around it.
         """
         roles = ["Empath", "Chef", "Poisoner", "Imp", "Monk",
@@ -147,11 +160,16 @@ class NobodyDied(SolverTest):
         state = game(7, claims={i: r for i, r in enumerate(roles)},
                      quiet_nights={2})
         accounts = _night_accounts(world, state)
-        self.assertEqual(len(accounts), 1)
-        cost, impaired, working = accounts[0]
-        self.assertPct(cost, 1.0, 1e-9)
-        self.assertEqual(working[2], {4}, "the Monk, on that night")
-        self.assertEqual(impaired[2], set())
+        # Two stories, not one. The Monk held — or the Poisoner in this
+        # world hit its own Imp, which then killed nobody.
+        self.assertEqual(len(accounts), 2)
+        guarded = [a for a in accounts if a[2][2] == {4}]
+        poisoned = [a for a in accounts if a[1][2] == {3}]
+        self.assertEqual(len(guarded), 1, "the Monk, working that night")
+        self.assertEqual(len(poisoned), 1, "the Imp, impaired that night")
+        self.assertPct(guarded[0][0], 1.0, 1e-9)
+        self.assertEqual(guarded[0][1][2], set())
+        self.assertAlmostEqual(poisoned[0][0], DEMON_POISONED_PENALTY)
 
     def test_a_corpse_lets_the_guard_off_the_hook(self):
         """With something to aim at, the world has a free explanation and
@@ -169,14 +187,16 @@ class NobodyDied(SolverTest):
 
     def test_a_starpass_never_explains_a_quiet_night(self):
         """The Imp killing itself leaves a body. With no protector and no
-        corpse to aim at, the night is impossible however many Minions
-        were standing by to catch the star."""
+        corpse to aim at, a starpass explains nothing however many Minions
+        were standing by to catch the star — only the Poisoner hitting
+        its own Demon is left."""
         roles = ["Empath", "Chef", "ScarletWoman", "Imp", "Poisoner",
                  "Washerwoman", "Undertaker"]
         state = game(7, claims={i: r for i, r in enumerate(roles)},
                      quiet_nights={2})
-        self.assertIsNone(explanation_cost(World(tuple(roles), (None,) * 7),
-                                           state))
+        self.assertAlmostEqual(
+            explanation_cost(World(tuple(roles), (None,) * 7), state),
+            ONLY_POISON)
 
 
 class SinkingTheKill(SolverTest):
@@ -195,12 +215,14 @@ class SinkingTheKill(SolverTest):
         self.assertIsNotNone(self.cost(quiet_nights={2}, deaths={5: "E1"}))
 
     def test_without_one_it_is_not(self):
-        self.assertIsNone(self.cost(quiet_nights={2}),
-                          "nothing to guard with and nothing to aim at")
+        self.assertAlmostEqual(self.cost(quiet_nights={2}), ONLY_POISON,
+                               msg="nothing to guard with and nothing to "
+                                   "aim at, so only the poisoned Demon")
 
     def test_the_corpse_has_to_predate_the_night(self):
-        self.assertIsNone(self.cost(quiet_nights={3}, deaths={5: "N4"}),
-                          "a death two nights later helps nobody")
+        self.assertAlmostEqual(self.cost(quiet_nights={3}, deaths={5: "N4"}),
+                               ONLY_POISON,
+                               msg="a death two nights later helps nobody")
 
     def test_sinking_twice_costs_twice(self):
         once = self.cost(quiet_nights={2}, deaths={5: "E1"})
@@ -215,7 +237,7 @@ class SinkingTheKill(SolverTest):
                            deaths={0: "E1"})
         self.assertBetween(share(with_corpse, "Monk"), 80.0, 99.9)
         clean = game(12, claims=claims, quiet_nights={2})
-        self.assertPct(share(clean, "Monk"), 100.0, 0.01)
+        self.assertGreater(share(clean, "Monk"), NEAR_PROOF)
 
 
 class TheMayorNeedsNoRuleOfItsOwn(SolverTest):
@@ -245,7 +267,8 @@ class TheMayorNeedsNoRuleOfItsOwn(SolverTest):
     def test_a_mayor_does_not_explain_a_quiet_night(self):
         no_guard = ["Washerwoman", "Mayor", "Chef", "Empath", "Imp",
                     "Poisoner", "Undertaker"]
-        self.assertIsNone(self.cost(no_guard, quiet_nights={2}))
+        self.assertAlmostEqual(self.cost(no_guard, quiet_nights={2}),
+                               ONLY_POISON)
 
 
 if __name__ == "__main__":

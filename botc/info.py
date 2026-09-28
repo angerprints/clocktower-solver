@@ -724,7 +724,15 @@ class FortuneTeller(Info):
         phase = f"N{self.night}"
         # Looking for the Demon specifically, not for evil — so a Goon
         # that has turned is nothing to it.
-        hard_demon = w.demon_at(phase) in pair
+        #
+        # **Any** seat holding a Demon character, dead or alive, not just
+        # the one doing the killing: "If they choose a dead Demon, then
+        # the Fortune Teller still receives a nod" (wiki). After the
+        # Scarlet Woman takes over, the executed Imp is still an Imp. This
+        # asked `demon_at` — who acts tonight — and a true yes on the old
+        # Imp read as impossible. Found by the engine of the single-player
+        # game, which had it right.
+        hard_demon = any(TEAM[w.role_at(x, phase)] == "demon" for x in pair)
         recluse = any(w.role_at(x, phase) == "Recluse" for x in pair)
         herring = rh in pair
         if self.yes:

@@ -59,6 +59,21 @@ class Source(NamedTuple):
         return (not callable(self.cost) and not callable(self.repeat_cost)
                 and self.cost >= 1.0 and self.repeat_cost >= 1.0)
 
+    def unavoidable(self):
+        """Free **and** it hits everything it reaches: being the Drunk, a
+        Minstrel, a No Dashii's two neighbours.
+
+        Free is not enough. A Sweetheart drunks one player out of the
+        whole table, a Vigormortis one of two, a Goon one of whoever chose
+        it — free, because the Storyteller picks, but they pick *one*.
+        Treating their whole reach as impaired made every seat impaired
+        once a Sweetheart had died, so "the Demon was working" could never
+        hold. The engine of the single-player game exposed it (phase 1):
+        a working Demon that killed on the night after a Sweetheart's
+        death was called impossible.
+        """
+        return self.free_for_everyone() and self.capacity >= len(self.seats)
+
 
 SOURCE_RULES = []
 
@@ -145,7 +160,7 @@ def arrangements(sources, cap=64):
     fixed = set()
     paid = []
     for source in sources:
-        if source.free_for_everyone():
+        if source.unavoidable():
             fixed |= set(source.seats)
         elif source.seats:
             paid.append(source)
@@ -187,7 +202,7 @@ def plan_night(sources, required, forbidden, previous):
     else, and a seat a free source cannot avoid reaching makes a
     `forbidden` seat impossible.
     """
-    free = [s for s in sources if s.free_for_everyone()]
+    free = [s for s in sources if s.unavoidable()]
     paid = [s for s in sources if s not in free]
 
     covered_free = set()

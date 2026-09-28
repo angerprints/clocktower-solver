@@ -102,6 +102,15 @@ POISON_REPEAT_PENALTY = 0.7
 # night with a working protector in play costs nothing.
 SUNK_KILL_PENALTY = 0.45
 
+# A Poisoner hitting its own Demon is legal — a poisoned Imp kills nobody,
+# which fakes a Monk's save — and it is rare. Settled at the table
+# (28.09.2026): rare. Priced on top of the poison itself, so a quiet night
+# with a claimed Monk still leaves that Monk at 99.5 per cent rather than
+# the 90.9 that pricing it like any other poison target gave. Before the
+# engine found it this explanation did not exist at all, and a quiet
+# night was proof of a protector.
+DEMON_POISONED_PENALTY = 0.05
+
 # Information with no genuine source anywhere in a world had to be invented
 # out of nothing. That happens - people bluff detailed readings - but it is
 # a deliberate risk, so those worlds are discounted. This is what makes an
@@ -740,7 +749,8 @@ def the_demon_kills(world, state, night):
         name="Demon", kind=death_causes.DEMON,
         seats=frozenset(range(state.n_players)),   # a corpse is a valid aim
         capacity=1, must_fire=True,
-        actor=demon if reachable else None)]
+        actor=demon if reachable else None,
+        actor_cost=DEMON_POISONED_PENALTY)]
 
 
 @death_causes.immunity_rule
@@ -3403,6 +3413,7 @@ PRIOR_RANGES = {
     "POISON_REPEAT_PENALTY": (0.50, 0.90),
     "FABRICATED_INFO_PENALTY": (0.20, 0.70),
     "SUNK_KILL_PENALTY": (0.25, 0.70),
+    "DEMON_POISONED_PENALTY": (0.02, 0.15),
     "READ_ODDS_STEP": (1.5, 3.0),
 }
 

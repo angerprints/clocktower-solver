@@ -41,6 +41,12 @@ export class Source {
            typeof this.repeatCost !== "function" &&
            this.cost >= 1.0 && this.repeatCost >= 1.0;
   }
+
+  /** Free and it hits everything it reaches. A Sweetheart, Vigormortis or
+   * Goon is free but picks one, so it is not — see impairment.py. */
+  unavoidable() {
+    return this.freeForEveryone() && this.capacity >= this.seats.size;
+  }
 }
 
 export const SOURCE_RULES = [];
@@ -124,8 +130,8 @@ function* arrangements(n, k, taken = [], used = new Set()) {
  * seat impossible.
  */
 export function planNight(sources, required, forbidden, previous) {
-  const free = sources.filter(s => s.freeForEveryone());
-  const paid = sources.filter(s => !s.freeForEveryone());
+  const free = sources.filter(s => s.unavoidable());
+  const paid = sources.filter(s => !s.unavoidable());
 
   const coveredFree = new Set();
   for (const source of free)
