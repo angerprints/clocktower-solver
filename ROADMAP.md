@@ -70,16 +70,21 @@ Dein gespeichertes Farmer-Brett wurde per Stichprobe beantwortet: 417.546 Welten
 
 ## Die neue Reihenfolge
 
-### Phase 0 — Zuhause und Auslieferung · *als Nächstes*
+### Phase 0 — Zuhause und Auslieferung · *erledigt am 28.09.2026*
 
-Eine von zwei Möglichkeiten, deine Entscheidung:
+Der komplette Quellcode liegt jetzt im GitHub-Repo `angerprints/clocktower-solver`, nicht mehr nur in einem Container. GitHub Pages liefert die Seite aus `docs/` aus.
 
-- **A.** Ein eigener Ordner `J:\dev\botc-solver` mit git. Ich lege die Dateien direkt dort ab, du lädst per `git push` hoch.
-- **B.** Ich bekomme Schreibzugriff auf das GitHub-Repo und committe direkt. Die Seite aktualisiert sich ohne dein Zutun.
+So wird ab jetzt veröffentlicht:
 
-Beides beendet das ZIP-Hochladen und den Datenverlust durch Container-Resets. B ist bequemer, A lässt dich jeden Schritt sehen.
+```
+python tools/build_site.py      # baut docs/ neu
+git add -A && git commit        # Quellcode und Seite zusammen
+git push                        # nach ein bis zwei Minuten ist die Seite aktuell
+```
 
-### Phase 1 — Der unabhängige Schiedsrichter
+Kein ZIP mehr, kein Hochladen von Hand. Ein Container-Reset kostet nichts mehr, weil alles auf GitHub liegt.
+
+### Phase 1 — Der unabhängige Schiedsrichter · *als Nächstes*
 
 Eine Brücke: Partien aus der Engine des Spiels werden zu Brettern für botc-solver.
 

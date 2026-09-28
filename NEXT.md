@@ -2,7 +2,7 @@
 
 **Die aktuelle Roadmap steht in `ROADMAP.md`.** Kurz:
 
-0. Zuhause und Auslieferung: eigener Ordner mit git oder direkter Push, statt ZIP
+0. ~~Zuhause und Auslieferung~~ erledigt: Quellcode auf GitHub, Seite aus docs/, Push statt ZIP
 1. Unabhängiger Schiedsrichter: Partien aus der Engine des Einzelspieler-Spiels als Bretter
 2. Deine Skripte vollständig: Ogre, Marionette, dann Mastermind, Mutant, Cerenovus, Savant
 3. Gemeinsames Regelwissen, wenn das Spiel bei v2 ankommt
