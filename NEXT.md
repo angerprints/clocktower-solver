@@ -1,10 +1,10 @@
-# Als Nächstes — Stand 28.09.2026
+# Als Nächstes — Stand 29.09.2026
 
 **Die aktuelle Roadmap steht in `ROADMAP.md`.** Kurz:
 
 0. ~~Zuhause und Auslieferung~~ erledigt: Quellcode auf GitHub, Seite aus docs/, Push statt ZIP
 1. ~~Unabhängiger Schiedsrichter~~ erledigt: 440 Engine-Partien, vier Regelfehler im Solver behoben
-2. Deine Skripte vollständig: ~~Ogre, Marionette, Mastermind~~ erledigt; als Nächstes die 22 S&V-Fehlfälle, dann Mutant, Cerenovus, Savant
+2. Deine Skripte vollständig: ~~Ogre, Marionette, Mastermind, S&V-Fehlfälle~~ erledigt; als Nächstes Mutant, Cerenovus, Savant (offen: S&V-Seed 181 mit 5 Nächten)
 3. Gemeinsames Regelwissen, wenn das Spiel bei v2 ankommt
 4. Eine echte Partie
 

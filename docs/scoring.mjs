@@ -116,7 +116,23 @@ export const heirRule = fn => (HEIR_RULES.push(fn), fn);
  * world, which is how a Demon dead in daylight with nobody to inherit
  * gets ruled out.
  */
-export function possibleTimelines(world, state, cap = 48) {
+// 128, not 48: a Barber's death offers every pair of seats. A night at a
+// time when more than one rule can move anybody. See solver.py.
+export function possibleTimelines(world, state, cap = 128) {
+  const movers = ["SnakeCharmer", "PitHag", "Barber", "Farmer", "Ogre",
+                  "FangGu"].filter(k => inBag(state, k)).length;
+  if (movers < 2) return allNightsAtOnce(world, state, cap);
+  const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
+  try {
+    return nightByNight(world, state, cap, last)
+      .map(([changes, weight]) => [changes, weight]);
+  } finally {
+    state._horizon = null;
+  }
+}
+
+/** Every rule once, over the whole game, in night-slot order. */
+function allNightsAtOnce(world, state, cap) {
   let stories = [[[], 1.0]];
   for (const rule of TRANSITION_RULES) {
     const grown = [];
@@ -130,6 +146,90 @@ export function possibleTimelines(world, state, cap = 48) {
     }
     if (!grown.length) return [];
     stories = grown;
+  }
+  return stories;
+}
+
+const nightOf = c => parseInt(c.phase.slice(1), 10);
+const changeKey = c => `${c.phase}|${c.seat}|${c.role}|${c.side}`;
+
+/** A night at a time, each rule seeing everything but its own earlier
+ * work. Stories are [changes, weight, owned] with owned = [[i, changes]].
+ * Only the last pass may call a story impossible. See solver.py. */
+/** The nights a transition rule could add anything, or null for all. The
+ * last pass still asks every rule about the whole game. See solver.py. */
+function nightsItActs(rule, state) {
+  const deaths = [];
+  for (const [seat, phases] of Object.entries(state.deaths || {}))
+    for (const p of phases) deaths.push([parseInt(p.slice(1), 10), p[0].toUpperCase()]);
+  const rows = (role, field) => new Set(state.infos
+    .filter(i => i.sourceRole === role && i[field]).map(i => i.night));
+  switch (rule.name) {
+    case "aBarberLetsTheDemonSwapTwo":
+      return new Set(deaths.map(([k, kind]) => kind !== "N" ? k + 1 : k));
+    case "aPitHagMakesSomebodyElse": return rows("PitHag", "role");
+    case "aSnakeCharmerTakesTheStar": return rows("SnakeCharmer", "swapped");
+    case "aFarmerHandsItOn":
+      return new Set(deaths.filter(([, kind]) => kind === "N").map(([k]) => k));
+    case "anOgrePicksASide": return new Set([1]);
+    case "demonHandovers": return new Set(deaths.map(([k]) => k));
+    default: return null;
+  }
+}
+
+function nightByNight(world, state, cap, last) {
+  let stories = [[[], 1.0, []]];
+  const acts = TRANSITION_RULES.map(rule => nightsItActs(rule, state));
+  for (let night = 1; night <= last; night++) {
+    const final = night === last;
+    state._horizon = night;
+    for (let i = 0; i < TRANSITION_RULES.length; i++) {
+      const rule = TRANSITION_RULES[i];
+      if (!final && acts[i] !== null && !acts[i].has(night)) continue;
+      const grown = [];
+      const seen = new Map();
+      const keep = (changes, got, owned) => {
+        const owner = new Map();
+        for (const [k, mine] of owned) for (const c of mine) owner.set(changeKey(c), k);
+        const ordered = changes.map((c, idx) => [c, idx]).sort((a, b) =>
+          phaseIndex(a[0].phase) - phaseIndex(b[0].phase) ||
+          (owner.get(changeKey(a[0])) ?? TRANSITION_RULES.length) -
+          (owner.get(changeKey(b[0])) ?? TRANSITION_RULES.length) ||
+          a[1] - b[1]).map(([c]) => c);
+        const key = ordered.map(changeKey).join(";");
+        if (seen.has(key)) {
+          const j = seen.get(key);
+          if (got > grown[j][1]) grown[j] = [ordered, got, owned];
+          return;
+        }
+        seen.set(key, grown.length);
+        grown.push([ordered, got, owned]);
+      };
+      for (const [changes, weight, owned] of stories) {
+        if (grown.length >= cap) break;
+        const entry = owned.find(([k]) => k === i);
+        const mine = entry ? entry[1] : [];
+        const mineKeys = new Set(mine.map(changeKey));
+        const others = changes.filter(c => !mineKeys.has(changeKey(c)));
+        const view = others.length ? new Timeline(world, others) : world;
+        let fitted = false;
+        for (const [extra, cost] of rule(view, state)) {
+          const upto = extra.filter(c => nightOf(c) <= night);
+          const uptoKeys = new Set(upto.map(changeKey));
+          if (mine.some(c => nightOf(c) < night && !uptoKeys.has(changeKey(c))))
+            continue;                     // another story's earlier night
+          fitted = true;
+          const added = upto.some(c => !mineKeys.has(changeKey(c)));
+          const again = owned.filter(([k]) => k !== i);
+          keep([...others, ...upto], weight * (added ? cost : 1.0),
+               [...again, [i, upto]]);
+          if (grown.length >= cap) break;
+        }
+        if (!fitted && !final) keep(changes, weight, owned);
+      }
+      if (!grown.length) return [];
+      stories = grown;
+    }
   }
   return stories;
 }
@@ -149,11 +249,15 @@ export const BARBER_SWAP_PENALTY = 0.15;
  */
 transitionRule(function aBarberLetsTheDemonSwapTwo(world, state) {
   if (!inBag(state, "Barber")) return [[[], 1.0]];
-  const barber = world.find("Barber");
-  if (barber === null) return [[[], 1.0]];
+  // Whoever was the Barber when they died, dealt or made. See solver.py.
+  const deaths = [];
+  for (let seat = 0; seat < state.nPlayers; seat++)
+    for (const phase of state.diedAt(seat))
+      if (world.roleAt(seat, phase) === "Barber") deaths.push(phase);
+  if (!deaths.length) return [[[], 1.0]];
 
   const stories = [[[], 1.0]];
-  for (const phase of state.diedAt(barber)) {
+  for (const phase of deaths) {
     const day = parseInt(phase.slice(1), 10);
     const night = "NDEX".indexOf(phase[0].toUpperCase()) > 0
       ? `N${day + 1}` : `N${day}`;
@@ -162,7 +266,11 @@ transitionRule(function aBarberLetsTheDemonSwapTwo(world, state) {
       for (let second = first + 1; second < state.nPlayers; second++) {
         const a = world.roleAt(first, night), b = world.roleAt(second, night);
         if (a === b) continue;
-        stories.push([[change(night, first, b), change(night, second, a)],
+        // Sides written out: a swap moves characters, never sides.
+        const sideA = world.evilAt(first, night) ? "evil" : "good";
+        const sideB = world.evilAt(second, night) ? "evil" : "good";
+        stories.push([[change(night, first, b, sideA),
+                       change(night, second, a, sideB)],
                       BARBER_SWAP_PENALTY]);
       }
   }
@@ -200,7 +308,11 @@ heirRule(function aMinionCatchesTheStar(view, state, phase, character) {
  */
 heirRule(function anOutsiderBecomesTheFangGu(view, state, phase, character) {
   if (character !== "FangGu" || phase[0].toUpperCase() !== "N") return [];
-  if (view.demonAt(phase) !== view.demonAt("N1")) return [];
+  // Once per game, asked of the jump itself: an evil Fang Gu written onto
+  // a seat dealt an Outsider. A Snake Charmer swap moves the star too.
+  if ((view.changes || []).some(c => c.role === "FangGu" && c.side === "evil"
+      && TEAM[view.roles[c.seat]] === "outsider"
+      && phaseIndex(c.phase) < phaseIndex(phase))) return [];
   const alive = state.aliveSet(phase);
   const out = [];
   for (let seat = 0; seat < state.nPlayers; seat++)
@@ -278,10 +390,26 @@ export function demonLineages(world, state, cap = 24) {
     let phases = state.diedAt(holder);
     if (phases.length && view.roleAt(holder, phases[0]) === "Zombuul")
       phases = phases.slice(1);
+    // Not yet, on a pass that only looks this far (possibleTimelines).
+    const horizon = state._horizon ?? null;
+    if (horizon !== null)
+      phases = phases.filter(p => parseInt(p.slice(1), 10) <= horizon);
     const phase = phases.length ? phases[0] : null;
-    if (phase !== null) {
-      const held = view.roleAt(holder, phase);
-      if (held && TEAM[held] !== "demon") { found.push(soFar); return; }
+    // Moved sideways before it died, or before the board ends: follow the
+    // star to whoever holds it now. See solver.py.
+    const check = phase !== null ? phase
+      : (horizon !== null ? `D${horizon}` : state.finalPhase());
+    {
+      const was = view.roleAt(holder, check);
+      if (was && TEAM[was] !== "demon") {
+        const successor = view.demonAt(check);
+        if (successor !== null && successor !== holder && !held.has(successor)) {
+          walk(view, successor, soFar, after, new Set([...held, holder]));
+          return;
+        }
+        found.push(soFar);
+        return;
+      }
     }
     // A handover cannot happen *earlier* than the one before it, and no
     // seat can hold the star twice. Both were true by construction until
@@ -332,7 +460,9 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
   if (!made.length) return [[[], 1.0]];
   const changes = made.map(info => {
     const phase = `N${info.night}`;
-    const side = world.evilAt(info.target, phase) ? "evil" : "good";
+    // The side when the Pit-Hag acted, as the night began. See solver.py.
+    const before = info.night > 1 ? `E${info.night - 1}` : "N0";  // the deal, as Python's `_before`
+    const side = world.evilAt(info.target, before) ? "evil" : "good";
     return change(phase, info.target, info.role, side);
   });
   return [[changes, 1.0]];
@@ -435,23 +565,52 @@ transitionRule(function anOgrePicksASide(world, state) {
   return [[[], 1.0], [turn, Math.min(1.0, evil / good)]];
 });
 
+/** Does this seat have that ability — held, or taken by a Philosopher? */
+function hasAbility(world, state, seat, role, phase) {
+  if (world.roleAt(seat, phase) === role) return true;
+  const taken = state.philosophies()[seat];
+  return !!(taken && taken[0] === role &&
+            world.roleAt(seat, phase) === "Philosopher" &&
+            phaseIndex(phase) >= phaseIndex(taken[1]));
+}
+
+/** Who has this ability — held, or gained by a Philosopher. */
+function whoeverWorks(world, state, role, phase) {
+  const seat = world.findAt(role, phase);
+  if (seat !== null) return seat;
+  for (const [who, [taken, since]] of Object.entries(state.philosophies()))
+    if (taken === role && world.roleAt(+who, phase) === "Philosopher" &&
+        phaseIndex(phase) >= phaseIndex(since)) return +who;
+  return null;
+}
+
 transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
   const swaps = state.infos.filter(
     i => i.sourceRole === "SnakeCharmer" && i.swapped);
   if (!swaps.length) return [[[], 1.0]];
 
   let stories = [[[], 1.0]];
-  for (const info of swaps) {
+  const base = world;
+  for (const info of [...swaps].sort((a, b) => a.night - b.night)) {
+    // Each swap sees the ones before it. See solver.py.
+    const soFar = stories.length ? stories[0][0] : [];
+    world = soFar.length ? new Timeline(base, soFar) : base;
     // Who *acted*, which is the board as it stood when the night began —
     // not after the swap this rule is about to write. The swap is dated
     // at the night now that it is immediate.
     const phase = `N${info.night}`;
-    const began = info.night > 1 ? `E${info.night - 1}` : phase;
-    const charmer = world.findAt("SnakeCharmer", began);
+    const began = info.night > 1 ? `E${info.night - 1}` : "N0";  // the deal, as Python's `_before`
+    // The seat that said so, if it has the ability — held or taken by a
+    // Philosopher — else whoever works it. See solver.py.
+    const charmer = hasAbility(world, state, info.player, "SnakeCharmer", began)
+      ? info.player : whoeverWorks(world, state, "SnakeCharmer", began);
     const demon = world.demonAt(began);
     if (charmer === null || demon === null || charmer === demon) continue;
     if (info.target !== demon) continue;   // they pointed at somebody else
-    const after = `D${info.night}`;
+    // From the night: the swap is immediate (settled at the table; the
+    // attribution above reads the board as it began). Python has written
+    // it at the night for a while and this still said the day after.
+    const after = `N${info.night}`;
     stories = stories.map(([changes, cost]) => [
       [...changes,
        // The character the Demon held **when the swap happened**, at
@@ -562,6 +721,9 @@ function plainFailures(world, state, outcome = {}) {
   let invented = 1.0;
   const fail = (night, seat) =>
     ((failures[night] = failures[night] || new Set()).add(seat));
+  // Nights where a reading came out true under a Vortox: either the
+  // Vortox was off or the sources were droisoned. See solver.py.
+  const vortoxOr = {};
 
   // Executing the Saint ends the game on the spot — while it is
   // *working*. A poisoned or drunk Saint is executed and the game carries
@@ -660,7 +822,7 @@ function plainFailures(world, state, outcome = {}) {
     if (seat === null) {
       // Who acted, not who holds the character now — a swap dated at
       // this night would otherwise find the seat it ended up at.
-      const began = info.night > 1 ? `E${info.night - 1}` : phase;
+      const began = info.night > 1 ? `E${info.night - 1}` : "N0";  // the deal, as Python's `_before`
       seat = world.findAt(role, began);
       if (seat === null) seat = world.findAt(role, phase);
       if (seat === null)
@@ -694,10 +856,11 @@ function plainFailures(world, state, outcome = {}) {
     // — and its own row was charged as invented, putting a world where
     // the swap really happened at 0.4 against 1.0 for one where it could
     // not.
-    const acted = info.night > 1 ? `E${info.night - 1}` : phase;
+    const acted = info.night > 1 ? `E${info.night - 1}` : "N0";  // the deal, as Python's `_before`
     let held;
+    // Held then, or taken by a Philosopher then. See solver.py.
     if (seat !== null && world.roleAt(seat, phase) !== role
-        && world.roleAt(seat, acted) === role) {
+        && hasAbility(world, state, seat, role, acted)) {
       held = abilityState(world, seat, role, acted, gained, vortoxed);
     } else {
       held = seat === null ? ABSENT
@@ -741,7 +904,9 @@ function plainFailures(world, state, outcome = {}) {
         ? info.isTrue(world, state, seat)
         : info.holds(world, state, null, seat);
       if (wasTrue) {
-        fail(info.night, vortox);
+        const got = vortoxOr[info.night] =
+          vortoxOr[info.night] || {vortox, sources: new Set()};
+        got.sources.add(seat);
         outcome[idx] = EXCUSED;
       } else outcome[idx] = HELD;
       return;
@@ -768,7 +933,7 @@ function plainFailures(world, state, outcome = {}) {
   });
   if (invented === null) return null;     // a hard fact did not hold
 
-  return {failures, ftInfos, invented, mustWork: working};
+  return {failures, ftInfos, invented, mustWork: working, vortoxOr};
 }
 
 // --------------------------------------------------------------------
@@ -850,7 +1015,7 @@ function impairmentPlan(world, state, failures, forbidden) {
 function explainOne(world, state, outcome = null) {
   const sorted = plainFailures(world, state, outcome || {});
   if (sorted === null) return null;
-  const {failures, ftInfos, invented, mustWork} = sorted;
+  const {failures, ftInfos, invented, mustWork, vortoxOr} = sorted;
 
   // Every way the nights could have gone. Each brings its own demands on
   // who was impaired and who was working, so the plan is solved once per
@@ -886,7 +1051,33 @@ function explainOne(world, state, outcome = null) {
     return best;
   };
 
-  const ceiling = settle(failures);
+  // `settle`, trying each way a true reading under a Vortox can be
+  // excused: per night, the Vortox off or every source droisoned.
+  const nights = Object.keys(vortoxOr || {}).map(Number).sort((a, b) => a - b);
+  const settleEither = readings => {
+    if (!nights.length) return settle(readings);
+    const k = Math.min(nights.length, 6);
+    let best = null;
+    for (let mask = 0; mask < (1 << k); mask++) {
+      const trial = {};
+      for (const [n, seats] of Object.entries(readings))
+        trial[n] = new Set(seats);
+      nights.forEach((night, i) => {
+        // Bit clear means the Vortox was off, which is the first choice
+        // tried, as in Python's `product((True, False))`.
+        const off = i >= k || !((mask >> (k - 1 - i)) & 1);
+        const {vortox, sources} = vortoxOr[night];
+        trial[night] = trial[night] || new Set();
+        if (off) trial[night].add(vortox);
+        else for (const s of sources) trial[night].add(s);
+      });
+      const got = settle(trial);
+      if (got !== null && (best === null || got > best)) best = got;
+    }
+    return best;
+  };
+
+  const ceiling = settleEither(failures);
   if (ceiling === null) return null;
   if (!ftInfos.length) return ceiling;
 
@@ -913,7 +1104,7 @@ function explainOne(world, state, outcome = null) {
         marks[idx] = EXCUSED;
       }
     }
-    const cost = settle(combined);
+    const cost = settleEither(combined);
     if (cost === null) continue;
     if (best === null || cost > best) { best = cost; bestMarks = marks; }
     if (best >= ceiling) break;           // cannot do better than this

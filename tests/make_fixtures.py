@@ -45,6 +45,51 @@ def seat(claim="", **kw):
             "read": 0, "wake": "", **kw}
 
 
+_KIND = {"NobleInfo": "Noble", "BecameInfo": "Became",
+         "AlsaahirGuess": "Alsaahir", "AcrobatChoice": "Acrobat",
+         "BalloonistInfo": "Balloonist"}
+
+
+def played(name, script, seed, n, nights):
+    """A simulator game, as the page would post it.
+
+    The boards the simulator found hardest to explain are the ones worth
+    holding both languages to: a Snake Charmer swapping with a Fang Gu
+    that had just jumped, two swaps on one night, a Barber's swap, a
+    Mastermind's extra day. Written from the played game rather than by
+    hand, so the board is one that really happened.
+    """
+    import dataclasses
+    sys.path.insert(0, str(HERE))
+    import claims as claim_model
+    import simulate
+    rng = random.Random(seed)
+    deal, heard = simulate.play(n, rng, nights=nights, script=script)
+    claims, wakes, _notes = claim_model.claims_for(deal, rng, script=script)
+    players = []
+    for seat in range(n):
+        at = deal.deaths.get(seat)
+        events = ["X" + at[1:] if at.startswith("E") else at] if at else []
+        players.append({"claim": claims.get(seat, ""), "events": events,
+                        "wake": wakes.get(seat, "")})
+    infos = []
+    for row in heard:
+        got = {"type": _KIND.get(type(row).__name__, type(row).__name__),
+               "night": row.night, "player": row.player}
+        for field in dataclasses.fields(row):
+            if field.name in ("night", "player", "trust", "confirmed"):
+                continue
+            value = getattr(row, field.name)
+            if isinstance(value, (tuple, frozenset, set)):
+                value = list(value)
+            got[field.name] = value
+        infos.append(got)
+    return board(name, script, players, infos=infos,
+                 votes={str(k): sorted(v) for k, v in deal.votes.items()},
+                 nominations={str(k): sorted(v)
+                              for k, v in deal.nominations.items()})
+
+
 def board(name, script, claims, **payload):
     return {
         "name": name,
@@ -378,6 +423,19 @@ def handmade():
                 [{"claim": c, "events": ["X1"]} if i == 6 else c
                  for i, c in enumerate(BMR9M)],
                 quiet_nights=[2], days_done=[1, 2])
+
+    # Played games the solver once got wrong, kept so both languages are
+    # held to them (29.09.2026): a charmer swapping with a Fang Gu that had
+    # just jumped (1), a Barber's swap that keeps sides (61), a Philosopher
+    # working the Snake Charmer (981), and at seven seats — the eleven-seat
+    # originals took minutes a board — two swaps in a row (1063) and a
+    # swap and a Barber on the same night (672); on Bad Moon Rising a
+    # Mastermind's extra day and a Zombuul surviving its execution.
+    for seed, n, nights in ((1, 8, 4), (61, 8, 4), (981, 8, 4),
+                            (1063, 7, 4), (672, 7, 4)):
+        yield played(f"sv-played-{seed}", SV, seed, n, nights)
+    yield played("bmr-played-mastermind", BMR, 5, 7, 4)
+    yield played("bmr-played-zombuul", BMR, 2, 7, 4)
 
     # Easter Trouble, the script with the Ogre and the Marionette. The
     # Ogre turns evil from day one, so an Empath beside it can read 0 on

@@ -182,7 +182,7 @@ function scriptFrom(payload) {
  * The messages are the ones the page shows, so they say what to do about
  * it rather than what went wrong.
  */
-function readBoard(payload) {
+export function readBoard(payload) {
   const n = Number(payload.n_players);
   if (!SETUP[n]) return {error: "Table sizes from 5 to 15 players."};
 
@@ -277,9 +277,13 @@ function readBoard(payload) {
     // wrong is dead *because* it acted.
     // The Sage and the Klutz are woken *by* dying, the same as the
     // Ravenkeeper.
+    // And every choice made before the Demon swings. See app.py.
     const actedAnyway = ["Ravenkeeper", "SageInfo", "KlutzChoice",
                          "SlayerShot", "VirginNomination",
-                         "GamblerGuess"];
+                         "GamblerGuess", "MoonchildChoice",
+                         "SnakeCharmerChoice", "PitHagChoice",
+                         "InnkeeperChoice", "SailorChoice", "ExorcistChoice",
+                         "PhilosopherChoice", "CourtierChoice"];
     const speaker = Number(row.player || 0);
     const night = Number(row.night || 1);
     if ((deaths[speaker] || []).includes(`N${night}`) &&

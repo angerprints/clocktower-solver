@@ -80,6 +80,7 @@ class Deal:
         # the Demon, still killing on quiet days. And the day after which
         # a Mastermind's extra day runs out and the game is over.
         self.zombuul_up = None
+        self.fanggu_jumped = False
         self.game_ends_after = None
         self.votes = {}                     # {day: {seat, ...}}
         self.nominations = {}               # {day: {seat, ...}}
@@ -392,9 +393,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                         if info.target != victim:
                             continue
                         gran = info.player
+                        # Working, not merely unpoisoned: a Courtier's drunk
+                        # Grandmother does not die of grief either
+                        # (29.09.2026).
                         if d.role_at(gran, f"N{night}") == "Grandmother" \
                                 and gran in d.alive_at(f"N{night}") \
-                                and d.poisoned.get(night) != gran:
+                                and d.working(gran, night):
                             d.deaths[gran] = f"N{night}"
 
         # Board-changing steps run **before** the readings, because by
@@ -712,23 +716,33 @@ def _barber_swap(d, night, rng):
     good.
     """
     yesterday = night - 1
-    if yesterday < 1:
-        return
+    # "If you died today **or tonight**": a Barber killed tonight lets the
+    # Demon swap tonight, not tomorrow night — the swap is at slot 40,
+    # after the kill. This waited a night, where the solver did not
+    # (29.09.2026).
     died = [p for p in range(d.n)
             if d.role_at(p, f"N{night}") == "Barber"
             and d.deaths.get(p) in (f"D{yesterday}", f"E{yesterday}",
-                                    f"N{yesterday}")]
+                                    f"N{night}")]
     if not died or rng.random() > 0.5:
         return                              # a "may", and usually not
-    living = sorted(d.alive_at(f"N{night}"))
+    # Alive after tonight's kill, which has already happened: the Barber
+    # acts at 40. Swapping the Demon's character into tonight's corpse
+    # left a dead Demon and a game that should have ended (29.09.2026).
+    living = sorted(p for p in d.alive_at(f"N{night}")
+                    if d.deaths.get(p) != f"N{night}")
     if len(living) < 2:
         return
     a, b = rng.sample(living, 2)
     phase = f"N{night}"
     got_a = d.role_at(a, phase)
     got_b = d.role_at(b, phase)
+    demon = d.demon_at(phase)
     d.changes.append((phase, a, got_b))
     d.changes.append((phase, b, got_a))
+    # And the star moves with the character, as with the Snake Charmer.
+    if demon in (a, b):
+        d.handovers.append((phase, b if demon == a else a))
 
 
 def _alsaahir_guesses(d, day, rng, heard):
@@ -996,9 +1010,8 @@ def _protected(d, night, target):
     swinging: a sober Soldier is safe, a Monk can guard somebody else.
     """
     phase = f"N{night}"
-    if d.role_at(target, phase) == "Soldier" \
-            and d.believes[target] is None \
-            and d.poisoned.get(night) != target:
+    # Working, which is every way of going wrong, not only the Poisoner.
+    if d.role_at(target, phase) == "Soldier" and d.working(target, night):
         return True
 
     # A sober Sailor cannot die. Missing here while the solver has always
@@ -1105,8 +1118,8 @@ def _demon_kills(d, night, rng):
     # The Monk guards, whoever is swinging.
     monk = d.roles.index("Monk") if "Monk" in d.roles else None
     guarded = None
-    if monk is not None and monk in living and d.believes[monk] is None \
-            and d.poisoned.get(night) != monk and rng.random() < 0.3:
+    if monk is not None and monk in living and d.working(monk, night) \
+            and rng.random() < 0.3:
         guarded = rng.choice([p for p in living if p != monk] or [monk])
 
     def take(pool):
@@ -1161,8 +1174,11 @@ def _demon_kills(d, night, rng):
     if kind == "Zombuul":
         # Only on a day when nobody died, and it survives its own first
         # death — which the deaths record rather than this.
+        # "If no-one died **today**": the day, not the night before it.
+        # A death on night four let nobody wake on night five here, where
+        # the rule and the solver say it does (29.09.2026).
         day = night - 1
-        if day >= 1 and any(at in (f"N{day}", f"D{day}", f"E{day}")
+        if day >= 1 and any(at in (f"D{day}", f"E{day}")
                             for at in d.deaths.values()):
             return []
         got = take(others)
@@ -1196,6 +1212,24 @@ def _demon_kills(d, night, rng):
         got = take(others)
         return [got] if got is not None else []
 
+    if kind == "FangGu":
+        # Killing an Outsider the first time is a jump: the Outsider lives
+        # and becomes an evil Fang Gu, and the old one dies instead. Never
+        # played here until now, so every Fang Gu that took an Outsider
+        # simply killed it — a game the rules do not allow, and one the
+        # solver never objected to because it does not insist on the jump.
+        got = take(others)
+        if got is not None and not d.fanggu_jumped \
+                and TEAM[d.role_at(got, phase)] == "outsider":
+            d.fanggu_jumped = True
+            d.fanggu_jump = (night, got)      # for the night-walk to replay
+            d.deaths[demon] = phase
+            d.handovers.append((phase, got))
+            d.changes.append((phase, got, "FangGu"))
+            d.side_changes.append((phase, got, "FangGu", "evil"))
+            return []
+        return [got] if got is not None else []
+
     got = take(others)
     return [got] if got is not None else []
 
@@ -1213,14 +1247,12 @@ def _demon_kill(d, night, rng):
 
     monk = d.roles.index("Monk") if "Monk" in d.roles else None
     monk_works = (monk is not None and monk in living
-                  and d.believes[monk] is None
-                  and d.poisoned.get(night) != monk)
+                  and d.working(monk, night))
     if monk_works and rng.random() < 0.3 and target != monk:
         return None                             # the Monk guarded them
 
     if d.role_at(target, f"N{night}") == "Soldier" \
-            and d.believes[target] is None \
-            and d.poisoned.get(night) != target:
+            and d.working(target, night):
         return None                             # a sober Soldier survives
     return target
 
@@ -1258,7 +1290,7 @@ def _conditionally_woke(d, seat, role, night):
         if night == 1:
             return True
         day = night - 1
-        return not any(at in (f"N{day}", f"D{day}", f"E{day}")
+        return not any(at in (f"D{day}", f"E{day}")
                        for at in d.deaths.values())
     if role in ("Courtier", "Philosopher", "Sage", "Klutz", "Juggler",
                 "Seamstress", "Artist", "Savant"):
@@ -1319,6 +1351,12 @@ def _in_night_order(d, night):
 
     def slot(seat):
         what = d.apparent(seat)
+        # A Philosopher that has taken an ability wakes when that
+        # character would. It kept its own slot 2, so one holding the
+        # Mathematician counted before the Pit-Hag at 16 had turned the
+        # drunk real Mathematician into somebody else (29.09.2026).
+        if what == "Philosopher" and seat in d.philosophies and night > 1:
+            what = d.philosophies[seat]
         got = getattr(CHARACTERS[what], field, 0) if what in CHARACTERS else 0
         return (got if got else 10_000, seat)
 
@@ -1344,8 +1382,12 @@ def _in_night_order(d, night):
 # turned one impossible board into five.
 # The Snake Charmer is here because its swap changes *who the Demon is*,
 # and that has to be settled before the Demon acts.
+# The Pit-Hag too, at slot 16: it acted in the late pass, after the kill,
+# so it could remake a seat the Demon had already killed or jumped into,
+# and create a character that was in play when it really acted
+# (29.09.2026).
 CHOOSES_EARLY = frozenset({"Innkeeper", "Sailor", "Monk", "Exorcist",
-                           "SnakeCharmer"})
+                           "SnakeCharmer", "PitHag"})
 
 
 def early_choices(d, night, rng):
@@ -1366,6 +1408,13 @@ def early_choices(d, night, rng):
     before = {seat: d.role_at(seat, f"N{night}") for seat in range(d.n)}
     for seat in _in_night_order(d, night):
         role = before[seat]
+        # A Philosopher that took an early chooser chooses early too. It
+        # waited for the late pass, after the kill and the Barber, so one
+        # holding the Snake Charmer pointed at a Demon the Barber had only
+        # just made at slot 40 (29.09.2026).
+        if role == "Philosopher" and night > 1 \
+                and d.philosophies.get(seat) in CHOOSES_EARLY:
+            role = d.philosophies[seat]
         if role not in CHOOSES_EARLY:
             continue
         if seat not in d.alive_at(f"N{night}"):
@@ -1383,7 +1432,24 @@ def honest_info(d, night, rng):
     whatever the Storyteller invented, so there is no honest version.
     """
     out = []
+    began = f"E{night - 1}" if night > 1 else "N1"
     for seat in _in_night_order(d, night):
+        # Acted in the early pass already — judged by what it held when
+        # the night began, since a swap there changes what it holds now.
+        # A charmer that swapped and was then drunk by a Sweetheart dying
+        # later that night was handed a second, invented Snake Charmer
+        # row saying nothing happened (29.09.2026).
+        if d.role_at(seat, began) in CHOOSES_EARLY \
+                and d.apparent(seat) == d.role_at(seat, began):
+            continue
+        # Dead before it woke hears nothing, droisoned or not — this was
+        # asked only of working seats, so a poisoned Oracle killed at
+        # night went on being told something (29.09.2026).
+        if d.deaths.get(seat) is not None and _died_before(d, seat, night):
+            continue
+        if d.deaths.get(seat) == f"N{night}" \
+                and d.role_at(seat, f"N{night}") not in ON_DEATH:
+            continue
         if not d.working(seat, night):
             # A droisoned seat is not silent. It wakes on the schedule of
             # the character it *believes* it is and is told something —
@@ -1441,7 +1507,8 @@ def honest_info(d, night, rng):
         # but its own choice, night after night.
         if made is None and role == "Philosopher":
             took = d.philosophies.get(seat)
-            if took:
+            # An early chooser it took has already acted, in the early pass.
+            if took and not (took in CHOOSES_EARLY and night > 1):
                 made = _for_role(d, seat, took, night, rng)
         if made is None:
             continue
@@ -1588,7 +1655,12 @@ def droisoned_at(d, night):
         return got
 
     for seat in range(d.n):
-        role = d.roles[seat]
+        # The character it holds tonight, not the one it was dealt: a
+        # Snake Charmer that swapped into a Vigormortis or a No Dashii is
+        # the one poisoning now. Reading the deal stopped the poison the
+        # moment the dealt seat died (29.09.2026) — the deal mistaken for
+        # the timeline once more.
+        role = d.role_at(seat, phase)
         if role == "NoDashii" and seat in living:
             out |= nearest_townsfolk(seat)
         elif role == "Sweetheart":
@@ -1602,6 +1674,15 @@ def droisoned_at(d, night):
                 if TEAM[d.role_at(other, phase)] != "minion":
                     continue
                 gone = d.deaths.get(other)
+                # Only the Minions it killed — the card says so. Every
+                # dead Minion used to count, an executed one too.
+                if not gone or gone[0] != "N":
+                    continue
+                k = int(gone[1:])
+                killer = d.demon_at(gone)
+                if other not in d.demon_aimed.get(k, ()) or killer is None \
+                        or d.role_at(killer, gone) != "Vigormortis":
+                    continue
                 # The poison triggers and registers on the night the
                 # Vigormortis killed, not the night after. Settled by
                 # asking rather than by reasoning: it was a real
@@ -1635,7 +1716,7 @@ def _vortox_working(d, night):
     seat = d.demon_at(phase)
     if seat is None or d.role_at(seat, f"N{night}") != "Vortox":
         return False
-    return seat in d.alive_at(phase) and d.poisoned.get(night) != seat
+    return seat in d.alive_at(phase) and d.working(seat, night)
 
 
 def _make_false(d, info, night, rng):
@@ -1962,8 +2043,11 @@ def _for_role(d, seat, role, night, rng):
         # exactly, because it is the thing that decides the droisoning —
         # which is the one reading here that is easier for the simulator
         # than for the solver.
-        return MathematicianInfo(night, seat,
-                                 count=len(droisoned_at(d, night)))
+        # Only the living: a dead player has no ability to go wrong. See
+        # the solver's `_possible_impairment_counts`.
+        living = set(d.alive_at(f"N{night}"))
+        return MathematicianInfo(
+            night, seat, count=len(droisoned_at(d, night) & living))
 
     if role == "Juggler" and night == 2:
         # Guessed publicly on the first day, answered the night after —
@@ -2076,6 +2160,11 @@ def _for_role(d, seat, role, night, rng):
             became = d.role_at(demon, phase)
             d.changes.append((after, seat, became))
             d.changes.append((after, demon, "SnakeCharmer"))
+            # And the star moves with it. `demon_at` reads the handovers
+            # last, so after a Fang Gu jump its handover outranked the
+            # swap and the new Snake Charmer went on killing — the charmer
+            # it had swapped with, once (29.09.2026).
+            d.handovers.append((after, seat))
             d.side_changes.append((after, seat, became, "evil"))
             d.side_changes.append((after, demon, "SnakeCharmer", "good"))
             # The new Snake Charmer — the old Demon — is poisoned from
@@ -2106,6 +2195,10 @@ def _for_role(d, seat, role, night, rng):
         if not living:
             return None
         in_play = {d.role_at(p, phase) for p in range(d.n)}
+        # And as the night began: this runs after the Demon, and a Fang Gu
+        # that jumped into the Klutz made the Klutz look free to create
+        # when, at slot 16, it was still in play (29.09.2026).
+        in_play |= {d.role_at(p, f"E{night - 1}") for p in range(d.n)}
         in_play |= {b for b in d.believes if b}
         spare = [k for k in (d.script.townsfolk + d.script.outsiders
                              + d.script.minions) if k not in in_play]
@@ -2123,10 +2216,14 @@ def _for_role(d, seat, role, night, rng):
         # Creating a *new* Demon is a real and interesting play, and the
         # solver already models the arbitrary deaths it causes. It is
         # left in; only the game-ending case is kept out.
-        demon = d.demon_at(phase)
-        choosable = [p for p in living if p != demon] or living
+        # The Demon at slot 16, as the night began — not after the kill.
+        # This runs after the Demon has swung, so a Fang Gu that had just
+        # jumped left its old seat looking like anybody, and the Pit-Hag
+        # unmade the Demon it acts before (29.09.2026).
+        demons = {d.demon_at(phase), d.demon_at(f"E{night - 1}")}
+        choosable = [p for p in living if p not in demons] or living
         target = rng.choice(choosable)
-        if target == demon:
+        if target in demons:
             spare = [k for k in spare if TEAM[k] == "demon"]
             if not spare:
                 return None
@@ -2219,8 +2316,14 @@ def _for_role(d, seat, role, night, rng):
         # On dying it points at somebody, and good loses if they are
         # evil — so a game that carried on means it pointed at a good
         # player. Which is what a Klutz that is working does.
-        good = [p for p in range(d.n)
-                if p != seat and not is_evil(d.roles[p])]
+        # Good **now**, and alive — "choose 1 alive player". It read the
+        # deal, so a Snake Charmer that had swapped into the Fang Gu still
+        # looked good, the Klutz picked it, and a game good had just lost
+        # ran on (29.09.2026).
+        phase = f"N{night}"
+        good = [p for p in d.alive_at(phase)
+                if p != seat and d.deaths.get(p) != phase
+                and d.side_at(p, phase) == "good"]
         if not good:
             return None
         return KlutzChoice(night, seat, target=rng.choice(good))

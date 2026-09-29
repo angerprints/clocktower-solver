@@ -341,9 +341,17 @@ def run_solve(payload):
     # The Sage and the Klutz are woken *by* dying, the same as the
     # Ravenkeeper — refusing their rows because they died that night is
     # exactly backwards.
+    # And every choice made before the Demon swings: a Snake Charmer at
+    # slot 11 points before a kill at 24 or later, and so do a Pit-Hag,
+    # Innkeeper, Sailor, Exorcist, Philosopher and Courtier. A swapped
+    # Snake Charmer killed on night five had its night-five choice refused
+    # (29.09.2026). The Moonchild is woken by dying, like the Sage.
     ACTED_ANYWAY = ("Ravenkeeper", "SageInfo", "KlutzChoice",
                     "SlayerShot", "VirginNomination",
-                    "GamblerGuess")
+                    "GamblerGuess", "MoonchildChoice",
+                    "SnakeCharmerChoice", "PitHagChoice", "InnkeeperChoice",
+                    "SailorChoice", "ExorcistChoice", "PhilosopherChoice",
+                    "CourtierChoice")
     for d in raw_infos:
         speaker = _int(d, "player", 0)
         night = _int(d, "night", 1)

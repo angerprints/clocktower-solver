@@ -1135,6 +1135,46 @@ class BadMoonRisingAtEveryTableSize(SolverTest):
         self.assertEqual(followed, extra)
 
 
+class SectsAndVioletsAtEveryTableSize(SolverTest):
+    """The wide sweep for the hardest script, kept.
+
+    Twenty-two of a thousand games were impossible for the solver before
+    29.09.2026, and the simulator did not yet play the Fang Gu's jump at
+    all; once it did, fifteen more. Every one was a rule fault on one side
+    or the other — see ROADMAP.md, phase 2 — and most of them were two
+    characters meeting on the same seat: a Snake Charmer swapping with a
+    Fang Gu that had just jumped, a Barber's swap on the night of a swap,
+    a Philosopher working the Snake Charmer.
+    """
+
+    def played(self, count=200, nights=4):
+        from botc import scripts
+        from botc.info import GameState
+        sv = scripts.SECTS_AND_VIOLETS
+        for seed in range(count):
+            rng = random.Random(seed)
+            n = [7, 8, 9, 10, 11][seed % 5]
+            deal, heard = simulate.play(n, rng, nights=nights, script=sv)
+            claims, wakes, _notes = C.claims_for(deal, rng, script=sv)
+            state = GameState(n_players=n, script=sv, claims=claims,
+                              wakes=wakes, deaths=dict(deal.deaths),
+                              infos=list(heard), votes=dict(deal.votes),
+                              nominations=dict(deal.nominations))
+            yield seed, deal, state
+
+    def test_no_board_is_impossible(self):
+        import botc.solver as S
+        from botc.worlds import World
+        for seed, deal, state in self.played():
+            truth = World(tuple(deal.roles), tuple(deal.believes))
+            with self.subTest(seed=seed, roles=deal.roles):
+                self.assertIsNotNone(S.explanation_cost(truth, state))
+
+    def test_the_fang_gu_jumps(self):
+        jumped = sum(deal.fanggu_jumped for _s, deal, _st in self.played())
+        self.assertGreater(jumped, 10, "the Fang Gu hardly ever jumped")
+
+
 class EasterTroublePlaysAndSolves(SolverTest):
     """The script with the Ogre and the Marionette, played and solved.
 

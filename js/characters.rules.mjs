@@ -94,8 +94,12 @@ sourceRule(function aSwappedSnakeCharmerIsPoisonedForGood(world, state, night) {
     if (info.sourceRole !== "SnakeCharmer" || !info.swapped) continue;
     // From the day after the swap, which is when it took effect.
     if (phaseIndex(`N${night}`) < phaseIndex(`D${info.night}`)) continue;
-    const seat = world.findAt("SnakeCharmer", `N${night}`);
-    if (seat === null) continue;
+    // The old Demon it pointed at, not the first Snake Charmer found.
+    // The player stays poisoned whatever they hold later, in a story where
+    // the swap happened. See solver.py.
+    const seat = info.target;
+    if (!(world.changes || []).some(c => c.seat === seat &&
+        c.role === "SnakeCharmer" && c.phase === `N${info.night}`)) continue;
     out.push(new Source("Snake Charmer", new Set([seat]),
                         {capacity: 1, cost: 1.0, repeatCost: 1.0}));
   }
@@ -137,6 +141,11 @@ sourceRule(function aVigormortisPoisonsBesideItsDeadMinions(world, state, night)
     if (!gone.length) continue;
     const first = gone.reduce((a, b) => phaseIndex(a) <= phaseIndex(b) ? a : b);
     if (phaseIndex(first) > phaseIndex(phase)) continue;
+    // Only a Minion it killed: at night, with a Vigormortis as the Demon.
+    if (first[0].toUpperCase() !== "N") continue;
+    const killer = world.demonAt(first);
+    if (killer === null || world.roleAt(killer, first) !== "Vigormortis")
+      continue;
     const beside = nearestTownsfolk(world, state, who, phase);
     if (beside.size)
       out.push(new Source("Vigormortis", beside,
@@ -203,14 +212,17 @@ sourceRule(function aPukkaPoisonsWhoeverItWillKill(world, state, night) {
  */
 sourceRule(function aSweetheartLeavesSomebodyDrunk(world, state, night) {
   if (!inBag(state, "Sweetheart")) return [];
-  const seat = world.find("Sweetheart");
-  if (seat === null) return [];
-  const gone = state.diedAt(seat);
-  if (!gone.length) return [];
-  const first = gone.reduce((a, b) => phaseIndex(a) <= phaseIndex(b) ? a : b);
-  if (phaseIndex(first) > phaseIndex(`N${night}`)) return [];
-  return [new Source("Sweetheart", allSeats(state),
-                     {capacity: 1, cost: 1.0, repeatCost: 1.0})];
+  // Whoever was the Sweetheart when they died, dealt or made. See solver.py.
+  const out = [];
+  for (let seat = 0; seat < state.nPlayers; seat++) {
+    const gone = state.diedAt(seat).filter(p => world.roleAt(seat, p) === "Sweetheart");
+    if (!gone.length) continue;
+    const first = gone.reduce((a, b) => phaseIndex(a) <= phaseIndex(b) ? a : b);
+    if (phaseIndex(first) > phaseIndex(`N${night}`)) continue;
+    out.push(new Source("Sweetheart", allSeats(state),
+                        {capacity: 1, cost: 1.0, repeatCost: 1.0}));
+  }
+  return out;
 });
 
 // The Poisoner goes in first, before anything below it. Registration
@@ -319,8 +331,13 @@ causeRule(function theDemonKills(world, state, night) {
   // Stopped at its source only when something tonight could reach it —
   // offered blindly it crowded the real story out of the first 24
   // accounts. See the_demon_kills in solver.py.
-  const reachable = sourcesOn(world, state, night)
+  let reachable = sourcesOn(world, state, night)
     .some(source => source.seats.has(demon));
+  // Not on a night a Sweetheart dies: her drunkenness can land on the
+  // Demon right after it kills her. See solver.py.
+  for (let p = 0; p < state.nPlayers; p++)
+    if (state.diedAt(p).includes(`N${night}`) &&
+        world.roleAt(p, `N${night}`) === "Sweetheart") reachable = false;
   return [new Cause("Demon", DEMON, allSeats(state),
                     {capacity: 1, mustFire: true,
                      actor: reachable ? demon : null,

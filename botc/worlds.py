@@ -136,6 +136,25 @@ class Timeline:
     world: World
     changes: tuple = ()
 
+    def __post_init__(self):
+        # A timeline laid over a timeline is one timeline. The rules are
+        # handed a view and build their own on top of it — the Demon's
+        # lineage walk and the Farmer both do — and every question here
+        # reads `self.world.roles`, which on a nested view is the deal:
+        # the changes underneath were silently dropped (29.09.2026).
+        if isinstance(self.world, Timeline):
+            object.__setattr__(self, "changes",
+                               tuple(self.world.changes) + tuple(self.changes))
+            object.__setattr__(self, "world", self.world.world)
+        # And in time order. Every question here takes the last change
+        # that applies, reading the list front to back — so a night-two
+        # jump written after a night-three swap overwrote the swap, and a
+        # Sweetheart the Snake Charmer had swapped away was still the Fang
+        # Gu (29.09.2026). Stable, so changes at one moment keep the order
+        # the rules made them in.
+        object.__setattr__(self, "changes", tuple(sorted(
+            self.changes, key=lambda c: phase_index(c.phase))))
+
     # Questions about the whole game go straight through: who was dealt
     # what, who claimed what. Only questions about a moment consult the
     # changes.

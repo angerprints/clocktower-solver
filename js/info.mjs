@@ -525,7 +525,11 @@ export const OgreChoice = declaredChoice("OgreChoice", "Ogre");
 export const PitHagChoice = define("PitHagChoice", "PitHag",
   function (w) {
     const phase = `N${this.night}`;
-    if (w.roleAt(this.target, phase) !== this.role) return false;
+    // The change is in the story, even if a jump later that night
+    // overwrote it. See info.py.
+    const took = (w.changes || []).some(c => c.phase === phase &&
+      c.seat === this.target && c.role === this.role);
+    if (!took && w.roleAt(this.target, phase) !== this.role) return false;
     if (this.night > 1) {
       const earlier = `N${this.night - 1}`;
       for (let p = 0; p < w.roles.length; p++)
@@ -552,7 +556,9 @@ export const SnakeCharmerChoice = define("SnakeCharmerChoice", "SnakeCharmer",
       return w.roleAt(this.target, `D${this.night}`) === "SnakeCharmer";
     // Nothing happened, so either they were not the Demon or the Snake
     // Charmer was not working — and the second is somebody else's excuse.
-    return w.demonAt(phase) !== this.target;
+    // Not the Demon when it chose, as the night began. See info.py.
+    const acted = this.night > 1 ? `E${this.night - 1}` : phase;
+    return w.demonAt(acted) !== this.target;
   });
 
 /** The night a Philosopher took somebody else's ability.
@@ -653,6 +659,10 @@ export const KlutzChoice = define("KlutzChoice", "Klutz",
 export function possibleImpairmentCounts(world, state, night) {
   const always = new Set();
   const movable = [];
+  // Only the living have an ability to go wrong. See info.py.
+  const living = state.aliveSet(`N${night}`);
+  // Certain or choosing is decided on the whole reach; only then are the
+  // living counted. See info.py.
   for (const source of sourcesOn(world, state, night)) {
     // Free *and* reaching everybody it touches — a Drunk holding
     // somebody else's token, a Minstrel silencing the table. A free
@@ -660,14 +670,15 @@ export function possibleImpairmentCounts(world, state, night) {
     // Vigormortis poisons one of the two Townsfolk beside a dead Minion
     // and the Storyteller chooses which. Counting its whole reach as
     // certainly impaired said two where the answer was one.
-    if (source.freeForEveryone() && source.capacity >= source.seats.size)
-      for (const seat of source.seats) always.add(seat);
-    else movable.push(source);
+    if (source.freeForEveryone() && source.capacity >= source.seats.size) {
+      for (const seat of source.seats) if (living.has(seat)) always.add(seat);
+    } else movable.push(source);
   }
   let most = always.size;
   for (const source of movable) {
     let fresh = 0;
-    for (const seat of source.seats) if (!always.has(seat)) fresh += 1;
+    for (const seat of source.seats)
+      if (!always.has(seat) && living.has(seat)) fresh += 1;
     most += Math.min(source.capacity, fresh);
   }
   return [always.size, Math.min(most, state.nPlayers)];

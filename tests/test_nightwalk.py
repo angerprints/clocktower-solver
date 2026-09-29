@@ -375,15 +375,10 @@ class TheWalkAgreesWithTheSimulator(SolverTest):
             if "Vortox" in deal.roles:
                 continue                  # the reading is a deliberate lie
             for night in nights:
-                hidden = {}
-                if deal.poisoned.get(night) is not None:
-                    hidden[("poisoner", night)] = deal.poisoned[night]
-                if deal.demon_aimed.get(night):
-                    hidden[("demon", night)] = deal.demon_aimed[night]
-                executed = [p for p, at in deal.deaths.items()
-                            if at == f"E{night - 1}"]
-                if executed:
-                    hidden[("executed", night)] = executed[0]
+                # Everything the walk has to be told, from the one place
+                # that knows it — assembled by hand here, it missed a Fang
+                # Gu's jump and counted the old Fang Gu alive (29.09.2026).
+                hidden = nightwalk.hidden_from(deal, night, heard)
                 got = nightwalk.walk(deal, night, hidden)
                 walked = {(r[1], r[2]): r[3] for r in got.readings}
                 for row in heard:

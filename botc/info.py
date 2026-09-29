@@ -847,7 +847,18 @@ def _possible_impairment_counts(world, state, night):
     """
     from .impairment import sources_on
 
+    # Only the living have an ability to go wrong. A swapped Snake
+    # Charmer stays poisoned after it dies, and counting the corpse made
+    # a Mathematician's honest nought impossible (29.09.2026). The
+    # simulator counted a dead Drunk but not a dead Snake Charmer, so the
+    # two disagreed in both directions at once.
+    living = set(state.alive_set(f"N{night}"))
+
     always, movable = set(), []
+    # Whether a source is certain is decided on its whole reach, and only
+    # then are the living counted: a Vigormortis may put its poison on a
+    # dead Townsfolk, and trimming the reach first made its one living
+    # choice look certain.
     for source in sources_on(world, state, night):
         # Free *and* reaching everybody it touches — a Drunk holding
         # somebody else's token, a Minstrel silencing the table. Those
@@ -862,13 +873,13 @@ def _possible_impairment_counts(world, state, night):
         # a range of (0, 0), because it went into `always` and `always`
         # was then compared against nothing.
         if source.free_for_everyone() and source.capacity >= len(source.seats):
-            always |= set(source.seats)
+            always |= set(source.seats) & living
         else:
             movable.append(source)
 
     most = len(always)
     for source in movable:
-        most += min(source.capacity, len(set(source.seats) - always))
+        most += min(source.capacity, len(set(source.seats) & living - always))
     return len(always), min(most, state.n_players)
 
 
@@ -1230,7 +1241,14 @@ class PitHagChoice(Info):
 
     def holds(self, w, s, rh, seat=None):
         phase = f"N{self.night}"
-        if w.role_at(self.target, phase) != self.role:
+        # The change is in the story — not necessarily still standing at
+        # the end of the night: a Fang Gu that jumped into the new Barber
+        # later the same night made it a Fang Gu by then, and the Pit-Hag's
+        # own row read as false (29.09.2026).
+        took = any(c.phase == phase and c.seat == self.target
+                   and c.role == self.role
+                   for c in getattr(w, "changes", ()))
+        if not took and w.role_at(self.target, phase) != self.role:
             return False              # the change did not take
         # It could only make something nobody already was. Checked on the
         # night before, since by this phase the change has landed.
@@ -1276,7 +1294,13 @@ class SnakeCharmerChoice(Info):
         # Nothing happened, so either they were not the Demon, or the
         # Snake Charmer was not working — and the second is somebody
         # else's excuse to pay for.
-        return w.demon_at(phase) != self.target
+        #
+        # Not the Demon **when it chose**, at slot 11 — the board as the
+        # night began. A Fang Gu that jumped into that seat later the same
+        # night made it the Demon by the end of it, and a charmer that had
+        # rightly swapped nothing read as needing an excuse (29.09.2026).
+        acted = f"E{self.night - 1}" if self.night > 1 else phase
+        return w.demon_at(acted) != self.target
 
 
 @dataclass

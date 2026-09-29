@@ -722,7 +722,11 @@ class TheThirdBatch(SolverTest):
         for changes, _cost in S.possible_timelines(world, state):
             for one in changes:
                 with self.subTest(change=one):
-                    self.assertIsNone(one.side, "the side must not move")
+                    # The swap writes each seat's side down (so a swapped
+                    # Demon is not read as good), and it is the side the
+                    # seat already had.
+                    had = "evil" if world.evil_at(one.seat, one.phase) else "good"
+                    self.assertIn(one.side, (None, had), "the side must not move")
 
     def test_the_lineage_walk_cannot_go_round_for_ever(self):
         """With two seats trading characters the star could be handed
@@ -1504,3 +1508,40 @@ class AnHeirIsNotALiar(SolverTest):
     def test_the_seat_that_died_is_not_its_own_heir(self):
         heir, _liar = self.worlds()
         self.assertNotIn(5, S._could_have_inherited(heir, self.board()))
+
+
+class FoundByTheWideSweep(SolverTest):
+    """Pinned without the simulator (29.09.2026)."""
+
+    def test_a_timeline_reads_its_changes_in_time_order(self):
+        from botc.worlds import Change, Timeline, World
+        w = World(("SnakeCharmer", "Sweetheart", "FangGu", "Oracle",
+                   "Dreamer"), (None,) * 5)
+        jump = Change("N2", 1, "FangGu", "evil")
+        swap = (Change("N3", 0, "FangGu", "evil"),
+                Change("N3", 1, "SnakeCharmer", "good"))
+        # Written out of order, as a story assembled a night at a time is.
+        view = Timeline(w, swap + (jump,))
+        self.assertEqual(view.role_at(1, "N3"), "SnakeCharmer")
+        self.assertEqual(view.demon_at("N3"), 0)
+        # And a timeline over a timeline is one timeline.
+        nested = Timeline(Timeline(w, (jump,)), swap)
+        self.assertEqual(nested.role_at(1, "N2"), "FangGu")
+        self.assertEqual(nested.role_at(1, "N3"), "SnakeCharmer")
+
+    def test_the_mathematician_counts_only_the_living(self):
+        from botc.info import GameState, _possible_impairment_counts
+        from botc.worlds import World
+        from botc import scripts
+        # A Philosopher that took the Dreamer drunks the real Dreamer; dead,
+        # that Dreamer has no ability left to go wrong.
+        w = World(("Philosopher", "Dreamer", "Mathematician", "Oracle",
+                   "Vortox"), (None,) * 5)
+        from botc.info import PhilosopherChoice
+        infos = [PhilosopherChoice(1, 0, 0, role="Dreamer")]
+        alive = GameState(n_players=5, script=scripts.SECTS_AND_VIOLETS,
+                          infos=infos)
+        dead = GameState(n_players=5, script=scripts.SECTS_AND_VIOLETS,
+                         infos=infos, deaths={1: ("D1",)})
+        self.assertEqual(_possible_impairment_counts(w, alive, 2)[0], 1)
+        self.assertEqual(_possible_impairment_counts(w, dead, 2)[0], 0)

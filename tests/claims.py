@@ -114,6 +114,20 @@ def claims_for(deal, rng, script=None):
         role = deal.roles[seat]
         honest = deal.apparent(seat)        # what a Drunk thinks it is
 
+        # Turned good by a swap: a Demon a Snake Charmer swapped with is
+        # a Snake Charmer now, knows it, and says so. Its opening bluff
+        # stood instead, so the rows it went on to write as the Snake
+        # Charmer were charged to whoever else claimed one (29.09.2026).
+        became = [(when, who, what) for when, who, what in deal.changes
+                  if who == seat]
+        if became:
+            when, _who, now = became[-1]
+            if deal.side_at(seat, when) == "good" and now != role \
+                    and not is_evil(now):
+                claims[seat] = now
+                notes[seat] = f"was the {role}, now the {now}, claiming it"
+                continue
+
         # A Marionette is evil and does not know it, so it claims the
         # token it was handed like any good player — only the knowing
         # evil bluff.

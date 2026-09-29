@@ -267,6 +267,11 @@ def hidden_from(deal, night, heard):
         out[("poisoner", night)] = deal.poisoned[night]
     if deal.demon_aimed.get(night):
         out[("demon", night)] = deal.demon_aimed[night]
+    # A Fang Gu's jump: it aimed at an Outsider and they took its place.
+    # The simulator leaves no aim behind for it, since nobody died of it.
+    jump = getattr(deal, "fanggu_jump", None)
+    if jump and jump[0] == night:
+        out[("fanggu_jump", night)] = jump[1]
     due = deal.pukka_history.get(night)
     if due and due[0] is not None:
         out[("pukka_due", night)] = due[0]
@@ -725,6 +730,18 @@ def walk(deal, night, hidden):
                 # A list, because a Shabaloth takes two and a Po none or
                 # three. What it aimed at is handed in like every other
                 # hidden choice; the walk decides what *lands*.
+                # A Fang Gu that took an Outsider for the first time: the
+                # Outsider lives and is the Fang Gu now, the old one dies.
+                # Asked first — a jump leaves no aim behind, since nobody
+                # died of the kill itself.
+                jump = hidden.get(("fanggu_jump", night))
+                if role == "FangGu" and jump is not None \
+                        and state.working(seat):
+                    state.choose(seat, jump, slot)
+                    state.kill(seat, slot, "FangGu jumped")
+                    state.roles[jump] = "FangGu"
+                    state.log.append((slot, "jumped", seat, jump))
+                    continue
                 aimed = hidden.get(("demon", night))
                 if aimed is None or not state.working(seat):
                     continue

@@ -13,6 +13,7 @@ import math
 import random
 import sys
 from collections import defaultdict
+from itertools import product
 
 from .info import (CourtierChoice, GameState, FortuneTeller,
                    AcrobatChoice, GrandmotherInfo, SlayerShot,
@@ -236,14 +237,70 @@ def transition_rule(fn):
     return fn
 
 
-def possible_timelines(world, state, cap=48):
+def possible_timelines(world, state, cap=128):
     """Every account of who was what, and when.
 
     Rules compose: each is offered the changes agreed so far and may add
     its own. An empty result from any rule means nothing can explain this
     world, which is how a Demon dead in daylight with nobody to inherit
     gets ruled out.
+
+    **128, not 48.** A Barber's death offers every pair of seats, which
+    is fifty-five at eleven players, and the cap cut the true swap off
+    the end (29.09.2026). 128 covers every pair up to fifteen; measured
+    on the corpus it costs three per cent.
+
+    **A night at a time.** The rules run in night-slot order, and each
+    covers every night at once — so run as one pass, the Snake Charmer
+    (slot 11) never saw what the Barber (slot 40) or a Fang Gu's jump
+    (a handover, last) had done on an *earlier* night, and a charmer that
+    swapped with the Demon they had moved read as pointing at the wrong
+    seat (29.09.2026, once the simulator played the jump). Now every rule
+    is asked once per night, sees everything decided before that night,
+    and keeps only that night's changes.
+
+    Two things a night-at-a-time pass has to allow for, both learned the
+    hard way on the first try:
+
+    * **Only the last pass may call a story impossible.** A rule asked on
+      night one sees a board without night four's swap, and the Demon's
+      lineage then finds a death on night four with nobody to inherit.
+      Early on, "nothing fits" means "nothing to add tonight".
+    * **A change may arrive late for an earlier night**, when the rule
+      could only offer it once a later night was in view. It is added if
+      nothing in the story contradicts it — the same seat changed
+      differently at the same moment, or a different Demon made at the
+      same moment — and the story is kept in time order, because a
+      timeline reads its changes in order.
+
+    A cost is charged when an offer adds something, so a story pays for
+    each change once.
     """
+    # One rule that can move anybody, beside the Demon's own lineage, and
+    # there is nothing for a night at a time to untangle: nobody else's
+    # change can be missing from its view. That is every Trouble Brewing
+    # and Bad Moon Rising board, and the single pass is a third quicker
+    # over the corpus.
+    movers = sum(1 for key in ("SnakeCharmer", "PitHag", "Barber",
+                               "Farmer", "Ogre", "FangGu")
+                 if _in_bag(state, key))
+    if movers < 2:
+        return _all_nights_at_once(world, state, cap)
+
+    last = max(1, int(state.final_phase()[1:]))
+    # A story is (changes, weight, owned): `owned[i]` is what rule i has
+    # contributed, so it can be asked again without its own earlier work
+    # in view — exactly as it saw the board when all rules ran once.
+    stories = [((), 1.0, ())]
+    try:
+        stories = _night_by_night(world, state, cap, last, stories)
+    finally:
+        state._horizon = None
+    return [(changes, weight) for changes, weight, _owned in stories]
+
+
+def _all_nights_at_once(world, state, cap):
+    """Every rule once, over the whole game, in night-slot order."""
     stories = [((), 1.0)]
     for rule in TRANSITION_RULES:
         grown = []
@@ -259,6 +316,100 @@ def possible_timelines(world, state, cap=48):
             return []
         stories = grown
     return stories
+
+
+def _nights_it_acts(rule, state):
+    """The nights a transition rule could add anything, or None for all.
+
+    Asking every rule on every night's pass made a busy Sects & Violets
+    board ten times slower — the Barber alone was asked four hundred
+    thousand times to enumerate its pairs for nights where no Barber had
+    died. The last pass still asks every rule about the whole game, so
+    this only saves the passes where nothing could have happened.
+    """
+    deaths = [(int(p[1:]), p[0].upper()) for _s, p in state.death_phases()]
+    rows = lambda role, field: {
+        info.night for info in state.infos
+        if getattr(info, "source_role", None) == role
+        and getattr(info, field, None)}
+    name = rule.__name__
+    if name == "a_barber_lets_the_demon_swap_two":
+        return {k + 1 if kind != "N" else k for k, kind in deaths}
+    if name == "a_pit_hag_makes_somebody_else":
+        return rows("PitHag", "role")
+    if name == "a_snake_charmer_takes_the_star":
+        return rows("SnakeCharmer", "swapped")
+    if name == "a_farmer_hands_it_on":
+        return {k for k, kind in deaths if kind == "N"}
+    if name == "an_ogre_picks_a_side":
+        return {1}
+    if name == "demon_handovers":
+        return {k for k, _kind in deaths}
+    return None
+
+
+def _night_by_night(world, state, cap, last, stories):
+    acts = [_nights_it_acts(rule, state) for rule in TRANSITION_RULES]
+    for night in range(1, last + 1):
+        final = night == last
+        # How far the Demon's lineage looks on this pass. A death after
+        # tonight has not happened yet: a Fang Gu jump on night two needs
+        # a Snake Charmer swap on night three to explain what follows, and
+        # judged whole on night two the jump was thrown out before the
+        # swap could exist.
+        state._horizon = night
+        for i, rule in enumerate(TRANSITION_RULES):
+            if not final and acts[i] is not None and night not in acts[i]:
+                continue                  # nothing it could add tonight
+            grown, seen = [], {}
+
+            def keep(changes, got, owned):
+                # In time order and, within one moment, in the order the
+                # rules act: a Snake Charmer's swap at slot 11 and a
+                # Barber's at 40 on the same night touch the same seat
+                # one after the other, and asking a rule again on a later
+                # pass must not move its change behind the other's.
+                owner = {c: k for k, mine in owned for c in mine}
+                key = tuple(sorted(changes, key=lambda c: (
+                    phase_index(c.phase), owner.get(c, len(TRANSITION_RULES)))))
+                if key in seen:
+                    j = seen[key]
+                    if got > grown[j][1]:
+                        grown[j] = (key, got, owned)
+                    return
+                seen[key] = len(grown)
+                grown.append((key, got, owned))
+
+            for changes, weight, owned in stories:
+                if len(grown) >= cap:
+                    break
+                mine = dict(owned).get(i, ())
+                others = tuple(c for c in changes if c not in mine)
+                view = Timeline(world, others) if others else world
+                fitted = False
+                for extra, cost in rule(view, state):
+                    upto = tuple(c for c in extra
+                                 if int(c.phase[1:]) <= night)
+                    # What this rule already settled for earlier nights
+                    # has to stand; an offer that drops or changes it is
+                    # another story.
+                    if any(int(c.phase[1:]) < night and c not in upto
+                           for c in mine):
+                        continue
+                    fitted = True
+                    added = [c for c in upto if c not in mine]
+                    again = tuple((k, v) for k, v in owned if k != i)
+                    keep(others + upto, weight * (cost if added else 1.0),
+                         again + ((i, upto),))
+                    if len(grown) >= cap:
+                        break
+                if not fitted and not final:
+                    keep(changes, weight, owned)  # judged once all is in
+            if not grown:
+                return []
+            stories = grown
+    return stories
+
 
 
 # Who can catch the Demon when it drops. The trigger is fixed by the rules
@@ -311,7 +462,16 @@ def an_outsider_becomes_the_fang_gu(view, state, phase, character):
     """
     if character != "FangGu" or phase[0].upper() != "N":
         return []
-    if view.demon_at(phase) != view.demon_at("N1"):
+    # Once per game — asked of the jump itself, not of whether the star
+    # has moved at all. A Snake Charmer swap moves it too, and was read
+    # as the jump already spent (29.09.2026). A jump leaves one mark: an
+    # evil Fang Gu written onto a seat that was dealt an Outsider.
+    # Earlier than this moment only: a story built a night at a time
+    # already holds this very jump when it is asked again later.
+    if any(c.role == "FangGu" and c.side == "evil"
+           and TEAM[view.roles[c.seat]] == "outsider"
+           and phase_index(c.phase) < phase_index(phase)
+           for c in getattr(view, "changes", ())):
         return []                         # it has already jumped once
     alive = state.alive_set(phase)
     return [Change(phase, seat, "FangGu", "evil")
@@ -347,12 +507,17 @@ def a_barber_lets_the_demon_swap_two(world, state):
     """
     if not _in_bag(state, "Barber"):
         return [((), 1.0)]
-    barber = world.find("Barber")
-    if barber is None:
+    # Whoever was the Barber when they died — dealt one, or made one by a
+    # Pit-Hag. Only the dealt one was looked for, so a Pit-Hag's Barber
+    # that was executed swapped nothing (29.09.2026).
+    deaths = [(seat, phase) for seat in range(state.n_players)
+              for phase in state.died_at(seat)
+              if world.role_at(seat, phase) == "Barber"]
+    if not deaths:
         return [((), 1.0)]
 
     stories = [((), 1.0)]
-    for phase in state.died_at(barber):
+    for _barber, phase in deaths:
         day = int(phase[1:])
         night = f"N{day + 1}" if phase[0].upper() in "DEX" else f"N{day}"
         if phase_index(night) > phase_index(state.final_phase()):
@@ -366,8 +531,14 @@ def a_barber_lets_the_demon_swap_two(world, state):
                 a, b = view.role_at(first, night), view.role_at(second, night)
                 if a == b:
                     continue
-                stories.append(((Change(night, first, b),
-                                 Change(night, second, a)),
+                # Sides written out, not left to the new character: a
+                # Change with no side takes the character's, so a swapped
+                # Demon read as a good Flowergirl and an Oracle counting
+                # it dead and evil looked wrong (29.09.2026).
+                side_a = "evil" if view.evil_at(first, night) else "good"
+                side_b = "evil" if view.evil_at(second, night) else "good"
+                stories.append(((Change(night, first, b, side_a),
+                                 Change(night, second, a, side_b)),
                                 BARBER_SWAP_PENALTY))
     return stories
 
@@ -388,7 +559,12 @@ def a_pit_hag_makes_somebody_else(world, state):
     changes = []
     for info in made:
         phase = f"N{info.night}"
-        side = "evil" if world.evil_at(info.target, phase) else "good"
+        # The side as it stood when the Pit-Hag acted, at slot 16 — not
+        # after a Fang Gu jumped into the same seat later that night,
+        # which is what a story built a night at a time shows it on the
+        # next pass (29.09.2026).
+        before = _before(info.night, phase)
+        side = "evil" if world.evil_at(info.target, before) else "good"
         changes.append(Change(phase, info.target, info.role, side))
     return [(tuple(changes), 1.0)]
 
@@ -559,7 +735,15 @@ def a_snake_charmer_takes_the_star(world, state):
         return [((), 1.0)]
 
     stories = [((), 1.0)]
-    for info in swaps:
+    base = world
+    for info in sorted(swaps, key=lambda i: i.night):
+        # Each swap sees the ones before it. Two swaps in a game — a
+        # charmer takes the star, and later a Philosopher working the
+        # Snake Charmer takes it from them — were each judged against the
+        # board with no swap at all, and the second found the Demon where
+        # it had been dealt (29.09.2026).
+        so_far = stories[0][0] if stories else ()
+        world = Timeline(base, so_far) if so_far else base
         # Who acted, which is the board as it stood when the night
         # *began* — not after the swap this rule is about to write.
         #
@@ -575,7 +759,17 @@ def a_snake_charmer_takes_the_star(world, state):
         before = _before(info.night, phase)
         # Held, or a Philosopher working it — nobody *holds* the character
         # then, and the swap plainly happened.
-        charmer = _whoever_works(world, state, "SnakeCharmer", before)
+        #
+        # **The seat that said so, if it has the ability.** With a
+        # Philosopher that took the Snake Charmer there are two seats
+        # with it — the Philosopher and the real one it made drunk — and
+        # asking for "whoever works it" found the drunk one first. The
+        # swap landed on the wrong seat and the real Demon was nowhere
+        # (29.09.2026).
+        charmer = (info.player
+                   if _has_ability(world, state, info.player,
+                                   "SnakeCharmer", before)
+                   else _whoever_works(world, state, "SnakeCharmer", before))
         demon = world.demon_at(before)
         if charmer is None or demon is None or charmer == demon:
             continue
@@ -642,8 +836,17 @@ def a_swapped_snake_charmer_is_poisoned_for_good(world, state, night):
         # From the day after the swap, which is when it took effect.
         if phase_index(f"N{night}") < phase_index(f"D{info.night}"):
             continue
-        seat = world.find_at("SnakeCharmer", f"N{night}")
-        if seat is None:
+        # The old Demon — the seat it pointed at — rather than the first
+        # seat holding a Snake Charmer, which can be the real one a
+        # Philosopher made drunk.
+        seat = info.target
+        # The *player* is poisoned, whatever they hold later — a Pit-Hag
+        # that turned the swapped Snake Charmer into a Sweetheart left
+        # them poisoned all the same (29.09.2026). Only in a story where
+        # the swap happened, which is the change written on that seat.
+        if not any(c.seat == seat and c.role == "SnakeCharmer"
+                   and c.phase == f"N{info.night}"
+                   for c in getattr(world, "changes", ())):
             continue
         out.append(impairment.Source("Snake Charmer", frozenset({seat}),
                                      capacity=1, cost=1.0, repeat_cost=1.0))
@@ -759,9 +962,26 @@ def demon_lineages(world, state, cap=24):
         # third wiki example is exactly this Zombuul executed twice.
         if phases and view.role_at(holder, phases[0]) == "Zombuul":
             phases = phases[1:]
+        # Not yet, on a pass that only looks this far (possible_timelines).
+        horizon = getattr(state, "_horizon", None)
+        if horizon is not None:
+            phases = [p for p in phases if int(p[1:]) <= horizon]
         phase = phases[0] if phases else None
-        if phase is not None and view.role_at(holder, phase) is not None \
-                and TEAM[view.role_at(holder, phase)] != "demon":
+        # Moved sideways before it died — or before the board ends, if it
+        # never did. A Snake Charmer swap hands the star across without a
+        # death, and the walk stopped there: whoever the charmer became
+        # was never walked, so when *that* Demon died — a Fang Gu jumping
+        # into an Outsider, an execution — nobody could inherit and the
+        # world was impossible (29.09.2026). Follow the star instead.
+        check = phase if phase is not None else (
+            f"D{horizon}" if horizon is not None else state.final_phase())
+        if view.role_at(holder, check) is not None \
+                and TEAM[view.role_at(holder, check)] != "demon":
+            successor = view.demon_at(check)
+            if successor is not None and successor != holder \
+                    and successor not in held:
+                walk(view, successor, so_far, after, held | {holder})
+                return
             found.append(so_far)
             return
         # A handover has to happen *later* than the one before it, and no
@@ -857,6 +1077,16 @@ def the_demon_kills(world, state, night):
     # impossible.
     reachable = any(demon in source.seats
                     for source in impairment.sources_on(world, state, night))
+    # Not on a night a Sweetheart dies. The Demon kills her working, and
+    # her drunkenness can land on the Demon the moment she falls — still
+    # tonight, before the later readings. The plan knows whole nights, so
+    # "working" and "drunk" on one night read as a contradiction, and a
+    # Vortox that killed its Sweetheart made the board impossible
+    # (29.09.2026). Left unasked tonight: permissive, never wrong.
+    if any(f"N{night}" in state.died_at(p)
+           and world.role_at(p, f"N{night}") == "Sweetheart"
+           for p in range(state.n_players)):
+        reachable = False
     return [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON,
         seats=frozenset(range(state.n_players)),   # a corpse is a valid aim
@@ -1323,6 +1553,16 @@ def an_acrobat_may_fall(world, state, night):
     return [death_causes.Cause(name="Acrobat", kind=death_causes.OTHER,
                                seats=frozenset({seat}), capacity=1,
                                must_fire=False)]
+
+
+def _has_ability(world, state, seat, role, phase):
+    """Does this seat have that ability — held, or taken by a Philosopher?"""
+    if world.role_at(seat, phase) == role:
+        return True
+    taken = (state.philosophies() or {}).get(seat)
+    return bool(taken and taken[0] == role
+                and world.role_at(seat, phase) == "Philosopher"
+                and phase_index(phase) >= phase_index(taken[1]))
 
 
 def _whoever_works(world, state, role, phase):
@@ -1868,6 +2108,9 @@ def _plain_failures(world, state, outcome=None):
     # work rather than a call in the right place.
 
     failures = defaultdict(set)
+    # Nights where a reading came out true under a Vortox: {night:
+    # (vortox, the readings' sources)}. Either will do — see `_explain`.
+    state._vortox_or = vortox_or = {}
     working = {}
     ft_infos = []
     invented = 1.0
@@ -2041,8 +2284,11 @@ def _plain_failures(world, state, outcome=None):
         # one where it could not. Exactly backwards, and the reason the
         # swap used to be dated a phase late.
         acted = _before(info.night, phase)
+        # Held then, **or taken by a Philosopher then** — a Philosopher
+        # that took the Snake Charmer and swapped is the Demon by `phase`,
+        # and its own row read as invented (29.09.2026).
         if seat is not None and world.role_at(seat, phase) != role \
-                and world.role_at(seat, acted) == role:
+                and _has_ability(world, state, seat, role, acted):
             held = ability_state(world, seat, role, acted, gained, vortoxed)
         else:
             held = (ABSENT if seat is None
@@ -2103,7 +2349,15 @@ def _plain_failures(world, state, outcome=None):
                         if hasattr(info, "is_true")
                         else info.holds(world, state, rh_for(info), seat))
             if was_true:
-                failures[info.night].add(vortox)
+                # The Vortox was not working — **or** the seat that said
+                # it was droisoned, since a droisoned Townsfolk is told
+                # anything and anything includes the truth. Only the
+                # first was offered, so a drunk Oracle that happened to
+                # say something true made the world impossible
+                # (29.09.2026). The plan holds sets, not disjunctions, so
+                # both are tried there, a night at a time.
+                got = vortox_or.setdefault(info.night, (vortox, set()))
+                got[1].add(seat)
                 outcome[idx] = EXCUSED
             else:
                 outcome[idx] = HELD
@@ -2221,6 +2475,18 @@ def a_vigormortis_poisons_beside_its_dead_minions(world, state, night):
         if not gone or phase_index(min(gone, key=phase_index)) > \
                 phase_index(phase):
             continue                      # still standing
+        # Only a Minion **it killed**: at night, while a Vigormortis was
+        # the Demon. Every dead Minion counted, an executed one too — the
+        # simulator read the card the same way, so neither noticed. Found
+        # when a Snake Charmer took the Vigormortis's seat and the
+        # simulator, reading the deal, stopped poisoning altogether
+        # (29.09.2026).
+        first = min(gone, key=phase_index)
+        if first[0].upper() != "N":
+            continue
+        killer = world.demon_at(first)
+        if killer is None or world.role_at(killer, first) != "Vigormortis":
+            continue
         beside = _nearest_townsfolk(world, state, who, phase,
                                     state.n_players)
         if beside:
@@ -2303,17 +2569,21 @@ def a_sweetheart_leaves_somebody_drunk(world, state, night):
     """
     if not _in_bag(state, "Sweetheart"):
         return []
-    seat = world.find("Sweetheart")
-    if seat is None:
-        return []
-    gone = state.died_at(seat)
-    if not gone:
-        return []
-    first = min(gone, key=phase_index)
-    if phase_index(first) > phase_index(f"N{night}"):
-        return []                         # it had not died yet
-    return [impairment.Source("Sweetheart", frozenset(range(state.n_players)),
-                              capacity=1, cost=1.0, repeat_cost=1.0)]
+    # Whoever was the Sweetheart when they died — dealt one, or made one by
+    # a Pit-Hag. Only the dealt one was looked for (29.09.2026).
+    out = []
+    for seat in range(state.n_players):
+        gone = [p for p in state.died_at(seat)
+                if world.role_at(seat, p) == "Sweetheart"]
+        if not gone:
+            continue
+        first = min(gone, key=phase_index)
+        if phase_index(first) > phase_index(f"N{night}"):
+            continue                      # it had not died yet
+        out.append(impairment.Source(
+            "Sweetheart", frozenset(range(state.n_players)),
+            capacity=1, cost=1.0, repeat_cost=1.0))
+    return out
 
 
 impairment.source_rule(
@@ -2750,6 +3020,7 @@ def _explain(world, state, outcome=None):
         world, state, outcome)
     if failures is None:
         return None
+    vortox_or = getattr(state, "_vortox_or", None) or {}
 
     # Every way the nights could have gone. Each brings its own demands
     # on who was impaired and who was working, so the impairment plan is
@@ -2815,7 +3086,27 @@ def _explain(world, state, outcome=None):
                 best = got
         return best
 
-    ceiling = settle(failures)
+    def settle_either(readings):
+        """`settle`, trying each way a true reading under a Vortox can be
+        excused: per night, the Vortox off, or every source droisoned.
+        One of the two covers the whole night, so this is two choices a
+        night rather than one per reading."""
+        nights = sorted(vortox_or)
+        if not nights:
+            return settle(readings)
+        best = None
+        for picks in product((True, False), repeat=min(len(nights), 6)):
+            trial = {n: set(seats) for n, seats in readings.items()}
+            for night, off in zip(nights, picks + (True,) * 6):
+                vortox, sources = vortox_or[night]
+                trial.setdefault(night, set()).update(
+                    {vortox} if off else sources)
+            got = settle(trial)
+            if got is not None and (best is None or got > best):
+                best = got
+        return best
+
+    ceiling = settle_either(failures)
     if ceiling is None:
         return None
     if not ft_infos:
@@ -2844,7 +3135,7 @@ def _explain(world, state, outcome=None):
             else:
                 combined.setdefault(info.night, set()).add(src)
                 marks[idx] = EXCUSED
-        cost = settle(combined)
+        cost = settle_either(combined)
         if cost is None:
             continue
         if best is None or cost > best:

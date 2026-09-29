@@ -95,8 +95,18 @@ export const change = (phase, seat, role = null, side = null) =>
  */
 export class Timeline {
   constructor(world, changes = []) {
+    // A timeline laid over a timeline is one timeline; nested, the
+    // changes underneath were dropped. See worlds.py.
+    if (world instanceof Timeline) {
+      changes = [...world.changes, ...changes];
+      world = world.world;
+    }
     this.world = world;
-    this.changes = changes;
+    // In time order, stable: questions take the last change that applies,
+    // front to back. See worlds.py.
+    this.changes = changes.map((c, i) => [c, i])
+      .sort((a, b) => phaseIndex(a[0].phase) - phaseIndex(b[0].phase) || a[1] - b[1])
+      .map(([c]) => c);
   }
 
   // Questions about the whole game go straight through; only questions
