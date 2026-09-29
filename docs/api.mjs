@@ -63,7 +63,7 @@ export const INFO_SOURCES = {
   SnakeCharmerChoice: "SnakeCharmer", PitHagChoice: "PitHag",
   MoonchildChoice: "Moonchild", ExorcistChoice: "Exorcist",
   InnkeeperChoice: "Innkeeper", SailorChoice: "Sailor",
-  OgreChoice: "Ogre",
+  OgreChoice: "Ogre", CerenovusMadness: "Cerenovus",
 };
 
 // --------------------------------------------------------------------
@@ -283,7 +283,8 @@ export function readBoard(payload) {
                          "GamblerGuess", "MoonchildChoice",
                          "SnakeCharmerChoice", "PitHagChoice",
                          "InnkeeperChoice", "SailorChoice", "ExorcistChoice",
-                         "PhilosopherChoice", "CourtierChoice"];
+                         "PhilosopherChoice", "CourtierChoice",
+                         "CerenovusMadness"];
     const speaker = Number(row.player || 0);
     const night = Number(row.night || 1);
     if ((deaths[speaker] || []).includes(`N${night}`) &&

@@ -466,8 +466,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # The Ogre picks late on its first night, after every reading.
         if night == 1:
             _ogre_picks(d, heard, rng)
+        _cerenovus_maddens(d, night, heard, rng)
 
         if night < nights:
+            # A Savant visits the Storyteller in daylight.
+            _savant_visits(d, night, heard, rng)
+
             # The day happens first: nominations, then votes, then the
             # execution that follows from them.
             # A public guess at the evil team, before the day's business.
@@ -2078,14 +2082,8 @@ def _for_role(d, seat, role, night, rng):
                 right += 1
         return JugglerInfo(night, seat, guesses=tuple(guesses), count=right)
 
-    if role == "Savant" and night == 1:
-        # Two statements a day, one true and one false — and the content
-        # can be anything at all, which is why the solver keeps the words
-        # and does not weigh them. The simulator says something shaped
-        # like a Savant statement and no more.
-        return SavantInfo(night, seat,
-                          first=_savant_line(d, rng, True),
-                          second=_savant_line(d, rng, False))
+    # A Savant is a day ability: see `_savant_visits`, run once the
+    # night is over.
 
     if role == "Artist" and night == 1:
         # One yes-or-no question, once a game. Also kept and not weighed.
@@ -2553,6 +2551,110 @@ def _shown_as(d, seat, team, rng):
             "minion": MINIONS, "demon": DEMONS}[team]
     spare = [k for k in pool if k not in d.roles]
     return rng.choice(spare or pool)
+
+
+def _cerenovus_maddens(d, night, heard, rng):
+    """The Cerenovus names a player and a good character each night.
+
+    Nothing in the game changes: madness is a matter of what somebody
+    says tomorrow, and the simulator's claims do not play along. What can
+    reach the table is the chosen player breaking madness to say they
+    were shown the Cerenovus — a good one, now and then.
+    """
+    from botc.info import CerenovusMadness
+    phase = f"N{night}"
+    for seat in range(d.n):
+        if d.role_at(seat, phase) != "Cerenovus":
+            continue
+        if seat not in d.alive_at(phase):
+            continue
+        target = rng.choice([p for p in range(d.n) if p != seat])
+        good = list(d.script.townsfolk) + list(d.script.outsiders)
+        role = rng.choice(good)
+        if d.side_at(target, phase) == "good" and rng.random() < 0.25:
+            heard.append(CerenovusMadness(night, target, role=role))
+
+
+def _savant_visits(d, night, heard, rng):
+    """Each day a Savant may ask the Storyteller for two things, one true
+    and one false.
+
+    Mostly in the shapes the solver can check (`SAVANT_KINDS`), judged
+    here by what the seats *are* — this simulator's own reading, not the
+    solver's function — so the two can disagree. Now and then only words,
+    which the solver keeps and does not weigh.
+
+    Under a working Vortox both are false. A droisoned Savant is told
+    whatever the Storyteller likes. Dead, it asks nothing.
+    """
+    phase = f"D{night}"
+    for seat in range(d.n):
+        if d.role_at(seat, phase) != "Savant":
+            continue
+        if seat not in d.alive_at(phase) or rng.random() < 0.3:
+            continue
+        if rng.random() < 0.2:
+            heard.append(SavantInfo(night, seat,
+                                    first=_savant_line(d, rng, True),
+                                    second=_savant_line(d, rng, False)))
+            continue
+        if not d.working(seat, night):
+            wanted = [rng.random() < 0.5, rng.random() < 0.5]
+        elif _vortox_working(d, night):
+            wanted = [False, False]
+        else:
+            wanted = [True, False]
+            rng.shuffle(wanted)
+        said = [_savant_statement(d, seat, phase, truth, rng)
+                for truth in wanted]
+        if None in said:
+            continue
+        heard.append(SavantInfo(night, seat,
+                                first=said[0][1], second=said[1][1],
+                                first_says=said[0][0],
+                                second_says=said[1][0]))
+
+
+def _savant_statement(d, seat, phase, truth, rng):
+    """One statement with the given truth, and some words for it."""
+    from botc.roles import TEAM
+    others = [p for p in range(d.n) if p != seat]
+    roles = [d.role_at(p, phase) for p in range(d.n)]
+    good = list(d.script.townsfolk) + list(d.script.outsiders)
+    for _ in range(40):
+        kind = rng.choice(("evil", "good", "same", "different", "is",
+                           "in_play", "not_in_play", "outsiders",
+                           "demon_among"))
+        if kind in ("evil", "good"):
+            p = rng.choice(others)
+            says = {"kind": kind, "seat": p}
+            real = (d.side_at(p, phase) == "evil") == (kind == "evil")
+        elif kind in ("same", "different"):
+            a, b = rng.sample(range(d.n), 2)
+            says = {"kind": kind, "a": a, "b": b}
+            real = ((d.side_at(a, phase) == d.side_at(b, phase))
+                    == (kind == "same"))
+        elif kind == "is":
+            p = rng.choice(others)
+            role = rng.choice([roles[p]] + good)
+            says = {"kind": kind, "seat": p, "role": role}
+            real = roles[p] == role
+        elif kind in ("in_play", "not_in_play"):
+            role = rng.choice(good + list(d.script.minions))
+            says = {"kind": kind, "role": role}
+            real = (role in roles) == (kind == "in_play")
+        elif kind == "outsiders":
+            actual = sum(1 for r in roles if TEAM[r] == "outsider")
+            count = rng.choice([actual, max(actual - 1, 0), actual + 1])
+            says = {"kind": kind, "count": count}
+            real = count == actual
+        else:
+            seats = sorted(rng.sample(range(d.n), 3))
+            says = {"kind": kind, "seats": seats}
+            real = d.demon_at(phase) in seats
+        if real == truth:
+            return says, f"{kind} {says}"
+    return None
 
 
 def _savant_line(d, rng, true_one):

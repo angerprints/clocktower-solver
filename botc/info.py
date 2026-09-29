@@ -1066,30 +1066,137 @@ class JugglerInfo(Info):
         return right == self.count
 
 
+# What a Savant can be told, when it is one of these. Anything else stays
+# words. Each is something the board can answer, and the list is kept
+# short on purpose: a statement nobody types is a statement nobody needs.
+SAVANT_KINDS = ("evil", "good", "same", "different", "demon_among",
+                "in_play", "not_in_play", "outsiders", "is")
+
+
+def savant_truths(says, w, phase, real=False):
+    """Which answers could this statement have had?
+
+    A set of booleans, because registration can make one statement
+    either: a Recluse "is evil" is true or false as the Storyteller
+    likes. With `real`, what the seat actually is — the Vortox's question,
+    since a misregistered statement is already false.
+    """
+    kind = says.get("kind")
+    n = len(getattr(w, "roles", ()))
+
+    def evil(seat):
+        if real:
+            return {bool(w.evil_at(seat, phase))}
+        return set(evil_registrations(w.role_at(seat, phase),
+                                      w.alignment_at(seat, phase)))
+
+    if kind == "evil":
+        return evil(int(says["seat"]))
+    if kind == "good":
+        return {not v for v in evil(int(says["seat"]))}
+    if kind in ("same", "different"):
+        want_same = kind == "same"
+        return {(a == b) == want_same
+                for a in evil(int(says["a"])) for b in evil(int(says["b"]))}
+    if kind == "is":
+        seat, role = int(says["seat"]), says["role"]
+        actual = w.role_at(seat, phase)
+        out = {actual == role}
+        if not real and registers_as_role(actual, role):
+            out.add(True)
+        return out
+    if kind in ("in_play", "not_in_play"):
+        role = says["role"]
+        held = [w.role_at(p, phase) for p in range(n)]
+        there = role in held
+        out = {there}
+        if not real and any(registers_as_role(r, role) for r in held):
+            out.add(True)
+        return out if kind == "in_play" else {not v for v in out}
+    if kind == "demon_among":
+        seats = {int(x) for x in says.get("seats") or ()}
+        demon = w.demon_at(phase)
+        out = {demon in seats}
+        if not real and any(
+                "demon" in CHARACTERS[w.role_at(p, phase)].registers
+                for p in seats):
+            out.add(True)
+        return out
+    if kind == "outsiders":
+        count = int(says["count"])
+        teams = [(w.role_at(p, phase), TEAM[w.role_at(p, phase)])
+                 for p in range(n)]
+        actual = sum(1 for _r, t in teams if t == "outsider")
+        if real:
+            return {actual == count}
+        # Outsiders that can read as something else, and others that can
+        # read as an Outsider, widen what the count could have been.
+        lo = sum(1 for r, t in teams if t == "outsider"
+                 and not (CHARACTERS[r].registers - {"outsider"}))
+        hi = actual + sum(1 for r, t in teams if t != "outsider"
+                          and "outsider" in CHARACTERS[r].registers)
+        out = set()
+        if lo <= count <= hi:
+            out.add(True)
+        if not (lo == hi == count):
+            out.add(False)
+        return out
+    raise ValueError(f"not a Savant statement: {kind!r}")
+
+
 @dataclass
 class SavantInfo(Info):
-    """Two statements, one true and one false — written down, not solved.
+    """Two statements, one true and one false.
 
-    A Savant's pair can be anything from "the Demon sits beside an
-    Outsider" to "no Minion has yet chosen a man", and checking arbitrary
-    claims about a board is a different program from this one. So the
-    words are kept and shown, and the solver does not pretend to weigh
-    them.
+    Written down as words, always. A Savant's pair can be anything from
+    "the Demon sits beside an Outsider" to "no Minion has yet chosen a
+    man", and checking arbitrary claims about a board is a different
+    program from this one — so words alone are kept and shown and not
+    weighed.
 
-    It is not nothing, though: recording one is still somebody claiming
-    to have visited the Storyteller, so a world with no Savant in it pays
-    for that claim the same as any other.
+    But most of what a Storyteller actually says is one of a handful of
+    shapes: somebody is evil, two players are on the same side, a
+    character is in play, there are so many Outsiders. When *both*
+    statements are entered as one of those (`first_says`,
+    `second_says`, see `SAVANT_KINDS`), the row is weighed: exactly one
+    of them was true. Under a Vortox both were false, and a droisoned
+    Savant can have been told anything.
+
+    Read on the day of the visit: the row's `night` is the day, and
+    poison from that night reaches it, as it reaches the whole day.
+
+    A Savant with nothing weighed is still not nothing: recording one is
+    somebody claiming to have visited the Storyteller, so a world with no
+    Savant in it pays for that claim the same as any other.
     """
 
     first: str = ""
     second: str = ""
+    first_says: Optional[dict] = None
+    second_says: Optional[dict] = None
     source_role = "Savant"
 
     def weighed(self, state):
-        return False
+        return bool(self.first_says) and bool(self.second_says)
+
+    def _phase(self):
+        return f"D{self.night}"
 
     def holds(self, w, s, rh, seat=None):
-        return True                    # the words are kept, not weighed
+        if not self.weighed(s):
+            return True                # the words are kept, not weighed
+        one = savant_truths(self.first_says, w, self._phase())
+        two = savant_truths(self.second_says, w, self._phase())
+        return any(a != b for a in one for b in two)
+
+    def is_true(self, w, s, seat=None):
+        """For the Vortox: was anything in it *really* true? Under a
+        working Vortox both statements are false."""
+        if not self.weighed(s):
+            return False
+        return (True in savant_truths(self.first_says, w, self._phase(), True)
+                or True in savant_truths(self.second_says, w, self._phase(),
+                                         True))
 
 
 @dataclass
@@ -1204,6 +1311,33 @@ class OgreChoice(Info):
 
     def holds(self, w, s, rh, seat=None):
         return True
+
+
+@dataclass
+class CerenovusMadness(Info):
+    """"The Cerenovus made me mad about being the X", said by the one it
+    chose.
+
+    Madness itself leaves no mark: a player playing along is a good
+    player lying, and the table cannot see that. What it can hear is
+    somebody breaking madness to say they were shown the Cerenovus — and
+    that says a Cerenovus is in play and was alive that night. The words
+    can be made up like any other; a world with no Cerenovus pays for
+    them as invented.
+
+    The character has to be a good one: the Cerenovus picks a Townsfolk
+    or an Outsider. Its own choice, so a Vortox does not reach it.
+    """
+
+    is_a_choice = True
+
+    role: str = ""
+    source_role = "Cerenovus"
+
+    def holds(self, w, s, rh, seat=None):
+        if TEAM.get(self.role) not in ("townsfolk", "outsider"):
+            return False
+        return seat is None or seat in s.alive_set(f"N{self.night}")
 
 
 @dataclass

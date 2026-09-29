@@ -4,7 +4,7 @@
 
 0. ~~Zuhause und Auslieferung~~ erledigt: Quellcode auf GitHub, Seite aus docs/, Push statt ZIP
 1. ~~Unabhängiger Schiedsrichter~~ erledigt: 440 Engine-Partien, vier Regelfehler im Solver behoben
-2. Deine Skripte vollständig: ~~Ogre, Marionette, Mastermind, S&V-Fehlfälle~~ erledigt; als Nächstes Mutant, Cerenovus, Savant (offen: S&V-Seed 181 mit 5 Nächten)
+2. ~~Deine Skripte vollständig~~ erledigt: Ogre, Marionette, Mastermind, S&V-Fehlfälle, Mutant, Cerenovus, Savant. Offen: zwei seltene Philosoph-Schlangenbeschwörer-Partien, und S&V löst seit dem Mutant langsamer
 3. Gemeinsames Regelwissen, wenn das Spiel bei v2 ankommt
 4. Eine echte Partie
 

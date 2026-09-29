@@ -51,6 +51,33 @@ def _int(d, key, default=0):
     return int(v)
 
 
+
+def _savant_says(said):
+    """One Savant statement in a shape the solver can check, or None.
+
+    Anything not recognised comes back as None, which keeps the row as
+    words rather than refusing the board: a Savant's pair is allowed to
+    be anything, and only the shapes in `SAVANT_KINDS` are weighed.
+    """
+    if not isinstance(said, dict) or said.get("kind") not in I.SAVANT_KINDS:
+        return None
+    out = {"kind": said["kind"]}
+    for key in ("seat", "a", "b", "count"):
+        if said.get(key) is not None and said.get(key) != "":
+            out[key] = int(said[key])
+    if said.get("role"):
+        out["role"] = str(said["role"])
+    if said.get("seats") is not None:
+        out["seats"] = [int(x) for x in said["seats"]]
+    need = {"evil": ("seat",), "good": ("seat",), "same": ("a", "b"),
+            "different": ("a", "b"), "is": ("seat", "role"),
+            "in_play": ("role",), "not_in_play": ("role",),
+            "outsiders": ("count",), "demon_among": ("seats",)}
+    if any(key not in out for key in need[out["kind"]]):
+        return None
+    return out
+
+
 def build_info(d):
     kind = d["type"]
     night = _int(d, "night", 1)
@@ -132,6 +159,9 @@ def build_info(d):
                               target=_int(d, "target"))
     if kind == "OgreChoice":
         return I.OgreChoice(night, player, trust, target=_int(d, "target"))
+    if kind == "CerenovusMadness":
+        return I.CerenovusMadness(night, player, trust,
+                                  role=str(d.get("role") or ""))
     if kind == "PitHagChoice":
         return I.PitHagChoice(night, player, trust, target=_int(d, "target"),
                               role=d["role"])
@@ -160,7 +190,9 @@ def build_info(d):
     if kind == "SavantInfo":
         return I.SavantInfo(night, player, trust,
                             first=str(d.get("first") or ""),
-                            second=str(d.get("second") or ""))
+                            second=str(d.get("second") or ""),
+                            first_says=_savant_says(d.get("first_says")),
+                            second_says=_savant_says(d.get("second_says")))
     if kind == "ArtistInfo":
         return I.ArtistInfo(night, player, trust,
                             question=str(d.get("question") or ""),
@@ -351,7 +383,7 @@ def run_solve(payload):
                     "GamblerGuess", "MoonchildChoice",
                     "SnakeCharmerChoice", "PitHagChoice", "InnkeeperChoice",
                     "SailorChoice", "ExorcistChoice", "PhilosopherChoice",
-                    "CourtierChoice")
+                    "CourtierChoice", "CerenovusMadness")
     for d in raw_infos:
         speaker = _int(d, "player", 0)
         night = _int(d, "night", 1)
@@ -602,7 +634,7 @@ INFO_SOURCES = {
     "SnakeCharmerChoice": "SnakeCharmer", "PitHagChoice": "PitHag",
     "MoonchildChoice": "Moonchild", "ExorcistChoice": "Exorcist",
     "InnkeeperChoice": "Innkeeper", "SailorChoice": "Sailor",
-    "OgreChoice": "Ogre",
+    "OgreChoice": "Ogre", "CerenovusMadness": "Cerenovus",
 }
 
 

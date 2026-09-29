@@ -490,10 +490,7 @@ export const DATA = {
    "team": "townsfolk",
    "wake": [
     "never"
-   ],
-   "modelled": false,
-   "note": "its pair of statements is kept but not weighed: they can be anything at all, and checking arbitrary claims about a board is a different program from this one",
-   "handled": "partly"
+   ]
   },
   "Seamstress": {
    "id": "seamstress",
@@ -562,10 +559,7 @@ export const DATA = {
    "wake": [
     "never"
    ],
-   "modelled": false,
-   "note": "madness leaves no mark on the board: being executed for breaking it looks like any other execution. If the table knows that is what happened, mark the seat as confirmed",
-   "handled": "not",
-   "settled": true
+   "hides": true
   },
   "Sweetheart": {
    "id": "sweetheart",
@@ -623,12 +617,8 @@ export const DATA = {
    "wake": [
     "every"
    ],
-   "modelled": false,
-   "note": "madness is a social constraint and leaves no mark of its own. What the table *can* see is somebody executed for breaking ceremadness, and marking that death says a Cerenovus is about — which is the only handle there is",
    "chooses": true,
    "nights": "every",
-   "handled": "not",
-   "settled": true,
    "first_night": 25,
    "other_night": 15
   },

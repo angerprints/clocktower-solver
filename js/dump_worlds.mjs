@@ -118,6 +118,14 @@ add("easter-12", 12,
      "Monk", "Undertaker", "Virgin", "Mayor", "Ogre", "Saint"],
     {script: easter});
 
+const SV = scripts.SECTS_AND_VIOLETS;
+// A Mutant stands behind any Townsfolk claim, good lies or not, and is
+// not held to what it says about waking.
+add("sv-9", 9, ["Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler", "Klutz", "Barber", "Seamstress", "Sweetheart"], {script: SV});
+add("sv-9-wake", 9, ["", "Dreamer", "Oracle", "Sage", "Juggler", "Klutz",
+                     "Barber", "Seamstress", "Sweetheart"],
+    {script: SV, wakes: {0: "every"}});
+
 const narrow = scripts.fromIds("A narrow script", [
   "washerwoman", "librarian", "investigator", "chef", "empath",
   "recluse", "saint", "poisoner", "spy", "imp"]);
@@ -149,6 +157,9 @@ for (const [tag, claim, opts] of [
   ["tb-confirmed", "Empath", {certainty: "confirmed"}],
   ["bmr-townsfolk", "Chambermaid", {script: BMR}],
   ["bmr-lunatic-bluff", "Grandmother", {script: BMR}],
+  ["sv-townsfolk", "Oracle", {script: SV}],
+  ["sv-outsider", "Sweetheart", {script: SV}],
+  ["sv-good-lies", "Oracle", {script: SV, allowGoodLies: true}],
 ]) {
   const script = opts.script || TB;
   candidateLists[tag] = candidates(

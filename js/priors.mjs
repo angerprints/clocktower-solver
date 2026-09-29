@@ -19,6 +19,9 @@ export const PRIORS = {
   // team's information for no gain.
   OUTSIDER_HIDING_PENALTY: 0.35,
   TOWNSFOLK_LIE_PENALTY: 0.02,
+  // A Cerenovus exists to make good players lie, so in a world with one
+  // alive a good Townsfolk's false claim is madness — up to one a night.
+  CERENOVUS_MADNESS_PENALTY: 0.25,
 
   // Evil is handed bluffs drawn from characters that are NOT in play, and
   // the team knows each other, so a clean bluff collides with nothing.
@@ -75,6 +78,7 @@ export const PRIORS = {
 export const PRIOR_RANGES = {
   OUTSIDER_HIDING_PENALTY: [0.15, 0.60],
   TOWNSFOLK_LIE_PENALTY: [0.005, 0.10],
+  CERENOVUS_MADNESS_PENALTY: [0.10, 0.50],
   BLUFF_COLLISION_PENALTY: [0.10, 0.60],
   NIGHT_DEATH_EVIL_PENALTY: [0.02, 0.15],
   POISON_HIT_PENALTY: [0.20, 0.55],

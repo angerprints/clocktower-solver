@@ -55,6 +55,13 @@ export const thinksItIsEvil = role =>
   CHARACTERS[role].believes &&
   CHARACTERS[role].believes_from.some(t => t === "minion" || t === "demon");
 
+/** Is this a good character that cannot say what it is?
+ *
+ * The Mutant: claiming to be an Outsider might get it executed, so it
+ * claims a Townsfolk instead — every time, and without choosing to.
+ */
+export const mustHide = role => !!CHARACTERS[role].hides;
+
 /** Which characters this one could have been handed to believe in.
  *
  * Empty for everybody who knows what they are.

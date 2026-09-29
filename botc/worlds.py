@@ -17,7 +17,7 @@ from .catalogue import CHARACTERS
 from .info import phase_index
 from .roles import (EVIL, TEAM, SETUP, alignment, believed_tokens,
                     believes_another, is_evil, knows_what_it_is,
-                    thinks_it_is_evil, wake_fits)
+                    must_hide, thinks_it_is_evil, wake_fits)
 from .scripts import DEFAULT
 
 
@@ -298,6 +298,7 @@ def _candidates(claim, allow_good_lies, certainty="", allowed=None,
     if wake and certainty not in ("hiding", "unsure"):
         opts = [o for o in opts
                 if (is_evil(o[0]) and knows_what_it_is(o[0]))
+                or must_hide(o[0])
                 or wake_fits(o[0], o[1], wake)]
 
     if allowed is not None:
@@ -375,6 +376,10 @@ def _candidates_from_claim(claim, allow_good_lies, certainty="",
         if allow_good_lies:
             out.extend((r, None) for r in outsiders
                        if not believes_another(r))
+        else:
+            # A Mutant is behind a Townsfolk claim whether or not good
+            # lies are allowed: it has no other claim it can safely make.
+            out.extend((r, None) for r in outsiders if must_hide(r))
         return out
 
     if claim in outsiders:

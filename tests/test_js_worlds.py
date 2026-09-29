@@ -120,6 +120,13 @@ def python_side():
         ["Noble", "Washerwoman", "Clockmaker", "Grandmother", "Artist",
          "Empath", "Monk", "Undertaker", "Virgin", "Mayor", "Ogre", "Saint"],
         script=easter)
+    sv = scripts.SECTS_AND_VIOLETS
+    # A Mutant stands behind any Townsfolk claim, good lies or not, and
+    # is not held to what it says about waking.
+    add("sv-9", 9, ["Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler", "Klutz", "Barber", "Seamstress", "Sweetheart"], script=sv)
+    add("sv-9-wake", 9, ["", "Dreamer", "Oracle", "Sage", "Juggler",
+                         "Klutz", "Barber", "Seamstress", "Sweetheart"],
+        script=sv, wakes={0: "every"})
     add("narrow-7", 7,
         ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath",
          "Recluse", "Saint"], script=narrow)
@@ -147,6 +154,10 @@ def python_side():
         ("tb-confirmed", "Empath", {"certainty": "confirmed"}),
         ("bmr-townsfolk", "Chambermaid", {"script": BMR}),
         ("bmr-lunatic-bluff", "Grandmother", {"script": BMR}),
+        ("sv-townsfolk", "Oracle", {"script": scripts.SECTS_AND_VIOLETS}),
+        ("sv-outsider", "Sweetheart", {"script": scripts.SECTS_AND_VIOLETS}),
+        ("sv-good-lies", "Oracle", {"script": scripts.SECTS_AND_VIOLETS,
+                                    "allow_good_lies": True}),
     ):
         script = kw.pop("script", TB)
         lists[tag] = sorted(

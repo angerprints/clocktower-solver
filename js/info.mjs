@@ -451,17 +451,113 @@ export const JugglerInfo = define("JugglerInfo", "Juggler",
     return right === this.count;
   });
 
-/** Two statements, one true and one false — written down, not solved.
+/** What a Savant can be told, when it is one of these. Anything else
+ * stays words. See info.py. */
+export const SAVANT_KINDS = ["evil", "good", "same", "different",
+  "demon_among", "in_play", "not_in_play", "outsiders", "is"];
+const SAVANT_NEEDS = {
+  evil: ["seat"], good: ["seat"], same: ["a", "b"], different: ["a", "b"],
+  is: ["seat", "role"], in_play: ["role"], not_in_play: ["role"],
+  outsiders: ["count"], demon_among: ["seats"]};
+
+/** One statement in a checkable shape, or null — the same tidying the
+ * Python server does on the way in (app.py `_savant_says`). */
+export function savantSays(said) {
+  if (!said || typeof said !== "object" || !SAVANT_KINDS.includes(said.kind))
+    return null;
+  const out = {kind: said.kind};
+  for (const key of ["seat", "a", "b", "count"])
+    if (said[key] !== null && said[key] !== undefined && said[key] !== "")
+      out[key] = Number(said[key]);
+  if (said.role) out.role = String(said.role);
+  if (said.seats !== null && said.seats !== undefined)
+    out.seats = said.seats.map(Number);
+  return SAVANT_NEEDS[out.kind].every(k => k in out) ? out : null;
+}
+
+/** Which answers could this statement have had? A set of booleans,
+ * because registration can make one either. With `real`, what the seat
+ * actually is — the Vortox's question. */
+export function savantTruths(says, w, phase, real = false) {
+  const n = w.roles.length;
+  const evil = seat => real ? [!!w.evilAt(seat, phase)]
+    : evilRegistrations(w.roleAt(seat, phase), w.alignmentAt(seat, phase));
+  const set = xs => new Set(xs);
+  switch (says.kind) {
+    case "evil": return set(evil(says.seat));
+    case "good": return set(evil(says.seat).map(v => !v));
+    case "same": case "different": {
+      const wantSame = says.kind === "same", out = [];
+      for (const a of evil(says.a)) for (const b of evil(says.b))
+        out.push((a === b) === wantSame);
+      return set(out);
+    }
+    case "is": {
+      const actual = w.roleAt(says.seat, phase);
+      const out = set([actual === says.role]);
+      if (!real && registersAsRole(actual, says.role)) out.add(true);
+      return out;
+    }
+    case "in_play": case "not_in_play": {
+      const held = [];
+      for (let p = 0; p < n; p++) held.push(w.roleAt(p, phase));
+      const out = set([held.includes(says.role)]);
+      if (!real && held.some(r => registersAsRole(r, says.role))) out.add(true);
+      return says.kind === "in_play" ? out : set([...out].map(v => !v));
+    }
+    case "demon_among": {
+      const seats = new Set(says.seats);
+      const out = set([seats.has(w.demonAt(phase))]);
+      if (!real && [...seats].some(
+            p => CHARACTERS[w.roleAt(p, phase)].registers.includes("demon")))
+        out.add(true);
+      return out;
+    }
+    case "outsiders": {
+      const roles = [];
+      for (let p = 0; p < n; p++) roles.push(w.roleAt(p, phase));
+      const actual = roles.filter(r => TEAM[r] === "outsider").length;
+      if (real) return set([actual === says.count]);
+      const lo = roles.filter(r => TEAM[r] === "outsider" &&
+        !CHARACTERS[r].registers.some(t => t !== "outsider")).length;
+      const hi = actual + roles.filter(r => TEAM[r] !== "outsider" &&
+        CHARACTERS[r].registers.includes("outsider")).length;
+      const out = new Set();
+      if (lo <= says.count && says.count <= hi) out.add(true);
+      if (!(lo === hi && hi === says.count)) out.add(false);
+      return out;
+    }
+  }
+  throw new Error(`not a Savant statement: ${says.kind}`);
+}
+
+/** Two statements, one true and one false.
  *
- * A Savant's pair can be anything from "the Demon sits beside an
- * Outsider" to "no Minion has yet chosen a man", and checking arbitrary
- * claims about a board is a different program from this one.
- *
- * Not nothing, though: recording one is still somebody claiming to have
- * visited the Storyteller, so a world with no Savant pays for the claim.
+ * Words alone are kept and shown and not weighed. When *both* are entered
+ * as one of the shapes in SAVANT_KINDS the row is weighed: exactly one
+ * was true; under a Vortox both were false. Read on the day of the visit.
+ * See info.py for the whole reasoning.
  */
-export const SavantInfo = define("SavantInfo", "Savant", () => true,
-                                 {weighed: () => false});
+export const SavantInfo = define("SavantInfo", "Savant",
+  function (w, s) {
+    const one = savantSays(this.first_says), two = savantSays(this.second_says);
+    if (!one || !two) return true;       // the words are kept, not weighed
+    const phase = `D${this.night}`;
+    const a = savantTruths(one, w, phase), b = savantTruths(two, w, phase);
+    for (const x of a) for (const y of b) if (x !== y) return true;
+    return false;
+  }, {
+    weighed() {
+      return !!savantSays(this.first_says) && !!savantSays(this.second_says);
+    },
+    isTrue(w) {
+      const one = savantSays(this.first_says), two = savantSays(this.second_says);
+      if (!one || !two) return false;
+      const phase = `D${this.night}`;
+      return savantTruths(one, w, phase, true).has(true) ||
+             savantTruths(two, w, phase, true).has(true);
+    },
+  });
 
 /** A yes-or-no question — the question kept, the answer not solved. */
 export const ArtistInfo = define("ArtistInfo", "Artist", () => true,
@@ -507,6 +603,17 @@ export const SailorChoice = declaredChoice("SailorChoice", "Sailor");
 
 /** Who the Ogre picked on its first night: it takes that side, unknowing. */
 export const OgreChoice = declaredChoice("OgreChoice", "Ogre");
+
+/** "The Cerenovus made me mad about being the X", said by the one it
+ * chose. Says a Cerenovus is in play and alive that night; the character
+ * has to be a good one. See info.py. */
+export const CerenovusMadness = define("CerenovusMadness", "Cerenovus",
+  function (w, s, rh, seat) {
+    if (TEAM[this.role] !== "townsfolk" && TEAM[this.role] !== "outsider")
+      return false;
+    return seat === null || seat === undefined ||
+           s.aliveSet(`N${this.night}`).has(seat);
+  });
 
 /** A seat that became a character it was not dealt.
  *
@@ -897,6 +1004,7 @@ ExorcistChoice.isAChoice = true;
 InnkeeperChoice.isAChoice = true;
 SailorChoice.isAChoice = true;
 OgreChoice.isAChoice = true;
+CerenovusMadness.isAChoice = true;
 
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
@@ -909,7 +1017,7 @@ export const KINDS = {
   SnakeCharmerChoice, PitHagChoice,
   Noble, Acrobat, Balloonist, Alsaahir, Became,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
-  OgreChoice,
+  OgreChoice, CerenovusMadness,
 };
 
 /** Build a reading from the shape the page posts. */

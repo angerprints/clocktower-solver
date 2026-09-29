@@ -275,6 +275,27 @@ def handmade():
          "second": "nobody has been mad"},
         {"type": "ArtistInfo", "night": 2, "player": 6,
          "question": "is seat 3 evil", "answer": True}])
+    # A Savant pair in shapes the solver checks: exactly one is true, or
+    # both false under a Vortox. Registration can make one either way.
+    yield board("sv-9-savant-weighed", SV, SV9B, infos=[
+        {"type": "SavantInfo", "night": 1, "player": 5,
+         "first": "seat 3 is evil", "second": "the Witch is in play",
+         "first_says": {"kind": "evil", "seat": 2},
+         "second_says": {"kind": "in_play", "role": "Witch"}},
+        {"type": "SavantInfo", "night": 2, "player": 5,
+         "first": "", "second": "",
+         "first_says": {"kind": "demon_among", "seats": [0, 1, 2]},
+         "second_says": {"kind": "outsiders", "count": 2}}])
+    yield board("sv-9-savant-shapes", SV, SV9B, infos=[
+        {"type": "SavantInfo", "night": 1, "player": 5,
+         "first_says": {"kind": "same", "a": 0, "b": 1},
+         "second_says": {"kind": "is", "seat": 3, "role": "Oracle"}},
+        {"type": "SavantInfo", "night": 2, "player": 5,
+         "first_says": {"kind": "different", "a": 2, "b": 4},
+         "second_says": {"kind": "not_in_play", "role": "Vortox"}},
+        {"type": "SavantInfo", "night": 3, "player": 5,
+         "first_says": {"kind": "good", "seat": 6},
+         "second_says": {"kind": "bogus"}}])
 
     # The third batch. Sage and Klutz act on the night they die, the
     # Sweetheart starts impairing from its death, and the Barber lets the

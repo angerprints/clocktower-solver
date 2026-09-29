@@ -115,6 +115,11 @@ class Character(NamedTuple):
     # neighbours the Demon. Only the deal — a Demon that moves on later
     # does not move the Marionette with it.
     beside: str = ""
+    # Can the holder not say what it is? A Mutant "mad about being an
+    # Outsider" might be executed, so it never claims one: it always
+    # stands behind a Townsfolk. Unlike every other good player, whose
+    # lie is a choice and costs a world, this one is the rules talking.
+    hides: bool = False
 
 
 def _handled(self):
@@ -335,11 +340,9 @@ _SV = [
        nights="other"),
     _c("Oracle", "oracle", "Oracle", "townsfolk", {OTHER},
        nights="other"),
-    _c("Savant", "savant", "Savant", "townsfolk", {NEVER},
-       handled=PARTLY,
-       note="its pair of statements is kept but not weighed: they can be "
-            "anything at all, and checking arbitrary claims about a "
-            "board is a different program from this one"),
+    # Weighed when both statements are entered in a shape the board can
+    # answer (info.SAVANT_KINDS); words alone are kept and shown.
+    _c("Savant", "savant", "Savant", "townsfolk", {NEVER}),
     _c("Seamstress", "seamstress", "Seamstress", "townsfolk",
        {NEVER, SOMETIMES}, nights="conditional", chooses=True),
     _c("Philosopher", "philosopher", "Philosopher", "townsfolk",
@@ -353,11 +356,7 @@ _SV = [
     _c("Sage", "sage", "Sage", "townsfolk", {NEVER, SOMETIMES},
        nights="conditional"),
 
-    _c("Mutant", "mutant", "Mutant", "outsider", {NEVER},
-       handled=NOT, settled=True,
-       note="madness leaves no mark on the board: being executed for "
-            "breaking it looks like any other execution. If the table "
-            "knows that is what happened, mark the seat as confirmed"),
+    _c("Mutant", "mutant", "Mutant", "outsider", {NEVER}, hides=True),
     _c("Sweetheart", "sweetheart", "Sweetheart", "outsider", {NEVER}),
     _c("Barber", "barber", "Barber", "outsider", {NEVER}),
     _c("Klutz", "klutz", "Klutz", "outsider", {NEVER}),
@@ -366,12 +365,13 @@ _SV = [
        nights="first"),
     _c("Witch", "witch", "Witch", "minion", {EVERY}, nights="every",
        chooses=True),
+    # Madness leaves no mark of its own. What the table can see is: a
+    # seat executed for breaking ceremadness, somebody saying they were
+    # made mad (info.CerenovusMadness), and a good player claiming what
+    # they are not — cheaper in a world with a Cerenovus alive
+    # (solver.CERENOVUS_MADNESS_PENALTY) when the seat is marked unsure.
     _c("Cerenovus", "cerenovus", "Cerenovus", "minion", {EVERY},
-       nights="every", chooses=True, handled=NOT, settled=True,
-       note="madness is a social constraint and leaves no mark of its "
-            "own. What the table *can* see is somebody executed for "
-            "breaking ceremadness, and marking that death says a "
-            "Cerenovus is about — which is the only handle there is"),
+       nights="every", chooses=True),
     _c("PitHag", "pithag", "Pit-Hag", "minion", {EVERY}, nights="every",
        chooses=True),
 

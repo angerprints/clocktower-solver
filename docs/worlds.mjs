@@ -12,7 +12,7 @@
 import {CHARACTERS, SETUP} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {EVIL, TEAM, alignment, believedTokens, believesAnother, isEvil,
-        knowsWhatItIs, thinksItIsEvil, wakeFits} from "./roles.mjs";
+        knowsWhatItIs, mustHide, thinksItIsEvil, wakeFits} from "./roles.mjs";
 import {DEFAULT} from "./scripts.mjs";
 
 const TEAMS = ["townsfolk", "outsider", "minion", "demon"];
@@ -240,9 +240,14 @@ function candidatesFromClaim(claim, allowGoodLies, certainty, script) {
     for (const b of believers)
       if (believedTokens(b, script).includes(claim)) out.push([b, claim]);
     out.push(...evilOptions(evil, script));
-    if (allowGoodLies)
+    if (allowGoodLies) {
       for (const r of script.outsiders)
         if (r !== claim && !believesAnother(r)) out.push([r, null]);
+    } else if (inTownsfolk) {
+      // A Mutant is behind a Townsfolk claim whether or not good lies are
+      // allowed: it has no other claim it can safely make.
+      for (const r of script.outsiders) if (mustHide(r)) out.push([r, null]);
+    }
     return out;
   }
 
@@ -282,7 +287,8 @@ export function candidates(claim, allowGoodLies = false, certainty = "",
   // Marionette is evil and still does not know.
   if (wake && certainty !== "hiding" && certainty !== "unsure")
     opts = opts.filter(([role, belief]) =>
-      (isEvil(role) && knowsWhatItIs(role)) || wakeFits(role, belief, wake));
+      (isEvil(role) && knowsWhatItIs(role)) || mustHide(role) ||
+      wakeFits(role, belief, wake));
 
   if (allowed !== null)
     opts = opts.filter(([role]) => allowed.has(role));

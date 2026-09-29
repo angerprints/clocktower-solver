@@ -33,7 +33,8 @@ own job — and the two would agree because they share an assumption,
 rather than because the solver is right.
 """
 
-from botc.roles import OUTSIDERS, TEAM, TOWNSFOLK, is_evil, knows_what_it_is
+from botc.roles import (OUTSIDERS, TEAM, TOWNSFOLK, is_evil,
+                        knows_what_it_is, must_hide)
 
 # How often a good player says something untrue. Most tables have one.
 GOOD_LIE_CHANCE = 0.10
@@ -156,6 +157,15 @@ def claims_for(deal, rng, script=None):
                 notes[seat] = (f"evil, out of bluffs — double-claiming "
                                f"the {claims[seat]}")
             continue
+
+        # A Mutant never says it is an Outsider: it might be executed
+        # for it. It always stands behind a Townsfolk nobody has taken.
+        if must_hide(role):
+            hidden = _hiding_claim(deal, seat, rng, script)
+            if hidden:
+                claims[seat] = hidden
+                notes[seat] = f"the {role}, hiding behind the {hidden}"
+                continue
 
         if rng.random() < GOOD_LIE_CHANCE:
             if TEAM[role] == "outsider" and rng.random() < HIDING_SHARE:

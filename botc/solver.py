@@ -22,7 +22,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
                     INVERTED,
-                    is_evil, show, wake_fits)
+                    is_evil, must_hide, show, wake_fits)
 from . import deaths as death_causes
 from . import impairment
 from .catalogue import CHARACTERS
@@ -54,6 +54,11 @@ DEFAULT_MAX_WORLDS = 300_000
 # that those worlds should almost vanish.
 OUTSIDER_HIDING_PENALTY = 0.35
 TOWNSFOLK_LIE_PENALTY = 0.02
+# A Cerenovus exists to make good players lie: each night it names
+# somebody who must convince the table they are some other good
+# character tomorrow. In a world with one alive, a good Townsfolk's false
+# claim is madness rather than chaos — up to one per night it was alive.
+CERENOVUS_MADNESS_PENALTY = 0.25
 
 # Evil is handed bluffs drawn from roles that are NOT in play, and the team
 # knows each other, so a clean bluff is one that collides with nothing: not
@@ -3291,6 +3296,22 @@ def _could_have_inherited(world, state):
     return out
 
 
+def _madness_nights(world, state):
+    """How many nights a Cerenovus was alive to make somebody mad.
+
+    Each is one good player who may be claiming a character they are
+    not — see `CERENOVUS_MADNESS_PENALTY`.
+    """
+    last = state.final_phase()
+    nights = int(last[1:]) if last[1:].isdigit() else 0
+    got = 0
+    for night in range(1, nights + 1):
+        who = world.find_at("Cerenovus", f"N{night}")
+        if who is not None and who in state.alive_set(f"N{night}"):
+            got += 1
+    return got
+
+
 def prior_weight(world, state):
     """Everything that makes a world plausible except the poison story."""
     w = confirmed_boost(world, state)
@@ -3304,14 +3325,22 @@ def prior_weight(world, state):
                 bluffs[claimed] += 1
 
     inherited = _could_have_inherited(world, state)
+    madness = _madness_nights(world, state)
 
     for p in range(state.n_players):
         evil = is_evil(world.roles[p])
-        if is_lying(world, state, p) and p not in inherited:
+        if is_lying(world, state, p) and p not in inherited \
+                and not must_hide(world.roles[p]):
+            # A Mutant's cover story is not a choice (catalogue `hides`),
+            # so it costs the world nothing.
             if not evil:
-                w *= (OUTSIDER_HIDING_PENALTY
-                      if TEAM[world.roles[p]] == "outsider"
-                      else TOWNSFOLK_LIE_PENALTY)
+                if TEAM[world.roles[p]] == "outsider":
+                    w *= OUTSIDER_HIDING_PENALTY
+                elif madness > 0:
+                    w *= CERENOVUS_MADNESS_PENALTY
+                    madness -= 1
+                else:
+                    w *= TOWNSFOLK_LIE_PENALTY
             else:
                 claim = state.claims.get(p)
                 if claim and (in_play(world, claim) or bluffs[claim] > 1):
@@ -3890,6 +3919,7 @@ def estimate(state, allow_good_lies=False, dives=25_000, keep_samples=8,
 PRIOR_RANGES = {
     "OUTSIDER_HIDING_PENALTY": (0.15, 0.60),
     "TOWNSFOLK_LIE_PENALTY": (0.005, 0.10),
+    "CERENOVUS_MADNESS_PENALTY": (0.10, 0.50),
     "BLUFF_COLLISION_PENALTY": (0.10, 0.60),
     "NIGHT_DEATH_EVIL_PENALTY": (0.02, 0.15),
     "POISON_HIT_PENALTY": (0.20, 0.55),

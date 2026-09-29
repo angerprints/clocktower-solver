@@ -179,10 +179,21 @@ class TheOutsiderTrap(SolverTest):
     """
 
     def test_two_outsider_claims_pin_those_seats(self):
+        """All but one. Since the Mutant was modelled it can stand behind
+        any Townsfolk claim, so the seat that says "Mutant" may be evil
+        bluffing it while the real one hides. The Sweetheart has nobody
+        to hide behind and stays pinned."""
         valid = S.solve(board())[1]
         self.assertTrue(valid)
-        self.assertEqual({w.roles[7] for w in valid}, {"Mutant"})
         self.assertEqual({w.roles[8] for w in valid}, {"Sweetheart"})
+        seven = {w.roles[7] for w in valid}
+        self.assertIn("Mutant", seven)
+        for role in seven - {"Mutant"}:
+            with self.subTest(role=role):
+                self.assertTrue(S.is_evil(role))
+        for w in valid:
+            if w.roles[7] != "Mutant":
+                self.assertIn("Mutant", w.roles[:7])
 
     def test_while_a_townsfolk_claimant_can_be_anything(self):
         valid = S.solve(board())[1]
@@ -555,10 +566,11 @@ class TheSecondBatch(SolverTest):
 
     def test_they_say_in_the_script_panel_that_they_are_not_solved(self):
         from botc.catalogue import CHARACTERS
-        for key in ("Savant", "Artist"):
-            with self.subTest(character=key):
-                self.assertFalse(CHARACTERS[key].modelled)
-                self.assertIn("not weighed", CHARACTERS[key].note)
+        # The Savant left this test when its statements got shapes the
+        # board answers (see TheSavantIsWeighedWhenItCanBe).
+        self.assertFalse(CHARACTERS["Artist"].modelled)
+        self.assertIn("not weighed", CHARACTERS["Artist"].note)
+        self.assertTrue(CHARACTERS["Savant"].modelled)
 
 
 class WhatSilencesTheMathematician(SolverTest):
@@ -588,10 +600,11 @@ class WhatSilencesTheMathematician(SolverTest):
 
     def test_a_script_whose_only_gaps_are_talkers_is_not_silenced(self):
         from botc.catalogue import CHARACTERS
+        # An Artist now; it was a Savant until the Savant was weighed.
         talkers = scripts.from_ids(
-            "Trouble Brewing, a Mathematician and a Savant",
+            "Trouble Brewing, a Mathematician and an Artist",
             [k.lower() for k in scripts.TROUBLE_BREWING.keys]
-            + ["mathematician", "savant"])
+            + ["mathematician", "artist"])
         self.assertFalse(all(c.modelled for c in talkers.characters()))
         self.assertTrue(all(c.modelled for c in talkers.characters()
                             if c.impairs))
@@ -737,10 +750,260 @@ class TheThirdBatch(SolverTest):
 
     # --- Mutant ---------------------------------------------------------
 
-    def test_the_mutant_says_why_it_is_not_modelled(self):
+    def test_the_mutant_is_modelled_now(self):
         from botc.catalogue import CHARACTERS
-        self.assertFalse(CHARACTERS["Mutant"].modelled)
-        self.assertIn("madness leaves no mark", CHARACTERS["Mutant"].note)
+        self.assertTrue(CHARACTERS["Mutant"].modelled)
+        self.assertTrue(CHARACTERS["Mutant"].hides)
+
+
+class TheMutantHides(SolverTest):
+    """A Mutant cannot say it is an Outsider — it might be executed for
+    it — so it always claims a Townsfolk.
+
+    For every other good player a false claim is a choice and costs the
+    world something. For this one it is the rules talking, and before
+    the Mutant was modelled a world with one in it was never even built
+    unless somebody claimed to be the Mutant: the one thing it never
+    does.
+    """
+
+    CLAIMS = ["Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler",
+              "Klutz", "Barber", "Seamstress", "Sweetheart"]
+
+    def board(self, **kw):
+        return GameState(n_players=9, script=SV,
+                         claims={i: r for i, r in enumerate(self.CLAIMS)},
+                         **kw)
+
+    def test_any_townsfolk_claim_can_be_the_mutant(self):
+        from botc.worlds import _candidates
+        got = _candidates("Oracle", False, script=SV)
+        self.assertIn(("Mutant", None), got)
+
+    def test_but_not_an_outsider_claim(self):
+        """Claiming another Outsider is being mad about being one."""
+        from botc.worlds import _candidates
+        self.assertNotIn(("Mutant", None),
+                         _candidates("Sweetheart", False, script=SV))
+
+    def test_nor_off_its_own_script(self):
+        from botc.worlds import _candidates
+        self.assertNotIn("Mutant", [r for r, _b in
+                                    _candidates("Chef", False,
+                                                script=scripts.TROUBLE_BREWING)])
+
+    def test_what_it_says_about_waking_does_not_rule_it_out(self):
+        """It says whatever suits the cover, like a bluffer."""
+        from botc.worlds import _candidates
+        got = _candidates("Oracle", False, wake="every", script=SV)
+        self.assertIn(("Mutant", None), got)
+
+    def test_its_cover_story_costs_nothing(self):
+        state = self.board()
+        honest = World(("Clockmaker", "Dreamer", "Oracle", "Sage",
+                        "Juggler", "Klutz", "Barber", "Witch", "Vortox"),
+                       (None,) * 9)
+        hiding = World(("Clockmaker", "Dreamer", "Mutant", "Sage",
+                        "Juggler", "Klutz", "Barber", "Witch", "Vortox"),
+                       (None,) * 9)
+        self.assertEqual(S.prior_weight(hiding, state),
+                         S.prior_weight(honest, state))
+
+    def test_a_board_holds_worlds_with_the_mutant_in_them(self):
+        valid = S.solve(self.board())[1]
+        self.assertTrue(any("Mutant" in w.roles for w in valid))
+
+    def test_a_confirmed_mutant_is_still_one(self):
+        """Executed for saying it: the table enters the seat as a
+        confirmed Mutant, and that is a world like any other."""
+        claims = dict(enumerate(self.CLAIMS))
+        claims[6] = "Mutant"
+        state = GameState(n_players=9, script=SV, claims=claims,
+                          certainties={6: "confirmed"},
+                          deaths={6: "D1"}, executions={1: 6})
+        valid = S.solve(state)[1]
+        self.assertTrue(valid)
+        self.assertTrue(all(w.roles[6] == "Mutant" for w in valid))
+
+
+class TheSavantIsWeighedWhenItCanBe(SolverTest):
+    """Two statements, one true and one false.
+
+    Words alone stay words. When both are entered in a shape the board can
+    answer, the pair is weighed: exactly one held — both false under a
+    Vortox, anything at all for a droisoned Savant.
+    """
+
+    W = World(("Clockmaker", "Dreamer", "Oracle", "Savant", "Juggler",
+               "Klutz", "Barber", "Witch", "Vortox"),
+              (None,) * 9)
+
+    def row(self, one, two, night=1):
+        from botc.info import SavantInfo
+        return SavantInfo(night, 3, first_says=one, second_says=two)
+
+    def state(self):
+        return GameState(n_players=9, script=SV, claims={})
+
+    def test_words_alone_are_not_weighed(self):
+        from botc.info import SavantInfo
+        self.assertFalse(SavantInfo(1, 3, first="a", second="b")
+                         .weighed(self.state()))
+
+    def test_one_shape_and_one_line_of_words_is_not_either(self):
+        row = self.row({"kind": "evil", "seat": 7}, None)
+        self.assertFalse(row.weighed(self.state()))
+
+    def test_exactly_one_true_holds(self):
+        row = self.row({"kind": "evil", "seat": 7},       # true
+                       {"kind": "in_play", "role": "PitHag"})   # false
+        self.assertTrue(row.holds(self.W, self.state(), None))
+
+    def test_both_true_does_not(self):
+        row = self.row({"kind": "evil", "seat": 7},
+                       {"kind": "demon_among", "seats": [8, 0, 1]})
+        self.assertFalse(row.holds(self.W, self.state(), None))
+
+    def test_both_false_does_not_either(self):
+        row = self.row({"kind": "good", "seat": 7},
+                       {"kind": "outsiders", "count": 3})
+        self.assertFalse(row.holds(self.W, self.state(), None))
+
+    def test_every_shape_answers(self):
+        from botc.info import SAVANT_KINDS, savant_truths
+        shapes = {
+            "evil": {"seat": 7}, "good": {"seat": 0},
+            "same": {"a": 7, "b": 8}, "different": {"a": 0, "b": 8},
+            "is": {"seat": 2, "role": "Oracle"},
+            "in_play": {"role": "Barber"},
+            "not_in_play": {"role": "Mutant"},
+            "outsiders": {"count": 2},
+            "demon_among": {"seats": [6, 7, 8]}}
+        self.assertEqual(sorted(shapes), sorted(SAVANT_KINDS))
+        for kind, args in shapes.items():
+            with self.subTest(kind=kind):
+                self.assertEqual(
+                    savant_truths(dict(kind=kind, **args), self.W, "D1"),
+                    {True})
+
+    def test_a_recluse_can_read_either_way(self):
+        from botc.info import savant_truths
+        w = World(("Clockmaker", "Dreamer", "Oracle", "Savant", "Juggler",
+                   "Recluse", "Barber", "Witch", "Vortox"), (None,) * 9)
+        self.assertEqual(savant_truths({"kind": "evil", "seat": 5}, w, "D1"),
+                         {True, False})
+        self.assertEqual(
+            savant_truths({"kind": "evil", "seat": 5}, w, "D1", real=True),
+            {False})
+
+    def test_under_a_vortox_both_were_false(self):
+        """`is_true` is the Vortox's question: anything really true in
+        it means the Vortox was not working."""
+        s = self.state()
+        both_false = self.row({"kind": "good", "seat": 7},
+                              {"kind": "outsiders", "count": 3})
+        one_true = self.row({"kind": "evil", "seat": 7},
+                            {"kind": "outsiders", "count": 3})
+        self.assertFalse(both_false.is_true(self.W, s))
+        self.assertTrue(one_true.is_true(self.W, s))
+
+    def test_a_vortox_board_takes_the_false_pair(self):
+        claims = {0: "Clockmaker", 1: "Dreamer", 2: "Oracle", 3: "Savant",
+                  4: "Juggler", 5: "Klutz", 6: "Barber"}
+        row = self.row({"kind": "good", "seat": 7},
+                       {"kind": "outsiders", "count": 3})
+        state = GameState(n_players=9, script=SV, claims=claims, infos=[row])
+        self.assertIsNotNone(S.explanation_cost(self.W, state))
+
+    def test_it_narrows_the_board(self):
+        """Told "seat 8 is evil" and "seat 1 is evil" on a board where
+        the rest is quiet: one of the two, so each is about half."""
+        claims = {i: r for i, r in enumerate(
+            ["Clockmaker", "Dreamer", "Oracle", "Savant", "Juggler",
+             "Klutz", "Barber", "Seamstress", "Sweetheart"])}
+        plain = GameState(n_players=9, script=SV, claims=claims)
+        told = GameState(n_players=9, script=SV, claims=claims, infos=[
+            self.row({"kind": "evil", "seat": 7},
+                     {"kind": "evil", "seat": 0})])
+        before = S.summarize(S.solve(plain)[1], plain)
+        after = S.summarize(S.solve(told)[1], told)
+        self.assertGreater(after[7]["evil_pct"], before[7]["evil_pct"])
+        self.assertGreater(after[0]["evil_pct"], before[0]["evil_pct"])
+
+
+class WhatMadnessLeavesBehind(SolverTest):
+    """The Cerenovus's madness leaves no mark of its own. Three things
+    the table can see do: a seat executed for breaking ceremadness (the
+    status), somebody saying they were made mad, and a good player
+    claiming what they are not."""
+
+    CLAIMS = ["Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler",
+              "Klutz", "Barber", "Seamstress", "Sweetheart"]
+
+    def board(self, **kw):
+        return GameState(n_players=9, script=SV,
+                         claims={i: r for i, r in enumerate(self.CLAIMS)},
+                         **kw)
+
+    def share(self, valid, role):
+        return sum(1 for w in valid if role in w.roles) / max(len(valid), 1)
+
+    def test_saying_so_makes_a_cerenovus_likelier(self):
+        from botc.info import CerenovusMadness
+        plain = self.board()
+        told = self.board(infos=[CerenovusMadness(1, 2, role="Clockmaker")])
+        def cerenovus(state):
+            rows = S.analyze(state)
+            return sum(dict(r["roles"]).get("Cerenovus", 0.0)
+                       for r in rows["rows"])
+        self.assertGreater(cerenovus(told), cerenovus(plain))
+
+    def test_the_character_has_to_be_a_good_one(self):
+        from botc.info import CerenovusMadness
+        w = World(("Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler",
+                   "Klutz", "Barber", "Cerenovus", "Vortox"), (None,) * 9)
+        state = self.board()
+        self.assertTrue(CerenovusMadness(1, 2, role="Oracle")
+                        .holds(w, state, None, 7))
+        self.assertFalse(CerenovusMadness(1, 2, role="Witch")
+                         .holds(w, state, None, 7))
+
+    def test_a_dead_cerenovus_maddens_nobody(self):
+        from botc.info import CerenovusMadness
+        w = World(("Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler",
+                   "Klutz", "Barber", "Cerenovus", "Vortox"), (None,) * 9)
+        state = self.board(deaths={7: "E1"}, executions={1: 7})
+        self.assertTrue(CerenovusMadness(1, 2, role="Oracle")
+                        .holds(w, state, None, 7))
+        self.assertFalse(CerenovusMadness(2, 2, role="Oracle")
+                         .holds(w, state, None, 7))
+
+    def test_it_is_a_choice_so_a_vortox_leaves_it_alone(self):
+        from botc.info import CerenovusMadness
+        self.assertFalse(CerenovusMadness(1, 2, role="Oracle")
+                         .is_information(self.board()))
+
+    def test_with_a_cerenovus_a_good_lie_is_cheaper(self):
+        """Seat 2 claims the Oracle and is really the Dreamer: madness in
+        a world with a Cerenovus alive, chaos without one."""
+        state = self.board(certainties={2: "unsure"}, days_done={1})
+        mad = World(("Clockmaker", "Dreamer", "Dreamer", "Sage", "Juggler",
+                     "Klutz", "Barber", "Cerenovus", "Vortox"), (None,) * 9)
+        sane = World(("Clockmaker", "Dreamer", "Dreamer", "Sage", "Juggler",
+                      "Klutz", "Barber", "Witch", "Vortox"), (None,) * 9)
+        self.assertAlmostEqual(
+            S.prior_weight(mad, state) / S.prior_weight(sane, state),
+            S.CERENOVUS_MADNESS_PENALTY / S.TOWNSFOLK_LIE_PENALTY)
+
+    def test_one_madness_a_night(self):
+        state = self.board(certainties={2: "unsure", 3: "unsure"})
+        mad = World(("Clockmaker", "Dreamer", "Dreamer", "Juggler",
+                     "Juggler", "Klutz", "Barber", "Cerenovus", "Vortox"),
+                    (None,) * 9)
+        self.assertEqual(S._madness_nights(mad, state), 1)
+        self.assertAlmostEqual(
+            S.prior_weight(mad, state),
+            S.CERENOVUS_MADNESS_PENALTY * S.TOWNSFOLK_LIE_PENALTY)
 
 
 class TheFourthBatch(SolverTest):
@@ -1295,9 +1558,14 @@ class CeremadnessNamesOneCharacter(SolverTest):
         an execution for that is an ordinary execution. Marking the
         ceremadness status would say something untrue, which is exactly
         what the rename prevents somebody doing by accident."""
-        from botc.catalogue import CHARACTERS
-        self.assertIn("madness leaves no mark", CHARACTERS["Mutant"].note)
-        self.assertIn("ceremadness", CHARACTERS["Cerenovus"].note)
+        # A Mutant executed for claiming to be one is entered as a
+        # confirmed Mutant claim, not as ceremadness; the status still
+        # names only the Cerenovus (see the rule test above).
+        import pathlib
+        page = (pathlib.Path(__file__).resolve().parent.parent
+                / "ui" / "index.html").read_text()
+        self.assertNotIn("Mutant", page[page.index("function dayOptions"):
+                                        page.index("const EVENT_WORDS")])
 
 
 class AVortoxFalsifiesInformationNotChoices(SolverTest):

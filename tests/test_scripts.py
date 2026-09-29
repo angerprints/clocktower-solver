@@ -56,9 +56,9 @@ class TheCatalogue(SolverTest):
         self.assertEqual(sorted(evil_registrations("Recluse")), [False, True])
 
     def test_unmodelled_characters_admit_it(self):
-        # The Ogre and the Marionette stood here until phase 2 built
-        # them; the Mutant and the Cerenovus are next in line.
-        for key in ("Artist", "Mutant", "Cerenovus"):
+        # The Ogre, the Marionette, the Mutant and the Cerenovus stood
+        # here until phase 2 built them.
+        for key in ("Artist", "Legion", "Riot"):
             with self.subTest(character=key):
                 self.assertFalse(CHARACTERS[key].modelled)
                 self.assertTrue(CHARACTERS[key].note)
@@ -574,17 +574,23 @@ class HowFarEachCharacterIsReasonedAbout(SolverTest):
 
     def test_recorded_but_not_weighed_is_its_own_thing(self):
         from botc.catalogue import CHARACTERS, PARTLY
-        for key in ("Savant", "Artist"):
-            with self.subTest(character=key):
-                self.assertEqual(CHARACTERS[key].handled, PARTLY)
-                self.assertFalse(CHARACTERS[key].modelled)
+        # The Savant was here until its statements could be entered in
+        # shapes the board answers; words alone are still only kept.
+        self.assertEqual(CHARACTERS["Artist"].handled, PARTLY)
+        self.assertFalse(CHARACTERS["Artist"].modelled)
 
     def test_and_so_is_nothing_to_read(self):
         from botc.catalogue import CHARACTERS
-        self.assertTrue(CHARACTERS["Mutant"].settled,
-                        "madness leaves no mark, so it is finished")
-        self.assertFalse(CHARACTERS["Marionette"].settled,
-                         "that one is simply not started")
+        # The Mutant and the Cerenovus were finished here — "madness
+        # leaves no mark" — until what madness *does* leave was modelled:
+        # a Mutant's forced cover story, a seat executed for or saying it
+        # broke ceremadness, a good player's lie made cheaper. Nothing is
+        # finished at NOT now; what is left there is simply not started.
+        from botc.catalogue import NOT
+        for key, c in CHARACTERS.items():
+            if c.handled == NOT:
+                with self.subTest(character=key):
+                    self.assertFalse(c.settled)
 
     def test_modelled_still_means_what_every_caller_meant(self):
         """A dozen places ask it, and all of them mean: can the solver be
@@ -597,27 +603,25 @@ class HowFarEachCharacterIsReasonedAbout(SolverTest):
         # test to keep failing. Nothing on the published scripts is
         # unbuilt now, so the example comes from the experimental pile.
         # The Marionette was the third until phase 2 built it.
-        for key in ("Savant", "Mutant", "Cerenovus"):
+        for key in ("Artist", "Legion"):
             with self.subTest(character=key):
                 self.assertFalse(CHARACTERS[key].modelled)
+        # Sects & Violets' three left this list in phase 2.
+        for key in ("Savant", "Mutant", "Cerenovus"):
+            with self.subTest(character=key):
+                self.assertTrue(CHARACTERS[key].modelled)
 
     def test_the_script_panel_says_three_different_things(self):
         sv = scripts.SECTS_AND_VIOLETS
         kinds = {c["kind"]: c for c in sv.complaints(9)}
-        # No "unmodelled" group any more: everything on this script is
-        # either reasoned about, recorded without being weighed, or
-        # leaves nothing on the board to read.
+        # Everything on this script is reasoned about except the Artist,
+        # whose question is kept and not weighed. The Savant sat beside
+        # it until its statements got shapes; the Mutant and the
+        # Cerenovus sat under "nothing to read" until what madness leaves
+        # was modelled.
         self.assertNotIn("unmodelled", kinds)
-        self.assertIn("recorded", kinds)
-        self.assertIn("nothing to read", kinds)
-        self.assertEqual(kinds["recorded"]["characters"],
-                         ["Savant", "Artist"])
-        # The Cerenovus joined the Mutant here: madness leaves no mark of
-        # its own, and what the table *can* see — somebody executed for
-        # breaking it — is recorded as a status rather than modelled as
-        # an ability.
-        self.assertEqual(sorted(kinds["nothing to read"]["characters"]),
-                         ["Cerenovus", "Mutant"])
+        self.assertNotIn("nothing to read", kinds)
+        self.assertEqual(kinds["recorded"]["characters"], ["Artist"])
 
     def test_nothing_appears_in_two_groups(self):
         for name, script in scripts.BUILT_IN.items():
@@ -639,18 +643,16 @@ class EveryPublishedScriptIsFinished(SolverTest):
     """Nothing on Trouble Brewing, Bad Moon Rising or Sects & Violets is
     waiting to be built.
 
-    Which is not the same as everything being *solved*. Four characters
-    across the three are finished at less than that, and each is finished
-    for a reason rather than a backlog:
-
-      * a **Savant** and an **Artist** say things that can be anything at
-        all, so the words are kept and shown and not weighed;
-      * a **Mutant** and a **Cerenovus** work through madness, which
-        leaves no mark on the board — what the table *can* see is
-        recorded as a status instead;
-      * a **Mastermind** changes how the game is won rather than what
-        happens on it, and the one part that does show — play carrying on
-        after the Demon is executed — is modelled.
+    Which is not the same as everything being *solved*. One character
+    across the three is finished at less than that, for a reason rather
+    than a backlog: an **Artist** asks whatever the player thought to
+    ask, so the question is kept and shown and not weighed. A Savant's
+    words are the same, but its statements can be entered in shapes the
+    board answers, and then they are weighed. The Mutant and the
+    Cerenovus work through madness, which leaves little on the board —
+    and what it does leave is modelled. A **Mastermind** changes how the
+    game is won; the part that shows, play carrying on after the Demon is
+    executed, is modelled.
 
     The test that matters is the second one: nothing may sit in the
     "coming" pile unnoticed.

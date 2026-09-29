@@ -87,6 +87,15 @@ def thinks_it_is_evil(role):
         team in ("minion", "demon") for team in character.believes_from)
 
 
+def must_hide(role):
+    """Is this a good character that cannot say what it is?
+
+    The Mutant: claiming to be an Outsider might get it executed, so it
+    claims a Townsfolk instead — every time, and without choosing to.
+    """
+    return CHARACTERS[role].hides
+
+
 def believed_tokens(role, script):
     """Which characters this one could have been handed to believe in.
 

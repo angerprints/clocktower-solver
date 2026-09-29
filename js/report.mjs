@@ -7,7 +7,7 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
-import {TEAM, believesAnother, isEvil, show, wakeFits} from "./roles.mjs";
+import {TEAM, believesAnother, isEvil, mustHide, show, wakeFits} from "./roles.mjs";
 import {bestStory, storyShares, explanationCost, forcedRoles, nightDeaths,
         worldConsistent} from "./scoring.mjs";
 import {PRIORS} from "./priors.mjs";
@@ -90,8 +90,21 @@ export function confirmedBoost(world, state) {
   return got;
 }
 
+/** How many nights a Cerenovus was alive to make somebody mad. */
+function madnessNights(world, state) {
+  const last = state.finalPhase();
+  const nights = /^\d+$/.test(last.slice(1)) ? Number(last.slice(1)) : 0;
+  let got = 0;
+  for (let night = 1; night <= nights; night++) {
+    const who = world.findAt("Cerenovus", `N${night}`);
+    if (who !== null && state.aliveSet(`N${night}`).has(who)) got++;
+  }
+  return got;
+}
+
 export function priorWeight(world, state) {
   let w = confirmedBoost(world, state);
+  let madness = madnessNights(world, state);
   const reads = state.reads || {};
   const suspects = state.suspects || {};
 
@@ -105,10 +118,12 @@ export function priorWeight(world, state) {
 
   for (let p = 0; p < state.nPlayers; p++) {
     const evil = isEvil(world.roles[p]);
-    if (isLying(world, state, p)) {
+    // A Mutant's cover story is not a choice, so it costs nothing.
+    if (isLying(world, state, p) && !mustHide(world.roles[p])) {
       if (!evil) {
-        w *= TEAM[world.roles[p]] === "outsider" ? PRIORS.OUTSIDER_HIDING_PENALTY
-                                                 : PRIORS.TOWNSFOLK_LIE_PENALTY;
+        if (TEAM[world.roles[p]] === "outsider") w *= PRIORS.OUTSIDER_HIDING_PENALTY;
+        else if (madness > 0) { w *= PRIORS.CERENOVUS_MADNESS_PENALTY; madness--; }
+        else w *= PRIORS.TOWNSFOLK_LIE_PENALTY;
       } else {
         const claim = state.claims[p];
         if (claim && (inPlay(world, claim) || (bluffs[claim] || 0) > 1))
