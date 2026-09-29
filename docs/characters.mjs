@@ -406,11 +406,7 @@ export const DATA = {
    "team": "minion",
    "wake": [
     "never"
-   ],
-   "modelled": false,
-   "note": "it changes how the game is won rather than what happens on the board — no deaths, no readings, nothing to reason about. What it does do is let play carry on after the Demon is executed, and that much is modelled",
-   "handled": "not",
-   "settled": true
+   ]
   },
   "Clockmaker": {
    "id": "clockmaker",

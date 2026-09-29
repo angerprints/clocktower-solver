@@ -1768,7 +1768,35 @@ class GamblerGuess(Info):
         who = self.player if seat is None else seat
         right = registers_as_role(w.role_at(self.target, f"N{self.night}"),
                                   self.role)
-        return not right if f"N{self.night}" in s.died_at(who) else right
+        if f"N{self.night}" in s.died_at(who):
+            return not right
+        if right:
+            return True
+        # Wrong, and still standing. Impaired is one way; being kept alive
+        # is the other. The row said only "impaired", so a Gambler a Tea
+        # Lady was guarding guessed wrong, lived, and the board was
+        # impossible (found with the Mastermind's wider sweep, 29.09.2026).
+        #
+        # Only a shield nobody had to aim, or an aimed one the record says
+        # landed here. An Innkeeper *could* have picked the Gambler on any
+        # night, and counting that made every wrong guess free on a board
+        # with an Innkeeper — the Gambler would say nothing at all. Whether
+        # the keeper was working is not asked, which errs toward keeping a
+        # world rather than losing the true one.
+        from .deaths import OTHER, shields_on
+        for shield in shields_on(w, s, self.night, who, OTHER):
+            if not shield.chosen or self._aimed_here(s, shield.by, who):
+                return True
+        return False
+
+    def _aimed_here(self, s, by, seat):
+        for info in s.infos:
+            if getattr(info, "source_role", None) != by \
+                    or info.night != self.night:
+                continue
+            if seat in (getattr(info, f, None) for f in ("target", "a", "b")):
+                return True
+        return False
 
 
 @dataclass

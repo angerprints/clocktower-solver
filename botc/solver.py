@@ -661,21 +661,62 @@ def demon_handovers(world, state):
     return [(chain, 1.0) for chain in demon_lineages(world, state)]
 
 
-def _mastermind_day(world, state, phase):
+def _executed(state, day, seat):
+    """Was this seat executed on this day — by any route the rules call
+    an execution?
+
+    The town's vote, a Virgin's nominator ("is executed immediately") and
+    a Cerenovus's madness. Not a Slayer's shot, a Witch's curse or a
+    Tinker going of its own accord: those are deaths in daylight, and the
+    Mastermind asks for an *execution*.
+    """
+    if state.executed_on(day) == seat:
+        return True
+    if (getattr(state, "madness_executions", None) or {}).get(day) == seat:
+        return True
+    return any(isinstance(info, VirginNomination) and info.triggered
+               and info.night == day and info.nominator == seat
+               for info in state.infos)
+
+
+def _mastermind_day(world, state, phase, holder):
     """Could play have carried on with no Demon at all?
 
-    Only with a Mastermind alive when the Demon went, only after a
-    daylight death, and only for one more day — so if the board runs on
-    past that, this is not what happened.
+    "If the Demon dies by execution (ending the game), play for 1 more
+    day." So only after an **execution** — a Slayer's shot ends the game
+    as it always did — only with the Mastermind alive, and only for one
+    more day: a board that runs on past that is not what happened.
+
+    Whether the Mastermind was *working*, and whether a Scarlet Woman
+    should have taken over instead, are questions for the impairment plan
+    and are asked in `_plain_failures`, where the story is recognised by
+    its marker.
     """
-    if not _in_bag(state, "Mastermind"):
+    if not _in_bag(state, "Mastermind") or phase[0].upper() != "D":
+        return False
+    day = int(phase[1:])
+    if not _executed(state, day, holder):
         return False
     seat = world.find_at("Mastermind", phase)
     if seat is None or seat not in state.alive_set(phase):
         return False
-    day = int(phase[1:])
     latest = phase_index(state.final_phase())
     return latest <= phase_index(f"D{day + 1}")
+
+
+def mastermind_marker(phase, seat):
+    """The mark a Mastermind's extra day leaves in a story.
+
+    A change that changes nothing — no character, no side — on the Demon
+    that was executed. Nothing else writes one, so it is unambiguous, and
+    because it moves nothing it needs no special case anywhere a story is
+    read. `_plain_failures` looks for it to ask what the day needs.
+    """
+    return Change(phase, seat, None, None)
+
+
+def is_mastermind_marker(change):
+    return change.role is None and change.side is None
 
 
 def demon_lineages(world, state, cap=24):
@@ -710,6 +751,14 @@ def demon_lineages(world, state, cap=24):
         # tracking it as the holder, looked for an heir, found none, and
         # declared the whole world impossible.
         phases = state.died_at(holder)
+        # A Zombuul's first death is not one. It registers dead and goes
+        # on killing, so the star has not moved and nobody inherits; only
+        # the second death is real. Reading the first as final made every
+        # board with an executed Zombuul impossible — nobody could take
+        # over, so no story fitted. Found with the Mastermind, whose
+        # third wiki example is exactly this Zombuul executed twice.
+        if phases and view.role_at(holder, phases[0]) == "Zombuul":
+            phases = phases[1:]
         phase = phases[0] if phases else None
         if phase is not None and view.role_at(holder, phase) is not None \
                 and TEAM[view.role_at(holder, phase)] != "demon":
@@ -741,9 +790,10 @@ def demon_lineages(world, state, cap=24):
         # A Mastermind buys one more day after the Demon is executed.
         # Nobody inherits — there simply is no Demon after this — so the
         # lineage ends here rather than continuing, and the nights that
-        # follow have no Demon kill to explain.
-        if phase[0].upper() != "N" and _mastermind_day(view, state, phase):
-            found.append(so_far)
+        # follow have no Demon kill to explain. Marked, so the plan can be
+        # told what that day needs.
+        if _mastermind_day(view, state, phase, holder):
+            found.append(so_far + (mastermind_marker(phase, holder),))
 
         # No offers at all, and no Mastermind, means good won right there
         # and there is no story to tell about what came after.
@@ -1680,7 +1730,17 @@ def _night_accounts(world, state):
             for extra_cost, extra_impaired, extra_working, earlier in options:
                 if extra_impaired & extra_working:
                     continue              # asked to be both at once
-                merged = {**impaired, night: set(extra_impaired)}
+                # The sets copied, not only the dict around them. With
+                # `{**impaired, ...}` every option of this night shared the
+                # previous nights' sets, and the `update` below wrote each
+                # option's demand into all of them: a Pukka's victim from
+                # one account and another account's victim piled up on the
+                # same night until no single Pukka could have poisoned
+                # both. The JavaScript always copied; Python did not, and
+                # six Bad Moon Rising games in three hundred were
+                # impossible for it alone (29.09.2026).
+                merged = {n: set(seats) for n, seats in impaired.items()}
+                merged[night] = set(extra_impaired)
                 # A kill that started on an earlier night puts its demand
                 # back where it belongs.
                 for when, seats in earlier.items():
@@ -1850,6 +1910,29 @@ def _plain_failures(world, state, outcome=None):
         if maddener is None or maddener not in state.alive_set(f"N{day}"):
             return None, None, 1.0, None
         working.setdefault(day, set()).add(maddener)
+
+    # A Mastermind's extra day, if this story has one.
+    #
+    # The Mastermind had to be working: a droisoned one has no ability,
+    # and the execution would simply have ended the game. And the day is
+    # only extra because the game *would have ended* — a Scarlet Woman
+    # who qualified would have become the Demon instead, so in a story
+    # where she did not, she was the one not working.
+    #
+    # Both used to go unasked, so a Mastermind day and a Scarlet Woman
+    # taking over stood side by side at no cost to either, and the solver
+    # split the Demon between them on a board where the rules pick her.
+    for change in getattr(world, "changes", ()):
+        if not is_mastermind_marker(change):
+            continue
+        day = int(change.phase[1:])
+        mastermind = world.find_at("Mastermind", change.phase)
+        if mastermind is None \
+                or mastermind not in state.alive_set(change.phase):
+            return None, None, 1.0, None
+        working.setdefault(day, set()).add(mastermind)
+        if scarlet_woman_takes_over(world, state, change.phase):
+            failures[day].add(world.find_at("ScarletWoman", change.phase))
 
     # Executing the Saint ends the game on the spot — while it is
     # *working*. A poisoned or drunk Saint is executed and the game

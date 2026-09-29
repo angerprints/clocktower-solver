@@ -76,6 +76,11 @@ class Deal:
         self.innkeeper_drunk = {}           # night -> which of them is drunk
         # What the table did in daylight. Only a Flowergirl and a Town
         # Crier ask, but the day is where the answer lives.
+        # A Zombuul that survived its first death — registered dead, still
+        # the Demon, still killing on quiet days. And the day after which
+        # a Mastermind's extra day runs out and the game is over.
+        self.zombuul_up = None
+        self.game_ends_after = None
         self.votes = {}                     # {day: {seat, ...}}
         self.nominations = {}               # {day: {seat, ...}}
         self.tally = {}                     # {day: {nominee: votes}}
@@ -473,6 +478,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             executed = _execute(d, night, rng, allow_takeover)
             if executed is not None:
                 d.deaths[executed] = f"E{night}"
+            # The Mastermind's extra day was this one: whoever went up,
+            # or nobody, the game is over now.
+            if d.game_ends_after is not None and night >= d.game_ends_after:
+                break
 
     return d, heard
 
@@ -809,6 +818,28 @@ def _hold_a_day(d, day, rng):
     d.tally[day] = tally
 
 
+def _survives_execution(d, seat, day):
+    """Could this seat not have died if the town executed it today?
+
+    A working Sailor cannot die. A working Fool survives its first death.
+    A working Tea Lady keeps both good neighbours alive, whatever the
+    cause. The record here has no way to say "executed and lived", so
+    these seats are simply not the ones the town picks — which is always
+    legal, where executing them and killing them never was.
+
+    Executions ignored all three, so a sober Sailor went up and died, and
+    the solver rightly called the board impossible. Found once the
+    Mastermind's sweep widened to three hundred Bad Moon Rising games.
+    """
+    phase = f"E{day}"
+    role = d.role_at(seat, phase)
+    if role == "Sailor" and d.working(seat, day):
+        return True
+    if role == "Fool" and d.working(seat, day) and d.deaths.get(seat) is None:
+        return True
+    return _kept_alive_by_a_tea_lady(d, seat, f"D{day}")
+
+
 def _execute(d, day, rng, allow_takeover=False):
     """The town executes somebody.
 
@@ -829,12 +860,35 @@ def _execute(d, day, rng, allow_takeover=False):
     # after the fourth missed this one because it is in the *day*, and I
     # only looked at the night.
     living = [p for p in d.alive_at(phase)
-              if d.role_at(p, phase) != "Saint"]
+              if d.role_at(p, phase) != "Saint"
+              and not _survives_execution(d, p, day)]
     heir = _heir(d, phase, rng)
     takeover = (allow_takeover and heir is not None
                 and d.roles[heir] == "ScarletWoman"
                 and len(d.alive_at(phase)) >= 5)
-    if not takeover:
+    # Two more ways the Demon can go up without the game ending there.
+    #
+    # A Zombuul survives its first death: it is recorded dead and goes on.
+    # Only the first — the record keeps one death a seat, so a second
+    # execution would overwrite the first and the solver would read the
+    # real death as the survivable one.
+    #
+    # A Mastermind, alive and working, buys one more day: "if the Demon
+    # dies by execution (ending the game), play for 1 more day". Only
+    # when nothing else would have kept the game going — a Scarlet Woman
+    # taking over comes first. Written from the wiki, not from the solver.
+    zombuul_first = (demon is not None
+                     and d.role_at(demon, phase) == "Zombuul"
+                     and d.zombuul_up is None
+                     and d.deaths.get(demon) is None)
+    mastermind = d.seat_of("Mastermind")
+    extra_day = (not takeover and not zombuul_first
+                 and mastermind is not None
+                 and d.role_at(mastermind, phase) == "Mastermind"
+                 and mastermind in d.alive_at(phase)
+                 and d.working(mastermind, day)
+                 and d.game_ends_after is None)
+    if not (takeover or zombuul_first or extra_day):
         living = [p for p in living if p != demon]
     if not living:
         return None
@@ -851,8 +905,13 @@ def _execute(d, day, rng, allow_takeover=False):
             return None
         victim = rng.choice(living)
     if victim == demon:
-        d.handovers.append((phase, heir))
-        d.changes.append((phase, heir, d.roles[victim]))
+        if zombuul_first:
+            d.zombuul_up = demon          # down on the board, not in fact
+        elif extra_day:
+            d.game_ends_after = day + 1   # one more day, then it is over
+        else:
+            d.handovers.append((phase, heir))
+            d.changes.append((phase, heir, d.roles[victim]))
     return victim
 
 
@@ -942,6 +1001,12 @@ def _protected(d, night, target):
             and d.poisoned.get(night) != target:
         return True
 
+    # A sober Sailor cannot die. Missing here while the solver has always
+    # had it as a shield; nothing tripped only because the Sailor is so
+    # often the drunk one of its own pair.
+    if d.role_at(target, phase) == "Sailor" and d.working(target, night):
+        return True
+
     # An Innkeeper keeps two players safe. The docstring above has
     # promised a Monk since this was written and neither was here — the
     # Innkeeper was dealt twenty-four times across a hundred and eighty
@@ -1010,7 +1075,9 @@ def _demon_kills(d, night, rng):
     phase = f"N{night}"
     demon = d.demon_at(phase)
     living = d.alive_at(phase)
-    if demon is None or demon not in living:
+    # A Zombuul that survived its first death is on the board as dead and
+    # still the Demon, so being off the living list does not stop it.
+    if demon is None or (demon not in living and d.zombuul_up != demon):
         return []
     # The Demon it is *now*, not the one this seat was dealt.
     #
@@ -1073,7 +1140,13 @@ def _demon_kills(d, night, rng):
         # night late.
         out = []
         stale = d.pukka_poisoned
-        if stale is not None and stale in living:
+        # The poison comes due as a death, and a death can be stopped: a
+        # Tea Lady beside it, a sober Sailor, an Innkeeper's pick. This
+        # took the seat regardless — the one kill in this file that never
+        # asked `_protected` — so a Sailor sober again on the night its
+        # poison came due died next to a working Tea Lady (29.09.2026).
+        if stale is not None and stale in living \
+                and not _protected(d, night, stale):
             out.append(stale)
         fresh = [p for p in others if p != stale]
         d.pukka_poisoned = rng.choice(fresh) if fresh else None
@@ -1544,6 +1617,15 @@ def droisoned_at(d, night):
                     beside = sorted(nearest_townsfolk(other))
                     if beside:
                         out.add(beside[0])
+
+    # The Courtier: whoever holds the named character is drunk for three
+    # nights and three days. Sixth droison source found missing from this
+    # list — the row was written and nothing happened, so a Courtier that
+    # named the Mastermind left it working, and the Demon's execution
+    # ran on for a day the rules do not give (29.09.2026).
+    got = getattr(d, "courtier_drunk", None)
+    if got is not None and got[0] <= night <= got[0] + 2:
+        out.add(got[1])
     return out
 
 
@@ -2199,6 +2281,21 @@ def _for_role(d, seat, role, night, rng):
                 continue
             if when == "never":
                 continue
+            # The Assassin is woken every night but the first ("at
+            # night*") until it spends its kill, pointing or shaking its
+            # head — and this simulator never spends it. Its wake set
+            # holds "first" because it is shown its team then, which is
+            # not its ability; reading the set counted it on night one and
+            # the conditional branch below never counted it again.
+            if what == "Assassin":
+                woke += night >= 2
+                continue
+            # The Philosopher chooses on the first night here, always,
+            # and choosing is waking for its ability. Its wake set says
+            # "never" or "sometimes", so night one never counted it.
+            if what == "Philosopher" and night == 1:
+                woke += p in d.philosophies
+                continue
             if night == 1:
                 if when == "every" or "first" in patterns:
                     woke += 1
@@ -2282,6 +2379,13 @@ def _for_role(d, seat, role, night, rng):
         # Three days and nights of drunkenness for whoever holds the
         # character it names. Used once, and the table hears which.
         named = rng.choice(list(d.script.townsfolk) + list(d.script.minions))
+        # And the drunkenness itself, which was never applied: the row
+        # was written and nobody got drunk. Decided now, while it is
+        # known whether the Courtier itself was working tonight.
+        holder = next((p for p in range(d.n)
+                       if d.role_at(p, f"N{night}") == named), None)
+        if holder is not None and d.working(seat, night):
+            d.courtier_drunk = (night, holder)
         return CourtierChoice(night, seat, role=named)
 
     if role == "Undertaker" and night > 1:

@@ -15,6 +15,7 @@ import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./
 import {sourcesOn} from "./impairment.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {possibleCounts} from "./waking.mjs";
+import {OTHER, shieldsOn} from "./deaths.mjs";
 
 const DEMONS = new Set(Object.entries(TEAM)
   .filter(([, team]) => team === "demon").map(([key]) => key));
@@ -785,7 +786,15 @@ export const GamblerGuess = define("GamblerGuess", "Gambler",
     const who = seat === null ? this.player : seat;
     const right = registersAsRole(w.roleAt(this.target, `N${this.night}`),
                                   this.role);
-    return s.diedAt(who).includes(`N${this.night}`) ? !right : right;
+    if (s.diedAt(who).includes(`N${this.night}`)) return !right;
+    if (right) return true;
+    // Wrong and still standing: impaired, or kept alive by a shield nobody
+    // had to aim, or an aimed one the record says landed here. See info.py.
+    const aimedHere = by => s.infos.some(info =>
+      info.sourceRole === by && info.night === this.night &&
+      [info.target, info.a, info.b].includes(who));
+    return shieldsOn(w, s, this.night, who, OTHER)
+      .some(sh => !sh.chosen || aimedHere(sh.by));
   });
 
 /** Named a character, not a player. Once per game.

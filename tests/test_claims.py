@@ -1079,6 +1079,62 @@ class TheSimulatorCanMoveCharactersAround(SolverTest):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
 
 
+class BadMoonRisingAtEveryTableSize(SolverTest):
+    """The wide sweep, kept. Six games at nine players found nothing for
+    a long time while three hundred across five table sizes found
+    thirty-two impossible boards (29.09.2026): an aliasing bug in the
+    solver's night accounts, a Gambler kept alive by a Tea Lady, the
+    Assassin's first night, and three things the simulator never did —
+    a Courtier's drunkenness, a sober Sailor surviving, a Pukka's poison
+    being stoppable.
+
+    Four nights, so the Demon can be executed with a day to spare: a
+    Zombuul surviving its first execution and a Mastermind's extra day
+    both happen here, decided by the simulator from the rules alone.
+    """
+
+    def played(self, count=200, nights=4):
+        from botc import scripts
+        from botc.info import GameState
+        bmr = scripts.BAD_MOON_RISING
+        for seed in range(count):
+            rng = random.Random(seed)
+            n = [7, 8, 9, 10, 11][seed % 5]
+            deal, heard = simulate.play(n, rng, nights=nights, script=bmr)
+            claims, wakes, _notes = C.claims_for(deal, rng, script=bmr)
+            state = GameState(n_players=n, script=bmr, claims=claims,
+                              wakes=wakes, deaths=dict(deal.deaths),
+                              infos=list(heard), votes=dict(deal.votes),
+                              nominations=dict(deal.nominations))
+            yield seed, deal, state
+
+    def test_no_board_is_impossible(self):
+        import botc.solver as S
+        from botc.worlds import World
+        for seed, deal, state in self.played():
+            truth = World(tuple(deal.roles), tuple(deal.believes))
+            with self.subTest(seed=seed, roles=deal.roles):
+                self.assertIsNotNone(S.explanation_cost(truth, state))
+
+    def test_the_demon_goes_up_and_the_game_goes_on(self):
+        """Both ways of it happen, and the solver's best story for a
+        Mastermind's day is the marked one."""
+        import botc.solver as S
+        from botc.worlds import World
+        extra = zombuul = followed = 0
+        for _seed, deal, state in self.played():
+            zombuul += deal.zombuul_up is not None
+            if deal.game_ends_after is None:
+                continue
+            extra += 1
+            truth = World(tuple(deal.roles), tuple(deal.believes))
+            _cost, changes = S.best_story(truth, state)
+            followed += any(S.is_mastermind_marker(c) for c in changes)
+        self.assertGreater(extra, 3, "hardly any Mastermind day")
+        self.assertGreater(zombuul, 3, "hardly any Zombuul survived")
+        self.assertEqual(followed, extra)
+
+
 class EasterTroublePlaysAndSolves(SolverTest):
     """The script with the Ogre and the Marionette, played and solved.
 

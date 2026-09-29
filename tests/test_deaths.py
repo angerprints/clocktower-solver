@@ -833,11 +833,16 @@ class OnlyTheImpPassesTheStar(SolverTest):
         from botc import scripts
         claims = ["Grandmother", "Sailor", "Chambermaid", "Exorcist",
                   "Innkeeper", "Gambler", "Gossip", "Tinker", "Moonchild"]
-        for demon in ("Zombuul", "Pukka", "Shabaloth", "Po"):
+        for demon in ("Pukka", "Shabaloth", "Po"):
             with self.subTest(demon=demon):
                 self.assertEqual(
                     self.lineages(demon, scripts.BAD_MOON_RISING, claims), [],
                     "good won there, and the board should say so")
+        # The Zombuul stood in that list until its first death was
+        # modelled as what it is: not a death. It goes on being the Demon,
+        # so there is one story, and it hands nothing on.
+        self.assertEqual(
+            self.lineages("Zombuul", scripts.BAD_MOON_RISING, claims), [()])
 
     def test_the_list_is_named_rather_than_assumed(self):
         import botc.solver as S

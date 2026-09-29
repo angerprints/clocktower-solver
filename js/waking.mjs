@@ -103,7 +103,9 @@ condition("Zombuul", (world, state, seat, night) => {
 });
 
 /** Every night until it uses its one kill, then never again. */
+// Every night but the first ("at night*") until it spends its kill.
 condition("Assassin", (world, state, seat, night) => {
+  if (night === 1) return false;
   for (const info of state.infos)
     if (info.sourceRole === "Assassin" && info.player === seat)
       return night <= info.night;

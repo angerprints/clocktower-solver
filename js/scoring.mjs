@@ -216,19 +216,37 @@ heirRule(function theScarletWomanStepsUp(view, state, phase, character) {
   return [change(phase, view.findAt("ScarletWoman", phase), character)];
 });
 
-/** Could play have carried on with no Demon at all?
- *
- * Only with a Mastermind alive when the Demon went, only after a daylight
- * death, and only for one more day — so if the board runs on past that,
- * this is not what happened.
- */
-function mastermindDay(world, state, phase) {
-  if (!inBag(state, "Mastermind")) return false;
+/** Was this seat executed on this day by any route the rules call an
+ * execution: the vote, a Virgin's nominator, a Cerenovus's madness. Not a
+ * Slayer's shot or a Witch's curse. See solver.py. */
+function executed(state, day, seat) {
+  if (state.executedOn(day) === seat) return true;
+  if ((state.madnessExecutions || {})[day] === seat) return true;
+  return state.infos.some(info =>
+    info.type === "VirginNomination" && info.triggered &&
+    info.night === day && info.nominator === seat);
+}
+
+/** Could play have carried on with no Demon at all? Only after an
+ * execution, with the Mastermind alive, and for one more day. Whether it
+ * was working, and whether a Scarlet Woman should have taken over, are
+ * asked of the plan where the story's marker is found. */
+function mastermindDay(world, state, phase, holder) {
+  if (!inBag(state, "Mastermind") || phase[0].toUpperCase() !== "D")
+    return false;
+  const day = parseInt(phase.slice(1), 10);
+  if (!executed(state, day, holder)) return false;
   const seat = world.findAt("Mastermind", phase);
   if (seat === null || !state.aliveSet(phase).has(seat)) return false;
-  const day = parseInt(phase.slice(1), 10);
   return phaseIndex(state.finalPhase()) <= phaseIndex(`D${day + 1}`);
 }
+
+/** The mark a Mastermind's extra day leaves in a story: a change that
+ * changes nothing, on the executed Demon. Nothing else writes one. */
+export const mastermindMarker = (phase, seat) => change(phase, seat, null, null);
+export const isMastermindMarker = c =>
+  (c.role === null || c.role === undefined) &&
+  (c.side === null || c.side === undefined);
 
 /** Every way the Demon could have changed hands in this world.
  *
@@ -255,7 +273,11 @@ export function demonLineages(world, state, cap = 24) {
     // later kills that seat, this walk was still tracking it as the
     // holder, looked for an heir, found none, and declared the whole
     // world impossible.
-    const phases = state.diedAt(holder);
+    // A Zombuul's first death is not one: it registers dead and goes on
+    // killing, so nobody inherits. Only the second is real. See solver.py.
+    let phases = state.diedAt(holder);
+    if (phases.length && view.roleAt(holder, phases[0]) === "Zombuul")
+      phases = phases.slice(1);
     const phase = phases.length ? phases[0] : null;
     if (phase !== null) {
       const held = view.roleAt(holder, phase);
@@ -282,8 +304,8 @@ export function demonLineages(world, state, cap = 24) {
     // A Mastermind buys one more day after the Demon is executed. Nobody
     // inherits — there simply is no Demon after this — so the lineage
     // ends here rather than continuing.
-    if (phase[0].toUpperCase() !== "N" && mastermindDay(view, state, phase))
-      found.push(soFar);
+    if (mastermindDay(view, state, phase, holder))
+      found.push([...soFar, mastermindMarker(phase, holder)]);
 
     // No offers at all, and no Mastermind, means good won right there.
     for (const move of moves) {
@@ -568,6 +590,19 @@ function plainFailures(world, state, outcome = {}) {
     const who = world.findAt("Cerenovus", `N${day}`);
     if (who === null || !state.aliveSet(`N${day}`).has(who)) return null;
     (working[day] = working[day] || new Set()).add(who);
+  }
+
+  // A Mastermind's extra day: it had to be working, and a Scarlet Woman
+  // who qualified would have taken over instead, so she was not.
+  for (const c of world.changes || []) {
+    if (!isMastermindMarker(c)) continue;
+    const day = parseInt(c.phase.slice(1), 10);
+    const mastermind = world.findAt("Mastermind", c.phase);
+    if (mastermind === null || !state.aliveSet(c.phase).has(mastermind))
+      return null;
+    (working[day] = working[day] || new Set()).add(mastermind);
+    if (scarletWomanTakesOver(world, state, c.phase))
+      fail(day, world.findAt("ScarletWoman", c.phase));
   }
 
   for (const day of Object.keys(state.executions || {}).map(Number)) {

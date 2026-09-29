@@ -216,12 +216,11 @@ _TB = [
     _c("Po", "po", "Po", "demon", {FIRST, EVERY}, nights="other",
        chooses=True),
 
-    _c("Mastermind", "mastermind", "Mastermind", "minion", {NEVER},
-       handled=NOT, settled=True,
-       note="it changes how the game is won rather than what happens on "
-            "the board — no deaths, no readings, nothing to reason about. "
-            "What it does do is let play carry on after the Demon is "
-            "executed, and that much is modelled"),
+    # Changes how the game is won, not what happens on the board — but
+    # a game that carries on after the Demon's execution is only legal
+    # with a working Mastermind alive and no Scarlet Woman able to take
+    # over, and that the solver weighs (`_mastermind_day`).
+    _c("Mastermind", "mastermind", "Mastermind", "minion", {NEVER}),
 ]
 
 

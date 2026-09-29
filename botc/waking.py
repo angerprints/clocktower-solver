@@ -190,7 +190,17 @@ def _zombuul(world, state, seat, night):
 
 @condition("Assassin")
 def _assassin(world, state, seat, night):
-    """Every night until it uses its one kill, then never again."""
+    """Every night until it uses its one kill, then never again.
+
+    Every night but the **first**: the card says "at night*". On night
+    one it is only shown its team, which is not its ability — the same
+    as a Baron. This said yes on night one too, and nothing noticed
+    because the simulator made the same mistake the other way round: it
+    counted the Assassin on night one and never after (29.09.2026, found
+    with the Mastermind's wider sweep).
+    """
+    if night == 1:
+        return False
     for info in state.infos:
         if getattr(info, "source_role", None) == "Assassin" \
                 and info.player == seat:

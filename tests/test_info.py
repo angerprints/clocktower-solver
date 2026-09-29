@@ -328,7 +328,9 @@ class ADayThatFinishedWithNoExecution(SolverTest):
         the game ran on too far for that."""
         import botc.solver as S
         from botc.worlds import World
-        world = World(("Grandmother", "Sailor", "Zombuul", "Exorcist",
+        # A Shabaloth, not the Zombuul this was: a Zombuul survives its
+        # first execution, so running on two more days would be legal.
+        world = World(("Grandmother", "Sailor", "Shabaloth", "Exorcist",
                        "Innkeeper", "Gambler", "Gossip", "Mastermind",
                        "Tinker"), (None,) * 9)
         one_more = self.board(deaths={2: "E2"}, quiet_nights={3},

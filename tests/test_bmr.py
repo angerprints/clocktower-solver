@@ -76,8 +76,9 @@ class TheScriptItself(SolverTest):
         self.assertEqual(set(BMR.keys) & set(scripts.TROUBLE_BREWING.keys),
                          set())
 
-    def test_every_character_but_one_is_reasoned_about(self):
-        self.assertEqual([c.name for c in BMR.unmodelled()], ["Mastermind"])
+    def test_every_character_is_reasoned_about(self):
+        # The Mastermind was the one left until 29.09.2026.
+        self.assertEqual([c.name for c in BMR.unmodelled()], [])
 
     def test_a_claim_from_off_the_script_is_refused(self):
         """It used to be set aside as "no constraint", which leaves every
@@ -729,10 +730,14 @@ class TheAssassin(SolverTest):
 
 
 class TheMastermind(SolverTest):
-    """Mostly out of scope, but the extra day it buys is not."""
+    """The extra day it buys. See also `TheMastermindBuysOneDay`."""
 
     def world(self):
-        return among("Grandmother", "Sailor", "Zombuul", "Exorcist",
+        # A Shabaloth rather than the Zombuul this used to be. A Zombuul
+        # survives its first execution, so "the board runs on too far"
+        # below was not too far at all once that was modelled — it was
+        # the Zombuul carrying on, which is legal.
+        return among("Grandmother", "Sailor", "Shabaloth", "Exorcist",
                      "Innkeeper", "Gambler", "Gossip", "Mastermind", "Tinker")
 
     def test_it_buys_one_more_day_after_the_demon_is_executed(self):
@@ -1049,3 +1054,125 @@ class APukkaPoisonsBeforeItKills(SolverTest):
         self.assertPct(cost(2), 1.0, 1e-9)      # true: nothing to explain
         self.assertLess(cost(0), 1.0)           # false: somebody must have
     
+
+
+class TheMastermindBuysOneDay(SolverTest):
+    """"If the Demon dies by execution (ending the game), play for 1 more
+    day." Each half of that sentence is a condition the solver checks.
+
+    Built with the wiki's page open (29.09.2026): execution only, the
+    Mastermind alive, and only when the game would otherwise have ended —
+    a Scarlet Woman who qualifies takes the Demon instead.
+    """
+
+    MIX = scripts.from_ids("A mixed bag", [
+        "imp", "zombuul", "mastermind", "scarletwoman", "poisoner",
+        "godfather", "grandmother", "sailor", "chambermaid", "exorcist",
+        "innkeeper", "gambler", "gossip", "courtier", "tealady", "minstrel",
+        "fool", "lunatic", "goon", "moonchild", "tinker"])
+    TOWN = ("Grandmother", "Sailor", "Chambermaid", "Exorcist", "Innkeeper",
+            "Gambler", "Gossip")
+
+    def world(self, *evil):
+        return World(tuple(evil) + self.TOWN[:9 - len(evil)],
+                     (None,) * 9)
+
+    def board(self, **kw):
+        base = dict(n_players=9, script=self.MIX, deaths={0: ("D2",)},
+                    executions={2: 0}, days_done={1, 2}, quiet_nights={3})
+        base.update(kw)
+        return GameState(**base)
+
+    def test_an_executed_demon_and_the_game_goes_on(self):
+        cost, changes = S.best_story(self.world("Imp", "Mastermind"),
+                                     self.board())
+        self.assertIsNotNone(cost)
+        self.assertTrue(any(S.is_mastermind_marker(c) for c in changes))
+
+    def test_not_without_a_mastermind(self):
+        self.assertIsNone(S.explanation_cost(
+            self.world("Imp", "Poisoner"), self.board()))
+
+    def test_only_one_more_day(self):
+        self.assertIsNone(S.explanation_cost(
+            self.world("Imp", "Mastermind"),
+            self.board(quiet_nights={3, 4}, days_done={1, 2, 3})))
+
+    def test_a_slayer_shot_is_not_an_execution(self):
+        self.assertIsNone(S.explanation_cost(
+            self.world("Imp", "Mastermind"), self.board(executions={})))
+
+    def test_the_mastermind_has_to_be_alive(self):
+        self.assertIsNone(S.explanation_cost(
+            self.world("Imp", "Mastermind"),
+            self.board(deaths={0: ("D2",), 1: ("D1",)},
+                       executions={1: 1, 2: 0})))
+
+    def test_a_scarlet_woman_comes_first(self):
+        """She takes the Demon for free; the Mastermind's day is still
+        possible, but only if she was not working, and that costs."""
+        world = self.world("Imp", "Mastermind", "ScarletWoman")
+        viable = []
+        cost, changes = S.best_story(world, self.board(), viable=viable)
+        self.assertEqual([c.role for c in changes], ["Imp"])
+        marked = [c for c, ch in viable
+                  if any(S.is_mastermind_marker(x) for x in ch)]
+        self.assertTrue(marked)
+        self.assertLess(max(marked), cost)
+
+
+class AZombuulSurvivesItsFirstExecution(SolverTest):
+    """The first time it dies it does not. Reading that death as final
+    left nobody to inherit, and every board with an executed Zombuul was
+    impossible."""
+
+    def test_executed_and_still_killing(self):
+        world = World(("Zombuul", "Godfather", "Grandmother", "Sailor",
+                       "Chambermaid", "Exorcist", "Innkeeper", "Gambler",
+                       "Gossip"), (None,) * 9)
+        state = GameState(n_players=9, script=scripts.BAD_MOON_RISING,
+                          deaths={0: ("D1",), 5: ("N3",)}, executions={1: 0},
+                          days_done={1, 2}, quiet_nights={2})
+        self.assertIsNotNone(S.explanation_cost(world, state))
+        # The second execution is real, and with nobody to take over the
+        # game is over — so a board that goes on is impossible.
+        later = GameState(n_players=9, script=scripts.BAD_MOON_RISING,
+                          deaths={0: ("D1", "D3"), 5: ("N3",)},
+                          executions={1: 0, 3: 0}, days_done={1, 2, 3},
+                          quiet_nights={2, 4})
+        self.assertIsNone(S.explanation_cost(world, later))
+
+
+class FoundByTheWiderSweep(SolverTest):
+    """Pinned without the simulator: three solver faults the three
+    hundred game sweep turned up (29.09.2026)."""
+
+    def test_a_tea_lady_keeps_a_wrong_gambler_alive(self):
+        from botc.info import GamblerGuess
+        # Gambler at 0 beside the Tea Lady at 1, whose other neighbour is
+        # good too. It names the Tea Lady as the Minstrel — wrong — and
+        # lives, because she was working.
+        world = World(("Gambler", "TeaLady", "Innkeeper", "Grandmother",
+                       "Gossip", "Godfather", "Po", "Exorcist", "Sailor"),
+                      (None,) * 9)
+        guess = GamblerGuess(2, 0, 0, target=1, role="Minstrel")
+        state = GameState(n_players=9, script=scripts.BAD_MOON_RISING,
+                          infos=[guess], days_done={1}, quiet_nights={2})
+        self.assertTrue(guess.holds(world, state, None))
+        # Not beside her, and nothing else could have kept it alive — no
+        # Innkeeper either, which could have picked it.
+        apart = World(("Grandmother", "TeaLady", "Chambermaid", "Gambler",
+                       "Gossip", "Godfather", "Po", "Exorcist", "Sailor"),
+                      (None,) * 9)
+        far = GamblerGuess(2, 3, 0, target=1, role="Minstrel")
+        self.assertFalse(far.holds(apart, state, None))
+
+    def test_the_assassin_sleeps_through_night_one(self):
+        """"At night*": on the first night it is only shown its team."""
+        from botc.waking import woke
+        world = World(("Assassin", "Grandmother", "Sailor", "Chambermaid",
+                       "Exorcist", "Innkeeper", "Gambler", "Gossip",
+                       "Zombuul"), (None,) * 9)
+        state = GameState(n_players=9, script=scripts.BAD_MOON_RISING)
+        self.assertFalse(woke(world, state, 0, 1))
+        self.assertTrue(woke(world, state, 0, 2))

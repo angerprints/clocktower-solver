@@ -4,7 +4,7 @@
 
 0. ~~Zuhause und Auslieferung~~ erledigt: Quellcode auf GitHub, Seite aus docs/, Push statt ZIP
 1. ~~Unabhängiger Schiedsrichter~~ erledigt: 440 Engine-Partien, vier Regelfehler im Solver behoben
-2. Deine Skripte vollständig: ~~Ogre, Marionette~~ erledigt, als Nächstes Mastermind, dann Mutant, Cerenovus, Savant
+2. Deine Skripte vollständig: ~~Ogre, Marionette, Mastermind~~ erledigt; als Nächstes die 22 S&V-Fehlfälle, dann Mutant, Cerenovus, Savant
 3. Gemeinsames Regelwissen, wenn das Spiel bei v2 ankommt
 4. Eine echte Partie
 

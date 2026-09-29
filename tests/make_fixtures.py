@@ -364,6 +364,21 @@ def handmade():
         "recluse", "saint", "poisoner", "spy", "imp"])
     yield board("custom-7-narrow", small, TB9[:5] + ["Recluse", "Saint"])
 
+    # The Mastermind: the Demon executed and the game going on for one
+    # more day. Only with a working Mastermind alive, and only when no
+    # Scarlet Woman could have taken over — or she was not working. And a
+    # Zombuul executed for the first time, which is not a death at all.
+    BMR9M = ["Grandmother", "Sailor", "Chambermaid", "Exorcist",
+             "Innkeeper", "Gambler", "Gossip", "Courtier", "Professor"]
+    hanged = [{"claim": c, "events": ["X2"]} if i == 6 else c
+              for i, c in enumerate(BMR9M)]
+    yield board("bmr-9-mastermind-quiet-after", BMR, hanged,
+                quiet_nights=[3], days_done=[1, 2])
+    yield board("bmr-9-zombuul-hanged", BMR,
+                [{"claim": c, "events": ["X1"]} if i == 6 else c
+                 for i, c in enumerate(BMR9M)],
+                quiet_nights=[2], days_done=[1, 2])
+
     # Easter Trouble, the script with the Ogre and the Marionette. The
     # Ogre turns evil from day one, so an Empath beside it can read 0 on
     # the first night and 1 on the second without anybody poisoned; the

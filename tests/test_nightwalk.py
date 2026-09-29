@@ -705,6 +705,12 @@ class TheWalkSaysWhenItWasNotTold(SolverTest):
                 rng = random.Random(seed)
                 deal, heard = simulate.play(9, rng, nights=3, script=script)
                 for night in (2, 3):
+                    # A game a Mastermind's extra day finished has no
+                    # night after it, and a night nobody played has
+                    # nothing to be told about.
+                    if deal.game_ends_after is not None \
+                            and night > deal.game_ends_after:
+                        continue
                     got = nightwalk.walk(
                         deal, night,
                         nightwalk.hidden_from(deal, night, heard))
