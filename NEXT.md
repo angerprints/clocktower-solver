@@ -4,7 +4,7 @@
 
 0. ~~Zuhause und Auslieferung~~ erledigt: Quellcode auf GitHub, Seite aus docs/, Push statt ZIP
 1. ~~Unabhängiger Schiedsrichter~~ erledigt: 440 Engine-Partien, vier Regelfehler im Solver behoben
-2. ~~Deine Skripte vollständig~~ erledigt: Ogre, Marionette, Mastermind, S&V-Fehlfälle, Mutant, Cerenovus, Savant. S&V danach um ein Drittel schneller gemacht. Offen: zwei seltene Philosoph-Schlangenbeschwörer-Partien, die Gewichtung der Barbier-Tausche, und Barbier-Bretter brauchen im Browser weiter bis zu 20 Sekunden
+2. ~~Deine Skripte vollständig~~ erledigt: Ogre, Marionette, Mastermind, S&V-Fehlfälle, Mutant, Cerenovus, Savant. S&V danach fast doppelt so schnell gemacht (Barbier-Tausch nur nach dem Tod eines genannten Barbiers). Offen: zwei seltene Philosoph-Schlangenbeschwörer-Partien, die Gewichtung der Barbier-Tausche, und Bretter mit genanntem totem Barbier brauchen im Browser bis zu 20 Sekunden
 3. Gemeinsames Regelwissen, wenn das Spiel bei v2 ankommt
 4. Eine echte Partie
 

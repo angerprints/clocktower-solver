@@ -139,12 +139,15 @@ function moversIn(world, state) {
     if (source === "PitHag" && info.role) made.add(info.role);
     else if (source === "SnakeCharmer" && info.swapped) swapped = true;
   }
-  const phases = [...state.deathPhases()].map(([, p]) => p).filter(p => p);
-  const died = phases.length > 0;
+  const deaths = [...state.deathPhases()].filter(([, p]) => p);
+  const phases = deaths.map(([, p]) => p);
   const atNight = phases.some(p => p[0].toUpperCase() === "N");
+  // A Barber counts only once a seat that claimed it has died.
+  const claimed = barberClaimants(state);
+  const barberDied = deaths.some(([s]) => claimed.has(Number(s)));
   const roles = new Set([...world.roles, ...made]);
   let count = (swapped ? 1 : 0) + (made.size ? 1 : 0);
-  for (const [key, needs] of [["Barber", died], ["Farmer", atNight],
+  for (const [key, needs] of [["Barber", barberDied], ["Farmer", atNight],
                               ["FangGu", atNight], ["Ogre", true]])
     if (needs && roles.has(key) && inBag(state, key)) count++;
   return count;
@@ -199,8 +202,17 @@ function nightsItActs(rule, state) {
   const rows = (role, field) => new Set(state.infos
     .filter(i => i.sourceRole === role && i[field]).map(i => i.night));
   switch (rule.name) {
-    case "aBarberLetsTheDemonSwapTwo":
-      return new Set(deaths.map(([k, kind]) => kind !== "N" ? k + 1 : k));
+    case "aBarberLetsTheDemonSwapTwo": {
+      const claimed = barberClaimants(state);
+      const out = new Set();
+      for (const [seat, phases] of Object.entries(state.deaths || {}))
+        if (claimed.has(Number(seat)))
+          for (const p of phases) {
+            const k = parseInt(p.slice(1), 10);
+            out.add(p[0].toUpperCase() !== "N" ? k + 1 : k);
+          }
+      return out;
+    }
     case "aPitHagMakesSomebodyElse": return rows("PitHag", "role");
     case "aSnakeCharmerTakesTheStar": return rows("SnakeCharmer", "swapped");
     case "aFarmerHandsItOn":
@@ -298,11 +310,26 @@ transitionRule(function aBarberLetsTheDemonSwapTwo(world, state) {
   return got;
 });
 
+/** Seats that said they were the Barber — as their claim, or in a row
+ * saying they became it or had been it. A swap is only considered once
+ * one of them has died (table ruling). See solver.py. */
+export function barberClaimants(state) {
+  const out = new Set();
+  for (const [seat, role] of Object.entries(state.claims || {}))
+    if (role === "Barber") out.add(Number(seat));
+  for (const info of state.infos)
+    if (info.type === "Became" && (info.role === "Barber" || info.was === "Barber"))
+      out.add(Number(info.player));
+  return out;
+}
+
 function barberOffers(world, state) {
-  // Whoever was the Barber when they died, dealt or made. See solver.py.
+  // Whoever was the Barber when they died, dealt or made — and claimed
+  // it. See solver.py.
+  const claimed = barberClaimants(state);
   const deaths = [];
   for (let seat = 0; seat < state.nPlayers; seat++)
-    for (const phase of state.diedAt(seat))
+    if (claimed.has(seat)) for (const phase of state.diedAt(seat))
       if (world.roleAt(seat, phase) === "Barber") deaths.push(phase);
   if (!deaths.length) return [[[], 1.0]];
 

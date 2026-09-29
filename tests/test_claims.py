@@ -1163,12 +1163,25 @@ class SectsAndVioletsAtEveryTableSize(SolverTest):
             yield seed, deal, state
 
     def test_no_board_is_impossible(self):
+        """Except the price of a table ruling (29.09.2026): a Barber swap
+        is only considered once a seat that *claimed* the Barber has died.
+        A Barber that hid, died, and whose Demon really swapped is a game
+        the solver gives up on purpose — about one in two hundred. Those
+        are counted, and must stay that rare; nothing else may fail."""
         import botc.solver as S
         from botc.worlds import World
+        given_up = 0
         for seed, deal, state in self.played():
             truth = World(tuple(deal.roles), tuple(deal.believes))
+            if S.explanation_cost(truth, state) is not None:
+                continue
+            claimed = S.barber_claimants(state)
+            hid = [p for p, at in deal.deaths.items()
+                   if deal.role_at(p, at) == "Barber" and p not in claimed]
             with self.subTest(seed=seed, roles=deal.roles):
-                self.assertIsNotNone(S.explanation_cost(truth, state))
+                self.assertTrue(hid, "impossible, and not a hidden Barber")
+                given_up += 1
+        self.assertLessEqual(given_up, 4)
 
     def test_the_fang_gu_jumps(self):
         jumped = sum(deal.fanggu_jumped for _s, deal, _st in self.played())

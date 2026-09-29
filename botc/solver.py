@@ -17,7 +17,7 @@ from itertools import product
 
 from .info import (CourtierChoice, GameState, FortuneTeller,
                    AcrobatChoice, GrandmotherInfo, SlayerShot,
-                   VirginNomination,
+                   VirginNomination, BecameInfo,
                    phase_index)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
@@ -323,12 +323,14 @@ def _movers_in(world, state):
             made.add(info.role)
         elif source == "SnakeCharmer" and getattr(info, "swapped", False):
             swapped = True
-    phases = [p for _s, p in state.death_phases() if p]
-    died = bool(phases)
+    deaths = [(s, p) for s, p in state.death_phases() if p]
+    phases = [p for _s, p in deaths]
     at_night = any(p[0].upper() == "N" for p in phases)
+    # A Barber counts only once a seat that claimed it has died.
+    barber_died = bool(barber_claimants(state) & {s for s, _p in deaths})
     roles = set(world.roles) | made
     count = int(swapped) + int(bool(made))
-    for key, needs in (("Barber", died), ("Farmer", at_night),
+    for key, needs in (("Barber", barber_died), ("Farmer", at_night),
                        ("FangGu", at_night), ("Ogre", True)):
         if needs and key in roles and _in_bag(state, key):
             count += 1
@@ -370,7 +372,10 @@ def _nights_it_acts(rule, state):
         and getattr(info, field, None)}
     name = rule.__name__
     if name == "a_barber_lets_the_demon_swap_two":
-        return {k + 1 if kind != "N" else k for k, kind in deaths}
+        claimed = barber_claimants(state)
+        return {int(p[1:]) + 1 if p[0].upper() != "N" else int(p[1:])
+                for seat, p in state.death_phases()
+                if p and seat in claimed}
     if name == "a_pit_hag_makes_somebody_else":
         return rows("PitHag", "role")
     if name == "a_snake_charmer_takes_the_star":
@@ -556,12 +561,34 @@ def a_barber_lets_the_demon_swap_two(world, state):
     return list(got)
 
 
+def barber_claimants(state):
+    """Seats that said they were the Barber — as their claim, or in a
+    row saying they became it or had been it.
+
+    **A swap is only considered once one of them has died** (table
+    ruling, 29.09.2026). A Barber's death offers every pair of seats,
+    fifty-odd stories each explained in full, and a Barber nobody claimed
+    is a death the table has no reason to read as one. The price: a
+    Barber who hid behind another claim, died, and whose Demon really
+    swapped leaves a board the solver cannot explain.
+    """
+    out = {seat for seat, role in (state.claims or {}).items()
+           if role == "Barber"}
+    for info in state.infos:
+        if isinstance(info, BecameInfo) and "Barber" in (info.role, info.was):
+            out.add(info.player)
+    return out
+
+
 def _barber_offers(world, state):
     """Every swap the Demon could make for each Barber death, and none."""
     # Whoever was the Barber when they died — dealt one, or made one by a
     # Pit-Hag. Only the dealt one was looked for, so a Pit-Hag's Barber
-    # that was executed swapped nothing (29.09.2026).
+    # that was executed swapped nothing (29.09.2026). And only a seat that
+    # claimed it: see `barber_claimants`.
+    claimed = barber_claimants(state)
     deaths = [(seat, phase) for seat in range(state.n_players)
+              if seat in claimed
               for phase in state.died_at(seat)
               if world.role_at(seat, phase) == "Barber"]
     if not deaths:

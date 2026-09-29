@@ -1844,10 +1844,14 @@ class FasterWithoutChangingAnAnswer(SolverTest):
                        "Klutz", "Mutant", "Witch", "Vortox"), (None,) * 9)
         barber = World(("Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler",
                         "Klutz", "Barber", "Witch", "FangGu"), (None,) * 9)
-        plain = GameState(n_players=9, script=SV, claims={},
+        plain = GameState(n_players=9, script=SV, claims={6: "Barber"},
                           deaths={6: "D1", 0: "N2"})
         self.assertEqual(S._movers_in(quiet, plain), 0)
         self.assertEqual(S._movers_in(barber, plain), 2)   # Barber, Fang Gu
+        # A Barber nobody claimed is no swap to consider (table ruling).
+        hidden = GameState(n_players=9, script=SV, claims={6: "Sage"},
+                           deaths={6: "D1", 0: "N2"})
+        self.assertEqual(S._movers_in(barber, hidden), 1)
         swapped = GameState(n_players=9, script=SV, claims={},
                             infos=[SnakeCharmerChoice(1, 2, target=8,
                                                       swapped=True)])
@@ -1885,6 +1889,33 @@ class FasterWithoutChangingAnAnswer(SolverTest):
             app.analyze = real
         truth = World(tuple(deal.roles), tuple(deal.believes))
         self.assertIsNotNone(S.explanation_cost(truth, seen["state"]))
+
+
+class ABarberSwapNeedsADeadBarberClaim(SolverTest):
+    """Table ruling, 29.09.2026: a Barber swap is only considered once a
+    seat that claimed the Barber has died. Its death offers every pair of
+    seats, and a Barber nobody claimed is a death the table has no reason
+    to read as one."""
+
+    ROLES = ("Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler", "Klutz",
+             "Barber", "Witch", "Vortox")
+
+    def stories(self, claim, **kw):
+        state = GameState(n_players=9, script=SV, claims={6: claim},
+                          deaths={6: "D1"}, quiet_nights={2}, **kw)
+        return S.possible_timelines(World(self.ROLES, (None,) * 9), state)
+
+    def test_a_claimed_barber_offers_the_swaps(self):
+        self.assertGreater(len(self.stories("Barber")), 30)
+
+    def test_a_hidden_one_offers_none(self):
+        self.assertEqual(self.stories("Sage"), [((), 1.0)])
+
+    def test_saying_so_later_counts_as_a_claim(self):
+        from botc.info import BecameInfo
+        got = self.stories("Sage", infos=[BecameInfo(1, 6, role="Sage",
+                                                     was="Barber")])
+        self.assertGreater(len(got), 30)
 
 
 class FoundByTheWideSweep(SolverTest):
