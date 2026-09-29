@@ -33,8 +33,10 @@ export function inBag(state, key) {
   return state._bagCache.has(key);
 }
 
-const allSeats = state => new Set(
-  Array.from({length: state.nPlayers}, (_, i) => i));
+// One set per board: every Demon's kill and every Sweetheart asks for it
+// on every night of every story. Nobody changes it.
+const allSeats = state => state._allSeats ||
+  (state._allSeats = new Set(Array.from({length: state.nPlayers}, (_, i) => i)));
 
 /** The seat holding this character, if it is standing tonight. */
 function acting(world, state, key, night) {

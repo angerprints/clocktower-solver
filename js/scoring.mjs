@@ -119,9 +119,8 @@ export const heirRule = fn => (HEIR_RULES.push(fn), fn);
 // 128, not 48: a Barber's death offers every pair of seats. A night at a
 // time when more than one rule can move anybody. See solver.py.
 export function possibleTimelines(world, state, cap = 128) {
-  const movers = ["SnakeCharmer", "PitHag", "Barber", "Farmer", "Ogre",
-                  "FangGu"].filter(k => inBag(state, k)).length;
-  if (movers < 2) return allNightsAtOnce(world, state, cap);
+  // Counted in this world, not on the script. See solver.py.
+  if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
   try {
     return nightByNight(world, state, cap, last)
@@ -129,6 +128,26 @@ export function possibleTimelines(world, state, cap = 128) {
   } finally {
     state._horizon = null;
   }
+}
+
+/** How many kinds of change could actually happen in this world. */
+function moversIn(world, state) {
+  const made = new Set();
+  let swapped = false;
+  for (const info of state.infos) {
+    const source = info.sourceRole;
+    if (source === "PitHag" && info.role) made.add(info.role);
+    else if (source === "SnakeCharmer" && info.swapped) swapped = true;
+  }
+  const phases = [...state.deathPhases()].map(([, p]) => p).filter(p => p);
+  const died = phases.length > 0;
+  const atNight = phases.some(p => p[0].toUpperCase() === "N");
+  const roles = new Set([...world.roles, ...made]);
+  let count = (swapped ? 1 : 0) + (made.size ? 1 : 0);
+  for (const [key, needs] of [["Barber", died], ["Farmer", atNight],
+                              ["FangGu", atNight], ["Ogre", true]])
+    if (needs && roles.has(key) && inBag(state, key)) count++;
+  return count;
 }
 
 /** Every rule once, over the whole game, in night-slot order. */
@@ -151,7 +170,22 @@ function allNightsAtOnce(world, state, cap) {
 }
 
 const nightOf = c => parseInt(c.phase.slice(1), 10);
-const changeKey = c => `${c.phase}|${c.seat}|${c.role}|${c.side}`;
+// Worked out once per change: the night passes ask for the same keys and
+// moments of the same few changes hundreds of times per world.
+const KEYS = new WeakMap(), MOMENTS = new WeakMap();
+const sameChange = (a, b) => a === b || (a.phase === b.phase &&
+  a.seat === b.seat && (a.role ?? null) === (b.role ?? null) &&
+  (a.side ?? null) === (b.side ?? null));
+const changeKey = c => {
+  let k = KEYS.get(c);
+  if (k === undefined) KEYS.set(c, k = `${c.phase}|${c.seat}|${c.role}|${c.side}`);
+  return k;
+};
+const momentOf = c => {
+  let m = MOMENTS.get(c);
+  if (m === undefined) MOMENTS.set(c, m = phaseIndex(c.phase));
+  return m;
+};
 
 /** A night at a time, each rule seeing everything but its own earlier
  * work. Stories are [changes, weight, owned] with owned = [[i, changes]].
@@ -191,11 +225,10 @@ function nightByNight(world, state, cap, last) {
       const keep = (changes, got, owned) => {
         const owner = new Map();
         for (const [k, mine] of owned) for (const c of mine) owner.set(changeKey(c), k);
-        const ordered = changes.map((c, idx) => [c, idx]).sort((a, b) =>
-          phaseIndex(a[0].phase) - phaseIndex(b[0].phase) ||
-          (owner.get(changeKey(a[0])) ?? TRANSITION_RULES.length) -
-          (owner.get(changeKey(b[0])) ?? TRANSITION_RULES.length) ||
-          a[1] - b[1]).map(([c]) => c);
+        const ordered = changes.map((c, idx) => [c, idx, momentOf(c),
+            owner.get(changeKey(c)) ?? TRANSITION_RULES.length])
+          .sort((a, b) => a[2] - b[2] || a[3] - b[3] || a[1] - b[1])
+          .map(([c]) => c);
         const key = ordered.map(changeKey).join(";");
         if (seen.has(key)) {
           const j = seen.get(key);
@@ -210,16 +243,21 @@ function nightByNight(world, state, cap, last) {
         const entry = owned.find(([k]) => k === i);
         const mine = entry ? entry[1] : [];
         const mineKeys = new Set(mine.map(changeKey));
-        const others = changes.filter(c => !mineKeys.has(changeKey(c)));
+        const others = mine.length
+          ? changes.filter(c => !mineKeys.has(changeKey(c))) : changes;
+        const earlier = mine.filter(c => nightOf(c) < night);
         const view = others.length ? new Timeline(world, others) : world;
         let fitted = false;
         for (const [extra, cost] of rule(view, state)) {
-          const upto = extra.filter(c => nightOf(c) <= night);
-          const uptoKeys = new Set(upto.map(changeKey));
-          if (mine.some(c => nightOf(c) < night && !uptoKeys.has(changeKey(c))))
+          // What this rule settled for earlier nights has to stand. Asked
+          // first and without building keys: on the last pass a Barber
+          // offers every pair again to each of its fifty-odd stories, and
+          // all but one offer fail here.
+          if (earlier.some(m => !extra.some(c => sameChange(c, m))))
             continue;                     // another story's earlier night
+          const upto = extra.filter(c => nightOf(c) <= night);
           fitted = true;
-          const added = upto.some(c => !mineKeys.has(changeKey(c)));
+          const added = upto.some(c => !mine.some(m => sameChange(m, c)));
           const again = owned.filter(([k]) => k !== i);
           keep([...others, ...upto], weight * (added ? cost : 1.0),
                [...again, [i, upto]]);
@@ -249,6 +287,18 @@ export const BARBER_SWAP_PENALTY = 0.15;
  */
 transitionRule(function aBarberLetsTheDemonSwapTwo(world, state) {
   if (!inBag(state, "Barber")) return [[[], 1.0]];
+  // Its offers depend only on the board it is shown, and a night-by-night
+  // solve shows it the same board once per story it already made — fifty
+  // times over. Kept per deal and per exact set of changes. See solver.py.
+  const base = world instanceof Timeline ? world.world : world;
+  const memo = memoFor(base, "_barberMemo", state);
+  const key = (world.changes || []).map(changeKey).join(";");
+  let got = memo.got.get(key);
+  if (got === undefined) memo.got.set(key, got = barberOffers(world, state));
+  return got;
+});
+
+function barberOffers(world, state) {
   // Whoever was the Barber when they died, dealt or made. See solver.py.
   const deaths = [];
   for (let seat = 0; seat < state.nPlayers; seat++)
@@ -275,7 +325,7 @@ transitionRule(function aBarberLetsTheDemonSwapTwo(world, state) {
       }
   }
   return stories;
-});
+}
 
 // Demons that hand the star on when they kill themselves. The Imp is the
 // only one in print, and saying so out loud matters: this used to be
@@ -946,6 +996,34 @@ function plainFailures(world, state, outcome = {}) {
  * because "the Demon was stopped" and "the Demon killed somebody" are the
  * same question asked of the same cause.
  */
+/** A memo on this deal, good for this state in this epoch only. */
+function memoFor(base, name, state) {
+  let memo = base[name];
+  if (!memo || memo.state !== state || memo.epoch !== state._epoch) {
+    memo = {state, epoch: state._epoch, got: new Map()};
+    Object.defineProperty(base, name, {value: memo, writable: true,
+                                       configurable: true});
+  }
+  return memo;
+}
+
+/** `explainNight`, kept per deal and per what had happened by then: a
+ * night's deaths read only the changes up to it, so the stories of one
+ * world share their early nights. See solver.py `_explained_night`. */
+function explainedNight(world, state, night, died) {
+  const base = world instanceof Timeline ? world.world : world;
+  const here = phaseIndex(`N${night}`);
+  const upto = (world.changes || []).filter(c => momentOf(c) <= here);
+  const memo = memoFor(base, "_nightsMemo", state);
+  const key = `${night}#${upto.map(changeKey).join(";")}`;
+  let got = memo.got.get(key);
+  if (got === undefined) {
+    got = explainNight(world, state, night, died());
+    memo.got.set(key, got);
+  }
+  return got;
+}
+
 function nightAccounts(world, state) {
   const deaths = nightDeaths(state);
   const nights = new Set([...Object.keys(deaths).map(Number),
@@ -954,8 +1032,8 @@ function nightAccounts(world, state) {
 
   let accounts = [{cost: 1.0, impaired: {}, working: {}}];
   for (const night of [...nights].sort((a, b) => a - b)) {
-    const died = new Set(deaths[night] || []);
-    const options = explainNight(world, state, night, died);
+    const options = explainedNight(world, state, night,
+                                   () => new Set(deaths[night] || []));
     if (!options.length) return [];
     const grown = [];
     for (const acc of accounts) {
@@ -1127,6 +1205,10 @@ export function rowOutcomes(world, state) {
  * the deal gives.
  */
 export function bestStory(world, state, outcome = null) {
+  // A new epoch for the memos (sources, nights, Barber offers): they save
+  // work between one world's stories, and kept past that a constant or a
+  // rule changed between two solves would be answered from before it.
+  state._epoch = (state._epoch || 0) + 1;
   const stories = possibleTimelines(world, state);
   if (!stories.length) return {cost: null, changes: [], viable: []};
   if (stories.length === 1 && !stories[0][0].length) {

@@ -1778,6 +1778,115 @@ class AnHeirIsNotALiar(SolverTest):
         self.assertNotIn(5, S._could_have_inherited(heir, self.board()))
 
 
+class FasterWithoutChangingAnAnswer(SolverTest):
+    """Sects & Violets got slow when the Mutant multiplied the worlds.
+    What made it quicker must not change a single answer — the corpus
+    checks that board by board; these pin the pieces."""
+
+    def test_the_indexed_timeline_answers_as_the_plain_walk_did(self):
+        import random
+        from botc.info import phase_index
+        from botc.roles import alignment, TEAM
+        from botc.worlds import Change, Timeline
+        rng = random.Random(7)
+        roles = ("Clockmaker", "Dreamer", "SnakeCharmer", "Oracle", "Barber",
+                 "Mutant", "Witch", "FangGu")
+        pool = list(roles) + ["Vortox", "Sage", "Philosopher"]
+        phases = [f"{k}{n}" for n in range(1, 5) for k in "ND"]
+
+        def plain_role(t, seat, phase):
+            role = t.world.roles[seat]
+            for c in t.changes:
+                if c.seat == seat and c.role is not None \
+                        and phase_index(c.phase) <= phase_index(phase):
+                    role = c.role
+            return role
+
+        def plain_side(t, seat, phase):
+            side = alignment(t.world.roles[seat])
+            for c in t.changes:
+                if c.seat != seat or phase_index(c.phase) > phase_index(phase):
+                    continue
+                side = c.side or (alignment(c.role) if c.role else side)
+            return side
+
+        def plain_demon(t, phase):
+            seat = t.world.demon_at(phase)
+            for c in t.changes:
+                if c.role and TEAM[c.role] == "demon" \
+                        and phase_index(c.phase) <= phase_index(phase):
+                    seat = c.seat
+            return seat
+
+        world = World(roles, (None,) * 8)
+        for _ in range(300):
+            changes = tuple(
+                Change(rng.choice(phases), rng.randrange(8),
+                       rng.choice(pool + [None]),
+                       rng.choice([None, "good", "evil"]))
+                for _k in range(rng.randrange(5)))
+            t = Timeline(world, changes)
+            for phase in phases:
+                self.assertEqual(t.demon_at(phase), plain_demon(t, phase))
+                for seat in range(8):
+                    self.assertEqual(t.role_at(seat, phase),
+                                     plain_role(t, seat, phase))
+                    self.assertEqual(t.alignment_at(seat, phase),
+                                     plain_side(t, seat, phase))
+                for role in pool:
+                    want = next((p for p in range(8)
+                                 if plain_role(t, p, phase) == role), None)
+                    self.assertEqual(t.find_at(role, phase), want)
+
+    def test_a_night_at_a_time_only_where_two_kinds_of_change_can_happen(self):
+        from botc.info import SnakeCharmerChoice
+        quiet = World(("Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler",
+                       "Klutz", "Mutant", "Witch", "Vortox"), (None,) * 9)
+        barber = World(("Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler",
+                        "Klutz", "Barber", "Witch", "FangGu"), (None,) * 9)
+        plain = GameState(n_players=9, script=SV, claims={},
+                          deaths={6: "D1", 0: "N2"})
+        self.assertEqual(S._movers_in(quiet, plain), 0)
+        self.assertEqual(S._movers_in(barber, plain), 2)   # Barber, Fang Gu
+        swapped = GameState(n_players=9, script=SV, claims={},
+                            infos=[SnakeCharmerChoice(1, 2, target=8,
+                                                      swapped=True)])
+        self.assertEqual(S._movers_in(quiet, swapped), 1)
+
+    def test_played_boards_put_the_votes_on_the_seats(self):
+        """Where the page and both readers look for them. At the top of
+        the payload they were dropped, and a Flowergirl who saw the Demon
+        vote read as lying — the true world impossible."""
+        import random
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import app
+        import make_fixtures
+        import simulate
+        board = make_fixtures.played("x", SV, 8, 10, 3)
+        self.assertNotIn("votes", board["payload"])
+        self.assertTrue(any(p["voted"] for p in board["payload"]["players"]))
+        deal, _heard = simulate.play(10, random.Random(8), nights=3,
+                                     script=SV)
+        seen = {}
+
+        def keep(state, *a, **k):
+            seen["state"] = state
+            raise LookupError
+
+        real = app.analyze
+        app.analyze = keep
+        try:
+            app.run_solve(board["payload"])
+        except LookupError:
+            pass
+        finally:
+            app.analyze = real
+        truth = World(tuple(deal.roles), tuple(deal.believes))
+        self.assertIsNotNone(S.explanation_cost(truth, seen["state"]))
+
+
 class FoundByTheWideSweep(SolverTest):
     """Pinned without the simulator (29.09.2026)."""
 

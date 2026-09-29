@@ -104,9 +104,30 @@ export class Timeline {
     this.world = world;
     // In time order, stable: questions take the last change that applies,
     // front to back. See worlds.py.
-    this.changes = changes.map((c, i) => [c, i])
-      .sort((a, b) => phaseIndex(a[0].phase) - phaseIndex(b[0].phase) || a[1] - b[1])
+    this.changes = changes.map((c, i) => [c, i, phaseIndex(c.phase)])
+      .sort((a, b) => a[2] - b[2] || a[1] - b[1])
       .map(([c]) => c);
+    // Indexed by seat on first use, with each moment already a number:
+    // most seats never change, and every question used to walk all the
+    // changes and parse every phase again. Same answers. See worlds.py.
+    this._index = null;
+  }
+
+  _indexed() {
+    if (this._index) return this._index;
+    const roles = new Map(), sides = new Map(), demons = [], held = new Set();
+    for (const c of this.changes) {
+      const at = phaseIndex(c.phase);
+      if (!sides.has(c.seat)) sides.set(c.seat, []);
+      sides.get(c.seat).push([at, c]);
+      if (c.role !== null && c.role !== undefined) {
+        if (!roles.has(c.seat)) roles.set(c.seat, []);
+        roles.get(c.seat).push([at, c.role]);
+        held.add(c.role);
+        if (TEAM[c.role] === "demon") demons.push([at, c.seat]);
+      }
+    }
+    return (this._index = {roles, sides, demons, held});
   }
 
   // Questions about the whole game go straight through; only questions
@@ -118,21 +139,25 @@ export class Timeline {
   evilPlayers() { return this.world.evilPlayers(); }
 
   roleAt(seat, phase) {
-    const here = phaseIndex(phase);
     let role = this.world.roles[seat];
-    for (const c of this.changes)
-      if (c.seat === seat && c.role !== null && phaseIndex(c.phase) <= here)
-        role = c.role;
+    const mine = this._indexed().roles.get(seat);
+    if (mine) {
+      const here = phaseIndex(phase);
+      for (const [at, changed] of mine) if (at <= here) role = changed;
+    }
     return role;
   }
 
   alignmentAt(seat, phase) {
-    const here = phaseIndex(phase);
     let side = alignment(this.world.roles[seat]);
-    for (const c of this.changes) {
-      if (c.seat !== seat || phaseIndex(c.phase) > here) continue;
-      // An explicit side wins; otherwise take the new character's.
-      side = c.side || (c.role ? alignment(c.role) : side);
+    const mine = this._indexed().sides.get(seat);
+    if (mine) {
+      const here = phaseIndex(phase);
+      for (const [at, c] of mine) {
+        if (at > here) continue;
+        // An explicit side wins; otherwise take the new character's.
+        side = c.side || (c.role ? alignment(c.role) : side);
+      }
     }
     return side;
   }
@@ -140,6 +165,9 @@ export class Timeline {
   evilAt(seat, phase) { return this.alignmentAt(seat, phase) === EVIL; }
 
   findAt(role, phase) {
+    // Nobody dealt it and nobody changed into it: nobody holds it.
+    if (!this._indexed().held.has(role) && !this.world.roles.includes(role))
+      return null;
     for (let seat = 0; seat < this.world.roles.length; seat++)
       if (this.roleAt(seat, phase) === role) return seat;
     return null;
@@ -159,11 +187,12 @@ export class Timeline {
    * the tracking was never the fault.
    */
   demonAt(phase) {
-    const here = phaseIndex(phase);
     let seat = this.world.demonAt(phase);
-    for (const c of this.changes)
-      if (c.role && TEAM[c.role] === "demon" && phaseIndex(c.phase) <= here)
-        seat = c.seat;
+    const demons = this._indexed().demons;
+    if (demons.length) {
+      const here = phaseIndex(phase);
+      for (const [at, changed] of demons) if (at <= here) seat = changed;
+    }
     return seat;
   }
 

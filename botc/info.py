@@ -1758,6 +1758,21 @@ class KlutzChoice(Info):
         return not w.evil_at(self.target, f"N{self.night}")
 
 
+_UNBUILT = {}
+
+
+def _unbuilt_impairer(script):
+    """Can something on this script droison that is not built? Asked of
+    every Mathematician reading in every story; the answer is the
+    script's, so it is worked out once per script."""
+    key = tuple(script.keys)
+    got = _UNBUILT.get(key)
+    if got is None:
+        got = _UNBUILT[key] = any(c.impairs and not c.modelled
+                                  for c in script.characters())
+    return got
+
+
 @dataclass
 class MathematicianInfo(Info):
     """How many abilities went wrong tonight.
@@ -1789,8 +1804,7 @@ class MathematicianInfo(Info):
     def weighed(self, state):
         # Silent on a script it cannot account for, and silence has to
         # survive a Vortox.
-        return not any(c.impairs and not c.modelled
-                       for c in state.script.characters())
+        return not _unbuilt_impairer(state.script)
 
     def holds(self, w, s, rh, seat=None):
         # It can only count what the solver knows how to break. A script
@@ -1801,7 +1815,7 @@ class MathematicianInfo(Info):
         #
         # So on a script that is not fully modelled this constrains
         # nothing, and says so, rather than being confidently wrong.
-        if any(c.impairs and not c.modelled for c in s.script.characters()):
+        if _unbuilt_impairer(s.script):
             return True
         low, high = _possible_impairment_counts(w, s, self.night)
         return low <= self.count <= high

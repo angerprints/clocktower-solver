@@ -538,9 +538,24 @@ export function savantTruths(says, w, phase, real = false) {
  * was true; under a Vortox both were false. Read on the day of the visit.
  * See info.py for the whole reasoning.
  */
+/** Both statements tidied once per row, since `weighed` and `holds` are
+ * asked of it in every story. [first, second], each null if only words. */
+function savantPair(row) {
+  if (row._pair === undefined ||
+      row._pairFrom !== row.first_says || row._pairFrom2 !== row.second_says) {
+    Object.defineProperty(row, "_pair", {value: [savantSays(row.first_says),
+      savantSays(row.second_says)], writable: true, configurable: true});
+    Object.defineProperty(row, "_pairFrom", {value: row.first_says,
+      writable: true, configurable: true});
+    Object.defineProperty(row, "_pairFrom2", {value: row.second_says,
+      writable: true, configurable: true});
+  }
+  return row._pair;
+}
+
 export const SavantInfo = define("SavantInfo", "Savant",
   function (w, s) {
-    const one = savantSays(this.first_says), two = savantSays(this.second_says);
+    const [one, two] = savantPair(this);
     if (!one || !two) return true;       // the words are kept, not weighed
     const phase = `D${this.night}`;
     const a = savantTruths(one, w, phase), b = savantTruths(two, w, phase);
@@ -548,10 +563,11 @@ export const SavantInfo = define("SavantInfo", "Savant",
     return false;
   }, {
     weighed() {
-      return !!savantSays(this.first_says) && !!savantSays(this.second_says);
+      const [one, two] = savantPair(this);
+      return !!one && !!two;
     },
     isTrue(w) {
-      const one = savantSays(this.first_says), two = savantSays(this.second_says);
+      const [one, two] = savantPair(this);
       if (!one || !two) return false;
       const phase = `D${this.night}`;
       return savantTruths(one, w, phase, true).has(true) ||
@@ -802,23 +818,30 @@ export function possibleImpairmentCounts(world, state, night) {
  * and it uses the night's own span, where "since dawn" straddles the day
  * before and tonight.
  */
+/** Can something on this script droison that the solver has not built?
+ * Asked of every Mathematician reading in every story; the answer
+ * belongs to the script, so it is kept there. */
+const UNBUILT = new WeakMap();
+function scriptHasUnbuiltImpairer(script) {
+  let got = UNBUILT.get(script);
+  if (got === undefined) UNBUILT.set(script, got = script.keys.some(
+    k => CHARACTERS[k].impairs && !CHARACTERS[k].modelled));
+  return got;
+}
+
 export const MathematicianInfo = define("MathematicianInfo", "Mathematician",
   function (w, s) {
     // It can only count what the solver knows how to break. A script
     // with characters still to be built may have ways to go wrong that
     // nothing here has heard of, and ruling out a number on that basis
     // would throw away worlds that really happened.
-    if (s.script.keys.some(k => CHARACTERS[k].impairs &&
-                                !CHARACTERS[k].modelled)) return true;
+    if (scriptHasUnbuiltImpairer(s.script)) return true;
     const [low, high] = possibleImpairmentCounts(w, s, this.night);
     return low <= this.count && this.count <= high;
   }, {
     // Silent on a script it cannot account for, and silence has to
     // survive a Vortox.
-    weighed(state) {
-      return !state.script.keys.some(k => CHARACTERS[k].impairs &&
-                                          !CHARACTERS[k].modelled);
-    },
+    weighed(state) { return !scriptHasUnbuiltImpairer(state.script); },
   });
 
 /** How many steps from the Demon to its nearest Minion.

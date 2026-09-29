@@ -154,6 +154,24 @@ class Timeline:
         # the rules made them in.
         object.__setattr__(self, "changes", tuple(sorted(
             self.changes, key=lambda c: phase_index(c.phase))))
+        # Indexed once, by seat, with each moment already turned into a
+        # number. Every question below used to walk all the changes and
+        # parse every phase again — fourteen million times on one ten-seat
+        # board — when most seats never change at all. Same answers, same
+        # order; only the walk is shorter.
+        roles, sides, demons, held = {}, {}, [], set()
+        for change in self.changes:
+            at = phase_index(change.phase)
+            sides.setdefault(change.seat, []).append((at, change))
+            if change.role is not None:
+                roles.setdefault(change.seat, []).append((at, change.role))
+                held.add(change.role)
+                if TEAM[change.role] == "demon":
+                    demons.append((at, change.seat))
+        object.__setattr__(self, "_roles_by_seat", roles)
+        object.__setattr__(self, "_sides_by_seat", sides)
+        object.__setattr__(self, "_demon_changes", demons)
+        object.__setattr__(self, "_roles_changed_to", held)
 
     # Questions about the whole game go straight through: who was dealt
     # what, who claimed what. Only questions about a moment consult the
@@ -176,29 +194,35 @@ class Timeline:
         return self.world.evil_players()
 
     def role_at(self, seat, phase):
-        here = phase_index(phase)
         role = self.world.roles[seat]
-        for change in self.changes:
-            if change.seat == seat and change.role is not None \
-                    and phase_index(change.phase) <= here:
-                role = change.role
+        mine = self._roles_by_seat.get(seat)
+        if mine:
+            here = phase_index(phase)
+            for at, changed in mine:
+                if at <= here:
+                    role = changed
         return role
 
     def alignment_at(self, seat, phase):
-        here = phase_index(phase)
         side = alignment(self.world.roles[seat])
-        for change in self.changes:
-            if change.seat != seat or phase_index(change.phase) > here:
-                continue
-            # An explicit side wins; otherwise take the new character's.
-            side = change.side or (alignment(change.role) if change.role
-                                   else side)
+        mine = self._sides_by_seat.get(seat)
+        if mine:
+            here = phase_index(phase)
+            for at, change in mine:
+                if at > here:
+                    continue
+                # An explicit side wins; otherwise the new character's.
+                side = change.side or (alignment(change.role) if change.role
+                                       else side)
         return side
 
     def evil_at(self, seat, phase):
         return self.alignment_at(seat, phase) == EVIL
 
     def find_at(self, role, phase):
+        # Nobody dealt it and nobody changed into it: nobody holds it.
+        if role not in self._roles_changed_to and role not in self.world.roles:
+            return None
         for seat in range(len(self.world.roles)):
             if self.role_at(seat, phase) == role:
                 return seat
@@ -222,12 +246,12 @@ class Timeline:
         demon role in it. That only failed while the swap was copying the
         wrong character; the tracking was never the fault.
         """
-        here = phase_index(phase)
         seat = self.world.demon_at(phase)
-        for change in self.changes:
-            if change.role and TEAM[change.role] == "demon" \
-                    and phase_index(change.phase) <= here:
-                seat = change.seat
+        if self._demon_changes:
+            here = phase_index(phase)
+            for at, changed in self._demon_changes:
+                if at <= here:
+                    seat = changed
         return seat
 
     def team_at(self, seat, phase):

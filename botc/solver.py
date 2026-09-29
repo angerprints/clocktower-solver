@@ -286,10 +286,13 @@ def possible_timelines(world, state, cap=128):
     # change can be missing from its view. That is every Trouble Brewing
     # and Bad Moon Rising board, and the single pass is a third quicker
     # over the corpus.
-    movers = sum(1 for key in ("SnakeCharmer", "PitHag", "Barber",
-                               "Farmer", "Ogre", "FangGu")
-                 if _in_bag(state, key))
-    if movers < 2:
+    #
+    # Counted **in this world**, not on the script. Asked of the script,
+    # every Sects & Violets board took the slow road for every world —
+    # including the three quarters with no Barber, no Fang Gu and nothing
+    # recorded for a Snake Charmer or a Pit-Hag — and once the Mutant
+    # multiplied the worlds that was most of the time a solve took.
+    if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
     last = max(1, int(state.final_phase()[1:]))
@@ -302,6 +305,34 @@ def possible_timelines(world, state, cap=128):
     finally:
         state._horizon = None
     return [(changes, weight) for changes, weight, _owned in stories]
+
+
+def _movers_in(world, state):
+    """How many kinds of change could actually happen in this world.
+
+    Each counts only when its rule could offer something here: a Snake
+    Charmer or a Pit-Hag through a recorded row (the rules apply those
+    whoever holds what), a Barber, Farmer or Fang Gu only if one is in
+    the world — dealt, or made by a recorded Pit-Hag creation — and has
+    the death that sets it off, an Ogre only if one was dealt.
+    """
+    made, swapped = set(), False
+    for info in state.infos:
+        source = getattr(info, "source_role", None)
+        if source == "PitHag" and getattr(info, "role", None):
+            made.add(info.role)
+        elif source == "SnakeCharmer" and getattr(info, "swapped", False):
+            swapped = True
+    phases = [p for _s, p in state.death_phases() if p]
+    died = bool(phases)
+    at_night = any(p[0].upper() == "N" for p in phases)
+    roles = set(world.roles) | made
+    count = int(swapped) + int(bool(made))
+    for key, needs in (("Barber", died), ("Farmer", at_night),
+                       ("FangGu", at_night), ("Ogre", True)):
+        if needs and key in roles and _in_bag(state, key):
+            count += 1
+    return count
 
 
 def _all_nights_at_once(world, state, cap):
@@ -512,6 +543,21 @@ def a_barber_lets_the_demon_swap_two(world, state):
     """
     if not _in_bag(state, "Barber"):
         return [((), 1.0)]
+    # Its offers depend only on the board it is shown, and a night-by-night
+    # solve shows it the same board once for every story it already made
+    # — fifty-odd times on a ten-seat table. Kept per deal and per exact
+    # set of changes; the offers are never changed by whoever reads them.
+    base = world.world if isinstance(world, Timeline) else world
+    memo = _memo_for(base, "_barber_memo", state)
+    key = tuple(getattr(world, "changes", ()))
+    got = memo.get(key)
+    if got is None:
+        got = memo[key] = _barber_offers(world, state)
+    return list(got)
+
+
+def _barber_offers(world, state):
+    """Every swap the Demon could make for each Barber death, and none."""
     # Whoever was the Barber when they died — dealt one, or made one by a
     # Pit-Hag. Only the dealt one was looked for, so a Pit-Hag's Barber
     # that was executed swapped nothing (29.09.2026).
@@ -1948,6 +1994,43 @@ def blame_for_deaths(state, worlds, allow_good_lies=False):
     return out
 
 
+_EPOCHS = __import__("itertools").count(1)
+
+
+def _memo_for(base, name, state):
+    """A memo on this deal, good for this state in this epoch only."""
+    epoch = getattr(state, "_epoch", None)
+    memo = getattr(base, name, None)
+    if memo is None or memo[0] is not state or memo[1] != epoch:
+        memo = (state, epoch, {})
+        object.__setattr__(base, name, memo)
+    return memo[2]
+
+
+def _explained_night(world, state, night):
+    """`explain_night`, kept per deal and per what had happened by then.
+
+    A night's deaths are explained from the board as it stood that night,
+    so they depend only on the changes up to it. Every story of one world
+    shares its deal, and most share their early nights too: a Barber
+    dying on night two offers fifty-five swaps, and night two's deaths
+    read the same in all of them. Worked out once rather than fifty-five
+    times — the answer is the same object, never changed by its readers.
+    """
+    base = world.world if isinstance(world, Timeline) else world
+    here = phase_index(f"N{night}")
+    upto = tuple(c for c in getattr(world, "changes", ())
+                 if phase_index(c.phase) <= here)
+    memo = _memo_for(base, "_nights_memo", state)
+    key = (night, upto)
+    got = memo.get(key)
+    if got is None:
+        died = set(_night_deaths(state).get(night, ()))
+        got = memo[key] = death_causes.explain_night(world, state, night,
+                                                     died)
+    return got
+
+
 def _night_accounts(world, state):
     """How every night of this game could have gone.
 
@@ -1966,8 +2049,7 @@ def _night_accounts(world, state):
 
     accounts = [(1.0, {}, {})]
     for night in sorted(nights):
-        died = set(_night_deaths(state).get(night, ()))
-        options = death_causes.explain_night(world, state, night, died)
+        options = _explained_night(world, state, night)
         if not options:
             return []
         grown = []
@@ -2940,6 +3022,11 @@ def best_story(world, state, outcome=None, viable=None):
     the story that won. `viable`, if given, is filled with every story
     that fits, as (cost, changes) — see `_story_shares`.
     """
+    # A new epoch for the memos below (`sources_on`, `_explained_night`,
+    # the Barber's offers). They save work between the stories of one
+    # world; kept past that, a constant or a rule changed between two
+    # solves of the same world would be answered from before the change.
+    state._epoch = next(_EPOCHS)
     stories = possible_timelines(world, state)
     if not stories:
         return None, ()

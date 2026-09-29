@@ -61,10 +61,23 @@ export function sourceRule(fn) {
   return fn;
 }
 
+/** Everything that could impair somebody on this night of this world.
+ * Kept on the view it was asked of — see impairment.py. */
 export function sourcesOn(world, state, night) {
-  const out = [];
-  for (const rule of SOURCE_RULES) out.push(...rule(world, state, night));
-  return out;
+  let memo = world._sourcesMemo;
+  if (!memo || memo.state !== state || memo.epoch !== state._epoch) {
+    memo = {state, epoch: state._epoch, nights: new Map()};
+    try { Object.defineProperty(world, "_sourcesMemo",
+            {value: memo, writable: true, enumerable: false,
+             configurable: true}); } catch (e) { /* frozen: no memo */ }
+  }
+  let got = memo.nights.get(night);
+  if (!got) {
+    got = [];
+    for (const rule of SOURCE_RULES) got.push(...rule(world, state, night));
+    memo.nights.set(night, got);
+  }
+  return got.slice();
 }
 
 export const aliveThrough = (world, state, seat, night) =>

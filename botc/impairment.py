@@ -89,10 +89,30 @@ def source_rule(fn):
 
 
 def sources_on(world, state, night):
-    out = []
-    for rule in SOURCE_RULES:
-        out.extend(rule(world, state, night))
-    return out
+    """Everything that could impair somebody on this night of this world.
+
+    Kept on the view it was asked of. Within one story the Demon's kill
+    asks it to know whether the Demon could have been stopped, and the
+    impairment plan asks it again for every night it settles — the same
+    answer each time, and on a busy Sects & Violets board a sixth of the
+    solve went on working it out again.
+    """
+    # Good for this state in this epoch only — see `solver.best_story`.
+    epoch = getattr(state, "_epoch", None)
+    memo = getattr(world, "_sources_memo", None)
+    if memo is None or memo[0] is not state or memo[1] != epoch:
+        memo = (state, epoch, {})
+        try:
+            object.__setattr__(world, "_sources_memo", memo)
+        except AttributeError:
+            pass
+    got = memo[2].get(night)
+    if got is None:
+        got = []
+        for rule in SOURCE_RULES:
+            got.extend(rule(world, state, night))
+        memo[2][night] = got
+    return list(got)
 
 
 def _alive_through(world, state, seat, night):

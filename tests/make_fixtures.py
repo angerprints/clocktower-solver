@@ -70,8 +70,17 @@ def played(name, script, seed, n, nights):
     for seat in range(n):
         at = deal.deaths.get(seat)
         events = ["X" + at[1:] if at.startswith("E") else at] if at else []
+        # Votes and nominations go on the seat, day by day, which is
+        # where the page and both readers look. Written at the top of the
+        # payload they were silently dropped, and a Flowergirl who saw
+        # the Demon vote read as lying (29.09.2026).
         players.append({"claim": claims.get(seat, ""), "events": events,
-                        "wake": wakes.get(seat, "")})
+                        "wake": wakes.get(seat, ""),
+                        "voted": sorted(day for day, who in deal.votes.items()
+                                        if seat in who),
+                        "nominated": sorted(
+                            day for day, who in deal.nominations.items()
+                            if seat in who)})
     infos = []
     for row in heard:
         got = {"type": _KIND.get(type(row).__name__, type(row).__name__),
@@ -84,10 +93,7 @@ def played(name, script, seed, n, nights):
                 value = list(value)
             got[field.name] = value
         infos.append(got)
-    return board(name, script, players, infos=infos,
-                 votes={str(k): sorted(v) for k, v in deal.votes.items()},
-                 nominations={str(k): sorted(v)
-                              for k, v in deal.nominations.items()})
+    return board(name, script, players, infos=infos)
 
 
 def board(name, script, claims, **payload):
