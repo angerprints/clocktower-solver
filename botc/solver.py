@@ -571,6 +571,12 @@ def barber_claimants(state):
     is a death the table has no reason to read as one. The price: a
     Barber who hid behind another claim, died, and whose Demon really
     swapped leaves a board the solver cannot explain.
+
+    Opening the swap to every dead seat once somebody reports an
+    unexplained change of character was tried and measured (30.09.2026):
+    it rescued none of the lost games and made the reported ones worse —
+    a swap touches two seats and usually only one of them says so. Kept on
+    the branch `barber-trigger-experiment`.
     """
     out = {seat for seat, role in (state.claims or {}).items()
            if role == "Barber"}
@@ -602,6 +608,7 @@ def _barber_offers(world, state):
             continue                      # the game had already finished
         view = world
         seats = range(state.n_players)
+        demon = view.demon_at(night)
         for first in seats:
             for second in seats:
                 if second <= first:
@@ -609,16 +616,76 @@ def _barber_offers(world, state):
                 a, b = view.role_at(first, night), view.role_at(second, night)
                 if a == b:
                     continue
+                # The Demon with one of its own Minions is the usual swap
+                # at this table and costs a world nothing; any other pair
+                # is a deliberate play priced as one (table habit,
+                # 30.09.2026). `_barber_share` splits the credit inside.
+                ours = ((first == demon and TEAM[b] == "minion")
+                        or (second == demon and TEAM[a] == "minion"))
+                kind = DemonMinionSwap if ours else OtherSwap
                 # Sides written out, not left to the new character: a
                 # Change with no side takes the character's, so a swapped
                 # Demon read as a good Flowergirl and an Oracle counting
                 # it dead and evil looked wrong (29.09.2026).
                 side_a = "evil" if view.evil_at(first, night) else "good"
                 side_b = "evil" if view.evil_at(second, night) else "good"
-                stories.append(((Change(night, first, b, side_a),
-                                 Change(night, second, a, side_b)),
-                                BARBER_SWAP_PENALTY))
+                stories.append(((kind(night, first, b, side_a),
+                                 kind(night, second, a, side_b)),
+                                1.0 if ours else BARBER_SWAP_PENALTY))
     return stories
+
+
+class DemonMinionSwap(Change):
+    """A Barber swap between the Demon and one of its Minions."""
+    __slots__ = ()
+
+
+class OtherSwap(Change):
+    """Any other Barber swap."""
+    __slots__ = ()
+
+
+def _barber_share(world, changes, state):
+    """How much of a world's credit a story gets for its Barber swap.
+
+    Two questions, answered apart (table ruling, 30.09.2026). *World
+    against world* is the story's cost: a Demon–Minion swap costs
+    nothing, any other swap `BARBER_SWAP_PENALTY`. *Inside one world* —
+    who is what now — the credit is shared out by what the table does:
+    "no swap" gets 1 − `BARBER_SWAP_SHARE`; of the rest, Demon–Minion
+    pairs get `BARBER_DEMON_MINION_SHARE` between them and every other
+    pair shares what is left, however many pairs there are. Splitting by
+    cost alone gave forty-five pairs at 0.15 each nearly nine tenths of
+    the credit and the usual swap almost none of it.
+
+    Returned as a factor on the story's cost: the swap's own price is
+    taken back out and its share put in.
+    """
+    swaps = [c for c in changes if isinstance(c, (DemonMinionSwap, OtherSwap))]
+    rest = tuple(c for c in changes
+                 if not isinstance(c, (DemonMinionSwap, OtherSwap)))
+    view = Timeline(world, rest) if rest else world
+    counts = {}
+    for extra, _cost in a_barber_lets_the_demon_swap_two(view, state):
+        if extra:
+            ours = isinstance(extra[0], DemonMinionSwap)
+            got = counts.setdefault(extra[0].phase, [0, 0])
+            got[0 if ours else 1] += 1
+    factor = 1.0
+    for night, (n_ours, n_other) in counts.items():
+        mine = [c for c in swaps if c.phase == night]
+        if not mine:
+            factor *= 1.0 - BARBER_SWAP_SHARE
+            continue
+        ours = isinstance(mine[0], DemonMinionSwap)
+        if n_ours and n_other:
+            part = (BARBER_DEMON_MINION_SHARE if ours
+                    else 1.0 - BARBER_DEMON_MINION_SHARE)
+        else:
+            part = 1.0
+        factor *= (BARBER_SWAP_SHARE * part / (n_ours if ours else n_other)
+                   / (1.0 if ours else BARBER_SWAP_PENALTY))
+    return factor
 
 
 @transition_rule
@@ -1902,6 +1969,11 @@ _CORNERED = 24
 # — it is a deliberate play with a cost, not the default. Priced so that
 # a world needing one is a worse story than a world that does not.
 BARBER_SWAP_PENALTY = 0.15
+# Inside a world, how the credit is shared once a Barber swap was open:
+# how often the Demon swaps at all, and how much of that is the Demon with
+# one of its own Minions (table habit, 30.09.2026). See `_barber_share`.
+BARBER_SWAP_SHARE = 0.75
+BARBER_DEMON_MINION_SHARE = 0.5
 
 # How many worlds are enough to settle what killed somebody. It is a
 # proportion, not a tally, so a spread across the space answers it as
@@ -3095,7 +3167,7 @@ def _report_phase(state):
     return now if phase_index(now) >= phase_index("D1") else "D1"
 
 
-def _story_shares(world, viable):
+def _story_shares(world, viable, state=None):
     """Each fitting story as (view, share of the world's weight).
 
     **A world weighs what its best story costs** — that is unchanged, and
@@ -3110,6 +3182,12 @@ def _story_shares(world, viable):
     costs. An Ogre beside two evil seats out of six turns evil in a third
     of its stories' weight, which is what a random pick would do.
     """
+    # A Barber swap gets the share the table gives it, not its price:
+    # see `_barber_share`. Only asked where a swap was open at all.
+    if state is not None and len(viable) > 1 and _in_bag(state, "Barber") \
+            and barber_claimants(state):
+        viable = [(cost * _barber_share(world, changes, state), changes)
+                  for cost, changes in viable]
     total = sum(cost for cost, _changes in viable)
     if total <= 0:
         return []
@@ -3826,7 +3904,7 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
         for idx, mark in outcome.items():
             told[idx][mark] += wt
         total += wt
-        for story, share in _story_shares(world, viable):
+        for story, share in _story_shares(world, viable, state):
             _tally(acc, world, story, state, wt * share, n, now)
             for day, seat in executed:
                 if story.demon_at(f"D{day}") == seat:
@@ -3995,7 +4073,7 @@ def estimate(state, allow_good_lies=False, dives=25_000, keep_samples=8,
         weight = stands_for * prior_weight(world, state) * cost
         total += weight
         sq += weight * weight
-        for story, share in _story_shares(world, viable):
+        for story, share in _story_shares(world, viable, state):
             _tally(acc, world, story, state, weight * share, n, now)
 
         if len(best) < keep_samples:
@@ -4034,6 +4112,8 @@ PRIOR_RANGES = {
     "OUTSIDER_HIDING_PENALTY": (0.15, 0.60),
     "TOWNSFOLK_LIE_PENALTY": (0.005, 0.10),
     "CERENOVUS_MADNESS_PENALTY": (0.10, 0.50),
+    "BARBER_SWAP_SHARE": (0.50, 0.90),
+    "BARBER_DEMON_MINION_SHARE": (0.25, 0.75),
     "BLUFF_COLLISION_PENALTY": (0.10, 0.60),
     "NIGHT_DEATH_EVIL_PENALTY": (0.02, 0.15),
     "POISON_HIT_PENALTY": (0.20, 0.55),

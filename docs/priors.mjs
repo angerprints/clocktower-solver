@@ -22,6 +22,11 @@ export const PRIORS = {
   // A Cerenovus exists to make good players lie, so in a world with one
   // alive a good Townsfolk's false claim is madness — up to one a night.
   CERENOVUS_MADNESS_PENALTY: 0.25,
+  // Inside a world once a Barber swap was open: how often the Demon swaps
+  // at all, and how much of that is the Demon with its own Minion (table
+  // habit). See solver.py `_barber_share`.
+  BARBER_SWAP_SHARE: 0.75,
+  BARBER_DEMON_MINION_SHARE: 0.5,
 
   // Evil is handed bluffs drawn from characters that are NOT in play, and
   // the team knows each other, so a clean bluff collides with nothing.
@@ -79,6 +84,8 @@ export const PRIOR_RANGES = {
   OUTSIDER_HIDING_PENALTY: [0.15, 0.60],
   TOWNSFOLK_LIE_PENALTY: [0.005, 0.10],
   CERENOVUS_MADNESS_PENALTY: [0.10, 0.50],
+  BARBER_SWAP_SHARE: [0.50, 0.90],
+  BARBER_DEMON_MINION_SHARE: [0.25, 0.75],
   BLUFF_COLLISION_PENALTY: [0.10, 0.60],
   NIGHT_DEATH_EVIL_PENALTY: [0.02, 0.15],
   POISON_HIT_PENALTY: [0.20, 0.55],

@@ -9996,32 +9996,32 @@
       "lying_pct": 4.0367
      },
      {
-      "evil_pct": 12.9159,
-      "demon_pct": 8.1015,
+      "evil_pct": 12.8794,
+      "demon_pct": 7.6793,
       "drunk_pct": 0.0,
       "lying_pct": 15.5963
      },
      {
-      "evil_pct": 12.9159,
-      "demon_pct": 8.1015,
+      "evil_pct": 12.8794,
+      "demon_pct": 7.6793,
       "drunk_pct": 0.0,
       "lying_pct": 15.5963
      },
      {
-      "evil_pct": 12.9159,
-      "demon_pct": 8.1015,
+      "evil_pct": 12.8794,
+      "demon_pct": 7.6793,
       "drunk_pct": 0.0,
       "lying_pct": 15.5963
      },
      {
-      "evil_pct": 12.9159,
-      "demon_pct": 8.1015,
+      "evil_pct": 12.8794,
+      "demon_pct": 7.6793,
       "drunk_pct": 0.0,
       "lying_pct": 15.5963
      },
      {
-      "evil_pct": 40.4702,
-      "demon_pct": 21.0205,
+      "evil_pct": 40.1083,
+      "demon_pct": 21.4584,
       "drunk_pct": 0.0,
       "lying_pct": 39.4495
      },
@@ -10032,14 +10032,14 @@
       "lying_pct": 21.2844
      },
      {
-      "evil_pct": 48.5981,
-      "demon_pct": 25.8284,
+      "evil_pct": 48.3045,
+      "demon_pct": 26.6414,
       "drunk_pct": 0.0,
       "lying_pct": 47.7064
      },
      {
-      "evil_pct": 39.9198,
-      "demon_pct": 20.7452,
+      "evil_pct": 39.5579,
+      "demon_pct": 21.1832,
       "drunk_pct": 0.0,
       "lying_pct": 38.8991
      }
@@ -15323,52 +15323,52 @@
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 96.3644,
-      "demon_pct": 97.0592,
+      "evil_pct": 96.3866,
+      "demon_pct": 97.2195,
       "drunk_pct": 0.0,
-      "lying_pct": 96.4232
+      "lying_pct": 96.4325
      },
      {
-      "evil_pct": 3.3344,
-      "demon_pct": 0.0655,
+      "evil_pct": 4.8275,
+      "demon_pct": 0.059,
       "drunk_pct": 0.0,
-      "lying_pct": 4.9627
+      "lying_pct": 6.4306
      },
      {
-      "evil_pct": 9.6453,
+      "evil_pct": 9.4963,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 9.6453
+      "lying_pct": 9.4963
      },
      {
-      "evil_pct": 33.4549,
+      "evil_pct": 32.9381,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 36.6384
+      "lying_pct": 36.0802
      },
      {
-      "evil_pct": 39.9998,
+      "evil_pct": 39.382,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 43.784
+      "lying_pct": 43.1077
      },
      {
-      "evil_pct": 0.0027,
+      "evil_pct": 0.0026,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0027
+      "lying_pct": 0.0026
      },
      {
-      "evil_pct": 15.0509,
+      "evil_pct": 14.8184,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 16.5646
+      "lying_pct": 16.3087
      },
      {
-      "evil_pct": 2.602,
-      "demon_pct": 2.8754,
+      "evil_pct": 2.6039,
+      "demon_pct": 2.7215,
       "drunk_pct": 0.0,
-      "lying_pct": 2.6471
+      "lying_pct": 2.6523
      }
     ],
     "blame": {
@@ -15691,7 +15691,9 @@
      {
       "name": "",
       "claim": "SnakeCharmer",
-      "events": [],
+      "events": [
+       "X2"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "",
@@ -15699,21 +15701,21 @@
        2
       ],
       "nominated": [
-       2,
-       3
+       2
       ]
      },
      {
       "name": "",
       "claim": "Savant",
       "events": [
-       "N4"
+       "X3"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       2
+       2,
+       3
       ],
       "nominated": [
        3
@@ -15721,10 +15723,8 @@
      },
      {
       "name": "",
-      "claim": "Mutant",
-      "events": [
-       "X3"
-      ],
+      "claim": "Flowergirl",
+      "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
@@ -15752,13 +15752,13 @@
      },
      {
       "name": "",
-      "claim": "Dreamer",
+      "claim": "",
       "events": [
-       "X2"
+       "N3"
       ],
       "certainty": "",
       "read": 0,
-      "wake": "",
+      "wake": "every",
       "voted": [
        1,
        2
@@ -15769,9 +15769,9 @@
      },
      {
       "name": "",
-      "claim": "Seamstress",
+      "claim": "SnakeCharmer",
       "events": [
-       "N3"
+       "N4"
       ],
       "certainty": "",
       "read": 0,
@@ -15781,7 +15781,8 @@
        2
       ],
       "nominated": [
-       2
+       2,
+       3
       ]
      }
     ],
@@ -15812,8 +15813,8 @@
       "type": "DreamerInfo",
       "night": 2,
       "player": 5,
-      "target": 0,
-      "good_role": "Barber",
+      "target": 6,
+      "good_role": "SnakeCharmer",
       "evil_role": "Witch"
      },
      {
@@ -15828,8 +15829,31 @@
      {
       "type": "SnakeCharmerChoice",
       "night": 3,
-      "player": 3,
-      "target": 6,
+      "player": 6,
+      "target": 5,
+      "swapped": false
+     },
+     {
+      "type": "SavantInfo",
+      "night": 3,
+      "player": 2,
+      "first": "different {'kind': 'different', 'a': 4, 'b': 6}",
+      "second": "not_in_play {'kind': 'not_in_play', 'role': 'Sage'}",
+      "first_says": {
+       "kind": "different",
+       "a": 4,
+       "b": 6
+      },
+      "second_says": {
+       "kind": "not_in_play",
+       "role": "Sage"
+      }
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 4,
+      "player": 6,
+      "target": 3,
       "swapped": false
      }
     ],
@@ -15865,7 +15889,7 @@
     }
    },
    "expect": {
-    "valid": 12,
+    "valid": 17,
     "sampled": false,
     "rows": [
      {
@@ -15876,9 +15900,21 @@
      },
      {
       "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8062
+     },
+     {
+      "evil_pct": 2.296,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.296
+     },
+     {
+      "evil_pct": 97.3366,
       "demon_pct": 100.0,
       "drunk_pct": 0.0,
-      "lying_pct": 82.1429
+      "lying_pct": 97.1988
      },
      {
       "evil_pct": 0.0,
@@ -15887,42 +15923,30 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 100.0,
+      "evil_pct": 0.5051,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 100.0
+      "lying_pct": 0.0574
      },
      {
       "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     },
-     {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     },
-     {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 17.8571
+      "lying_pct": 98.4693
      }
     ],
     "blame": {
-     "4": {
-      "2": {
-       "Demon": 1.0
-      }
-     },
      "2": {
       "4": {
        "Demon": 1.0
       }
      },
      "3": {
+      "5": {
+       "Demon": 1.0
+      }
+     },
+     "4": {
       "6": {
        "Demon": 1.0
       }
@@ -15953,42 +15977,42 @@
      },
      {
       "name": "",
-      "claim": "",
+      "claim": "Philosopher",
       "events": [
-       "N3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "never",
-      "voted": [
-       2
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "TownCrier",
-      "events": [
-       "N4"
+       "X3"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       1,
        2,
        3
       ],
       "nominated": [
-       2,
        3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "TownCrier",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
       ]
      },
      {
       "name": "",
       "claim": "SnakeCharmer",
       "events": [
-       "X3"
+       "N4"
       ],
       "certainty": "",
       "read": 0,
@@ -16016,7 +16040,8 @@
        2
       ],
       "nominated": [
-       1
+       1,
+       2
       ]
      },
      {
@@ -16032,7 +16057,7 @@
        3
       ],
       "nominated": [
-       2
+       3
       ]
      },
      {
@@ -16072,8 +16097,30 @@
       "swapped": true
      },
      {
+      "type": "SavantInfo",
+      "night": 2,
+      "player": 4,
+      "first": "good {'kind': 'good', 'seat': 0}",
+      "second": "evil {'kind': 'evil', 'seat': 6}",
+      "first_says": {
+       "kind": "good",
+       "seat": 0
+      },
+      "second_says": {
+       "kind": "evil",
+       "seat": 6
+      }
+     },
+     {
       "type": "SnakeCharmerChoice",
       "night": 3,
+      "player": 3,
+      "target": 5,
+      "swapped": false
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 4,
       "player": 3,
       "target": 5,
       "swapped": false
@@ -16111,50 +16158,50 @@
     }
    },
    "expect": {
-    "valid": 408,
+    "valid": 40,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 0.5976,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 12.4356
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 0.2854,
+      "evil_pct": 17.5436,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.2854
+      "lying_pct": 17.5436
      },
      {
-      "evil_pct": 2.7824,
+      "evil_pct": 4.3859,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 14.6204
+      "lying_pct": 4.3859
      },
      {
-      "evil_pct": 0.2614,
+      "evil_pct": 0.6569,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 96.58
+      "lying_pct": 99.0147
      },
      {
-      "evil_pct": 12.5032,
+      "evil_pct": 17.5436,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 26.1624
+      "lying_pct": 34.6493
      },
      {
       "evil_pct": 100.0,
       "demon_pct": 100.0,
       "drunk_pct": 0.0,
-      "lying_pct": 6.2068
+      "lying_pct": 1.6421
      },
      {
-      "evil_pct": 84.6142,
+      "evil_pct": 59.87,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 84.6142
+      "lying_pct": 59.87
      }
     ],
     "blame": {
@@ -16164,12 +16211,12 @@
       }
      },
      "3": {
-      "1": {
+      "2": {
        "Demon": 1.0
       }
      },
      "4": {
-      "2": {
+      "3": {
        "Demon": 1.0
       }
      }

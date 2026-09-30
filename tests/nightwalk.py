@@ -272,6 +272,12 @@ def hidden_from(deal, night, heard):
     jump = getattr(deal, "fanggu_jump", None)
     if jump and jump[0] == night:
         out[("fanggu_jump", night)] = jump[1]
+    # A Barber's swap, at slot 40: without it a Dreamer at 56 read the
+    # seat as it was before (30.09.2026, once the Demon swapped with its
+    # own Minion half the time).
+    swap = (getattr(deal, "barber_swaps", None) or {}).get(night)
+    if swap:
+        out[("barber", night)] = swap
     due = deal.pukka_history.get(night)
     if due and due[0] is not None:
         out[("pukka_due", night)] = due[0]

@@ -368,7 +368,7 @@ export function estimate(state, allowGoodLies = false, dives = 25000,
     for (const [idx, mark] of Object.entries(outcome))
       told[idx][mark] = (told[idx][mark] || 0) + wt;
 
-    for (const [story, part] of storyShares(world, viable))
+    for (const [story, part] of storyShares(world, viable, state))
       tallySeats(perSeat, world, story, state, wt * part, now);
     tallyBlame(blame, view, state, wt);
 
@@ -457,7 +457,7 @@ export function analyze(state, allowGoodLies = false,
     for (const [idx, mark] of Object.entries(outcome))
       told[idx][mark] = (told[idx][mark] || 0) + wt;
 
-    for (const [story, part] of storyShares(world, viable)) {
+    for (const [story, part] of storyShares(world, viable, state)) {
       tallySeats(perSeat, world, story, state, wt * part, now);
       for (const [day, seat] of executed)
         if (story.demonAt(`D${day}`) === seat) hanged[seat] += wt * part;

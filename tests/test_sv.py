@@ -1918,6 +1918,48 @@ class ABarberSwapNeedsADeadBarberClaim(SolverTest):
         self.assertGreater(len(got), 30)
 
 
+class TheBarbersSwapIsWeighedAsTheTablePlays(SolverTest):
+    """Table ruling of 30.09.2026: once a swap is open, the Demon usually
+    swaps, half the time with one of its own Minions. World against world
+    that swap is free and any other costs 0.15; inside a world the credit
+    is shared out 25 / 75, and half the 75 goes to Demon–Minion pairs."""
+
+    ROLES = ("Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler", "Klutz",
+             "Barber", "Witch", "Vortox")
+
+    def test_the_demon_and_its_minion_swap_for_free(self):
+        state = GameState(n_players=9, script=SV, claims={6: "Barber"},
+                          deaths={6: "D1"}, quiet_nights={2})
+        offers = S._barber_offers(World(self.ROLES, (None,) * 9), state)
+        ours = [cost for extra, cost in offers
+                if extra and isinstance(extra[0], S.DemonMinionSwap)]
+        other = [cost for extra, cost in offers
+                 if extra and isinstance(extra[0], S.OtherSwap)]
+        self.assertEqual(ours, [1.0])          # the Vortox and the Witch
+        self.assertTrue(other and set(other) == {S.BARBER_SWAP_PENALTY})
+
+    def test_the_credit_inside_a_world_follows_the_table(self):
+        world = World(self.ROLES, (None,) * 9)
+        state = GameState(n_players=9, script=SV, claims={6: "Barber"},
+                          deaths={6: "D1"}, quiet_nights={2})
+        offers = S._barber_offers(world, state)
+        swaps = [extra for extra, _cost in offers if extra]
+        n_other = sum(isinstance(e[0], S.OtherSwap) for e in swaps)
+        ours = next(e for e in swaps if isinstance(e[0], S.DemonMinionSwap))
+        other = next(e for e in swaps if isinstance(e[0], S.OtherSwap))
+        self.assertAlmostEqual(S._barber_share(world, (), state),
+                               1 - S.BARBER_SWAP_SHARE)
+        self.assertAlmostEqual(
+            S._barber_share(world, ours, state),
+            S.BARBER_SWAP_SHARE * S.BARBER_DEMON_MINION_SHARE)
+        # Every other pair, taken together, gets the other half — the
+        # price each paid taken back out.
+        self.assertAlmostEqual(
+            S._barber_share(world, other, state) * S.BARBER_SWAP_PENALTY
+            * n_other,
+            S.BARBER_SWAP_SHARE * (1 - S.BARBER_DEMON_MINION_SHARE))
+
+
 class FoundByTheWideSweep(SolverTest):
     """Pinned without the simulator (29.09.2026)."""
 

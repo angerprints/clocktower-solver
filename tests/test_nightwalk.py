@@ -588,6 +588,12 @@ class TheDreamerReadsWhatIsThereNow(SolverTest):
                     hidden[("poisoner", night)] = deal.poisoned[night]
                 if deal.demon_aimed.get(night):
                     hidden[("demon", night)] = deal.demon_aimed[night]
+                # A Fang Gu's jump and a Barber's swap both move who holds
+                # what before the Dreamer reads at 56.
+                for key in (("fanggu_jump", night), ("barber", night)):
+                    got_it = nightwalk.hidden_from(deal, night, heard).get(key)
+                    if got_it is not None:
+                        hidden[key] = got_it
                 got = nightwalk.walk(deal, night, hidden)
                 mine = {(r[1], r[2]): r[3] for r in got.readings}
                 for row in rows:
