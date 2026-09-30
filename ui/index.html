@@ -229,6 +229,8 @@ main{
 }
 .centre .count{font-family:var(--display);font-size:50px;line-height:1;color:#F3E3BE;text-shadow:0 2px 6px rgba(0,0,0,.7)}
 .centre .count.none{color:#E9959A}
+table.review{border-collapse:collapse;font-size:13px}
+table.review th,table.review td{padding:3px 10px;text-align:left;border-bottom:1px solid rgba(201,169,97,.25)}
 .centre .cap{font-family:var(--display);font-size:10px;letter-spacing:.19em;text-transform:uppercase;color:#B9AEDC;margin-top:7px}
 .centre .legal{font-size:13px;font-style:italic;color:#8E86B8;margin-top:2px}
 .centre .est{font-family:var(--display);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
@@ -432,6 +434,7 @@ footer{padding:0 18px 40px}
     <div class="more">
       <button id="more">&hellip;</button>
       <div class="more-menu" id="more-menu" hidden>
+        <button id="after">After the game…</button>
         <button id="save">Save to a file</button>
         <button id="load">Open a file</button>
         <button id="reset">Clear game</button>
@@ -440,6 +443,24 @@ footer{padding:0 18px 40px}
     <button class="primary" id="solve">Solve</button>
   </div>
 </header>
+
+<section id="after-panel" class="pane parchment" hidden
+         style="margin:14px 18px 0;border-radius:3px">
+  <div class="pane-title"><h2>After the game: would it have found the Demon?</h2>
+    <button class="ghost" id="close-after">close</button></div>
+  <div class="rule"></div>
+  <div class="hint" style="margin-bottom:8px">Once the grimoire is open, set
+    what each seat really was — it starts from what they claimed, so only the
+    liars need changing. Then look back: every morning of the game is solved
+    again as the table knew it at dawn, and judged by where the true Demon
+    stood. Saved with the game, so a file you send on carries it.</div>
+  <div id="after-seats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 14px"></div>
+  <div style="margin-top:10px;display:flex;gap:10px;align-items:center">
+    <button class="primary" id="look-back">Look back</button>
+    <span class="hint" id="look-back-state"></span>
+  </div>
+  <div id="after-out" style="margin-top:10px"></div>
+</section>
 
 <section id="script-panel" class="pane parchment" hidden
          style="margin:14px 18px 0;border-radius:3px">
@@ -606,17 +627,18 @@ function worker(){
   return WORKER;
 }
 
-function directly(kind, payload){
+function directly(kind, payload, truth){
   return kind === "guesswork" ? solver.guessworkFor(payload)
-                              : solver.solveBoard(payload);
+       : kind === "review" ? solver.reviewGame(payload, truth)
+       : solver.solveBoard(payload);
 }
 
 /** Solve in the background: resolves with what the solver answered,
  * calls `onStep(fraction)` as it goes, rejects with "stopped" if the
  * user stops it. */
-function inBackground(kind, payload, onStep){
+function inBackground(kind, payload, onStep, truth){
   const w = worker();
-  if(!w) return new Promise(done => setTimeout(() => done(directly(kind, payload)), 0));
+  if(!w) return new Promise(done => setTimeout(() => done(directly(kind, payload, truth)), 0));
   return new Promise((resolve, reject) => {
     const id = `${Date.now()}-${Math.random()}`;
     JOB = {id, reject};
@@ -632,9 +654,9 @@ function inBackground(kind, payload, onStep){
     w.onerror = e => {
       if(e && e.preventDefault) e.preventDefault();
       w.terminate(); WORKER = null; NO_WORKER = true; JOB = null;
-      try{ resolve(directly(kind, payload)); }catch(err){ reject(err); }
+      try{ resolve(directly(kind, payload, truth)); }catch(err){ reject(err); }
     };
-    w.postMessage({id, kind, payload});
+    w.postMessage({id, kind, payload, truth});
   });
 }
 
@@ -986,6 +1008,10 @@ function boot(){
   });
   if(isOpen("notes")) drawNotes();
   $("#save").onclick = () => { $("#more-menu").hidden = true; saveToFile(); };
+  $("#after").onclick = () => { $("#more-menu").hidden = true;
+                                $("#after-panel").hidden = false; drawAfter(); };
+  $("#close-after").onclick = () => { $("#after-panel").hidden = true; };
+  $("#look-back").onclick = doLookBack;
   $("#load").onclick = () => { $("#more-menu").hidden = true; loadFromFile(); };
 
   c.onchange = async e => {
@@ -2523,6 +2549,75 @@ function nothingFits(d){
     });
   }
   return out + `</div>`;
+}
+
+/* ---------- after the game ---------- */
+// What each seat really was, one entry per seat, kept in the game so a
+// saved file carries it. Starts from the claims: most seats told the
+// truth, and the ones that did not are the ones worth changing.
+function truthNow(){
+  if(!Array.isArray(S.truth)) S.truth = [];
+  for(let i=0;i<S.n;i++)
+    if(S.truth[i] === undefined || S.truth[i] === null)
+      S.truth[i] = S.players[i].claim || "";
+  S.truth.length = S.n;
+  return S.truth;
+}
+function drawAfter(){
+  const truth = truthNow(), box = $("#after-seats"); box.innerHTML = "";
+  for(let i=0;i<S.n;i++){
+    const row = document.createElement("label"); row.className = "field";
+    const name = document.createElement("span"); name.textContent = `${i+1}. ${seatName(i)}`;
+    const sel = document.createElement("select");
+    sel.appendChild(opt("", "— not known —"));
+    allRoles("all").forEach(r => sel.appendChild(opt(r, label(r))));
+    sel.value = truth[i] || "";
+    sel.onchange = () => { S.truth[i] = sel.value; save(); };
+    row.appendChild(name); row.appendChild(sel); box.appendChild(row);
+  }
+}
+async function doLookBack(){
+  const btn = $("#look-back"), state = $("#look-back-state");
+  if(JOB){ stopBackground(); return; }
+  const truth = truthNow();
+  const demons = truth.map((r,i)=>[r,i]).filter(([r]) => SCRIPT.demons.includes(r));
+  if(!demons.length){
+    state.textContent = "Set which seat was the Demon first."; return;
+  }
+  const payload = { n_players:S.n, allow_good_lies:false,
+                    players:S.players.slice(0,S.n), infos:S.infos,
+                    quiet_nights:S.quiet, days_done:S.done,
+                    script:S.script, fabled:S.fabled };
+  btn.textContent = "Stop"; state.textContent = "working…"; $("#after-out").innerHTML = "";
+  try{
+    const got = await inBackground("review", payload,
+      f => { state.textContent = `working… ${Math.round(f*100)}%`; }, truth);
+    state.textContent = "";
+    const who = i => esc(seatName(i));
+    const rows = got.nights.map(n => {
+      if(n.error) return `<tr><td>${n.night}</td><td colspan="4">${esc(n.error)}</td></tr>`;
+      const d = n.demon;
+      const place = !d ? "—" : d.rank === 1 && !d.level ? "1st"
+                  : d.rank === 1 ? `1st, level with ${d.level}` : `${d.rank}${["","st","nd","rd"][d.rank]||"th"}`;
+      const mark = n.found && d && !d.level ? "✓" : n.found ? "≈" : "✗";
+      return `<tr><td>Morning ${n.night}</td><td>${place}</td>
+        <td>${d ? d.pct.toFixed(0)+"%" : "—"}</td>
+        <td>${who(n.topSeat)} (${n.topPct.toFixed(0)}%)</td><td>${mark}</td></tr>`;
+    }).join("");
+    const clean = got.nights.filter(n => n.found && n.demon && !n.demon.level).length;
+    $("#after-out").innerHTML = `
+      <div class="hint" style="margin-bottom:6px">The Demon was
+        ${got.demons.map(who).join(" and ")}. It was the clear top suspect on
+        <b>${clean} of ${got.nights.length}</b> mornings.</div>
+      <table class="review"><thead><tr><th></th><th>Demon's place</th>
+        <th>Demon %</th><th>Top suspect</th><th></th></tr></thead>
+        <tbody>${rows}</tbody></table>
+      <div class="hint" style="margin-top:6px">✓ clear top suspect · ≈ top,
+        level with others · ✗ somebody else was ahead. Save the game to a file
+        to keep this, or to send it on.</div>`;
+  }catch(e){
+    state.textContent = e && e.message === "stopped" ? "stopped" : "could not look back";
+  }finally{ btn.textContent = "Look back"; }
 }
 
 /* ---------- how much of this is guesswork ---------- */

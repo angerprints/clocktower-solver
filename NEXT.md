@@ -6,7 +6,7 @@
 1. ~~Unabhängiger Schiedsrichter~~ erledigt: 440 Engine-Partien, vier Regelfehler im Solver behoben
 2. ~~Deine Skripte vollständig~~ erledigt: Ogre, Marionette, Mastermind, S&V-Fehlfälle, Mutant, Cerenovus, Savant. S&V danach fast doppelt so schnell gemacht (Barbier-Tausch nur nach dem Tod eines genannten Barbiers). Barbier-Gewichtung nach deinem Tisch, Rechnung im Hintergrund mit Fortschritt und Stopp (30.09.2026). Offen: zwei seltene Philosoph-Schlangenbeschwörer-Partien; Sitze mit geänderter Rolle werden nicht aus ihrer Anfangsrolle gesucht
 3. Gemeinsames Regelwissen, wenn das Spiel bei v2 ankommt
-4. Eine echte Partie
+4. Eine echte Partie: Werkzeug und Anleitung fertig (ANLEITUNG-ECHTE-PARTIE.md), wartet auf eine mitgeschriebene Runde
 
 Alles darunter ist das Protokoll der bisherigen Sitzungen.
 

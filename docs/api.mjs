@@ -20,6 +20,7 @@ import {EXACT_LIMIT, analyze} from "./report.mjs";
 // For the background worker, which reaches the solver through here only.
 export {onProgress} from "./report.mjs";
 import {sensitivity} from "./sensitivity.mjs";
+import {review} from "./review.mjs";
 import {TEAM, WAKE, show} from "./roles.mjs";
 import * as scripts from "./scripts.mjs";
 import {GameState} from "./state.mjs";
@@ -428,4 +429,11 @@ export function solveBoard(payload, {maxWorlds = EXACT_LIMIT} = {}) {
     reply.readings = result.readings;
   if (!result.valid) reply.diagnosis = whyNothingFits(state);
   return reply;
+}
+
+/** A real game looked back on: each morning solved as the table knew it,
+ * judged by where the true Demon stood. `truth` is the character each
+ * seat really held, one entry per seat. See review.mjs. */
+export function reviewGame(payload, truth) {
+  return review(payload, truth, {solve: solveBoard});
 }

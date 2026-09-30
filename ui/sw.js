@@ -45,6 +45,7 @@ const FILES = [
   "../js/phases.mjs",
   "../js/priors.mjs",
   "../js/report.mjs",
+  "../js/review.mjs",
   "../js/rng.mjs",
   "../js/roles.mjs",
   "../js/scoring.mjs",
