@@ -591,6 +591,61 @@ footer{padding:0 18px 40px}
 // server for an answer.
 import * as solver from "../js/api.mjs";
 
+// The solve runs beside the page, in a worker, so a long board neither
+// freezes the page nor hides that it is busy: it reports how far along it
+// is and can be stopped. Where a browser cannot start a module worker —
+// an old one, or a page opened straight from disk — it runs here as it
+// always did, and the page freezes for the length of it as it always did.
+const WORKER_URL = "../js/worker.mjs";
+let WORKER = null, NO_WORKER = false, JOB = null;
+
+function worker(){
+  if(WORKER || NO_WORKER) return WORKER;
+  try{ WORKER = new Worker(new URL(WORKER_URL, import.meta.url), {type:"module"}); }
+  catch(e){ NO_WORKER = true; WORKER = null; }
+  return WORKER;
+}
+
+function directly(kind, payload){
+  return kind === "guesswork" ? solver.guessworkFor(payload)
+                              : solver.solveBoard(payload);
+}
+
+/** Solve in the background: resolves with what the solver answered,
+ * calls `onStep(fraction)` as it goes, rejects with "stopped" if the
+ * user stops it. */
+function inBackground(kind, payload, onStep){
+  const w = worker();
+  if(!w) return new Promise(done => setTimeout(() => done(directly(kind, payload)), 0));
+  return new Promise((resolve, reject) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    JOB = {id, reject};
+    w.onmessage = e => {
+      const m = e.data || {};
+      if(m.id !== id) return;
+      if("progress" in m){ if(onStep) onStep(m.progress); return; }
+      JOB = null;
+      if(m.error) reject(new Error(m.error)); else resolve(m.data);
+    };
+    // The worker could not load (no module workers here) or fell over:
+    // stop using it and answer on the page instead.
+    w.onerror = e => {
+      if(e && e.preventDefault) e.preventDefault();
+      w.terminate(); WORKER = null; NO_WORKER = true; JOB = null;
+      try{ resolve(directly(kind, payload)); }catch(err){ reject(err); }
+    };
+    w.postMessage({id, kind, payload});
+  });
+}
+
+/** Stop the solve in flight by throwing its worker away. */
+function stopBackground(){
+  if(!JOB || !WORKER) return;
+  WORKER.terminate(); WORKER = null;
+  const job = JOB; JOB = null;
+  job.reject(new Error("stopped"));
+}
+
 // Keep a copy on the device, so it opens with nothing behind it.
 //
 // Only on a secure origin — https or localhost — because that is the
@@ -2476,15 +2531,14 @@ async function doSensitivity(){
   btn.disabled=true; btn.textContent="working…";
   $("#error").innerHTML="";
   try{
-    // Solved here like everything else. It re-solves the board a
-    // dozen times over, so give the browser a moment to paint the
-    // waiting state first.
-    await new Promise(done => setTimeout(done, 0));
-    const data = solver.guessworkFor({
+    // It re-solves the board thirty times over, in the background, and
+    // says how far it has got.
+    const data = await inBackground("guesswork", {
       n_players:S.n, allow_good_lies:false,
       players:S.players.slice(0,S.n), infos:S.infos,
       quiet_nights:S.quiet, days_done:S.done,
-      script:S.script, fabled:S.fabled });
+      script:S.script, fabled:S.fabled },
+      f => { btn.textContent=`working… ${Math.round(f*100)}%`; });
     if(data.error){ $("#error").innerHTML=`<div class="err">${esc(data.error)}</div>`; return; }
     SHAKE=data.rows; draw();
     $("#samples").innerHTML=`<div class="pane parchment">
@@ -2500,24 +2554,28 @@ async function doSensitivity(){
         ${r.swing>4?` <span style="color:var(--ink-soft);font-style:italic">${esc(r.driver)}</span>`:""}</span>
       </div></div>`).join("")}</div>`;
   }catch(e){
+    if(e && e.message === "stopped") return;
     $("#error").innerHTML=`<div class="err">Could not reach the solver.</div>`;
   }finally{ btn.disabled=false; btn.textContent=was; }
 }
 
 /* ---------- solving ---------- */
 async function doSolve(){
+  if(JOB){ stopBackground(); return; }      // the button reads "Stop" now
   $("#error").innerHTML=""; $("#samples").innerHTML="";
   $("#count-cap").textContent="working…";
+  const btn=$("#solve"); btn.textContent="Stop";
   const payload={ n_players:S.n, allow_good_lies:false,
                   players:S.players.slice(0,S.n), infos:S.infos,
                   quiet_nights:S.quiet, days_done:S.done,
                   script:S.script, fabled:S.fabled };
   try{
-    // Solved here rather than asked for. A big board takes a moment, so
-    // yield to the browser first — otherwise the "solving" state never
-    // gets painted and the page just freezes.
-    await new Promise(done => setTimeout(done, 0));
-    const data = solver.solveBoard(payload);
+    // Solved in the background: the page stays usable, the count shows how
+    // far along it is, and the button stops it.
+    const data = await inBackground("solve", payload, f => {
+      $("#count-worlds").textContent=`${Math.round(f*100)}%`;
+      $("#count-cap").textContent="working…";
+    });
     if(data.error){
       $("#error").innerHTML=`<div class="err">${esc(data.error)}</div>`;
       drawCentre(); return;
@@ -2541,8 +2599,9 @@ async function doSolve(){
     }
     draw(); save();
   }catch(e){
+    if(e && e.message === "stopped"){ drawCentre(); return; }
     $("#error").innerHTML=`<div class="err">Could not reach the solver. Is app.py still running?</div>`;
     drawCentre();
-  }
+  }finally{ btn.textContent="Solve"; }
 }
 </script>

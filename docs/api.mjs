@@ -17,6 +17,8 @@ import {makeInfo} from "./info.mjs";
 import {claimsCannotFillTheBag, diagnose} from "./diagnose.mjs";
 import {couldExplainNothingFitting, refuses} from "./limits.mjs";
 import {EXACT_LIMIT, analyze} from "./report.mjs";
+// For the background worker, which reaches the solver through here only.
+export {onProgress} from "./report.mjs";
 import {sensitivity} from "./sensitivity.mjs";
 import {TEAM, WAKE, show} from "./roles.mjs";
 import * as scripts from "./scripts.mjs";

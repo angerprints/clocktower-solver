@@ -133,6 +133,13 @@ def build():
     # so the whole graph moves together.
     page = OUT / "index.html"
     page.write_text(page.read_text().replace(
+        'from "./api.mjs"', f'from "./api.mjs?v={version}"').replace(
+        '"./worker.mjs"', f'"./worker.mjs?v={version}"'))
+    # The background worker is a second entry point, so it gets the same
+    # treatment: its own URL carries the fingerprint, and so does the one
+    # import it makes.
+    background = OUT / "worker.mjs"
+    background.write_text(background.read_text().replace(
         'from "./api.mjs"', f'from "./api.mjs?v={version}"'))
 
     (OUT / "README.md").write_text(NOTE)

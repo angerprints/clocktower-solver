@@ -53,6 +53,7 @@ const FILES = [
   "../js/state.mjs",
   "../js/waking.mjs",
   "../js/worlds.mjs",
+  "../js/worker.mjs",
 ];
 
 self.addEventListener("install", event => {

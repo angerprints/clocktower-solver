@@ -21,14 +21,19 @@
 // than to bound the worst case.
 
 import {PRIOR_RANGES, withPrior} from "./priors.mjs";
-import {estimate} from "./report.mjs";
+import {estimate, progressPart} from "./report.mjs";
 import {Rng} from "./rng.mjs";
 
 export function sensitivity(state, allowGoodLies = false, {
   ranges = PRIOR_RANGES, seed = 0, dives = 3500,
 } = {}) {
-  const solveNow = () =>
-    estimate(state, allowGoodLies, dives, 1, new Rng(seed));
+  // Progress over the whole job: one base run and two per range.
+  const runs = 1 + 2 * Object.keys(ranges).length;
+  let run = 0;
+  const solveNow = () => {
+    progressPart(run++, runs);
+    return estimate(state, allowGoodLies, dives, 1, new Rng(seed));
+  };
 
   const base = solveNow();
   const rows = base.rows.map((r, i) => ({

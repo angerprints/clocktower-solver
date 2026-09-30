@@ -335,6 +335,36 @@ export function pilotSize(state, allowGoodLies = false, walks = 1500,
  * real distribution rather than of whichever corner of the search the
  * walk happened to like.
  */
+// --------------------------------------------------------------------
+// Progress, for a solve running in the background (js/worker.mjs)
+// --------------------------------------------------------------------
+
+// One listener at a time: the worker sets it for the length of a job and
+// clears it after. Called at most every 150 ms, so reporting costs the
+// solve nothing worth measuring. `stage` lets a caller that solves many
+// times over — the guesswork check — turn each run's progress into one
+// figure for the whole job.
+let progressListener = null, progressStage = [0, 1], progressLast = 0;
+
+/** Listen for progress: fn(fraction between 0 and 1). null to stop. */
+export function onProgress(fn) {
+  progressListener = fn;
+  progressStage = [0, 1];
+  progressLast = 0;
+}
+
+/** Run `i` of `of` in a job that solves several times over. */
+export function progressPart(i, of) { progressStage = [i, of]; }
+
+function progress(done, total) {
+  if (!progressListener || total <= 0) return;
+  const now = Date.now();
+  if (now - progressLast < 150) return;
+  progressLast = now;
+  const within = Math.min(done / total, 0.99);
+  progressListener((progressStage[0] + within) / progressStage[1]);
+}
+
 export function estimate(state, allowGoodLies = false, dives = 25000,
                          keepSamples = 8, rng = null) {
   const n = state.nPlayers;
@@ -353,6 +383,7 @@ export function estimate(state, allowGoodLies = false, dives = 25000,
     ...searchOptions(state, allowGoodLies), dives, rng,
   }, (world, standsFor) => {
     walked += 1;
+    progress(walked, dives);
     if (world === null) return;           // a dead end still counts as a walk
     legalSum += standsFor;
 
@@ -414,7 +445,8 @@ export function analyze(state, allowGoodLies = false,
                         dives = 25000, rng = null) {
   // A few hundred walks say whether walking the whole thing is feasible,
   // which is much better than finding out half a million worlds in.
-  if (pilotSize(state, allowGoodLies) > maxWorlds)
+  const pilot = pilotSize(state, allowGoodLies);
+  if (pilot > maxWorlds)
     return estimate(state, allowGoodLies, dives, keepSamples, rng);
   const n = state.nPlayers;
   const now = reportPhase(state);
@@ -440,6 +472,9 @@ export function analyze(state, allowGoodLies = false,
 
   eachWorld(n, state.claims, searchOptions(state, allowGoodLies), world => {
     legal += 1;
+    // Against the pilot's estimate of how many worlds there are, which is
+    // a guess; held below 100 % until the walk really ends.
+    progress(legal, Math.max(pilot, legal * 1.05));
     if (legal > maxWorlds) {
       // Too big to walk. Stop, and throw the partial count away — it is
       // the first corner of the tree and nothing like a fair sample.

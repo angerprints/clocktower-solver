@@ -71,6 +71,16 @@ class TheBuiltFolder(SolverTest):
             with self.subTest(module=name):
                 self.assertTrue((SITE / name).is_file())
 
+    def test_the_background_worker_carries_the_same_stamp(self):
+        """The solve runs in `worker.mjs`, a second entry point: its URL
+        and its one import carry the release fingerprint like the page's
+        own, or a cached solver could answer a fresh page."""
+        stamp = re.search(r'from "\./api\.mjs\?v=([0-9a-f]+)"', self.page)
+        self.assertIsNotNone(stamp)
+        self.assertIn(f'"./worker.mjs?v={stamp.group(1)}"', self.page)
+        background = (SITE / "worker.mjs").read_text()
+        self.assertIn(f'from "./api.mjs?v={stamp.group(1)}"', background)
+
     def test_every_module_that_shipped_is_kept_offline(self):
         """The other direction: a module copied but not listed would be
         fetched from the network on a page that is meant to work without
@@ -185,6 +195,45 @@ class ItRunsFromThere(SolverTest):
     def test_the_guesswork_check_runs_too(self):
         """The last thing that needed a server."""
         self.assertEqual(self.got["guesswork"], 9)
+
+
+@unittest.skipUnless(NODE, "Node is not installed")
+class TheSolveSaysHowFarItHasGot(SolverTest):
+    """Progress for the background solve: a fraction that only grows,
+    stays below one until the answer is in, and changes nothing about the
+    answer itself."""
+
+    def test_progress_grows_and_the_answer_is_the_same(self):
+        fixtures = json.loads((ROOT / "tests" / "fixtures"
+                               / "conformance.json").read_text())
+        payload = next(c["payload"] for c in fixtures["cases"]
+                       if c["name"] == "sv-9-bare")
+        script = """
+            import {solveBoard, onProgress, guessworkFor} from "./js/api.mjs";
+            const payload = JSON.parse(process.argv[1]);
+            const plain = solveBoard(payload);
+            const steps = [];
+            onProgress(f => steps.push(f));
+            const watched = solveBoard(payload);
+            const shake = [];
+            onProgress(f => shake.push(f));
+            guessworkFor(payload);
+            onProgress(null);
+            console.log(JSON.stringify({steps, shake,
+              same: JSON.stringify(plain.rows) === JSON.stringify(watched.rows)}));
+        """
+        got = subprocess.run([NODE, "--input-type=module", "-e", script,
+                              json.dumps(payload)], cwd=ROOT,
+                             capture_output=True, text=True, timeout=600)
+        self.assertEqual(got.returncode, 0, got.stderr)
+        out = json.loads(got.stdout.strip().splitlines()[-1])
+        self.assertTrue(out["same"])
+        for key in ("steps", "shake"):
+            with self.subTest(job=key):
+                steps = out[key]
+                self.assertTrue(steps, "no progress reported at all")
+                self.assertTrue(all(0 <= f < 1 for f in steps))
+                self.assertEqual(steps, sorted(steps))
 
 
 if __name__ == "__main__":
