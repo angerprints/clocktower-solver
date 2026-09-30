@@ -25,7 +25,7 @@ import {bags, eachWorld} from "./worlds.mjs";
 export function anythingFits(state, allowGoodLies = false,
                              ceiling = 120_000) {
   let seen = 0, found = false, complete = true;
-  eachWorld(state.nPlayers, state.claims, {
+  eachWorld(state.nPlayers, state.searchClaims(), {
     certainties: state.certainties,
     allowGoodLies,
     forced: forcedRoles(state),

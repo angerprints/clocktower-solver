@@ -61,7 +61,8 @@ export const nightDeathFactor = night =>
 export function isLying(world, state, p) {
   const role = world.roles[p];
   const believed = world.believes[p];
-  const claim = state.claims[p];
+  // Against what it was dealt — see state.searchClaims.
+  const claim = state.searchClaims()[p];
   if (claim && !(role === claim ||
                  (believesAnother(role) && believed === claim))) return true;
   const said = (state.wakes || {})[p];
@@ -163,7 +164,7 @@ const searchOptions = (state, allowGoodLies) => ({
 export function solve(state, allowGoodLies = false,
                       maxWorlds = DEFAULT_MAX_WORLDS) {
   const all = [];
-  eachWorld(state.nPlayers, state.claims,
+  eachWorld(state.nPlayers, state.searchClaims(),
             searchOptions(state, allowGoodLies), world => {
     all.push(world);
     return all.length < maxWorlds;
@@ -320,7 +321,7 @@ export function margin(pct, ess) {
 export function pilotSize(state, allowGoodLies = false, walks = 1500,
                           rng = null) {
   let total = 0.0, walked = 0;
-  sampleWorlds(state.nPlayers, state.claims, {
+  sampleWorlds(state.nPlayers, state.searchClaims(), {
     ...searchOptions(state, allowGoodLies),
     dives: walks, rng: rng || new Rng(0),
   }, (_world, standsFor) => { walked += 1; total += standsFor; });
@@ -349,7 +350,7 @@ export function estimate(state, allowGoodLies = false, dives = 25000,
     evil: 0, demon: 0, drunk: 0, lying: 0, roles: {},
   }));
 
-  sampleWorlds(n, state.claims, {
+  sampleWorlds(n, state.searchClaims(), {
     ...searchOptions(state, allowGoodLies), dives, rng,
   }, (world, standsFor) => {
     walked += 1;
@@ -368,7 +369,7 @@ export function estimate(state, allowGoodLies = false, dives = 25000,
     for (const [idx, mark] of Object.entries(outcome))
       told[idx][mark] = (told[idx][mark] || 0) + wt;
 
-    for (const [story, part] of storyShares(world, viable))
+    for (const [story, part] of storyShares(world, viable, state))
       tallySeats(perSeat, world, story, state, wt * part, now);
     tallyBlame(blame, view, state, wt);
 
@@ -438,7 +439,7 @@ export function analyze(state, allowGoodLies = false,
     evil: 0, demon: 0, drunk: 0, lying: 0, roles: {},
   }));
 
-  eachWorld(n, state.claims, searchOptions(state, allowGoodLies), world => {
+  eachWorld(n, state.searchClaims(), searchOptions(state, allowGoodLies), world => {
     legal += 1;
     if (legal > maxWorlds) {
       // Too big to walk. Stop, and throw the partial count away — it is
@@ -457,7 +458,7 @@ export function analyze(state, allowGoodLies = false,
     for (const [idx, mark] of Object.entries(outcome))
       told[idx][mark] = (told[idx][mark] || 0) + wt;
 
-    for (const [story, part] of storyShares(world, viable)) {
+    for (const [story, part] of storyShares(world, viable, state)) {
       tallySeats(perSeat, world, story, state, wt * part, now);
       for (const [day, seat] of executed)
         if (story.demonAt(`D${day}`) === seat) hanged[seat] += wt * part;

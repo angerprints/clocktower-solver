@@ -118,6 +118,24 @@ export class GameState {
   }
 
   /** Which character each Philosopher took, and from when. */
+  /** The claims the search deals from: a seat that reported "became X,
+   * was Y" was dealt Y. See info.py `search_claims`. */
+  searchClaims() {
+    const key = `${this.infos.length}|${Object.keys(this.claims || {}).length}`;
+    if (this._searchClaims && this._searchClaims.key === key &&
+        this._searchClaims.claims === this.claims)
+      return this._searchClaims.got;
+    const got = {...(this.claims || {})};
+    const earliest = {};
+    for (const info of this.infos)
+      if (info.type === "Became" && info.was &&
+          (!(info.player in earliest) || info.night < earliest[info.player][0]))
+        earliest[info.player] = [info.night, info.was];
+    for (const [seat, [, was]] of Object.entries(earliest)) got[seat] = was;
+    this._searchClaims = {key, claims: this.claims, got};
+    return got;
+  }
+
   philosophies() {
     if (!this._philosophies) {
       const got = {};

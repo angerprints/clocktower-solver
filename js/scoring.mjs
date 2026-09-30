@@ -297,7 +297,7 @@ export const BARBER_SWAP_PENALTY = 0.15;
  * Anchored to the Barber's death. A "may", so doing nothing comes first,
  * because it is what usually happened.
  */
-transitionRule(function aBarberLetsTheDemonSwapTwo(world, state) {
+const barberRule = transitionRule(function aBarberLetsTheDemonSwapTwo(world, state) {
   if (!inBag(state, "Barber")) return [[[], 1.0]];
   // Its offers depend only on the board it is shown, and a night-by-night
   // solve shows it the same board once per story it already made — fifty
@@ -320,7 +320,37 @@ export function barberClaimants(state) {
   for (const info of state.infos)
     if (info.type === "Became" && (info.role === "Barber" || info.was === "Barber"))
       out.add(Number(info.player));
+  // A reported change nothing on the record explains opens the swap to
+  // every seat that died before it (table ruling, 30.09.2026).
+  const reported = unexplainedChange(state);
+  if (reported !== null) {
+    const latest = phaseIndex(`N${reported}`);
+    for (const [seat, phase] of state.deathPhases())
+      if (phase && phaseIndex(phase) <= latest) out.add(Number(seat));
+  }
   return out;
+}
+
+/** The latest night somebody reported becoming a character that no
+ * recorded Pit-Hag creation, Snake Charmer swap or Farmer's death
+ * accounts for — or null. See solver.py. */
+function unexplainedChange(state) {
+  const made = new Set(), charmed = new Set();
+  for (const info of state.infos) {
+    if (info.sourceRole === "PitHag" && info.role) made.add(`${info.target}|${info.role}`);
+    if (info.sourceRole === "SnakeCharmer" && info.swapped) {
+      charmed.add(Number(info.player)); charmed.add(Number(info.target));
+    }
+  }
+  let latest = null;
+  for (const info of state.infos) {
+    if (info.type !== "Became" || !info.role) continue;
+    if (made.has(`${info.player}|${info.role}`) || charmed.has(Number(info.player)))
+      continue;
+    if (info.role === "Farmer") continue;   // handed on by a Farmer's death
+    latest = latest === null ? info.night : Math.max(latest, info.night);
+  }
+  return latest;
 }
 
 function barberOffers(world, state) {
@@ -339,6 +369,7 @@ function barberOffers(world, state) {
     const night = "NDEX".indexOf(phase[0].toUpperCase()) > 0
       ? `N${day + 1}` : `N${day}`;
     if (phaseIndex(night) > phaseIndex(state.finalPhase())) continue;
+    const demon = world.demonAt(night);
     for (let first = 0; first < state.nPlayers; first++)
       for (let second = first + 1; second < state.nPlayers; second++) {
         const a = world.roleAt(first, night), b = world.roleAt(second, night);
@@ -346,9 +377,15 @@ function barberOffers(world, state) {
         // Sides written out: a swap moves characters, never sides.
         const sideA = world.evilAt(first, night) ? "evil" : "good";
         const sideB = world.evilAt(second, night) ? "evil" : "good";
-        stories.push([[change(night, first, b, sideA),
-                       change(night, second, a, sideB)],
-                      BARBER_SWAP_PENALTY]);
+        // The Demon with one of its own Minions costs a world nothing;
+        // any other pair is priced as a deliberate play (table habit).
+        const ours = (first === demon && TEAM[b] === "minion") ||
+                     (second === demon && TEAM[a] === "minion");
+        const pair = [change(night, first, b, sideA),
+                      change(night, second, a, sideB)];
+        for (const c of pair)
+          Object.defineProperty(c, "barber", {value: ours ? "ours" : "other"});
+        stories.push([pair, ours ? 1.0 : BARBER_SWAP_PENALTY]);
       }
   }
   return stories;
@@ -1265,11 +1302,46 @@ export function bestStory(world, state, outcome = null) {
  * its stories by what each costs, so an Ogre that may have turned evil
  * and a starpass with several heirs are counted as the odds say rather
  * than all-or-nothing. See solver.py. */
-export function storyShares(world, viable) {
+export function storyShares(world, viable, state = null) {
+  // A Barber swap gets the share the table gives it, not its price.
+  if (state && viable.length > 1 && inBag(state, "Barber") &&
+      barberClaimants(state).size)
+    viable = viable.map(([cost, changes]) =>
+      [cost * barberShare(world, changes, state), changes]);
   const total = viable.reduce((sum, [cost]) => sum + cost, 0);
   if (total <= 0) return [];
   return viable.map(([cost, changes]) =>
     [changes.length ? new Timeline(world, changes) : world, cost / total]);
+}
+
+/** How much of a world's credit a story gets for its Barber swap: the
+ * swap's price taken back out and the table's share put in — "no swap"
+ * 1 − BARBER_SWAP_SHARE, Demon–Minion pairs BARBER_DEMON_MINION_SHARE of
+ * the rest between them, every other pair what is left. See solver.py. */
+function barberShare(world, changes, state) {
+  const swaps = changes.filter(c => c.barber);
+  const rest = changes.filter(c => !c.barber);
+  const view = rest.length ? new Timeline(world, rest) : world;
+  const counts = new Map();
+  for (const [extra] of barberRule(view, state)) {
+    if (!extra.length) continue;
+    const got = counts.get(extra[0].phase) || [0, 0];
+    got[extra[0].barber === "ours" ? 0 : 1] += 1;
+    counts.set(extra[0].phase, got);
+  }
+  let factor = 1.0;
+  for (const [night, [nOurs, nOther]] of counts) {
+    const mine = swaps.filter(c => c.phase === night);
+    if (!mine.length) { factor *= 1.0 - PRIORS.BARBER_SWAP_SHARE; continue; }
+    const ours = mine[0].barber === "ours";
+    const part = nOurs && nOther
+      ? (ours ? PRIORS.BARBER_DEMON_MINION_SHARE
+              : 1.0 - PRIORS.BARBER_DEMON_MINION_SHARE)
+      : 1.0;
+    factor *= PRIORS.BARBER_SWAP_SHARE * part / (ours ? nOurs : nOther) /
+              (ours ? 1.0 : BARBER_SWAP_PENALTY);
+  }
+  return factor;
 }
 
 /** How much explaining this world needs, as a multiplier, or null. */

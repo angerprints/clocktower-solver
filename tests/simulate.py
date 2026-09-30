@@ -458,7 +458,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # contained one. Found by somebody reading a transcript and
             # asking why a Barber execution on day 1 produced nothing on
             # night 2.
-            _barber_swap(d, night, rng)
+            heard += _barber_swap(d, night, rng)
 
         heard += [row for row in honest_info(d, night, rng)
                   if d.role_at(row.player, f"N{night}") not in CHOOSES_EARLY]
@@ -728,25 +728,43 @@ def _barber_swap(d, night, rng):
             if d.role_at(p, f"N{night}") == "Barber"
             and d.deaths.get(p) in (f"D{yesterday}", f"E{yesterday}",
                                     f"N{night}")]
-    if not died or rng.random() > 0.5:
-        return                              # a "may", and usually not
+    # At this table the Demon usually swaps, and half the time with one of
+    # its own Minions — the Barber's death is loud, the swap is quiet
+    # (table habit, 30.09.2026).
+    if not died or rng.random() > 0.75:
+        return []
     # Alive after tonight's kill, which has already happened: the Barber
     # acts at 40. Swapping the Demon's character into tonight's corpse
     # left a dead Demon and a game that should have ended (29.09.2026).
     living = sorted(p for p in d.alive_at(f"N{night}")
                     if d.deaths.get(p) != f"N{night}")
     if len(living) < 2:
-        return
-    a, b = rng.sample(living, 2)
+        return []
     phase = f"N{night}"
+    demon = d.demon_at(phase)
+    minions = [p for p in living if TEAM[d.role_at(p, phase)] == "minion"]
+    if demon in living and minions and rng.random() < 0.5:
+        a, b = demon, rng.choice(minions)
+    else:
+        a, b = rng.sample(living, 2)
     got_a = d.role_at(a, phase)
     got_b = d.role_at(b, phase)
-    demon = d.demon_at(phase)
     d.changes.append((phase, a, got_b))
     d.changes.append((phase, b, got_a))
     # And the star moves with the character, as with the Snake Charmer.
     if demon in (a, b):
         d.handovers.append((phase, b if demon == a else a))
+    # "Each player learns which character they become." A good player
+    # handed a good character says so, often — the one trace a swap leaves
+    # when the Barber hid.
+    from botc.info import BecameInfo
+    told = []
+    for seat, was, now in ((a, got_a, got_b), (b, got_b, got_a)):
+        if was != now and d.side_at(seat, phase) == "good" \
+                and TEAM[now] in ("townsfolk", "outsider") \
+                and rng.random() < 0.6:
+            told.append(BecameInfo(night, seat, role=now, was=was))
+    return told
 
 
 def _alsaahir_guesses(d, day, rng, heard):

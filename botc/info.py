@@ -244,6 +244,34 @@ class GameState:
                 latest = phase
         return latest
 
+    def search_claims(self):
+        """The claims the search deals from.
+
+        A seat whose character changed and says so — a "became X, was Y"
+        row — claims the new character now, but it was *dealt* the old
+        one. Searched from its claim alone, the true deal was never built,
+        and the change that explains everything could not be found: a
+        Pit-Hag's creation or a Barber's swap reported honestly read as a
+        good player lying. So the search deals from the earliest `was`
+        such a seat gave; everything else — whose information a row is —
+        still reads the claim as it stands.
+        """
+        key = (len(self.infos), id(self.claims), len(self.claims or {}))
+        got = getattr(self, "_search_claims", None)
+        if got is not None and got[0] == key:
+            return got[1]
+        claims = dict(self.claims or {})
+        earliest = {}
+        for info in self.infos:
+            if type(info).__name__ == "BecameInfo" and info.was \
+                    and (info.player not in earliest
+                         or info.night < earliest[info.player][0]):
+                earliest[info.player] = (info.night, info.was)
+        for seat, (_night, was) in earliest.items():
+            claims[seat] = was
+        self._search_claims = (key, claims)
+        return claims
+
     def philosophies(self):
         """Which character each Philosopher took, and from when.
 

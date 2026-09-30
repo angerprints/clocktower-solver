@@ -1918,6 +1918,84 @@ class ABarberSwapNeedsADeadBarberClaim(SolverTest):
         self.assertGreater(len(got), 30)
 
 
+class ASwapThatIsReported(SolverTest):
+    """Table rulings of 30.09.2026.
+
+    A seat whose character changed and says so ("became X, was Y") was
+    dealt Y: the search deals from Y and the new claim is no lie. A
+    reported change nothing on the record explains opens the Barber's
+    swap to every seat that died before it. And once a swap is open, the
+    credit inside a world follows what the table does: the Demon usually
+    swaps, half the time with one of its own Minions.
+    """
+
+    ROLES = ("Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler", "Klutz",
+             "Barber", "Witch", "Vortox")
+
+    def test_the_search_deals_from_what_they_claimed_before(self):
+        from botc.info import BecameInfo
+        state = GameState(n_players=9, script=SV,
+                          claims={2: "Dreamer"},
+                          infos=[BecameInfo(2, 2, role="Dreamer",
+                                            was="Oracle")])
+        self.assertEqual(state.search_claims()[2], "Oracle")
+        self.assertEqual(state.claims[2], "Dreamer")
+        world = World(self.ROLES, (None,) * 9)
+        self.assertFalse(S.is_lying(world, state, 2))
+
+    def test_an_unexplained_change_opens_the_swap_to_the_dead(self):
+        from botc.info import BecameInfo
+        state = GameState(n_players=9, script=SV,
+                          claims={6: "Sage", 2: "Dreamer"},
+                          deaths={6: "D1"}, quiet_nights={2},
+                          infos=[BecameInfo(2, 2, role="Dreamer",
+                                            was="Oracle")])
+        self.assertIn(6, S.barber_claimants(state))
+
+    def test_a_recorded_creation_explains_it(self):
+        from botc.info import BecameInfo, PitHagChoice
+        state = GameState(n_players=9, script=SV,
+                          claims={6: "Sage", 2: "Dreamer"},
+                          deaths={6: "D1"}, quiet_nights={2},
+                          infos=[BecameInfo(2, 2, role="Dreamer",
+                                            was="Oracle"),
+                                 PitHagChoice(2, 7, target=2,
+                                              role="Dreamer")])
+        self.assertNotIn(6, S.barber_claimants(state))
+
+    def test_the_demon_and_its_minion_swap_for_free(self):
+        state = GameState(n_players=9, script=SV, claims={6: "Barber"},
+                          deaths={6: "D1"}, quiet_nights={2})
+        offers = S._barber_offers(World(self.ROLES, (None,) * 9), state)
+        ours = [cost for extra, cost in offers
+                if extra and isinstance(extra[0], S.DemonMinionSwap)]
+        other = [cost for extra, cost in offers
+                 if extra and isinstance(extra[0], S.OtherSwap)]
+        self.assertEqual(ours, [1.0])          # the Vortox and the Witch
+        self.assertTrue(other and set(other) == {S.BARBER_SWAP_PENALTY})
+
+    def test_the_credit_inside_a_world_follows_the_table(self):
+        world = World(self.ROLES, (None,) * 9)
+        state = GameState(n_players=9, script=SV, claims={6: "Barber"},
+                          deaths={6: "D1"}, quiet_nights={2})
+        offers = S._barber_offers(world, state)
+        swaps = [extra for extra, _cost in offers if extra]
+        n_other = sum(isinstance(e[0], S.OtherSwap) for e in swaps)
+        ours = next(e for e in swaps if isinstance(e[0], S.DemonMinionSwap))
+        other = next(e for e in swaps if isinstance(e[0], S.OtherSwap))
+        self.assertAlmostEqual(S._barber_share(world, (), state),
+                               1 - S.BARBER_SWAP_SHARE)
+        self.assertAlmostEqual(
+            S._barber_share(world, ours, state),
+            S.BARBER_SWAP_SHARE * S.BARBER_DEMON_MINION_SHARE)
+        # Every other pair, taken together, gets the other half — the
+        # price each paid taken back out.
+        self.assertAlmostEqual(
+            S._barber_share(world, other, state) * S.BARBER_SWAP_PENALTY
+            * n_other,
+            S.BARBER_SWAP_SHARE * (1 - S.BARBER_DEMON_MINION_SHARE))
+
+
 class FoundByTheWideSweep(SolverTest):
     """Pinned without the simulator (29.09.2026)."""
 
