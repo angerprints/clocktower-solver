@@ -40,6 +40,18 @@ Bewertet wird nach dem Maßstab des Tisches: Stand der wahre Dämon an jedem Mor
 **Ergebnis (01.10.2026):**
 
 - **Regelprüfung bestanden:** Die wahre Welt ist an allen sechs Morgen gültig. Ihr Gewicht ist 1,0, nach den beiden erfundenen Undertaker-Angaben von Ekken 0,4 × 0,4 = 0,16.
-- **Tischprüfung:** Sam stand an allen sechs Morgen auf Platz 2 oder 3, nie vorn. Vorn lag fast immer Ben, am letzten Morgen mit 50–80 %. Das Brett ist zu groß zum Abzählen, die Zahlen kommen aus einer Stichprobe und schwanken zwischen zwei Läufen um bis zu zehn Punkte.
-- **Warum Ben:** Ohne Bauchgefühl gibt es eine billigere Welt als die wahre. Ben ist Imp mit Butler-Bluff, Cosmo ist ein nüchterner Fortune Teller, dessen Ja-Ergebnisse auf Ben in Nacht 5 und 6 stimmen. Patters ist der Poisoner, das deckt der Investigator. Ekken ist der Drunk, dann sind seine Undertaker-Angaben kostenlos, und die Virgin löst bei einem Outsider ohnehin nicht aus. Die wahre Welt muss dagegen zwei erfundene Angaben bezahlen. Dieselbe Lesart hatte Cosmo am Tisch selbst: „Wenn ich gut bin, ist es Ben.“
-- **Mit dem Bauchgefühl des Tisches:** Der Tisch hielt Ben für gut, wegen seines Butler-Witzes, bevor er die Bluffs kennen konnte. Mit diesem Bauchgefühl für Ben (−2) dreht sich der letzte Morgen: Sam 65 %, Ben 34 %, Cosmo als Marionette 39 %.
+- **Tischprüfung aus Bens Sicht:** Das Transkript ist aus Bens Sicht, er hat das Butler-Token selbst gezogen. Deshalb steht sein Sitz auf **This seat is me**: Butler, außer er wäre die Marionette.
+
+  | Morgen | Sams Platz | Sam | vorn |
+  |---|---|---|---|
+  | 1 | 1 | 24–27 % | Sam |
+  | 2 | 1 | 29–35 % | Sam |
+  | 3 | 2–3 | 23–28 % | Emily 34–37 % |
+  | 4 | 2–3 | 14–28 % | Emily 43–64 % |
+  | 5 | 1 | 93–97 % | Sam |
+  | 6 | 1 | 97–99 % | Sam |
+
+  Die Bereiche umfassen mehrere Läufe, denn die Zahlen kommen aus einer Stichprobe. Mit **Role is confirmed** statt **This seat is me** ändert sich praktisch nichts. In vier Sitzordnungen ist Sam am letzten Morgen 97–99 % vorn.
+- **Ohne Bens Token** (nur sein Claim): Sam stand auf Platz 2 bis 3, nie vorn. Vorn lag Ben, am letzten Morgen mit 50–80 %.
+- **Warum Ben ohne sein Token vorn lag:** Ohne Bauchgefühl gibt es eine billigere Welt als die wahre. Ben ist Imp mit Butler-Bluff, Cosmo ist ein nüchterner Fortune Teller, dessen Ja-Ergebnisse auf Ben in Nacht 5 und 6 stimmen. Patters ist der Poisoner, das deckt der Investigator. Ekken ist der Drunk, dann sind seine Undertaker-Angaben kostenlos, und die Virgin löst bei einem Outsider ohnehin nicht aus. Die wahre Welt muss dagegen zwei erfundene Angaben bezahlen. Dieselbe Lesart hatte Cosmo am Tisch selbst: „Wenn ich gut bin, ist es Ben.“ Der Tisch entschied nach Bauchgefühl (Bens Butler-Witz kam, bevor er die Bluffs kennen konnte). Als Lesart −2 eingetragen, liegt auch dann Sam vorn mit 65 %.
+- **Rollen teils falsch, Dämon richtig:** Am Ende hält der Solver Patters (57 %) statt Ekken für den Poisoner, weil Ekkens erfundene Undertaker-Angaben Gewicht kosten.

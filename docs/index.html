@@ -610,14 +610,14 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=2f403f8ec299";
+import * as solver from "./api.mjs?v=a293341afdd2";
 
 // The solve runs beside the page, in a worker, so a long board neither
 // freezes the page nor hides that it is busy: it reports how far along it
 // is and can be stopped. Where a browser cannot start a module worker —
 // an old one, or a page opened straight from disk — it runs here as it
 // always did, and the page freezes for the length of it as it always did.
-const WORKER_URL = "./worker.mjs?v=2f403f8ec299";
+const WORKER_URL = "./worker.mjs?v=a293341afdd2";
 let WORKER = null, NO_WORKER = false, JOB = null;
 
 function worker(){
@@ -1983,7 +1983,7 @@ function drawInspector(){
   ce.appendChild(opt("unsure","Claim not trusted"));
   ce.value=p.certainty||""; ce.disabled=!p.claim;
   $("#cert-note").textContent = !p.claim ? "Pick a claimed role first."
-    : p.certainty==="self" ? "You can see your own token, so this role is yours — unless the Storyteller made you the Drunk, which you would not know."
+    : p.certainty==="self" ? "You can see your own token, so this role is yours — unless the Storyteller made you the Drunk (or, where the script has them, the Marionette or the Lunatic), which you would not know."
     : p.certainty==="confirmed" ? "Taken as certain, and not the Drunk. Use it for mechanical proof, like a Virgin that triggered."
     : p.certainty==="hiding" ? "Also allows a good player covering up — an Outsider claiming somebody else's role. That is the good lie people actually tell, and it stays cheap to search."
     : p.certainty==="unsure" ? "The claim is set aside — this seat could hold any role. Slow: it multiplies the search, so use it on one or two seats at most."

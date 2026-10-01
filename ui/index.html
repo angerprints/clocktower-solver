@@ -1983,7 +1983,7 @@ function drawInspector(){
   ce.appendChild(opt("unsure","Claim not trusted"));
   ce.value=p.certainty||""; ce.disabled=!p.claim;
   $("#cert-note").textContent = !p.claim ? "Pick a claimed role first."
-    : p.certainty==="self" ? "You can see your own token, so this role is yours — unless the Storyteller made you the Drunk, which you would not know."
+    : p.certainty==="self" ? "You can see your own token, so this role is yours — unless the Storyteller made you the Drunk (or, where the script has them, the Marionette or the Lunatic), which you would not know."
     : p.certainty==="confirmed" ? "Taken as certain, and not the Drunk. Use it for mechanical proof, like a Virgin that triggered."
     : p.certainty==="hiding" ? "Also allows a good player covering up — an Outsider claiming somebody else's role. That is the good lie people actually tell, and it stays cheap to search."
     : p.certainty==="unsure" ? "The claim is set aside — this seat could hold any role. Slow: it multiplies the search, so use it on one or two seats at most."

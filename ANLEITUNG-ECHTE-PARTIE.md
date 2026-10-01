@@ -12,7 +12,8 @@
 2. Tippe oben auf den Skriptnamen und wähle unter **Published** euer Skript. Bei einem eigenen Skript nimmst du **Or open a script file** mit der Skript-Datei aus der offiziellen App.
 3. Stelle oben bei **Players** die Spielerzahl ein.
 4. Tippe nacheinander auf jeden Sitz und trage unter **Name** den Namen ein, in der Reihenfolge, in der ihr sitzt.
-5. Stand von einer alten Runde auf dem Gerät? Dann erst **…** → **Clear game**.
+5. **Deinen eigenen Sitz** antippen, deinen Charakter als **Claimed role** eintragen und darunter **This seat is me** wählen. Dein eigenes Token ist das Sicherste, was du weißt. In der ersten ausgewerteten Partie hat genau das den Dämon von Platz 2 auf Platz 1 gebracht.
+6. Stand von einer alten Runde auf dem Gerät? Dann erst **…** → **Clear game**.
 
 ## Während des Spiels
 

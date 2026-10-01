@@ -198,9 +198,9 @@ Bleibt wertvoll, auch neben Phase 1: ein gespeichertes Brett aus einer echten Ru
 **Erste Partie (01.10.2026):** ein gestreamtes „Trouble Brewing with a Marionette“ mit 12 Spielern, abgeschrieben aus einem Transkript. Die Datei liegt unter `real-games/`, die Einzelheiten stehen in `real-games/README.md`.
 
 - **Regelprüfung bestanden:** Die wahre Welt ist an allen sechs Morgen gültig. `tests/test_real_games.py` hält das fest.
-- **Tischprüfung nicht bestanden:** Der Dämon Sam stand auf Platz 2 bis 3, nie vorn. Vorn lag Ben, am letzten Morgen mit 50–80 %.
-- **Grund:** Der Fehler liegt im Brett, nicht in einer Regel. Es gibt eine billigere Welt mit Ben als Imp und Butler-Bluff, Cosmo als nüchternem Fortune Teller und Ekken als Drunk. Die wahre Welt muss zwei erfundene Undertaker-Angaben bezahlen.
-- **Was am Tisch entschied:** das Bauchgefühl „Ben ist gut“. Trägt man dieses Gefühl als Lesart −2 ein, liegt Sam vorn mit 65 %.
+- **Tischprüfung aus Bens Sicht bestanden:** Das Transkript stammt von Ben, und er kennt sein eigenes Token. Sein Sitz steht deshalb auf **This seat is me**: Butler, außer der Erzähler hat ihn zur Marionette gemacht. Damit liegt Sam an vier von sechs Morgen klar vorn, am Ende mit 96–99 %. An den Morgen 3 und 4 ist es ein Dreikampf mit Emily und Alejo, Sam liegt dort auf Platz 2 bis 3.
+- **Ohne Bens eigenes Token** lag Sam nie vorn. Es gibt eine billigere Welt mit Ben als Imp und Butler-Bluff, Cosmo als nüchternem Fortune Teller und Ekken als Drunk. Wer am Tisch mitschreibt, sollte also immer seinen eigenen Sitz markieren.
+- **Rollen teils falsch, Dämon richtig:** Am Ende hält der Solver Patters für den wahrscheinlicheren Poisoner (57 %) und Ekken eher für den Drunk. Der Grund ist, dass Ekkens erfundene Undertaker-Angaben Gewicht kosten. Nach dem Maßstab des Tisches ist der Job trotzdem getan.
 - **Offene Ideen, nicht gebaut:**
   - Ein Info-Claim, der lange öffentlich bekannt ist und nie stirbt, deutet auf Drunk, Marionette oder böse.
   - Ein Verlauf der Claims pro Sitz. In dieser Partie haben allerdings drei Gute ihren Claim gewechselt, das Signal hätte also in die Irre geführt.

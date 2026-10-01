@@ -65,7 +65,8 @@
    {
     "name": "Ben",
     "claim": "Butler",
-    "events": []
+    "events": [],
+    "certainty": "self"
    },
    {
     "name": "Chris",
