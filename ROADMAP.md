@@ -189,13 +189,23 @@ Wenn das Spiel bei v2 ankommt (vorher kommen dort M9 bis M13): kein Solver-Neuba
 
 Das ist auch der Grund, warum botc-solver zweisprachig bleiben sollte. Die Python-Hälfte ist genau die, die das Spiel nutzen kann.
 
-### Phase 4 — Eine echte Partie · *Werkzeug fertig am 30.09.2026, wartet auf deine Partie*
+### Phase 4 — Eine echte Partie · *Werkzeug fertig am 30.09.2026, erste Partie ausgewertet am 01.10.2026*
 
 Bleibt wertvoll, auch neben Phase 1: ein gespeichertes Brett aus einer echten Runde, und der Vergleich, was das Werkzeug sagt und was passiert ist. Die Engine-Partien prüfen die Regeln, eine echte Partie prüft, ob das Werkzeug am Tisch hilft.
 
 **Gebaut:** Auf der Seite gibt es unter **…** → **After the game…** die Auflösung. Du trägst ein, wer was war, vorbelegt mit den Claims. **Look back** rechnet jeden Morgen der Partie neu, mit genau dem Wissen, das der Tisch damals hatte: Nacht-Ereignisse bis zu dieser Nacht, Tages-Ereignisse bis zum Vortag. Bewertet wird nach deinem Maßstab, also wo der echte Dämon stand, mit wie viel Prozent, und ob er klarer Hauptverdacht war. Gleichstände werden angezeigt. Die Auflösung wird mit der Partie gespeichert. `tools/review_game.mjs` liefert dieselbe Auswertung für eine Datei, die du mir schickst. Die Anleitung für den Spieleabend steht in `ANLEITUNG-ECHTE-PARTIE.md`.
 
-**Als Nächstes:** eine Runde mitschreiben, speichern und die Datei hier anhängen.
+**Erste Partie (01.10.2026):** ein gestreamtes „Trouble Brewing with a Marionette“ mit 12 Spielern, abgeschrieben aus einem Transkript. Die Datei liegt unter `real-games/`, die Einzelheiten stehen in `real-games/README.md`.
+
+- **Regelprüfung bestanden:** Die wahre Welt ist an allen sechs Morgen gültig. `tests/test_real_games.py` hält das fest.
+- **Tischprüfung nicht bestanden:** Der Dämon Sam stand auf Platz 2 bis 3, nie vorn. Vorn lag Ben, am letzten Morgen mit 50–80 %.
+- **Grund:** Der Fehler liegt im Brett, nicht in einer Regel. Es gibt eine billigere Welt mit Ben als Imp und Butler-Bluff, Cosmo als nüchternem Fortune Teller und Ekken als Drunk. Die wahre Welt muss zwei erfundene Undertaker-Angaben bezahlen.
+- **Was am Tisch entschied:** das Bauchgefühl „Ben ist gut“. Trägt man dieses Gefühl als Lesart −2 ein, liegt Sam vorn mit 65 %.
+- **Offene Ideen, nicht gebaut:**
+  - Ein Info-Claim, der lange öffentlich bekannt ist und nie stirbt, deutet auf Drunk, Marionette oder böse.
+  - Ein Verlauf der Claims pro Sitz. In dieser Partie haben allerdings drei Gute ihren Claim gewechselt, das Signal hätte also in die Irre geführt.
+
+**Als Nächstes:** weitere Partien, am besten selbst am Tisch mitgeschrieben, mit gesicherter Sitzordnung.
 
 ### Später
 

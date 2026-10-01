@@ -1,0 +1,251 @@
+{
+ "format": "clocktower-solver-game",
+ "version": 1,
+ "script": {
+  "name": "Trouble Brewing with a Marionette",
+  "author": "",
+  "characters": [
+   "washerwoman",
+   "librarian",
+   "investigator",
+   "chef",
+   "empath",
+   "fortuneteller",
+   "undertaker",
+   "monk",
+   "ravenkeeper",
+   "virgin",
+   "slayer",
+   "soldier",
+   "mayor",
+   "butler",
+   "drunk",
+   "recluse",
+   "saint",
+   "poisoner",
+   "spy",
+   "scarletwoman",
+   "baron",
+   "imp",
+   "marionette"
+  ],
+  "fabled": []
+ },
+ "game": {
+  "n": 12,
+  "players": [
+   {
+    "name": "Emily",
+    "claim": "Mayor",
+    "events": [
+     "X4"
+    ]
+   },
+   {
+    "name": "Jackie",
+    "claim": "Monk",
+    "events": [
+     "N6"
+    ]
+   },
+   {
+    "name": "Mullabuck",
+    "claim": "Empath",
+    "events": [
+     "N3"
+    ]
+   },
+   {
+    "name": "Ekken",
+    "claim": "Undertaker",
+    "events": [
+     "X3"
+    ]
+   },
+   {
+    "name": "Ben",
+    "claim": "Butler",
+    "events": []
+   },
+   {
+    "name": "Chris",
+    "claim": "Investigator",
+    "events": [
+     "N4"
+    ]
+   },
+   {
+    "name": "Alejo",
+    "claim": "Virgin",
+    "events": [
+     "N5"
+    ]
+   },
+   {
+    "name": "Chiz",
+    "claim": "Chef",
+    "events": [
+     "X1"
+    ]
+   },
+   {
+    "name": "Patters",
+    "claim": "Ravenkeeper",
+    "events": [
+     "X2"
+    ]
+   },
+   {
+    "name": "Naya",
+    "claim": "",
+    "events": [
+     "N2"
+    ]
+   },
+   {
+    "name": "Cosmo",
+    "claim": "FortuneTeller",
+    "events": []
+   },
+   {
+    "name": "Sam",
+    "claim": "Saint",
+    "events": []
+   }
+  ],
+  "infos": [
+   {
+    "type": "Chef",
+    "night": 1,
+    "player": 7,
+    "count": 1
+   },
+   {
+    "type": "Investigator",
+    "night": 1,
+    "player": 5,
+    "a": 3,
+    "b": 8,
+    "role": "Poisoner"
+   },
+   {
+    "type": "Empath",
+    "night": 1,
+    "player": 2,
+    "count": 0
+   },
+   {
+    "type": "Empath",
+    "night": 2,
+    "player": 2,
+    "count": 0
+   },
+   {
+    "type": "Undertaker",
+    "night": 2,
+    "player": 3,
+    "target": 7,
+    "role": "Chef"
+   },
+   {
+    "type": "Undertaker",
+    "night": 3,
+    "player": 3,
+    "target": 8,
+    "role": "Poisoner"
+   },
+   {
+    "type": "VirginNomination",
+    "night": 3,
+    "player": 6,
+    "nominator": 3,
+    "triggered": false
+   },
+   {
+    "type": "FortuneTeller",
+    "night": 1,
+    "player": 10,
+    "a": 0,
+    "b": 1,
+    "yes": true
+   },
+   {
+    "type": "FortuneTeller",
+    "night": 2,
+    "player": 10,
+    "a": 3,
+    "b": 5,
+    "yes": false
+   },
+   {
+    "type": "FortuneTeller",
+    "night": 3,
+    "player": 10,
+    "a": 2,
+    "b": 6,
+    "yes": true
+   },
+   {
+    "type": "FortuneTeller",
+    "night": 4,
+    "player": 10,
+    "a": 1,
+    "b": 5,
+    "yes": false
+   },
+   {
+    "type": "FortuneTeller",
+    "night": 5,
+    "player": 10,
+    "a": 1,
+    "b": 4,
+    "yes": true
+   },
+   {
+    "type": "FortuneTeller",
+    "night": 6,
+    "player": 10,
+    "a": 4,
+    "b": 5,
+    "yes": true
+   }
+  ],
+  "quiet": [],
+  "done": [
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "fabled": [],
+  "truth": [
+   "Mayor",
+   "Monk",
+   "Drunk",
+   "Poisoner",
+   "Butler",
+   "Investigator",
+   "Virgin",
+   "Chef",
+   "Ravenkeeper",
+   "Slayer",
+   "Marionette",
+   "Imp"
+  ],
+  "believes": [
+   null,
+   null,
+   "Empath",
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   "FortuneTeller",
+   null
+  ]
+ }
+}
