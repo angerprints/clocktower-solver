@@ -253,13 +253,16 @@ export function uncertain(world, state, seat, night) {
 /** Every value "how many of these woke" could have taken. */
 // Woken to be *shown* something rather than to do anything.
 //
-// A Spy is shown the grimoire, an Evil Twin its twin, a Marionette a good
-// character's night. They wake, and none of it is their own ability
-// working — the same reason a Baron being shown its team does not count.
+// A Spy is shown the grimoire and an Evil Twin its twin. They wake, and
+// none of it is their own ability working — the same reason a Baron being
+// shown its team does not count.
 //
-// The Lunatic was on this list while its rule said it counts, and the
-// list won. The table ruled that it does count (02.10.2026).
-export const SHOWN_NOT_ACTING = new Set(["Spy", "EvilTwin", "Marionette"]);
+// The Lunatic and the Marionette were on this list and came off it by
+// table ruling (02.10.2026): both act, and only think they are somebody
+// else while they do. A Marionette lives the nights of the token it was
+// handed, so the Chambermaid gets the number that token gives — exactly
+// as for the Drunk, which was never on the list.
+export const SHOWN_NOT_ACTING = new Set(["Spy", "EvilTwin"]);
 
 /** What a Chambermaid counts — narrower than `woke`. */
 export function wokeForOwnAbility(world, state, seat, night) {

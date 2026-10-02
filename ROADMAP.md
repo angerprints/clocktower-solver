@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 29.09.2026
+**Stand:** 02.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -235,19 +235,41 @@ Der Chat, der das Einzelspieler-Spiel baut, hat alle 25 Charaktere von Bad Moon 
 - **Dämon gefunden, alter gegen neuen Giftpreis, 152 Partien:** praktisch unverändert (Pukka: 23 → 22 von 41 vorn, mittlere Sicherheit 35,1 → 36,3 %). Der Preis traf alle Pukka-Welten gleich, deshalb verschiebt er vor allem, *welcher* Dämon es ist, kaum *wer*.
 - Das Korpus: 9 von 153 Brettern geben andere Zahlen, alle Bad Moon Rising.
 
-**Offen, nicht gebaut:**
+**Nachtrag am selben Tag, deine Entscheidung zur Marionette:** Die Kammerzofe bekommt die Zahl, die das Token der Marionette ergibt, genau wie beim Trunkenbold. Der Solver hatte sie gar nicht gezählt, der Simulator schon immer nach ihrem Token. Kein Skript in den Messläufen hatte beide Charaktere, deshalb fiel es nie auf. Auf einem gemischten Skript mit beiden verwarf der Solver vorher die wahre Welt in 115 von 532 Partien, jetzt in 0.
 
-- **Eine gestörte Dämonin als Erklärung für eine ruhige Nacht** gibt es nur beim allgemeinen Dämon, nicht bei Zombuul, Pukka, Shabaloth und Poe. Die Bretter gehen trotzdem auf, über einen Schutz auf dem Opfer.
-- **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung 4) bildet der Solver nicht allgemein ab, nur der Simulator für die Pukka.
-- **Marionette bei der Kammerzofe:** Der Solver zählt sie nicht, den Trunkenbold schon. Nach deiner Entscheidung zur Verrückten wäre „zählt“ folgerichtig. Deine Entscheidung.
-- **Zombuul-Partien** findet der Solver am schlechtesten: Dämon vorn in 10 von 37.
-- Die alte lokale Python-App lehnt einen Tod in Nacht 1 ab, die Seite nicht. Ein Bastler kann in Nacht 1 sterben.
+### Als Nächstes
 
-### Später
+**1 · Neubewertung Bad Moon Rising.** Das Skript noch einmal als Ganzes ansehen, jetzt wo die Regeln mit dem Spiel abgeglichen sind:
 
-- Exakte Zählung früher Bretter auf der Website (Tempo: der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten)
-- weitere experimentelle Charaktere nach Bedarf
-- NEXT.md in eine kurze Roadmap und ein Archiv aufteilen
+- Wie oft findet der Solver den Dämon, getrennt nach Zombuul, Pukka, Shabaloth und Poe? Der erste Blick: Shabaloth 38 von 40 vorn, Poe 22 von 34, Pukka 22 von 41, **Zombuul 10 von 37**.
+- Warum ist der Zombuul so schwach? Das ist die erste Frage.
+- Die offenen Stellen 1 bis 3 aus der Liste unten gehören hierher.
+- Am Ende steht eine Liste: was stimmt, was fehlt, was sich lohnt.
+
+**2 · Neubewertung Sects & Violets.** Danach dasselbe für das zweite Skript:
+
+- Dämon gefunden, getrennt nach Fang Gu, Vigormortis, No Dashii und Vortox.
+- Die offenen Stellen 4 bis 7 gehören hierher.
+- Ein Abgleich der Regeln gegen das Wiki, wie ihn der andere Chat für Bad Moon Rising gemacht hat, steht für Sects & Violets noch aus.
+
+### Offene Stellen
+
+| Nr. | Bereich | Was offen ist |
+|---|---|---|
+| 1 | Bad Moon Rising | **Gestörter Dämon als Erklärung für eine ruhige Nacht.** Das gibt es nur beim allgemeinen Dämon, nicht bei Zombuul, Pukka, Shabaloth und Poe. Die Bretter gehen trotzdem auf, über einen Schutz auf dem Opfer. |
+| 2 | Bad Moon Rising | **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung vom 02.10.2026). Der Solver bildet das nicht allgemein ab. Der Simulator tut es für Pukka, Gastwirt und Segler, für Höfling und Giftmischer nicht. |
+| 3 | Bad Moon Rising | **Der Professor bleibt ohne Gegenprobe:** Der Simulator löst nie einen aus. |
+| 4 | Sects & Violets | **Zwei seltene Partien mit Philosoph und Schlangenbeschwörer** verlieren die wahre Welt (Seeds 836 und 181). |
+| 5 | Sects & Violets | **Sitze, deren Rolle gewechselt hat,** werden nicht von ihrer ursprünglichen Rolle aus gesucht (halber Barbier-Tausch). |
+| 6 | Sects & Violets | **Der direkte Messlauf ohne Hinrichtungen** verwirft 20 von 1.500 Partien, der Lauf über das Brett der Seite nicht. Zu klären, ob das der Messlauf ist oder der Solver. |
+| 7 | Sects & Violets | **Barbier-Bretter brauchen im Browser etwa 20 Sekunden.** Die Seite friert dabei nicht mehr ein. |
+| 8 | Echte Partien | **Ein Info-Claim, den alle kennen und der nie nachts stirbt,** deutet auf Trunkenbold, Marionette oder böse. Idee aus der ersten echten Partie, nicht gebaut. |
+| 9 | Echte Partien | **Claims haben keinen Zeitpunkt.** Die Seite kennt einen Claim pro Sitz, der Rückblick sieht ihn schon am ersten Morgen. Ein Verlauf der Claims ist nicht gebaut. |
+| 10 | Echte Partien | **Mehr Partien.** Eine ausgewertete Partie ist ein Anfang, belastbar wird es mit drei bis fünf weiteren. |
+| 11 | Werkzeug | **Die alte lokale Python-App lehnt einen Tod in Nacht 1 ab,** die Seite nicht. Ein Bastler kann in Nacht 1 sterben. Der Night-Walk kennt den Fall auch nicht. |
+| 12 | Werkzeug | **Exakte Zählung früher Bretter auf der Website.** Der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten. |
+| 13 | Werkzeug | **NEXT.md** in eine kurze Roadmap und ein Archiv aufteilen. |
+| 14 | Nach Bedarf | Weitere experimentelle Charaktere. |
 
 ---
 

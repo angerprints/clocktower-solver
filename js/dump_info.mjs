@@ -279,6 +279,26 @@ const waking = {};
   }
 }
 
+// A Marionette beside a Chambermaid, which needs a mixed script: it counts
+// as the token it holds (table ruling, 02.10.2026).
+{
+  const {World} = await import("./worlds.mjs");
+  const mixed = scripts.fromIds("Mixed", [
+    "chambermaid", "empath", "chef", "undertaker", "monk", "washerwoman",
+    "slayer", "saint", "drunk", "marionette", "poisoner", "imp"]);
+  for (const token of ["Empath", "Chef", "Undertaker"])
+    for (const holder of ["Marionette", "Drunk"]) {
+      const state = board(mixed, ["Chambermaid", token, "Monk",
+                                  "Washerwoman", "Slayer", "Saint", "Chef"],
+                          {deaths: {5: "D2"}, executions: {2: 5}});
+      const w = new World(["Chambermaid", holder, "Imp", "Washerwoman",
+                           "Slayer", "Saint", "Chef"],
+                          [null, token, null, null, null, null, null]);
+      waking[`token ${holder} thinks ${token}`] = [1, 2, 3, 4].map(n =>
+        [...possibleCounts(w, state, [1, 4], n)].sort());
+    }
+}
+
 // --- where a reading is attributed ------------------------------------
 const relaying = {};
 {

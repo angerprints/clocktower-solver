@@ -2515,7 +2515,13 @@ def _for_role(d, seat, role, night, rng):
             # a Spy the grimoire, an Evil Twin its twin. Neither is their
             # own ability working, so a Chambermaid does not count them —
             # the same rule as a Baron being shown its team.
-            if what in ("Spy", "EvilTwin", "Marionette"):
+            #
+            # A Marionette is not here. `apparent` has already turned it
+            # into the token it was handed, and it counts as that token
+            # does (table ruling, 02.10.2026) — which this always did,
+            # while the solver said otherwise and no script on the sweep
+            # had both characters to show it.
+            if what in ("Spy", "EvilTwin"):
                 continue
             if when == "never":
                 continue

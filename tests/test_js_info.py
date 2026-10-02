@@ -391,6 +391,25 @@ def python_side():
                        for pair in ((7, 8), (3, 6), (6, 8), (1, 7))],
         }
 
+    # A Marionette beside a Chambermaid, which needs a mixed script: it
+    # counts as the token it holds (table ruling, 02.10.2026).
+    from botc import scripts as script_mod
+    mixed = script_mod.from_ids("Mixed", [
+        "chambermaid", "empath", "chef", "undertaker", "monk",
+        "washerwoman", "slayer", "saint", "drunk", "marionette",
+        "poisoner", "imp"])
+    for token in ("Empath", "Chef", "Undertaker"):
+        for holder in ("Marionette", "Drunk"):
+            st = board(mixed, ["Chambermaid", token, "Monk", "Washerwoman",
+                               "Slayer", "Saint", "Chef"],
+                       deaths={5: "D2"}, executions={2: 5})
+            w = World(("Chambermaid", holder, "Imp", "Washerwoman",
+                       "Slayer", "Saint", "Chef"),
+                      (None, token, None, None, None, None, None))
+            waking[f"token {holder} thinks {token}"] = [
+                sorted(possible_counts(w, st, (1, 4), n))
+                for n in (1, 2, 3, 4)]
+
     return {"readings": readings, "relaying": relaying, "lives": lives,
             "helpers": helpers, "waking": waking}
 

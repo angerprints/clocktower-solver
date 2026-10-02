@@ -1567,3 +1567,59 @@ class AnExorcistAndAPukka(SolverTest):
         self.assertEqual(self.cost([(2, 0), (3, 8)], demon="Zombuul"), 1.0)
         got = self.cost([(2, 8), (3, 0)], demon="Zombuul")
         self.assertTrue(got is None or got < 1.0)
+
+
+class AMarionetteCountsAsTheTokenItHolds(SolverTest):
+    """Table ruling (02.10.2026): the Chambermaid gets the number the
+    Marionette's token gives.
+
+    It thinks it is a good character and lives that character's nights,
+    the same as the Drunk — which always counted, while the Marionette
+    sat on the list of seats that are only shown something. The
+    simulator counted it all along; no script on the sweep had both
+    characters, so nothing showed the two disagreeing.
+    """
+
+    IDS = ["chambermaid", "empath", "chef", "undertaker", "monk",
+           "washerwoman", "slayer", "saint", "drunk", "marionette",
+           "poisoner", "imp"]
+
+    def counts(self, token, night, **more):
+        from botc import waking
+        script = scripts.from_ids("Mixed", self.IDS)
+        claims = ["Chambermaid", token, "Monk", "Washerwoman", "Slayer",
+                  "Saint", "Chef"]
+        state = GameState(n_players=7, script=script,
+                          claims={i: r for i, r in enumerate(claims)}, **more)
+        world = World(("Chambermaid", "Marionette", "Imp", "Washerwoman",
+                       "Slayer", "Saint", "Chef"),
+                      (None, token, None, None, None, None, None))
+        return waking.possible_counts(world, state, [1, 4], night)
+
+    def test_one_that_thinks_it_is_the_empath_wakes_every_night(self):
+        self.assertEqual(self.counts("Empath", 1), {1})
+        self.assertEqual(self.counts("Empath", 3), {1})
+
+    def test_one_that_thinks_it_is_the_chef_only_on_the_first(self):
+        self.assertEqual(self.counts("Chef", 1), {1})
+        self.assertEqual(self.counts("Chef", 2), {0})
+
+    def test_one_that_thinks_it_is_the_undertaker_after_an_execution(self):
+        self.assertEqual(self.counts("Undertaker", 2), {0})
+        hanged = {"deaths": {5: "D1"}, "executions": {1: 5}}
+        self.assertEqual(self.counts("Undertaker", 2, **hanged), {1})
+
+    def test_the_drunk_is_counted_the_same_way(self):
+        from botc import waking
+        script = scripts.from_ids("Mixed", self.IDS)
+        claims = ["Chambermaid", "Empath", "Monk", "Washerwoman", "Slayer",
+                  "Saint", "Chef"]
+        state = GameState(n_players=7, script=script,
+                          claims={i: r for i, r in enumerate(claims)})
+        for holder in ("Drunk", "Marionette"):
+            with self.subTest(holder=holder):
+                world = World(("Chambermaid", holder, "Imp", "Washerwoman",
+                               "Slayer", "Saint", "Chef"),
+                              (None, "Empath") + (None,) * 5)
+                self.assertEqual(
+                    waking.possible_counts(world, state, [1, 4], 2), {1})

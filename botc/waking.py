@@ -74,22 +74,26 @@ def _scarlet_woman(world, state, seat, night):
 
 # Woken to be *shown* something rather than to do anything.
 #
-# A Spy is shown the grimoire, an Evil Twin its twin, a Marionette a
-# good character's night. They wake, and none of it is their own ability
-# working — the same reason a Chambermaid does not count a Baron being
-# shown the other evil players.
+# A Spy is shown the grimoire and an Evil Twin its twin. They wake, and
+# none of it is their own ability working — the same reason a Chambermaid
+# does not count a Baron being shown the other evil players.
 #
-# The Lunatic was on this list while the rule below said it counts, and
-# the list won: a Chambermaid beside one never counted it. The table
-# ruled that it does (02.10.2026) — choosing who it thinks it kills is
-# what a Lunatic's ability is.
+# Two characters were on this list and came off it by table ruling
+# (02.10.2026), because both *act*, and only think they are somebody
+# else while they do:
+#
+#   * The Lunatic chooses who it thinks it kills. The rule below said it
+#     counts while this list said it does not, and the list won.
+#   * The Marionette is handed a good character's token and lives that
+#     character's nights, so the Chambermaid gets the number that token
+#     gives — exactly as for the Drunk, which was never on the list.
 #
 # The distinction is that `woke` answers two questions at once: *did this
 # seat wake*, which decides what a player could honestly claim about
 # their nights, and *did its own ability fire*, which is what a
 # Chambermaid asks. They are the same for almost every character and not
 # for these.
-SHOWN_NOT_ACTING = frozenset({"Spy", "EvilTwin", "Marionette"})
+SHOWN_NOT_ACTING = frozenset({"Spy", "EvilTwin"})
 
 
 def woke_for_own_ability(world, state, seat, night):
