@@ -204,8 +204,10 @@ _TB = [
 
     _c("Imp", "imp", "Imp", "demon", {FIRST, EVERY}, nights="other", chooses=True),
 
+    # Woken on the first night to learn the Outsiders, and after that
+    # only on a night it kills — see `waking._godfather`.
     _c("Godfather", "godfather", "Godfather", "minion", {FIRST, EVERY},
-       nights="every", chooses=True,
+       nights="conditional", chooses=True,
        setup=({"townsfolk": 1, "outsider": -1},
               {"townsfolk": -1, "outsider": 1})),
     _c("DevilsAdvocate", "devilsadvocate", "Devil's Advocate", "minion",

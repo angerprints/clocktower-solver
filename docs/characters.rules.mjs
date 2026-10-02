@@ -188,18 +188,49 @@ sourceRule(function aPhilosopherDrunksWhoeverHadIt(world, state, night) {
  * once a death is recorded on the right night, and no test or corpus
  * board had one.
  *
- * Priced like the Poisoner, and for the same reason: it reaches the
- * whole table, so leaving it free would let it excuse *any* reading at
- * no cost — which it duly did.
+ * Two tokens can matter on one night, and they are priced differently.
+ *
+ * The one it places tonight: whoever goes on to die tomorrow night was
+ * certainly the one it chose, so that costs nothing — the Pukka poisons
+ * somebody every night and the body says who. This charged the
+ * Poisoner's price for it, so every Pukka kill cost its world 0.35 and
+ * the true world of a Pukka game weighed a fifth of any other Demon's
+ * (02.10.2026). Anybody else is a guess and priced like one.
+ *
+ * The one it placed last night: that player stays poisoned until the
+ * Pukka's turn comes round again, so a Sailor, a Fool or an Innkeeper
+ * that dies tonight was still poisoned as the night began. Free for the
+ * same reason, and it reaches only tonight's dead.
+ *
+ * Neither is forced on anybody: a seat that acted before the Pukka on
+ * the night it was chosen was still sober when it did.
  */
+function diedOn(state, night) {
+  const phase = `N${night}`, out = new Set();
+  for (const seat of Object.keys(state.deaths || {}))
+    if (state.diedAt(+seat).includes(phase)) out.add(+seat);
+  return out;
+}
+
 sourceRule(function aPukkaPoisonsWhoeverItWillKill(world, state, night) {
   if (!inBag(state, "Pukka")) return [];
   const phase = `N${night}`;
   const seat = world.findAt("Pukka", phase);
   if (seat === null || !state.aliveSet(phase).has(seat)) return [];
-  return [new Source("Pukka", state.aliveSet(phase),
-                     {capacity: 1, cost: PRIORS.POISON_HIT_PENALTY,
-                      repeatCost: PRIORS.POISON_REPEAT_PENALTY})];
+  const alive = state.aliveSet(phase);
+  const dueTomorrow = diedOn(state, night + 1);
+  const out = [new Source("Pukka", alive, {
+    capacity: 1,
+    cost: who => (dueTomorrow.has(who) ? 1.0 : PRIORS.POISON_HIT_PENALTY),
+    repeatCost: who =>
+      (dueTomorrow.has(who) ? 1.0 : PRIORS.POISON_REPEAT_PENALTY),
+  })];
+  const dueTonight = new Set(
+    [...diedOn(state, night)].filter(who => alive.has(who)));
+  if (night >= 2 && dueTonight.size)
+    out.push(new Source("Pukka's token", dueTonight,
+                        {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0}));
+  return out;
 });
 
 /** From the night it dies, one player is drunk for good.
@@ -546,9 +577,13 @@ causeRule(function aGamblerMayLose(world, state, night) {
   if (!inBag(state, "Gambler") || night < 2) return [];
   const seat = acting(world, state, "Gambler", night);
   if (seat === null) return [];
-  const guessed = state.infos.some(
+  const guesses = state.infos.filter(
     i => i.sourceRole === "Gambler" && i.night === night);
-  if (!guessed) return [];               // no guess recorded, no risk
+  if (!guesses.length) return [];        // no guess recorded, no risk
+  // And a guess that was right kills nobody: a Gambler dead by morning
+  // then went some other way, and that way has to be found.
+  if (guesses.every(i => world.roleAt(i.target, `N${night}`) === i.role))
+    return [];
   return [new Cause("Gambler", OTHER, new Set([seat]), {capacity: 1})];
 });
 
@@ -670,6 +705,20 @@ immunityRule(function anInnkeeperGuardsTwo(world, state, night) {
 immunityRule(function anExorcistSendsTheDemonToBed(
     world, state, night, seat, kind) {
   if (!inBag(state, "Exorcist") || kind !== DEMON || night < 2) return [];
+  const demon = world.demonAt(`N${night}`);
+  if (demon !== null && demon !== undefined &&
+      world.roleAt(demon, `N${night}`) === "Pukka") {
+    // A Pukka is the exception: what dies tonight was chosen last night.
+    // Naming it stops it *choosing*, so yesterday's victim still dies and
+    // the quiet night is the one after (the flowchart; 02.10.2026).
+    if (night < 3 || acting(world, state, "Exorcist", night - 1) === null)
+      return [];
+    const before = chosen(state, "Exorcist", night - 1);
+    if (before !== null && !before.has(world.demonAt(`N${night - 1}`)))
+      return [];
+    // It had to be working *then*, which is not tonight's question.
+    return [shield("Exorcist", {chosen: true})];
+  }
   const exorcist = acting(world, state, "Exorcist", night);
   if (exorcist === null) return [];
   // Recorded, it only stops the Demon if it named the seat holding it.

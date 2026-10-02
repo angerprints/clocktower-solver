@@ -1941,7 +1941,17 @@ class GamblerGuess(Info):
         right = registers_as_role(w.role_at(self.target, f"N{self.night}"),
                                   self.role)
         if f"N{self.night}" in s.died_at(who):
-            return not right
+            # Dead by morning is not the same as guessed wrong. It
+            # guesses before the Demon acts, so one that guessed right
+            # can be killed all the same — by the Demon, a Gossip, an
+            # Assassin. This said "wrong, or impossible", and the true
+            # world of a game where the Shabaloth took a Gambler that
+            # had just named it correctly was thrown out (02.10.2026).
+            #
+            # What killed it is the night's business: the guess is only
+            # offered as a cause when it was wrong. See
+            # `solver.a_gambler_may_lose`.
+            return True
         if right:
             return True
         # Wrong, and still standing. Impaired is one way; being kept alive

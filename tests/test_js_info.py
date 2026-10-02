@@ -343,6 +343,54 @@ def python_side():
                        for n in (1, 2, 3)],
         }
 
+    # Worlds written out rather than searched for, because nobody claims
+    # to be a Lunatic or a Godfather: what a Chambermaid counts beside
+    # each of the characters the table ruled on (02.10.2026).
+    from botc.worlds import World
+    GOOD = ["Grandmother", "Sailor", "Chambermaid", "Professor",
+            "Innkeeper", "Gambler", "Tinker"]
+    NOBODY = (None,) * 9
+    LUNATIC = ["Grandmother", "Sailor", "Chambermaid", "Professor",
+               "Innkeeper", "Gambler", "Lunatic"]
+    direct = {
+        "godfather": (GOOD + ["Godfather", "Po"], NOBODY, {}),
+        "godfather-outsider-executed":
+            (GOOD + ["Godfather", "Po"], NOBODY,
+             {"deaths": {6: "D1"}, "executions": {1: 6}}),
+        "godfather-townsfolk-executed":
+            (GOOD + ["Godfather", "Po"], NOBODY,
+             {"deaths": {5: "D1"}, "executions": {1: 5}}),
+        "pukka": (GOOD + ["Godfather", "Pukka"], NOBODY, {}),
+        "zombuul": (GOOD + ["Godfather", "Zombuul"], NOBODY, {}),
+        "shabaloth-and-a-raising":
+            (GOOD + ["Godfather", "Shabaloth"], NOBODY,
+             {"deaths": {0: "N2"}, "resurrections": {0: "N3"}}),
+        "po-and-a-raising":
+            (GOOD + ["Godfather", "Po"], NOBODY,
+             {"deaths": {0: "N2"}, "resurrections": {0: "N3"}}),
+        "lunatic-thinks-po":
+            (LUNATIC + ["Godfather", "Po"],
+             (None,) * 6 + ("Po", None, None), {}),
+        "lunatic-thinks-pukka":
+            (LUNATIC + ["Godfather", "Pukka"],
+             (None,) * 6 + ("Pukka", None, None), {}),
+        "lunatic-no-token":
+            (LUNATIC + ["Godfather", "Zombuul"], NOBODY,
+             {"deaths": {5: "D2"}, "executions": {2: 5}}),
+    }
+    for name, (roles, believes, opts) in direct.items():
+        st = board(BMR, roles[:7] + ["Tinker", "Moonchild"], **opts)
+        w = World(tuple(roles), tuple(believes))
+        waking["direct " + name] = {
+            "woke": [[woke(w, st, seat, n) for n in (1, 2, 3, 4)]
+                     for seat in (3, 6, 7, 8)],
+            "open": [[uncertain(w, st, seat, n) for n in (1, 2, 3, 4)]
+                     for seat in (3, 6, 7, 8)],
+            "counts": [[sorted(possible_counts(w, st, pair, n))
+                        for n in (1, 2, 3, 4)]
+                       for pair in ((7, 8), (3, 6), (6, 8), (1, 7))],
+        }
+
     return {"readings": readings, "relaying": relaying, "lives": lives,
             "helpers": helpers, "waking": waking}
 
@@ -388,7 +436,12 @@ class TheReadingsAgree(SolverTest):
                                     # of good characters is not a
                                     # Dreamer reading. Both false in
                                     # every world, which is the point.
-                                    "clockmaker-0", "dreamer-two-good")]
+                                    "clockmaker-0", "dreamer-two-good",
+                                    # A Gambler dead by morning says
+                                    # nothing by itself any more: it may
+                                    # have guessed right and been killed
+                                    # all the same. True in every world.
+                                    "gambler-died")]
         self.assertEqual(useless, [], "these tell the two apart from nothing")
 
     def test_a_relayed_reading_lands_on_the_same_seat(self):

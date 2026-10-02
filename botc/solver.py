@@ -1747,9 +1747,16 @@ def a_gambler_may_lose(world, state, night):
     seat = _whoever_works(world, state, "Gambler", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
-    if not any(getattr(info, "source_role", None) == "Gambler"
-               and info.night == night for info in state.infos):
+    guesses = [info for info in state.infos
+               if getattr(info, "source_role", None) == "Gambler"
+               and info.night == night]
+    if not guesses:
         return []                         # no guess recorded, no risk
+    # And a guess that was right kills nobody. Then a Gambler dead by
+    # morning went some other way, and that way has to be found.
+    if all(world.role_at(info.target, phase) == info.role
+           for info in guesses):
+        return []
     return [death_causes.Cause(name="Gambler", kind=death_causes.OTHER,
                                seats=frozenset({seat}), capacity=1)]
 
@@ -1885,6 +1892,27 @@ def an_exorcist_sends_the_demon_to_bed(world, state, night, seat, kind):
     if kind != death_causes.DEMON or night < 2:
         return []
     phase = f"N{night}"
+    demon = world.demon_at(phase)
+    if demon is not None and world.role_at(demon, phase) == "Pukka":
+        # A Pukka is the exception, because what dies tonight was chosen
+        # last night. Naming it stops it *choosing* — so yesterday's
+        # victim still dies, and the quiet night is the one after, when
+        # there is no poison left to come due (the flowchart's steps 1
+        # and 3 to 5; table ruling, 02.10.2026).
+        #
+        # Read the plain way, a board played by that rule had its quiet
+        # night a night late for the Exorcist's row, and had to be
+        # explained by something else or not at all.
+        before = f"N{night - 1}"
+        exorcist = world.find_at("Exorcist", before)
+        if night < 3 or exorcist is None \
+                or exorcist not in state.alive_set(before):
+            return []
+        picked = _chosen(state, "Exorcist", night - 1)
+        if picked is not None and world.demon_at(before) not in picked:
+            return []
+        # It had to be working *then*, which is not tonight's question.
+        return [death_causes.Shield("Exorcist", chosen=True)]
     exorcist = world.find_at("Exorcist", phase)
     if exorcist is None or exorcist not in state.alive_set(phase):
         return []
@@ -2713,20 +2741,40 @@ def a_philosopher_drunks_whoever_had_it(world, state, night):
     return out
 
 
+def _died_on(state, night):
+    """Everybody the board records as dying on this night."""
+    phase = f"N{night}"
+    return frozenset(seat for seat in (state.deaths or {})
+                     if phase in state.died_at(seat))
+
+
 @impairment.source_rule
 def a_pukka_poisons_whoever_it_will_kill(world, state, night):
     """It poisons on one night and that poison kills on the next.
 
     The kill rule demands the victim was poisoned the night before
     (`victim_impaired_at=night - 1`), so this is what provides that
-    poison.
+    poison. Two tokens can matter on one night, and they are priced
+    differently.
 
-    Priced like the Poisoner, and for the same reason: it reaches the
-    whole table, so left free it would excuse any reading at no cost.
+    **The one it places tonight.** Whoever goes on to die tomorrow night
+    was certainly the one it chose, so that costs nothing: the Pukka
+    poisons somebody every night and the body says who. This charged the
+    Poisoner's price for it, as though the poison had to get lucky, and
+    so every Pukka kill cost its world 0.35 — the true world of a Pukka
+    game weighed a fifth of any other Demon's (02.10.2026). Anybody else
+    is a guess and is priced like one: it reaches the whole table, so
+    left free it would excuse any reading at no cost.
 
-    A source that reaches everybody has to pay for landing where the
-    story needs it. The ones that are free — a Sweetheart, a No Dashii —
-    are free because they reach one seat or two that nobody chose.
+    **The one it placed last night.** That player stays poisoned until
+    the Pukka's turn comes round again — so a Sailor, a Fool or an
+    Innkeeper that dies tonight was still poisoned as the night began,
+    and chose, guarded or failed to survive in that state. Free for the
+    same reason, and it reaches only tonight's dead.
+
+    Neither is forced on anybody. A night and its day share one span
+    here, and a seat that acted *before* the Pukka on the night it was
+    chosen was still sober when it did.
     """
     if not _in_bag(state, "Pukka"):
         return []
@@ -2734,9 +2782,23 @@ def a_pukka_poisons_whoever_it_will_kill(world, state, night):
     seat = world.find_at("Pukka", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
-    return [impairment.Source("Pukka", frozenset(state.alive_set(phase)),
-                              capacity=1, cost=POISON_HIT_PENALTY,
-                              repeat_cost=POISON_REPEAT_PENALTY)]
+    alive = frozenset(state.alive_set(phase))
+    due_tomorrow = _died_on(state, night + 1)
+
+    def fresh(who):
+        return 1.0 if who in due_tomorrow else POISON_HIT_PENALTY
+
+    def fresh_again(who):
+        return 1.0 if who in due_tomorrow else POISON_REPEAT_PENALTY
+
+    out = [impairment.Source("Pukka", alive, capacity=1, cost=fresh,
+                             repeat_cost=fresh_again)]
+    due_tonight = _died_on(state, night) & alive
+    if night >= 2 and due_tonight:
+        out.append(impairment.Source("Pukka's token", due_tonight,
+                                     capacity=1, cost=lambda who: 1.0,
+                                     repeat_cost=lambda who: 1.0))
+    return out
 
 
 @impairment.source_rule

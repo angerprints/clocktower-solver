@@ -207,6 +207,42 @@ Bleibt wertvoll, auch neben Phase 1: ein gespeichertes Brett aus einer echten Ru
 
 **Als Nächstes:** weitere Partien, am besten selbst am Tisch mitgeschrieben, mit gesicherter Sitzordnung.
 
+### Regelabgleich Bad Moon Rising mit dem Spiel · *erledigt am 02.10.2026*
+
+Der Chat, der das Einzelspieler-Spiel baut, hat alle 25 Charaktere von Bad Moon Rising gegen Wiki, Pukka-Flowchart und diesen Code gelesen und sechs Abweichungen übergeben (`claude/handover-web-solver-bmr-regeln.md`). Alle sechs sind abgearbeitet, in Python und JavaScript, mit Tests.
+
+| Nr. | Stelle | Jetzt |
+|---|---|---|
+| 1 | Kammerzofe, Dämon in Nacht 1 | **Weg B, duldsam** (deine Entscheidung): Die Dämon-Info ist nicht die Fähigkeit des Dämons, aber beide Zahlen bleiben erlaubt. Nur die Pukka zählt sicher. Der Simulator spielt deinen Tisch und zählt nicht. |
+| 2 | Kammerzofe, Verrückte | Zählt, nach dem Plan des Dämons, für den sie sich hält. |
+| 3 | Kammerzofe, Professor | Zählt ab Nacht 2, bis jemand wiederbelebt wurde. Ist ein Shabaloth im Spiel, bleibt es danach offen. |
+| 4 | Kammerzofe, Pate | Nacht 1, danach nur nach einem Tag, an dem ein Außenseiter starb. |
+| 5 | Gift der Pukka | Vergiftet bis zum nächsten Zug der Pukka, getrennt vom Gift des Giftmischers, und es ruht, solange die Pukka selbst gestört ist. |
+| 6 | Exorzist und Pukka | Der Exorzist verhindert die Wahl, nicht den Tod: Das Opfer von gestern stirbt, die Nacht danach ist die ruhige. Im Simulator und im Solver. |
+
+**Was dabei zusätzlich herauskam:**
+
+- **Jeder Kill der Pukka kostete ihre Welt 0,35.** Das Gift auf dem späteren Opfer wurde bepreist wie ein Treffer des Giftmischers, als wäre es Glück. Die wahre Welt einer Pukka-Partie wog dadurch im Mittel 0,17, bei den anderen Dämonen 0,78 bis 0,86. Jetzt ist das Gift auf dem, der in der Nacht darauf stirbt, kostenlos: 0,76.
+- **Ein Glücksspieler, der richtig rät und in derselben Nacht vom Dämon getötet wird, war unmöglich.** Der Solver las „tot, also falsch geraten“. Gefunden, sobald der Simulator den Glücksspieler vor dem Dämon handeln ließ. Das hätte an einem echten Tisch die wahre Welt gekostet.
+- **Der Night-Walk hat einen Fehler im neuen Simulator gefunden:** Das neue Gift liegt, bevor das alte fällig wird. Eine heute vergiftete Teedame schützt den gestern Vergifteten also nicht.
+- **Im JavaScript fehlte der Zeitplan des Philosophen** für die Kammerzofe. Python hatte ihn.
+- Die Aussage der Übergabe, das Gift ende schon in der Nacht der Wahl, stimmte nur halb: Nacht und folgender Tag teilen sich hier eine Spanne, der Tag war also gedeckt. Es fehlte die Todesnacht.
+
+**Messung:**
+
+- Wahrheit gehalten: 1.500 BMR-Partien über 4 Nächte, 0 verworfen, auf beiden Wegen (direkt und über das Brett der Seite). Schiedsrichter: 440 Engine-Partien, 0 verworfen. 994 Tests grün.
+- Simulator gegen Night-Walk, Pukka-Nächte: vorher 14 von 620 verschieden, jetzt 5 von 1.248, und das sind alles die bekannten Fälle „Bastler stirbt in Nacht 1“.
+- **Dämon gefunden, alter gegen neuen Giftpreis, 152 Partien:** praktisch unverändert (Pukka: 23 → 22 von 41 vorn, mittlere Sicherheit 35,1 → 36,3 %). Der Preis traf alle Pukka-Welten gleich, deshalb verschiebt er vor allem, *welcher* Dämon es ist, kaum *wer*.
+- Das Korpus: 9 von 153 Brettern geben andere Zahlen, alle Bad Moon Rising.
+
+**Offen, nicht gebaut:**
+
+- **Eine gestörte Dämonin als Erklärung für eine ruhige Nacht** gibt es nur beim allgemeinen Dämon, nicht bei Zombuul, Pukka, Shabaloth und Poe. Die Bretter gehen trotzdem auf, über einen Schutz auf dem Opfer.
+- **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung 4) bildet der Solver nicht allgemein ab, nur der Simulator für die Pukka.
+- **Marionette bei der Kammerzofe:** Der Solver zählt sie nicht, den Trunkenbold schon. Nach deiner Entscheidung zur Verrückten wäre „zählt“ folgerichtig. Deine Entscheidung.
+- **Zombuul-Partien** findet der Solver am schlechtesten: Dämon vorn in 10 von 37.
+- Die alte lokale Python-App lehnt einen Tod in Nacht 1 ab, die Seite nicht. Ein Bastler kann in Nacht 1 sterben.
+
 ### Später
 
 - Exakte Zählung früher Bretter auf der Website (Tempo: der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten)

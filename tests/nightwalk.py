@@ -251,7 +251,23 @@ def hidden_from(deal, night, heard):
     derives = set()
     if deal.poisoned.get(night) is not None:
         derives.add(deal.poisoned[night])
-    standing = set(simulate.droisoned_at(deal, night)) - derives
+    # The Pukka's fresh poison is the walk's own to place, at its slot —
+    # so it is asked for with that token lifted, rather than subtracted
+    # afterwards: a Gambler the Courtier had already made drunk was
+    # poisoned by the Pukka on top, and subtracting the seat handed the
+    # walk a sober Gambler. The token still standing from last night is
+    # different. It was on the board when the night began.
+    fresh = deal.pukka_marks.pop(night, None)
+    try:
+        standing = set(simulate.droisoned_at(deal, night)) - derives
+    finally:
+        if fresh is not None:
+            deal.pukka_marks[night] = fresh
+    # Whoever the Pukka's poison came due for was still poisoned as the
+    # night began, whether or not they lived to see the morning.
+    came_due = deal.pukka_history.get(night)
+    if came_due and came_due[0] is not None:
+        standing.add(came_due[0])
     if standing:
         out = {("standing", night): standing}
     else:
@@ -281,6 +297,8 @@ def hidden_from(deal, night, heard):
     due = deal.pukka_history.get(night)
     if due and due[0] is not None:
         out[("pukka_due", night)] = due[0]
+    if due and due[1] is not None:
+        out[("pukka_fresh", night)] = due[1]
     if deal.monk_guarded.get(night) is not None:
         out[("monk", night)] = deal.monk_guarded[night]
     if deal.innkeeper_guarded.get(night):
@@ -748,6 +766,9 @@ def walk(deal, night, hidden):
                     state.roles[jump] = "FangGu"
                     state.log.append((slot, "jumped", seat, jump))
                     continue
+                if role == "Pukka":
+                    _pukka_takes_its_turn(state, seat, slot, hidden, night)
+                    continue
                 aimed = hidden.get(("demon", night))
                 if aimed is None or not state.working(seat):
                     continue
@@ -770,16 +791,6 @@ def walk(deal, night, hidden):
                     _goon_answers(state, seat, target, slot)
                     if not able:
                         break
-
-                    if role == "Pukka":
-                        # Poisons tonight and kills on the *next* night, so
-                        # the death it causes now is last night's poison
-                        # coming due.
-                        state.droison(target, slot, "Pukka")
-                        stale = hidden.get(("pukka_due", night))
-                        if stale is not None and stale in state.alive:
-                            state.kill(stale, slot, role)
-                        continue
 
                     if target not in state.alive:
                         continue              # sunk into a corpse
@@ -1251,6 +1262,48 @@ def _readings_that_must_be_droisoned(view, state, night):
     detail.
     """
     return set()
+
+
+def _pukka_takes_its_turn(state, seat, slot, hidden, night):
+    """The Pukka's turn, step by step as the flowchart has it.
+
+      1  Exorcised: it does not choose.
+      2  Otherwise it chooses, and that player is poisoned — unless the
+         Pukka is itself drunk or poisoned, when nothing happens at all
+         and the old token stays where it is.
+      3  Somebody already carrying its poison is attacked, their own
+         ability still poisoned, and the token comes off either way.
+
+    It droisoned the seat that *died* and ignored the Exorcist for the
+    death, which was the simulator's own reading before 02.10.2026.
+    """
+    if not state.working(seat):
+        return
+    if seat in state.silenced:
+        state.log.append((slot, "exorcised", seat, "no choice"))
+    else:
+        fresh = hidden.get(("pukka_fresh", night))
+        if fresh is not None:
+            able = state.working(seat)
+            state.choose(seat, fresh, slot)
+            _goon_answers(state, seat, fresh, slot)
+            if not able:
+                return
+            state.droison(fresh, slot, "Pukka")
+    stale = hidden.get(("pukka_due", night))
+    if stale is None or stale not in state.alive:
+        return
+    # A guard holds only while whoever gave it is still working, and the
+    # Pukka has just poisoned somebody: an Innkeeper it chose tonight
+    # protects nobody from the poison of the night before.
+    keepers = [p for p, r in state.roles.items()
+               if r in ("Innkeeper", "Monk") and p in state.alive]
+    if stale in state.guarded and any(state.working(p) for p in keepers):
+        state.log.append((slot, "guarded", stale, "Pukka"))
+        state.prevented.add(seat)
+        return
+    state.kill(stale, slot, "Pukka")
+    _grandmother_grieves(state, stale, slot, hidden, night)
 
 
 _PLAN_TO_WALK = {"Poisoner": "poisoner", "Monk": "monk",

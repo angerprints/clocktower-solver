@@ -62,8 +62,16 @@ class Deal:
         # State a Demon carries between nights. A Pukka's poison kills on
         # the night after it lands; a Po that took nobody takes three the
         # next time.
-        self.pukka_poisoned = None
+        self.pukka_poisoned = None          # where its token sits now
         self.pukka_history = {}             # night -> (came due, freshly hit)
+        # The Pukka's poison, kept apart from the Poisoner's: one table
+        # for both lost whichever was written second.
+        #   marks  night -> the seat it poisoned on that night's turn
+        #   due    night -> the seat still poisoned from before, until
+        #          its turn (and through the night, if that seat died)
+        self.pukka_marks = {}
+        self.pukka_due = {}
+        self.pukka_owner = None             # the seat the tokens belong to
         self.po_charged = False
         self.demon_aimed = {}               # night -> who the Demon aimed at
         self.monk_guarded = {}              # night -> who the Monk kept safe
@@ -336,6 +344,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         if (poisoner is not None and poisoner in living
                 and d.demon_at(f"N{night}") != poisoner):
             d.poisoned[night] = rng.choice(living)
+
+        # A Pukka's token carries into the night: whoever it poisoned
+        # stays poisoned until the Pukka has had its turn.
+        _pukka_token_carries(d, night)
 
         # A Monk guards somebody from the Demon; a Witch curses somebody
         # who dies if they nominate. Neither is announced, so neither has
@@ -1030,11 +1042,53 @@ def _living_beside(d, seat, phase):
     return out
 
 
-def _protected(d, night, target):
+def _live_pukka(d, night):
+    """The seat holding the Pukka tonight, if it is alive."""
+    phase = f"N{night}"
+    demon = d.demon_at(phase)
+    if demon is None or demon not in d.alive_at(phase):
+        return None
+    return demon if d.role_at(demon, phase) == "Pukka" else None
+
+
+def _pukka_token_carries(d, night):
+    """At nightfall: whose poison is still standing from before.
+
+    "If the Pukka dies or changes player, remove all Pukka reminder
+    tokens" — so the token belongs to a seat, and goes when that seat
+    stops being a living Pukka.
+    """
+    pukka = _live_pukka(d, night)
+    if pukka is None or pukka != d.pukka_owner:
+        d.pukka_poisoned = None
+    d.pukka_owner = pukka
+    if d.pukka_poisoned is not None:
+        d.pukka_due[night] = d.pukka_poisoned
+
+
+def _exorcised(d, night):
+    """Did a working Exorcist name the Demon tonight?"""
+    phase = f"N{night}"
+    if d.exorcised.get(night) is None:
+        return False
+    demon = d.demon_at(phase)
+    if demon is None or d.exorcised[night] != demon:
+        return False
+    exo = next((p for p in range(d.n)
+                if d.role_at(p, phase) == "Exorcist"
+                and p in d.alive_at(phase)), None)
+    return exo is not None and d.working(exo, night)
+
+
+def _protected(d, night, target, by_exorcist=True):
     """Would the kill be stopped before it landed?
 
     Shared by every Demon, because none of them cares which one is
     swinging: a sober Soldier is safe, a Monk can guard somebody else.
+
+    `by_exorcist` is for the one kill an Exorcist does not stop: a
+    Pukka's poison coming due. The Exorcist keeps the Demon from
+    *choosing*, and that death was chosen the night before.
     """
     phase = f"N{night}"
     # Working, which is every way of going wrong, not only the Poisoner.
@@ -1072,15 +1126,9 @@ def _protected(d, night, target):
         if all(d.side_at(p, phase) == "good" for p in around):
             return True
 
-    # An Exorcist that named the Demon stops it killing at all tonight.
-    if d.exorcised.get(night) is not None:
-        demon = d.demon_at(phase)
-        if demon is not None and d.exorcised[night] == demon:
-            exo = next((p for p in range(d.n)
-                        if d.role_at(p, phase) == "Exorcist"
-                        and p in d.alive_at(phase)), None)
-            if exo is not None and d.working(exo, night):
-                return True
+    # An Exorcist that named the Demon stops it choosing at all tonight.
+    if by_exorcist and _exorcised(d, night):
+        return True
 
     if d.monk_guarded.get(night) == target:
         monk = next((p for p in range(d.n)
@@ -1175,27 +1223,49 @@ def _demon_kills(d, night, rng):
         return target
 
     if kind == "Pukka":
-        # Poisons on one night and that poison kills on the next, so it
-        # starts a night earlier than anybody else and its victim dies a
-        # night late.
+        # Step by step as the flowchart has it (Not_Quite_Vertical's,
+        # which the table plays by, 02.10.2026). A drunk or poisoned
+        # Pukka never gets here — the early return above is the
+        # flowchart's "the token stays where it is, and no attack".
+        #
+        #   1  Exorcised: it is shown the Exorcist and does not choose.
+        #   2  Otherwise it chooses, and that player is poisoned.
+        #   3  Was somebody already poisoned from before?
+        #   4  Then it attacks them, their own ability still poisoned.
+        #   5  Dead or not, that token comes off.
+        #
+        # The Exorcist had this backwards: `_protected` said yes for
+        # every target once the Demon was named, so yesterday's victim
+        # lived and the Pukka went on to choose a new one. It is the
+        # choosing the Exorcist stops. The night after is the quiet one,
+        # because there is no token left to come due.
         out = []
         stale = d.pukka_poisoned
+        fresh = None
+        if not _exorcised(d, night):
+            pool = [p for p in others if p != stale]
+            fresh = rng.choice(pool) if pool else None
+        # The new poison lands *before* the old one comes due (steps 2
+        # and 4), so a Tea Lady or an Innkeeper poisoned tonight is no
+        # help to the one poisoned yesterday. The night-walk had this
+        # right and found it here.
+        if fresh is not None:
+            d.pukka_marks[night] = fresh
         # The poison comes due as a death, and a death can be stopped: a
-        # Tea Lady beside it, a sober Sailor, an Innkeeper's pick. This
-        # took the seat regardless — the one kill in this file that never
-        # asked `_protected` — so a Sailor sober again on the night its
-        # poison came due died next to a working Tea Lady (29.09.2026).
-        if stale is not None and stale in living \
-                and not _protected(d, night, stale):
-            out.append(stale)
-        fresh = [p for p in others if p != stale]
-        d.pukka_poisoned = rng.choice(fresh) if fresh else None
+        # Tea Lady beside it, a sober Sailor, an Innkeeper's pick. Asked
+        # while the victim is still poisoned, so a Sailor or a Fool that
+        # was the one poisoned has nothing to be saved by.
+        if stale is not None:
+            if stale in living \
+                    and not _protected(d, night, stale, by_exorcist=False):
+                out.append(stale)           # and what its death sets off
+            else:                           # is poisoned still
+                d.pukka_due.pop(night, None)    # lived: healthy from here
+        d.pukka_poisoned = fresh
         # Kept per night as well as carried forward. A replay has to be
         # told which seat's poison came due tonight, and the running
         # value is overwritten before anybody can ask.
-        d.pukka_history[night] = (stale, d.pukka_poisoned)
-        if d.pukka_poisoned is not None:
-            d.poisoned.setdefault(night, d.pukka_poisoned)
+        d.pukka_history[night] = (stale, fresh)
         return out
 
     if kind == "Zombuul":
@@ -1307,19 +1377,33 @@ def _conditionally_woke(d, seat, role, night):
     file is — but derived from the facts rather than from a die.
     """
     from botc.info import phase_index
+    from botc.roles import TEAM
     if role == "Undertaker":
         return any(at == f"E{night - 1}" for at in d.deaths.values())
     if role == "Ravenkeeper":
         return d.deaths.get(seat) == f"N{night}"
     if role == "Zombuul":
-        # Only on a night after a day when nobody died — and it wakes on
-        # the first night regardless, like every Demon.
+        # Only on a night after a day when nobody died. On the first it
+        # is only told its Minions and bluffs, which is not its ability.
         if night == 1:
-            return True
+            return False
         day = night - 1
         return not any(at in (f"D{day}", f"E{day}")
                        for at in d.deaths.values())
-    if role in ("Courtier", "Philosopher", "Sage", "Klutz", "Juggler",
+    if role == "Godfather":
+        # Learns the Outsiders on the first night; after that it is woken
+        # only to kill, which is after a day an Outsider died.
+        if night == 1:
+            return True
+        day = night - 1
+        return any(at in (f"D{day}", f"E{day}")
+                   and TEAM[d.role_at(who, f"D{day}")] == "outsider"
+                   for who, at in d.deaths.items())
+    if role == "Courtier":
+        # Woken until it names a character, and here it always does so on
+        # the first night.
+        return night == 1
+    if role in ("Philosopher", "Sage", "Klutz", "Juggler",
                 "Seamstress", "Artist", "Savant"):
         # Once-a-game characters: they woke on the night they used it,
         # which the simulator records by having produced a row.
@@ -1413,8 +1497,13 @@ def _in_night_order(d, night):
 # so it could remake a seat the Demon had already killed or jumped into,
 # and create a character that was in play when it really acted
 # (29.09.2026).
+# The Gambler and the Courtier joined on 02.10.2026. Both act before
+# every Demon, and until the Pukka's poison was dated to its turn nothing
+# could tell: a Gambler the Pukka poisoned *tonight* had already guessed,
+# and was being read as poisoned when it did — so it lived through a
+# wrong guess the night-walk rightly said had killed it.
 CHOOSES_EARLY = frozenset({"Innkeeper", "Sailor", "Monk", "Exorcist",
-                           "SnakeCharmer", "PitHag"})
+                           "SnakeCharmer", "PitHag", "Gambler", "Courtier"})
 
 
 def early_choices(d, night, rng):
@@ -1587,6 +1676,9 @@ def droisoned_at(d, night):
     if d.poisoned.get(night) is not None:
         out.add(d.poisoned[night])
 
+    # A Pukka's poison is added last, below: it rests while the Pukka
+    # itself is drunk or poisoned, so everybody else has to be known.
+
     # A swapped Snake Charmer is poisoned for the rest of the game.
     #
     # `perma_poisoned` was written when the swap happened and read in
@@ -1734,6 +1826,21 @@ def droisoned_at(d, night):
     got = getattr(d, "courtier_drunk", None)
     if got is not None and got[0] <= night <= got[0] + 2:
         out.add(got[1])
+
+    # The Pukka, last. Whoever it poisoned on its turn tonight, and
+    # whoever was still carrying its token from before: poisoned from the
+    # Pukka's turn, through the day, and into the next night until the
+    # Pukka's turn comes round again. That last stretch was missing — the
+    # poison stopped at dusk, so a Sailor poisoned yesterday was sober
+    # again and unkillable on the night the poison came for it.
+    #
+    # And it rests while the Pukka itself is drunk or poisoned, which is
+    # why this is asked after everybody else is settled.
+    pukka = _live_pukka(d, night)
+    if pukka is not None and pukka not in out:
+        for marked in (d.pukka_marks.get(night), d.pukka_due.get(night)):
+            if marked is not None:
+                out.add(marked)
     return out
 
 
@@ -2387,31 +2494,37 @@ def _for_role(d, seat, role, night, rng):
         #     Being shown your team is not your ability working.
         #   * "every" includes the first night, though its wake set does
         #     not bother to say so.
-        #   * "other" means from the second — except a Demon, which also
-        #     wakes on the first to learn its Minions, and *that* is its
-        #     own ability.
+        #   * "other" means from the second. A Demon is told its Minions
+        #     and its bluffs on the first, and that is *not* its ability
+        #     (table ruling, 02.10.2026) — only a Pukka, which already
+        #     chooses then, counts. The solver keeps both counts legal
+        #     for other tables; this Storyteller is the table's own.
         woke = 0
         for p in (a, b):
             what = d.apparent(p)             # a Drunk wakes on its token
+            # A Lunatic lives the night of the Demon it thinks it is —
+            # here always the real one — and choosing who it thinks it
+            # kills counts (table ruling, 02.10.2026).
+            if d.role_at(p, f"N{night}") == "Lunatic":
+                real = d.demon_at(f"N{night}")
+                what = (d.role_at(real, f"N{night}") if real is not None
+                        else "Lunatic")
             char = CHARACTERS[what]
             when, patterns = char.nights, char.wake
-            # Woken to be *told* something rather than to do anything.
-            # A Lunatic is shown a Demon's night and made to choose
-            # victims who never die; a Spy is shown the grimoire; an Evil
-            # Twin is shown its twin. All of them wake and none of it is
-            # their own ability working, so a Chambermaid does not count
-            # them — the same rule as a Baron being shown its team.
-            if what in ("Lunatic", "Spy", "EvilTwin", "Marionette"):
+            # Woken to be *shown* something rather than to do anything:
+            # a Spy the grimoire, an Evil Twin its twin. Neither is their
+            # own ability working, so a Chambermaid does not count them —
+            # the same rule as a Baron being shown its team.
+            if what in ("Spy", "EvilTwin", "Marionette"):
                 continue
             if when == "never":
                 continue
-            # The Assassin is woken every night but the first ("at
-            # night*") until it spends its kill, pointing or shaking its
-            # head — and this simulator never spends it. Its wake set
-            # holds "first" because it is shown its team then, which is
-            # not its ability; reading the set counted it on night one and
-            # the conditional branch below never counted it again.
-            if what == "Assassin":
+            # The Assassin and the Professor are woken every night but
+            # the first ("at night*") until they spend it, pointing or
+            # shaking their head — and this simulator never spends
+            # either. The Assassin's wake set holds "first" because it is
+            # shown its team then, which is not its ability.
+            if what in ("Assassin", "Professor"):
                 woke += night >= 2
                 continue
             # The Philosopher chooses on the first night here, always,
@@ -2420,13 +2533,13 @@ def _for_role(d, seat, role, night, rng):
             if what == "Philosopher" and night == 1:
                 woke += p in d.philosophies
                 continue
-            if night == 1:
-                if when == "every" or "first" in patterns:
+            if when == "conditional":
+                woke += bool(_conditionally_woke(d, p, what, night))
+            elif night == 1:
+                if when == "every" or ("first" in patterns
+                                       and char.team != "demon"):
                     woke += 1
             elif when in ("every", "other"):
-                woke += 1
-            elif when == "conditional" and _conditionally_woke(d, p, what,
-                                                               night):
                 woke += 1
         return ChambermaidInfo(night, seat, a=a, b=b, count=woke)
 

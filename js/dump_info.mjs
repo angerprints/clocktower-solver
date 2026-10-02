@@ -236,6 +236,49 @@ const waking = {};
   }
 }
 
+// Worlds written out rather than searched for, because nobody claims to
+// be a Lunatic or a Godfather. See test_js_info.py.
+{
+  const BMR = scripts.BAD_MOON_RISING;
+  const GOOD = ["Grandmother", "Sailor", "Chambermaid", "Professor",
+                "Innkeeper", "Gambler", "Tinker"];
+  const LUNATIC = [...GOOD.slice(0, 6), "Lunatic"];
+  const NOBODY = Array(9).fill(null);
+  const thinks = token => [...Array(6).fill(null), token, null, null];
+  const direct = {
+    godfather: [[...GOOD, "Godfather", "Po"], NOBODY, {}],
+    "godfather-outsider-executed": [[...GOOD, "Godfather", "Po"], NOBODY,
+      {deaths: {6: "D1"}, executions: {1: 6}}],
+    "godfather-townsfolk-executed": [[...GOOD, "Godfather", "Po"], NOBODY,
+      {deaths: {5: "D1"}, executions: {1: 5}}],
+    pukka: [[...GOOD, "Godfather", "Pukka"], NOBODY, {}],
+    zombuul: [[...GOOD, "Godfather", "Zombuul"], NOBODY, {}],
+    "shabaloth-and-a-raising": [[...GOOD, "Godfather", "Shabaloth"], NOBODY,
+      {deaths: {0: "N2"}, resurrections: {0: "N3"}}],
+    "po-and-a-raising": [[...GOOD, "Godfather", "Po"], NOBODY,
+      {deaths: {0: "N2"}, resurrections: {0: "N3"}}],
+    "lunatic-thinks-po": [[...LUNATIC, "Godfather", "Po"], thinks("Po"), {}],
+    "lunatic-thinks-pukka": [[...LUNATIC, "Godfather", "Pukka"],
+      thinks("Pukka"), {}],
+    "lunatic-no-token": [[...LUNATIC, "Godfather", "Zombuul"], NOBODY,
+      {deaths: {5: "D2"}, executions: {2: 5}}],
+  };
+  const {World} = await import("./worlds.mjs");
+  for (const [name, [roles, believes, opts]] of Object.entries(direct)) {
+    const state = board(BMR, [...roles.slice(0, 7), "Tinker", "Moonchild"],
+                        opts);
+    const w = new World(roles, believes);
+    const nights = [1, 2, 3, 4];
+    waking["direct " + name] = {
+      woke: [3, 6, 7, 8].map(seat => nights.map(n => woke(w, state, seat, n))),
+      open: [3, 6, 7, 8].map(seat =>
+        nights.map(n => uncertain(w, state, seat, n))),
+      counts: [[7, 8], [3, 6], [6, 8], [1, 7]].map(pair => nights.map(n =>
+        [...possibleCounts(w, state, pair, n)].sort())),
+    };
+  }
+}
+
 // --- where a reading is attributed ------------------------------------
 const relaying = {};
 {

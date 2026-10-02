@@ -321,7 +321,7 @@ export const DATA = {
     }
    ],
    "chooses": true,
-   "nights": "every",
+   "nights": "conditional",
    "first_night": 21,
    "other_night": 37
   },

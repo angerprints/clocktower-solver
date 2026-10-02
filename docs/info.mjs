@@ -927,7 +927,11 @@ export const GamblerGuess = define("GamblerGuess", "Gambler",
     const who = seat === null ? this.player : seat;
     const right = registersAsRole(w.roleAt(this.target, `N${this.night}`),
                                   this.role);
-    if (s.diedAt(who).includes(`N${this.night}`)) return !right;
+    // Dead by morning is not the same as guessed wrong: it guesses before
+    // the Demon acts, so one that guessed right can be killed all the
+    // same. What killed it is the night's business — the guess is only
+    // offered as a cause when it was wrong. See info.py.
+    if (s.diedAt(who).includes(`N${this.night}`)) return true;
     if (right) return true;
     // Wrong and still standing: impaired, or kept alive by a shield nobody
     // had to aim, or an aimed one the record says landed here. See info.py.

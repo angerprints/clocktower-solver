@@ -19,6 +19,15 @@ rather than a single number:
   * Anybody impaired still wakes. Being drunk or poisoned does not let
     you sleep through the night; the Storyteller wakes you and makes an
     answer up. So impairment never changes this count.
+  * The Demon on the first night. It is woken to learn its Minions and
+    its bluffs, which is not its ability — the same reason a Baron does
+    not count. That is the table's ruling (02.10.2026), and only the
+    Pukka, which already chooses on night one, counts for certain. But
+    Storytellers elsewhere do count it, and this tool is used at their
+    tables too: so it is *open*, both numbers stay legal, and the true
+    world survives either way.
+  * A Professor after somebody came back to life, when a Shabaloth is
+    about. Whichever of them did it is not written down.
 """
 
 from .catalogue import CHARACTERS
@@ -63,19 +72,24 @@ def _scarlet_woman(world, state, seat, night):
     return demon == seat and world.demon_at("N1") != seat
 
 
-# Woken to be *told* something rather than to do anything.
+# Woken to be *shown* something rather than to do anything.
 #
-# A Lunatic is shown a Demon's night and made to choose victims who never
-# die — it wakes, and none of it is its own ability working. A Chambermaid
-# does not count it, for the same reason it does not count a Baron being
+# A Spy is shown the grimoire, an Evil Twin its twin, a Marionette a
+# good character's night. They wake, and none of it is their own ability
+# working — the same reason a Chambermaid does not count a Baron being
 # shown the other evil players.
+#
+# The Lunatic was on this list while the rule below said it counts, and
+# the list won: a Chambermaid beside one never counted it. The table
+# ruled that it does (02.10.2026) — choosing who it thinks it kills is
+# what a Lunatic's ability is.
 #
 # The distinction is that `woke` answers two questions at once: *did this
 # seat wake*, which decides what a player could honestly claim about
 # their nights, and *did its own ability fire*, which is what a
 # Chambermaid asks. They are the same for almost every character and not
 # for these.
-SHOWN_NOT_ACTING = frozenset({"Lunatic", "Spy", "EvilTwin", "Marionette"})
+SHOWN_NOT_ACTING = frozenset({"Spy", "EvilTwin", "Marionette"})
 
 
 def woke_for_own_ability(world, state, seat, night):
@@ -92,18 +106,25 @@ def woke_for_own_ability(world, state, seat, night):
 
 @condition("Lunatic")
 def _lunatic(world, state, seat, night):
-    """Every night, believing it is the Demon.
+    """On the schedule of the Demon it thinks it is, and it counts.
 
-    It is *shown* a night rather than acting in one, and a Chambermaid
-    counts it — being woken to be told you killed somebody is still being
-    woken for your own ability, which is what a Lunatic's ability is.
+    It is shown a night rather than acting in one, and a Chambermaid
+    counts it all the same — being woken to choose who you think you
+    kill is a Lunatic's ability doing what it does (table ruling,
+    02.10.2026).
 
-    Missing entirely, and `nights == "conditional"` is checked before the
-    night-one branch, so a character without a rule here silently never
-    wakes at all. Found by a Chambermaid counting two where the solver
-    could only reach one.
+    So it wakes when that Demon would: one that thinks it is the Pukka
+    chooses on the first night, one that thinks it is the Po does not —
+    the first night it is only shown "its Minions", and whether that
+    counts is open the same way it is for a real Demon. See `uncertain`.
+
+    Missing entirely at first, and `nights == "conditional"` is checked
+    before the night-one branch, so a character without a rule here
+    silently never wakes at all. Found by a Chambermaid counting two
+    where the solver could only reach one.
     """
-    return True
+    return woke_as(world, state, seat, night,
+                   _acts_as(world, seat, f"N{night}"))
 
 
 @condition("Philosopher")
@@ -159,16 +180,49 @@ def _courtier(world, state, seat, night):
     return True                           # never spent, so still being woken
 
 
+def _raised_on(state):
+    """The first night anybody came back to life, or None."""
+    nights = [int(str(phase)[1:])
+              for phases in (state.resurrections or {}).values()
+              for phase in phases if str(phase)[:1].upper() == "N"]
+    return min(nights) if nights else None
+
+
 @condition("Professor")
 def _professor(world, state, seat, night):
-    """Once a game, so only on the night it spends it.
+    """Every night but the first, until it has raised somebody.
 
-    Returning True on every night had a Chambermaid counting a Professor
-    that had raised nobody. There is nothing on the record to say which
-    night it used — so this says *no* unless something else does, which
-    keeps the count honest rather than inventing a wake.
+    "Once per game, at night*": it is woken from the second night on and
+    may decline, the same as an Assassin. This said *never*, because
+    nothing records which night it used — which had a Chambermaid beside
+    an unspent Professor counting one where the solver allowed none.
+
+    What the board does record is somebody coming back to life. With no
+    Shabaloth about, that was the Professor, and it sleeps from then on.
+    With one, see `uncertain`.
     """
-    return False
+    if night == 1:
+        return False
+    raised = _raised_on(state)
+    return raised is None or night <= raised
+
+
+@condition("Godfather")
+def _godfather(world, state, seat, night):
+    """The first night, and after a day an Outsider died.
+
+    On the first night it learns which Outsiders are in play, which is
+    its ability. After that it is woken only to kill, and it only kills
+    when an Outsider died *today* — in daylight, the same condition the
+    kill itself has. The catalogue said "every", so a Chambermaid beside
+    a Godfather on a night nothing had happened counted one too many.
+    """
+    if night == 1:
+        return True
+    day = f"D{night - 1}"
+    return any(day in state.died_at(who)
+               and world.team_at(who, day) == "outsider"
+               for who in (state.deaths or {}))
 
 
 @condition("Zombuul")
@@ -176,12 +230,9 @@ def _zombuul(world, state, seat, night):
     """Only on nights it can actually kill — which is nights after a day
     when nobody died.
 
-    Except the first, when it wakes like every other Demon to learn its
-    Minions and its bluffs. That is what a Chambermaid beside it counts,
-    and the killing schedule is a separate question from the waking one.
+    On the first it is only told its Minions and its bluffs, like every
+    Demon but the Pukka. Whether that counts is open; see `uncertain`.
     """
-    if night == 1:
-        return True
     if night < 2:
         return False
     return not any(f"D{night - 1}" in state.died_at(who)
@@ -218,19 +269,25 @@ def _believer(world, state, seat, night):
     return woke_as(world, state, seat, night, token)
 
 
+def _is_demon(role):
+    return CHARACTERS[role].team == "demon"
+
+
 def woke_as(world, state, seat, night, role):
     """Did somebody holding this character wake for it on this night?
 
     A Demon is the awkward case. Its `nights` says "other", because that
-    is when it *kills* — but it also wakes on the first night to learn
-    its Minions and its bluffs, and a Chambermaid sitting beside one
-    counts that. Reading the single word said every Demon slept through
-    night one, which made a Chambermaid who correctly counted two into a
-    board with no legal world at all.
+    is when it *kills* — and on the first night it is woken to learn its
+    Minions and its bluffs. That is not its ability (table ruling,
+    02.10.2026), so this says no; but it is not a settled no, and
+    `uncertain` keeps both counts legal. Only a Demon whose `nights` is
+    "every" — the Pukka — acts on the first night and counts outright.
 
-    The `wake` set is the honest answer and has been on every character
-    since the beginning: it holds "first" for every Demon and not for an
-    Exorcist, which is exactly the distinction being asked about.
+    This has been wrong in both directions. Reading `nights` alone and
+    calling the answer final made a Chambermaid who counted two beside a
+    Demon and a Courtier into a board with no legal world at all; reading
+    the `wake` set made every Demon count for certain, which rules out a
+    Chambermaid at a table where it does not.
     """
     when = CHARACTERS[role].nights
     if when == CONDITIONAL:
@@ -239,23 +296,17 @@ def woke_as(world, state, seat, night, role):
     if when == NEVER:
         return False
     if night == 1:
-        # Being shown the other evil players is not waking for your own
-        # ability, so a Chambermaid does not count it. A Baron says
-        # "first night" honestly — its `wake` set is what a *player*
-        # could truthfully claim — and yet it has no night ability at
-        # all, which `nights` records as "never".
-        #
-        # Reading the wake set alone made a Chambermaid beside a Baron
-        # say one where the answer is none. A Demon is the opposite case
-        # and does count: it wakes on the first night to learn its
-        # Minions and bluffs, and that is its own ability working.
-        if when == NEVER:
-            return False
         # "every" means every night including the first, and its wake set
         # does not bother to say so — reading the set alone made every
-        # Empath and Poisoner sleep through night one, which is a worse
-        # bug than the one being fixed.
-        return when == EVERY or FIRST in CHARACTERS[role].wake
+        # Empath and Poisoner sleep through night one.
+        if when == EVERY:
+            return True
+        # Being told who your Minions are is not your ability. A Baron
+        # says "first night" honestly — its `wake` set is what a *player*
+        # could truthfully claim — and has no night ability at all.
+        if _is_demon(role):
+            return False
+        return FIRST in CHARACTERS[role].wake
     if when == FIRST:
         return False                      # night one only, and this is not
     return True                           # "other" and "every" both wake
@@ -274,16 +325,42 @@ def woke(world, state, seat, night):
     return woke_as(world, state, seat, night, role)
 
 
+def _acts_as(world, seat, phase):
+    """The character whose night this seat is living through."""
+    role = world.role_at(seat, phase)
+    if role != "Lunatic":
+        return role
+    # The token it was shown — and when nobody recorded one, the Demon
+    # that is really in play, which is what a Storyteller reaches for.
+    if world.believes[seat]:
+        return world.believes[seat]
+    demon = world.demon_at(phase)
+    return world.role_at(demon, phase) if demon is not None else "Imp"
+
+
 def uncertain(world, state, seat, night):
     """Could this seat's waking have gone either way?
 
-    Only one thing does this: an Exorcist sending the Demon to bed. It is
-    a choice nobody writes down, so with one in play the Demon's waking
-    is genuinely open rather than merely unrecorded.
+    Three things do this, and each is something nobody writes down:
+
+      * An Exorcist sending the Demon to bed.
+      * The Demon on the first night, told its Minions and its bluffs.
+        Not its ability at this table; counted at others. A Lunatic that
+        thinks it is that Demon is shown the same thing.
+      * A Professor once somebody has come back to life with a Shabaloth
+        in play: either of them could have done it.
     """
-    if night < 2 or "Exorcist" not in state.script.keys:
-        return False
     phase = f"N{night}"
+    acting = _acts_as(world, seat, phase)
+    if night == 1:
+        return _is_demon(acting) and CHARACTERS[acting].nights != EVERY
+    if acting == "Professor":
+        raised = _raised_on(state)
+        return (raised is not None and night > raised
+                and seat in state.alive_set(phase)
+                and world.find_at("Shabaloth", f"N{raised}") is not None)
+    if "Exorcist" not in state.script.keys:
+        return False
     if world.demon_at(phase) != seat:
         return False
     exorcist = world.find_at("Exorcist", phase)

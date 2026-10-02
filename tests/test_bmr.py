@@ -295,14 +295,32 @@ class TheGambler(SolverTest):
         return GamblerGuess(2, self.GAMBLER, target=self.NAMED, role=role)
 
     def test_dying_of_it_means_the_guess_was_wrong(self):
-        wrong = board(deaths={self.GAMBLER: "N2"},
-                      infos=[self.guess("Exorcist")])
+        """On a night nothing else kills. Somebody died in daylight, so
+        the Zombuul stays in bed — and a Gambler dead by morning after
+        a *correct* guess has to have gone some dearer way."""
+        day = {"deaths": {self.GAMBLER: "N2", 0: "D1"}, "executions": {1: 0}}
+        wrong = board(infos=[self.guess("Exorcist")], **day)
+        right = board(infos=[self.guess("Chambermaid")], **day)
+        self.assertIsNotNone(S.explanation_cost(among(*HONEST), wrong))
+        got = S.explanation_cost(among(*HONEST), right)
+        self.assertTrue(
+            got is None
+            or got < S.explanation_cost(among(*HONEST), wrong),
+            "dying on a correct guess needs excusing")
+
+    def test_but_the_demon_may_take_one_that_guessed_right(self):
+        """It guesses before the Demon acts. This was impossible — "dead,
+        so wrong" — and the true world went with it whenever a Demon
+        killed the Gambler that had just named somebody correctly
+        (02.10.2026)."""
         right = board(deaths={self.GAMBLER: "N2"},
                       infos=[self.guess("Chambermaid")])
-        self.assertIsNotNone(S.explanation_cost(among(*HONEST), wrong))
-        self.assertLess(S.explanation_cost(among(*HONEST), right),
-                        S.explanation_cost(among(*HONEST), wrong),
-                        "dying on a correct guess needs excusing")
+        self.assertEqual(S.explanation_cost(among(*HONEST), right), 1.0)
+
+    def test_a_right_guess_is_not_offered_as_what_killed_it(self):
+        right = board(deaths={self.GAMBLER: "N2"},
+                      infos=[self.guess("Chambermaid")])
+        self.assertEqual(S.a_gambler_may_lose(among(*HONEST), right, 2), [])
 
     def test_living_through_it_means_the_guess_was_right(self):
         self.assertPct(S.explanation_cost(
@@ -904,17 +922,20 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class EveryDemonWakesOnTheFirstNight(SolverTest):
-    """It learns its Minions and its bluffs, and a Chambermaid counts it.
+class TheDemonsFirstNightIsOpen(SolverTest):
+    """Told its Minions and its bluffs — and whether a Chambermaid counts
+    that depends on whose table it is.
 
-    A Demon's `nights` says "other", because that is when it *kills* —
-    and the waking check read that single word, so every Demon slept
-    through night one. A Chambermaid who correctly counted two beside a
-    Demon and a Courtier produced a board with no legal world at all.
+    Three readings in turn. A Demon's `nights` says "other", and reading
+    that single word had every Demon asleep on night one: a Chambermaid
+    who counted two beside a Demon and a Courtier made a board with no
+    legal world. Reading the `wake` set instead had every Demon awake
+    for certain, which does the same to a Chambermaid who counted *one*.
 
-    The `wake` set has held the honest answer since the beginning:
-    "first" is on every Demon and not on an Exorcist, which is exactly
-    the distinction being asked about.
+    The table's ruling (02.10.2026) is that it does not count — being
+    told who your Minions are is not your ability, the same as a Baron —
+    and that only the Pukka does, because it already chooses. Other
+    Storytellers count it. So the solver calls it open and keeps both.
     """
 
     def board(self):
@@ -925,25 +946,45 @@ class EveryDemonWakesOnTheFirstNight(SolverTest):
         return GameState(n_players=9, script=scripts.BAD_MOON_RISING,
                          claims={i: r for i, r in enumerate(claims)})
 
-    def world(self, demon="Po"):
+    def world(self, demon="Po", minion="Godfather", believes=None):
         from botc.worlds import World
         return World(("Grandmother", "Sailor", "Chambermaid", "Exorcist",
-                      "Innkeeper", "Gambler", "Gossip", "Godfather", demon),
-                     (None,) * 9)
+                      "Innkeeper", "Gambler", "Gossip", minion, demon),
+                     believes or (None,) * 9)
 
-    def test_a_demon_wakes_on_night_one(self):
+    def test_it_is_not_its_ability_and_not_settled_either(self):
         from botc import waking
-        for demon in ("Po", "Zombuul", "Pukka", "Shabaloth"):
+        for demon in ("Po", "Zombuul", "Shabaloth"):
             with self.subTest(demon=demon):
-                self.assertTrue(
-                    waking.woke(self.world(demon), self.board(), 8, 1))
+                w = self.world(demon)
+                self.assertFalse(waking.woke(w, self.board(), 8, 1))
+                self.assertTrue(waking.uncertain(w, self.board(), 8, 1))
 
-    def test_but_an_exorcist_does_not(self):
+    def test_both_counts_are_legal_beside_one(self):
+        """The Sailor woke; the Po may or may not be counted."""
+        from botc import waking
+        got = waking.possible_counts(self.world(), self.board(), [1, 8], 1)
+        self.assertEqual(got, {1, 2})
+
+    def test_the_pukka_chooses_on_night_one_and_counts_for_certain(self):
+        from botc import waking
+        w = self.world("Pukka")
+        self.assertTrue(waking.woke(w, self.board(), 8, 1))
+        self.assertFalse(waking.uncertain(w, self.board(), 8, 1))
+        self.assertEqual(
+            waking.possible_counts(w, self.board(), [1, 8], 1), {2})
+
+    def test_from_the_second_night_a_demon_simply_wakes(self):
+        from botc import waking
+        self.assertTrue(waking.woke(self.world("Po"), self.board(), 8, 2))
+
+    def test_but_an_exorcist_does_not_wake_on_the_first(self):
         """The one that actually means "not the first night", and the
         reason this cannot simply say everybody wakes."""
         from botc import waking
         self.assertFalse(waking.woke(self.world(), self.board(), 3, 1))
         self.assertTrue(waking.woke(self.world(), self.board(), 3, 2))
+        self.assertFalse(waking.uncertain(self.world(), self.board(), 3, 1))
 
     def test_and_every_night_still_includes_the_first(self):
         """The first fix read the `wake` set alone, which does not list
@@ -956,10 +997,153 @@ class EveryDemonWakesOnTheFirstNight(SolverTest):
                 self.assertTrue(
                     waking.woke(self.world(), self.board(), seat, 1))
 
-    def test_a_chambermaid_beside_a_demon_counts_it(self):
+
+class ALunaticCountsLikeTheDemonItThinksItIs(SolverTest):
+    """Table ruling (02.10.2026): choosing who it thinks it kills is a
+    Lunatic's ability, and a Chambermaid counts it.
+
+    The rule said so and a list beside it said the opposite — `Lunatic`
+    sat in `SHOWN_NOT_ACTING`, and the list is what `possible_counts`
+    asks. So a Chambermaid beside one never counted it.
+    """
+
+    def setUp(self):
+        from botc.info import GameState
+        from botc import scripts
+        from botc.worlds import World
+        claims = ["Grandmother", "Sailor", "Chambermaid", "Minstrel",
+                  "Innkeeper", "Gambler", "Gossip", "Tinker", "Moonchild"]
+        self.state = GameState(n_players=9, script=scripts.BAD_MOON_RISING,
+                               claims={i: r for i, r in enumerate(claims)})
+        self.World = World
+
+    def world(self, thinks, demon="Po"):
+        believes = [None] * 9
+        believes[7] = thinks
+        return self.World(("Grandmother", "Sailor", "Chambermaid",
+                           "Minstrel", "Innkeeper", "Gambler", "Gossip",
+                           "Lunatic", demon), tuple(believes))
+
+    def test_it_counts_from_the_second_night(self):
         from botc import waking
-        got = waking.possible_counts(self.world(), self.board(), [7, 8], 1)
-        self.assertIn(2, got, "the Godfather and the Po both woke")
+        got = waking.possible_counts(self.world("Po"), self.state, [3, 7], 2)
+        self.assertEqual(got, {1})
+
+    def test_one_that_thinks_it_is_the_pukka_counts_on_the_first(self):
+        from botc import waking
+        got = waking.possible_counts(self.world("Pukka", "Pukka"),
+                                     self.state, [3, 7], 1)
+        self.assertEqual(got, {1})
+
+    def test_one_that_thinks_it_is_the_po_is_open_on_the_first(self):
+        from botc import waking
+        got = waking.possible_counts(self.world("Po"), self.state, [3, 7], 1)
+        self.assertEqual(got, {0, 1})
+
+    def test_with_no_token_recorded_it_follows_the_real_demon(self):
+        from botc import waking
+        got = waking.possible_counts(self.world(None, "Pukka"), self.state,
+                                     [3, 7], 1)
+        self.assertEqual(got, {1})
+
+    def test_a_zombuul_lunatic_sleeps_after_a_day_death(self):
+        from botc.info import GameState
+        from botc import scripts, waking
+        state = GameState(n_players=9, script=scripts.BAD_MOON_RISING,
+                          claims=dict(self.state.claims),
+                          deaths={0: "D1"}, executions={1: 0})
+        got = waking.possible_counts(self.world("Zombuul", "Zombuul"),
+                                     state, [3, 7], 2)
+        self.assertEqual(got, {0})
+
+
+class AGodfatherWakesToKillAndNotOtherwise(SolverTest):
+    """Night one for the Outsiders, then only after one died in daylight.
+
+    The catalogue said "every", so a Chambermaid beside a Godfather on an
+    ordinary night counted one too many.
+    """
+
+    def state(self, **more):
+        from botc.info import GameState
+        from botc import scripts
+        claims = ["Grandmother", "Sailor", "Chambermaid", "Minstrel",
+                  "Innkeeper", "Gambler", "Tinker", "Gossip", "Moonchild"]
+        return GameState(n_players=9, script=scripts.BAD_MOON_RISING,
+                         claims={i: r for i, r in enumerate(claims)}, **more)
+
+    def world(self):
+        from botc.worlds import World
+        return World(("Grandmother", "Sailor", "Chambermaid", "Minstrel",
+                      "Innkeeper", "Gambler", "Tinker", "Godfather", "Po"),
+                     (None,) * 9)
+
+    def test_the_first_night(self):
+        from botc import waking
+        self.assertTrue(waking.woke(self.world(), self.state(), 7, 1))
+
+    def test_not_on_an_ordinary_night(self):
+        from botc import waking
+        self.assertFalse(waking.woke(self.world(), self.state(), 7, 2))
+
+    def test_after_an_outsider_was_executed(self):
+        from botc import waking
+        state = self.state(deaths={6: "D1"}, executions={1: 6})
+        self.assertTrue(waking.woke(self.world(), state, 7, 2))
+        self.assertFalse(waking.woke(self.world(), state, 7, 3))
+
+    def test_not_after_a_townsfolk_was(self):
+        from botc import waking
+        state = self.state(deaths={5: "D1"}, executions={1: 5})
+        self.assertFalse(waking.woke(self.world(), state, 7, 2))
+
+    def test_an_outsider_lost_at_night_wakes_nobody(self):
+        from botc import waking
+        state = self.state(deaths={6: "N2"})
+        self.assertFalse(waking.woke(self.world(), state, 7, 3))
+
+
+class AProfessorIsWokenUntilItRaisesSomebody(SolverTest):
+    """ "Once per game, at night*" — woken from the second night and free
+    to decline, like the Assassin.
+
+    It said never, because no row records the night it was used. What the
+    board does record is somebody coming back to life.
+    """
+
+    def state(self, **more):
+        from botc.info import GameState
+        from botc import scripts
+        claims = ["Grandmother", "Sailor", "Chambermaid", "Professor",
+                  "Innkeeper", "Gambler", "Tinker", "Gossip", "Moonchild"]
+        return GameState(n_players=9, script=scripts.BAD_MOON_RISING,
+                         claims={i: r for i, r in enumerate(claims)}, **more)
+
+    def world(self, demon="Po"):
+        from botc.worlds import World
+        return World(("Grandmother", "Sailor", "Chambermaid", "Professor",
+                      "Innkeeper", "Gambler", "Tinker", "Godfather", demon),
+                     (None,) * 9)
+
+    def test_not_the_first_night_and_every_one_after(self):
+        from botc import waking
+        got = [waking.woke(self.world(), self.state(), 3, n)
+               for n in (1, 2, 3, 4)]
+        self.assertEqual(got, [False, True, True, True])
+
+    def test_it_sleeps_once_somebody_came_back(self):
+        from botc import waking
+        state = self.state(deaths={0: "N2"}, resurrections={0: "N3"})
+        got = [waking.woke(self.world(), state, 3, n) for n in (2, 3, 4)]
+        self.assertEqual(got, [True, True, False])
+        self.assertFalse(waking.uncertain(self.world(), state, 3, 4))
+
+    def test_unless_a_shabaloth_could_have_done_it(self):
+        from botc import waking
+        state = self.state(deaths={0: "N2"}, resurrections={0: "N3"})
+        w = self.world("Shabaloth")
+        self.assertTrue(waking.uncertain(w, state, 3, 4))
+        self.assertEqual(waking.possible_counts(w, state, [1, 3], 4), {1, 2})
 
 
 class APukkaPoisonsBeforeItKills(SolverTest):
@@ -1031,7 +1215,11 @@ class APukkaPoisonsBeforeItKills(SolverTest):
                      if s.name == "Pukka")
         self.assertFalse(pukka.free_for_everyone(),
                          "a table-wide source must pay to land")
-        self.assertPct(pukka.cost, S.POISON_HIT_PENALTY, 1e-9)
+        # Nobody on this board dies the next night, so every seat is a
+        # guess. The one that does die is another matter: see
+        # `ThePukkasPoisonIsNotLuck`.
+        for seat in range(8):
+            self.assertPct(pukka.price(seat), S.POISON_HIT_PENALTY, 1e-9)
 
     def test_and_a_false_reading_still_costs_something(self):
         import botc.solver as S
@@ -1176,3 +1364,206 @@ class FoundByTheWiderSweep(SolverTest):
         state = GameState(n_players=9, script=scripts.BAD_MOON_RISING)
         self.assertFalse(woke(world, state, 0, 1))
         self.assertTrue(woke(world, state, 0, 2))
+
+
+class ThePukkaTakesItsTurnByTheFlowchart(SolverTest):
+    """The simulator's Pukka, step by step (table ruling, 02.10.2026:
+    the flowchart by Not_Quite_Vertical is what counts).
+
+    Three things were off. Its poison ended at dusk, so the player it
+    killed was sober again on the night the poison came for them. It
+    shared one table with the Poisoner's, and whichever was written
+    second was lost. And an Exorcist that named it saved yesterday's
+    victim while the Pukka went on to choose a new one — the wrong way
+    round on both counts.
+    """
+
+    ROLES = ["Exorcist", "Sailor", "Chambermaid", "Gambler", "Innkeeper",
+             "Fool", "Tinker", "Godfather", "Pukka"]
+
+    def deal(self, marked=None):
+        import simulate
+        d = simulate.Deal(self.ROLES, [None] * 9, None, {}, {}, None)
+        d.script = scripts.BAD_MOON_RISING
+        d.pukka_owner = 8
+        d.pukka_poisoned = marked
+        return d
+
+    def turn(self, d, night, seed=0):
+        import random
+        import simulate
+        simulate._pukka_token_carries(d, night)
+        return simulate._demon_kills(d, night, random.Random(seed))
+
+    def test_the_marked_player_is_still_poisoned_when_it_comes_due(self):
+        """A Sailor cannot die — unless it is the one that was poisoned."""
+        import simulate
+        for victim in (1, 5):                    # the Sailor, the Fool
+            with self.subTest(victim=self.ROLES[victim]):
+                d = self.deal(marked=victim)
+                simulate._pukka_token_carries(d, 2)
+                self.assertIn(victim, simulate.droisoned_at(d, 2))
+                self.assertEqual(self.turn(d, 2), [victim])
+                # What its death sets off is poisoned still.
+                self.assertIn(victim, simulate.droisoned_at(d, 2))
+
+    def test_the_new_poison_is_not_there_before_its_turn(self):
+        import simulate
+        d = self.deal()
+        simulate._pukka_token_carries(d, 1)
+        self.assertEqual(simulate.droisoned_at(d, 1), set())
+        self.turn(d, 1)
+        self.assertEqual(simulate.droisoned_at(d, 1), {d.pukka_marks[1]})
+
+    def test_one_that_was_protected_is_healthy_again(self):
+        """Guarded by a sober Innkeeper: alive, and the token is gone."""
+        import simulate
+        for seed in range(40):
+            d = self.deal(marked=3)
+            d.innkeeper_guarded[2] = (3, 6)
+            got = self.turn(d, 2, seed)
+            fresh = d.pukka_marks.get(2)
+            with self.subTest(seed=seed, fresh=fresh):
+                if fresh == 4:
+                    # The Innkeeper was poisoned first — steps 2 and 4 —
+                    # so it guards nobody.
+                    self.assertEqual(got, [3])
+                else:
+                    self.assertEqual(got, [])
+                    self.assertNotIn(3, simulate.droisoned_at(d, 2))
+                self.assertEqual(d.pukka_poisoned, fresh)
+
+    def test_an_exorcist_stops_the_choosing_not_the_dying(self):
+        d = self.deal(marked=3)
+        d.exorcised[2] = 8
+        self.assertEqual(self.turn(d, 2), [3])
+        self.assertEqual(d.pukka_history[2], (3, None))
+        self.assertIsNone(d.pukka_poisoned)
+        # And the night after is the quiet one: no token to come due.
+        self.assertEqual(self.turn(d, 3), [])
+        self.assertIsNotNone(d.pukka_poisoned)
+
+    def test_a_poisoned_pukka_leaves_its_token_where_it_is(self):
+        """No attack, no new poison — and the old one rests meanwhile."""
+        import simulate
+        d = self.deal(marked=3)
+        d.poisoned[2] = 8                        # somebody got to the Pukka
+        self.assertEqual(self.turn(d, 2), [])
+        self.assertEqual(d.pukka_poisoned, 3)
+        self.assertNotIn(3, simulate.droisoned_at(d, 2))
+        # Sober again, it attacks the one it marked two nights ago.
+        self.assertEqual(self.turn(d, 3), [3])
+
+    def test_a_poisoner_beside_it_does_not_lose_its_own(self):
+        import simulate
+        d = self.deal()
+        d.poisoned[1] = 0
+        self.turn(d, 1)
+        fresh = d.pukka_marks[1]
+        self.assertEqual(simulate.droisoned_at(d, 1), {0, fresh})
+
+    def test_the_token_goes_with_the_pukka(self):
+        import simulate
+        d = self.deal(marked=3)
+        d.deaths[8] = "E1"
+        simulate._pukka_token_carries(d, 2)
+        self.assertIsNone(d.pukka_poisoned)
+        self.assertEqual(simulate.droisoned_at(d, 2), set())
+
+
+class ThePukkasPoisonIsNotLuck(SolverTest):
+    """Whoever dies tomorrow night was the one it chose.
+
+    The kill demands its victim was poisoned the night before, and the
+    poison was priced like the Poisoner's — as though it had to get
+    lucky. So every Pukka kill cost its world 0.35, and the true world of
+    a Pukka game weighed a fifth of any other Demon's.
+    """
+
+    CLAIMS = ["Grandmother", "Sailor", "Chambermaid", "Exorcist",
+              "Innkeeper", "Fool", "Gossip", "Tinker", "Moonchild"]
+
+    def world(self):
+        return World(("Grandmother", "Sailor", "Chambermaid", "Exorcist",
+                      "Innkeeper", "Fool", "Gossip", "Godfather", "Pukka"),
+                     (None,) * 9)
+
+    def state(self, deaths):
+        return GameState(n_players=9, script=scripts.BAD_MOON_RISING,
+                         claims={i: r for i, r in enumerate(self.CLAIMS)},
+                         deaths=deaths)
+
+    def test_a_plain_kill_costs_nothing(self):
+        got = S.explanation_cost(self.world(), self.state({6: "N2"}))
+        self.assertEqual(got, 1.0)
+
+    def test_nor_do_three_in_a_row(self):
+        got = S.explanation_cost(
+            self.world(), self.state({6: "N2", 3: "N3", 2: "N4"}))
+        self.assertEqual(got, 1.0)
+
+    def test_a_fool_it_poisoned_dies_and_that_is_free_too(self):
+        """Still poisoned on the night the poison comes due, so the
+        Fool's first death is a real one."""
+        got = S.explanation_cost(self.world(), self.state({5: "N2"}))
+        self.assertEqual(got, 1.0)
+
+    def test_poison_on_anybody_else_is_still_a_guess(self):
+        from botc import impairment
+        state = self.state({6: "N2"})
+        pukka = [s for s in impairment.sources_on(self.world(), state, 1)
+                 if s.name == "Pukka"][0]
+        self.assertEqual(pukka.price(6), 1.0)
+        self.assertEqual(pukka.price(2), S.POISON_HIT_PENALTY)
+        self.assertFalse(pukka.unavoidable())
+
+    def test_the_token_reaches_only_tonights_dead(self):
+        from botc import impairment
+        state = self.state({6: "N2"})
+        names = {s.name: s for s in
+                 impairment.sources_on(self.world(), state, 2)}
+        self.assertEqual(set(names["Pukka's token"].seats), {6})
+        self.assertNotIn("Pukka's token", {
+            s.name for s in impairment.sources_on(self.world(), state, 3)})
+
+
+class AnExorcistAndAPukka(SolverTest):
+    """Naming the Pukka stops it choosing, not what it chose last night.
+
+    So yesterday's victim still dies and the quiet night is the one
+    *after* (the flowchart, steps 1 and 3 to 5). The shield sat on the
+    night the Exorcist chose, as it does for every other Demon — which
+    is a night late for a Pukka.
+
+    No Sailor, Innkeeper, Fool or Tea Lady on this board, so nothing
+    else is on hand to explain a quiet night.
+    """
+
+    CLAIMS = ["Grandmother", "Gambler", "Chambermaid", "Exorcist", "Gossip",
+              "Courtier", "Professor", "Tinker", "Moonchild"]
+
+    def cost(self, rows, demon="Pukka"):
+        from botc.info import ExorcistChoice
+        world = World(("Grandmother", "Gambler", "Chambermaid", "Exorcist",
+                       "Gossip", "Courtier", "Professor", "Godfather",
+                       demon), (None,) * 9)
+        state = GameState(
+            n_players=9, script=scripts.BAD_MOON_RISING,
+            claims={i: r for i, r in enumerate(self.CLAIMS)},
+            deaths={6: "N2", 2: "N4"}, quiet_nights={3},
+            infos=[ExorcistChoice(night, 3, target=who)
+                   for night, who in rows])
+        return S.explanation_cost(world, state)
+
+    def test_named_on_the_second_night_the_third_is_quiet(self):
+        self.assertEqual(self.cost([(2, 8), (3, 0)]), 1.0)
+
+    def test_named_on_the_quiet_night_itself_explains_nothing(self):
+        got = self.cost([(2, 0), (3, 8)])
+        self.assertTrue(got is None or got < 1.0)
+
+    def test_for_any_other_demon_it_is_the_night_it_was_named(self):
+        """A Zombuul rather than a Po, which may simply choose nobody."""
+        self.assertEqual(self.cost([(2, 0), (3, 8)], demon="Zombuul"), 1.0)
+        got = self.cost([(2, 8), (3, 0)], demon="Zombuul")
+        self.assertTrue(got is None or got < 1.0)

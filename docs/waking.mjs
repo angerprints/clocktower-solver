@@ -19,8 +19,16 @@
 //   * Anybody impaired still wakes. Being drunk or poisoned does not let
 //     you sleep through the night; the Storyteller wakes you and makes an
 //     answer up. So impairment never changes this count.
+//   * The Demon on the first night. It is woken to learn its Minions and
+//     its bluffs, which is not its ability — the table's ruling
+//     (02.10.2026); only the Pukka, which already chooses then, counts
+//     for certain. Storytellers elsewhere do count it, so it is *open*:
+//     both numbers stay legal and the true world survives either way.
+//   * A Professor after somebody came back to life, when a Shabaloth is
+//     about. Whichever of them did it is not written down.
 
 import {CHARACTERS} from "./catalogue.mjs";
+import {phaseIndex} from "./phases.mjs";
 
 export const NEVER = "never";
 export const FIRST = "first";
@@ -49,18 +57,32 @@ condition("Undertaker", (world, state, seat, night) =>
 condition("ScarletWoman", (world, state, seat, night) =>
   world.demonAt(`N${night}`) === seat && world.demonAt("N1") !== seat);
 
-/** Every night until it names a character, then never again. */
-/** Every night, believing it is the Demon.
+/** On the schedule of the Demon it thinks it is, and it counts.
  *
- * Missing entirely, and `nights === "conditional"` is checked before the
- * night-one branch — so a character without a rule here silently never
- * wakes at all. Found by a Chambermaid counting two where the solver
- * could only reach one.
+ * Being woken to choose who you think you kill is a Lunatic's ability
+ * doing what it does (table ruling, 02.10.2026). So it wakes when that
+ * Demon would; the first night is open the same way a real Demon's is.
+ *
+ * Missing entirely at first, and `nights === "conditional"` is checked
+ * before the night-one branch — so a character without a rule here
+ * silently never wakes at all.
  */
-condition("Lunatic", () => true);
+condition("Lunatic", (world, state, seat, night) =>
+  wokeAs(world, state, seat, night, actsAs(world, seat, `N${night}`)));
 
 /** The night it chooses, and thereafter on its gained schedule. */
-condition("Philosopher", () => true);
+//
+// A Philosopher that took a character is that character, ability wise, so
+// one that took the Clockmaker wakes on the first night and never again.
+// This said "always" here while Python had the schedule — a Chambermaid
+// beside one was read differently by the two (02.10.2026).
+condition("Philosopher", (world, state, seat, night) => {
+  const took = state.philosophies()[seat];
+  if (!took) return true;
+  const [taken, since] = took;
+  if (phaseIndex(`N${night}`) < phaseIndex(since)) return true;
+  return wokeAs(world, state, seat, night, taken);
+});
 
 /** Answered on the night after the day it guessed, and never again. */
 condition("Juggler", (world, state, seat, night) => night === 2);
@@ -79,23 +101,51 @@ condition("Courtier", (world, state, seat, night) => {
   return true;                       // never spent, so still being woken
 });
 
-/** From the second night until it raises somebody. */
-/** Once a game, so only on the night it spends it.
+/** The first night anybody came back to life, or null. */
+function raisedOn(state) {
+  let first = null;
+  for (const phases of Object.values(state.resurrections || {}))
+    for (const phase of phases) {
+      if (String(phase)[0].toUpperCase() !== "N") continue;
+      const n = parseInt(String(phase).slice(1), 10);
+      if (first === null || n < first) first = n;
+    }
+  return first;
+}
+
+/** Every night but the first, until it has raised somebody.
  *
- * Returning true every night had a Chambermaid counting a Professor that
- * had raised nobody. Nothing on the record says which night it used, so
- * this says no unless something else does — which keeps the count honest
- * rather than inventing a wake.
+ * "Once per game, at night*": woken from the second night on and free
+ * to decline, the same as an Assassin. This said *never*, which had a
+ * Chambermaid beside an unspent Professor counting one where none was
+ * allowed. With no Shabaloth about, somebody coming back to life was
+ * the Professor, and it sleeps from then on; with one, see `uncertain`.
  */
-condition("Professor", () => false);
+condition("Professor", (world, state, seat, night) => {
+  if (night === 1) return false;
+  const raised = raisedOn(state);
+  return raised === null || night <= raised;
+});
+
+/** The first night, and after a day an Outsider died.
+ *
+ * It learns the Outsiders on the first night, and after that is woken
+ * only to kill — the same daylight condition the kill itself has.
+ */
+condition("Godfather", (world, state, seat, night) => {
+  if (night === 1) return true;
+  const day = `D${night - 1}`;
+  for (const who of Object.keys(state.deaths || {}))
+    if (state.diedAt(+who).includes(day) &&
+        world.teamAt(+who, day) === "outsider") return true;
+  return false;
+});
 
 /** Only on nights it can actually kill — which is nights after a day
  * when nobody died. */
 condition("Zombuul", (world, state, seat, night) => {
-  // Except the first night, when it wakes like every other Demon to
-  // learn its Minions and its bluffs. The killing schedule is a separate
-  // question from the waking one.
-  if (night === 1) return true;
+  // On the first it is only told its Minions and its bluffs, like every
+  // Demon but the Pukka. Whether that counts is open; see `uncertain`.
   if (night < 2) return false;
   for (const who of Object.keys(state.deaths || {}))
     if (state.diedAt(who).includes(`D${night - 1}`)) return false;
@@ -120,18 +170,16 @@ const believer = (world, state, seat, night) => {
 condition("Drunk", believer);
 condition("Marionette", believer);
 
+const isDemon = role => CHARACTERS[role].team === "demon";
+
 /** Did somebody holding this character wake for it on this night?
  *
  * A Demon is the awkward case. Its `nights` says "other", because that
- * is when it *kills* — but it also wakes on the first night to learn its
- * Minions and its bluffs, and a Chambermaid sitting beside one counts
- * that. Reading the single word said every Demon slept through night
- * one, which made a Chambermaid who correctly counted two into a board
- * with no legal world at all.
- *
- * The `wake` set is the honest answer, except that "every" does not
- * bother to list "first" — so that is checked separately, or every
- * Empath and Poisoner sleeps through night one instead.
+ * is when it *kills* — and on the first night it is woken to learn its
+ * Minions and its bluffs. That is not its ability (table ruling,
+ * 02.10.2026), so this says no; but it is not a settled no, and
+ * `uncertain` keeps both counts legal. Only a Demon whose `nights` is
+ * "every" — the Pukka — acts on the first night and counts outright.
  */
 export function wokeAs(world, state, seat, night, role) {
   const when = CHARACTERS[role].nights;
@@ -141,12 +189,13 @@ export function wokeAs(world, state, seat, night, role) {
   }
   if (when === NEVER) return false;
   if (night === 1) {
-    // Being shown the other evil players is not waking for your own
-    // ability, so a Chambermaid does not count it. A Baron says "first
-    // night" honestly — its `wake` set is what a player could truthfully
-    // claim — and yet it has no night ability at all.
-    if (when === NEVER) return false;
-    return when === EVERY || (CHARACTERS[role].wake || []).includes(FIRST);
+    // "every" includes the first night, and its wake set does not bother
+    // to say so.
+    if (when === EVERY) return true;
+    // Being told who your Minions are is not your ability. A Baron says
+    // "first night" honestly and has no night ability at all.
+    if (isDemon(role)) return false;
+    return (CHARACTERS[role].wake || []).includes(FIRST);
   }
   if (when === FIRST) return false;
   return true;                                   // "other" and "every"
@@ -164,34 +213,53 @@ export function woke(world, state, seat, night) {
   return wokeAs(world, state, seat, night, role);
 }
 
+/** The character whose night this seat is living through. */
+function actsAs(world, seat, phase) {
+  const role = world.roleAt(seat, phase);
+  if (role !== "Lunatic") return role;
+  // The token it was shown — and when nobody recorded one, the Demon
+  // that is really in play, which is what a Storyteller reaches for.
+  if (world.believes[seat]) return world.believes[seat];
+  const demon = world.demonAt(phase);
+  return demon !== null && demon !== undefined
+    ? world.roleAt(demon, phase) : "Imp";
+}
+
 /** Could this seat's waking have gone either way?
  *
- * Only one thing does this: an Exorcist sending the Demon to bed. It is a
- * choice nobody writes down, so with one in play the Demon's waking is
- * genuinely open rather than merely unrecorded.
+ * Three things do this, and each is something nobody writes down: an
+ * Exorcist sending the Demon to bed; the Demon on the first night, told
+ * its Minions and bluffs (and a Lunatic that thinks it is that Demon);
+ * and a Professor once somebody has come back to life with a Shabaloth
+ * in play.
  */
 export function uncertain(world, state, seat, night) {
-  if (night < 2 || !state.script.keys.includes("Exorcist")) return false;
   const phase = `N${night}`;
+  const acting = actsAs(world, seat, phase);
+  if (night === 1)
+    return isDemon(acting) && CHARACTERS[acting].nights !== EVERY;
+  if (acting === "Professor") {
+    const raised = raisedOn(state);
+    return raised !== null && night > raised &&
+           state.aliveSet(phase).has(seat) &&
+           world.findAt("Shabaloth", `N${raised}`) !== null;
+  }
+  if (!state.script.keys.includes("Exorcist")) return false;
   if (world.demonAt(phase) !== seat) return false;
   const exorcist = world.findAt("Exorcist", phase);
   return exorcist !== null && state.aliveSet(phase).has(exorcist);
 }
 
 /** Every value "how many of these woke" could have taken. */
-// Woken to be *told* something rather than to do anything.
+// Woken to be *shown* something rather than to do anything.
 //
-// A Lunatic is shown a Demon's night and made to choose victims who never
-// die — it wakes, and none of it is its own ability working. A
-// Chambermaid does not count it, for the same reason it does not count a
-// Baron being shown the other evil players.
+// A Spy is shown the grimoire, an Evil Twin its twin, a Marionette a good
+// character's night. They wake, and none of it is their own ability
+// working — the same reason a Baron being shown its team does not count.
 //
-// `woke` answers two questions at once: *did this seat wake*, which
-// decides what a player could honestly claim, and *did its own ability
-// fire*, which is what a Chambermaid asks. They agree for almost every
-// character, which is why the difference went unnoticed.
-export const SHOWN_NOT_ACTING = new Set(
-  ["Lunatic", "Spy", "EvilTwin", "Marionette"]);
+// The Lunatic was on this list while its rule said it counts, and the
+// list won. The table ruled that it does count (02.10.2026).
+export const SHOWN_NOT_ACTING = new Set(["Spy", "EvilTwin", "Marionette"]);
 
 /** What a Chambermaid counts — narrower than `woke`. */
 export function wokeForOwnAbility(world, state, seat, night) {
