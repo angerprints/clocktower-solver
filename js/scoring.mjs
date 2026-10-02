@@ -12,13 +12,14 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
-import {planNight, sourcesOn} from "./impairment.mjs";
+import {minionStillActs, planNight, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {ABSENT, ARBITRARY, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
 import {Timeline, change} from "./worlds.mjs";
-import {inBag, survivalsOf} from "./characters.rules.mjs";
+import {inBag, survivalsOf, teaLadyFailedAtTheGallows}
+  from "./characters.rules.mjs";
 
 // What became of a recorded reading in one particular world. Four
 // outcomes rather than true-or-false, because two of them are neither.
@@ -829,13 +830,36 @@ function plainFailures(world, state, outcome = {}) {
   // who did it has to have been working.
   for (const [day, ] of Object.entries(state.witchDeaths || {})) {
     const witch = world.findAt("Witch", `N${day}`);
-    if (witch === null || !state.aliveSet(`N${day}`).has(witch)) return null;
+    if (witch === null || !minionStillActs(world, state, witch, `N${day}`))
+      return null;
+    // "If just 3 players live, you lose this ability" — and the curse
+    // goes with it.
+    if (state.aliveSet(`D${day}`).size <= 3) return null;
     (working[day] = working[day] || new Set()).add(witch);
   }
   for (const [day, ] of Object.entries(state.madnessExecutions || {})) {
     const who = world.findAt("Cerenovus", `N${day}`);
-    if (who === null || !state.aliveSet(`N${day}`).has(who)) return null;
+    if (who === null || !minionStillActs(world, state, who, `N${day}`))
+      return null;
     (working[day] = working[day] || new Set()).add(who);
+  }
+
+  // The good twin executed, and the game carried on. Evil wins on the
+  // spot when that happens, so play continuing says the Evil Twin was not
+  // working — or that the one who hanged was the evil one, which is the
+  // deduction the table draws and this never did (02.10.2026).
+  for (const info of state.infos) {
+    if (info.type !== "EvilTwinPair") continue;
+    for (const day of Object.keys(state.executions || {}).map(Number)) {
+      const hanged = state.executionDeath(day);
+      if (hanged !== info.a && hanged !== info.b) continue;
+      const other = hanged === info.a ? info.b : info.a;
+      const phase = `D${day}`;
+      if (world.roleAt(other, phase) !== "EvilTwin" ||
+          !state.aliveSet(phase).has(other) ||
+          world.evilAt(hanged, phase)) continue;
+      fail(day, other);
+    }
   }
 
   // A Mastermind's extra day: it had to be working, and a Scarlet Woman
@@ -858,18 +882,32 @@ function plainFailures(world, state, outcome = {}) {
     // A Sailor cannot die, and that holds in daylight — so a working one
     // walks away from its own execution.
     if (world.roleAt(seat, `D${day}`) === "Sailor") fail(day, seat);
+    // And the same for a Tea Lady's neighbour: executed and dead, so she
+    // was not working. The mirror of her saving one.
+    const lady = teaLadyFailedAtTheGallows(world, state, day, seat);
+    if (lady !== null) fail(day, lady);
   }
 
   // Somebody standing again needs a reason, and the reason has to have
-  // been working. A Professor only raises a Townsfolk, which is not the
-  // same as raising somebody good: the Spy registers as one.
-  let raisings = 0;
+  // been working. Two characters do it.
+  //
+  // A Professor raises one Townsfolk, once — which is not the same as
+  // raising somebody good: the Spy registers as one.
+  //
+  // A Shabaloth may regurgitate somebody it chose the night before,
+  // whatever they are and as often as the Storyteller likes. That was
+  // missing altogether: with no Professor in the world the board was
+  // thrown out, and a second resurrection always was (02.10.2026).
+  let byProfessor = 0;
   for (const [seatKey, phases] of Object.entries(state.resurrections || {})) {
     const seat = Number(seatKey);
     for (const phase of phases) {
-      raisings += 1;
       const night = parseInt(phase.slice(1), 10);
       if (!Number.isFinite(night)) continue;
+      const shabaloth = inBag(state, "Shabaloth")
+        ? world.findAt("Shabaloth", phase) : null;
+      if (shabaloth !== null && night >= 3 &&
+          state.aliveSet(phase).has(shabaloth)) continue;
       const prof = world.findAt("Professor", phase);
       if (prof === null || !inBag(state, "Professor")) return null;
       if (!state.aliveSet(phase).has(prof) || night < 2) return null;
@@ -877,18 +915,27 @@ function plainFailures(world, state, outcome = {}) {
       if (TEAM[raised] !== "townsfolk" &&
           !CHARACTERS[raised].registers.includes("townsfolk")) return null;
       (working[night] = working[night] || new Set()).add(prof);
+      byProfessor += 1;
     }
   }
-  if (raisings > 1) return null;          // once per game
+  if (byProfessor > 1) return null;       // once per game
 
   // An execution that killed nobody needs a reason, and the reason has to
   // have been working.
   for (const [dayKey, seat] of Object.entries(state.executions || {})) {
     const day = Number(dayKey);
     if (state.executionDeath(day) !== null) continue;
-    const survivors = survivalsOf(world, state, day, seat);
-    if (!survivors.length) return null;   // nothing here survives one
-    working[day] = new Set(survivors);
+    const survivors = new Set(survivalsOf(world, state, day, seat));
+    if (!survivors.size) return null;     // nothing here survives one
+    // One of them did it, and that one was working. With a single
+    // candidate that is a demand; with several it is "one of these",
+    // which the plan cannot hold. Demanding all of them threw out a
+    // Devil's Advocate's rescue whenever a Pacifist on the same board was
+    // drunk — and it replaced whatever else had to be working that day.
+    if (survivors.size === 1) {
+      const set = (working[day] = working[day] || new Set());
+      for (const who of survivors) set.add(who);
+    }
   }
 
   const spent = spentNominations(state);
@@ -988,9 +1035,16 @@ function plainFailures(world, state, outcome = {}) {
         ? info.isTrue(world, state, seat)
         : info.holds(world, state, null, seat);
       if (wasTrue) {
-        const got = vortoxOr[info.night] =
-          vortoxOr[info.night] || {vortox, sources: new Set()};
-        got.sources.add(seat);
+        // Then the Vortox was not working, and nothing else will do:
+        // "even if they are drunk or poisoned, it must be false". For
+        // three days this also accepted the seat itself being droisoned
+        // (corrected 02.10.2026). The Mathematician keeps both ways out:
+        // its number is checked against a range rather than a value.
+        if (info.type === "MathematicianInfo") {
+          const got = vortoxOr[info.night] =
+            vortoxOr[info.night] || {vortox, sources: new Set()};
+          got.sources.add(seat);
+        } else fail(info.night, vortox);
         outcome[idx] = EXCUSED;
       } else outcome[idx] = HELD;
       return;
@@ -1105,6 +1159,36 @@ function nightAccounts(world, state) {
  * working, so nothing can have stopped it.
  */
 function impairmentPlan(world, state, failures, forbidden) {
+  const got = planAsGiven(world, state, failures, forbidden);
+  if (got !== null) return got;
+  // A Courtier that was itself drunk or poisoned when it chose made
+  // nobody drunk at all. Its drunkenness is unavoidable while it stands,
+  // so a world that needs the named character *working* fails above — and
+  // then the other story is tried: the Courtier impaired on the night it
+  // chose, and its three days never happening.
+  //
+  // The same goes for a Philosopher: one that was drunk or poisoned when
+  // it chose gained nothing and drunk nobody.
+  for (const info of state.infos) {
+    const source = info.sourceRole;
+    if ((source !== "Courtier" && source !== "Philosopher") || !info.role)
+      continue;
+    const phase = `N${info.night}`;
+    const began = info.night > 1 ? `E${info.night - 1}` : "N0";
+    const holder = info.player;
+    if (world.roleAt(holder, began) !== source &&
+        world.roleAt(holder, phase) !== source) continue;
+    const again = {};
+    for (const [night, seats] of Object.entries(failures))
+      again[night] = new Set(seats);
+    (again[info.night] = again[info.night] || new Set()).add(holder);
+    const other = planAsGiven(world, state, again, forbidden, [source]);
+    if (other !== null) return other;
+  }
+  return null;
+}
+
+function planAsGiven(world, state, failures, forbidden, without = null) {
   let total = 1.0;
   let previous = {};
   const nights = new Set([...Object.keys(failures), ...Object.keys(forbidden)]
@@ -1113,7 +1197,9 @@ function impairmentPlan(world, state, failures, forbidden) {
     const wanted = failures[night] || new Set();
     const blocked = forbidden[night] || new Set();
     for (const s of wanted) if (blocked.has(s)) return null;
-    const got = planNight(sourcesOn(world, state, night),
+    let sources = sourcesOn(world, state, night);
+    if (without) sources = sources.filter(src => !without.includes(src.name));
+    const got = planNight(sources,
                           [...wanted].sort((a, b) => a - b),
                           [...blocked].sort((a, b) => a - b), previous);
     if (got === null) return null;

@@ -284,10 +284,19 @@ def run_solve(payload):
                     deaths.setdefault(i, []).append(f"D{day}")
             elif kind == "W":
                 # Dropped dead as they nominated: a Witch is about.
+                #
+                # The day as a number, like every other status. These two
+                # kept it as the text they were typed in, so the demand
+                # that the Witch was working was filed under "2" while
+                # everything else that day was filed under 2 — and a
+                # madness execution was an execution on a day no rule
+                # ever asked about (02.10.2026). The page was right.
+                day = int(day)
                 witch_deaths[day] = i
                 deaths.setdefault(i, []).append(f"D{day}")
             elif kind == "M":
                 # Executed for breaking madness: a Cerenovus is about.
+                day = int(day)
                 madness_executions[day] = i
                 executions[day] = i
                 deaths.setdefault(i, []).append(f"D{day}")

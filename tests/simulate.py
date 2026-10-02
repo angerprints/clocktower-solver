@@ -210,9 +210,15 @@ def deal(n, rng, script=None):
     # One setup changer at most, chosen before the bag is filled — which
     # is how the Storyteller does it.
     changer = None
-    movers = [k for k in ("Baron", "Godfather", "FangGu") if k in minions
-              or k in demons]
-    if movers and rng.random() < 0.25:
+    # The Vigormortis joined on 02.10.2026. Its "[-1 Outsider]" was in
+    # neither the catalogue nor here, so it was dealt like a Demon that
+    # changes nothing and the two agreed with each other about it.
+    movers = [k for k in ("Baron", "Godfather", "FangGu", "Vigormortis")
+              if k in minions or k in demons]
+    # A quarter of the time for each script with one changer — and half
+    # the time on Sects & Violets, which has two of its four Demons on
+    # the list, so that every Demon is still dealt equally often.
+    if movers and rng.random() < 0.25 * len(movers):
         changer = rng.choice(movers)
         if changer == "Baron" and tf >= 2 and out + 2 <= len(outsiders):
             tf, out = tf - 2, out + 2
@@ -220,6 +226,10 @@ def deal(n, rng, script=None):
             tf, out = tf - 1, out + 1
         elif changer == "FangGu" and out + 1 <= len(outsiders) and tf >= 1:
             tf, out = tf - 1, out + 1
+        elif changer == "Vigormortis":
+            # One Outsider fewer, if there is one to take.
+            if out >= 1 and tf + 1 <= len(townsfolk):
+                tf, out = tf + 1, out - 1
         else:
             changer = None
 
@@ -227,10 +237,10 @@ def deal(n, rng, script=None):
         rest = [m for m in minions if m != changer]
         picked_minions = [changer] + rng.sample(rest, mi - 1)
         picked_demons = list(rng.sample(demons, de))
-    elif changer == "FangGu":
+    elif changer in ("FangGu", "Vigormortis"):
         picked_minions = rng.sample(minions, mi)
-        rest = [d for d in demons if d != "FangGu"]
-        picked_demons = ["FangGu"] + list(rng.sample(rest, de - 1))
+        rest = [d for d in demons if d not in ("FangGu", "Vigormortis")]
+        picked_demons = [changer] + list(rng.sample(rest, de - 1))
     else:
         # A setup changer that is not chosen must stay out of the bag:
         # its change is mandatory, so it cannot sit in a bag that did not
@@ -238,7 +248,8 @@ def deal(n, rng, script=None):
         rest = [m for m in minions if m not in ("Baron", "Godfather")]
         picked_minions = rng.sample(rest, mi) if len(rest) >= mi \
             else rng.sample(minions, mi)
-        spare_demons = [d for d in demons if d != "FangGu"]
+        spare_demons = [d for d in demons
+                        if d not in ("FangGu", "Vigormortis")]
         picked_demons = list(rng.sample(spare_demons, de)) \
             if len(spare_demons) >= de else list(rng.sample(demons, de))
 
@@ -664,6 +675,24 @@ def _kept_alive_by_a_tea_lady(d, seat, phase):
     her. That board had no legal world.
     """
     from botc.roles import TEAM
+    # And the two others that keep somebody alive whatever the death is:
+    # a sober Sailor cannot die, and neither can the pair a working
+    # Innkeeper chose tonight. Only the Tea Lady was asked, so a Gambler
+    # the Innkeeper had just protected guessed wrong and died of it — the
+    # Innkeeper acts first, so its guard already stands. Nothing showed
+    # it until the solver held a recorded Innkeeper to its word
+    # (02.10.2026).
+    if phase[0] == "N":
+        night = int(phase[1:])
+        if d.role_at(seat, phase) == "Sailor" and d.working(seat, night):
+            return True
+        pair = d.innkeeper_guarded.get(night)
+        if pair and seat in pair:
+            keeper = next((p for p in range(d.n)
+                           if d.role_at(p, phase) == "Innkeeper"
+                           and p in d.alive_at(phase)), None)
+            if keeper is not None and d.working(keeper, night):
+                return True
     for lady in range(d.n):
         if d.role_at(lady, phase) != "TeaLady":
             continue
@@ -915,6 +944,14 @@ def _execute(d, day, rng, allow_takeover=False):
     living = [p for p in d.alive_at(phase)
               if d.role_at(p, phase) != "Saint"
               and not _survives_execution(d, p, day)]
+    # Nor the good twin while the Evil Twin stands: evil wins on the spot,
+    # the same as with the Saint, and the record would run on past the
+    # end of the game.
+    twins = getattr(d, "twins", None)
+    if twins is not None:
+        evil, good = twins
+        if evil in d.alive_at(phase) and d.role_at(evil, phase) == "EvilTwin":
+            living = [p for p in living if p != good]
     heir = _heir(d, phase, rng)
     takeover = (allow_takeover and heir is not None
                 and d.roles[heir] == "ScarletWoman"
@@ -1435,7 +1472,19 @@ def _droisoned_info(d, seat, night, rng):
         return None
     # A quarter of the time the lie happens to be the truth. The rest of
     # the time it is not.
-    if rng.random() < 0.75:
+    #
+    # Never under a Vortox, for a real Townsfolk: "even if they are drunk
+    # or poisoned, it must be false". The coin was tossed regardless, so
+    # a drunk Oracle told the truth beside a working Vortox — and the
+    # solver was taught to allow it rather than the simulator to stop
+    # (both corrected 02.10.2026).
+    false = rng.random() < 0.75
+    if (d.believes[seat] is None
+            and TEAM[d.role_at(seat, f"N{night}")] == "townsfolk"
+            and _vortox_working(d, night)
+            and not getattr(made, "is_a_choice", False)):
+        false = True
+    if false:
         made = _make_false(d, made, night, rng)
     return made
 
@@ -1488,7 +1537,9 @@ def _in_night_order(d, night):
 #
 # A first attempt listed every character that chooses, which swept in the
 # Gambler — whose *death* follows from its guess, so moving it early
-# changed who was alive when the Demon picked — and the Chambermaid,
+# changed who was alive when the Demon picked (it is early now all the
+# same, since 02.10.2026: that is the order the night really has, and a
+# Pukka's poison made the difference visible) — and the Chambermaid,
 # which is not early at all but sits at slot 70. Being wrong about that
 # turned one impossible board into five.
 # The Snake Charmer is here because its swap changes *who the Demon is*,
@@ -1823,9 +1874,16 @@ def droisoned_at(d, night):
     # list — the row was written and nothing happened, so a Courtier that
     # named the Mastermind left it working, and the Demon's execution
     # ran on for a day the rules do not give (29.09.2026).
+    #
+    # Only while the Courtier lives: a drunkenness rests when the one
+    # causing it dies (table ruling, 02.10.2026). It ran its three days
+    # regardless, so a Gambler a dead Courtier had named went on
+    # surviving wrong guesses.
     got = getattr(d, "courtier_drunk", None)
     if got is not None and got[0] <= night <= got[0] + 2:
-        out.add(got[1])
+        courtier = got[2] if len(got) > 2 else None
+        if courtier is None or courtier in living:
+            out.add(got[1])
 
     # The Pukka, last. Whoever it poisoned on its turn tonight, and
     # whoever was still carrying its token from before: poisoned from the
@@ -2236,7 +2294,9 @@ def _for_role(d, seat, role, night, rng):
                 if p != seat and d.side_at(p, phase) == "good"]
         if not good:
             return None
-        return EvilTwinPair(1, seat, a=seat, b=rng.choice(good))
+        other = rng.choice(good)
+        d.twins = (seat, other)
+        return EvilTwinPair(1, seat, a=seat, b=other)
 
     # NOTE: the Acrobat is not here. It acts at slot 39, between the
     # Demon and the readings, so its pick is made in `_acrobat_may_fall`
@@ -2628,7 +2688,7 @@ def _for_role(d, seat, role, night, rng):
         holder = next((p for p in range(d.n)
                        if d.role_at(p, f"N{night}") == named), None)
         if holder is not None and d.working(seat, night):
-            d.courtier_drunk = (night, holder)
+            d.courtier_drunk = (night, holder, seat)
         return CourtierChoice(night, seat, role=named)
 
     if role == "Undertaker" and night > 1:
@@ -2742,6 +2802,9 @@ def _savant_visits(d, night, heard, rng):
             continue
         if not d.working(seat, night):
             wanted = [rng.random() < 0.5, rng.random() < 0.5]
+            # Under a Vortox even a drunk Savant hears nothing true.
+            if _vortox_working(d, night):
+                wanted = [False, False]
         elif _vortox_working(d, night):
             wanted = [False, False]
         else:

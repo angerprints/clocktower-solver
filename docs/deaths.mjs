@@ -14,6 +14,9 @@
 
 export const DEMON = "demon";     // the Demon's own kill
 export const OTHER = "other";     // anything else that kills at night
+// A Moonchild's pick, written down: the one death that names its victim in
+// public beforehand, so that player living is something to explain.
+export const PICKED = "picked";
 
 /** Something that can kill on a given night.
  *

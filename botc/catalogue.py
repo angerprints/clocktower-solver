@@ -380,8 +380,12 @@ _SV = [
     _c("FangGu", "fanggu", "Fang Gu", "demon", {FIRST, EVERY},
        nights="other", chooses=True,
        setup=({"townsfolk": -1, "outsider": 1},)),
+    # "[-1 Outsider]". Missing until the script was read against the
+    # wiki (02.10.2026): every Vigormortis game was searched with one
+    # Outsider too many, so its true bag was never among the worlds.
     _c("Vigormortis", "vigormortis", "Vigormortis", "demon",
-       {FIRST, EVERY}, nights="other", chooses=True),
+       {FIRST, EVERY}, nights="other", chooses=True,
+       setup=({"townsfolk": 1, "outsider": -1},)),
     _c("NoDashii", "nodashii", "No Dashii", "demon", {FIRST, EVERY},
        nights="other", chooses=True),
     _c("Vortox", "vortox", "Vortox", "demon", {FIRST, EVERY},

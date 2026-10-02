@@ -7,6 +7,7 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
+import {minionStillActs} from "./impairment.mjs";
 import {TEAM, believesAnother, isEvil, mustHide, show, wakeFits} from "./roles.mjs";
 import {bestStory, storyShares, explanationCost, forcedRoles, nightDeaths,
         worldConsistent} from "./scoring.mjs";
@@ -97,7 +98,8 @@ function madnessNights(world, state) {
   let got = 0;
   for (let night = 1; night <= nights; night++) {
     const who = world.findAt("Cerenovus", `N${night}`);
-    if (who !== null && state.aliveSet(`N${night}`).has(who)) got++;
+    if (who !== null && minionStillActs(world, state, who, `N${night}`))
+      got++;
   }
   return got;
 }

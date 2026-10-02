@@ -12,7 +12,7 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./roles.mjs";
-import {sourcesOn} from "./impairment.mjs";
+import {killedByAVigormortis, sourcesOn} from "./impairment.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {possibleCounts} from "./waking.mjs";
 import {OTHER, shieldsOn} from "./deaths.mjs";
@@ -627,8 +627,11 @@ export const CerenovusMadness = define("CerenovusMadness", "Cerenovus",
   function (w, s, rh, seat) {
     if (TEAM[this.role] !== "townsfolk" && TEAM[this.role] !== "outsider")
       return false;
-    return seat === null || seat === undefined ||
-           s.aliveSet(`N${this.night}`).has(seat);
+    if (seat === null || seat === undefined ||
+        s.aliveSet(`N${this.night}`).has(seat)) return true;
+    // Dead, and maddening people all the same: a Vigormortis's own Minion
+    // keeps its ability.
+    return killedByAVigormortis(w, s, seat, `N${this.night}`);
   });
 
 /** A seat that became a character it was not dealt.
@@ -938,8 +941,10 @@ export const GamblerGuess = define("GamblerGuess", "Gambler",
     const aimedHere = by => s.infos.some(info =>
       info.sourceRole === by && info.night === this.night &&
       [info.target, info.a, info.b].includes(who));
+    // A Tea Lady who fell later the same night was still standing when the
+    // guess was made, so her shield counts here though it is marked aimed.
     return shieldsOn(w, s, this.night, who, OTHER)
-      .some(sh => !sh.chosen || aimedHere(sh.by));
+      .some(sh => !sh.chosen || aimedHere(sh.by) || sh.by === "Tea Lady");
   });
 
 /** Named a character, not a player. Once per game.

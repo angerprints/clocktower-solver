@@ -17,7 +17,7 @@ from itertools import product
 
 from .info import (CourtierChoice, GameState, FortuneTeller,
                    AcrobatChoice, GrandmotherInfo, SlayerShot,
-                   VirginNomination, BecameInfo,
+                   VirginNomination, BecameInfo, EvilTwinPair,
                    phase_index)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
@@ -1284,11 +1284,18 @@ def survives_execution_rule(fn):
     return fn
 
 
-def survivals_of(world, state, day, seat):
+def survivals_of(world, state, day, seat, but=None):
     out = []
     for rule in SURVIVES_EXECUTION_RULES:
-        out.extend(rule(world, state, day, seat))
+        if rule is not but:
+            out.extend(rule(world, state, day, seat))
     return out
+
+
+def _walked_away(state, day, seat):
+    """Was this seat executed that day and left standing?"""
+    return (state.executions or {}).get(day) == seat \
+        and state.execution_death(day) is None
 
 
 @survives_execution_rule
@@ -1302,6 +1309,14 @@ def a_devils_advocate_saves_from_the_gallows(world, state, day, seat):
     phase = f"N{day}"
     advocate = world.find_at("DevilsAdvocate", phase)
     if advocate is None or advocate not in state.alive_set(phase):
+        return []
+    # "Different to last night": it cannot keep the same player from the
+    # gallows two days running. If they walked away yesterday too and
+    # nothing but the Advocate could have managed that, it was spent on
+    # them then.
+    if _walked_away(state, day - 1, seat) and not survivals_of(
+            world, state, day - 1, seat,
+            but=a_devils_advocate_saves_from_the_gallows):
         return []
     return [advocate]
 
@@ -1324,6 +1339,41 @@ def a_pacifist_may_spare_the_good(world, state, day, seat):
     return [pacifist]
 
 
+def _tea_lady_keeping(world, state, seat, phase):
+    """The Tea Lady whose protection covers this seat right now, if any.
+
+    Both her living neighbours good, and this seat one of them. Asked of
+    a phase, because who is living beside her changes as people die —
+    and it is asked at night and in daylight alike.
+    """
+    lady = world.find_at("TeaLady", phase)
+    if lady is None or lady not in state.alive_set(phase):
+        return None
+    around = _living_beside(state, lady, phase)
+    if seat not in around or len(around) < 2:
+        return None
+    if any(world.evil_at(p, phase) for p in around):
+        return None                       # one of them is evil, so nothing
+    return lady
+
+
+@survives_execution_rule
+def a_tea_lady_keeps_her_neighbours_from_the_gallows(world, state, day,
+                                                     seat):
+    """ "Cannot die" means cannot die: the gallows as much as the Demon.
+
+    Her night-time protection has been here since she went in and the
+    daylight half never was — so a neighbour executed and left standing
+    had nothing to explain it, and the world that really happened was
+    not a world (02.10.2026, found reading every character against the
+    rulebook).
+    """
+    if not _in_bag(state, "TeaLady"):
+        return []
+    lady = _tea_lady_keeping(world, state, seat, f"D{day}")
+    return [] if lady is None else [lady]
+
+
 @survives_execution_rule
 def a_fool_walks_away_once(world, state, day, seat):
     """Its one free death covers the gallows as well as the night."""
@@ -1331,6 +1381,12 @@ def a_fool_walks_away_once(world, state, day, seat):
         return []
     if world.role_at(seat, f"D{day}") != "Fool":
         return []
+    # Once. An earlier walk from the gallows that nothing else explains
+    # was the Fool's one free death, and it is gone.
+    for earlier in range(1, day):
+        if _walked_away(state, earlier, seat) and not survivals_of(
+                world, state, earlier, seat, but=a_fool_walks_away_once):
+            return []
     return [seat]
 
 
@@ -1496,10 +1552,14 @@ def a_po_kills_none_or_three(world, state, night):
     # rule answers for any world. A capacity is a *ceiling* — the search
     # may use fewer — so offering three covers taking one as well, and
     # the shape stays what everything else expects.
+    #
+    # Except on the second night. Three is for the night after it chose
+    # nobody, and the first night is not a choice — so its first kill is
+    # always a single one.
     return [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON,
         seats=frozenset(range(state.n_players)),
-        capacity=3, must_fire=False)]
+        capacity=1 if night == 2 else 3, must_fire=False)]
 
 
 def _pit_hag_made_a_demon(state, night):
@@ -1663,13 +1723,41 @@ def a_moonchild_takes_somebody_with_it(world, state, night):
     # Recorded, it points somewhere in particular — so a seat that died
     # reads good and one that did not reads evil, which is the whole
     # value of writing the pick down.
-    picked = _chosen(state, "Moonchild", night)
-    if picked is not None:
-        good = good & picked
+    #
+    # The second half of that was a promise this did not keep. The pick
+    # *may* kill when nobody said who it was; once it is written down and
+    # the player is good, it **does** — and a good player it named who is
+    # still standing needs a reason: somebody keeping them alive, or the
+    # Moonchild's ability not working that night. Without that, "they
+    # lived, so they are evil" was never drawn (02.10.2026).
+    picked = _chosen(state, "Moonchild", night, by=child)
+    if picked is None:
+        if not good:
+            return []
+        return [death_causes.Cause(name="Moonchild",
+                                   kind=death_causes.OTHER,
+                                   seats=good, capacity=1)]
+    good = good & picked
     if not good:
+        return []                         # it named somebody evil
+    return [death_causes.Cause(name="Moonchild", kind=death_causes.PICKED,
+                               seats=good, capacity=1, must_fire=True)]
+
+
+@death_causes.immunity_rule
+def a_moonchild_that_was_not_working(world, state, night, seat, kind):
+    """The pick did nothing because the Moonchild's ability did not.
+
+    What counts is its state on the night the pick lands, and the dead
+    can be drunk or poisoned like anybody else — a Minstrel, a Courtier,
+    a Pukka that would rather its Minion lived. The plan does not reach
+    the dead, so this is priced like a poisoning rather than routed
+    through it: possible, and it has to be paid for.
+    """
+    if kind != death_causes.PICKED:
         return []
-    return [death_causes.Cause(name="Moonchild", kind=death_causes.OTHER,
-                               seats=good, capacity=1)]
+    return [death_causes.Shield("Moonchild not working", needs=None,
+                                cost=POISON_HIT_PENALTY, chosen=True)]
 
 
 @death_causes.cause_rule
@@ -1808,15 +1896,16 @@ def a_tea_lady_keeps_her_neighbours(world, state, night, seat, kind):
     if not _in_bag(state, "TeaLady"):
         return []
     phase = f"N{night}"
-    lady = world.find_at("TeaLady", phase)
-    if lady is None or lady not in state.alive_set(phase):
+    lady = _tea_lady_keeping(world, state, seat, phase)
+    if lady is None:
         return []
-    around = _living_beside(state, lady, phase)
-    if seat not in around or len(around) < 2:
-        return []
-    if any(world.evil_at(p, phase) for p in around):
-        return []                         # one of them is evil, so nothing
-    return [death_causes.Shield("Tea Lady", needs=lady)]
+    # A Tea Lady who died tonight herself stops protecting the moment she
+    # goes. A Shabaloth that takes her first and her neighbour second
+    # kills both, and the plan knows whole nights rather than the order
+    # within one — so on such a night her protection may explain a
+    # survival but demands nothing of a death.
+    fell = f"N{night}" in state.died_at(lady)
+    return [death_causes.Shield("Tea Lady", needs=lady, chosen=fell)]
 
 
 def _living_beside(state, seat, phase):
@@ -1877,7 +1966,18 @@ def an_innkeeper_guards_two(world, state, night, seat, kind):
     keeper = world.find_at("Innkeeper", phase)
     if keeper is None or night < 2 or keeper not in state.alive_set(phase):
         return []
-    return [death_causes.Shield("Innkeeper", needs=keeper, chosen=True)]
+    # Written down, the choice is no longer free. The two it named cannot
+    # die tonight while it is working, so one of them dead means it was
+    # not — and nobody else is covered at all. Unless the Innkeeper fell
+    # tonight itself: its protection goes with it, and the plan does not
+    # know which came first.
+    picked = _chosen(state, "Innkeeper", night, ("a", "b"), by=keeper)
+    if picked is None:
+        return [death_causes.Shield("Innkeeper", needs=keeper, chosen=True)]
+    if seat not in picked:
+        return []
+    fell = phase in state.died_at(keeper)
+    return [death_causes.Shield("Innkeeper", needs=keeper, chosen=fell)]
 
 
 @death_causes.immunity_rule
@@ -1908,7 +2008,7 @@ def an_exorcist_sends_the_demon_to_bed(world, state, night, seat, kind):
         if night < 3 or exorcist is None \
                 or exorcist not in state.alive_set(before):
             return []
-        picked = _chosen(state, "Exorcist", night - 1)
+        picked = _chosen(state, "Exorcist", night - 1, by=exorcist)
         if picked is not None and world.demon_at(before) not in picked:
             return []
         # It had to be working *then*, which is not tonight's question.
@@ -1920,10 +2020,16 @@ def an_exorcist_sends_the_demon_to_bed(world, state, night, seat, kind):
     # it named the seat holding it. That is the deduction the table draws
     # from a silent night, and it cannot be drawn while the choice is a
     # secret — which is why the row is worth having.
-    picked = _chosen(state, "Exorcist", night)
+    picked = _chosen(state, "Exorcist", night, by=exorcist)
     if picked is not None and world.demon_at(phase) not in picked:
         return []
-    return [death_causes.Shield("Exorcist", needs=exorcist, chosen=True)]
+    # And it cuts the other way. Named and written down, the Demon does
+    # not act tonight — so a Demon kill on that night says the Exorcist
+    # was not working, or that this seat is not the Demon. That second
+    # reading is what the table draws from it, and it was not drawn here:
+    # the shield was only ever an excuse for a quiet night.
+    return [death_causes.Shield("Exorcist", needs=exorcist,
+                                chosen=picked is None)]
 
 
 @death_causes.immunity_rule
@@ -2359,14 +2465,40 @@ def _plain_failures(world, state, outcome=None):
     # demands them rather than merely wanting them.
     for day, seat in sorted((state.witch_deaths or {}).items()):
         witch = world.find_at("Witch", f"N{day}")
-        if witch is None or witch not in state.alive_set(f"N{day}"):
+        if witch is None or not minion_still_acts(world, state, witch,
+                                                  f"N{day}"):
+            return None, None, 1.0, None
+        # "If just 3 players live, you lose this ability" — and the curse
+        # goes with it, so nobody drops dead nominating at a table of
+        # three.
+        if len(state.alive_set(f"D{day}")) <= 3:
             return None, None, 1.0, None
         working.setdefault(day, set()).add(witch)
     for day, seat in sorted((state.madness_executions or {}).items()):
         maddener = world.find_at("Cerenovus", f"N{day}")
-        if maddener is None or maddener not in state.alive_set(f"N{day}"):
+        if maddener is None or not minion_still_acts(world, state, maddener,
+                                                     f"N{day}"):
             return None, None, 1.0, None
         working.setdefault(day, set()).add(maddener)
+
+    # The good twin executed, and the game carried on. Evil wins on the
+    # spot when that happens, so play continuing says the Evil Twin was
+    # not working — or that the one who hanged was the evil one, which is
+    # the deduction the table draws and this never did (02.10.2026).
+    for info in state.infos:
+        if not isinstance(info, EvilTwinPair):
+            continue
+        for day in (state.executions or {}):
+            hanged = state.execution_death(day)
+            if hanged not in (info.a, info.b):
+                continue
+            other = info.b if hanged == info.a else info.a
+            phase = f"D{day}"
+            if world.role_at(other, phase) != "EvilTwin" \
+                    or other not in state.alive_set(phase) \
+                    or world.evil_at(hanged, phase):
+                continue
+            failures[day].add(other)
 
     # A Mastermind's extra day, if this story has one.
     #
@@ -2412,16 +2544,36 @@ def _plain_failures(world, state, outcome=None):
         # something had to have stopped it working.
         if world.role_at(seat, f"D{day}") == "Sailor":
             failures[day].add(seat)
+        # And the same for a Tea Lady's neighbour: executed and dead, so
+        # she was not working. The mirror of her saving one.
+        if _in_bag(state, "TeaLady"):
+            lady = _tea_lady_keeping(world, state, seat, f"D{day}")
+            if lady is not None:
+                failures[day].add(lady)
 
     # Somebody standing again needs a reason, and the reason has to have
-    # been working. A Professor is the one here — and it only raises a
-    # Townsfolk, which is not the same as raising somebody good: the Spy
-    # registers as a Townsfolk and would be raised like anybody else.
+    # been working. Two characters do it.
+    #
+    # A Professor raises one Townsfolk, once — which is not the same as
+    # raising somebody good: the Spy registers as a Townsfolk and would
+    # be raised like anybody else.
+    #
+    # A Shabaloth may regurgitate somebody it chose the night before,
+    # whatever they are and as often as the Storyteller likes. That was
+    # missing altogether: with no Professor in the world the board was
+    # thrown out, and a second resurrection always was (02.10.2026).
+    # Which dead player it chose is not recorded, so any of them will do.
+    by_professor = 0
     for seat, phases in (state.resurrections or {}).items():
         for phase in phases:
             night = int(phase[1:]) if phase[1:].isdigit() else None
             if night is None:
                 continue
+            shabaloth = (world.find_at("Shabaloth", phase)
+                         if _in_bag(state, "Shabaloth") else None)
+            if shabaloth is not None and night >= 3 \
+                    and shabaloth in state.alive_set(phase):
+                continue                  # it could have; nothing demanded
             prof = world.find_at("Professor", phase)
             if prof is None or not _in_bag(state, "Professor"):
                 return None, None, 1.0, None
@@ -2432,8 +2584,9 @@ def _plain_failures(world, state, outcome=None):
                     and "townsfolk" not in CHARACTERS[raised].registers:
                 return None, None, 1.0, None
             working.setdefault(night, set()).add(prof)
-    # Once per game, so two of them is not a game.
-    if sum(len(v) for v in (state.resurrections or {}).values()) > 1:
+            by_professor += 1
+    # Once per game, so two of the Professor's is not a game.
+    if by_professor > 1:
         return None, None, 1.0, None
 
     # An execution that killed nobody needs a reason, and the reason has
@@ -2441,10 +2594,18 @@ def _plain_failures(world, state, outcome=None):
     for day, seat in (state.executions or {}).items():
         if state.execution_death(day) is not None:
             continue                      # it did kill; nothing to explain
-        survivors = survivals_of(world, state, day, seat)
+        survivors = set(survivals_of(world, state, day, seat))
         if not survivors:
             return None, None, 1.0, None  # nothing here survives an execution
-        working[day] = set(survivors)
+        # One of them did it, and that one was working. With a single
+        # candidate that is a demand; with several it is "one of these",
+        # which the plan cannot hold — it knows sets, not alternatives.
+        # Demanding all of them, as this did, threw out a Devil's
+        # Advocate's rescue whenever a Pacifist on the same board was
+        # drunk. And it *replaced* whatever else had to be working that
+        # day rather than adding to it.
+        if len(survivors) == 1:
+            working.setdefault(day, set()).update(survivors)
 
     spent = _spent_nominations(state)
     for idx, (info, src) in enumerate(zip(state.infos, _source_seats(state))):
@@ -2563,15 +2724,25 @@ def _plain_failures(world, state, outcome=None):
                         if hasattr(info, "is_true")
                         else info.holds(world, state, rh_for(info), seat))
             if was_true:
-                # The Vortox was not working — **or** the seat that said
-                # it was droisoned, since a droisoned Townsfolk is told
-                # anything and anything includes the truth. Only the
-                # first was offered, so a drunk Oracle that happened to
-                # say something true made the world impossible
-                # (29.09.2026). The plan holds sets, not disjunctions, so
-                # both are tried there, a night at a time.
-                got = vortox_or.setdefault(info.night, (vortox, set()))
-                got[1].add(seat)
+                # Then the Vortox was not working, and nothing else will
+                # do. "Even if they are drunk or poisoned, it must be
+                # false" — the card's own clarification.
+                #
+                # For three days this also accepted the seat itself being
+                # droisoned, on the reasoning that a droisoned Townsfolk
+                # is told anything and anything includes the truth. Under
+                # a Vortox it does not, and the simulator that produced
+                # such a board was making the same mistake (corrected
+                # 02.10.2026, reading the script against the wiki).
+                #
+                # The Mathematician is left with both ways out. Its number
+                # is checked against a range rather than a value, so a
+                # false one can sit inside what this would call true.
+                if type(info).__name__ == "MathematicianInfo":
+                    got = vortox_or.setdefault(info.night, (vortox, set()))
+                    got[1].add(seat)
+                else:
+                    failures[info.night].add(vortox)
                 outcome[idx] = EXCUSED
             else:
                 outcome[idx] = HELD
@@ -2606,15 +2777,21 @@ def _plain_failures(world, state, outcome=None):
     return failures, ft_infos, invented, working
 
 
-def _chosen(state, role, night, fields=("target",)):
+def _chosen(state, role, night, fields=("target",), by=None):
     """What a declared choice named on this night, if it was recorded.
 
     Returns the seats, or None when nothing was written down. None is not
     the same as an empty answer: it means "nobody said", and the rule
     falls back to reaching everybody rather than reaching nobody.
+
+    `by` is the seat that really holds the character in this world. A
+    row from anybody else is a bluff's story, and what the real one
+    chose is then as unrecorded as if nobody had spoken.
     """
     for info in state.infos:
         if getattr(info, "source_role", None) != role or info.night != night:
+            continue
+        if by is not None and info.player != by:
             continue
         got = [getattr(info, f) for f in fields
                if getattr(info, f, None) is not None]
@@ -2658,10 +2835,63 @@ def a_no_dashii_poisons_its_townsfolk_neighbours(world, state, night):
     if seat is None or seat not in state.alive_set(phase):
         return []
     hit = _nearest_townsfolk(world, state, seat, phase, state.n_players)
-    if not hit:
-        return []
-    return [impairment.Source("No Dashii", frozenset(hit),
-                              capacity=len(hit), cost=1.0, repeat_cost=1.0)]
+    out = []
+    if hit:
+        out.append(impairment.Source("No Dashii", frozenset(hit),
+                                     capacity=len(hit), cost=1.0,
+                                     repeat_cost=1.0))
+    # Whoever was beside it as the night began, and no longer is. "The
+    # players who are poisoned may change immediately" — so on a night a
+    # Pit-Hag turns its Townsfolk neighbour into something else, that
+    # neighbour was poisoned for the part of the night before it
+    # happened. A Snake Charmer there pointed at the No Dashii, nothing
+    # came of it, and by the end of the night it was an Evil Twin with
+    # no reason to have failed (02.10.2026). On offer, not forced.
+    began = _before(night, phase)
+    then = world.find_at("NoDashii", began)
+    if then is not None:
+        earlier = _nearest_townsfolk(world, state, then, began,
+                                     state.n_players) - set(hit)
+        if earlier:
+            out.append(impairment.Source(
+                "No Dashii, as the night began", frozenset(earlier),
+                capacity=len(earlier), cost=lambda who: 1.0,
+                repeat_cost=lambda who: 1.0))
+    return out
+
+
+def killed_by_a_vigormortis(world, state, who, phase):
+    """Is this a dead Minion a living Vigormortis killed?
+
+    "Minions you kill keep their ability": at night, while a Vigormortis
+    was the Demon, and only for as long as it stays alive.
+    """
+    if world.team_at(who, phase) != "minion":
+        return False
+    gone = [p for p in state.died_at(who)
+            if phase_index(p) <= phase_index(phase)]
+    if not gone:
+        return False
+    first = min(gone, key=phase_index)
+    if first[0].upper() != "N":
+        return False
+    killer = world.demon_at(first)
+    if killer is None or world.role_at(killer, first) != "Vigormortis":
+        return False
+    now = world.find_at("Vigormortis", phase)
+    return now is not None and now in state.alive_set(phase)
+
+
+def minion_still_acts(world, state, seat, phase):
+    """Alive — or dead at a Vigormortis's hand, which keeps its ability.
+
+    A Witch it killed goes on cursing and a Cerenovus goes on maddening.
+    Only "alive" was asked, so a nominator dropping dead on the day after
+    a Vigormortis took its own Witch had nobody to have cursed them, and
+    the board was not a world (02.10.2026).
+    """
+    return seat in state.alive_set(phase) \
+        or killed_by_a_vigormortis(world, state, seat, phase)
 
 
 @impairment.source_rule
@@ -2729,15 +2959,29 @@ def a_philosopher_drunks_whoever_had_it(world, state, night):
     for who, (taken, since) in state.philosophies().items():
         if phase_index(phase) < phase_index(since):
             continue
-        if world.role_at(who, phase) != "Philosopher":
-            continue
         if who not in state.alive_set(phase):
             continue                      # it stops when they do
-        had = world.find_at(taken, phase)
+        # The span in which it stops being the Philosopher, or dies, is
+        # half and half: whoever it drunk is drunk until that moment and
+        # sober after it. A Philosopher that took the Snake Charmer and
+        # swapped tonight is the Demon by the end of the night — and the
+        # real Snake Charmer, pointing at the same Demon a moment
+        # earlier, was still drunk when nothing happened. So there the
+        # drunkenness is on offer rather than forced, and it is read off
+        # the board as the night began.
+        began = _before(night, phase)
+        still = world.role_at(who, phase) == "Philosopher"
+        if not still and world.role_at(who, began) != "Philosopher":
+            continue
+        went = (not still) or any(at in state.died_at(who)
+                                  for at in (phase, f"D{night}"))
+        had = world.find_at(taken, began if not still else phase)
         if had is None or had == who:
             continue                      # nobody else was holding it
+        free = (lambda seat: 1.0) if went else 1.0
         out.append(impairment.Source("Philosopher", frozenset({had}),
-                                     capacity=1, cost=1.0, repeat_cost=1.0))
+                                     capacity=1, cost=free,
+                                     repeat_cost=free))
     return out
 
 
@@ -2928,11 +3172,26 @@ def a_courtier_names_a_character(world, state, night):
         courtier = world.find_at("Courtier", phase)
         if courtier is None or courtier != info.player:
             continue                      # not really the Courtier here
+        # Only while the Courtier lives. A drunkenness rests when the one
+        # causing it dies (table ruling, 02.10.2026) — and this ran the
+        # full three days regardless, so a Sailor the dead Courtier had
+        # named was still "drunk" when it walked away from the gallows.
+        if courtier not in state.alive_set(phase):
+            continue
         hit = world.find_at(info.role, phase)
         if hit is None:
             continue                      # named somebody nobody is
+        # In the span the Courtier dies, the named one is drunk for part
+        # of it and sober for the rest — and a night and its day are one
+        # key here. So there it is on offer rather than forced: free to
+        # explain something that went wrong, and no bar to something
+        # that worked.
+        went = any(at in state.died_at(courtier)
+                   for at in (phase, f"D{night}"))
+        free = (lambda who: 1.0) if went else 1.0
         out.append(impairment.Source("Courtier", frozenset({hit}),
-                                     capacity=1, cost=1.0, repeat_cost=1.0))
+                                     capacity=1, cost=free,
+                                     repeat_cost=free))
     return out
 
 
@@ -2956,7 +3215,10 @@ def a_minstrel_silences_the_table(world, state, night):
     seat = world.find_at("Minstrel", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
-    executed = (state.executions or {}).get(night - 1)
+    # "If a Minion *died* by execution." One that walked away — a Devil's
+    # Advocate's pick — silences nobody, and this used to drunk the whole
+    # table for it.
+    executed = state.execution_death(night - 1)
     if executed is None:
         return []
     if world.team_at(executed, f"D{night - 1}") != "minion":
@@ -2999,6 +3261,37 @@ def _impairment_plan(world, state, failures, forbidden):
     been: a Monk that is the only explanation for a quiet night was
     working, so nothing can have stopped it.
     """
+    got = _plan_as_given(world, state, failures, forbidden)
+    if got is not None:
+        return got
+    # A Courtier that was itself drunk or poisoned when it chose made
+    # nobody drunk at all. Its drunkenness is unavoidable while it
+    # stands, so a world that needs the named character *working* fails
+    # above — and then the other story is tried: the Courtier impaired
+    # on the night it chose, and its three days never happening.
+    #
+    # The same goes for a Philosopher: one that was drunk or poisoned
+    # when it chose gained nothing and drunk nobody.
+    for info in state.infos:
+        source = getattr(info, "source_role", None)
+        if source not in ("Courtier", "Philosopher") \
+                or not getattr(info, "role", None):
+            continue
+        phase = f"N{info.night}"
+        holder = info.player
+        if world.role_at(holder, _before(info.night, phase)) != source \
+                and world.role_at(holder, phase) != source:
+            continue
+        again = {night: set(seats) for night, seats in failures.items()}
+        again.setdefault(info.night, set()).add(holder)
+        got = _plan_as_given(world, state, again, forbidden,
+                             without=(source,))
+        if got is not None:
+            return got
+    return None
+
+
+def _plan_as_given(world, state, failures, forbidden, without=()):
     plan, total = {}, 1.0
     previous = {}
     nights = set(failures) | set(forbidden)
@@ -3007,9 +3300,11 @@ def _impairment_plan(world, state, failures, forbidden):
         blocked = forbidden.get(night, set())
         if wanted & blocked:
             return None                   # asked to be both at once
+        sources = impairment.sources_on(world, state, night)
+        if without:
+            sources = [s for s in sources if s.name not in without]
         got = impairment.plan_night(
-            impairment.sources_on(world, state, night),
-            sorted(wanted), sorted(blocked), previous)
+            sources, sorted(wanted), sorted(blocked), previous)
         if got is None:
             return None
         cost, hits = got
@@ -3561,7 +3856,8 @@ def _madness_nights(world, state):
     got = 0
     for night in range(1, nights + 1):
         who = world.find_at("Cerenovus", f"N{night}")
-        if who is not None and who in state.alive_set(f"N{night}"):
+        if who is not None and minion_still_acts(world, state, who,
+                                                 f"N{night}"):
             got += 1
     return got
 

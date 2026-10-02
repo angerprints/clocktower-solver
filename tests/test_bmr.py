@@ -214,7 +214,7 @@ class WalkingAwayFromAnExecution(SolverTest):
     """Four reasons now, told apart by which seat had to be working."""
 
     def test_there_are_four_of_them(self):
-        self.assertEqual(len(S.SURVIVES_EXECUTION_RULES), 4)
+        self.assertEqual(len(S.SURVIVES_EXECUTION_RULES), 5)
 
     def test_a_sailor_walks_away_from_its_own(self):
         self.assertIsNotNone(S.explanation_cost(among(*HONEST),
@@ -1623,3 +1623,240 @@ class AMarionetteCountsAsTheTokenItHolds(SolverTest):
                               (None, "Empath") + (None,) * 5)
                 self.assertEqual(
                     waking.possible_counts(world, state, [1, 4], 2), {1})
+
+
+class TheRulebookReadAgainstTheCode(SolverTest):
+    """Every character of Bad Moon Rising, read against the rulebook the
+    single-player game is built from (02.10.2026).
+
+    Each test is a small board with one true world. Where a rule was
+    missing, that world was thrown out; where it was loose, a world that
+    could not have happened cost nothing.
+    """
+
+    def cost(self, roles, bluffs, believes=None, **board):
+        claims = list(roles)
+        for seat, claim in bluffs.items():
+            claims[seat] = claim
+        state = GameState(n_players=len(roles),
+                          script=scripts.BAD_MOON_RISING,
+                          claims={i: c for i, c in enumerate(claims)},
+                          **board)
+        return S.explanation_cost(
+            World(tuple(roles), tuple(believes or (None,) * len(roles))),
+            state)
+
+    TEA = ["Gambler", "TeaLady", "Gossip", "Chambermaid", "Professor",
+           "Minstrel", "Tinker", "Godfather"]
+    EVIL = {7: "Moonchild", 8: "Courtier"}
+
+    # --- the Tea Lady ----------------------------------------------------
+
+    def test_her_neighbour_walks_away_from_the_gallows(self):
+        got = self.cost(self.TEA + ["Po"], self.EVIL, executions={1: 2})
+        self.assertIsNotNone(got)
+
+    def test_and_one_that_hangs_means_she_was_not_working(self):
+        """Nothing on this board could have stopped her."""
+        got = self.cost(self.TEA + ["Po"], self.EVIL,
+                        executions={1: 2}, deaths={2: "D1"})
+        self.assertIsNone(got)
+
+    def test_a_shabaloth_takes_her_and_then_her_neighbour(self):
+        got = self.cost(self.TEA + ["Shabaloth"], self.EVIL,
+                        deaths={1: "N2", 2: "N2"})
+        self.assertEqual(got, 1.0)
+
+    def test_but_not_her_neighbour_while_she_stands(self):
+        got = self.cost(self.TEA + ["Shabaloth"], self.EVIL,
+                        deaths={2: "N2"})
+        self.assertIsNone(got)
+
+    # --- the Shabaloth ---------------------------------------------------
+
+    BARE = ["Gambler", "Sailor", "Gossip", "Chambermaid", "Exorcist",
+            "Minstrel", "Tinker", "Godfather"]
+
+    def test_a_shabaloth_brings_somebody_back(self):
+        got = self.cost(self.BARE + ["Shabaloth"], self.EVIL,
+                        deaths={0: "N2", 2: "N2"}, resurrections={0: "N3"})
+        self.assertIsNotNone(got)
+
+    def test_and_may_do_it_twice(self):
+        got = self.cost(self.BARE + ["Shabaloth"], self.EVIL,
+                        deaths={0: "N2", 2: "N2", 3: "N3"},
+                        resurrections={0: "N3", 3: "N4"})
+        self.assertIsNotNone(got)
+
+    def test_nobody_else_does(self):
+        got = self.cost(self.BARE + ["Po"], self.EVIL,
+                        deaths={0: "N2"}, resurrections={0: "N3"})
+        self.assertIsNone(got)
+
+    def test_a_professor_still_only_once(self):
+        roles = ["Gambler", "Chambermaid", "Gossip", "Professor",
+                 "Exorcist", "Minstrel", "Tinker", "Godfather", "Po"]
+        self.assertEqual(self.cost(roles, self.EVIL, deaths={0: "N2"},
+                                   resurrections={0: "N3"},
+                                   quiet_nights={3}), 1.0)
+        self.assertIsNone(self.cost(
+            roles, self.EVIL, deaths={0: "N2", 1: "N3"},
+            resurrections={0: "N3", 1: "N4"}))
+
+    # --- the Courtier ----------------------------------------------------
+
+    COURT = ["Courtier", "Fool", "Gossip", "Chambermaid", "Exorcist",
+             "Minstrel", "Tinker", "Godfather", "Po"]
+    COURT_EVIL = {7: "Moonchild", 8: "Professor"}
+
+    def named(self):
+        from botc.info import CourtierChoice
+        return [CourtierChoice(1, 0, role="Fool")]
+
+    def test_its_drunkenness_rests_once_it_is_dead(self):
+        """Table ruling. The Fool it named walks away from the gallows
+        the day after the Courtier died."""
+        got = self.cost(self.COURT, self.COURT_EVIL, infos=self.named(),
+                        deaths={0: "N2"}, executions={2: 1})
+        self.assertIsNotNone(got)
+
+    def test_while_it_lives_the_named_one_is_drunk(self):
+        """Nothing here could have got at the Courtier on the first
+        night, so the Fool was drunk and did not walk away."""
+        got = self.cost(self.COURT, self.COURT_EVIL, infos=self.named(),
+                        deaths={3: "N2"}, executions={2: 1})
+        self.assertIsNone(got)
+
+    def test_unless_the_courtier_was_itself_impaired_when_it_chose(self):
+        """Then it made nobody drunk at all. A Sailor on the board could
+        have chosen it first: priced, not free."""
+        roles = self.COURT[:2] + ["Sailor"] + self.COURT[3:]
+        got = self.cost(roles, self.COURT_EVIL, infos=self.named(),
+                        deaths={3: "N2"}, executions={2: 1})
+        self.assertIsNotNone(got)
+        self.assertLess(got, 1.0)
+
+    # --- the Minstrel ----------------------------------------------------
+
+    MINSTREL = ["Gambler", "Sailor", "Gossip", "Chambermaid", "Exorcist",
+                "Minstrel", "Tinker", "DevilsAdvocate", "Po"]
+
+    def test_a_minion_that_walked_away_silences_nobody(self):
+        got = self.cost(self.MINSTREL, self.COURT_EVIL,
+                        executions={1: 7, 2: 1}, deaths={3: "N2"})
+        self.assertIsNotNone(got)
+
+    def test_one_that_died_silences_everybody(self):
+        got = self.cost(self.MINSTREL, self.COURT_EVIL,
+                        executions={1: 7, 2: 1}, deaths={7: "D1"})
+        self.assertIsNone(got)
+
+    # --- the Po ----------------------------------------------------------
+
+    def test_a_po_takes_one_on_the_second_night(self):
+        got = self.cost(self.BARE + ["Po"], self.EVIL,
+                        deaths={0: "N2", 2: "N2", 3: "N2"})
+        self.assertIsNone(got)
+
+    def test_and_three_after_a_night_it_took_nobody(self):
+        got = self.cost(self.BARE + ["Po"], self.EVIL,
+                        deaths={0: "N3", 2: "N3", 3: "N3"}, quiet_nights={2})
+        self.assertEqual(got, 1.0)
+
+    # --- choices that were written down ----------------------------------
+
+    def test_an_innkeepers_pair_cannot_die_while_it_works(self):
+        from botc.info import InnkeeperChoice
+        roles = ["Innkeeper", "Gambler", "Courtier", "Chambermaid",
+                 "Exorcist", "Minstrel", "Pacifist", "Mastermind",
+                 "Shabaloth"]
+        got = self.cost(roles, {7: "Tinker", 8: "Professor"},
+                        infos=[InnkeeperChoice(2, 0, a=1, b=2)],
+                        deaths={1: "N2", 3: "N2"})
+        self.assertTrue(got is None or got < 1.0)
+
+    def test_an_exorcist_that_named_the_demon_and_a_body_anyway(self):
+        from botc.info import ExorcistChoice
+        roles = ["Exorcist", "Gambler", "Courtier", "Chambermaid", "Gossip",
+                 "Minstrel", "Pacifist", "Mastermind", "Zombuul"]
+        bluffs = {7: "Tinker", 8: "Professor"}
+        named = [ExorcistChoice(2, 0, target=8)]
+        self.assertEqual(self.cost(roles, bluffs, infos=named,
+                                   quiet_nights={2}), 1.0)
+        got = self.cost(roles, bluffs, infos=named, deaths={3: "N2"})
+        self.assertTrue(got is None or got < 1.0)
+
+    def test_a_fake_exorcists_row_binds_nobody(self):
+        """The real one sits unclaimed elsewhere, and what it chose is as
+        unrecorded as if nobody had spoken."""
+        from botc.info import ExorcistChoice
+        roles = ["Exorcist", "Gambler", "Courtier", "Chambermaid", "Gossip",
+                 "Minstrel", "Pacifist", "Mastermind", "Zombuul"]
+        bluffs = {0: "Tinker", 7: "Exorcist", 8: "Professor"}
+        got = self.cost(roles, bluffs, quiet_nights={2},
+                        infos=[ExorcistChoice(2, 7, target=3)])
+        self.assertIsNotNone(got)
+
+    # --- the Moonchild ---------------------------------------------------
+
+    CHILD = ["Moonchild", "Gambler", "Gossip", "Chambermaid", "Exorcist",
+             "Minstrel", "Tinker", "Mastermind", "Zombuul"]
+    CHILD_EVIL = {7: "Fool", 8: "Courtier"}
+
+    def picked(self, who):
+        from botc.info import MoonchildChoice
+        return {"executions": {1: 0}, "deaths": {0: "D1"},
+                "infos": [MoonchildChoice(2, 0, target=who)]}
+
+    def test_a_good_player_it_named_dies(self):
+        board = self.picked(3)
+        board["deaths"][3] = "N2"
+        self.assertEqual(self.cost(self.CHILD, self.CHILD_EVIL, **board),
+                         1.0)
+
+    def test_one_still_standing_has_to_be_explained(self):
+        got = self.cost(self.CHILD, self.CHILD_EVIL, quiet_nights={2},
+                        **self.picked(3))
+        self.assertIsNotNone(got)
+        self.assertLess(got, 1.0)
+
+    def test_an_evil_one_it_named_simply_lives(self):
+        got = self.cost(self.CHILD, self.CHILD_EVIL, quiet_nights={2},
+                        **self.picked(7))
+        self.assertEqual(got, 1.0)
+
+    # --- walking away from the gallows -----------------------------------
+
+    def test_one_rescuer_working_is_enough(self):
+        """A Devil's Advocate saved them, and the Pacifist on the same
+        board was drunk the whole time: the Courtier named it. Both used
+        to be demanded, and the rescue was thrown out."""
+        from botc.info import CourtierChoice
+        roles = ["Gambler", "Chambermaid", "Gossip", "Courtier", "Exorcist",
+                 "Minstrel", "Pacifist", "DevilsAdvocate", "Po"]
+        got = self.cost(roles, {7: "Moonchild", 8: "Professor"},
+                        infos=[CourtierChoice(1, 3, role="Pacifist")],
+                        executions={1: 0})
+        self.assertIsNotNone(got)
+
+    def test_a_devils_advocate_not_the_same_player_two_days_running(self):
+        roles = ["Gambler", "Chambermaid", "Gossip", "Courtier", "Exorcist",
+                 "Minstrel", "Tinker", "DevilsAdvocate", "Po"]
+        bluffs = {7: "Moonchild", 8: "Professor"}
+        self.assertIsNotNone(self.cost(roles, bluffs, executions={1: 0}))
+        self.assertIsNone(self.cost(roles, bluffs,
+                                    executions={1: 0, 2: 0},
+                                    deaths={1: "N2"}))
+        # Somebody else on the second day is another matter.
+        self.assertIsNotNone(self.cost(roles, bluffs,
+                                       executions={1: 0, 2: 2},
+                                       deaths={1: "N2"}))
+
+    def test_a_fool_walks_away_once(self):
+        roles = ["Fool", "Chambermaid", "Gossip", "Courtier", "Exorcist",
+                 "Minstrel", "Tinker", "Godfather", "Po"]
+        bluffs = {7: "Moonchild", 8: "Professor"}
+        self.assertIsNotNone(self.cost(roles, bluffs, executions={1: 0}))
+        self.assertIsNone(self.cost(roles, bluffs,
+                                    executions={1: 0, 2: 0},
+                                    deaths={3: "N2"}))

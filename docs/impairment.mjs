@@ -19,6 +19,36 @@
  * a Storyteller treats it as a price the town pays rather than a weapon
  * to point at evil.
  */
+import {phaseIndex} from "./phases.mjs";
+
+/** Is this a dead Minion a living Vigormortis killed?
+ *
+ * "Minions you kill keep their ability": at night, while a Vigormortis was
+ * the Demon, and only for as long as it stays alive. */
+export function killedByAVigormortis(world, state, who, phase) {
+  if (world.teamAt(who, phase) !== "minion") return false;
+  const gone = state.diedAt(who)
+    .filter(p => phaseIndex(p) <= phaseIndex(phase));
+  if (!gone.length) return false;
+  const first = gone.reduce((a, b) => phaseIndex(a) <= phaseIndex(b) ? a : b);
+  if (first[0].toUpperCase() !== "N") return false;
+  const killer = world.demonAt(first);
+  if (killer === null || killer === undefined ||
+      world.roleAt(killer, first) !== "Vigormortis") return false;
+  const now = world.findAt("Vigormortis", phase);
+  return now !== null && state.aliveSet(phase).has(now);
+}
+
+/** Alive — or dead at a Vigormortis's hand, which keeps its ability.
+ *
+ * A Witch it killed goes on cursing and a Cerenovus goes on maddening.
+ * Only "alive" was asked, so a nominator dropping dead on the day after a
+ * Vigormortis took its own Witch had nobody to have cursed them
+ * (02.10.2026). */
+export const minionStillActs = (world, state, seat, phase) =>
+  state.aliveSet(phase).has(seat) ||
+  killedByAVigormortis(world, state, seat, phase);
+
 export class Source {
   constructor(name, seats, {capacity = 1, cost = 1.0, repeatCost = 1.0} = {}) {
     this.name = name;

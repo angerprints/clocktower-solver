@@ -391,6 +391,105 @@ def handmade():
     yield board("bmr-9-moonchild-choice", BMR, moon, infos=[
         {"type": "MoonchildChoice", "night": 3, "player": 8, "target": 0}])
 
+    # The rulebook read against the code, character by character
+    # (02.10.2026). One board for each rule that was missing or loose, so
+    # both languages are held to the reading that was settled.
+    TEA = BMR9[:6] + ["TeaLady"] + BMR9[7:]
+    # "Cannot die" covers the gallows: her good neighbour walks away.
+    yield board("bmr-9-tea-lady-gallows", BMR, TEA,
+                players_override={5: ["S1"]})
+    # A Shabaloth takes her first and her neighbour second: both die.
+    yield board("bmr-9-tea-lady-falls", BMR, TEA,
+                players_override={6: ["N2"], 5: ["N2"]})
+    # Somebody back from the dead with no Professor claimed: a Shabaloth
+    # regurgitates, and may do it twice.
+    yield board("bmr-9-regurgitated", BMR, BMR9,
+                players_override={2: ["N2", "R3"], 4: ["N2"]})
+    yield board("bmr-9-regurgitated-twice", BMR, BMR9,
+                players_override={2: ["N2", "R3"], 4: ["N2"],
+                                  5: ["N3", "R4"]})
+    # A Courtier's drunkenness rests when it dies: the Sailor it named
+    # walks away from the gallows the day after.
+    COURT = BMR9[:6] + ["Courtier"] + BMR9[7:]
+    yield board("bmr-9-courtier-died", BMR, COURT,
+                players_override={6: ["N2"], 1: ["S2"]},
+                infos=[{"type": "CourtierChoice", "night": 1, "player": 6,
+                        "role": "Sailor"}])
+    yield board("bmr-9-courtier-lives", BMR, COURT,
+                players_override={2: ["N2"], 1: ["S2"]},
+                infos=[{"type": "CourtierChoice", "night": 1, "player": 6,
+                        "role": "Sailor"}])
+    # A Minstrel silences the table when a Minion *dies* on the gallows,
+    # not when one walks away from it.
+    MINSTREL = BMR9[:6] + ["Minstrel"] + BMR9[7:]
+    yield board("bmr-9-minstrel-survivor", BMR, MINSTREL,
+                players_override={7: ["S1"], 1: ["S2"], 2: ["N2"]})
+    # And the ordinary case beside it: the one hanged did die, so in the
+    # worlds where that was a Minion the Minstrel sings.
+    yield board("bmr-9-minstrel-sings", BMR, MINSTREL,
+                players_override={7: ["X1"], 2: ["N2"]})
+    # A Po takes one on the second night, never three.
+    yield board("bmr-9-po-night-two", BMR, BMR9,
+                players_override={2: ["N2"], 4: ["N2"], 5: ["N2"]})
+    # Written down, a choice binds: one of the Innkeeper's pair dead, and
+    # a death on the night the Exorcist named somebody.
+    yield board("bmr-9-innkeeper-broken", BMR, BMR9,
+                players_override={0: ["N2"]},
+                infos=[{"type": "InnkeeperChoice", "night": 2, "player": 4,
+                        "a": 0, "b": 2}])
+    yield board("bmr-9-exorcist-named-and-killed", BMR, BMR9,
+                players_override={2: ["N2"]},
+                infos=[{"type": "ExorcistChoice", "night": 2, "player": 3,
+                        "target": 6}])
+    # A good player the Moonchild named who is still standing.
+    hanged_child = [{"claim": c, "events": ["X1"]} if i == 8 else c
+                    for i, c in enumerate(BMR9)]
+    yield board("bmr-9-moonchild-spared", BMR, hanged_child,
+                quiet_nights=[2],
+                infos=[{"type": "MoonchildChoice", "night": 2, "player": 8,
+                        "target": 0}])
+    # And the same reading of Sects & Violets against the wiki.
+    #
+    # A Vigormortis takes an Outsider out of the bag: one Outsider claim
+    # at nine players, where every other Demon needs two.
+    yield board("sv-9-one-outsider", SV,
+                SV9[:7] + ["Savant", "Sweetheart"])
+    # Its own Minions keep their ability: a Witch dead since night two,
+    # and somebody dropping dead as they nominate on day three.
+    dead_witch = [{"claim": c, "events": ["N2"]} if i == 2
+                  else {"claim": c, "events": ["W3"]} if i == 4
+                  else {"claim": c, "events": ["N3"]} if i == 5 else c
+                  for i, c in enumerate(SV9)]
+    yield board("sv-9-dead-witch-still-curses", SV, dead_witch,
+                days_done=[1, 2])
+    # A Witch at a table of three has no ability left.
+    three = [{"claim": c, "events": [e]} for c, e in
+             zip(SV9[:5], ["X1", "N2", "W2", "", ""])]
+    yield board("sv-5-witch-at-three", SV,
+                [x if x["events"] != [""] else x["claim"] for x in three])
+    # The good twin hanged and the game went on.
+    yield board("sv-9-twin-hanged", SV, marked(1, "X1"), days_done=[1],
+                infos=[{"type": "EvilTwinPair", "night": 1, "player": 1,
+                        "a": 1, "b": 6}])
+    # Under a Vortox even a drunk Townsfolk is told nothing true: an
+    # Oracle whose ability a Philosopher took, giving the right number.
+    drunk_oracle = [{"claim": "Philosopher"}] + [
+        {"claim": c, "events": ["X1"]} if i == 7
+        else {"claim": c, "events": ["N2"]} if i == 4 else c
+        for i, c in enumerate(SV9) if i > 0]
+    yield board("sv-9-drunk-under-a-vortox", SV, drunk_oracle,
+                days_done=[1],
+                infos=[{"type": "PhilosopherChoice", "night": 1, "player": 0,
+                        "role": "Oracle"},
+                       {"type": "OracleInfo", "night": 2, "player": 6,
+                        "count": 0}])
+
+    # A Gambler that guessed right, dead by morning all the same.
+    yield board("bmr-9-gambler-right-and-dead", BMR, BMR9,
+                players_override={5: ["N2"]},
+                infos=[{"type": "GamblerGuess", "night": 2, "player": 5,
+                        "target": 2, "role": "Chambermaid"}])
+
     # A reading the table confirmed. Evidence that its source is who
     # they claim, and it accumulates — so one board with a single tick
     # and one with three, to hold both languages to the same curve.

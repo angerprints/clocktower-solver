@@ -40,6 +40,21 @@ def kind_of(note):
     return "honest"
 
 
+
+def _a_barber_hid_and_died(deal, state):
+    """The one kind of game the solver gives up on purpose.
+
+    A table ruling (29.09.2026): a Barber swap is only looked for once a
+    seat that *claimed* the Barber has died. One that hid and died may
+    have moved the Demon, and the true world is then not among those
+    searched. `SectsAndVioletsOverFourNights` counts how often; the
+    smaller classes just step over those games.
+    """
+    import botc.solver as S
+    claimed = S.barber_claimants(state)
+    return any(deal.role_at(p, at) == "Barber" and p not in claimed
+               for p, at in deal.deaths.items())
+
 class HowATableClaims(SolverTest):
 
     @classmethod
@@ -737,6 +752,8 @@ class TheSimulatorCanDealAnyScript(SolverTest):
                     want += 2
                 elif "Godfather" in roles or "FangGu" in roles:
                     want += 1
+                elif "Vigormortis" in roles:
+                    want -= 1         # [-1 Outsider], missing until 02.10.2026
                 with self.subTest(script=name, seed=seed):
                     self.assertEqual(outsiders, want)
 
@@ -899,6 +916,8 @@ class SectsAndVioletsPlaysAndSolves(SolverTest):
         from botc.worlds import World
         for deal, state in self.games():
             truth = World(tuple(deal.roles), tuple(deal.believes))
+            if _a_barber_hid_and_died(deal, state):
+                continue
             with self.subTest(roles=deal.roles):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
 
@@ -1075,6 +1094,8 @@ class TheSimulatorCanMoveCharactersAround(SolverTest):
         from botc.worlds import World
         for _seed, deal, state in self.played():
             truth = World(tuple(deal.roles), tuple(deal.believes))
+            if _a_barber_hid_and_died(deal, state):
+                continue
             with self.subTest(roles=deal.roles):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
 

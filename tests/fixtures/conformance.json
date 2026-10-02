@@ -4071,76 +4071,76 @@
     }
    },
    "expect": {
-    "valid": 10012,
+    "valid": 9908,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 0.2704,
-      "demon_pct": 0.0296,
-      "drunk_pct": 3.6164,
-      "lying_pct": 3.8868
+      "evil_pct": 0.2111,
+      "demon_pct": 0.0299,
+      "drunk_pct": 2.7024,
+      "lying_pct": 2.9135
      },
      {
-      "evil_pct": 26.8604,
-      "demon_pct": 13.4498,
-      "drunk_pct": 10.3514,
-      "lying_pct": 37.2119
+      "evil_pct": 26.9095,
+      "demon_pct": 13.4706,
+      "drunk_pct": 10.4509,
+      "lying_pct": 37.3603
      },
      {
-      "evil_pct": 0.5162,
-      "demon_pct": 0.0976,
-      "drunk_pct": 8.0832,
-      "lying_pct": 8.5994
+      "evil_pct": 0.5156,
+      "demon_pct": 0.0986,
+      "drunk_pct": 8.1592,
+      "lying_pct": 8.6748
      },
      {
-      "evil_pct": 28.2734,
-      "demon_pct": 14.174,
-      "drunk_pct": 10.401,
-      "lying_pct": 38.6744
+      "evil_pct": 28.3368,
+      "demon_pct": 14.2021,
+      "drunk_pct": 10.5009,
+      "lying_pct": 38.8377
      },
      {
-      "evil_pct": 28.2734,
-      "demon_pct": 14.174,
-      "drunk_pct": 10.401,
-      "lying_pct": 38.6744
+      "evil_pct": 28.3368,
+      "demon_pct": 14.2021,
+      "drunk_pct": 10.5009,
+      "lying_pct": 38.8377
      },
      {
-      "evil_pct": 28.2734,
-      "demon_pct": 14.174,
-      "drunk_pct": 10.401,
-      "lying_pct": 38.6744
+      "evil_pct": 28.3368,
+      "demon_pct": 14.2021,
+      "drunk_pct": 10.5009,
+      "lying_pct": 38.8377
      },
      {
-      "evil_pct": 28.0543,
-      "demon_pct": 14.062,
-      "drunk_pct": 10.3923,
-      "lying_pct": 38.4466
+      "evil_pct": 28.0071,
+      "demon_pct": 14.0328,
+      "drunk_pct": 10.4896,
+      "lying_pct": 38.4967
      },
      {
-      "evil_pct": 29.7391,
-      "demon_pct": 14.9195,
-      "drunk_pct": 11.7736,
-      "lying_pct": 41.5128
+      "evil_pct": 29.6732,
+      "demon_pct": 14.8808,
+      "drunk_pct": 11.884,
+      "lying_pct": 41.5572
      },
      {
-      "evil_pct": 29.7391,
-      "demon_pct": 14.9195,
-      "drunk_pct": 11.7736,
-      "lying_pct": 41.5128
+      "evil_pct": 29.6732,
+      "demon_pct": 14.8808,
+      "drunk_pct": 11.884,
+      "lying_pct": 41.5572
      }
     ],
     "blame": {
      "2": {
       "2": {
-       "Demon": 0.852,
-       "Assassin": 0.0335,
-       "Gossip": 0.1145
+       "Demon": 0.8373,
+       "Assassin": 0.0369,
+       "Gossip": 0.1258
       },
       "0": {
-       "followed on": 0.5129,
-       "Demon": 0.3391,
-       "Assassin": 0.0335,
-       "Gossip": 0.1145
+       "followed on": 0.5847,
+       "Demon": 0.2526,
+       "Assassin": 0.0369,
+       "Gossip": 0.1258
       }
      }
     }
@@ -4434,75 +4434,75 @@
     }
    },
    "expect": {
-    "valid": 9336,
+    "valid": 8700,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 28.2257,
-      "demon_pct": 14.2044,
-      "drunk_pct": 9.1538,
-      "lying_pct": 37.3795
+      "evil_pct": 29.1516,
+      "demon_pct": 14.6695,
+      "drunk_pct": 9.3354,
+      "lying_pct": 38.487
      },
      {
-      "evil_pct": 28.2257,
-      "demon_pct": 14.2044,
-      "drunk_pct": 9.1538,
-      "lying_pct": 37.3795
+      "evil_pct": 29.1516,
+      "demon_pct": 14.6695,
+      "drunk_pct": 9.3354,
+      "lying_pct": 38.487
      },
      {
-      "evil_pct": 0.9055,
-      "demon_pct": 0.0993,
-      "drunk_pct": 12.108,
-      "lying_pct": 13.0135
+      "evil_pct": 0.9751,
+      "demon_pct": 0.1383,
+      "drunk_pct": 12.4803,
+      "lying_pct": 13.4554
      },
      {
-      "evil_pct": 28.2257,
-      "demon_pct": 14.2044,
-      "drunk_pct": 9.1538,
-      "lying_pct": 37.3795
+      "evil_pct": 29.1516,
+      "demon_pct": 14.6695,
+      "drunk_pct": 9.3354,
+      "lying_pct": 38.487
      },
      {
-      "evil_pct": 0.9055,
-      "demon_pct": 0.0993,
-      "drunk_pct": 12.108,
-      "lying_pct": 13.0135
+      "evil_pct": 0.9751,
+      "demon_pct": 0.1383,
+      "drunk_pct": 12.4803,
+      "lying_pct": 13.4554
      },
      {
-      "evil_pct": 28.2257,
-      "demon_pct": 14.2044,
-      "drunk_pct": 9.1538,
-      "lying_pct": 37.3795
+      "evil_pct": 29.1516,
+      "demon_pct": 14.6695,
+      "drunk_pct": 9.3354,
+      "lying_pct": 38.487
      },
      {
-      "evil_pct": 22.7414,
-      "demon_pct": 11.4499,
-      "drunk_pct": 7.4749,
-      "lying_pct": 30.2162
+      "evil_pct": 17.7063,
+      "demon_pct": 8.9127,
+      "drunk_pct": 5.8384,
+      "lying_pct": 23.5447
      },
      {
-      "evil_pct": 31.2725,
-      "demon_pct": 15.767,
-      "drunk_pct": 10.2548,
-      "lying_pct": 41.5273
+      "evil_pct": 31.8685,
+      "demon_pct": 16.0663,
+      "drunk_pct": 10.2937,
+      "lying_pct": 42.1622
      },
      {
-      "evil_pct": 31.2725,
-      "demon_pct": 15.767,
-      "drunk_pct": 10.2548,
-      "lying_pct": 41.5273
+      "evil_pct": 31.8685,
+      "demon_pct": 16.0663,
+      "drunk_pct": 10.2937,
+      "lying_pct": 42.1622
      }
     ],
     "blame": {
      "2": {
       "2": {
-       "Demon": 0.7493,
-       "Assassin": 0.0516,
-       "Gossip": 0.1991
+       "Demon": 0.6688,
+       "Assassin": 0.0655,
+       "Gossip": 0.2657
       },
       "4": {
-       "Demon": 0.7493,
-       "Assassin": 0.0516,
-       "Gossip": 0.1991
+       "Demon": 0.6688,
+       "Assassin": 0.0655,
+       "Gossip": 0.2657
       }
      }
     }
@@ -5171,70 +5171,70 @@
     }
    },
    "expect": {
-    "valid": 5720,
+    "valid": 7136,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 28.6335,
-      "demon_pct": 14.3167,
-      "drunk_pct": 11.7828,
-      "lying_pct": 40.4163
+      "evil_pct": 26.9151,
+      "demon_pct": 13.4715,
+      "drunk_pct": 10.7709,
+      "lying_pct": 37.686
      },
      {
-      "evil_pct": 28.6335,
-      "demon_pct": 14.3167,
-      "drunk_pct": 11.7828,
-      "lying_pct": 40.4163
+      "evil_pct": 26.9151,
+      "demon_pct": 13.4715,
+      "drunk_pct": 10.7709,
+      "lying_pct": 37.686
      },
      {
-      "evil_pct": 0.0,
+      "evil_pct": 0.2468,
       "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "drunk_pct": 4.1712,
+      "lying_pct": 4.4179
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "evil_pct": 8.7865,
+      "demon_pct": 4.4072,
+      "drunk_pct": 3.3109,
+      "lying_pct": 12.0974
      },
      {
-      "evil_pct": 28.6335,
-      "demon_pct": 14.3167,
-      "drunk_pct": 11.7828,
-      "lying_pct": 40.4163
+      "evil_pct": 26.9151,
+      "demon_pct": 13.4715,
+      "drunk_pct": 10.7709,
+      "lying_pct": 37.686
      },
      {
-      "evil_pct": 28.6335,
-      "demon_pct": 14.3167,
-      "drunk_pct": 11.7828,
-      "lying_pct": 40.4163
+      "evil_pct": 26.9151,
+      "demon_pct": 13.4715,
+      "drunk_pct": 10.7709,
+      "lying_pct": 37.686
      },
      {
-      "evil_pct": 28.6335,
-      "demon_pct": 14.3167,
-      "drunk_pct": 11.7828,
-      "lying_pct": 40.4163
+      "evil_pct": 26.9151,
+      "demon_pct": 13.4715,
+      "drunk_pct": 10.7709,
+      "lying_pct": 37.686
      },
      {
-      "evil_pct": 28.4163,
-      "demon_pct": 14.2081,
-      "drunk_pct": 13.3032,
-      "lying_pct": 41.7195
+      "evil_pct": 28.1955,
+      "demon_pct": 14.1178,
+      "drunk_pct": 12.5517,
+      "lying_pct": 40.7472
      },
      {
-      "evil_pct": 28.4163,
-      "demon_pct": 14.2081,
-      "drunk_pct": 13.3032,
-      "lying_pct": 41.7195
+      "evil_pct": 28.1955,
+      "demon_pct": 14.1178,
+      "drunk_pct": 12.5517,
+      "lying_pct": 40.7472
      }
     ],
     "blame": {
      "2": {
       "2": {
-       "Demon": 0.7915,
-       "Assassin": 0.0452,
-       "Gossip": 0.1634
+       "Demon": 0.7848,
+       "Assassin": 0.0443,
+       "Gossip": 0.1709
       }
      }
     }
@@ -5527,62 +5527,62 @@
     }
    },
    "expect": {
-    "valid": 1512,
+    "valid": 1176,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 23.2143,
-      "demon_pct": 11.6071,
+      "evil_pct": 21.1285,
+      "demon_pct": 10.5642,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 25.8103
      },
      {
-      "evil_pct": 23.2143,
-      "demon_pct": 11.6071,
+      "evil_pct": 21.1285,
+      "demon_pct": 10.5642,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 25.8103
      },
      {
-      "evil_pct": 23.2143,
-      "demon_pct": 11.6071,
+      "evil_pct": 21.1285,
+      "demon_pct": 10.5642,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 25.8103
      },
      {
-      "evil_pct": 23.2143,
-      "demon_pct": 11.6071,
+      "evil_pct": 21.1285,
+      "demon_pct": 10.5642,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 25.8103
      },
      {
-      "evil_pct": 23.2143,
-      "demon_pct": 11.6071,
+      "evil_pct": 21.1285,
+      "demon_pct": 10.5642,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 25.8103
      },
      {
-      "evil_pct": 23.2143,
-      "demon_pct": 11.6071,
+      "evil_pct": 21.1285,
+      "demon_pct": 10.5642,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 25.8103
      },
      {
-      "evil_pct": 23.2143,
-      "demon_pct": 11.6071,
+      "evil_pct": 21.1285,
+      "demon_pct": 10.5642,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 25.8103
      },
      {
-      "evil_pct": 37.5,
-      "demon_pct": 18.75,
+      "evil_pct": 41.1765,
+      "demon_pct": 20.5882,
       "drunk_pct": 0.0,
-      "lying_pct": 37.5
+      "lying_pct": 41.1765
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 10.9244,
+      "demon_pct": 5.4622,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 10.9244
      }
     ]
    }
@@ -5700,62 +5700,62 @@
     }
    },
    "expect": {
-    "valid": 1368,
+    "valid": 1072,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 26.255,
-      "demon_pct": 13.1756,
+      "evil_pct": 23.6619,
+      "demon_pct": 11.8688,
       "drunk_pct": 0.0,
-      "lying_pct": 32.0542
+      "lying_pct": 28.674
      },
      {
-      "evil_pct": 26.255,
-      "demon_pct": 13.1756,
+      "evil_pct": 23.6619,
+      "demon_pct": 11.8688,
       "drunk_pct": 0.0,
-      "lying_pct": 32.0542
+      "lying_pct": 28.674
      },
      {
-      "evil_pct": 0.7501,
+      "evil_pct": 0.6653,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 7.6746
+      "lying_pct": 6.5618
      },
      {
-      "evil_pct": 26.255,
-      "demon_pct": 13.1756,
+      "evil_pct": 23.6619,
+      "demon_pct": 11.8688,
       "drunk_pct": 0.0,
-      "lying_pct": 32.0542
+      "lying_pct": 28.674
      },
      {
-      "evil_pct": 26.255,
-      "demon_pct": 13.1756,
+      "evil_pct": 23.6619,
+      "demon_pct": 11.8688,
       "drunk_pct": 0.0,
-      "lying_pct": 32.0542
+      "lying_pct": 28.674
      },
      {
-      "evil_pct": 26.255,
-      "demon_pct": 13.1756,
+      "evil_pct": 23.6619,
+      "demon_pct": 11.8688,
       "drunk_pct": 0.0,
-      "lying_pct": 32.0542
+      "lying_pct": 28.674
      },
      {
-      "evil_pct": 26.255,
-      "demon_pct": 13.1756,
+      "evil_pct": 23.6619,
+      "demon_pct": 11.8688,
       "drunk_pct": 0.0,
-      "lying_pct": 32.0542
+      "lying_pct": 28.674
      },
      {
-      "evil_pct": 41.7196,
-      "demon_pct": 20.9463,
+      "evil_pct": 45.0786,
+      "demon_pct": 22.6262,
       "drunk_pct": 0.0,
-      "lying_pct": 41.7196
+      "lying_pct": 45.0786
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 12.2845,
+      "demon_pct": 6.1612,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 12.2845
      }
     ],
     "blame": {
@@ -5880,62 +5880,62 @@
     }
    },
    "expect": {
-    "valid": 1008,
+    "valid": 784,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 25.2747,
-      "demon_pct": 14.2857,
+      "evil_pct": 23.1293,
+      "demon_pct": 13.3031,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 26.0771
      },
      {
-      "evil_pct": 25.2747,
-      "demon_pct": 14.2857,
+      "evil_pct": 23.1293,
+      "demon_pct": 13.3031,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 26.0771
      },
      {
-      "evil_pct": 25.2747,
-      "demon_pct": 14.2857,
+      "evil_pct": 23.1293,
+      "demon_pct": 13.3031,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 26.0771
      },
      {
-      "evil_pct": 25.2747,
-      "demon_pct": 14.2857,
+      "evil_pct": 23.1293,
+      "demon_pct": 13.3031,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 26.0771
      },
      {
-      "evil_pct": 25.2747,
-      "demon_pct": 14.2857,
+      "evil_pct": 23.1293,
+      "demon_pct": 13.3031,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 26.0771
      },
      {
-      "evil_pct": 25.2747,
-      "demon_pct": 14.2857,
+      "evil_pct": 23.1293,
+      "demon_pct": 13.3031,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 26.0771
      },
      {
-      "evil_pct": 25.2747,
-      "demon_pct": 14.2857,
+      "evil_pct": 23.1293,
+      "demon_pct": 13.3031,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5714
+      "lying_pct": 26.0771
      },
      {
-      "evil_pct": 23.0769,
+      "evil_pct": 25.9259,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 23.0769
+      "lying_pct": 25.9259
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 12.1693,
+      "demon_pct": 6.8783,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 12.1693
      }
     ]
    }
@@ -6075,80 +6075,80 @@
     }
    },
    "expect": {
-    "valid": 51840,
+    "valid": 41040,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 25.2632,
-      "demon_pct": 8.4211,
+      "evil_pct": 23.7173,
+      "demon_pct": 7.9058,
       "drunk_pct": 0.0,
-      "lying_pct": 30.0
+      "lying_pct": 27.9581
      },
      {
-      "evil_pct": 25.2632,
-      "demon_pct": 8.4211,
+      "evil_pct": 23.7173,
+      "demon_pct": 7.9058,
       "drunk_pct": 0.0,
-      "lying_pct": 30.0
+      "lying_pct": 27.9581
      },
      {
-      "evil_pct": 25.2632,
-      "demon_pct": 8.4211,
+      "evil_pct": 23.7173,
+      "demon_pct": 7.9058,
       "drunk_pct": 0.0,
-      "lying_pct": 30.0
+      "lying_pct": 27.9581
      },
      {
-      "evil_pct": 25.2632,
-      "demon_pct": 8.4211,
+      "evil_pct": 23.7173,
+      "demon_pct": 7.9058,
       "drunk_pct": 0.0,
-      "lying_pct": 30.0
+      "lying_pct": 27.9581
      },
      {
-      "evil_pct": 25.2632,
-      "demon_pct": 8.4211,
+      "evil_pct": 23.7173,
+      "demon_pct": 7.9058,
       "drunk_pct": 0.0,
-      "lying_pct": 30.0
+      "lying_pct": 27.9581
      },
      {
-      "evil_pct": 25.2632,
-      "demon_pct": 8.4211,
+      "evil_pct": 23.7173,
+      "demon_pct": 7.9058,
       "drunk_pct": 0.0,
-      "lying_pct": 30.0
+      "lying_pct": 27.9581
      },
      {
-      "evil_pct": 25.2632,
-      "demon_pct": 8.4211,
+      "evil_pct": 23.7173,
+      "demon_pct": 7.9058,
       "drunk_pct": 0.0,
-      "lying_pct": 30.0
+      "lying_pct": 27.9581
      },
      {
-      "evil_pct": 47.3684,
-      "demon_pct": 15.7895,
+      "evil_pct": 50.2618,
+      "demon_pct": 16.7539,
       "drunk_pct": 0.0,
-      "lying_pct": 47.3684
+      "lying_pct": 50.2618
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 12.5654,
+      "demon_pct": 4.1885,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 12.5654
      },
      {
-      "evil_pct": 25.2632,
-      "demon_pct": 8.4211,
+      "evil_pct": 23.7173,
+      "demon_pct": 7.9058,
       "drunk_pct": 0.0,
-      "lying_pct": 30.0
+      "lying_pct": 27.9581
      },
      {
-      "evil_pct": 25.2632,
-      "demon_pct": 8.4211,
+      "evil_pct": 23.7173,
+      "demon_pct": 7.9058,
       "drunk_pct": 0.0,
-      "lying_pct": 30.0
+      "lying_pct": 27.9581
      },
      {
-      "evil_pct": 25.2632,
-      "demon_pct": 8.4211,
+      "evil_pct": 23.7173,
+      "demon_pct": 7.9058,
       "drunk_pct": 0.0,
-      "lying_pct": 30.0
+      "lying_pct": 27.9581
      }
     ]
    }
@@ -6271,62 +6271,62 @@
     }
    },
    "expect": {
-    "valid": 1032,
+    "valid": 888,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 18.4179,
-      "demon_pct": 9.209,
+      "evil_pct": 15.9276,
+      "demon_pct": 7.9638,
       "drunk_pct": 0.0,
-      "lying_pct": 22.6682
+      "lying_pct": 19.457
      },
      {
-      "evil_pct": 25.6985,
-      "demon_pct": 14.3251,
+      "evil_pct": 26.1086,
+      "demon_pct": 14.7511,
       "drunk_pct": 0.0,
-      "lying_pct": 31.4246
+      "lying_pct": 32.4208
      },
      {
-      "evil_pct": 22.5502,
-      "demon_pct": 10.1928,
+      "evil_pct": 20.2262,
+      "demon_pct": 8.8688,
       "drunk_pct": 0.0,
-      "lying_pct": 28.2763
+      "lying_pct": 26.5385
      },
      {
-      "evil_pct": 23.2389,
-      "demon_pct": 9.8977,
+      "evil_pct": 21.0181,
+      "demon_pct": 8.5294,
       "drunk_pct": 0.0,
-      "lying_pct": 28.965
+      "lying_pct": 27.3303
      },
      {
-      "evil_pct": 23.2389,
-      "demon_pct": 9.8977,
+      "evil_pct": 21.0181,
+      "demon_pct": 8.5294,
       "drunk_pct": 0.0,
-      "lying_pct": 28.965
+      "lying_pct": 27.3303
      },
      {
-      "evil_pct": 22.5502,
-      "demon_pct": 10.1928,
+      "evil_pct": 20.2262,
+      "demon_pct": 8.8688,
       "drunk_pct": 0.0,
-      "lying_pct": 28.2763
+      "lying_pct": 26.5385
      },
      {
-      "evil_pct": 25.6985,
-      "demon_pct": 14.3251,
+      "evil_pct": 24.9774,
+      "demon_pct": 14.1855,
       "drunk_pct": 0.0,
-      "lying_pct": 31.4246
+      "lying_pct": 31.9683
      },
      {
-      "evil_pct": 38.6068,
-      "demon_pct": 21.9599,
+      "evil_pct": 45.2489,
+      "demon_pct": 25.6787,
       "drunk_pct": 0.0,
-      "lying_pct": 38.6068
+      "lying_pct": 45.2489
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 5.2489,
+      "demon_pct": 2.6244,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 5.2489
      }
     ]
    }
@@ -6451,62 +6451,62 @@
     }
    },
    "expect": {
-    "valid": 935,
+    "valid": 807,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 28.8014,
-      "demon_pct": 16.0547,
+      "evil_pct": 29.6566,
+      "demon_pct": 16.4706,
       "drunk_pct": 0.0,
-      "lying_pct": 35.2189
+      "lying_pct": 36.2317
      },
      {
-      "evil_pct": 20.6417,
-      "demon_pct": 10.3209,
+      "evil_pct": 16.817,
+      "demon_pct": 8.4085,
       "drunk_pct": 0.0,
-      "lying_pct": 25.4052
+      "lying_pct": 20.5434
      },
      {
-      "evil_pct": 28.636,
-      "demon_pct": 16.0547,
+      "evil_pct": 28.4324,
+      "demon_pct": 16.7692,
       "drunk_pct": 0.0,
-      "lying_pct": 33.7303
+      "lying_pct": 33.6638
      },
      {
-      "evil_pct": 21.7444,
-      "demon_pct": 10.3209,
+      "evil_pct": 22.0125,
+      "demon_pct": 10.2598,
       "drunk_pct": 0.0,
-      "lying_pct": 26.9214
+      "lying_pct": 27.244
      },
      {
-      "evil_pct": 20.5866,
-      "demon_pct": 9.1631,
+      "evil_pct": 20.7584,
+      "demon_pct": 9.0057,
       "drunk_pct": 0.0,
-      "lying_pct": 25.7636
+      "lying_pct": 25.9898
      },
      {
-      "evil_pct": 20.5866,
-      "demon_pct": 9.1631,
+      "evil_pct": 20.7584,
+      "demon_pct": 9.0057,
       "drunk_pct": 0.0,
-      "lying_pct": 25.7636
+      "lying_pct": 25.9898
      },
      {
-      "evil_pct": 22.0201,
-      "demon_pct": 10.5965,
+      "evil_pct": 22.3111,
+      "demon_pct": 10.5584,
       "drunk_pct": 0.0,
-      "lying_pct": 27.197
+      "lying_pct": 27.5426
      },
      {
-      "evil_pct": 36.9831,
-      "demon_pct": 18.3262,
+      "evil_pct": 37.7128,
+      "demon_pct": 18.6026,
       "drunk_pct": 0.0,
-      "lying_pct": 36.9831
+      "lying_pct": 37.7128
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 1.5408,
+      "demon_pct": 0.9197,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 1.5408
      }
     ]
    }
@@ -6637,62 +6637,62 @@
     }
    },
    "expect": {
-    "valid": 687,
+    "valid": 652,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 22.058,
-      "demon_pct": 12.2957,
+      "evil_pct": 21.7454,
+      "demon_pct": 12.0769,
       "drunk_pct": 0.0,
-      "lying_pct": 26.9729
+      "lying_pct": 26.5665
      },
      {
-      "evil_pct": 22.058,
-      "demon_pct": 12.2957,
+      "evil_pct": 20.2128,
+      "demon_pct": 11.4201,
       "drunk_pct": 0.0,
-      "lying_pct": 26.9729
+      "lying_pct": 25.0996
      },
      {
-      "evil_pct": 30.2115,
-      "demon_pct": 15.3697,
+      "evil_pct": 28.7472,
+      "demon_pct": 15.0633,
       "drunk_pct": 0.0,
-      "lying_pct": 36.0385
+      "lying_pct": 34.79
      },
      {
-      "evil_pct": 24.849,
-      "demon_pct": 11.5906,
+      "evil_pct": 25.2222,
+      "demon_pct": 11.4726,
       "drunk_pct": 0.0,
-      "lying_pct": 30.676
+      "lying_pct": 31.2651
      },
      {
-      "evil_pct": 19.571,
-      "demon_pct": 8.4238,
+      "evil_pct": 20.296,
+      "demon_pct": 8.7358,
       "drunk_pct": 0.0,
-      "lying_pct": 25.398
+      "lying_pct": 26.3388
      },
      {
-      "evil_pct": 19.571,
-      "demon_pct": 8.4238,
+      "evil_pct": 20.296,
+      "demon_pct": 8.7358,
       "drunk_pct": 0.0,
-      "lying_pct": 25.398
+      "lying_pct": 26.3388
      },
      {
-      "evil_pct": 21.45,
-      "demon_pct": 10.725,
+      "evil_pct": 21.7191,
+      "demon_pct": 10.8596,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5437
+      "lying_pct": 29.0756
      },
      {
-      "evil_pct": 40.2314,
-      "demon_pct": 20.8757,
+      "evil_pct": 41.2357,
+      "demon_pct": 21.3732,
       "drunk_pct": 0.0,
-      "lying_pct": 40.2314
+      "lying_pct": 41.2357
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 0.5255,
+      "demon_pct": 0.2627,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 0.5255
      }
     ]
    }
@@ -7343,62 +7343,62 @@
     }
    },
    "expect": {
-    "valid": 888,
+    "valid": 768,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 20.9141,
-      "demon_pct": 9.3029,
+      "evil_pct": 21.1386,
+      "demon_pct": 9.3317,
       "drunk_pct": 0.0,
-      "lying_pct": 25.9003
+      "lying_pct": 26.1881
      },
      {
-      "evil_pct": 22.4146,
-      "demon_pct": 10.8033,
+      "evil_pct": 22.7475,
+      "demon_pct": 10.9406,
       "drunk_pct": 0.0,
-      "lying_pct": 27.4007
+      "lying_pct": 27.797
      },
      {
-      "evil_pct": 28.4164,
-      "demon_pct": 16.8052,
+      "evil_pct": 29.1832,
+      "demon_pct": 17.3762,
       "drunk_pct": 0.0,
-      "lying_pct": 33.4026
+      "lying_pct": 34.2327
      },
      {
-      "evil_pct": 21.6066,
-      "demon_pct": 10.8033,
+      "evil_pct": 17.4257,
+      "demon_pct": 8.7129,
       "drunk_pct": 0.0,
-      "lying_pct": 26.5928
+      "lying_pct": 21.2871
      },
      {
-      "evil_pct": 28.4164,
-      "demon_pct": 16.8052,
+      "evil_pct": 29.1832,
+      "demon_pct": 17.3762,
       "drunk_pct": 0.0,
-      "lying_pct": 33.4026
+      "lying_pct": 34.2327
      },
      {
-      "evil_pct": 22.4146,
-      "demon_pct": 10.8033,
+      "evil_pct": 22.7475,
+      "demon_pct": 10.9406,
       "drunk_pct": 0.0,
-      "lying_pct": 27.4007
+      "lying_pct": 27.797
      },
      {
-      "evil_pct": 20.9141,
-      "demon_pct": 9.3029,
+      "evil_pct": 21.1386,
+      "demon_pct": 9.3317,
       "drunk_pct": 0.0,
-      "lying_pct": 25.9003
+      "lying_pct": 26.1881
      },
      {
-      "evil_pct": 34.903,
-      "demon_pct": 15.374,
+      "evil_pct": 35.1485,
+      "demon_pct": 15.3465,
       "drunk_pct": 0.0,
-      "lying_pct": 34.903
+      "lying_pct": 35.1485
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 1.2871,
+      "demon_pct": 0.6436,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 1.2871
      }
     ]
    }
@@ -7533,62 +7533,62 @@
     ]
    },
    "expect": {
-    "valid": 624,
+    "valid": 408,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 30.436,
-      "demon_pct": 20.2714,
+      "evil_pct": 27.1234,
+      "demon_pct": 18.0689,
       "drunk_pct": 0.0,
-      "lying_pct": 33.728
+      "lying_pct": 30.008
      },
      {
-      "evil_pct": 30.436,
-      "demon_pct": 20.2714,
+      "evil_pct": 27.1234,
+      "demon_pct": 18.0689,
       "drunk_pct": 0.0,
-      "lying_pct": 33.728
+      "lying_pct": 30.008
      },
      {
-      "evil_pct": 30.436,
-      "demon_pct": 20.2714,
+      "evil_pct": 27.1234,
+      "demon_pct": 18.0689,
       "drunk_pct": 0.0,
-      "lying_pct": 33.728
+      "lying_pct": 30.008
      },
      {
-      "evil_pct": 22.4949,
-      "demon_pct": 10.8865,
+      "evil_pct": 23.117,
+      "demon_pct": 14.0625,
       "drunk_pct": 0.0,
-      "lying_pct": 26.22
+      "lying_pct": 26.0016
      },
      {
-      "evil_pct": 18.0191,
-      "demon_pct": 9.0095,
+      "evil_pct": 15.7051,
+      "demon_pct": 7.8526,
       "drunk_pct": 0.0,
-      "lying_pct": 22.1773
+      "lying_pct": 19.0705
      },
      {
-      "evil_pct": 24.3719,
-      "demon_pct": 10.8865,
+      "evil_pct": 25.7212,
+      "demon_pct": 14.0625,
       "drunk_pct": 0.0,
-      "lying_pct": 28.9633
+      "lying_pct": 29.8077
      },
      {
-      "evil_pct": 16.864,
-      "demon_pct": 3.3786,
+      "evil_pct": 15.3045,
+      "demon_pct": 3.6458,
       "drunk_pct": 0.0,
-      "lying_pct": 21.4554
+      "lying_pct": 19.391
      },
      {
-      "evil_pct": 26.942,
-      "demon_pct": 5.0245,
+      "evil_pct": 30.6891,
+      "demon_pct": 5.1282,
       "drunk_pct": 0.0,
-      "lying_pct": 26.942
+      "lying_pct": 30.6891
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 8.0929,
+      "demon_pct": 1.0417,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 8.0929
      }
     ]
    }
@@ -7723,62 +7723,62 @@
     ]
    },
    "expect": {
-    "valid": 776,
+    "valid": 536,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 15.0421,
-      "demon_pct": 1.4119,
+      "evil_pct": 12.3769,
+      "demon_pct": 0.8536,
       "drunk_pct": 0.0,
-      "lying_pct": 22.2102
+      "lying_pct": 17.6953
      },
      {
-      "evil_pct": 15.0421,
-      "demon_pct": 1.4119,
+      "evil_pct": 12.3769,
+      "demon_pct": 0.8536,
       "drunk_pct": 0.0,
-      "lying_pct": 22.2102
+      "lying_pct": 17.6953
      },
      {
-      "evil_pct": 16.807,
-      "demon_pct": 3.1768,
+      "evil_pct": 14.5108,
+      "demon_pct": 2.9875,
       "drunk_pct": 0.0,
-      "lying_pct": 23.975
+      "lying_pct": 19.8293
      },
      {
-      "evil_pct": 31.3332,
-      "demon_pct": 19.0605,
+      "evil_pct": 26.3296,
+      "demon_pct": 14.8063,
       "drunk_pct": 0.0,
-      "lying_pct": 38.0939
+      "lying_pct": 31.6481
      },
      {
-      "evil_pct": 16.9427,
-      "demon_pct": 8.4714,
+      "evil_pct": 12.8693,
+      "demon_pct": 6.4347,
       "drunk_pct": 0.0,
-      "lying_pct": 20.8526
+      "lying_pct": 15.6271
      },
      {
-      "evil_pct": 29.9756,
-      "demon_pct": 19.0605,
+      "evil_pct": 24.6881,
+      "demon_pct": 14.8063,
       "drunk_pct": 0.0,
-      "lying_pct": 36.3291
+      "lying_pct": 29.5141
      },
      {
-      "evil_pct": 29.9756,
-      "demon_pct": 19.0605,
+      "evil_pct": 24.6881,
+      "demon_pct": 14.8063,
       "drunk_pct": 0.0,
-      "lying_pct": 36.3291
+      "lying_pct": 29.5141
      },
      {
-      "evil_pct": 44.8819,
-      "demon_pct": 28.3465,
+      "evil_pct": 49.7702,
+      "demon_pct": 30.7945,
       "drunk_pct": 0.0,
-      "lying_pct": 44.8819
+      "lying_pct": 49.7702
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 22.39,
+      "demon_pct": 13.6573,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 22.39
      }
     ]
    }
@@ -7907,62 +7907,62 @@
     ]
    },
    "expect": {
-    "valid": 492,
+    "valid": 340,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 17.1966,
-      "demon_pct": 9.7179,
+      "evil_pct": 16.4336,
+      "demon_pct": 8.2168,
       "drunk_pct": 0.0,
-      "lying_pct": 21.6301
+      "lying_pct": 20.6294
      },
      {
-      "evil_pct": 14.2857,
-      "demon_pct": 6.807,
+      "evil_pct": 12.6457,
+      "demon_pct": 4.4289,
       "drunk_pct": 0.0,
-      "lying_pct": 18.7192
+      "lying_pct": 16.8415
      },
      {
-      "evil_pct": 33.7662,
-      "demon_pct": 2.3287,
+      "evil_pct": 27.7972,
+      "demon_pct": 1.5152,
       "drunk_pct": 0.0,
-      "lying_pct": 36.8562
+      "lying_pct": 31.1189
      },
      {
-      "evil_pct": 17.1966,
-      "demon_pct": 9.7179,
+      "evil_pct": 16.4336,
+      "demon_pct": 8.2168,
       "drunk_pct": 0.0,
-      "lying_pct": 21.6301
+      "lying_pct": 20.6294
      },
      {
-      "evil_pct": 26.601,
-      "demon_pct": 19.1223,
+      "evil_pct": 28.6713,
+      "demon_pct": 20.4545,
       "drunk_pct": 0.0,
-      "lying_pct": 31.0345
+      "lying_pct": 32.8671
      },
      {
-      "evil_pct": 27.9445,
-      "demon_pct": 13.9722,
+      "evil_pct": 22.8438,
+      "demon_pct": 11.4219,
       "drunk_pct": 0.0,
-      "lying_pct": 34.3932
+      "lying_pct": 27.7389
      },
      {
-      "evil_pct": 29.288,
-      "demon_pct": 19.1223,
+      "evil_pct": 32.1678,
+      "demon_pct": 20.4545,
       "drunk_pct": 0.0,
-      "lying_pct": 35.7367
+      "lying_pct": 38.986
      },
      {
-      "evil_pct": 33.7215,
-      "demon_pct": 19.2118,
+      "evil_pct": 37.0629,
+      "demon_pct": 20.8625,
       "drunk_pct": 0.0,
-      "lying_pct": 33.7215
+      "lying_pct": 37.0629
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 5.9441,
+      "demon_pct": 4.4289,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 5.9441
      }
     ]
    }
@@ -8090,62 +8090,62 @@
     ]
    },
    "expect": {
-    "valid": 296,
+    "valid": 216,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 21.2459,
-      "demon_pct": 8.1477,
+      "evil_pct": 21.3543,
+      "demon_pct": 7.9664,
       "drunk_pct": 0.0,
-      "lying_pct": 25.9488
+      "lying_pct": 26.3665
      },
      {
-      "evil_pct": 48.0611,
-      "demon_pct": 34.9629,
+      "evil_pct": 50.1217,
+      "demon_pct": 36.7338,
       "drunk_pct": 0.0,
-      "lying_pct": 52.764
+      "lying_pct": 55.1339
      },
      {
-      "evil_pct": 1.6089,
+      "evil_pct": 1.0843,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 16.4604
+      "lying_pct": 10.3784
      },
      {
-      "evil_pct": 46.514,
-      "demon_pct": 34.9629,
+      "evil_pct": 48.462,
+      "demon_pct": 36.7338,
       "drunk_pct": 0.0,
-      "lying_pct": 49.67
+      "lying_pct": 51.8146
      },
      {
-      "evil_pct": 19.6988,
-      "demon_pct": 8.1477,
+      "evil_pct": 19.6946,
+      "demon_pct": 7.9664,
       "drunk_pct": 0.0,
-      "lying_pct": 22.8548
+      "lying_pct": 23.0471
      },
      {
-      "evil_pct": 12.995,
-      "demon_pct": 1.4439,
+      "evil_pct": 12.5028,
+      "demon_pct": 0.7745,
       "drunk_pct": 0.0,
-      "lying_pct": 16.151
+      "lying_pct": 15.8553
      },
      {
-      "evil_pct": 12.995,
-      "demon_pct": 1.4439,
+      "evil_pct": 12.5028,
+      "demon_pct": 0.7745,
       "drunk_pct": 0.0,
-      "lying_pct": 16.151
+      "lying_pct": 15.8553
      },
      {
-      "evil_pct": 36.8812,
-      "demon_pct": 10.8911,
+      "evil_pct": 32.8391,
+      "demon_pct": 8.2762,
       "drunk_pct": 0.0,
-      "lying_pct": 36.8812
+      "lying_pct": 32.8391
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 1.4384,
+      "demon_pct": 0.7745,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 1.4384
      }
     ],
     "blame": {
@@ -8277,62 +8277,62 @@
     }
    },
    "expect": {
-    "valid": 1032,
+    "valid": 808,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 19.66,
-      "demon_pct": 8.8528,
+      "evil_pct": 18.9567,
+      "demon_pct": 8.3685,
       "drunk_pct": 0.0,
-      "lying_pct": 25.64
+      "lying_pct": 23.485
      },
      {
-      "evil_pct": 20.9302,
-      "demon_pct": 10.1231,
+      "evil_pct": 20.3996,
+      "demon_pct": 9.8113,
       "drunk_pct": 0.0,
-      "lying_pct": 26.9103
+      "lying_pct": 24.9279
      },
      {
-      "evil_pct": 27.477,
-      "demon_pct": 14.2271,
+      "evil_pct": 24.5061,
+      "demon_pct": 12.808,
       "drunk_pct": 0.0,
-      "lying_pct": 33.164
+      "lying_pct": 29.3674
      },
      {
-      "evil_pct": 18.292,
-      "demon_pct": 9.146,
+      "evil_pct": 15.6271,
+      "demon_pct": 7.8135,
       "drunk_pct": 0.0,
-      "lying_pct": 22.5132
+      "lying_pct": 19.0899
      },
      {
-      "evil_pct": 26.4999,
-      "demon_pct": 14.2271,
+      "evil_pct": 23.3962,
+      "demon_pct": 12.808,
       "drunk_pct": 0.0,
-      "lying_pct": 31.8937
+      "lying_pct": 27.9245
      },
      {
-      "evil_pct": 24.5456,
-      "demon_pct": 12.2728,
+      "evil_pct": 21.1765,
+      "demon_pct": 10.5882,
       "drunk_pct": 0.0,
-      "lying_pct": 29.9394
+      "lying_pct": 25.7048
      },
      {
-      "evil_pct": 24.5456,
-      "demon_pct": 12.2728,
+      "evil_pct": 21.1765,
+      "demon_pct": 10.5882,
       "drunk_pct": 0.0,
-      "lying_pct": 29.9394
+      "lying_pct": 25.7048
      },
      {
-      "evil_pct": 38.0496,
-      "demon_pct": 18.8782,
+      "evil_pct": 40.7325,
+      "demon_pct": 20.1998,
       "drunk_pct": 0.0,
-      "lying_pct": 38.0496
+      "lying_pct": 40.7325
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 14.0289,
+      "demon_pct": 7.0144,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 14.0289
      }
     ]
    }
@@ -8457,62 +8457,62 @@
     }
    },
    "expect": {
-    "valid": 1008,
+    "valid": 776,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 26.2435,
-      "demon_pct": 13.1217,
+      "evil_pct": 22.8503,
+      "demon_pct": 11.4251,
       "drunk_pct": 0.0,
-      "lying_pct": 31.0045
+      "lying_pct": 27.7365
      },
      {
-      "evil_pct": 26.2435,
-      "demon_pct": 13.1217,
+      "evil_pct": 22.8503,
+      "demon_pct": 11.4251,
       "drunk_pct": 0.0,
-      "lying_pct": 31.0045
+      "lying_pct": 27.7365
      },
      {
-      "evil_pct": 24.7919,
-      "demon_pct": 14.0894,
+      "evil_pct": 24.6467,
+      "demon_pct": 14.4192,
       "drunk_pct": 0.0,
-      "lying_pct": 29.8432
+      "lying_pct": 29.1737
      },
      {
-      "evil_pct": 18.115,
-      "demon_pct": 9.0575,
+      "evil_pct": 16.8623,
+      "demon_pct": 8.4311,
       "drunk_pct": 0.0,
-      "lying_pct": 22.2953
+      "lying_pct": 20.5988
      },
      {
-      "evil_pct": 25.7596,
-      "demon_pct": 14.0894,
+      "evil_pct": 25.8443,
+      "demon_pct": 14.4192,
       "drunk_pct": 0.0,
-      "lying_pct": 31.1012
+      "lying_pct": 30.7305
      },
      {
-      "evil_pct": 22.6631,
-      "demon_pct": 10.9928,
+      "evil_pct": 22.012,
+      "demon_pct": 10.5868,
       "drunk_pct": 0.0,
-      "lying_pct": 28.0046
+      "lying_pct": 26.8982
      },
      {
-      "evil_pct": 21.4051,
-      "demon_pct": 9.7349,
+      "evil_pct": 20.4551,
+      "demon_pct": 9.0299,
       "drunk_pct": 0.0,
-      "lying_pct": 26.7467
+      "lying_pct": 25.3413
      },
      {
-      "evil_pct": 34.7784,
-      "demon_pct": 15.7925,
+      "evil_pct": 38.4431,
+      "demon_pct": 17.2455,
       "drunk_pct": 0.0,
-      "lying_pct": 34.7784
+      "lying_pct": 38.4431
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 6.0359,
+      "demon_pct": 3.018,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 6.0359
      }
     ]
    }
@@ -8648,62 +8648,62 @@
     ]
    },
    "expect": {
-    "valid": 608,
+    "valid": 440,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 6.9199,
-      "demon_pct": 1.7639,
+      "evil_pct": 5.8104,
+      "demon_pct": 0.9939,
       "drunk_pct": 0.0,
-      "lying_pct": 8.7517
+      "lying_pct": 7.4159
      },
      {
-      "evil_pct": 6.9199,
-      "demon_pct": 1.7639,
+      "evil_pct": 5.8104,
+      "demon_pct": 0.9939,
       "drunk_pct": 0.0,
-      "lying_pct": 8.7517
+      "lying_pct": 7.4159
      },
      {
-      "evil_pct": 29.9864,
-      "demon_pct": 14.9932,
+      "evil_pct": 24.5413,
+      "demon_pct": 12.2706,
       "drunk_pct": 0.0,
-      "lying_pct": 36.9064
+      "lying_pct": 29.5872
      },
      {
-      "evil_pct": 34.3962,
-      "demon_pct": 19.403,
+      "evil_pct": 29.5107,
+      "demon_pct": 17.2401,
       "drunk_pct": 0.0,
-      "lying_pct": 41.3161
+      "lying_pct": 34.5566
      },
      {
-      "evil_pct": 21.1669,
-      "demon_pct": 10.5834,
+      "evil_pct": 14.9847,
+      "demon_pct": 7.4924,
       "drunk_pct": 0.0,
-      "lying_pct": 26.0516
+      "lying_pct": 18.1957
      },
      {
-      "evil_pct": 34.3962,
-      "demon_pct": 19.403,
+      "evil_pct": 29.5107,
+      "demon_pct": 17.2401,
       "drunk_pct": 0.0,
-      "lying_pct": 41.3161
+      "lying_pct": 34.5566
      },
      {
-      "evil_pct": 29.9864,
-      "demon_pct": 14.9932,
+      "evil_pct": 24.5413,
+      "demon_pct": 12.2706,
       "drunk_pct": 0.0,
-      "lying_pct": 36.9064
+      "lying_pct": 29.5872
      },
      {
-      "evil_pct": 36.228,
-      "demon_pct": 17.0963,
+      "evil_pct": 43.4251,
+      "demon_pct": 20.5657,
       "drunk_pct": 0.0,
-      "lying_pct": 36.228
+      "lying_pct": 43.4251
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 21.8654,
+      "demon_pct": 10.9327,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 21.8654
      }
     ]
    }
@@ -8834,62 +8834,62 @@
     }
    },
    "expect": {
-    "valid": 1512,
+    "valid": 1176,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 27.5424,
-      "demon_pct": 13.7712,
+      "evil_pct": 24.688,
+      "demon_pct": 12.344,
       "drunk_pct": 0.0,
-      "lying_pct": 33.8983
+      "lying_pct": 30.1098
      },
      {
-      "evil_pct": 27.5424,
-      "demon_pct": 13.7712,
+      "evil_pct": 24.688,
+      "demon_pct": 12.344,
       "drunk_pct": 0.0,
-      "lying_pct": 33.8983
+      "lying_pct": 30.1098
      },
      {
-      "evil_pct": 27.5424,
-      "demon_pct": 13.7712,
+      "evil_pct": 24.688,
+      "demon_pct": 12.344,
       "drunk_pct": 0.0,
-      "lying_pct": 33.8983
+      "lying_pct": 30.1098
      },
      {
-      "evil_pct": 27.5424,
-      "demon_pct": 13.7712,
+      "evil_pct": 24.688,
+      "demon_pct": 12.344,
       "drunk_pct": 0.0,
-      "lying_pct": 33.8983
+      "lying_pct": 30.1098
      },
      {
-      "evil_pct": 27.5424,
-      "demon_pct": 13.7712,
+      "evil_pct": 24.688,
+      "demon_pct": 12.344,
       "drunk_pct": 0.0,
-      "lying_pct": 33.8983
+      "lying_pct": 30.1098
      },
      {
-      "evil_pct": 12.3941,
-      "demon_pct": 6.197,
+      "evil_pct": 10.9391,
+      "demon_pct": 5.4695,
       "drunk_pct": 0.0,
-      "lying_pct": 15.2542
+      "lying_pct": 13.3533
      },
      {
-      "evil_pct": 12.3941,
-      "demon_pct": 6.197,
+      "evil_pct": 10.9391,
+      "demon_pct": 5.4695,
       "drunk_pct": 0.0,
-      "lying_pct": 15.2542
+      "lying_pct": 13.3533
      },
      {
-      "evil_pct": 37.5,
-      "demon_pct": 18.75,
+      "evil_pct": 41.8264,
+      "demon_pct": 20.9132,
       "drunk_pct": 0.0,
-      "lying_pct": 37.5
+      "lying_pct": 41.8264
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 12.8555,
+      "demon_pct": 6.4277,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 12.8555
      }
     ]
    }
@@ -9040,62 +9040,62 @@
     }
    },
    "expect": {
-    "valid": 682,
+    "valid": 496,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 15.8745,
-      "demon_pct": 4.6823,
+      "evil_pct": 17.1957,
+      "demon_pct": 6.9511,
       "drunk_pct": 0.0,
-      "lying_pct": 21.8685
+      "lying_pct": 22.2679
      },
      {
-      "evil_pct": 12.7108,
-      "demon_pct": 1.5186,
+      "evil_pct": 13.1179,
+      "demon_pct": 2.8733,
       "drunk_pct": 0.0,
-      "lying_pct": 18.7048
+      "lying_pct": 18.1901
      },
      {
-      "evil_pct": 20.8634,
-      "demon_pct": 1.5186,
+      "evil_pct": 19.7051,
+      "demon_pct": 6.01,
       "drunk_pct": 0.0,
-      "lying_pct": 26.1274
+      "lying_pct": 24.3068
      },
      {
-      "evil_pct": 24.2097,
-      "demon_pct": 14.2343,
+      "evil_pct": 20.4893,
+      "demon_pct": 11.0289,
       "drunk_pct": 0.0,
-      "lying_pct": 29.8387
+      "lying_pct": 25.3262
      },
      {
-      "evil_pct": 32.484,
-      "demon_pct": 22.5086,
+      "evil_pct": 31.1543,
+      "demon_pct": 21.6939,
       "drunk_pct": 0.0,
-      "lying_pct": 38.113
+      "lying_pct": 35.9912
      },
      {
-      "evil_pct": 18.223,
-      "demon_pct": 9.1115,
+      "evil_pct": 17.6662,
+      "demon_pct": 8.8331,
       "drunk_pct": 0.0,
-      "lying_pct": 22.4283
+      "lying_pct": 21.5809
      },
      {
-      "evil_pct": 35.2827,
-      "demon_pct": 22.5086,
+      "evil_pct": 34.7616,
+      "demon_pct": 21.6939,
       "drunk_pct": 0.0,
-      "lying_pct": 42.9194
+      "lying_pct": 42.1863
      },
      {
-      "evil_pct": 40.3519,
-      "demon_pct": 23.9176,
+      "evil_pct": 40.6838,
+      "demon_pct": 20.2635,
       "drunk_pct": 0.0,
-      "lying_pct": 40.3519
+      "lying_pct": 40.6838
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 5.2258,
+      "demon_pct": 0.6524,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 5.2258
      }
     ]
    }
@@ -9253,62 +9253,62 @@
     }
    },
    "expect": {
-    "valid": 832,
+    "valid": 688,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 27.6105,
-      "demon_pct": 12.891,
+      "evil_pct": 24.2405,
+      "demon_pct": 11.1831,
       "drunk_pct": 0.0,
-      "lying_pct": 33.8556
+      "lying_pct": 29.4452
      },
      {
-      "evil_pct": 25.2333,
-      "demon_pct": 10.5138,
+      "evil_pct": 21.8039,
+      "demon_pct": 8.7464,
       "drunk_pct": 0.0,
-      "lying_pct": 31.4784
+      "lying_pct": 27.0085
      },
      {
-      "evil_pct": 10.6045,
-      "demon_pct": 4.1136,
+      "evil_pct": 6.8091,
+      "demon_pct": 2.1862,
       "drunk_pct": 0.0,
-      "lying_pct": 17.9467
+      "lying_pct": 13.1384
      },
      {
-      "evil_pct": 30.1706,
-      "demon_pct": 15.0853,
+      "evil_pct": 28.7389,
+      "demon_pct": 14.3695,
       "drunk_pct": 0.0,
-      "lying_pct": 35.3185
+      "lying_pct": 33.9436
      },
      {
-      "evil_pct": 22.4904,
-      "demon_pct": 14.171,
+      "evil_pct": 18.9924,
+      "demon_pct": 12.4951,
       "drunk_pct": 0.0,
-      "lying_pct": 29.2841
+      "lying_pct": 24.7593
      },
      {
-      "evil_pct": 5.477,
-      "demon_pct": 2.7385,
+      "evil_pct": 4.2225,
+      "demon_pct": 2.1113,
       "drunk_pct": 0.0,
-      "lying_pct": 6.741
+      "lying_pct": 5.1582
      },
      {
-      "evil_pct": 37.485,
-      "demon_pct": 20.5711,
+      "evil_pct": 36.2363,
+      "demon_pct": 19.9925,
       "drunk_pct": 0.0,
-      "lying_pct": 45.3758
+      "lying_pct": 44.2525
      },
      {
-      "evil_pct": 40.9286,
-      "demon_pct": 19.9157,
+      "evil_pct": 44.3995,
+      "demon_pct": 21.6374,
       "drunk_pct": 0.0,
-      "lying_pct": 40.9286
+      "lying_pct": 44.3995
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 14.5569,
+      "demon_pct": 7.2785,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 14.5569
      }
     ]
    }
@@ -9434,62 +9434,62 @@
     }
    },
    "expect": {
-    "valid": 164,
+    "valid": 152,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 19.9362,
-      "demon_pct": 15.949,
+      "evil_pct": 22.6449,
+      "demon_pct": 18.1159,
       "drunk_pct": 0.0,
-      "lying_pct": 21.1324
+      "lying_pct": 24.0036
      },
      {
-      "evil_pct": 3.9872,
+      "evil_pct": 4.529,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 5.1834
+      "lying_pct": 5.8877
      },
      {
-      "evil_pct": 3.9872,
+      "evil_pct": 4.529,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 5.1834
+      "lying_pct": 5.8877
      },
      {
-      "evil_pct": 0.638,
+      "evil_pct": 0.7246,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 3.5088
+      "lying_pct": 3.9855
      },
      {
-      "evil_pct": 3.9872,
+      "evil_pct": 4.529,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 5.1834
+      "lying_pct": 5.8877
      },
      {
-      "evil_pct": 33.0941,
-      "demon_pct": 12.5997,
+      "evil_pct": 33.0616,
+      "demon_pct": 14.3116,
       "drunk_pct": 0.0,
-      "lying_pct": 33.0144
+      "lying_pct": 32.971
      },
      {
-      "evil_pct": 33.0941,
-      "demon_pct": 12.5997,
+      "evil_pct": 33.0616,
+      "demon_pct": 14.3116,
       "drunk_pct": 0.0,
-      "lying_pct": 33.0144
+      "lying_pct": 32.971
      },
      {
-      "evil_pct": 39.7927,
-      "demon_pct": 13.5566,
+      "evil_pct": 40.6703,
+      "demon_pct": 15.3986,
       "drunk_pct": 0.0,
-      "lying_pct": 39.7129
+      "lying_pct": 40.5797
      },
      {
-      "evil_pct": 61.8022,
-      "demon_pct": 45.2951,
+      "evil_pct": 56.6123,
+      "demon_pct": 37.8623,
       "drunk_pct": 0.0,
-      "lying_pct": 61.7225
+      "lying_pct": 56.5217
      }
     ],
     "blame": {
@@ -9621,62 +9621,62 @@
     }
    },
    "expect": {
-    "valid": 364,
+    "valid": 328,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 0.0867,
-      "demon_pct": 0.0454,
+      "evil_pct": 0.0991,
+      "demon_pct": 0.0519,
       "drunk_pct": 0.0,
-      "lying_pct": 2.5846
+      "lying_pct": 2.9542
      },
      {
-      "evil_pct": 12.4732,
-      "demon_pct": 6.2386,
+      "evil_pct": 14.2567,
+      "demon_pct": 7.1307,
       "drunk_pct": 0.0,
-      "lying_pct": 14.9711
+      "lying_pct": 17.1118
      },
      {
-      "evil_pct": 12.4732,
-      "demon_pct": 6.2386,
+      "evil_pct": 14.2567,
+      "demon_pct": 7.1307,
       "drunk_pct": 0.0,
-      "lying_pct": 14.9711
+      "lying_pct": 17.1118
      },
      {
-      "evil_pct": 12.4732,
-      "demon_pct": 6.2386,
+      "evil_pct": 14.2567,
+      "demon_pct": 7.1307,
       "drunk_pct": 0.0,
-      "lying_pct": 14.9711
+      "lying_pct": 17.1118
      },
      {
-      "evil_pct": 12.4732,
-      "demon_pct": 6.2386,
+      "evil_pct": 14.2567,
+      "demon_pct": 7.1307,
       "drunk_pct": 0.0,
-      "lying_pct": 14.9711
+      "lying_pct": 17.1118
      },
      {
-      "evil_pct": 0.9083,
+      "evil_pct": 0.8966,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.9083
+      "lying_pct": 0.8966
      },
      {
-      "evil_pct": 47.6947,
-      "demon_pct": 23.954,
+      "evil_pct": 45.0291,
+      "demon_pct": 22.6129,
       "drunk_pct": 0.0,
-      "lying_pct": 47.6053
+      "lying_pct": 44.9269
      },
      {
-      "evil_pct": 53.9912,
-      "demon_pct": 27.0919,
+      "evil_pct": 52.2259,
+      "demon_pct": 26.1995,
       "drunk_pct": 0.0,
-      "lying_pct": 53.9224
+      "lying_pct": 52.1472
      },
      {
-      "evil_pct": 47.6947,
-      "demon_pct": 23.954,
+      "evil_pct": 45.0291,
+      "demon_pct": 22.6129,
       "drunk_pct": 0.0,
-      "lying_pct": 47.6053
+      "lying_pct": 44.9269
      }
     ],
     "blame": {
@@ -9801,62 +9801,62 @@
     }
    },
    "expect": {
-    "valid": 388,
+    "valid": 352,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 11.0799,
-      "demon_pct": 5.5445,
+      "evil_pct": 12.4719,
+      "demon_pct": 6.2411,
       "drunk_pct": 0.0,
-      "lying_pct": 13.3031
+      "lying_pct": 14.9745
      },
      {
-      "evil_pct": 11.0799,
-      "demon_pct": 5.5445,
+      "evil_pct": 12.4719,
+      "demon_pct": 6.2411,
       "drunk_pct": 0.0,
-      "lying_pct": 13.3031
+      "lying_pct": 14.9745
      },
      {
-      "evil_pct": 11.0799,
-      "demon_pct": 5.5445,
+      "evil_pct": 12.4719,
+      "demon_pct": 6.2411,
       "drunk_pct": 0.0,
-      "lying_pct": 13.3031
+      "lying_pct": 14.9745
      },
      {
-      "evil_pct": 11.0799,
-      "demon_pct": 5.5445,
+      "evil_pct": 12.4719,
+      "demon_pct": 6.2411,
       "drunk_pct": 0.0,
-      "lying_pct": 13.3031
+      "lying_pct": 14.9745
      },
      {
-      "evil_pct": 11.0799,
-      "demon_pct": 5.5445,
+      "evil_pct": 12.4719,
+      "demon_pct": 6.2411,
       "drunk_pct": 0.0,
-      "lying_pct": 13.3031
+      "lying_pct": 14.9745
      },
      {
-      "evil_pct": 45.8409,
-      "demon_pct": 23.1549,
+      "evil_pct": 43.3265,
+      "demon_pct": 21.8761,
       "drunk_pct": 0.0,
-      "lying_pct": 45.6443
+      "lying_pct": 43.1052
      },
      {
-      "evil_pct": 45.8409,
-      "demon_pct": 23.1549,
+      "evil_pct": 43.3265,
+      "demon_pct": 21.8761,
       "drunk_pct": 0.0,
-      "lying_pct": 45.6443
+      "lying_pct": 43.1052
      },
      {
-      "evil_pct": 51.5124,
-      "demon_pct": 25.9679,
+      "evil_pct": 49.7106,
+      "demon_pct": 25.0426,
       "drunk_pct": 0.0,
-      "lying_pct": 51.3612
+      "lying_pct": 49.5403
      },
      {
-      "evil_pct": 1.9964,
+      "evil_pct": 1.9408,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 1.9964
+      "lying_pct": 1.9408
      }
     ],
     "blame": {
@@ -9986,62 +9986,62 @@
     ]
    },
    "expect": {
-    "valid": 320,
+    "valid": 284,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 1.2844,
+      "evil_pct": 1.5385,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 4.0367
+      "lying_pct": 4.8352
      },
      {
-      "evil_pct": 12.8794,
-      "demon_pct": 7.6793,
+      "evil_pct": 15.427,
+      "demon_pct": 9.0539,
       "drunk_pct": 0.0,
-      "lying_pct": 15.5963
+      "lying_pct": 18.6813
      },
      {
-      "evil_pct": 12.8794,
-      "demon_pct": 7.6793,
+      "evil_pct": 15.427,
+      "demon_pct": 9.0539,
       "drunk_pct": 0.0,
-      "lying_pct": 15.5963
+      "lying_pct": 18.6813
      },
      {
-      "evil_pct": 12.8794,
-      "demon_pct": 7.6793,
+      "evil_pct": 15.427,
+      "demon_pct": 9.0539,
       "drunk_pct": 0.0,
-      "lying_pct": 15.5963
+      "lying_pct": 18.6813
      },
      {
-      "evil_pct": 12.8794,
-      "demon_pct": 7.6793,
+      "evil_pct": 15.427,
+      "demon_pct": 9.0539,
       "drunk_pct": 0.0,
-      "lying_pct": 15.5963
+      "lying_pct": 18.6813
      },
      {
-      "evil_pct": 40.1083,
-      "demon_pct": 21.4584,
+      "evil_pct": 37.0528,
+      "demon_pct": 19.302,
       "drunk_pct": 0.0,
-      "lying_pct": 39.4495
+      "lying_pct": 36.2637
      },
      {
-      "evil_pct": 21.2844,
+      "evil_pct": 18.9011,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 21.2844
+      "lying_pct": 18.9011
      },
      {
-      "evil_pct": 48.3045,
-      "demon_pct": 26.6414,
+      "evil_pct": 46.8703,
+      "demon_pct": 25.5102,
       "drunk_pct": 0.0,
-      "lying_pct": 47.7064
+      "lying_pct": 46.1538
      },
      {
-      "evil_pct": 39.5579,
-      "demon_pct": 21.1832,
+      "evil_pct": 36.3935,
+      "demon_pct": 18.9723,
       "drunk_pct": 0.0,
-      "lying_pct": 38.8991
+      "lying_pct": 35.6044
      }
     ],
     "blame": {
@@ -10166,62 +10166,62 @@
     }
    },
    "expect": {
-    "valid": 102,
+    "valid": 90,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 9.8765,
-      "demon_pct": 4.9383,
+      "evil_pct": 11.5942,
+      "demon_pct": 5.7971,
       "drunk_pct": 0.0,
-      "lying_pct": 12.0988
+      "lying_pct": 14.2029
      },
      {
-      "evil_pct": 9.8765,
-      "demon_pct": 4.9383,
+      "evil_pct": 11.5942,
+      "demon_pct": 5.7971,
       "drunk_pct": 0.0,
-      "lying_pct": 12.0988
+      "lying_pct": 14.2029
      },
      {
-      "evil_pct": 4.9383,
+      "evil_pct": 5.7971,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 7.1605
+      "lying_pct": 8.4058
      },
      {
-      "evil_pct": 9.8765,
-      "demon_pct": 4.9383,
+      "evil_pct": 11.5942,
+      "demon_pct": 5.7971,
       "drunk_pct": 0.0,
-      "lying_pct": 12.0988
+      "lying_pct": 14.2029
      },
      {
-      "evil_pct": 9.8765,
-      "demon_pct": 4.9383,
+      "evil_pct": 11.5942,
+      "demon_pct": 5.7971,
       "drunk_pct": 0.0,
-      "lying_pct": 12.0988
+      "lying_pct": 14.2029
      },
      {
-      "evil_pct": 37.037,
-      "demon_pct": 19.1358,
+      "evil_pct": 34.7826,
+      "demon_pct": 18.1159,
       "drunk_pct": 0.0,
-      "lying_pct": 37.037
+      "lying_pct": 34.7826
      },
      {
-      "evil_pct": 37.037,
-      "demon_pct": 19.1358,
+      "evil_pct": 34.7826,
+      "demon_pct": 18.1159,
       "drunk_pct": 0.0,
-      "lying_pct": 37.037
+      "lying_pct": 34.7826
      },
      {
-      "evil_pct": 44.4444,
-      "demon_pct": 22.8395,
+      "evil_pct": 43.4783,
+      "demon_pct": 22.4638,
       "drunk_pct": 0.0,
-      "lying_pct": 44.4444
+      "lying_pct": 43.4783
      },
      {
-      "evil_pct": 37.037,
-      "demon_pct": 19.1358,
+      "evil_pct": 34.7826,
+      "demon_pct": 18.1159,
       "drunk_pct": 0.0,
-      "lying_pct": 37.037
+      "lying_pct": 34.7826
      }
     ]
    }
@@ -10339,62 +10339,62 @@
     }
    },
    "expect": {
-    "valid": 102,
+    "valid": 90,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 9.8765,
-      "demon_pct": 4.9383,
+      "evil_pct": 11.5942,
+      "demon_pct": 5.7971,
       "drunk_pct": 0.0,
-      "lying_pct": 12.0988
+      "lying_pct": 14.2029
      },
      {
-      "evil_pct": 9.8765,
-      "demon_pct": 4.9383,
+      "evil_pct": 11.5942,
+      "demon_pct": 5.7971,
       "drunk_pct": 0.0,
-      "lying_pct": 12.0988
+      "lying_pct": 14.2029
      },
      {
-      "evil_pct": 4.9383,
+      "evil_pct": 5.7971,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 7.1605
+      "lying_pct": 8.4058
      },
      {
-      "evil_pct": 9.8765,
-      "demon_pct": 4.9383,
+      "evil_pct": 11.5942,
+      "demon_pct": 5.7971,
       "drunk_pct": 0.0,
-      "lying_pct": 12.0988
+      "lying_pct": 14.2029
      },
      {
-      "evil_pct": 9.8765,
-      "demon_pct": 4.9383,
+      "evil_pct": 11.5942,
+      "demon_pct": 5.7971,
       "drunk_pct": 0.0,
-      "lying_pct": 12.0988
+      "lying_pct": 14.2029
      },
      {
-      "evil_pct": 37.037,
-      "demon_pct": 19.1358,
+      "evil_pct": 34.7826,
+      "demon_pct": 18.1159,
       "drunk_pct": 0.0,
-      "lying_pct": 37.037
+      "lying_pct": 34.7826
      },
      {
-      "evil_pct": 37.037,
-      "demon_pct": 19.1358,
+      "evil_pct": 34.7826,
+      "demon_pct": 18.1159,
       "drunk_pct": 0.0,
-      "lying_pct": 37.037
+      "lying_pct": 34.7826
      },
      {
-      "evil_pct": 44.4444,
-      "demon_pct": 22.8395,
+      "evil_pct": 43.4783,
+      "demon_pct": 22.4638,
       "drunk_pct": 0.0,
-      "lying_pct": 44.4444
+      "lying_pct": 43.4783
      },
      {
-      "evil_pct": 37.037,
-      "demon_pct": 19.1358,
+      "evil_pct": 34.7826,
+      "demon_pct": 18.1159,
       "drunk_pct": 0.0,
-      "lying_pct": 37.037
+      "lying_pct": 34.7826
      }
     ]
    }
@@ -10518,62 +10518,62 @@
     }
    },
    "expect": {
-    "valid": 343,
+    "valid": 304,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 8.7531,
-      "demon_pct": 4.7894,
+      "evil_pct": 10.2218,
+      "demon_pct": 5.5931,
       "drunk_pct": 0.0,
-      "lying_pct": 10.7845
+      "lying_pct": 12.594
      },
      {
-      "evil_pct": 11.7258,
-      "demon_pct": 5.2849,
+      "evil_pct": 13.6933,
+      "demon_pct": 6.1716,
       "drunk_pct": 0.0,
-      "lying_pct": 13.7572
+      "lying_pct": 16.0656
      },
      {
-      "evil_pct": 8.7531,
-      "demon_pct": 4.7894,
+      "evil_pct": 10.2218,
+      "demon_pct": 5.5931,
       "drunk_pct": 0.0,
-      "lying_pct": 10.7845
+      "lying_pct": 12.594
      },
      {
-      "evil_pct": 8.7531,
-      "demon_pct": 4.7894,
+      "evil_pct": 10.2218,
+      "demon_pct": 5.5931,
       "drunk_pct": 0.0,
-      "lying_pct": 10.7845
+      "lying_pct": 12.594
      },
      {
-      "evil_pct": 8.7531,
-      "demon_pct": 4.7894,
+      "evil_pct": 10.2218,
+      "demon_pct": 5.5931,
       "drunk_pct": 0.0,
-      "lying_pct": 10.7845
+      "lying_pct": 12.594
      },
      {
-      "evil_pct": 34.3518,
-      "demon_pct": 18.6623,
+      "evil_pct": 32.2083,
+      "demon_pct": 17.3578,
       "drunk_pct": 0.0,
-      "lying_pct": 34.3518
+      "lying_pct": 32.2083
      },
      {
-      "evil_pct": 43.0223,
-      "demon_pct": 15.3592,
+      "evil_pct": 40.405,
+      "demon_pct": 14.4648,
       "drunk_pct": 0.0,
-      "lying_pct": 43.0223
+      "lying_pct": 40.405
      },
      {
-      "evil_pct": 41.5359,
-      "demon_pct": 22.8737,
+      "evil_pct": 40.5979,
+      "demon_pct": 22.2758,
       "drunk_pct": 0.0,
-      "lying_pct": 41.5359
+      "lying_pct": 40.5979
      },
      {
-      "evil_pct": 34.3518,
-      "demon_pct": 18.6623,
+      "evil_pct": 32.2083,
+      "demon_pct": 17.3578,
       "drunk_pct": 0.0,
-      "lying_pct": 34.3518
+      "lying_pct": 32.2083
      }
     ]
    }
@@ -10699,62 +10699,62 @@
     ]
    },
    "expect": {
-    "valid": 376,
+    "valid": 328,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 4.7676,
-      "demon_pct": 2.3838,
+      "evil_pct": 5.8055,
+      "demon_pct": 2.9028,
       "drunk_pct": 0.0,
-      "lying_pct": 5.8403
+      "lying_pct": 7.1118
      },
      {
-      "evil_pct": 11.919,
-      "demon_pct": 5.9595,
+      "evil_pct": 14.5138,
+      "demon_pct": 7.2569,
       "drunk_pct": 0.0,
-      "lying_pct": 14.6007
+      "lying_pct": 17.7794
      },
      {
-      "evil_pct": 11.919,
-      "demon_pct": 5.9595,
+      "evil_pct": 14.5138,
+      "demon_pct": 7.2569,
       "drunk_pct": 0.0,
-      "lying_pct": 14.6007
+      "lying_pct": 17.7794
      },
      {
-      "evil_pct": 11.919,
-      "demon_pct": 5.9595,
+      "evil_pct": 14.5138,
+      "demon_pct": 7.2569,
       "drunk_pct": 0.0,
-      "lying_pct": 14.6007
+      "lying_pct": 17.7794
      },
      {
-      "evil_pct": 11.919,
-      "demon_pct": 5.9595,
+      "evil_pct": 14.5138,
+      "demon_pct": 7.2569,
       "drunk_pct": 0.0,
-      "lying_pct": 14.6007
+      "lying_pct": 17.7794
      },
      {
-      "evil_pct": 34.9225,
-      "demon_pct": 17.4613,
+      "evil_pct": 31.6401,
+      "demon_pct": 15.82,
       "drunk_pct": 0.0,
-      "lying_pct": 34.9225
+      "lying_pct": 31.6401
      },
      {
-      "evil_pct": 34.9225,
-      "demon_pct": 17.4613,
+      "evil_pct": 31.6401,
+      "demon_pct": 15.82,
       "drunk_pct": 0.0,
-      "lying_pct": 34.9225
+      "lying_pct": 31.6401
      },
      {
-      "evil_pct": 42.789,
-      "demon_pct": 21.3945,
+      "evil_pct": 41.2192,
+      "demon_pct": 20.6096,
       "drunk_pct": 0.0,
-      "lying_pct": 42.789
+      "lying_pct": 41.2192
      },
      {
-      "evil_pct": 34.9225,
-      "demon_pct": 17.4613,
+      "evil_pct": 31.6401,
+      "demon_pct": 15.82,
       "drunk_pct": 0.0,
-      "lying_pct": 34.9225
+      "lying_pct": 31.6401
      }
     ]
    }
@@ -10896,14 +10896,14 @@
     ]
    },
    "expect": {
-    "valid": 264,
+    "valid": 216,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 2.8339,
-      "demon_pct": 1.4169,
+      "evil_pct": 3.8591,
+      "demon_pct": 1.9296,
       "drunk_pct": 0.0,
-      "lying_pct": 3.4715
+      "lying_pct": 4.7274
      },
      {
       "evil_pct": 0.0,
@@ -10918,40 +10918,40 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 17.7117,
-      "demon_pct": 8.8558,
+      "evil_pct": 24.1196,
+      "demon_pct": 12.0598,
       "drunk_pct": 0.0,
-      "lying_pct": 21.6968
+      "lying_pct": 29.5466
      },
      {
-      "evil_pct": 17.7117,
-      "demon_pct": 8.8558,
+      "evil_pct": 24.1196,
+      "demon_pct": 12.0598,
       "drunk_pct": 0.0,
-      "lying_pct": 21.6968
+      "lying_pct": 29.5466
      },
      {
-      "evil_pct": 39.0011,
-      "demon_pct": 19.5005,
+      "evil_pct": 35.0217,
+      "demon_pct": 17.5109,
       "drunk_pct": 0.0,
-      "lying_pct": 39.0011
+      "lying_pct": 35.0217
      },
      {
-      "evil_pct": 39.0011,
-      "demon_pct": 19.5005,
+      "evil_pct": 35.0217,
+      "demon_pct": 17.5109,
       "drunk_pct": 0.0,
-      "lying_pct": 39.0011
+      "lying_pct": 35.0217
      },
      {
-      "evil_pct": 44.7396,
-      "demon_pct": 22.3698,
+      "evil_pct": 42.8365,
+      "demon_pct": 21.4182,
       "drunk_pct": 0.0,
-      "lying_pct": 44.7396
+      "lying_pct": 42.8365
      },
      {
-      "evil_pct": 39.0011,
-      "demon_pct": 19.5005,
+      "evil_pct": 35.0217,
+      "demon_pct": 17.5109,
       "drunk_pct": 0.0,
-      "lying_pct": 39.0011
+      "lying_pct": 35.0217
      }
     ]
    }
@@ -11257,62 +11257,62 @@
     }
    },
    "expect": {
-    "valid": 408,
+    "valid": 360,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 10.6496,
-      "demon_pct": 5.3248,
+      "evil_pct": 12.6743,
+      "demon_pct": 6.3371,
       "drunk_pct": 0.0,
-      "lying_pct": 13.0458
+      "lying_pct": 15.526
      },
      {
-      "evil_pct": 4.2599,
-      "demon_pct": 2.1299,
+      "evil_pct": 5.0697,
+      "demon_pct": 2.5349,
       "drunk_pct": 0.0,
-      "lying_pct": 5.2183
+      "lying_pct": 6.2104
      },
      {
-      "evil_pct": 10.6496,
-      "demon_pct": 5.3248,
+      "evil_pct": 12.6743,
+      "demon_pct": 6.3371,
       "drunk_pct": 0.0,
-      "lying_pct": 13.0458
+      "lying_pct": 15.526
      },
      {
-      "evil_pct": 10.6496,
-      "demon_pct": 5.3248,
+      "evil_pct": 12.6743,
+      "demon_pct": 6.3371,
       "drunk_pct": 0.0,
-      "lying_pct": 13.0458
+      "lying_pct": 15.526
      },
      {
-      "evil_pct": 5.3248,
+      "evil_pct": 6.3371,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 7.721
+      "lying_pct": 9.1888
      },
      {
-      "evil_pct": 37.8594,
-      "demon_pct": 19.5953,
+      "evil_pct": 35.5513,
+      "demon_pct": 18.5678,
       "drunk_pct": 0.0,
-      "lying_pct": 37.8594
+      "lying_pct": 35.5513
      },
      {
-      "evil_pct": 37.8594,
-      "demon_pct": 19.5953,
+      "evil_pct": 35.5513,
+      "demon_pct": 18.5678,
       "drunk_pct": 0.0,
-      "lying_pct": 37.8594
+      "lying_pct": 35.5513
      },
      {
-      "evil_pct": 44.8882,
-      "demon_pct": 23.1097,
+      "evil_pct": 43.9163,
+      "demon_pct": 22.7503,
       "drunk_pct": 0.0,
-      "lying_pct": 44.8882
+      "lying_pct": 43.9163
      },
      {
-      "evil_pct": 37.8594,
-      "demon_pct": 19.5953,
+      "evil_pct": 35.5513,
+      "demon_pct": 18.5678,
       "drunk_pct": 0.0,
-      "lying_pct": 37.8594
+      "lying_pct": 35.5513
      }
     ]
    }
@@ -11431,62 +11431,62 @@
     ]
    },
    "expect": {
-    "valid": 376,
+    "valid": 328,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 10.9589,
-      "demon_pct": 5.4795,
+      "evil_pct": 13.1148,
+      "demon_pct": 6.5574,
       "drunk_pct": 0.0,
-      "lying_pct": 13.4247
+      "lying_pct": 16.0656
      },
      {
-      "evil_pct": 10.9589,
-      "demon_pct": 5.4795,
+      "evil_pct": 13.1148,
+      "demon_pct": 6.5574,
       "drunk_pct": 0.0,
-      "lying_pct": 13.4247
+      "lying_pct": 16.0656
      },
      {
-      "evil_pct": 10.9589,
-      "demon_pct": 5.4795,
+      "evil_pct": 13.1148,
+      "demon_pct": 6.5574,
       "drunk_pct": 0.0,
-      "lying_pct": 13.4247
+      "lying_pct": 16.0656
      },
      {
-      "evil_pct": 10.9589,
-      "demon_pct": 5.4795,
+      "evil_pct": 13.1148,
+      "demon_pct": 6.5574,
       "drunk_pct": 0.0,
-      "lying_pct": 13.4247
+      "lying_pct": 16.0656
      },
      {
-      "evil_pct": 10.9589,
-      "demon_pct": 5.4795,
+      "evil_pct": 13.1148,
+      "demon_pct": 6.5574,
       "drunk_pct": 0.0,
-      "lying_pct": 13.4247
+      "lying_pct": 16.0656
      },
      {
-      "evil_pct": 34.2466,
-      "demon_pct": 17.1233,
+      "evil_pct": 31.1475,
+      "demon_pct": 15.5738,
       "drunk_pct": 0.0,
-      "lying_pct": 34.2466
+      "lying_pct": 31.1475
      },
      {
-      "evil_pct": 34.2466,
-      "demon_pct": 17.1233,
+      "evil_pct": 31.1475,
+      "demon_pct": 15.5738,
       "drunk_pct": 0.0,
-      "lying_pct": 34.2466
+      "lying_pct": 31.1475
      },
      {
-      "evil_pct": 42.4658,
-      "demon_pct": 21.2329,
+      "evil_pct": 40.9836,
+      "demon_pct": 20.4918,
       "drunk_pct": 0.0,
-      "lying_pct": 42.4658
+      "lying_pct": 40.9836
      },
      {
-      "evil_pct": 34.2466,
-      "demon_pct": 17.1233,
+      "evil_pct": 31.1475,
+      "demon_pct": 15.5738,
       "drunk_pct": 0.0,
-      "lying_pct": 34.2466
+      "lying_pct": 31.1475
      }
     ]
    }
@@ -11613,62 +11613,62 @@
     ]
    },
    "expect": {
-    "valid": 1056,
+    "valid": 720,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 24.0161,
-      "demon_pct": 12.5301,
+      "evil_pct": 22.0703,
+      "demon_pct": 12.5,
       "drunk_pct": 0.0,
-      "lying_pct": 29.3173
+      "lying_pct": 26.1719
      },
      {
-      "evil_pct": 23.1058,
-      "demon_pct": 11.4859,
+      "evil_pct": 19.5845,
+      "demon_pct": 9.5703,
       "drunk_pct": 0.0,
-      "lying_pct": 28.4471
+      "lying_pct": 23.8192
      },
      {
-      "evil_pct": 23.1058,
-      "demon_pct": 11.4859,
+      "evil_pct": 19.5845,
+      "demon_pct": 9.5703,
       "drunk_pct": 0.0,
-      "lying_pct": 28.4471
+      "lying_pct": 23.8192
      },
      {
-      "evil_pct": 23.1058,
-      "demon_pct": 11.4859,
+      "evil_pct": 19.5845,
+      "demon_pct": 9.5703,
       "drunk_pct": 0.0,
-      "lying_pct": 28.4471
+      "lying_pct": 23.8192
      },
      {
-      "evil_pct": 23.1058,
-      "demon_pct": 11.4859,
+      "evil_pct": 19.5845,
+      "demon_pct": 9.5703,
       "drunk_pct": 0.0,
-      "lying_pct": 28.4471
+      "lying_pct": 23.8192
      },
      {
-      "evil_pct": 23.1058,
-      "demon_pct": 11.4859,
+      "evil_pct": 19.5845,
+      "demon_pct": 9.5703,
       "drunk_pct": 0.0,
-      "lying_pct": 28.4471
+      "lying_pct": 23.8192
      },
      {
-      "evil_pct": 23.1058,
-      "demon_pct": 11.4859,
+      "evil_pct": 19.5845,
+      "demon_pct": 9.5703,
       "drunk_pct": 0.0,
-      "lying_pct": 28.4471
+      "lying_pct": 23.8192
      },
      {
-      "evil_pct": 37.3494,
-      "demon_pct": 18.5542,
+      "evil_pct": 42.9155,
+      "demon_pct": 21.1914,
       "drunk_pct": 0.0,
-      "lying_pct": 37.3494
+      "lying_pct": 42.9155
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 17.5071,
+      "demon_pct": 8.8867,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 17.5071
      }
     ]
    }
@@ -11795,62 +11795,62 @@
     ]
    },
    "expect": {
-    "valid": 902,
+    "valid": 612,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 28.0623,
-      "demon_pct": 17.1507,
+      "evil_pct": 27.2094,
+      "demon_pct": 17.5255,
       "drunk_pct": 0.0,
-      "lying_pct": 32.5699
+      "lying_pct": 30.7194
      },
      {
-      "evil_pct": 31.6262,
-      "demon_pct": 15.7215,
+      "evil_pct": 27.4583,
+      "demon_pct": 13.418,
       "drunk_pct": 0.0,
-      "lying_pct": 38.9372
+      "lying_pct": 33.3956
      },
      {
-      "evil_pct": 20.6322,
-      "demon_pct": 9.7664,
+      "evil_pct": 17.5006,
+      "demon_pct": 8.128,
       "drunk_pct": 0.0,
-      "lying_pct": 25.607
+      "lying_pct": 21.5708
      },
      {
-      "evil_pct": 20.6322,
-      "demon_pct": 9.7664,
+      "evil_pct": 17.5006,
+      "demon_pct": 8.128,
       "drunk_pct": 0.0,
-      "lying_pct": 25.607
+      "lying_pct": 21.5708
      },
      {
-      "evil_pct": 20.6322,
-      "demon_pct": 9.7664,
+      "evil_pct": 17.5006,
+      "demon_pct": 8.128,
       "drunk_pct": 0.0,
-      "lying_pct": 25.607
+      "lying_pct": 21.5708
      },
      {
-      "evil_pct": 20.6322,
-      "demon_pct": 9.7664,
+      "evil_pct": 17.5006,
+      "demon_pct": 8.128,
       "drunk_pct": 0.0,
-      "lying_pct": 25.607
+      "lying_pct": 21.5708
      },
      {
-      "evil_pct": 21.0902,
-      "demon_pct": 10.2245,
+      "evil_pct": 18.123,
+      "demon_pct": 8.7503,
       "drunk_pct": 0.0,
-      "lying_pct": 26.065
+      "lying_pct": 22.1932
      },
      {
-      "evil_pct": 36.6926,
-      "demon_pct": 17.8378,
+      "evil_pct": 41.7476,
+      "demon_pct": 20.1892,
       "drunk_pct": 0.0,
-      "lying_pct": 36.6926
+      "lying_pct": 41.7476
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 15.4593,
+      "demon_pct": 7.6052,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 15.4593
      }
     ]
    }
@@ -11973,62 +11973,62 @@
     }
    },
    "expect": {
-    "valid": 888,
+    "valid": 552,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 20.9141,
-      "demon_pct": 9.3029,
+      "evil_pct": 13.3775,
+      "demon_pct": 5.0331,
       "drunk_pct": 0.0,
-      "lying_pct": 25.9003
+      "lying_pct": 16.1589
      },
      {
-      "evil_pct": 22.4146,
-      "demon_pct": 10.8033,
+      "evil_pct": 15.5298,
+      "demon_pct": 7.1854,
       "drunk_pct": 0.0,
-      "lying_pct": 27.4007
+      "lying_pct": 18.3113
      },
      {
-      "evil_pct": 28.4164,
-      "demon_pct": 16.8052,
+      "evil_pct": 24.1391,
+      "demon_pct": 15.7947,
       "drunk_pct": 0.0,
-      "lying_pct": 33.4026
+      "lying_pct": 26.9205
      },
      {
-      "evil_pct": 21.6066,
-      "demon_pct": 10.8033,
+      "evil_pct": 23.3113,
+      "demon_pct": 11.6556,
       "drunk_pct": 0.0,
-      "lying_pct": 26.5928
+      "lying_pct": 28.4768
      },
      {
-      "evil_pct": 28.4164,
-      "demon_pct": 16.8052,
+      "evil_pct": 24.1391,
+      "demon_pct": 15.7947,
       "drunk_pct": 0.0,
-      "lying_pct": 33.4026
+      "lying_pct": 26.9205
      },
      {
-      "evil_pct": 22.4146,
-      "demon_pct": 10.8033,
+      "evil_pct": 15.5298,
+      "demon_pct": 7.1854,
       "drunk_pct": 0.0,
-      "lying_pct": 27.4007
+      "lying_pct": 18.3113
      },
      {
-      "evil_pct": 20.9141,
-      "demon_pct": 9.3029,
+      "evil_pct": 13.3775,
+      "demon_pct": 5.0331,
       "drunk_pct": 0.0,
-      "lying_pct": 25.9003
+      "lying_pct": 16.1589
      },
      {
-      "evil_pct": 34.903,
-      "demon_pct": 15.374,
+      "evil_pct": 43.0464,
+      "demon_pct": 18.543,
       "drunk_pct": 0.0,
-      "lying_pct": 34.903
+      "lying_pct": 43.0464
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 27.5497,
+      "demon_pct": 13.7748,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 27.5497
      }
     ]
    }
@@ -12151,62 +12151,62 @@
     }
    },
    "expect": {
-    "valid": 1152,
+    "valid": 1032,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 24.4624,
-      "demon_pct": 12.2312,
+      "evil_pct": 24.8057,
+      "demon_pct": 12.4028,
       "drunk_pct": 0.0,
-      "lying_pct": 30.1075
+      "lying_pct": 30.53
      },
      {
-      "evil_pct": 24.4624,
-      "demon_pct": 12.2312,
+      "evil_pct": 24.8057,
+      "demon_pct": 12.4028,
       "drunk_pct": 0.0,
-      "lying_pct": 30.1075
+      "lying_pct": 30.53
      },
      {
-      "evil_pct": 24.4624,
-      "demon_pct": 12.2312,
+      "evil_pct": 24.8057,
+      "demon_pct": 12.4028,
       "drunk_pct": 0.0,
-      "lying_pct": 30.1075
+      "lying_pct": 30.53
      },
      {
-      "evil_pct": 15.7258,
-      "demon_pct": 7.8629,
+      "evil_pct": 12.4382,
+      "demon_pct": 6.2191,
       "drunk_pct": 0.0,
-      "lying_pct": 19.3548
+      "lying_pct": 15.1943
      },
      {
-      "evil_pct": 24.4624,
-      "demon_pct": 12.2312,
+      "evil_pct": 24.8057,
+      "demon_pct": 12.4028,
       "drunk_pct": 0.0,
-      "lying_pct": 30.1075
+      "lying_pct": 30.53
      },
      {
-      "evil_pct": 24.4624,
-      "demon_pct": 12.2312,
+      "evil_pct": 24.8057,
+      "demon_pct": 12.4028,
       "drunk_pct": 0.0,
-      "lying_pct": 30.1075
+      "lying_pct": 30.53
      },
      {
-      "evil_pct": 24.4624,
-      "demon_pct": 12.2312,
+      "evil_pct": 24.8057,
+      "demon_pct": 12.4028,
       "drunk_pct": 0.0,
-      "lying_pct": 30.1075
+      "lying_pct": 30.53
      },
      {
-      "evil_pct": 37.5,
-      "demon_pct": 18.75,
+      "evil_pct": 37.8092,
+      "demon_pct": 18.9046,
       "drunk_pct": 0.0,
-      "lying_pct": 37.5
+      "lying_pct": 37.8092
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 0.9187,
+      "demon_pct": 0.4594,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 0.9187
      }
     ]
    }
@@ -12322,62 +12322,62 @@
     }
    },
    "expect": {
-    "valid": 424,
+    "valid": 376,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 9.4118,
-      "demon_pct": 4.7059,
+      "evil_pct": 10.9589,
+      "demon_pct": 5.4795,
       "drunk_pct": 0.0,
-      "lying_pct": 11.5294
+      "lying_pct": 13.4247
      },
      {
-      "evil_pct": 9.4118,
-      "demon_pct": 4.7059,
+      "evil_pct": 10.9589,
+      "demon_pct": 5.4795,
       "drunk_pct": 0.0,
-      "lying_pct": 11.5294
+      "lying_pct": 13.4247
      },
      {
-      "evil_pct": 9.4118,
-      "demon_pct": 4.7059,
+      "evil_pct": 10.9589,
+      "demon_pct": 5.4795,
       "drunk_pct": 0.0,
-      "lying_pct": 11.5294
+      "lying_pct": 13.4247
      },
      {
-      "evil_pct": 9.4118,
-      "demon_pct": 4.7059,
+      "evil_pct": 10.9589,
+      "demon_pct": 5.4795,
       "drunk_pct": 0.0,
-      "lying_pct": 11.5294
+      "lying_pct": 13.4247
      },
      {
-      "evil_pct": 9.4118,
-      "demon_pct": 4.7059,
+      "evil_pct": 10.9589,
+      "demon_pct": 5.4795,
       "drunk_pct": 0.0,
-      "lying_pct": 11.5294
+      "lying_pct": 13.4247
      },
      {
-      "evil_pct": 43.5294,
-      "demon_pct": 21.7647,
+      "evil_pct": 42.4658,
+      "demon_pct": 21.2329,
       "drunk_pct": 0.0,
-      "lying_pct": 43.5294
+      "lying_pct": 42.4658
      },
      {
-      "evil_pct": 36.4706,
-      "demon_pct": 18.2353,
+      "evil_pct": 34.2466,
+      "demon_pct": 17.1233,
       "drunk_pct": 0.0,
-      "lying_pct": 36.4706
+      "lying_pct": 34.2466
      },
      {
-      "evil_pct": 36.4706,
-      "demon_pct": 18.2353,
+      "evil_pct": 34.2466,
+      "demon_pct": 17.1233,
       "drunk_pct": 0.0,
-      "lying_pct": 36.4706
+      "lying_pct": 34.2466
      },
      {
-      "evil_pct": 36.4706,
-      "demon_pct": 18.2353,
+      "evil_pct": 34.2466,
+      "demon_pct": 17.1233,
       "drunk_pct": 0.0,
-      "lying_pct": 36.4706
+      "lying_pct": 34.2466
      }
     ]
    }
@@ -13106,6 +13106,3337 @@
        "Demon": 0.7742,
        "Assassin": 0.0389,
        "Gossip": 0.1868
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-tea-lady-gallows",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "S1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 6632,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 26.6677,
+      "demon_pct": 13.3339,
+      "drunk_pct": 8.5299,
+      "lying_pct": 35.1976
+     },
+     {
+      "evil_pct": 26.6677,
+      "demon_pct": 13.3339,
+      "drunk_pct": 8.5299,
+      "lying_pct": 35.1976
+     },
+     {
+      "evil_pct": 26.6677,
+      "demon_pct": 13.3339,
+      "drunk_pct": 8.5299,
+      "lying_pct": 35.1976
+     },
+     {
+      "evil_pct": 26.6677,
+      "demon_pct": 13.3339,
+      "drunk_pct": 8.5299,
+      "lying_pct": 35.1976
+     },
+     {
+      "evil_pct": 26.6677,
+      "demon_pct": 13.3339,
+      "drunk_pct": 8.5299,
+      "lying_pct": 35.1976
+     },
+     {
+      "evil_pct": 9.7485,
+      "demon_pct": 4.8742,
+      "drunk_pct": 10.4984,
+      "lying_pct": 20.2468
+     },
+     {
+      "evil_pct": 9.7485,
+      "demon_pct": 4.8742,
+      "drunk_pct": 3.9369,
+      "lying_pct": 13.6854
+     },
+     {
+      "evil_pct": 13.7791,
+      "demon_pct": 6.8895,
+      "drunk_pct": 15.0914,
+      "lying_pct": 28.8705
+     },
+     {
+      "evil_pct": 33.3854,
+      "demon_pct": 16.6927,
+      "drunk_pct": 13.451,
+      "lying_pct": 46.8364
+     }
+    ]
+   }
+  },
+  {
+   "name": "bmr-9-tea-lady-falls",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 4596,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 27.2126,
+      "demon_pct": 13.6978,
+      "drunk_pct": 8.9729,
+      "lying_pct": 36.1855
+     },
+     {
+      "evil_pct": 27.2126,
+      "demon_pct": 13.6978,
+      "drunk_pct": 8.9729,
+      "lying_pct": 36.1855
+     },
+     {
+      "evil_pct": 27.2126,
+      "demon_pct": 13.6978,
+      "drunk_pct": 8.9729,
+      "lying_pct": 36.1855
+     },
+     {
+      "evil_pct": 27.2126,
+      "demon_pct": 13.6978,
+      "drunk_pct": 8.9729,
+      "lying_pct": 36.1855
+     },
+     {
+      "evil_pct": 27.2126,
+      "demon_pct": 13.6978,
+      "drunk_pct": 8.9729,
+      "lying_pct": 36.1855
+     },
+     {
+      "evil_pct": 0.8115,
+      "demon_pct": 0.0401,
+      "drunk_pct": 11.6517,
+      "lying_pct": 12.4632
+     },
+     {
+      "evil_pct": 0.8115,
+      "demon_pct": 0.0401,
+      "drunk_pct": 11.6517,
+      "lying_pct": 12.4632
+     },
+     {
+      "evil_pct": 31.157,
+      "demon_pct": 15.7154,
+      "drunk_pct": 10.393,
+      "lying_pct": 41.55
+     },
+     {
+      "evil_pct": 31.157,
+      "demon_pct": 15.7154,
+      "drunk_pct": 10.393,
+      "lying_pct": 41.55
+     }
+    ],
+    "blame": {
+     "2": {
+      "5": {
+       "Demon": 0.8821,
+       "Assassin": 0.1179
+      },
+      "6": {
+       "Demon": 0.8821,
+       "Assassin": 0.1179
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-regurgitated",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 2514,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 27.3926,
+      "demon_pct": 13.7951,
+      "drunk_pct": 8.9858,
+      "lying_pct": 36.3784
+     },
+     {
+      "evil_pct": 27.3926,
+      "demon_pct": 13.7951,
+      "drunk_pct": 8.9858,
+      "lying_pct": 36.3784
+     },
+     {
+      "evil_pct": 0.7787,
+      "demon_pct": 0.0,
+      "drunk_pct": 11.7742,
+      "lying_pct": 12.5529
+     },
+     {
+      "evil_pct": 27.3926,
+      "demon_pct": 13.7951,
+      "drunk_pct": 8.9858,
+      "lying_pct": 36.3784
+     },
+     {
+      "evil_pct": 0.7787,
+      "demon_pct": 0.0,
+      "drunk_pct": 11.7742,
+      "lying_pct": 12.5529
+     },
+     {
+      "evil_pct": 27.3926,
+      "demon_pct": 13.7951,
+      "drunk_pct": 8.9858,
+      "lying_pct": 36.3784
+     },
+     {
+      "evil_pct": 27.3926,
+      "demon_pct": 13.7951,
+      "drunk_pct": 8.9858,
+      "lying_pct": 36.3784
+     },
+     {
+      "evil_pct": 30.7397,
+      "demon_pct": 15.5121,
+      "drunk_pct": 10.2124,
+      "lying_pct": 40.9521
+     },
+     {
+      "evil_pct": 30.7397,
+      "demon_pct": 15.5121,
+      "drunk_pct": 10.2124,
+      "lying_pct": 40.9521
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 0.8236,
+       "Assassin": 0.0387,
+       "Gossip": 0.1377
+      },
+      "4": {
+       "Demon": 0.8236,
+       "Assassin": 0.0387,
+       "Gossip": 0.1377
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-regurgitated-twice",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "N3",
+       "R4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 2182,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 31.9566,
+      "demon_pct": 16.2455,
+      "drunk_pct": 8.8316,
+      "lying_pct": 40.7882
+     },
+     {
+      "evil_pct": 31.9566,
+      "demon_pct": 16.2455,
+      "drunk_pct": 8.8316,
+      "lying_pct": 40.7882
+     },
+     {
+      "evil_pct": 0.9192,
+      "demon_pct": 0.0,
+      "drunk_pct": 12.2447,
+      "lying_pct": 13.1639
+     },
+     {
+      "evil_pct": 31.9566,
+      "demon_pct": 16.2455,
+      "drunk_pct": 8.8316,
+      "lying_pct": 40.7882
+     },
+     {
+      "evil_pct": 0.9192,
+      "demon_pct": 0.0,
+      "drunk_pct": 12.2447,
+      "lying_pct": 13.1639
+     },
+     {
+      "evil_pct": 1.8383,
+      "demon_pct": 0.0,
+      "drunk_pct": 12.1483,
+      "lying_pct": 13.9866
+     },
+     {
+      "evil_pct": 31.9566,
+      "demon_pct": 16.2455,
+      "drunk_pct": 8.8316,
+      "lying_pct": 40.7882
+     },
+     {
+      "evil_pct": 34.2485,
+      "demon_pct": 17.509,
+      "drunk_pct": 8.9859,
+      "lying_pct": 43.2344
+     },
+     {
+      "evil_pct": 34.2485,
+      "demon_pct": 17.509,
+      "drunk_pct": 8.9859,
+      "lying_pct": 43.2344
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 0.8323,
+       "Assassin": 0.0396,
+       "Gossip": 0.1281
+      },
+      "4": {
+       "Demon": 0.8323,
+       "Assassin": 0.0396,
+       "Gossip": 0.1281
+      }
+     },
+     "3": {
+      "5": {
+       "Demon": 0.793,
+       "Assassin": 0.0445,
+       "Gossip": 0.1625
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-courtier-died",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [
+       "S2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 6,
+      "role": "Sailor"
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 8892,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 26.6943,
+      "demon_pct": 13.3624,
+      "drunk_pct": 10.4711,
+      "lying_pct": 37.1654
+     },
+     {
+      "evil_pct": 8.092,
+      "demon_pct": 4.0495,
+      "drunk_pct": 3.169,
+      "lying_pct": 11.261
+     },
+     {
+      "evil_pct": 26.6943,
+      "demon_pct": 13.3624,
+      "drunk_pct": 10.4711,
+      "lying_pct": 37.1654
+     },
+     {
+      "evil_pct": 26.6943,
+      "demon_pct": 13.3624,
+      "drunk_pct": 10.4711,
+      "lying_pct": 37.1654
+     },
+     {
+      "evil_pct": 26.6943,
+      "demon_pct": 13.3624,
+      "drunk_pct": 10.4711,
+      "lying_pct": 37.1654
+     },
+     {
+      "evil_pct": 26.6943,
+      "demon_pct": 13.3624,
+      "drunk_pct": 10.4711,
+      "lying_pct": 37.1654
+     },
+     {
+      "evil_pct": 0.4076,
+      "demon_pct": 0.0815,
+      "drunk_pct": 5.4371,
+      "lying_pct": 5.8446
+     },
+     {
+      "evil_pct": 29.0145,
+      "demon_pct": 14.5285,
+      "drunk_pct": 12.7115,
+      "lying_pct": 41.726
+     },
+     {
+      "evil_pct": 29.0145,
+      "demon_pct": 14.5285,
+      "drunk_pct": 12.7115,
+      "lying_pct": 41.726
+     }
+    ],
+    "blame": {
+     "2": {
+      "6": {
+       "Demon": 0.9533,
+       "Assassin": 0.0467
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-courtier-lives",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [
+       "S2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 6,
+      "role": "Sailor"
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 8892,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 27.5045,
+      "demon_pct": 13.7904,
+      "drunk_pct": 10.0138,
+      "lying_pct": 37.5183
+     },
+     {
+      "evil_pct": 11.1723,
+      "demon_pct": 5.5991,
+      "drunk_pct": 4.1459,
+      "lying_pct": 15.3182
+     },
+     {
+      "evil_pct": 0.9827,
+      "demon_pct": 0.1965,
+      "drunk_pct": 13.0048,
+      "lying_pct": 13.9875
+     },
+     {
+      "evil_pct": 27.5045,
+      "demon_pct": 13.7904,
+      "drunk_pct": 10.0138,
+      "lying_pct": 37.5183
+     },
+     {
+      "evil_pct": 27.5045,
+      "demon_pct": 13.7904,
+      "drunk_pct": 10.0138,
+      "lying_pct": 37.5183
+     },
+     {
+      "evil_pct": 27.5045,
+      "demon_pct": 13.7904,
+      "drunk_pct": 10.0138,
+      "lying_pct": 37.5183
+     },
+     {
+      "evil_pct": 16.9694,
+      "demon_pct": 8.5072,
+      "drunk_pct": 6.2334,
+      "lying_pct": 23.2028
+     },
+     {
+      "evil_pct": 30.4289,
+      "demon_pct": 15.2678,
+      "drunk_pct": 11.9581,
+      "lying_pct": 42.387
+     },
+     {
+      "evil_pct": 30.4289,
+      "demon_pct": 15.2678,
+      "drunk_pct": 11.9581,
+      "lying_pct": 42.387
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 0.9605,
+       "Assassin": 0.0395
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-minstrel-survivor",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [
+       "S2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [
+       "S1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 2880,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 22.9309,
+      "demon_pct": 11.4812,
+      "drunk_pct": 8.5876,
+      "lying_pct": 31.5186
+     },
+     {
+      "evil_pct": 22.9309,
+      "demon_pct": 11.4812,
+      "drunk_pct": 8.5876,
+      "lying_pct": 31.5186
+     },
+     {
+      "evil_pct": 0.6348,
+      "demon_pct": 0.1587,
+      "drunk_pct": 10.2539,
+      "lying_pct": 10.8887
+     },
+     {
+      "evil_pct": 22.9309,
+      "demon_pct": 11.4812,
+      "drunk_pct": 8.5876,
+      "lying_pct": 31.5186
+     },
+     {
+      "evil_pct": 22.9309,
+      "demon_pct": 11.4812,
+      "drunk_pct": 8.5876,
+      "lying_pct": 31.5186
+     },
+     {
+      "evil_pct": 22.9309,
+      "demon_pct": 11.4812,
+      "drunk_pct": 8.5876,
+      "lying_pct": 31.5186
+     },
+     {
+      "evil_pct": 22.9309,
+      "demon_pct": 11.4812,
+      "drunk_pct": 8.5876,
+      "lying_pct": 31.5186
+     },
+     {
+      "evil_pct": 30.8899,
+      "demon_pct": 15.477,
+      "drunk_pct": 12.9456,
+      "lying_pct": 43.8354
+     },
+     {
+      "evil_pct": 30.8899,
+      "demon_pct": 15.477,
+      "drunk_pct": 12.9456,
+      "lying_pct": 43.8354
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-minstrel-sings",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 8615,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 25.7421,
+      "demon_pct": 14.0469,
+      "drunk_pct": 8.6538,
+      "lying_pct": 34.3959
+     },
+     {
+      "evil_pct": 25.3558,
+      "demon_pct": 13.8532,
+      "drunk_pct": 8.4815,
+      "lying_pct": 33.8373
+     },
+     {
+      "evil_pct": 0.75,
+      "demon_pct": 0.0737,
+      "drunk_pct": 11.2226,
+      "lying_pct": 11.9725
+     },
+     {
+      "evil_pct": 25.6565,
+      "demon_pct": 14.0041,
+      "drunk_pct": 8.611,
+      "lying_pct": 34.2675
+     },
+     {
+      "evil_pct": 25.3558,
+      "demon_pct": 13.8532,
+      "drunk_pct": 8.4815,
+      "lying_pct": 33.8373
+     },
+     {
+      "evil_pct": 25.7421,
+      "demon_pct": 14.0469,
+      "drunk_pct": 8.6538,
+      "lying_pct": 34.3959
+     },
+     {
+      "evil_pct": 25.7421,
+      "demon_pct": 14.0469,
+      "drunk_pct": 8.6538,
+      "lying_pct": 34.3959
+     },
+     {
+      "evil_pct": 15.1458,
+      "demon_pct": 0.3531,
+      "drunk_pct": 12.7869,
+      "lying_pct": 27.9327
+     },
+     {
+      "evil_pct": 30.5101,
+      "demon_pct": 15.7219,
+      "drunk_pct": 11.6098,
+      "lying_pct": 42.1199
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 0.7754,
+       "Assassin": 0.0572,
+       "Godfather": 0.1675
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-po-night-two",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 2922,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 38.0471,
+      "demon_pct": 19.2932,
+      "drunk_pct": 9.5333,
+      "lying_pct": 47.5803
+     },
+     {
+      "evil_pct": 38.0471,
+      "demon_pct": 19.2932,
+      "drunk_pct": 9.5333,
+      "lying_pct": 47.5803
+     },
+     {
+      "evil_pct": 1.1863,
+      "demon_pct": 0.0601,
+      "drunk_pct": 14.1996,
+      "lying_pct": 15.3859
+     },
+     {
+      "evil_pct": 38.0471,
+      "demon_pct": 19.2932,
+      "drunk_pct": 9.5333,
+      "lying_pct": 47.5803
+     },
+     {
+      "evil_pct": 1.1863,
+      "demon_pct": 0.0601,
+      "drunk_pct": 14.1996,
+      "lying_pct": 15.3859
+     },
+     {
+      "evil_pct": 1.1863,
+      "demon_pct": 0.0601,
+      "drunk_pct": 14.1996,
+      "lying_pct": 15.3859
+     },
+     {
+      "evil_pct": 6.6101,
+      "demon_pct": 3.3398,
+      "drunk_pct": 1.9286,
+      "lying_pct": 8.5387
+     },
+     {
+      "evil_pct": 37.8448,
+      "demon_pct": 19.3002,
+      "drunk_pct": 8.6044,
+      "lying_pct": 46.4492
+     },
+     {
+      "evil_pct": 37.8448,
+      "demon_pct": 19.3002,
+      "drunk_pct": 8.6044,
+      "lying_pct": 46.4492
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 0.5997,
+       "Assassin": 0.1152,
+       "Gossip": 0.2851
+      },
+      "4": {
+       "Demon": 0.5997,
+       "Assassin": 0.1152,
+       "Gossip": 0.2851
+      },
+      "5": {
+       "Assassin": 0.1152,
+       "Demon": 0.5997,
+       "Gossip": 0.2851
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-innkeeper-broken",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "InnkeeperChoice",
+      "night": 2,
+      "player": 4,
+      "a": 0,
+      "b": 2
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 10070,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.948,
+      "demon_pct": 0.1852,
+      "drunk_pct": 12.7426,
+      "lying_pct": 13.6907
+     },
+     {
+      "evil_pct": 11.1178,
+      "demon_pct": 5.5707,
+      "drunk_pct": 4.3401,
+      "lying_pct": 15.4579
+     },
+     {
+      "evil_pct": 26.6448,
+      "demon_pct": 13.36,
+      "drunk_pct": 9.7453,
+      "lying_pct": 36.3901
+     },
+     {
+      "evil_pct": 26.6448,
+      "demon_pct": 13.36,
+      "drunk_pct": 9.7453,
+      "lying_pct": 36.3901
+     },
+     {
+      "evil_pct": 23.0415,
+      "demon_pct": 11.5481,
+      "drunk_pct": 8.69,
+      "lying_pct": 31.7315
+     },
+     {
+      "evil_pct": 26.6448,
+      "demon_pct": 13.36,
+      "drunk_pct": 9.7453,
+      "lying_pct": 36.3901
+     },
+     {
+      "evil_pct": 26.6448,
+      "demon_pct": 13.36,
+      "drunk_pct": 9.7453,
+      "lying_pct": 36.3901
+     },
+     {
+      "evil_pct": 29.1567,
+      "demon_pct": 14.628,
+      "drunk_pct": 11.4455,
+      "lying_pct": 40.6022
+     },
+     {
+      "evil_pct": 29.1567,
+      "demon_pct": 14.628,
+      "drunk_pct": 11.4455,
+      "lying_pct": 40.6022
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 0.7791,
+       "Assassin": 0.0471,
+       "Gossip": 0.1738
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-exorcist-named-and-killed",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "ExorcistChoice",
+      "night": 2,
+      "player": 3,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 11698,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 26.4033,
+      "demon_pct": 13.5149,
+      "drunk_pct": 9.5995,
+      "lying_pct": 36.0027
+     },
+     {
+      "evil_pct": 26.2244,
+      "demon_pct": 13.5149,
+      "drunk_pct": 9.461,
+      "lying_pct": 35.6854
+     },
+     {
+      "evil_pct": 0.9282,
+      "demon_pct": 0.1912,
+      "drunk_pct": 12.4095,
+      "lying_pct": 13.3378
+     },
+     {
+      "evil_pct": 12.4058,
+      "demon_pct": 6.2176,
+      "drunk_pct": 4.6788,
+      "lying_pct": 17.0846
+     },
+     {
+      "evil_pct": 26.3502,
+      "demon_pct": 13.5149,
+      "drunk_pct": 9.5464,
+      "lying_pct": 35.8966
+     },
+     {
+      "evil_pct": 26.4033,
+      "demon_pct": 13.5149,
+      "drunk_pct": 9.5995,
+      "lying_pct": 36.0027
+     },
+     {
+      "evil_pct": 22.9724,
+      "demon_pct": 9.5278,
+      "drunk_pct": 9.9941,
+      "lying_pct": 32.9665
+     },
+     {
+      "evil_pct": 29.1562,
+      "demon_pct": 15.0019,
+      "drunk_pct": 11.275,
+      "lying_pct": 40.4312
+     },
+     {
+      "evil_pct": 29.1562,
+      "demon_pct": 15.0019,
+      "drunk_pct": 11.275,
+      "lying_pct": 40.4312
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 0.7728,
+       "Assassin": 0.0433,
+       "Gossip": 0.1839
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-moonchild-spared",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "MoonchildChoice",
+      "night": 2,
+      "player": 8,
+      "target": 0
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    },
+    "quiet_nights": [
+     2
+    ]
+   },
+   "expect": {
+    "valid": 11809,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 26.5596,
+      "demon_pct": 13.5682,
+      "drunk_pct": 9.1608,
+      "lying_pct": 35.7204
+     },
+     {
+      "evil_pct": 22.8001,
+      "demon_pct": 11.6771,
+      "drunk_pct": 8.9257,
+      "lying_pct": 31.7258
+     },
+     {
+      "evil_pct": 23.5796,
+      "demon_pct": 12.0782,
+      "drunk_pct": 9.34,
+      "lying_pct": 32.9195
+     },
+     {
+      "evil_pct": 23.5676,
+      "demon_pct": 12.0722,
+      "drunk_pct": 9.334,
+      "lying_pct": 32.9016
+     },
+     {
+      "evil_pct": 12.878,
+      "demon_pct": 6.7161,
+      "drunk_pct": 5.7008,
+      "lying_pct": 18.5789
+     },
+     {
+      "evil_pct": 23.5796,
+      "demon_pct": 12.0782,
+      "drunk_pct": 9.34,
+      "lying_pct": 32.9195
+     },
+     {
+      "evil_pct": 23.5796,
+      "demon_pct": 12.0782,
+      "drunk_pct": 9.34,
+      "lying_pct": 32.9195
+     },
+     {
+      "evil_pct": 31.6586,
+      "demon_pct": 15.974,
+      "drunk_pct": 15.1199,
+      "lying_pct": 46.7784
+     },
+     {
+      "evil_pct": 11.7974,
+      "demon_pct": 3.7578,
+      "drunk_pct": 7.6722,
+      "lying_pct": 19.4696
+     }
+    ]
+   }
+  },
+  {
+   "name": "sv-9-one-outsider",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Flowergirl",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "TownCrier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sweetheart",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 3360,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 23.3333,
+      "demon_pct": 11.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.0
+     },
+     {
+      "evil_pct": 23.3333,
+      "demon_pct": 11.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.0
+     },
+     {
+      "evil_pct": 23.3333,
+      "demon_pct": 11.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.0
+     },
+     {
+      "evil_pct": 23.3333,
+      "demon_pct": 11.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.0
+     },
+     {
+      "evil_pct": 23.3333,
+      "demon_pct": 11.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.0
+     },
+     {
+      "evil_pct": 23.3333,
+      "demon_pct": 11.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.0
+     },
+     {
+      "evil_pct": 23.3333,
+      "demon_pct": 11.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.0
+     },
+     {
+      "evil_pct": 23.3333,
+      "demon_pct": 11.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.0
+     },
+     {
+      "evil_pct": 13.3333,
+      "demon_pct": 6.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.3333
+     }
+    ]
+   }
+  },
+  {
+   "name": "sv-9-dead-witch-still-curses",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Flowergirl",
+      "events": [
+       "W3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "TownCrier",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Mutant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sweetheart",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 116,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 26.5919,
+      "demon_pct": 14.2909,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.5304
+     },
+     {
+      "evil_pct": 26.5919,
+      "demon_pct": 14.2909,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.5304
+     },
+     {
+      "evil_pct": 0.1809,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 6.2048
+     },
+     {
+      "evil_pct": 26.5919,
+      "demon_pct": 14.2909,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.5304
+     },
+     {
+      "evil_pct": 14.11,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 19.5912
+     },
+     {
+      "evil_pct": 1.411,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 7.3806
+     },
+     {
+      "evil_pct": 26.5919,
+      "demon_pct": 14.2909,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.5304
+     },
+     {
+      "evil_pct": 53.7808,
+      "demon_pct": 29.7214,
+      "drunk_pct": 0.0,
+      "lying_pct": 53.7808
+     },
+     {
+      "evil_pct": 24.1498,
+      "demon_pct": 13.1151,
+      "drunk_pct": 0.0,
+      "lying_pct": 24.1498
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "5": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "sv-5-witch-at-three",
+   "payload": {
+    "n_players": 5,
+    "players": [
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "W2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Flowergirl",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 2 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 3 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "sv-9-twin-hanged",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sage",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Klutz",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Barber",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Mutant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sweetheart",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "EvilTwinPair",
+      "night": 1,
+      "player": 1,
+      "a": 1,
+      "b": 6
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 273,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 11.1888,
+      "demon_pct": 5.5944,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.7063
+     },
+     {
+      "evil_pct": 9.0909,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 11.6084
+     },
+     {
+      "evil_pct": 11.1888,
+      "demon_pct": 5.5944,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.7063
+     },
+     {
+      "evil_pct": 11.1888,
+      "demon_pct": 5.5944,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.7063
+     },
+     {
+      "evil_pct": 11.1888,
+      "demon_pct": 5.5944,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.7063
+     },
+     {
+      "evil_pct": 34.7319,
+      "demon_pct": 18.648,
+      "drunk_pct": 0.0,
+      "lying_pct": 34.7319
+     },
+     {
+      "evil_pct": 33.5664,
+      "demon_pct": 17.4825,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.5664
+     },
+     {
+      "evil_pct": 43.1235,
+      "demon_pct": 22.8438,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.1235
+     },
+     {
+      "evil_pct": 34.7319,
+      "demon_pct": 18.648,
+      "drunk_pct": 0.0,
+      "lying_pct": 34.7319
+     }
+    ]
+   }
+  },
+  {
+   "name": "sv-9-drunk-under-a-vortox",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Flowergirl",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "TownCrier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Mutant",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sweetheart",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Oracle"
+     },
+     {
+      "type": "OracleInfo",
+      "night": 2,
+      "player": 6,
+      "count": 0
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 584,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 11.4347,
+      "demon_pct": 6.9955,
+      "drunk_pct": 0.0,
+      "lying_pct": 12.9961
+     },
+     {
+      "evil_pct": 27.5152,
+      "demon_pct": 17.5653,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.4519
+     },
+     {
+      "evil_pct": 27.2856,
+      "demon_pct": 17.3357,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.2223
+     },
+     {
+      "evil_pct": 27.2856,
+      "demon_pct": 17.3357,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.2223
+     },
+     {
+      "evil_pct": 1.0141,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 7.0988
+     },
+     {
+      "evil_pct": 27.5152,
+      "demon_pct": 17.5653,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.4519
+     },
+     {
+      "evil_pct": 18.3231,
+      "demon_pct": 10.8224,
+      "drunk_pct": 0.0,
+      "lying_pct": 20.5733
+     },
+     {
+      "evil_pct": 38.0621,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 38.0621
+     },
+     {
+      "evil_pct": 21.5644,
+      "demon_pct": 12.3799,
+      "drunk_pct": 0.0,
+      "lying_pct": 21.5644
+     }
+    ],
+    "blame": {
+     "2": {
+      "4": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-9-gambler-right-and-dead",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "GamblerGuess",
+      "night": 2,
+      "player": 5,
+      "target": 2,
+      "role": "Chambermaid"
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 11716,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 24.2011,
+      "demon_pct": 12.1128,
+      "drunk_pct": 9.688,
+      "lying_pct": 33.8891
+     },
+     {
+      "evil_pct": 24.2011,
+      "demon_pct": 12.1128,
+      "drunk_pct": 9.688,
+      "lying_pct": 33.8891
+     },
+     {
+      "evil_pct": 24.2011,
+      "demon_pct": 12.1128,
+      "drunk_pct": 9.688,
+      "lying_pct": 33.8891
+     },
+     {
+      "evil_pct": 24.2011,
+      "demon_pct": 12.1128,
+      "drunk_pct": 9.688,
+      "lying_pct": 33.8891
+     },
+     {
+      "evil_pct": 24.2011,
+      "demon_pct": 12.1128,
+      "drunk_pct": 9.688,
+      "lying_pct": 33.8891
+     },
+     {
+      "evil_pct": 0.3622,
+      "demon_pct": 0.0724,
+      "drunk_pct": 4.8985,
+      "lying_pct": 5.2607
+     },
+     {
+      "evil_pct": 24.2011,
+      "demon_pct": 12.1128,
+      "drunk_pct": 9.688,
+      "lying_pct": 33.8891
+     },
+     {
+      "evil_pct": 27.2155,
+      "demon_pct": 13.6254,
+      "drunk_pct": 12.0666,
+      "lying_pct": 39.2821
+     },
+     {
+      "evil_pct": 27.2155,
+      "demon_pct": 13.6254,
+      "drunk_pct": 12.0666,
+      "lying_pct": 39.2821
+     }
+    ],
+    "blame": {
+     "2": {
+      "5": {
+       "Demon": 0.6692,
+       "Assassin": 0.0379,
+       "Gossip": 0.1534,
+       "Gambler": 0.1395
       }
      }
     }
@@ -15029,7 +18360,7 @@
     }
    },
    "expect": {
-    "valid": 2240,
+    "valid": 1600,
     "sampled": false,
     "rows": [
      {
@@ -15039,34 +18370,34 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 99.8223,
-      "demon_pct": 99.1215,
+      "evil_pct": 99.7469,
+      "demon_pct": 98.7486,
       "drunk_pct": 0.0,
-      "lying_pct": 81.4807
+      "lying_pct": 83.0378
      },
      {
-      "evil_pct": 8.4656,
+      "evil_pct": 9.3169,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 32.3677
+      "lying_pct": 34.2301
      },
      {
-      "evil_pct": 0.8785,
-      "demon_pct": 0.8785,
+      "evil_pct": 1.2514,
+      "demon_pct": 1.2514,
       "drunk_pct": 0.0,
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 45.4849,
+      "evil_pct": 47.7585,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 74.8943
+      "lying_pct": 75.8244
      },
      {
-      "evil_pct": 43.7301,
+      "evil_pct": 40.8568,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 67.6323
+      "lying_pct": 65.7699
      },
      {
       "evil_pct": 0.0,
@@ -15075,10 +18406,10 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 2.6747,
+      "evil_pct": 2.5741,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 43.625
+      "lying_pct": 41.1377
      }
     ],
     "blame": {
@@ -15107,21 +18438,21 @@
     "players": [
      {
       "name": "",
-      "claim": "Seamstress",
-      "events": [],
+      "claim": "Philosopher",
+      "events": [
+       "N3"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [
-       1
-      ],
+      "voted": [],
       "nominated": [
        2
       ]
      },
      {
       "name": "",
-      "claim": "Oracle",
+      "claim": "Dreamer",
       "events": [
        "N4"
       ],
@@ -15129,29 +18460,15 @@
       "read": 0,
       "wake": "",
       "voted": [
-       1,
-       2,
        3
       ],
-      "nominated": []
+      "nominated": [
+       3
+      ]
      },
      {
       "name": "",
       "claim": "Barber",
-      "events": [
-       "N3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Dreamer",
       "events": [
        "X1"
       ],
@@ -15160,39 +18477,6 @@
       "wake": "",
       "voted": [],
       "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Savant",
-      "events": [
-       "X3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2
-      ],
-      "nominated": [
-       1,
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Philosopher",
-      "events": [
-       "N2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1
-      ],
-      "nominated": [
-       1
-      ]
      },
      {
       "name": "",
@@ -15207,6 +18491,20 @@
        1,
        2
       ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
       "nominated": []
      },
      {
@@ -15218,73 +18516,116 @@
       "wake": "",
       "voted": [
        1,
-       2
+       3
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "TownCrier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
       ],
       "nominated": [
        3
       ]
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
      }
     ],
     "infos": [
      {
       "type": "SnakeCharmerChoice",
       "night": 1,
-      "player": 7,
-      "target": 6,
-      "swapped": false
-     },
-     {
-      "type": "PhilosopherChoice",
-      "night": 1,
       "player": 5,
-      "role": "Flowergirl"
+      "target": 3,
+      "swapped": false
      },
      {
       "type": "DreamerInfo",
       "night": 1,
-      "player": 3,
-      "target": 1,
+      "player": 1,
+      "target": 7,
       "good_role": "Oracle",
-      "evil_role": "NoDashii"
+      "evil_role": "Cerenovus"
      },
      {
       "type": "SnakeCharmerChoice",
       "night": 2,
-      "player": 7,
+      "player": 5,
       "target": 4,
       "swapped": false
      },
      {
+      "type": "DreamerInfo",
+      "night": 2,
+      "player": 1,
+      "target": 3,
+      "good_role": "Flowergirl",
+      "evil_role": "NoDashii"
+     },
+     {
       "type": "FlowergirlInfo",
       "night": 2,
-      "player": 6,
+      "player": 3,
       "voted": false
      },
      {
       "type": "OracleInfo",
       "night": 2,
-      "player": 1,
-      "count": 5
+      "player": 7,
+      "count": 1
+     },
+     {
+      "type": "CerenovusMadness",
+      "night": 2,
+      "player": 3,
+      "role": "Oracle"
      },
      {
       "type": "SnakeCharmerChoice",
       "night": 3,
-      "player": 7,
-      "target": 4,
+      "player": 0,
+      "target": 7,
       "swapped": false
+     },
+     {
+      "type": "DreamerInfo",
+      "night": 3,
+      "player": 1,
+      "target": 7,
+      "good_role": "Oracle",
+      "evil_role": "Witch"
      },
      {
       "type": "OracleInfo",
       "night": 3,
-      "player": 1,
-      "count": 5
-     },
-     {
-      "type": "SnakeCharmerChoice",
-      "night": 4,
       "player": 7,
-      "target": 0,
-      "swapped": false
+      "count": 2
      }
     ],
     "script": {
@@ -15319,71 +18660,71 @@
     }
    },
    "expect": {
-    "valid": 184,
+    "valid": 216,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 96.3866,
-      "demon_pct": 97.2195,
-      "drunk_pct": 0.0,
-      "lying_pct": 96.4325
-     },
-     {
-      "evil_pct": 4.8275,
-      "demon_pct": 0.059,
-      "drunk_pct": 0.0,
-      "lying_pct": 6.4306
-     },
-     {
-      "evil_pct": 9.4963,
+      "evil_pct": 25.8864,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 9.4963
+      "lying_pct": 26.0128
      },
      {
-      "evil_pct": 32.9381,
+      "evil_pct": 14.4409,
+      "demon_pct": 0.0486,
+      "drunk_pct": 0.0,
+      "lying_pct": 14.7891
+     },
+     {
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 36.0802
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 39.382,
+      "evil_pct": 14.1211,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 43.1077
+      "lying_pct": 14.2222
      },
      {
-      "evil_pct": 0.0026,
+      "evil_pct": 34.4476,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0026
+      "lying_pct": 34.574
      },
      {
-      "evil_pct": 14.8184,
+      "evil_pct": 14.7048,
+      "demon_pct": 11.4633,
+      "drunk_pct": 0.0,
+      "lying_pct": 14.5554
+     },
+     {
+      "evil_pct": 82.2654,
+      "demon_pct": 88.4881,
+      "drunk_pct": 0.0,
+      "lying_pct": 82.2603
+     },
+     {
+      "evil_pct": 16.9097,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 16.3087
-     },
-     {
-      "evil_pct": 2.6039,
-      "demon_pct": 2.7215,
-      "drunk_pct": 0.0,
-      "lying_pct": 2.6523
+      "lying_pct": 17.8732
      }
     ],
     "blame": {
+     "3": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
      "4": {
       "1": {
        "Demon": 1.0
       }
      },
-     "3": {
-      "2": {
-       "Demon": 1.0
-      }
-     },
      "2": {
-      "5": {
+      "4": {
        "Demon": 1.0
       }
      }
@@ -15598,56 +18939,56 @@
     }
    },
    "expect": {
-    "valid": 277,
+    "valid": 199,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 79.9398,
-      "demon_pct": 63.1759,
+      "evil_pct": 83.6162,
+      "demon_pct": 65.5273,
       "drunk_pct": 0.0,
-      "lying_pct": 79.9398
+      "lying_pct": 83.6162
      },
      {
-      "evil_pct": 1.5434,
+      "evil_pct": 1.57,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 23.8804
+      "lying_pct": 17.4183
      },
      {
-      "evil_pct": 55.4182,
-      "demon_pct": 36.8241,
+      "evil_pct": 53.5669,
+      "demon_pct": 34.4727,
       "drunk_pct": 0.0,
-      "lying_pct": 61.983
+      "lying_pct": 58.0213
      },
      {
-      "evil_pct": 9.6407,
+      "evil_pct": 10.6714,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 27.513
+      "lying_pct": 22.7665
      },
      {
-      "evil_pct": 22.1079,
+      "evil_pct": 19.932,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 31.2715
+      "lying_pct": 26.5226
      },
      {
-      "evil_pct": 20.7292,
+      "evil_pct": 21.4399,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 25.0567
+      "lying_pct": 24.7281
      },
      {
-      "evil_pct": 1.2933,
+      "evil_pct": 1.26,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 2.5713
+      "lying_pct": 2.1078
      },
      {
-      "evil_pct": 9.3275,
+      "evil_pct": 7.9436,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 27.7241
+      "lying_pct": 19.4628
      }
     ],
     "blame": {
@@ -15676,9 +19017,44 @@
     "players": [
      {
       "name": "",
-      "claim": "Barber",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
       "events": [
-       "X1"
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [
+       "N2"
       ],
       "certainty": "",
       "read": 0,
@@ -15690,86 +19066,7 @@
      },
      {
       "name": "",
-      "claim": "SnakeCharmer",
-      "events": [
-       "X2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2
-      ],
-      "nominated": [
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Savant",
-      "events": [
-       "X3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2,
-       3
-      ],
-      "nominated": [
-       3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Flowergirl",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2,
-       3
-      ],
-      "nominated": [
-       1,
-       3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Mathematician",
-      "events": [
-       "N2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "",
-      "events": [
-       "N3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "every",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": [
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "SnakeCharmer",
+      "claim": "Sage",
       "events": [
        "N4"
       ],
@@ -15781,80 +19078,121 @@
        2
       ],
       "nominated": [
-       2,
+       1,
        3
       ]
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
      }
     ],
     "infos": [
      {
       "type": "SnakeCharmerChoice",
       "night": 1,
-      "player": 1,
+      "player": 0,
       "target": 6,
       "swapped": true
      },
      {
       "type": "DreamerInfo",
       "night": 1,
-      "player": 5,
+      "player": 1,
       "target": 0,
-      "good_role": "Barber",
-      "evil_role": "Cerenovus"
+      "good_role": "Flowergirl",
+      "evil_role": "Vigormortis"
      },
      {
-      "type": "SnakeCharmerChoice",
-      "night": 2,
-      "player": 6,
-      "target": 1,
-      "swapped": false
-     },
-     {
-      "type": "DreamerInfo",
-      "night": 2,
-      "player": 5,
-      "target": 6,
-      "good_role": "SnakeCharmer",
-      "evil_role": "Witch"
+      "type": "SeamstressInfo",
+      "night": 1,
+      "player": 2,
+      "a": 1,
+      "b": 3,
+      "same": false
      },
      {
       "type": "SavantInfo",
-      "night": 2,
-      "player": 2,
-      "first": "there are 1 outsiders in play",
-      "second": "there are 2 outsiders in play",
+      "night": 1,
+      "player": 4,
+      "first": "the demon is not seat 3",
+      "second": "there are 1 outsiders in play",
       "first_says": null,
       "second_says": null
      },
      {
-      "type": "SnakeCharmerChoice",
-      "night": 3,
-      "player": 6,
-      "target": 5,
-      "swapped": false
+      "type": "DreamerInfo",
+      "night": 2,
+      "player": 1,
+      "target": 0,
+      "good_role": "Clockmaker",
+      "evil_role": "Vigormortis"
+     },
+     {
+      "type": "MathematicianInfo",
+      "night": 2,
+      "player": 5,
+      "count": 0
      },
      {
       "type": "SavantInfo",
-      "night": 3,
-      "player": 2,
-      "first": "different {'kind': 'different', 'a': 4, 'b': 6}",
-      "second": "not_in_play {'kind': 'not_in_play', 'role': 'Sage'}",
-      "first_says": {
-       "kind": "different",
-       "a": 4,
-       "b": 6
-      },
-      "second_says": {
-       "kind": "not_in_play",
-       "role": "Sage"
-      }
+      "night": 2,
+      "player": 4,
+      "first": "there are 0 outsiders in play",
+      "second": "the demon is seat 3",
+      "first_says": null,
+      "second_says": null
      },
      {
-      "type": "SnakeCharmerChoice",
-      "night": 4,
-      "player": 6,
-      "target": 3,
-      "swapped": false
+      "type": "DreamerInfo",
+      "night": 3,
+      "player": 1,
+      "target": 2,
+      "good_role": "Seamstress",
+      "evil_role": "Vigormortis"
      }
     ],
     "script": {
@@ -15889,65 +19227,65 @@
     }
    },
    "expect": {
-    "valid": 17,
+    "valid": 84,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     },
-     {
       "evil_pct": 100.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 1.8062
-     },
-     {
-      "evil_pct": 2.296,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 2.296
-     },
-     {
-      "evil_pct": 97.3366,
       "demon_pct": 100.0,
       "drunk_pct": 0.0,
-      "lying_pct": 97.1988
+      "lying_pct": 38.977
+     },
+     {
+      "evil_pct": 58.2713,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 60.7813
+     },
+     {
+      "evil_pct": 5.1905,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 11.0964
+     },
+     {
+      "evil_pct": 36.8194,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 51.5841
+     },
+     {
+      "evil_pct": 0.225,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.5873
      },
      {
       "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     },
-     {
-      "evil_pct": 0.5051,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0574
+      "lying_pct": 5.9059
      },
      {
       "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 98.4693
+      "lying_pct": 75.0846
      }
     ],
     "blame": {
      "2": {
-      "4": {
-       "Demon": 1.0
-      }
-     },
-     "3": {
-      "5": {
+      "2": {
        "Demon": 1.0
       }
      },
      "4": {
-      "6": {
+      "3": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "4": {
        "Demon": 1.0
       }
      }
@@ -16621,50 +19959,50 @@
     }
    },
    "expect": {
-    "valid": 2902,
+    "valid": 2878,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 20.5327,
-      "demon_pct": 13.3626,
+      "evil_pct": 20.8247,
+      "demon_pct": 13.2778,
       "drunk_pct": 0.0,
-      "lying_pct": 20.1643
+      "lying_pct": 20.0363
      },
      {
-      "evil_pct": 32.3293,
-      "demon_pct": 21.5881,
-      "drunk_pct": 7.0273,
-      "lying_pct": 39.3566
+      "evil_pct": 32.6732,
+      "demon_pct": 21.4511,
+      "drunk_pct": 4.999,
+      "lying_pct": 37.6722
      },
      {
-      "evil_pct": 32.3293,
-      "demon_pct": 21.5881,
-      "drunk_pct": 7.0273,
-      "lying_pct": 39.3566
+      "evil_pct": 31.7109,
+      "demon_pct": 20.6958,
+      "drunk_pct": 6.9827,
+      "lying_pct": 38.6935
      },
      {
-      "evil_pct": 4.701,
-      "demon_pct": 1.4966,
-      "drunk_pct": 4.6072,
-      "lying_pct": 0.1133
+      "evil_pct": 4.612,
+      "demon_pct": 1.428,
+      "drunk_pct": 4.578,
+      "lying_pct": 0.1126
      },
      {
-      "evil_pct": 32.3293,
-      "demon_pct": 21.5881,
-      "drunk_pct": 7.0273,
-      "lying_pct": 39.3566
+      "evil_pct": 31.7109,
+      "demon_pct": 20.6958,
+      "drunk_pct": 6.9827,
+      "lying_pct": 38.6935
      },
      {
-      "evil_pct": 59.6884,
-      "demon_pct": 14.7584,
-      "drunk_pct": 20.6474,
-      "lying_pct": 80.3358
+      "evil_pct": 59.9443,
+      "demon_pct": 16.3202,
+      "drunk_pct": 20.5164,
+      "lying_pct": 80.4606
      },
      {
-      "evil_pct": 18.0899,
-      "demon_pct": 5.618,
-      "drunk_pct": 8.4643,
-      "lying_pct": 26.5542
+      "evil_pct": 18.5241,
+      "demon_pct": 6.1314,
+      "drunk_pct": 8.4105,
+      "lying_pct": 26.9347
      }
     ]
    }
@@ -18124,80 +21462,80 @@
     }
    },
    "expect": {
-    "valid": 2076,
+    "valid": 1662,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 15.7731,
-      "demon_pct": 5.2577,
-      "drunk_pct": 0.6234,
-      "lying_pct": 15.1496
+      "evil_pct": 23.4261,
+      "demon_pct": 7.8087,
+      "drunk_pct": 0.7693,
+      "lying_pct": 22.6568
      },
      {
-      "evil_pct": 21.8101,
-      "demon_pct": 6.8786,
-      "drunk_pct": 1.6937,
-      "lying_pct": 20.1164
+      "evil_pct": 18.6498,
+      "demon_pct": 5.911,
+      "drunk_pct": 1.3656,
+      "lying_pct": 17.2843
      },
      {
-      "evil_pct": 51.5794,
-      "demon_pct": 17.9551,
-      "drunk_pct": 0.2078,
-      "lying_pct": 51.3716
+      "evil_pct": 50.8911,
+      "demon_pct": 17.4638,
+      "drunk_pct": 0.1282,
+      "lying_pct": 50.7629
      },
      {
-      "evil_pct": 21.3944,
-      "demon_pct": 6.6708,
-      "drunk_pct": 1.4859,
-      "lying_pct": 19.9086
+      "evil_pct": 18.1369,
+      "demon_pct": 5.6546,
+      "drunk_pct": 1.1091,
+      "lying_pct": 17.0278
      },
      {
-      "evil_pct": 20.532,
-      "demon_pct": 6.7747,
-      "drunk_pct": 0.4156,
-      "lying_pct": 20.1164
+      "evil_pct": 17.4125,
+      "demon_pct": 5.7187,
+      "drunk_pct": 0.2564,
+      "lying_pct": 17.156
      },
      {
-      "evil_pct": 20.532,
-      "demon_pct": 6.7747,
-      "drunk_pct": 0.4156,
-      "lying_pct": 20.1164
+      "evil_pct": 17.4125,
+      "demon_pct": 5.7187,
+      "drunk_pct": 0.2564,
+      "lying_pct": 17.156
      },
      {
-      "evil_pct": 20.532,
-      "demon_pct": 6.7747,
-      "drunk_pct": 0.4156,
-      "lying_pct": 20.1164
+      "evil_pct": 17.4125,
+      "demon_pct": 5.7187,
+      "drunk_pct": 0.2564,
+      "lying_pct": 17.156
      },
      {
-      "evil_pct": 20.532,
-      "demon_pct": 6.7747,
-      "drunk_pct": 0.4156,
-      "lying_pct": 20.1164
+      "evil_pct": 17.4125,
+      "demon_pct": 5.7187,
+      "drunk_pct": 0.2564,
+      "lying_pct": 17.156
      },
      {
-      "evil_pct": 20.9476,
-      "demon_pct": 6.9825,
-      "drunk_pct": 0.6234,
-      "lying_pct": 20.3242
+      "evil_pct": 17.9254,
+      "demon_pct": 5.9751,
+      "drunk_pct": 0.5129,
+      "lying_pct": 17.4125
      },
      {
-      "evil_pct": 17.1862,
-      "demon_pct": 5.2577,
-      "drunk_pct": 2.1405,
-      "lying_pct": 15.0457
+      "evil_pct": 24.4454,
+      "demon_pct": 7.6164,
+      "drunk_pct": 2.1734,
+      "lying_pct": 22.2721
      },
      {
-      "evil_pct": 52.4106,
-      "demon_pct": 18.8487,
-      "drunk_pct": 0.4156,
-      "lying_pct": 51.995
+      "evil_pct": 52.4298,
+      "demon_pct": 19.0794,
+      "drunk_pct": 0.3847,
+      "lying_pct": 52.0451
      },
      {
-      "evil_pct": 16.7706,
-      "demon_pct": 5.0499,
-      "drunk_pct": 1.9327,
-      "lying_pct": 14.8379
+      "evil_pct": 24.4454,
+      "demon_pct": 7.6164,
+      "drunk_pct": 2.1734,
+      "lying_pct": 22.2721
      }
     ]
    }
@@ -19806,80 +23144,80 @@
     }
    },
    "expect": {
-    "valid": 7470,
+    "valid": 4203,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 5.9962,
-      "demon_pct": 1.9987,
-      "drunk_pct": 6.6992,
-      "lying_pct": 6.1409
+      "evil_pct": 5.3207,
+      "demon_pct": 1.7736,
+      "drunk_pct": 5.9445,
+      "lying_pct": 5.4492
      },
      {
-      "evil_pct": 6.5361,
-      "demon_pct": 1.9987,
-      "drunk_pct": 7.2391,
-      "lying_pct": 6.1409
+      "evil_pct": 5.7998,
+      "demon_pct": 1.7736,
+      "drunk_pct": 6.4236,
+      "lying_pct": 5.4492
      },
      {
-      "evil_pct": 56.6251,
-      "demon_pct": 19.1316,
-      "drunk_pct": 43.3749,
-      "lying_pct": 56.6251
+      "evil_pct": 56.6188,
+      "demon_pct": 19.1006,
+      "drunk_pct": 43.3812,
+      "lying_pct": 56.6188
      },
      {
-      "evil_pct": 47.0392,
-      "demon_pct": 15.5132,
-      "drunk_pct": 7.9869,
-      "lying_pct": 50.29
+      "evil_pct": 46.9447,
+      "demon_pct": 15.5004,
+      "drunk_pct": 7.5153,
+      "lying_pct": 50.2574
      },
      {
-      "evil_pct": 47.4585,
-      "demon_pct": 15.9727,
-      "drunk_pct": 7.7572,
-      "lying_pct": 51.0195
+      "evil_pct": 47.3167,
+      "demon_pct": 15.9081,
+      "drunk_pct": 7.3114,
+      "lying_pct": 50.9046
      },
      {
-      "evil_pct": 6.4557,
-      "demon_pct": 1.9987,
-      "drunk_pct": 7.1587,
-      "lying_pct": 6.1409
+      "evil_pct": 5.7284,
+      "demon_pct": 1.7736,
+      "drunk_pct": 6.3522,
+      "lying_pct": 5.4492
      },
      {
-      "evil_pct": 47.9697,
-      "demon_pct": 15.9899,
-      "drunk_pct": 1.1579,
-      "lying_pct": 49.1276
+      "evil_pct": 53.2072,
+      "demon_pct": 17.7357,
+      "drunk_pct": 1.2843,
+      "lying_pct": 54.4915
      },
      {
-      "evil_pct": 5.9962,
-      "demon_pct": 1.9987,
-      "drunk_pct": 6.6992,
-      "lying_pct": 6.1409
+      "evil_pct": 5.3207,
+      "demon_pct": 1.7736,
+      "drunk_pct": 5.9445,
+      "lying_pct": 5.4492
      },
      {
-      "evil_pct": 5.9962,
-      "demon_pct": 1.9987,
-      "drunk_pct": 6.6992,
-      "lying_pct": 6.1409
+      "evil_pct": 5.3207,
+      "demon_pct": 1.7736,
+      "drunk_pct": 5.9445,
+      "lying_pct": 5.4492
      },
      {
-      "evil_pct": 6.5361,
-      "demon_pct": 1.9987,
-      "drunk_pct": 7.2391,
-      "lying_pct": 6.1409
+      "evil_pct": 5.7998,
+      "demon_pct": 1.7736,
+      "drunk_pct": 6.4236,
+      "lying_pct": 5.4492
      },
      {
-      "evil_pct": 56.8549,
-      "demon_pct": 19.4015,
-      "drunk_pct": 43.1451,
-      "lying_pct": 56.8549
+      "evil_pct": 56.8227,
+      "demon_pct": 19.3401,
+      "drunk_pct": 43.1773,
+      "lying_pct": 56.8227
      },
      {
-      "evil_pct": 6.5361,
-      "demon_pct": 1.9987,
-      "drunk_pct": 7.2391,
-      "lying_pct": 6.1409
+      "evil_pct": 5.7998,
+      "demon_pct": 1.7736,
+      "drunk_pct": 6.4236,
+      "lying_pct": 5.4492
      }
     ]
    }
@@ -22422,44 +25760,44 @@
     }
    },
    "expect": {
-    "valid": 68,
+    "valid": 42,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 12.2699,
-      "demon_pct": 6.135,
+      "evil_pct": 9.8522,
+      "demon_pct": 4.9261,
       "drunk_pct": 0.0,
-      "lying_pct": 12.2699
+      "lying_pct": 9.8522
      },
      {
-      "evil_pct": 36.8098,
-      "demon_pct": 18.4049,
+      "evil_pct": 39.4089,
+      "demon_pct": 19.7044,
       "drunk_pct": 0.0,
-      "lying_pct": 36.8098
+      "lying_pct": 39.4089
      },
      {
-      "evil_pct": 12.2699,
-      "demon_pct": 6.135,
+      "evil_pct": 9.8522,
+      "demon_pct": 4.9261,
       "drunk_pct": 0.0,
-      "lying_pct": 12.2699
+      "lying_pct": 9.8522
      },
      {
-      "evil_pct": 50.9202,
-      "demon_pct": 25.4601,
+      "evil_pct": 50.7389,
+      "demon_pct": 25.3695,
       "drunk_pct": 0.0,
-      "lying_pct": 50.9202
+      "lying_pct": 50.7389
      },
      {
-      "evil_pct": 36.8098,
-      "demon_pct": 18.4049,
+      "evil_pct": 39.4089,
+      "demon_pct": 19.7044,
       "drunk_pct": 0.0,
-      "lying_pct": 36.8098
+      "lying_pct": 39.4089
      },
      {
-      "evil_pct": 50.9202,
-      "demon_pct": 25.4601,
+      "evil_pct": 50.7389,
+      "demon_pct": 25.3695,
       "drunk_pct": 0.0,
-      "lying_pct": 50.9202
+      "lying_pct": 50.7389
      }
     ]
    }
@@ -22602,7 +25940,7 @@
     ]
    },
    "expect": {
-    "valid": 1344,
+    "valid": 672,
     "sampled": false,
     "rows": [
      {
@@ -23776,50 +27114,50 @@
     }
    },
    "expect": {
-    "valid": 112,
+    "valid": 64,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 18.2137,
-      "demon_pct": 9.1068,
-      "drunk_pct": 0.4413,
-      "lying_pct": 18.655
+      "evil_pct": 16.8667,
+      "demon_pct": 8.4333,
+      "drunk_pct": 0.4087,
+      "lying_pct": 17.2754
      },
      {
-      "evil_pct": 18.2137,
-      "demon_pct": 9.1068,
-      "drunk_pct": 0.4413,
-      "lying_pct": 18.655
+      "evil_pct": 16.8667,
+      "demon_pct": 8.4333,
+      "drunk_pct": 0.4087,
+      "lying_pct": 17.2754
      },
      {
-      "evil_pct": 18.2137,
-      "demon_pct": 9.1068,
-      "drunk_pct": 0.4413,
-      "lying_pct": 18.655
+      "evil_pct": 16.8667,
+      "demon_pct": 8.4333,
+      "drunk_pct": 0.4087,
+      "lying_pct": 17.2754
      },
      {
-      "evil_pct": 18.2137,
-      "demon_pct": 9.1068,
-      "drunk_pct": 0.4413,
-      "lying_pct": 18.655
+      "evil_pct": 16.8667,
+      "demon_pct": 8.4333,
+      "drunk_pct": 0.4087,
+      "lying_pct": 17.2754
      },
      {
-      "evil_pct": 54.4658,
-      "demon_pct": 27.2329,
-      "drunk_pct": 26.62,
-      "lying_pct": 76.8827
+      "evil_pct": 57.8333,
+      "demon_pct": 28.9166,
+      "drunk_pct": 26.5975,
+      "lying_pct": 76.6461
      },
      {
-      "evil_pct": 54.4658,
-      "demon_pct": 27.2329,
-      "drunk_pct": 26.62,
-      "lying_pct": 76.8827
+      "evil_pct": 57.8333,
+      "demon_pct": 28.9166,
+      "drunk_pct": 26.5975,
+      "lying_pct": 76.6461
      },
      {
-      "evil_pct": 18.2137,
-      "demon_pct": 9.1068,
-      "drunk_pct": 0.4413,
-      "lying_pct": 18.655
+      "evil_pct": 16.8667,
+      "demon_pct": 8.4333,
+      "drunk_pct": 0.4087,
+      "lying_pct": 17.2754
      }
     ]
    }
@@ -25316,67 +28654,70 @@
     }
    },
    "expect": {
-    "valid": 178,
+    "valid": 0,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 7.2788,
-      "demon_pct": 3.3595,
-      "drunk_pct": 13.9978,
-      "lying_pct": 6.7189
-     },
-     {
-      "evil_pct": 44.7928,
-      "demon_pct": 22.3964,
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 44.7928
-     },
-     {
-      "evil_pct": 0.168,
-      "demon_pct": 0.0,
-      "drunk_pct": 13.4378,
-      "lying_pct": 0.168
-     },
-     {
-      "evil_pct": 0.28,
-      "demon_pct": 0.0,
-      "drunk_pct": 22.3964,
-      "lying_pct": 0.28
-     },
-     {
-      "evil_pct": 60.5663,
-      "demon_pct": 22.3964,
-      "drunk_pct": 0.0,
-      "lying_pct": 44.7928
-     },
-     {
-      "evil_pct": 0.5599,
-      "demon_pct": 0.0,
-      "drunk_pct": 13.9978,
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 51.0638,
-      "demon_pct": 25.9239,
-      "drunk_pct": 7.2788,
-      "lying_pct": 50.5039
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 51.0638,
-      "demon_pct": 25.9239,
-      "drunk_pct": 7.2788,
-      "lying_pct": 50.5039
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      }
     ],
-    "blame": {
-     "2": {
-      "2": {
-       "Demon": 1.0
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 3 dying"
       },
-      "3": {
-       "Demon": 1.0
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
       }
-     }
+     ],
+     "complete": true
     }
    }
   },

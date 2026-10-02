@@ -660,6 +660,12 @@ export const DATA = {
     "every",
     "first"
    ],
+   "setup": [
+    {
+     "townsfolk": 1,
+     "outsider": -1
+    }
+   ],
    "chooses": true,
    "nights": "other",
    "impairs": true,

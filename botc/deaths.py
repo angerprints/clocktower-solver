@@ -32,6 +32,10 @@ from typing import NamedTuple
 
 DEMON = "demon"          # the Demon's own kill
 OTHER = "other"          # anything else that kills at night
+# A Moonchild's pick, written down. Told apart because it is the one
+# death that names its victim in public beforehand — so when that player
+# lives, there is something to explain that no other cause has.
+PICKED = "picked"
 
 
 class Cause(NamedTuple):

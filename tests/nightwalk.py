@@ -328,6 +328,14 @@ def hidden_from(deal, night, heard):
         if got and (key, night) not in out:
             out[(key, night)] = got[0].target
 
+    # What a Pit-Hag made. The walk has had the branch since it learned
+    # the character and nothing ever filled it: the comparisons happened
+    # to draw no game where it mattered until the deal changed shape
+    # (02.10.2026), and then a Dreamer at 56 read the seat as it had been.
+    made = row("PitHagChoice")
+    if made:
+        out[("pithag", night)] = (made[0].target, made[0].role)
+
     guess = row("GamblerGuess")
     if guess:
         out[("gambler", night)] = (guess[0].target, guess[0].role)

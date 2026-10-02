@@ -590,7 +590,8 @@ class TheDreamerReadsWhatIsThereNow(SolverTest):
                     hidden[("demon", night)] = deal.demon_aimed[night]
                 # A Fang Gu's jump and a Barber's swap both move who holds
                 # what before the Dreamer reads at 56.
-                for key in (("fanggu_jump", night), ("barber", night)):
+                for key in (("fanggu_jump", night), ("barber", night),
+                            ("pithag", night)):
                     got_it = nightwalk.hidden_from(deal, night, heard).get(key)
                     if got_it is not None:
                         hidden[key] = got_it
@@ -786,9 +787,26 @@ class TheWalkRunsOverASolverWorld(SolverTest):
                               wakes=wakes, deaths=dict(deal.deaths),
                               infos=list(heard))
             world = World(tuple(deal.roles), tuple(deal.believes))
+            # A Barber that hid and died: the swap is not looked for (a
+            # table ruling, 29.09.2026), so the view the solver would
+            # score is knowingly not the game that was played.
+            claimed = S.barber_claimants(state)
+            if any(deal.role_at(p, at) == "Barber" and p not in claimed
+                   for p, at in deal.deaths.items()):
+                continue
             chains = S.possible_timelines(world, state)
-            view = (Timeline(world, chains[0][0])
-                    if chains and chains[0][0] else world)
+            # The telling that is the game played, where the solver has
+            # it. Taking the first one was enough until a claimed Barber's
+            # swap put several on offer: the first is the cheapest, and
+            # the cheapest is the one with no swap in it.
+            phases = [f"{half}{k}" for k in (1, 2, 3) for half in "NE"]
+            def played(chain):
+                view = Timeline(world, chain) if chain else world
+                return all(view.role_at(p, at) == deal.role_at(p, at)
+                           for p in range(deal.n) for at in phases)
+            chain = next((c for c, _cost in chains if played(c)),
+                         chains[0][0] if chains else ())
+            view = Timeline(world, chain) if chain else world
             yield deal, heard, nightwalk.AsBoard(view, state)
 
     def test_the_adapter_needs_almost_nothing(self):

@@ -144,8 +144,15 @@ class TheDreamer(SolverTest):
             self.reading(good="SnakeCharmer", evil="Witch")])))
         was = dict(plain[2]["roles"]).get("SnakeCharmer", 0)
         now = dict(rows[2]["roles"]).get("SnakeCharmer", 0)
-        self.assertGreater(now, was)
         self.assertGreater(now, 60.0)
+        # And no longer more than the bare board gives, which is worth
+        # saying out loud. Under a Vortox the reading *must* be false,
+        # "even if they are drunk or poisoned" — so in every Vortox world
+        # the seat is certainly not what the Dreamer named, and that
+        # takes back about what the other worlds add. It rose while a
+        # drunk Dreamer was allowed to tell the truth beside a Vortox,
+        # which the card rules out (02.10.2026).
+        self.assertLess(abs(now - was), 6.0)
 
     def test_naming_something_else_raises_suspicion(self):
         plain = S.summarize(*self._solved(board()))
@@ -182,18 +189,31 @@ class TheOutsiderTrap(SolverTest):
         """All but one. Since the Mutant was modelled it can stand behind
         any Townsfolk claim, so the seat that says "Mutant" may be evil
         bluffing it while the real one hides. The Sweetheart has nobody
-        to hide behind and stays pinned."""
+        to hide behind and stays pinned.
+
+        **Unless a Vigormortis is in play.** It takes an Outsider out of
+        the bag, so then one of the two claims is somebody evil's. That
+        was missing until 02.10.2026, and this test held the wrong bag
+        in place."""
         valid = S.solve(board())[1]
         self.assertTrue(valid)
-        self.assertEqual({w.roles[8] for w in valid}, {"Sweetheart"})
-        seven = {w.roles[7] for w in valid}
+        plain = [w for w in valid if "Vigormortis" not in w.roles]
+        self.assertEqual({w.roles[8] for w in plain}, {"Sweetheart"})
+        seven = {w.roles[7] for w in plain}
         self.assertIn("Mutant", seven)
         for role in seven - {"Mutant"}:
             with self.subTest(role=role):
                 self.assertTrue(S.is_evil(role))
-        for w in valid:
+        for w in plain:
             if w.roles[7] != "Mutant":
                 self.assertIn("Mutant", w.roles[:7])
+        # With one, exactly one Outsider is real.
+        from botc.roles import TEAM
+        with_it = [w for w in valid if "Vigormortis" in w.roles]
+        self.assertTrue(with_it)
+        for w in with_it:
+            self.assertEqual(
+                sum(TEAM[r] == "outsider" for r in w.roles), 1)
 
     def test_while_a_townsfolk_claimant_can_be_anything(self):
         valid = S.solve(board())[1]
@@ -403,24 +423,35 @@ class TheFlowergirlAndTheTownCrier(SolverTest):
                         infos=[FlowergirlInfo(3, 4, voted=False)])
         said_yes = S.summarize(S.solve(yes)[1], yes)
         said_no = S.summarize(S.solve(no)[1], no)
+        # Asked of the Demon, which is what a Flowergirl is told about.
+        # It used to ask who was *evil*, and that held only while the two
+        # Outsider claims were pinned good — a Vigormortis takes one out
+        # of the bag, so on a "no" some of the weight now goes to those
+        # two seats rather than to the other abstainers.
         for seat in (0, 1, 2):
             with self.subTest(voter=seat + 1):
-                self.assertGreater(said_yes[seat]["evil_pct"],
-                                   said_no[seat]["evil_pct"])
+                self.assertGreater(said_yes[seat]["demon_pct"],
+                                   said_no[seat]["demon_pct"])
         for seat in (3, 5, 6):
             with self.subTest(abstained=seat + 1):
-                self.assertLess(said_yes[seat]["evil_pct"],
-                                said_no[seat]["evil_pct"])
+                self.assertLess(said_yes[seat]["demon_pct"],
+                                said_no[seat]["demon_pct"])
 
     def test_the_town_crier_points_at_the_nominator(self):
         from botc.info import TownCrierInfo
         state = self.board(nominations={2: {2}}, days_done={2},
                            infos=[TownCrierInfo(3, 5, nominated=True)])
         rows = S.summarize(S.solve(state)[1], state)
-        for seat in (0, 1, 3, 6):
+        # Not seat 7, the Town Crier's neighbour: a No Dashii sitting
+        # there poisons it, which is the other way a "yes" comes about.
+        for seat in (0, 1, 3):
             with self.subTest(other=seat + 1):
                 self.assertLess(rows[seat]["evil_pct"],
                                 rows[2]["evil_pct"])
+        # And it does point there: more than the same board without it.
+        bare = self.board(nominations={2: {2}}, days_done={2})
+        before = S.summarize(S.solve(bare)[1], bare)
+        self.assertGreater(rows[2]["evil_pct"], before[2]["evil_pct"])
 
 
 class TheSecondBatch(SolverTest):
@@ -1995,3 +2026,162 @@ class FoundByTheWideSweep(SolverTest):
                          infos=infos, deaths={1: ("D1",)})
         self.assertEqual(_possible_impairment_counts(w, alive, 2)[0], 1)
         self.assertEqual(_possible_impairment_counts(w, dead, 2)[0], 0)
+
+
+class TheScriptReadAgainstTheWiki(SolverTest):
+    """Every character of Sects & Violets, read against the official
+    wiki (02.10.2026).
+
+    Each test is a small board with one true world. Where a rule was
+    missing, that world was thrown out; where it was loose, a world that
+    could not have happened cost nothing.
+    """
+
+    def cost(self, roles, bluffs, **more):
+        claims = list(roles)
+        for seat, claim in bluffs.items():
+            claims[seat] = claim
+        state = GameState(n_players=len(roles), script=SV,
+                          claims={i: c for i, c in enumerate(claims)},
+                          **more)
+        return S.explanation_cost(
+            World(tuple(roles), (None,) * len(roles)), state)
+
+    BLUFFS = {5: "Savant", 7: "Artist", 8: "Sage"}
+
+    # --- the Vigormortis -------------------------------------------------
+
+    def outsiders_by_demon(self, claims):
+        from botc.roles import TEAM
+        from botc.worlds import iter_worlds
+        seen = set()
+        for world in iter_worlds(9, dict(enumerate(claims)), script=SV):
+            demon = next(r for r in world.roles if TEAM[r] == "demon")
+            seen.add((demon, sum(TEAM[r] == "outsider"
+                                 for r in world.roles)))
+        return seen
+
+    def test_a_vigormortis_takes_an_outsider_out_of_the_bag(self):
+        """ "[-1 Outsider]". It was dealt like any other Demon, so every
+        Vigormortis game was searched with one Outsider too many."""
+        got = self.outsiders_by_demon(CLAIMS)
+        self.assertIn(("Vigormortis", 1), got)
+        self.assertNotIn(("Vigormortis", 2), got)
+        self.assertIn(("NoDashii", 2), got)
+        self.assertIn(("Vortox", 2), got)
+
+    def test_and_nothing_where_there_is_none_to_take(self):
+        """Seven players have no Outsiders, and it is still in play."""
+        from botc.worlds import _bags
+        with_it = [counts for present, counts in _bags(7, SV)
+                   if "Vigormortis" in present]
+        self.assertTrue(with_it)
+        self.assertTrue(all(c["outsider"] == 0 for c in with_it))
+
+    WITCH = ["Oracle", "Clockmaker", "Dreamer", "Flowergirl", "Sweetheart",
+             "Mutant", "Juggler", "Witch"]
+
+    def test_its_dead_witch_goes_on_cursing(self):
+        got = self.cost(self.WITCH + ["Vigormortis"], self.BLUFFS,
+                        deaths={7: "N2", 1: "N3", 2: "D3"},
+                        witch_deaths={3: 2}, days_done={1, 2})
+        self.assertIsNotNone(got)
+
+    def test_any_other_demons_dead_witch_does_not(self):
+        got = self.cost(self.WITCH + ["Vortox"], self.BLUFFS,
+                        deaths={7: "N2", 1: "N3", 2: "D3"},
+                        witch_deaths={3: 2}, executions={1: 3, 2: 4},
+                        days_done={1, 2})
+        self.assertIsNone(got)
+
+    def test_its_dead_cerenovus_goes_on_maddening(self):
+        roles = self.WITCH[:7] + ["Cerenovus", "Vigormortis"]
+        got = self.cost(roles, self.BLUFFS,
+                        deaths={7: "N2", 1: "N3", 2: "D3"},
+                        madness_executions={3: 2}, executions={3: 2},
+                        days_done={1, 2})
+        self.assertIsNotNone(got)
+
+    # --- the Witch -------------------------------------------------------
+
+    def test_a_witch_at_a_table_of_three_has_no_ability(self):
+        got = self.cost(["Oracle", "Clockmaker", "Dreamer", "Witch",
+                         "FangGu"], {3: "Artist", 4: "Sage"},
+                        executions={1: 0},
+                        deaths={0: "D1", 1: "N2", 2: "D2"},
+                        witch_deaths={2: 2})
+        self.assertIsNone(got)
+
+    # --- the Vortox ------------------------------------------------------
+
+    def drunk_oracle(self, count):
+        """A Philosopher took the Oracle, so the real one is drunk — and
+        nothing on the board can reach the Vortox."""
+        from botc.info import OracleInfo, PhilosopherChoice
+        roles = ["Philosopher", "Oracle", "Dreamer", "Flowergirl",
+                 "Clockmaker", "Mutant", "Juggler", "Witch", "Vortox"]
+        return self.cost(
+            roles, self.BLUFFS, executions={1: 7},
+            deaths={7: "D1", 3: "N2"}, days_done={1},
+            infos=[PhilosopherChoice(1, 0, role="Oracle"),
+                   OracleInfo(2, 1, count=count)])
+
+    def test_even_a_drunk_townsfolk_is_told_nothing_true(self):
+        """ "Even if they are drunk or poisoned, it must be false." One
+        Minion is dead, so one is the truth."""
+        self.assertIsNone(self.drunk_oracle(1))
+
+    def test_and_something_false_is_what_it_gets(self):
+        self.assertEqual(self.drunk_oracle(0), 1.0)
+
+    # --- the Evil Twin ---------------------------------------------------
+
+    TWINS = ["Oracle", "Clockmaker", "Dreamer", "Flowergirl", "Sweetheart",
+             "Mutant", "Juggler", "EvilTwin", "FangGu"]
+    TWIN_BLUFFS = {5: "Savant", 7: "Dreamer", 8: "Sage"}
+
+    def pair(self):
+        from botc.info import EvilTwinPair
+        return [EvilTwinPair(1, 2, a=2, b=7)]
+
+    def test_the_evil_twin_hanged_and_the_game_goes_on(self):
+        got = self.cost(self.TWINS, self.TWIN_BLUFFS, infos=self.pair(),
+                        executions={1: 7}, deaths={7: "D1", 1: "N2"})
+        self.assertEqual(got, 1.0)
+
+    def test_the_good_twin_hanged_would_have_ended_it(self):
+        got = self.cost(self.TWINS, self.TWIN_BLUFFS, infos=self.pair(),
+                        executions={1: 2}, deaths={2: "D1", 1: "N2"},
+                        days_done={1})
+        self.assertIsNone(got)
+
+    def test_unless_the_evil_twin_was_already_dead(self):
+        got = self.cost(self.TWINS, self.TWIN_BLUFFS, infos=self.pair(),
+                        executions={1: 3, 2: 2},
+                        deaths={3: "D1", 7: "N2", 2: "D2", 1: "N3"},
+                        days_done={1, 2})
+        self.assertIsNotNone(got)
+
+    # --- the Philosopher -------------------------------------------------
+
+    def test_a_philosopher_that_was_poisoned_when_it_chose_drunks_nobody(
+            self):
+        """It sits beside a No Dashii, so it was poisoned all along and
+        gained nothing — and the real Oracle goes on telling the truth.
+        The drunkenness was forced, with no way to say it never
+        happened."""
+        from botc.info import PhilosopherChoice
+        from botc import impairment
+        roles = ["Philosopher", "Oracle", "Dreamer", "Flowergirl",
+                 "Clockmaker", "Mutant", "Juggler", "Witch", "NoDashii"]
+        state = GameState(
+            n_players=9, script=SV,
+            claims={i: c for i, c in enumerate(
+                roles[:5] + ["Savant", "Juggler", "Artist", "Sage"])},
+            infos=[PhilosopherChoice(1, 0, role="Oracle")])
+        world = World(tuple(roles), (None,) * 9)
+        # The Oracle has to have been working, and nothing else is asked.
+        got = S._impairment_plan(world, state, {}, {1: {1}})
+        self.assertIsNotNone(got)
+        self.assertIn(0, impairment.sources_on(world, state, 1)[0].seats
+                      | {0})

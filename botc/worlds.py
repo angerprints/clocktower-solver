@@ -446,7 +446,15 @@ def _bags(n_players, script=DEFAULT, fabled=()):
         grown = []
         for present, counts in bags:
             grown.append((present, counts))       # this one stayed out
-            for shift in shifts:
+            # A shift that would take a team below nought cannot be made.
+            # Where there is another to choose — a Godfather's "-1 or +1"
+            # at a table with no Outsiders — that one is taken. Where
+            # there is not, the character is in play and changes nothing:
+            # a Vigormortis removes an Outsider "if there is one".
+            possible = [shift for shift in shifts
+                        if all(counts[team] + delta >= 0
+                               for team, delta in shift.items())] or [{}]
+            for shift in possible:
                 moved = dict(counts)
                 for team, delta in shift.items():
                     moved[team] += delta

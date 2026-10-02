@@ -141,6 +141,12 @@ run("bmr-9-godfather-claimed", BMR,
     {deaths: {7: "D2"}});
 run("bmr-9b-courtier-lands", BMR, BMR9B, {
   infos: [{type: "CourtierChoice", night: 1, player: 0, role: "Sailor"}]});
+// And a Minion that owns up and hangs. The Minstrel sings only when the
+// one executed *died* and was a Minion, and on the boards above the first
+// four thousand worlds never put a Minion in that seat.
+run("bmr-9b-assassin-hanged", BMR,
+    [...BMR9B.slice(0, 6), "Assassin", ...BMR9B.slice(7)],
+    {deaths: {6: "E1"}});
 
 // --- what is registered ----------------------------------------------
 const registry = {

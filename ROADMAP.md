@@ -237,31 +237,62 @@ Der Chat, der das Einzelspieler-Spiel baut, hat alle 25 Charaktere von Bad Moon 
 
 **Nachtrag am selben Tag, deine Entscheidung zur Marionette:** Die Kammerzofe bekommt die Zahl, die das Token der Marionette ergibt, genau wie beim Trunkenbold. Der Solver hatte sie gar nicht gezählt, der Simulator schon immer nach ihrem Token. Kein Skript in den Messläufen hatte beide Charaktere, deshalb fiel es nie auf. Auf einem gemischten Skript mit beiden verwarf der Solver vorher die wahre Welt in 115 von 532 Partien, jetzt in 0.
 
+### Regelprüfung Bad Moon Rising und Sects & Violets · *erledigt am 02.10.2026*
+
+Die Frage war: Sind die Regeln beider Skripte noch richtig umgesetzt? Alle 50 Charaktere wurden gegen das Regelwerk des Spiels, das Pukka-Flowchart und das offizielle Wiki gelesen, mit rund 130 Probebrettern mit bekannter Wahrheit. Der volle Bericht steht in `claude/regelpruefung-bmr-und-snv.md`.
+
+**Regeln, die fehlten (die wahre Welt ging verloren), alle behoben:**
+
+| Skript | Charakter | Was fehlte |
+|---|---|---|
+| BMR | Teedame | Sie schützte nachts, aber nicht vor der Hinrichtung. |
+| BMR | Teedame und Shabaloth | Tötet der Shabaloth erst sie und dann ihren Nachbarn, sterben beide. |
+| BMR | Shabaloth | Das Hochwürgen fehlte ganz. |
+| BMR | Höfling | Die Trunkenheit lief weiter, wenn der Höfling tot oder beim Wählen selbst gestört war. |
+| BMR | Minnesänger | Er löste auch aus, wenn der hingerichtete Scherge überlebte. |
+| BMR | Überlebte Hinrichtung | Standen zwei mögliche Retter auf dem Brett, mussten beide funktioniert haben. |
+| S&V | **Vigormortis** | **„[−1 Außenseiter]“ fehlte ganz.** Der wahre Beutel kam in der Suche nicht vor. Der wichtigste Fund. |
+| S&V | Vigormortis und Schergen | Eine vom Vigormortis getötete Hexe oder ein Cerenovus wirkte nicht weiter. |
+| S&V | No Dashii | Ein Nachbar, der nachts die Rolle wechselt, war vorher in derselben Nacht noch vergiftet. |
+| S&V | Philosoph | Dasselbe für die Nacht, in der er aufhört oder stirbt, und: beim Wählen gestört, macht er niemanden betrunken. |
+
+**Stellen, die zu viel durchließen, jetzt strenger:** Teedame (Nachbar wird gehängt), Poe (höchstens ein Toter in Nacht 2), Gastwirt (eingetragenes Paar bindet), Exorzist (nennt er den Dämon, tötet der nicht), Mondkind (ein gewählter Guter stirbt), Teufelsadvokat (nicht zweimal hintereinander derselbe), Narr (nur einmal), Vortox (auch ein gestörter Bürger sagt nichts Wahres, nach dem Wiki), Böser Zwilling (guter Zwilling gehängt heißt Spielende), Hexe (keine Fähigkeit bei drei Lebenden).
+
+**Berichtigung zum 29.09.2026:** Damals hatte ich beim Vortox das Gegenteil eingebaut, weil der Simulator ein betrunkenes Orakel die Wahrheit sagen ließ. Solver und Simulator hatten denselben Fehler. Beide folgen jetzt dem Wiki.
+
+**Nebenbei gefunden:** Die alte lokale Python-App speicherte den Tag bei Hexen-Tod und Wahnsinns-Hinrichtung als Text statt als Zahl. Die Seite war richtig.
+
+**Messung:**
+
+- Wahrheit gehalten: Bad Moon Rising, Trouble Brewing und das Oster-Skript je 3.000 Partien, 0 verworfen.
+- Sects & Violets, 3.000 Partien: 22 verworfen (0,7 %, vorher 1,3 %). Alle 22 haben einen Barbier-Tausch, in 21 hat sich der Barbier nie gemeldet. Das ist nach deiner Regel Sache des Dorfs.
+- Python und JavaScript stimmen auf allen 171 Brettern des Korpus überein, darunter 18 neue für diese Regeln. 1.034 Tests grün.
+
 ### Als Nächstes
 
-**1 · Neubewertung Bad Moon Rising.** Das Skript noch einmal als Ganzes ansehen, jetzt wo die Regeln mit dem Spiel abgeglichen sind:
+**1 · Der Simulator spielt die neuen Regeln nicht.** Sie sind durch Einzeltests und Korpus-Bretter gedeckt, aber kein Messlauf erzeugt sie:
 
-- Wie oft findet der Solver den Dämon, getrennt nach Zombuul, Pukka, Shabaloth und Poe? Der erste Blick: Shabaloth 38 von 40 vorn, Poe 22 von 34, Pukka 22 von 41, **Zombuul 10 von 37**.
-- Warum ist der Zombuul so schwach? Das ist die erste Frage.
-- Die offenen Stellen 1 bis 3 aus der Liste unten gehören hierher.
-- Am Ende steht eine Liste: was stimmt, was fehlt, was sich lohnt.
+- eine überlebte Hinrichtung (Teufelsadvokat, Pazifist, Narr, Segler, Teedame)
+- das Hochwürgen des Shabaloth und den Professor
+- ein Mondkind, das nachts stirbt und am Morgen wählt
+- einen Nominierenden, der durch die Hexe tot umfällt
 
-**2 · Neubewertung Sects & Violets.** Danach dasselbe für das zweite Skript:
+Erst wenn der Simulator das spielt, prüfen die Messläufe diese Regeln mit.
 
-- Dämon gefunden, getrennt nach Fang Gu, Vigormortis, No Dashii und Vortox.
-- Die offenen Stellen 4 bis 7 gehören hierher.
-- Ein Abgleich der Regeln gegen das Wiki, wie ihn der andere Chat für Bad Moon Rising gemacht hat, steht für Sects & Violets noch aus.
+**2 · Wie gut findet der Solver den Dämon?** Die zweite Hälfte der Neubewertung, jetzt wo die Regeln stimmen: getrennt nach Dämon, für beide Skripte. Der erste Blick bei Bad Moon Rising: Shabaloth 38 von 40 vorn, Poe 22 von 34, Pukka 22 von 41, **Zombuul 10 von 37**. Warum der Zombuul so schwach ist, ist die erste Frage.
+
+**3 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox) betreffen auch das Regelwerk des Einzelspieler-Spiels.
 
 ### Offene Stellen
 
 | Nr. | Bereich | Was offen ist |
 |---|---|---|
 | 1 | Bad Moon Rising | **Gestörter Dämon als Erklärung für eine ruhige Nacht.** Das gibt es nur beim allgemeinen Dämon, nicht bei Zombuul, Pukka, Shabaloth und Poe. Die Bretter gehen trotzdem auf, über einen Schutz auf dem Opfer. |
-| 2 | Bad Moon Rising | **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung vom 02.10.2026). Der Solver bildet das nicht allgemein ab. Der Simulator tut es für Pukka, Gastwirt und Segler, für Höfling und Giftmischer nicht. |
-| 3 | Bad Moon Rising | **Der Professor bleibt ohne Gegenprobe:** Der Simulator löst nie einen aus. |
-| 4 | Sects & Violets | **Zwei seltene Partien mit Philosoph und Schlangenbeschwörer** verlieren die wahre Welt (Seeds 836 und 181). |
-| 5 | Sects & Violets | **Sitze, deren Rolle gewechselt hat,** werden nicht von ihrer ursprünglichen Rolle aus gesucht (halber Barbier-Tausch). |
-| 6 | Sects & Violets | **Der direkte Messlauf ohne Hinrichtungen** verwirft 20 von 1.500 Partien, der Lauf über das Brett der Seite nicht. Zu klären, ob das der Messlauf ist oder der Solver. |
+| 2 | Bad Moon Rising | **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung vom 02.10.2026). Abgebildet für Höfling und Philosoph (Tod, und Störung beim Wählen) und für die Pukka. Nicht allgemein für eine Quelle, die erst später gestört wird. |
+| 3 | Bad Moon Rising | **Poe und Meuchelmörder bleiben locker:** drei Tote in zwei Nächten hintereinander, und ein Meuchelmörder ohne eingetragene Zeile kann in mehreren Nächten zuschlagen (jeder Schlag kostet 0,25). |
+| 4 | Sects & Violets | **Barbier-Tausch ohne gemeldeten Barbier** verliert die wahre Welt, in 21 von 3.000 Partien. Nach deiner Regel gewollt. |
+| 5 | Sects & Violets | **Sitze, deren Rolle gewechselt hat,** werden nicht von ihrer ursprünglichen Rolle aus gesucht (halber Barbier-Tausch). 1 von 3.000 Partien. |
+| 6 | Sects & Violets | **Mathematiker unter einem Vortox:** Seine Zahl wird als Bereich geprüft, deshalb bleibt hier die alte, lockere Regel. |
 | 7 | Sects & Violets | **Barbier-Bretter brauchen im Browser etwa 20 Sekunden.** Die Seite friert dabei nicht mehr ein. |
 | 8 | Echte Partien | **Ein Info-Claim, den alle kennen und der nie nachts stirbt,** deutet auf Trunkenbold, Marionette oder böse. Idee aus der ersten echten Partie, nicht gebaut. |
 | 9 | Echte Partien | **Claims haben keinen Zeitpunkt.** Die Seite kennt einen Claim pro Sitz, der Rückblick sieht ihn schon am ersten Morgen. Ein Verlauf der Claims ist nicht gebaut. |
@@ -270,6 +301,8 @@ Der Chat, der das Einzelspieler-Spiel baut, hat alle 25 Charaktere von Bad Moon 
 | 12 | Werkzeug | **Exakte Zählung früher Bretter auf der Website.** Der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten. |
 | 13 | Werkzeug | **NEXT.md** in eine kurze Roadmap und ein Archiv aufteilen. |
 | 14 | Nach Bedarf | Weitere experimentelle Charaktere. |
+
+**Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 
 ---
 

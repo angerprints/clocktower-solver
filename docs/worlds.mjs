@@ -343,7 +343,15 @@ export function bags(nPlayers, script = DEFAULT, fabled = []) {
     const grown = [];
     for (const [present, counts] of out) {
       grown.push([present, counts]);              // this one stayed out
-      for (const shift of shifts) {
+      // A shift that would take a team below nought cannot be made. Where
+      // there is another to choose, that one is taken; where there is
+      // not, the character is in play and changes nothing — a Vigormortis
+      // removes an Outsider "if there is one".
+      let possible = shifts.filter(shift =>
+        Object.entries(shift).every(([team, delta]) =>
+          counts[team] + delta >= 0));
+      if (!possible.length) possible = [{}];
+      for (const shift of possible) {
         const moved = {...counts};
         for (const [team, delta] of Object.entries(shift)) moved[team] += delta;
         grown.push([new Set([...present, role]), moved]);

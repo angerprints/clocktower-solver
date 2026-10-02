@@ -1337,7 +1337,12 @@ class CerenovusMadness(Info):
     def holds(self, w, s, rh, seat=None):
         if TEAM.get(self.role) not in ("townsfolk", "outsider"):
             return False
-        return seat is None or seat in s.alive_set(f"N{self.night}")
+        if seat is None or seat in s.alive_set(f"N{self.night}"):
+            return True
+        # Dead, and maddening people all the same: a Vigormortis's own
+        # Minion keeps its ability.
+        from .solver import killed_by_a_vigormortis
+        return killed_by_a_vigormortis(w, s, seat, f"N{self.night}")
 
 
 @dataclass
@@ -1968,6 +1973,13 @@ class GamblerGuess(Info):
         from .deaths import OTHER, shields_on
         for shield in shields_on(w, s, self.night, who, OTHER):
             if not shield.chosen or self._aimed_here(s, shield.by, who):
+                return True
+            # A Tea Lady who fell later the same night was still standing
+            # when the guess was made — it guesses before the Demon acts.
+            # Her shield is marked as aimed on such a night because the
+            # plan cannot order the two, which is no reason to doubt it
+            # here, where the order is known.
+            if shield.by == "Tea Lady":
                 return True
         return False
 
