@@ -344,13 +344,47 @@ Der volle Bericht steht in `claude/simulator-schlaeger-und-drei-kills.md`.
 - Simulator gegen Night-Walk, Bad Moon Rising, jetzt mit Schläger: 0 von 23.544 Nächten (4 Nächte), 0 von 29.021 (6 Nächte). Vorher wichen mit Schläger 39 von 4.639 ab.
 - Korpus: 190 Bretter, 9 davon neue gespielte Partien. Python und JavaScript stimmen überein. 1.091 Tests grün.
 
+### Messung: Wie oft findet der Solver den Dämon? · *gemessen am 03.10.2026*
+
+Der volle Bericht steht in `claude/messung-daemon-gefunden.md`. Am Solver wurde dafür nichts geändert.
+
+Je Skript 400 gespielte Partien, 7 bis 10 Spieler, Stand nach vier Nächten. „Vorn“ heißt: Kein anderer Sitz hat einen höheren Dämon-Wert als der wahre Dämon. Zufall wäre etwa 12 %. Jede Zahl schwankt um etwa 5 Punkte.
+
+| Bad Moon Rising | Partien | vorn | unter den ersten drei |
+|---|---|---|---|
+| Shabaloth | 95 | 81 % | 100 % |
+| Poe | 94 | 67 % | 97 % |
+| Pukka | 103 | 65 % | 95 % |
+| **Zombuul** | 90 | **36 %** | 73 % |
+| alle (laufende Partien) | 382 | 63 % | 92 % |
+
+| Sects & Violets | Partien | vorn | unter den ersten drei |
+|---|---|---|---|
+| Fang Gu | 104 | 82 % | 99 % |
+| Vigormortis | 105 | 81 % | 100 % |
+| No Dashii | 99 | 78 % | 98 % |
+| Vortox | 92 | 75 % | 100 % |
+| alle | 400 | 79 % | 99 % |
+
+**Warum der Zombuul schwach ist,** drei Gründe:
+
+1. **Er tötet im Simulator fast nie.** Das Dorf richtet fast jeden Tag hin, und der Zombuul tötet nur nach einem Tag ohne Toten. In 55 von 90 Partien hat er kein einziges Mal getötet. Nachts sterben im Schnitt 1,1 Spieler statt 3,5 beim Shabaloth, es wird also kaum jemand entlastet.
+2. **Der Solver erkennt ihn nicht an den stillen Nächten.** In Zombuul-Partien glaubt er im Mittel zu 26 % an einen Zombuul, das ist der Ausgangswert. Nach drei stillen Nächten ist es in 65 % der Partien wirklich ein Zombuul, der Solver gibt ihm 32 % und einem Shabaloth noch 20 %. Eine Erklärung für stille Nächte ist zu billig, welche, ist nicht gemessen.
+3. **Der scheintote Zombuul** (hingerichtet, spielt weiter) steht in 2 von 24 Partien vorn, im Mittel mit 10 %, also unter Zufall. Das folgt aus Grund 2.
+
+Wüsste der Solver den Dämon-Typ sicher, stünde der Zombuul in 42 % statt 36 % vorn. Mehr ist über Grund 2 nicht zu holen, der Rest ist Grund 1.
+
+**Sonst aufgefallen:** Bei 10 Spielern schätzt der Solver 82 von 100 Brettern statt sie zu zählen, und die Trefferquote fällt bei Bad Moon Rising von 72 % (7 Spieler) auf 51 %. Steht der Falsche vorn, ist es in 49 von 143 Fällen ein Scherge. Bei Sects & Violets kosten Rollenwechsel etwa 9 Punkte (74 % statt 83 %), und 9 Spieler sind mit 61 % der schwächste Wert, ohne dass der Grund untersucht ist.
+
 ### Als Nächstes
 
-**1 · Wie gut findet der Solver den Dämon?** Die zweite Hälfte der Neubewertung: getrennt nach Dämon, für beide Skripte. Der erste Blick bei Bad Moon Rising vom 02.10.: Shabaloth 38 von 40 vorn, Poe 22 von 34, Pukka 22 von 41, **Zombuul 10 von 37**. Warum der Zombuul so schwach ist, ist die erste Frage. Der Simulator spielt Bad Moon Rising jetzt vollständig, die Messung steht also auf festem Boden.
+**1 · Stille Nächte: welche Erklärung ist zu billig?** Erst messen, was die Shabaloth- und Pukka-Welten durch drei stille Nächte trägt (Exorzist, betrunkener Dämon, Schutz auf dem Opfer, Kill auf einen Toten). Das ist eine Messung ohne Änderung. Ob und wie bepreist wird, ist deine Entscheidung. Die Preise dürfen nicht einfach an den Simulator angepasst werden.
 
-**2 · Was der Simulator weiter nicht spielt:** die **Hinrichtung wegen Wahnsinn** (Cerenovus) in Sects & Violets.
+**2 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin. Ob das zu oft ist, entscheidet, wie viel von den 36 % am Zombuul liegt und wie viel am Simulator.
 
-**3 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox, Rückkehr mitten in der Nacht, Pukka eine Nacht später, Teedame neben dem Schläger, Gift auf einem Überlebenden) betreffen auch das Regelwerk des Einzelspieler-Spiels.
+**3 · Was der Simulator weiter nicht spielt:** die **Hinrichtung wegen Wahnsinn** (Cerenovus) in Sects & Violets.
+
+**4 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox, Rückkehr mitten in der Nacht, Pukka eine Nacht später, Teedame neben dem Schläger, Gift auf einem Überlebenden) betreffen auch das Regelwerk des Einzelspieler-Spiels.
 
 ### Offene Stellen
 
@@ -378,6 +412,9 @@ Der volle Bericht steht in `claude/simulator-schlaeger-und-drei-kills.md`.
 | 20 | Solver | **Der Solver rechnet in ganzen Nächten.** Das Pukka-Gift auf einem Überlebenden gilt bei ihm für die ganze Nacht und den Tag danach, am Tisch nur bis zum Zug der Pukka. Das hält zu viele Welten, verliert aber keine. |
 | 21 | Simulator | **Ein Seitenwechsel des Schlägers gilt für die ganze Nacht,** nicht erst ab dem Platz, an dem er gewählt wurde. Simulator und Night-Walk machen es gleich. |
 | 22 | Solver | **Grenze 400 für die Erzählungen der Nächte** bleibt eine Grenze. In 60.000 Partien ging keine wahre Welt verloren, ausgeschlossen ist es bei sieben und mehr Nächten nicht. Sauber wäre, die Nächte einzeln statt als Produkt zu führen. |
+| 23 | Solver | **Der Dämon-Typ wird aus stillen Nächten nicht erkannt** (Messung vom 03.10.2026). Trifft vor allem den scheintoten Zombuul: 2 von 24 vorn. |
+| 24 | Messung | **Nicht gemessen:** wie früh der Solver den Dämon findet (nur der Stand nach vier Nächten), und ob ein Dämon am Morgen vor seiner Hinrichtung vorn stand. Der Solver weiß nicht, dass eine Partie zu Ende ist. |
+| 25 | Sects & Violets | **9 Spieler:** Der Dämon steht nur in 61 % vorn (8 Spieler 82 %, 10 Spieler 77 %). Grund nicht untersucht. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 
