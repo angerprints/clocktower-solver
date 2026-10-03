@@ -30,7 +30,8 @@ export const PICKED = "picked";
 export class Cause {
   constructor(name, kind, seats, {
     capacity = 1, cost = 1.0, mustFire = false, unstoppable = false,
-    victimImpairedAt = null, actor = null, actorCost = 1.0,
+    victimImpairedAt = null, alsoImpaired = [], actor = null,
+    actorCost = 1.0,
   } = {}) {
     this.name = name;
     this.kind = kind;
@@ -48,6 +49,11 @@ export class Cause {
     // the victim has to have been the one it poisoned — a demand on a
     // night that has already been explained.
     this.victimImpairedAt = victimImpairedAt;
+    // And some need more than the victim to have been impaired back then.
+    // A Pukka that was itself drunk for a night kept its poison waiting
+    // and killed a night late: [span, seat] pairs that also had to be
+    // impaired, on nights already explained.
+    this.alsoImpaired = alsoImpaired;
     // The seat whose ability this is. A must-fire cause that killed nobody
     // may have been stopped at its source — a poisoned Imp kills nobody —
     // and one that did kill had a working source. See deaths.py.
@@ -201,6 +207,10 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
           if (!earlier[at]) earlier[at] = new Set();
           earlier[at].add(victim);
         }
+        for (const [span, who] of cause.alsoImpaired) {
+          if (!earlier[span]) earlier[span] = new Set();
+          earlier[span].add(who);
+        }
         const impaired = new Set(acc.impaired);
         for (const s of blocked) impaired.add(s.needs);
         grown.push({
@@ -228,16 +238,43 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
                     working: new Set(acc.working)}];
     for (const hit of implied) {
       const grown = [];
+      // A death that follows is still a death, and what keeps a seat
+      // alive keeps it alive from this too: a Grandmother beside a
+      // working Tea Lady, or in the Innkeeper's pair, does not die of
+      // grief. Not the Demon's own kill, so a Monk is no help. None of
+      // that was asked — she lived, so she "was not working", and with
+      // nothing able to impair her the world that happened was thrown
+      // out (03.10.2026).
+      const shields = shieldsOn(world, state, night, hit.seat, OTHER);
       for (const o of options) {
-        if (followed.includes(hit.seat) || o.impaired.has(hit.seat))
-          // It happened, and whatever caused it was working.
+        if (followed.includes(hit.seat)) {
+          // It happened: whatever caused it was working, and anything
+          // always-on that should have stopped it was not.
+          const blocked = shields.filter(s => !s.chosen);
+          if (blocked.some(s => s.needs === null)) continue;
+          grown.push({cost: o.cost,
+                      impaired: new Set([...o.impaired,
+                                         ...blocked.map(s => s.needs)]),
+                      working: new Set([...o.working, hit.needs])});
+        } else if (o.impaired.has(hit.seat)) {
           grown.push({cost: o.cost, impaired: o.impaired,
                       working: new Set([...o.working, hit.needs])});
-        else
-          // It did not happen, so whatever would have caused it was not.
+        } else {
+          // It did not happen. Whatever would have caused it was not
+          // working —
           grown.push({cost: o.cost,
                       impaired: new Set([...o.impaired, hit.needs]),
                       working: new Set(o.working)});
+          // — or something kept them alive, and *that* was.
+          for (const s of shields) {
+            if (s.needs !== null && o.impaired.has(s.needs)) continue;
+            grown.push({cost: o.cost * s.cost,
+                        impaired: new Set(o.impaired),
+                        working: s.needs === null
+                          ? new Set(o.working)
+                          : new Set([...o.working, s.needs])});
+          }
+        }
       }
       options = grown;
     }

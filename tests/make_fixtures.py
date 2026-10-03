@@ -68,8 +68,9 @@ def played(name, script, seed, n, nights):
     claims, wakes, _notes = claim_model.claims_for(deal, rng, script=script)
     players = []
     for seat in range(n):
-        at = deal.deaths.get(seat)
-        events = ["X" + at[1:] if at.startswith("E") else at] if at else []
+        # Everything that happened to the seat, not only a death: it can
+        # walk away from the gallows, drop dead nominating, or come back.
+        events = deal.events(seat)
         # Votes and nominations go on the seat, day by day, which is
         # where the page and both readers look. Written at the top of the
         # payload they were silently dropped, and a Flowergirl who saw
@@ -561,7 +562,21 @@ def handmade():
                             (1063, 7, 4), (672, 7, 4)):
         yield played(f"sv-played-{seed}", SV, seed, n, nights)
     yield played("bmr-played-mastermind", BMR, 5, 7, 4)
-    yield played("bmr-played-zombuul", BMR, 2, 7, 4)
+    yield played("bmr-played-zombuul", BMR, 30, 7, 4)
+
+    # Games with the four things the simulator learned on 03.10.2026, one
+    # of each kind: somebody walking away from the gallows for each of
+    # the five reasons there are, the dead coming back by both hands, a
+    # Moonchild taken at night that names somebody in the morning, a
+    # Pukka whose kill came a night late because it was drunk, and a
+    # nominator a Witch had cursed. The seeds are whichever came first.
+    for what, seed in (("walked-advocate", 41), ("walked-pacifist", 16),
+                       ("walked-sailor", 9), ("walked-tea-lady", 19),
+                       ("fool-and-back", 12), ("regurgitated", 1),
+                       ("professor", 6), ("moonchild-at-night", 82),
+                       ("pukka-a-night-late", 104)):
+        yield played(f"bmr-played-{what}", BMR, seed, 7, 4)
+    yield played("sv-played-witch", SV, 8, 7, 4)
 
     # Easter Trouble, the script with the Ogre and the Marionette. The
     # Ogre turns evil from day one, so an Empath beside it can read 0 on

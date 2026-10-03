@@ -1339,18 +1339,48 @@ def a_pacifist_may_spare_the_good(world, state, day, seat):
     return [pacifist]
 
 
-def _tea_lady_keeping(world, state, seat, phase):
+def _returned_at(state, phase):
+    """Who came back to life at this moment."""
+    return frozenset(seat for seat, phases
+                     in (state.resurrections or {}).items()
+                     if phase in phases)
+
+
+def _rosters(state, phase):
+    """Who was alive at this moment — which, on a night somebody came
+    back, has two answers.
+
+    A return is dated to a night, and a night is seventy-odd slots long.
+    A Shabaloth regurgitates just before it chooses; a Professor raises
+    at 43, after every Demon has been and gone. So whoever came back
+    tonight was dead for the first part of it and alive for the rest, and
+    nothing on the board says where the line fell. Anything that depends
+    on who was standing has to hold both ways before it may be demanded.
+    """
+    alive = state.alive_set(phase)
+    back = _returned_at(state, phase)
+    return [alive, alive - back] if back else [alive]
+
+
+def _tea_lady_keeping(world, state, seat, phase, alive=None):
     """The Tea Lady whose protection covers this seat right now, if any.
 
     Both her living neighbours good, and this seat one of them. Asked of
     a phase, because who is living beside her changes as people die —
     and it is asked at night and in daylight alike.
     """
+    if alive is None:
+        alive = state.alive_set(phase)
     lady = world.find_at("TeaLady", phase)
-    if lady is None or lady not in state.alive_set(phase):
+    if lady is None or lady not in alive:
         return None
-    around = _living_beside(state, lady, phase)
-    if seat not in around or len(around) < 2:
+    around = _living_beside(state, lady, phase, alive)
+    # One other player left alive is her neighbour on both sides, and
+    # "both your alive neighbours are good" is true of them. This wanted
+    # two different seats, so the last player standing beside her could
+    # be executed and die (03.10.2026 — a Zombuul under its shroud, a
+    # Fool and a Tea Lady, in a game that ran six nights).
+    if seat not in around:
         return None
     if any(world.evil_at(p, phase) for p in around):
         return None                       # one of them is evil, so nothing
@@ -1383,7 +1413,15 @@ def a_fool_walks_away_once(world, state, day, seat):
         return []
     # Once. An earlier walk from the gallows that nothing else explains
     # was the Fool's one free death, and it is gone.
+    #
+    # Unless it has been dead and back since. "The regurgitated player
+    # regains their ability, even a once per game ability already used" —
+    # and the same for a Professor's. A Fool that walked from the gallows,
+    # was taken by the Shabaloth and came back walks again (03.10.2026).
     for earlier in range(1, day):
+        if any(earlier < int(at[1:]) <= day
+               for at in (state.resurrections or {}).get(seat, ())):
+            continue
         if _walked_away(state, earlier, seat) and not survivals_of(
                 world, state, earlier, seat, but=a_fool_walks_away_once):
             return []
@@ -1493,10 +1531,34 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
     seat = world.find_at("Pukka", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
-    return [death_causes.Cause(
+    out = [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON,
         seats=frozenset(state.alive_set(f"N{night - 1}")),
         capacity=1, must_fire=True, victim_impaired_at=night - 1)]
+    # A night late, or two. A drunk or poisoned Pukka does not attack and
+    # its token stays where it is (the flowchart), and the poison rests
+    # while it does (table ruling, 02.10.2026). So the one it poisoned on
+    # night two was sober through night three and died on night four —
+    # which, read the plain way, needs them poisoned on a night they were
+    # demonstrably working: a Tea Lady who kept her neighbour from the
+    # gallows that day, a Professor who raised somebody.
+    #
+    # The same kill under the same name, so it shares the one a night;
+    # and never owed, since the plain cause already is.
+    for late in (1, 2):
+        chose = night - 1 - late
+        if chose < 1:
+            break
+        if any(world.find_at("Pukka", f"N{k}") != seat
+               or seat not in state.alive_set(f"N{k}")
+               for k in range(chose, night)):
+            break
+        out.append(death_causes.Cause(
+            name="Demon", kind=death_causes.DEMON,
+            seats=frozenset(state.alive_set(f"N{chose}")),
+            capacity=1, victim_impaired_at=chose,
+            also_impaired=tuple((k, seat) for k in range(chose + 1, night))))
+    return out
 
 
 @death_causes.cause_rule
@@ -1877,6 +1939,13 @@ def a_grandmother_grieves(world, state, night, victim, kind):
         # — so the board had no legal world at all.
         if seat not in state.alive_set(f"N{night}"):
             continue
+        # Nor one who only came back tonight and is standing at dawn. A
+        # Professor raises at 43, after every Demon: she was still dead
+        # when her grandchild fell. (Regurgitated *before* the Shabaloth
+        # chose, she would have died of it — and then nobody would have
+        # announced her return.)
+        if seat in _returned_at(state, f"N{night}"):
+            continue
         out.append(death_causes.Implication(seat=seat, needs=seat))
     return out
 
@@ -1896,21 +1965,32 @@ def a_tea_lady_keeps_her_neighbours(world, state, night, seat, kind):
     if not _in_bag(state, "TeaLady"):
         return []
     phase = f"N{night}"
-    lady = _tea_lady_keeping(world, state, seat, phase)
+    # On a night somebody came back, who stood beside her has two
+    # answers. She was raised at 43 and her neighbour was killed at 28:
+    # she was not there to keep them. Or the one beside her came back
+    # late, and at 28 her neighbour was somebody else. Her protection is
+    # only *demanded* when it held whichever way the night went
+    # (03.10.2026 — the first played game with a return in it).
+    held = [_tea_lady_keeping(world, state, seat, phase, alive)
+            for alive in _rosters(state, phase)]
+    lady = next((who for who in held if who is not None), None)
     if lady is None:
         return []
+    either_way = all(who is not None for who in held)
     # A Tea Lady who died tonight herself stops protecting the moment she
     # goes. A Shabaloth that takes her first and her neighbour second
     # kills both, and the plan knows whole nights rather than the order
     # within one — so on such a night her protection may explain a
     # survival but demands nothing of a death.
     fell = f"N{night}" in state.died_at(lady)
-    return [death_causes.Shield("Tea Lady", needs=lady, chosen=fell)]
+    return [death_causes.Shield("Tea Lady", needs=lady,
+                                chosen=fell or not either_way)]
 
 
-def _living_beside(state, seat, phase):
+def _living_beside(state, seat, phase, alive=None):
     """The nearest living player on each side, going round the circle."""
-    alive = state.alive_set(phase)
+    if alive is None:
+        alive = state.alive_set(phase)
     n = state.n_players
     out = []
     for step in (1, -1):
@@ -1966,6 +2046,8 @@ def an_innkeeper_guards_two(world, state, night, seat, kind):
     keeper = world.find_at("Innkeeper", phase)
     if keeper is None or night < 2 or keeper not in state.alive_set(phase):
         return []
+    if keeper in _returned_at(state, phase):
+        return []                         # back tonight, after its turn
     # Written down, the choice is no longer free. The two it named cannot
     # die tonight while it is working, so one of them dead means it was
     # not — and nobody else is covered at all. Unless the Innkeeper fell
@@ -2016,6 +2098,8 @@ def an_exorcist_sends_the_demon_to_bed(world, state, night, seat, kind):
     exorcist = world.find_at("Exorcist", phase)
     if exorcist is None or exorcist not in state.alive_set(phase):
         return []
+    if exorcist in _returned_at(state, phase):
+        return []                         # back tonight, after its turn
     # Recorded, the choice is no longer free: it only stops the Demon if
     # it named the seat holding it. That is the deduction the table draws
     # from a silent night, and it cannot be drawn while the choice is a
@@ -2071,6 +2155,14 @@ def the_dead_cannot_die_again(world, state, night, seat, kind):
     """
     phase = f"N{night}"
     if seat in state.alive_set(phase):
+        # Back tonight, so dead for the first part of it: a Pukka's
+        # poison that came due at 26 found a corpse, and a Professor
+        # stood it up at 43. The same sunk kill, except that from then on
+        # the seat can die like anybody else — so it is an excuse on
+        # offer, not a bar.
+        if seat in _returned_at(state, phase):
+            return [death_causes.Shield("already dead", needs=None,
+                                        cost=SUNK_KILL_PENALTY, chosen=True)]
         return []
     return [death_causes.Shield("already dead", needs=None,
                                 cost=SUNK_KILL_PENALTY)]
@@ -2264,6 +2356,9 @@ def _explained_night(world, state, night):
     return got
 
 
+ACCOUNTS_KEPT = 96
+
+
 def _night_accounts(world, state):
     """How every night of this game could have gone.
 
@@ -2310,10 +2405,42 @@ def _night_accounts(world, state):
                     merged,
                     {**working, night: set(extra_working)},
                 ))
-        accounts = grown[:24]
+        accounts = _the_accounts_worth_keeping(grown)
         if not accounts:
             return []
     return accounts
+
+
+def _the_accounts_worth_keeping(grown):
+    """One account per set of demands, the cheapest excuses first.
+
+    What an account asks of the impairment plan is who had to be impaired
+    and who had to be working, night by night. Two accounts that ask the
+    same differ only in what they cost, and the dearer one can never win
+    — so only the best of each is kept, which loses nothing.
+
+    Then a cap, because the nights multiply. It used to be the first
+    twenty-four *as they came*, unsorted and with every duplicate still
+    in: a Bad Moon Rising night has a Demon, a Gossip, an Assassin and a
+    Gambler all able to explain the same body, ten ways for one night and
+    seven for the next, and by the fourth night the account that really
+    happened was past the cut. The world was then thrown out with nothing
+    wrong with it (03.10.2026, found when the simulator began playing
+    games with more in them).
+    """
+    best = {}
+    for cost, impaired, working in grown:
+        if any(seats & working.get(night, set())
+               for night, seats in impaired.items()):
+            continue                      # impaired and working at once
+        key = (tuple(sorted((n, tuple(sorted(s)))
+                            for n, s in impaired.items() if s)),
+               tuple(sorted((n, tuple(sorted(s)))
+                            for n, s in working.items() if s)))
+        if key not in best or cost > best[key][0]:
+            best[key] = (cost, impaired, working)
+    kept = sorted(best.values(), key=lambda account: -account[0])
+    return kept[:ACCOUNTS_KEPT]
 
 
 def forced_roles(state):
@@ -3104,6 +3231,12 @@ def a_sailor_drunks_one_of_two(world, state, night):
     seat = world.find_at("Sailor", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
+    # Whoever came back tonight was dead when its turn came — a Shabaloth
+    # regurgitates at 27 and a Professor raises at 43, and the Sailor
+    # chooses at 4. The same for the Innkeeper at 9 and the Exorcist at
+    # 21: no choice, so nobody drunk and nobody guarded.
+    if seat in _returned_at(state, phase):
+        return []
 
     def price(hit):
         if hit == seat:
@@ -3143,8 +3276,15 @@ def a_goon_drunks_whoever_chose_it(world, state, night):
         if seat != goon and CHARACTERS[world.role_at(seat, phase)].chooses)
     if not pickers:
         return []
+    # On offer, never forced. With one chooser left alive this was a free
+    # source that could reach everybody it could reach — which the plan
+    # reads as unavoidable, so the last Sailor standing was drunk every
+    # night whether or not it had pointed at the Goon. Found when a Sailor
+    # walked away from the gallows and had to have been sober
+    # (03.10.2026).
+    free = lambda who: 1.0
     return [impairment.Source("Goon", pickers, capacity=1,
-                              cost=1.0, repeat_cost=1.0)]
+                              cost=free, repeat_cost=free)]
 
 
 @impairment.source_rule
@@ -3188,7 +3328,11 @@ def a_courtier_names_a_character(world, state, night):
         # that worked.
         went = any(at in state.died_at(courtier)
                    for at in (phase, f"D{night}"))
-        free = (lambda who: 1.0) if went else 1.0
+        # And the same on the night it comes back: dead until a Professor
+        # raised it at 43, so the one it named was sober for every slot
+        # before that — the Professor among them, if that is who it named.
+        back = courtier in _returned_at(state, phase)
+        free = (lambda who: 1.0) if went or back else 1.0
         out.append(impairment.Source("Courtier", frozenset({hit}),
                                      capacity=1, cost=free,
                                      repeat_cost=free))
@@ -3214,6 +3358,10 @@ def a_minstrel_silences_the_table(world, state, night):
     phase = f"N{night}"
     seat = world.find_at("Minstrel", phase)
     if seat is None or seat not in state.alive_set(phase):
+        return []
+    # There to hear it: a Minstrel raised tonight was dead when the
+    # Minion hanged, and its ability did nothing.
+    if seat not in state.alive_set(f"D{night - 1}"):
         return []
     # "If a Minion *died* by execution." One that walked away — a Devil's
     # Advocate's pick — silences nobody, and this used to drunk the whole
@@ -3242,6 +3390,8 @@ def an_innkeeper_drunks_one_of_the_two_it_guards(world, state, night):
     seat = world.find_at("Innkeeper", phase)
     if seat is None or night < 2 or seat not in state.alive_set(phase):
         return []
+    if seat in _returned_at(state, phase):
+        return []                         # back tonight, after its turn
     # One of the two it protected, and it does not choose which — so a
     # recorded choice narrows the drunk from the table to a pair.
     picked = _chosen(state, "Innkeeper", night, ("a", "b"))

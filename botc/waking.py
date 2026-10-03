@@ -326,7 +326,37 @@ def woke(world, state, seat, night):
     role = world.role_at(seat, phase)
     if seat not in state.alive_set(phase) and role != "Ravenkeeper":
         return False
+    if _came_back_tonight(world, state, seat, night) == ASLEEP:
+        return False
     return woke_as(world, state, seat, night, role)
+
+
+ASLEEP, OPEN = "asleep", "open"
+
+
+def _came_back_tonight(world, state, seat, night):
+    """A seat that returned to life this night: was its turn still to come?
+
+    "They wake later tonight if they normally would." A Shabaloth
+    regurgitates just before its own turn and a Professor raises at its
+    own, so whoever came back was dead for every slot before that. An
+    Innkeeper at 9 slept through; a Chambermaid at 70 did not.
+
+    Which of the two did it is not written down. Before both, it was
+    ASLEEP; after both, it woke as it normally would (None); between
+    them, OPEN.
+    """
+    phase = f"N{night}"
+    if phase not in (state.resurrections or {}).get(seat, ()):
+        return None
+    acting = _acts_as(world, seat, phase)
+    slot = getattr(CHARACTERS[acting], "other_night", 0) or 0
+    raisers = [getattr(CHARACTERS[who], "other_night", 0) or 0
+               for who in ("Shabaloth", "Professor")
+               if world.find_at(who, phase) is not None]
+    if not raisers or slot > max(raisers):
+        return None
+    return ASLEEP if slot <= min(raisers) else OPEN
 
 
 def _acts_as(world, seat, phase):
@@ -358,11 +388,21 @@ def uncertain(world, state, seat, night):
     acting = _acts_as(world, seat, phase)
     if night == 1:
         return _is_demon(acting) and CHARACTERS[acting].nights != EVERY
+    if _came_back_tonight(world, state, seat, night) == OPEN:
+        return True
     if acting == "Professor":
+        # Night two it is woken for certain: its first chance. After
+        # that, it may have chosen somebody who was no Townsfolk, or
+        # chosen while drunk — nothing happens, the ability is gone, and
+        # nobody at the table can see that it went. Only a return with no
+        # Shabaloth about pins it: that was the Professor, awake until
+        # then and asleep after.
+        if night < 3 or seat not in state.alive_set(phase):
+            return False
         raised = _raised_on(state)
-        return (raised is not None and night > raised
-                and seat in state.alive_set(phase)
-                and world.find_at("Shabaloth", f"N{raised}") is not None)
+        if raised is None:
+            return True
+        return world.find_at("Shabaloth", f"N{raised}") is not None
     if "Exorcist" not in state.script.keys:
         return False
     if world.demon_at(phase) != seat:

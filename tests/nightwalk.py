@@ -45,9 +45,13 @@ class Night:
         self.died = set()
         self.chosen_by = {}                 # seat -> who chose it first
         self.guarded = set()                # safe from the Demon tonight
+        self.guards = {}                    # seat -> who is guarding it
         self.gained = {}                    # seat -> ability it took
         self.silenced = set()               # Demons that cannot kill
         self.spared = set()                 # safe from execution tomorrow
+        self.fool_spent = set()             # Fools with no free death left
+        self.safe = {}                      # seat -> the Innkeeper keeping it
+        self.undead = None                  # a Zombuul under its shroud
         self.cursed = set()                 # dies if it nominates
         self.log = []                       # what happened, in order
         # Characters that always act and were not told what they did.
@@ -84,7 +88,7 @@ class Night:
         self.droisoned.add(seat)
         self.log.append((slot, "droisoned", seat, why))
 
-    def kill(self, seat, slot, why):
+    def kill(self, seat, slot, why, unstoppable=False):
         """Somebody dies — unless a Tea Lady is keeping them alive.
 
         **Both her living neighbours good means neither can die.** Full
@@ -96,9 +100,39 @@ class Night:
         simulator learned that the same way — a Tinker died beside a
         working Tea Lady and no world could explain it.
         """
+        if unstoppable:
+            self.died.add(seat)
+            self.alive.discard(seat)
+            self.log.append((slot, "died", seat, why))
+            return
         if self._a_tea_lady_holds(seat):
             self.prevented.add(seat)
             self.log.append((slot, "kept alive", seat, "Tea Lady"))
+            return
+        # The other two that keep somebody alive whatever the death is: a
+        # sober Sailor cannot die, and neither can the pair a working
+        # Innkeeper chose tonight. Only the Demon's kill asked about the
+        # Innkeeper, and nothing asked about the Sailor — so a Gambler
+        # the Innkeeper had just protected guessed wrong and died here,
+        # where the simulator had it live (03.10.2026; one in a hundred
+        # and sixty nights disagreed for this alone).
+        if self.roles.get(seat) == "Sailor" and self.working(seat):
+            self.prevented.add(seat)
+            self.log.append((slot, "kept alive", seat, "Sailor"))
+            return
+        keeper = self.safe.get(seat)
+        if keeper is not None and self.working(keeper):
+            self.prevented.add(seat)
+            self.log.append((slot, "kept alive", seat, "Innkeeper"))
+            return
+        # A Fool's first death does not happen. Last, so a guard that
+        # held earlier has not used it up — and once, so the walk is told
+        # which Fools had already spent theirs before tonight.
+        if self.roles.get(seat) == "Fool" and seat not in self.fool_spent \
+                and self.working(seat):
+            self.fool_spent.add(seat)
+            self.prevented.add(seat)
+            self.log.append((slot, "kept alive", seat, "Fool"))
             return
         self.died.add(seat)
         self.alive.discard(seat)
@@ -266,7 +300,12 @@ def hidden_from(deal, night, heard):
     # Whoever the Pukka's poison came due for was still poisoned as the
     # night began, whether or not they lived to see the morning.
     came_due = deal.pukka_history.get(night)
+    token_only = False
     if came_due and came_due[0] is not None:
+        # Poisoned by that token and nothing else? Then they are healthy
+        # again from the Pukka's turn, if they are still about — "dead or
+        # not, that token comes off". A dead Moonchild's pick at 50 lands.
+        token_only = came_due[0] not in standing
         standing.add(came_due[0])
     if standing:
         out = {("standing", night): standing}
@@ -274,6 +313,8 @@ def hidden_from(deal, night, heard):
         out = {}
     out.update({"red_herring": deal.red_herring,
                 "gained": dict(getattr(deal, "philosophies", {}) or {})})
+    if token_only:
+        out[("pukka_token_only", night)] = True
 
     def row(kind):
         return [h for h in heard
@@ -309,6 +350,31 @@ def hidden_from(deal, night, heard):
         out[("sailor_drunk", night)] = deal.sailor_drunk[night]
     if deal.cursed.get(night) is not None:
         out[("witch", night)] = deal.cursed[night]
+    # A Devil's Advocate's pick, hidden like the Monk's guard.
+    spared = getattr(deal, "spared", {}).get(night)
+    if spared is not None:
+        out[("devilsadvocate", night)] = spared[1]
+    # Who came back tonight, and by whose hand: they were dead when the
+    # night began, and the walk has to stand them up at the right slot.
+    back = getattr(deal, "regurgitated", {}).get(night)
+    if back is not None:
+        out[("regurgitated", night)] = back
+    back = getattr(deal, "professor_raised", {}).get(night)
+    if back is not None:
+        out[("professor", night)] = back
+    if getattr(deal, "zombuul_up", None) is not None:
+        out[("zombuul_up", night)] = deal.zombuul_up
+    # Fools whose one free death was gone before tonight.
+    from botc.info import phase_index
+    # Read off the whole history, not the Fool's state at the end of the
+    # game: one that came back has its free death again, and the record
+    # of having spent the first is gone from it by then.
+    now = phase_index(phase)
+    out[("fool_spent", night)] = {
+        seat for seat, at in getattr(deal, "fool_spent_ever", ())
+        if phase_index(at) < now and not any(
+            who == seat and phase_index(at) < phase_index(back) <= now
+            for who, back, _by in getattr(deal, "resurrections", ()))}
 
     # Choices the table *hears*, read straight off the rows. These were
     # missing and the walk's own warning found them — a Sailor, a Snake
@@ -346,11 +412,10 @@ def hidden_from(deal, night, heard):
     if gran:
         out["grandchild"] = gran[0].target
     if any(deal.role_at(p, phase) == "Tinker"
-           and deal.deaths.get(p) == phase for p in range(deal.n)):
+           and p in deal.died_on(phase) for p in range(deal.n)):
         out[("tinker", night)] = True
 
-    executed = [p for p, at in deal.deaths.items()
-                if at == f"E{night - 1}"]
+    executed = sorted(deal.died_on(f"E{night - 1}"))
     if executed:
         out[("executed", night)] = executed[0]
     return out
@@ -387,6 +452,12 @@ def _note_what_we_were_not_told(state, deal, roles, night, hidden):
             continue                      # droisoned, so it does nothing
         if deal.roles[seat] != role:
             continue                      # arrived mid-game
+        if seat in (hidden.get(("regurgitated", night)),
+                    hidden.get(("professor", night))):
+            continue                      # back tonight, after its turn
+        # "If just 3 players live, you lose this ability."
+        if role == "Witch" and len(state.alive | state.died) <= 3:
+            continue
         if hidden.get((key, night)) is None:
             state.untold.add(role)
 
@@ -421,7 +492,15 @@ def walk(deal, night, hidden):
     was = f"E{night - 1}" if night > 1 else phase
     roles = {seat: deal.role_at(seat, was) for seat in range(deal.n)}
     sides = {seat: deal.side_at(seat, was) for seat in range(deal.n)}
-    state = Night(roles, sides, deal.alive_at(phase))
+    # Alive when the night began. `alive_at` counts somebody who comes
+    # back tonight as alive tonight, which is right for the night as a
+    # whole and wrong for its first half: a regurgitated Innkeeper was
+    # dead at slot 9 and guarded nobody.
+    back_tonight = {hidden.get(("regurgitated", night)),
+                    hidden.get(("professor", night))} - {None}
+    state = Night(roles, sides, set(deal.alive_at(phase)) - back_tonight)
+    state.fool_spent = set(hidden.get(("fool_spent", night)) or ())
+    state.undead = hidden.get(("zombuul_up", night))
     # Droisonings that were already standing when the night began — a
     # Sweetheart's from the night it died, a swapped Snake Charmer's, a
     # Courtier's three-day run. The walk starts each night fresh, so
@@ -541,6 +620,7 @@ def walk(deal, night, hidden):
                 _goon_answers(state, seat, target, slot)
                 if state.working(seat):
                     state.guarded.add(target)
+                    state.guards[target] = seat
 
             elif role == "Innkeeper":
                 # Two players are safe tonight and one of them is drunk. Acts
@@ -558,6 +638,9 @@ def walk(deal, night, hidden):
                     _goon_answers(state, seat, target, slot)
                 if state.working(seat):
                     state.guarded |= set(picked)
+                    for target in picked:
+                        state.safe[target] = seat
+                        state.guards[target] = seat
                     drunk = hidden.get(("innkeeper_drunk", night))
                     if drunk is not None:
                         state.droison(drunk, slot, "Innkeeper")
@@ -636,6 +719,11 @@ def walk(deal, night, hidden):
                 # add a body the Demon did not take.
                 target = hidden.get(("moonchild", night))
                 if target is None:
+                    continue
+                # Its state *tonight* decides, and the dead can be drunk
+                # or poisoned like anybody else. The pick is public, so
+                # it is handed in whether or not it did anything.
+                if seat in state.droisoned:
                     continue
                 if state.sides.get(target) == "good" and target in state.alive:
                     state.kill(target, slot, "Moonchild")
@@ -720,7 +808,18 @@ def walk(deal, night, hidden):
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
                 if target in state.alive:
-                    state.kill(target, slot, "Assassin")
+                    state.kill(target, slot, "Assassin", unstoppable=True)
+
+            elif role == "Professor":
+                # Once a game, a dead Townsfolk stands up again. At 43,
+                # after every Demon — so whoever comes back was not there
+                # to be killed tonight, and wakes only if their own slot
+                # is still to come.
+                back = hidden.get(("professor", night))
+                if back is None or not state.working(seat):
+                    continue
+                state.alive.add(back)
+                state.log.append((slot, "raised", back, "Professor"))
 
             elif role == "Godfather":
                 # Kills if an Outsider died in daylight. Acts at 37, after
@@ -777,8 +876,20 @@ def walk(deal, night, hidden):
                 if role == "Pukka":
                     _pukka_takes_its_turn(state, seat, slot, hidden, night)
                     continue
+                # "Just before waking the Shabaloth": one it chose last
+                # night may be alive again, before it chooses tonight.
+                back = hidden.get(("regurgitated", night))
+                if role == "Shabaloth" and back is not None \
+                        and state.working(seat):
+                    state.alive.add(back)
+                    state.log.append((slot, "raised", back, "Shabaloth"))
                 aimed = hidden.get(("demon", night))
-                if aimed is None or not state.working(seat):
+                # A Zombuul that survived its first death is down on the
+                # board and still the Demon: being off the living list
+                # does not stop it, only being droisoned does.
+                able = state.working(seat) or (
+                    seat == state.undead and seat not in state.droisoned)
+                if aimed is None or not able:
                     continue
                 targets = [aimed] if isinstance(aimed, int) else list(aimed)
                 if seat in state.silenced:
@@ -793,7 +904,6 @@ def walk(deal, night, hidden):
                 # Checking afterwards had the Goon protecting itself from
                 # every Demon that picked it, which is not what the card
                 # says and cost twelve of eighty nights.
-                able = state.working(seat)
                 for target in targets:
                     state.choose(seat, target, slot)
                     _goon_answers(state, seat, target, slot)
@@ -804,7 +914,12 @@ def walk(deal, night, hidden):
                         continue              # sunk into a corpse
                     # A guard set earlier tonight holds, which is the whole
                     # reason the Monk acts at 12 and the Demon at 24.
-                    if target in state.guarded:
+                    # ...while whoever set it is still standing and
+                    # working. A Shabaloth that takes the Innkeeper first
+                    # finds its pair unguarded for the second kill.
+                    giver = state.guards.get(target)
+                    if target in state.guarded and (
+                            giver is None or state.working(giver)):
                         state.log.append((slot, "guarded", target, role))
                         state.prevented.add(seat)
                         continue
@@ -1102,6 +1217,10 @@ def _grandmother_grieves(state, victim, slot, hidden, night):
     child = hidden.get("grandchild")
     if child is None or child != victim:
         return
+    # Only if the grandchild really died. A Tea Lady keeping them alive
+    # left nothing to grieve, and this grieved anyway (03.10.2026).
+    if victim in state.alive:
+        return
     for seat, role in state.roles.items():
         if role != "Grandmother" or seat not in state.alive:
             continue
@@ -1299,7 +1418,10 @@ def _pukka_takes_its_turn(state, seat, slot, hidden, night):
                 return
             state.droison(fresh, slot, "Pukka")
     stale = hidden.get(("pukka_due", night))
+    lifted = hidden.get(("pukka_token_only", night))
     if stale is None or stale not in state.alive:
+        if stale is not None and lifted:
+            state.droisoned.discard(stale)    # the token comes off a corpse too
         return
     # A guard holds only while whoever gave it is still working, and the
     # Pukka has just poisoned somebody: an Innkeeper it chose tonight
@@ -1309,6 +1431,8 @@ def _pukka_takes_its_turn(state, seat, slot, hidden, night):
     if stale in state.guarded and any(state.working(p) for p in keepers):
         state.log.append((slot, "guarded", stale, "Pukka"))
         state.prevented.add(seat)
+        if lifted:
+            state.droisoned.discard(stale)    # lived, and healthy from here
         return
     state.kill(stale, slot, "Pukka")
     _grandmother_grieves(state, stale, slot, hidden, night)

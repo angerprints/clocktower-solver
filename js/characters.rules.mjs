@@ -46,6 +46,30 @@ function acting(world, state, key, night) {
   return seat;
 }
 
+/** Who came back to life at this moment. */
+function returnedAt(state, phase) {
+  const out = new Set();
+  for (const [seat, phases] of Object.entries(state.resurrections || {}))
+    if (phases.includes(phase)) out.add(Number(seat));
+  return out;
+}
+
+/** Who was alive at this moment — which, on a night somebody came back,
+ * has two answers.
+ *
+ * A return is dated to a night, and a night is seventy-odd slots long. A
+ * Shabaloth regurgitates just before it chooses; a Professor raises at
+ * 43, after every Demon has been and gone. So whoever came back tonight
+ * was dead for the first part of it and alive for the rest, and nothing
+ * on the board says where the line fell. Anything that depends on who was
+ * standing has to hold both ways before it may be demanded. */
+function rosters(state, phase) {
+  const alive = state.aliveSet(phase);
+  const back = returnedAt(state, phase);
+  if (!back.size) return [alive];
+  return [alive, new Set([...alive].filter(seat => !back.has(seat)))];
+}
+
 const anyDiedAt = (state, phase) =>
   Object.keys(state.deaths || {}).some(who => state.diedAt(who).includes(phase));
 
@@ -359,11 +383,14 @@ survivesExecutionRule(function aPacifistMaySpareTheGood(
  * Both her living neighbours good, and this seat one of them. Asked of a
  * phase, because who is living beside her changes as people die — and it
  * is asked at night and in daylight alike. */
-function teaLadyKeeping(world, state, seat, phase) {
+function teaLadyKeeping(world, state, seat, phase, alive = null) {
+  if (alive === null) alive = state.aliveSet(phase);
   const lady = world.findAt("TeaLady", phase);
-  if (lady === null || !state.aliveSet(phase).has(lady)) return null;
-  const around = livingBeside(state, lady, phase);
-  if (!around.has(seat) || around.size < 2) return null;
+  if (lady === null || !alive.has(lady)) return null;
+  const around = livingBeside(state, lady, phase, alive);
+  // One other player left alive is her neighbour on both sides, and "both
+  // your alive neighbours are good" is true of them (03.10.2026).
+  if (!around.has(seat)) return null;
   for (const p of around) if (world.evilAt(p, phase)) return null;
   return lady;
 }
@@ -393,10 +420,18 @@ const aFoolWalksAwayOnce = survivesExecutionRule(
     if (world.roleAt(seat, `D${day}`) !== "Fool") return [];
     // Once. An earlier walk from the gallows that nothing else explains
     // was the Fool's one free death, and it is gone.
-    for (let earlier = 1; earlier < day; earlier++)
+    //
+    // Unless it has been dead and back since: "the regurgitated player
+    // regains their ability, even a once per game ability already used",
+    // and the same for a Professor's (03.10.2026).
+    const back = ((state.resurrections || {})[seat] || [])
+      .map(at => parseInt(String(at).slice(1), 10));
+    for (let earlier = 1; earlier < day; earlier++) {
+      if (back.some(night => earlier < night && night <= day)) continue;
       if (walkedAway(state, earlier, seat) &&
           !survivalsOf(world, state, earlier, seat, aFoolWalksAwayOnce).length)
         return [];
+    }
     return [seat];
   });
 
@@ -495,10 +530,32 @@ causeRule(function aZombuulKillsOnAQuietDay(world, state, night) {
  * is a demand on a night already accounted for. */
 causeRule(function aPukkaKillsWhatItPoisoned(world, state, night) {
   if (!inBag(state, "Pukka") || night < 2) return [];
-  if (acting(world, state, "Pukka", night) === null) return [];
-  return [new Cause("Demon", DEMON, state.aliveSet(`N${night - 1}`),
-                    {capacity: 1, mustFire: true,
-                     victimImpairedAt: night - 1})];
+  const seat = acting(world, state, "Pukka", night);
+  if (seat === null) return [];
+  const out = [new Cause("Demon", DEMON, state.aliveSet(`N${night - 1}`),
+                         {capacity: 1, mustFire: true,
+                          victimImpairedAt: night - 1})];
+  // A night late, or two. A drunk or poisoned Pukka does not attack and
+  // its token stays where it is (the flowchart), and the poison rests
+  // while it does (table ruling, 02.10.2026). So the one it poisoned on
+  // night two was sober through night three and died on night four —
+  // which, read the plain way, needs them poisoned on a night they were
+  // demonstrably working. The same kill under the same name, so it
+  // shares the one a night; and never owed, since the plain cause is.
+  for (const late of [1, 2]) {
+    const chose = night - 1 - late;
+    if (chose < 1) break;
+    let same = true;
+    for (let k = chose; k < night; k++)
+      if (acting(world, state, "Pukka", k) !== seat) same = false;
+    if (!same) break;
+    const also = [];
+    for (let k = chose + 1; k < night; k++) also.push([k, seat]);
+    out.push(new Cause("Demon", DEMON, state.aliveSet(`N${chose}`),
+                       {capacity: 1, victimImpairedAt: chose,
+                        alsoImpaired: also}));
+  }
+  return out;
 });
 
 /** Two a night, and either can be aimed at somebody already dead, so the
@@ -704,6 +761,10 @@ implicationRule(function aGrandmotherGrieves(world, state, night, victim, kind) 
     if (world.roleAt(seat, `N${night}`) !== "Grandmother") continue;
     // A Grandmother already dead cannot die again of grief.
     if (!state.aliveSet(`N${night}`).has(seat)) continue;
+    // Nor one who only came back tonight and is standing at dawn: a
+    // Professor raises at 43, after every Demon, so she was still dead
+    // when her grandchild fell.
+    if (returnedAt(state, `N${night}`).has(seat)) continue;
     out.push(implication(seat, seat));
   }
   return out;
@@ -733,8 +794,8 @@ immunityRule(function theMonkGuardsAgainstTheDemon(
 });
 
 /** The nearest living player on each side, going round the circle. */
-function livingBeside(state, seat, phase) {
-  const alive = state.aliveSet(phase);
+function livingBeside(state, seat, phase, alive = null) {
+  if (alive === null) alive = state.aliveSet(phase);
   const n = state.nPlayers;
   const out = new Set();
   for (const step of [1, -1])
@@ -768,15 +829,23 @@ immunityRule(function aMoonchildThatWasNotWorking(
 immunityRule(function aTeaLadyKeepsHerNeighbours(world, state, night, seat) {
   if (!inBag(state, "TeaLady")) return [];
   const phase = `N${night}`;
-  const lady = teaLadyKeeping(world, state, seat, phase);
-  if (lady === null) return [];
+  // On a night somebody came back, who stood beside her has two answers.
+  // She was raised at 43 and her neighbour was killed at 28: she was not
+  // there to keep them. Or the one beside her came back late, and at 28
+  // her neighbour was somebody else. Her protection is only *demanded*
+  // when it held whichever way the night went (03.10.2026).
+  const held = rosters(state, phase).map(
+    alive => teaLadyKeeping(world, state, seat, phase, alive));
+  const lady = held.find(who => who !== null);
+  if (lady === undefined) return [];
+  const eitherWay = held.every(who => who !== null);
   // A Tea Lady who died tonight herself stops protecting the moment she
   // goes. A Shabaloth that takes her first and her neighbour second kills
   // both, and the plan knows whole nights rather than the order within
   // one — so on such a night her protection may explain a survival but
   // demands nothing of a death.
   const fell = state.diedAt(lady).includes(phase);
-  return [shield("Tea Lady", {needs: lady, chosen: fell})];
+  return [shield("Tea Lady", {needs: lady, chosen: fell || !eitherWay})];
 });
 
 /** The first death does not take it, whatever the death was.
@@ -807,6 +876,7 @@ immunityRule(function anInnkeeperGuardsTwo(world, state, night, seat) {
   if (!inBag(state, "Innkeeper") || night < 2) return [];
   const keeper = acting(world, state, "Innkeeper", night);
   if (keeper === null) return [];
+  if (returnedAt(state, `N${night}`).has(keeper)) return [];   // back tonight
   // Written down, the choice is no longer free. The two it named cannot
   // die tonight while it is working, so one of them dead means it was not
   // — and nobody else is covered at all. Unless the Innkeeper fell
@@ -843,6 +913,7 @@ immunityRule(function anExorcistSendsTheDemonToBed(
   }
   const exorcist = acting(world, state, "Exorcist", night);
   if (exorcist === null) return [];
+  if (returnedAt(state, `N${night}`).has(exorcist)) return []; // back tonight
   // Recorded, it only stops the Demon if it named the seat holding it.
   const named = chosen(state, "Exorcist", night, ["target"], exorcist);
   if (named !== null && !named.has(world.demonAt(`N${night}`))) return [];
@@ -879,7 +950,17 @@ immunityRule(function aMayorsDeathMayBeMoved(world, state, night, seat, kind) {
  * unimpaired — but it is a deliberate play rather than the default, and a
  * Demon bluffing Soldier or Monk has every reason to make it. */
 immunityRule(function theDeadCannotDieAgain(world, state, night, seat) {
-  if (state.aliveSet(`N${night}`).has(seat)) return [];
+  if (state.aliveSet(`N${night}`).has(seat)) {
+    // Back tonight, so dead for the first part of it: a Pukka's poison
+    // that came due at 26 found a corpse, and a Professor stood it up at
+    // 43. The same sunk kill, except that from then on the seat can die
+    // like anybody else — an excuse on offer, not a bar.
+    if (returnedAt(state, `N${night}`).has(seat))
+      return [shield("already dead", {needs: null,
+                                      cost: PRIORS.SUNK_KILL_PENALTY,
+                                      chosen: true})];
+    return [];
+  }
   return [shield("already dead", {needs: null, cost: PRIORS.SUNK_KILL_PENALTY})];
 });
 
@@ -896,6 +977,11 @@ sourceRule(function aSailorDrunksOneOfTwo(world, state, night) {
   const phase = `N${night}`;
   const seat = acting(world, state, "Sailor", night);
   if (seat === null) return [];
+  // Whoever came back tonight was dead when its turn came — a Shabaloth
+  // regurgitates at 27 and a Professor raises at 43, and the Sailor
+  // chooses at 4. The same for the Innkeeper at 9 and the Exorcist at 21:
+  // no choice, so nobody drunk and nobody guarded.
+  if (returnedAt(state, phase).has(seat)) return [];
   const price = hit => {
     if (hit === seat) return 0.6;        // the usual half of the coin
     return world.evilAt(hit, phase) ? PRIORS.SAILOR_ON_EVIL_PENALTY : 0.6;
@@ -922,8 +1008,13 @@ sourceRule(function aGoonDrunksWhoeverChoseIt(world, state, night) {
   const pickers = new Set([...state.aliveSet(phase)].filter(
     seat => seat !== goon && CHARACTERS[world.roleAt(seat, phase)].chooses));
   if (!pickers.size) return [];
-  return [new Source("Goon", pickers, {capacity: 1, cost: 1.0,
-                                       repeatCost: 1.0})];
+  // On offer, never forced. With one chooser left alive this was a free
+  // source that could reach everybody it could reach — which the plan
+  // reads as unavoidable, so the last Sailor standing was drunk every
+  // night whether or not it had pointed at the Goon (03.10.2026).
+  const free = () => 1.0;
+  return [new Source("Goon", pickers, {capacity: 1, cost: free,
+                                       repeatCost: free})];
 });
 
 /** Whoever holds the named character, drunk for three days and nights.
@@ -953,7 +1044,11 @@ sourceRule(function aCourtierNamesACharacter(world, state, night) {
     // something that worked.
     const died = state.diedAt(courtier);
     const went = died.includes(phase) || died.includes(`D${night}`);
-    const free = went ? () => 1.0 : 1.0;
+    // And the same on the night it comes back: dead until a Professor
+    // raised it at 43, so the one it named was sober for every slot
+    // before that — the Professor among them, if that is who it named.
+    const back = returnedAt(state, phase).has(courtier);
+    const free = went || back ? () => 1.0 : 1.0;
     out.push(new Source("Courtier", new Set([hit]),
                         {capacity: 1, cost: free, repeatCost: free}));
   }
@@ -969,6 +1064,9 @@ sourceRule(function aMinstrelSilencesTheTable(world, state, night) {
   if (!inBag(state, "Minstrel")) return [];
   const seat = acting(world, state, "Minstrel", night);
   if (seat === null) return [];
+  // There to hear it: a Minstrel raised tonight was dead when the Minion
+  // hanged, and its ability did nothing.
+  if (!state.aliveSet(`D${night - 1}`).has(seat)) return [];
   // "If a Minion *died* by execution": one that walked away silences
   // nobody.
   const executed = state.executionDeath(night - 1);
@@ -989,6 +1087,7 @@ sourceRule(function anInnkeeperDrunksOneOfTheTwoItGuards(world, state, night) {
   if (!inBag(state, "Innkeeper") || night < 2) return [];
   const seat = acting(world, state, "Innkeeper", night);
   if (seat === null) return [];
+  if (returnedAt(state, `N${night}`).has(seat)) return [];     // back tonight
   // One of the two it protected, and it does not choose which.
   const picked = chosen(state, "Innkeeper", night, ["a", "b"]);
   const reach = picked === null ? state.aliveSet(`N${night}`) : picked;

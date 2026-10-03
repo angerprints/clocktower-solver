@@ -73,7 +73,12 @@ class Deal:
         self.pukka_due = {}
         self.pukka_owner = None             # the seat the tokens belong to
         self.po_charged = False
+        # What it chose, in order — whether or not the kill landed — and
+        # who died of it. They were one list until a Shabaloth went for a
+        # Fool twice: the first try was shrugged off and left no trace, so
+        # a replay saw one attack and a Fool still standing (03.10.2026).
         self.demon_aimed = {}               # night -> who the Demon aimed at
+        self.demon_killed = {}              # night -> who it killed
         self.monk_guarded = {}              # night -> who the Monk kept safe
         self.cursed = {}                    # night -> who a Witch aimed at
         self.exorcised = {}                 # night -> who an Exorcist named
@@ -93,6 +98,27 @@ class Deal:
         self.votes = {}                     # {day: {seat, ...}}
         self.nominations = {}               # {day: {seat, ...}}
         self.tally = {}                     # {day: {nominee: votes}}
+        # Death stopped being permanent, and an execution stopped being a
+        # death (03.10.2026). `deaths` stays what it always was — the
+        # death a seat is lying under *now* — so everything that asks
+        # "is this seat dead" goes on working. What came before a return
+        # is kept beside it, and `record()` puts the two together for
+        # anybody who wants the whole story.
+        self.earlier_deaths = []            # [(seat, phase)] since undone
+        self.resurrections = []             # [(seat, phase, by whom)]
+        self.executions = {}                # {day: seat} executed, and lived
+        self.walked_because = {}            # {day: what kept them alive}
+        self.witch_deaths = {}              # {day: seat} died nominating
+        self.fool_spent = {}                # Fool seat -> when its free death went
+        self.fool_spent_ever = []           # [(seat, phase)], never forgotten
+        self.spared = {}                    # night -> (advocate, who it chose)
+        self.professor_chose = {}           # seat -> the night it spent it
+        self.professor_raised = {}          # night -> who came back
+        self.shabaloth_took = {}            # night -> (shabaloth, who died of it)
+        self.regurgitated = {}              # night -> who came back
+        self.moonchild_picked = {}          # night -> who it named
+        self.cursed_by = {}                 # night -> the Witch that cursed
+        self.pacifist_spared = 0            # how often it has stepped in
 
     def demon_at(self, phase):
         """The seat holding the Demon at this phase."""
@@ -165,9 +191,122 @@ class Deal:
     def alive_at(self, phase):
         from botc.info import phase_index
         here = phase_index(phase)
-        return [p for p in range(self.n)
-                if self.deaths.get(p) is None
-                or phase_index(self.deaths[p]) >= here]
+        if not self.resurrections:
+            return [p for p in range(self.n)
+                    if self.deaths.get(p) is None
+                    or phase_index(self.deaths[p]) >= here]
+        # Somebody came back, so a seat's life is a run of events and not
+        # one date. The same reading as `GameState._alive`: a death takes
+        # effect *after* its moment — killed on night two, alive during
+        # night two — and a return *at* its moment.
+        out = []
+        for p in range(self.n):
+            events = [(phase_index(at), False) for at in self.deaths_of(p)]
+            events += [(phase_index(at), True)
+                       for who, at, _by in self.resurrections if who == p]
+            standing = True
+            for at, back in sorted(events):
+                if back:
+                    if at <= here:
+                        standing = True
+                elif at < here:
+                    standing = False
+            if standing:
+                out.append(p)
+        return out
+
+    def deaths_of(self, seat):
+        """Every moment this seat died, in order. Usually none or one."""
+        out = [at for who, at in self.earlier_deaths if who == seat]
+        if self.deaths.get(seat) is not None:
+            out.append(self.deaths[seat])
+        return out
+
+    def died_on(self, *phases):
+        """Who died at any of these moments, whether or not they stayed dead.
+
+        `deaths` forgets a death once the seat is back, which is right for
+        "who is dead now" and wrong for "did anybody die yesterday" — an
+        Undertaker still learns who was executed after a Professor has
+        raised them.
+        """
+        out = {seat for seat, at in self.deaths.items() if at in phases}
+        out |= {seat for seat, at in self.earlier_deaths if at in phases}
+        return out
+
+    def back_at(self, seat, phase):
+        """Whoever stood this seat up again at this moment, or None."""
+        return next((by for who, at, by in self.resurrections
+                     if who == seat and at == phase), None)
+
+    def raise_up(self, seat, phase, by):
+        """This seat is alive again, with its ability back.
+
+        "Even a once per game ability they used already" — so a Fool gets
+        its free death again and a Professor its one choice.
+        """
+        self.earlier_deaths.append((seat, self.deaths.pop(seat)))
+        self.resurrections.append((seat, phase, by))
+        self.fool_spent.pop(seat, None)
+        self.professor_chose.pop(seat, None)
+
+    def record(self, upto=None):
+        """What the table saw happen to its players, for a `GameState`.
+
+        Use as `GameState(..., **deal.record())`. Handing over
+        `dict(deal.deaths)` was enough while a death was the only thing
+        that could happen to a seat; now it would drop every return, every
+        execution somebody walked away from, and the first death of
+        anybody who came back.
+
+        `upto` cuts it off at a phase, for a board as it stood mid-game.
+        """
+        from botc.info import phase_index
+        limit = None if upto is None else phase_index(upto)
+        seen = lambda at: limit is None or phase_index(at) <= limit
+        deaths = {}
+        for seat in range(self.n):
+            got = tuple(at for at in self.deaths_of(seat) if seen(at))
+            if got:
+                deaths[seat] = got
+        back = {}
+        for seat, at, _by in self.resurrections:
+            if seen(at):
+                back[seat] = back.get(seat, ()) + (at,)
+        return {
+            "deaths": deaths,
+            "resurrections": back,
+            "executions": {day: seat for day, seat in self.executions.items()
+                           if seen(f"D{day}")},
+            "witch_deaths": {day: seat
+                             for day, seat in self.witch_deaths.items()
+                             if seen(f"D{day}")},
+        }
+
+    def events(self, seat):
+        """The same, for one seat, in the status codes the page posts.
+
+            N2 died at night      X3 executed and died   S3 executed, lived
+            D3 died by day        W3 died nominating     R3 back at night 3
+        """
+        from botc.info import phase_index
+        out = []
+        for at in self.deaths_of(seat):
+            day = int(at[1:])
+            if at[0] == "E":
+                code = f"X{day}"
+            elif at[0] == "D" and self.witch_deaths.get(day) == seat:
+                code = f"W{day}"
+            else:
+                code = at
+            out.append((phase_index(at), code))
+        for who, at, _by in self.resurrections:
+            if who == seat:
+                out.append((phase_index(at), f"R{at[1:]}"))
+        for day, who in self.executions.items():
+            if who == seat:
+                out.append((phase_index(f"D{day}"), f"S{day}"))
+        return [code for _at, code in sorted(out)]
 
     def working(self, seat, night):
         """Is this seat's ability actually doing anything tonight?
@@ -369,6 +508,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # rules for them had nothing to check against.
         _monk_guards(d, night, rng)
         _witch_curses(d, night, rng)
+        _devils_advocate_picks(d, night, rng)
 
         # Choices made before the Demon swings — an Innkeeper's guard, a
         # Monk's, a Sailor's drunk. By slot they are at 9, 12 and 4, so
@@ -402,7 +542,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 # What it *aimed* at, kept for the replay: a Shabaloth
                 # kill sunk into a corpse leaves no body, so reading the
                 # deaths back gives an incomplete assignment.
-                d.demon_aimed[night] = list(aimed)
+                d.demon_killed[night] = list(aimed)
+                d.demon_aimed.setdefault(night, list(aimed))
                 for victim in aimed:
                     d.deaths[victim] = f"N{night}"
                     # A Grandmother whose grandchild the Demon takes goes
@@ -419,9 +560,15 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                         # Working, not merely unpoisoned: a Courtier's drunk
                         # Grandmother does not die of grief either
                         # (29.09.2026).
+                        # And able to die at all: a Tea Lady beside her,
+                        # or an Innkeeper's pick, stops grief like
+                        # anything else. The night-walk had that right.
                         if d.role_at(gran, f"N{night}") == "Grandmother" \
                                 and gran in d.alive_at(f"N{night}") \
-                                and d.working(gran, night):
+                                and d.deaths.get(gran) is None \
+                                and d.working(gran, night) \
+                                and not _kept_alive_by_a_tea_lady(
+                                    d, gran, f"N{night}"):
                             d.deaths[gran] = f"N{night}"
 
         # Board-changing steps run **before** the readings, because by
@@ -460,6 +607,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             #
             # A Tinker may simply go, and the Storyteller decides when.
             # Both were dealt and never acted at all.
+            # A Professor raises a dead Townsfolk, once. At 43: after
+            # every Demon, before the Tinker and the Moonchild.
+            _professor_raises(d, night, rng)
             _moonchild_takes_one(d, night, heard, rng)
             _tinker_may_go(d, night, rng)
 
@@ -482,6 +632,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # asking why a Barber execution on day 1 produced nothing on
             # night 2.
             heard += _barber_swap(d, night, rng)
+
+        _nobody_returns_only_to_die(d, night)
 
         heard += [row for row in honest_info(d, night, rng)
                   if d.role_at(row.player, f"N{night}") not in CHOOSES_EARLY]
@@ -541,29 +693,132 @@ def _ogre_picks(d, heard, rng):
 
 
 def _moonchild_takes_one(d, night, heard, rng):
-    """Named in daylight, and tonight a good player they named dies.
+    """It named somebody on learning it died, and tonight they die — if
+    they were good.
 
-    Fires on the night after the Moonchild died by day. A droisoned
-    Moonchild names nobody worth acting on — its ability was not working
-    when it chose.
+    "When you learn that you died": on the spot if it went in daylight,
+    at dawn if it went in the night. Either way the pick lands on the
+    night that follows, which for a Moonchild killed on night two is
+    night three. Only the daylight half was played here, so a Moonchild
+    the Demon took never named anybody (03.10.2026).
+
+    The choice is public, so it is on the record whether or not it does
+    anything. What decides that is the Moonchild's state **tonight**, not
+    when it chose: "drunk or poisoned at night but sober and healthy when
+    they chose a player today, that player doesn't die" — and the other
+    way round they do. This asked about the day, and wrote nothing down
+    for a Moonchild that was not working then.
     """
     phase = f"N{night}"
     day = night - 1
+    if day < 1:
+        return
     for seat in range(d.n):
-        if d.role_at(seat, phase) != "Moonchild":
+        if d.role_at(seat, f"D{day}") != "Moonchild":
             continue
-        if d.deaths.get(seat) not in (f"D{day}", f"E{day}"):
+        if d.deaths.get(seat) not in (f"N{day}", f"D{day}", f"E{day}"):
             continue
-        if not d.working(seat, day):
-            continue
-        others = [p for p in d.alive_at(phase) if p != seat]
+        # Alive when it chose, which was in daylight: not somebody who
+        # only came back tonight.
+        others = [p for p in d.alive_at(phase)
+                  if p != seat and d.back_at(p, phase) is None]
         if not others:
             continue
         target = rng.choice(others)
         heard.append(MoonchildChoice(night, seat, target=target))
-        if d.side_at(target, phase) == "good" \
-                and not _kept_alive_by_a_tea_lady(d, target, phase):
-            d.deaths.setdefault(target, phase)
+        d.moonchild_picked[night] = target
+        if not d.working(seat, night):
+            continue
+        if d.side_at(target, f"D{day}") != "good":
+            continue
+        if d.deaths.get(target) is not None:
+            continue                      # the Demon got there first
+        if d.back_at(target, phase) is not None:
+            continue                      # as with the Tinker, below
+        if _kept_alive_by_a_tea_lady(d, target, phase) \
+                or _a_fool_shrugs_it_off(d, target, phase):
+            continue
+        d.deaths[target] = phase
+
+
+def _nobody_returns_only_to_die(d, night):
+    """Up and down again before dawn is a night the table saw nothing of.
+
+    A Grandmother regurgitated just before the Shabaloth takes her
+    grandchild dies of it there and then. By morning she is as dead as
+    she was the evening before, and nobody announces a return that did
+    not last the night — so the record keeps her first death and drops
+    the rest. Without this the two events shared one moment, and "back
+    at night three, dead at night three" read as alive.
+    """
+    phase = f"N{night}"
+    for seat, at, by in list(d.resurrections):
+        if at != phase or d.deaths.get(seat) != phase:
+            continue
+        d.resurrections.remove((seat, at, by))
+        before = [x for x in d.earlier_deaths if x[0] == seat][-1]
+        d.earlier_deaths.remove(before)
+        d.deaths[seat] = before[1]
+        if d.regurgitated.get(night) == seat:
+            del d.regurgitated[night]
+        if d.professor_raised.get(night) == seat:
+            del d.professor_raised[night]
+
+
+def _a_fool_shrugs_it_off(d, seat, phase):
+    """A working Fool's first death does not happen — and then it is gone.
+
+    Asked last, after everything else that might have kept the seat
+    alive: a Fool the Monk was guarding has not used anything up.
+
+    Never played at all until executions could be survived (03.10.2026):
+    the town simply did not pick the Fool, and the Demon killed it like
+    anybody else.
+    """
+    if d.role_at(seat, phase) != "Fool" or seat in d.fool_spent:
+        return False
+    if not d.working(seat, int(phase[1:])):
+        return False
+    d.fool_spent[seat] = phase
+    d.fool_spent_ever.append((seat, phase))
+    return True
+
+
+def _professor_raises(d, night, rng):
+    """Once a game, a dead player — and if they are a Townsfolk, they live.
+
+    Anybody else and nothing happens, and the ability is gone all the
+    same; drunk or poisoned and nothing happens either. So the table sees
+    a Professor's choice only when it worked.
+
+    Never somebody who died tonight: the Storyteller shakes their head at
+    a player who is not dead yet as far as the Professor can know.
+
+    Mostly a Townsfolk, because a table usually knows which of its dead
+    is worth having back.
+    """
+    if night < 2:
+        return
+    phase = f"N{night}"
+    for seat in range(d.n):
+        if d.role_at(seat, phase) != "Professor" or seat in d.professor_chose:
+            continue
+        if seat not in d.alive_at(phase) or d.deaths.get(seat) == phase:
+            continue                      # dead before its turn came
+        dead = [p for p in range(d.n)
+                if d.deaths.get(p) is not None and d.deaths[p] != phase
+                and p != d.zombuul_up]
+        if not dead or rng.random() >= 0.5:
+            continue
+        worth = [p for p in dead if TEAM[d.role_at(p, phase)] == "townsfolk"]
+        target = rng.choice(worth if worth and rng.random() < 0.7 else dead)
+        d.professor_chose[seat] = night
+        if not d.working(seat, night):
+            continue
+        if TEAM[d.role_at(target, phase)] != "townsfolk":
+            continue
+        d.raise_up(target, phase, "Professor")
+        d.professor_raised[night] = target
 
 
 def _tinker_may_go(d, night, rng):
@@ -573,6 +828,10 @@ def _tinker_may_go(d, night, rng):
         if d.role_at(seat, phase) != "Tinker":
             continue
         if seat not in d.alive_at(phase):
+            continue
+        # Not on the night it came back: down, up and down again before
+        # dawn is a night the table sees nothing of.
+        if d.back_at(seat, phase) is not None:
             continue
         if rng.random() < 0.15 and not _kept_alive_by_a_tea_lady(
                 d, seat, phase):
@@ -590,14 +849,76 @@ def _witch_curses(d, night, rng):
     droisoned Witch curses nobody.
     """
     phase = f"N{night}"
+    # Alive, or killed by a Vigormortis: "Minions you kill keep their
+    # ability". A dead Witch stopped cursing here whatever killed it.
     witch = next((p for p in range(d.n)
                   if d.role_at(p, phase) == "Witch"
-                  and p in d.alive_at(phase)), None)
+                  and _has_its_ability(d, p, phase)), None)
     if witch is None or not d.working(witch, night):
         return
     others = [p for p in d.alive_at(phase) if p != witch]
-    if len(others) >= 2:
+    # "If just 3 players live, you lose this ability."
+    if len(d.alive_at(phase)) > 3 and len(others) >= 2:
         d.cursed[night] = rng.choice(others)
+        d.cursed_by[night] = witch
+
+
+def _has_its_ability(d, seat, phase):
+    """Alive — or a Minion a Vigormortis killed, which keeps what it had."""
+    if seat in d.alive_at(phase):
+        return True
+    return _a_vigormortis_killed(d, seat, phase)
+
+
+def _a_vigormortis_killed(d, seat, phase):
+    """Did the Vigormortis that is still about kill this Minion at night?"""
+    gone = d.deaths.get(seat)
+    if not gone or gone[0] != "N" or phase_index(gone) > phase_index(phase):
+        return False
+    if TEAM[d.role_at(seat, phase)] != "minion":
+        return False
+    killer = d.demon_at(gone)
+    if killer is None or d.role_at(killer, gone) != "Vigormortis":
+        return False
+    if seat not in d.demon_killed.get(int(gone[1:]), ()):
+        return False
+    now = d.demon_at(phase)
+    return now is not None and now in d.alive_at(phase) \
+        and d.role_at(now, phase) == "Vigormortis"
+
+
+def _devils_advocate_picks(d, night, rng):
+    """Somebody who will not die if the town executes them tomorrow.
+
+    Every night including the first, a living player, and never the one
+    it chose the night before. Hidden, like the Monk's guard: the table
+    learns of it only when somebody walks away from the gallows.
+
+    It looks after its own. Most nights that is the Demon.
+    """
+    phase = f"N{night}"
+    advocate = next((p for p in range(d.n)
+                     if d.role_at(p, phase) == "DevilsAdvocate"
+                     and p in d.alive_at(phase)), None)
+    if advocate is None:
+        return
+    before = d.spared.get(night - 1)
+    last = before[1] if before and before[0] == advocate else None
+    # Not a Zombuul lying under a shroud: it registers as dead.
+    living = [p for p in d.alive_at(phase) if p != last]
+    if not living:
+        return
+    evil = [p for p in living if d.side_at(p, phase) == "evil"]
+    demon = d.demon_at(phase)
+    if demon in living and rng.random() < 0.5:
+        target = demon
+    elif evil and rng.random() < 0.5:
+        target = rng.choice(evil)
+    else:
+        target = rng.choice(living)
+    # Chosen either way, so "different to last night" counts a night it
+    # was drunk; but a drunk Advocate's choice protects nobody.
+    d.spared[night] = (advocate, target)
 
 
 def _monk_guards(d, night, rng):
@@ -688,16 +1009,20 @@ def _kept_alive_by_a_tea_lady(d, seat, phase):
             return True
         pair = d.innkeeper_guarded.get(night)
         if pair and seat in pair:
+            # Still standing: an Innkeeper the Demon took at 27 keeps
+            # nobody from a Moonchild's pick at 50. The same for a Tea
+            # Lady, below. (A Gambler at 10 asks before anybody has died.)
             keeper = next((p for p in range(d.n)
                            if d.role_at(p, phase) == "Innkeeper"
-                           and p in d.alive_at(phase)), None)
+                           and p in d.alive_at(phase)
+                           and d.deaths.get(p) is None), None)
             if keeper is not None and d.working(keeper, night):
                 return True
     for lady in range(d.n):
         if d.role_at(lady, phase) != "TeaLady":
             continue
         if lady not in d.alive_at(phase) or not d.working(
-                lady, int(phase[1:])):
+                lady, int(phase[1:])) or d.deaths.get(lady) is not None:
             continue
         around = []
         for step in (1, -1):
@@ -705,7 +1030,8 @@ def _kept_alive_by_a_tea_lady(d, seat, phase):
                 other = (lady + step * gap) % d.n
                 if other == lady:
                     break
-                if other in d.alive_at(phase):
+                if other in d.alive_at(phase) \
+                        and d.deaths.get(other) is None:
                     around.append(other)
                     break
         if seat in around and len(around) >= 2 \
@@ -881,10 +1207,28 @@ def _hold_a_day(d, day, rng):
     how_many = min(len(living), rng.randint(1, 3))
     nominators = rng.sample(living, how_many)
 
+    # A Demon the Witch cursed keeps its hand down: nominating would kill
+    # it, and the record would run on past the end of the game.
+    night = day
+    cursed = d.cursed.get(night)
+    if cursed is not None and cursed == d.demon_at(phase):
+        nominators = [p for p in nominators if p != cursed]
+
     tally = {}
     for who in nominators:
-        nominee = rng.choice([p for p in living if p != who] or [who])
+        if d.deaths.get(who) is not None:
+            continue                      # went down nominating, just now
+        nominee = rng.choice([p for p in living
+                              if p != who and d.deaths.get(p) is None]
+                             or [who])
         d.nominations.setdefault(day, set()).add(who)
+        # "If they nominate tomorrow, they die" — at once, and the
+        # nomination still counts. The Witch was dealt, aimed every night
+        # and never killed anybody, so a death the solver reads as "a
+        # Witch is in play, and working" never came up (03.10.2026).
+        if who == cursed and _the_curse_bites(d, who, day):
+            d.deaths[who] = f"D{day}"
+            d.witch_deaths[day] = who
         votes = set()
         for voter in living:
             # Evil is a shade less willing to put its own up, which is
@@ -900,26 +1244,67 @@ def _hold_a_day(d, day, rng):
     d.tally[day] = tally
 
 
-def _survives_execution(d, seat, day):
-    """Could this seat not have died if the town executed it today?
+def _the_curse_bites(d, seat, day):
+    """Does the cursed player, nominating, drop dead?
 
-    A working Sailor cannot die. A working Fool survives its first death.
-    A working Tea Lady keeps both good neighbours alive, whatever the
-    cause. The record here has no way to say "executed and lived", so
-    these seats are simply not the ones the town picks — which is always
-    legal, where executing them and killing them never was.
-
-    Executions ignored all three, so a sober Sailor went up and died, and
-    the solver rightly called the board impossible. Found once the
-    Mastermind's sweep widened to three hundred Bad Moon Rising games.
+    The Witch has to have its ability still: alive (or a Vigormortis's
+    own kill), sober, and more than three players living. And the seat
+    has to be able to die at all.
     """
-    phase = f"E{day}"
+    phase = f"D{day}"
+    witch = d.cursed_by.get(day)
+    if witch is None or d.role_at(witch, phase) != "Witch":
+        return False
+    if not _has_its_ability(d, witch, phase) or not d.working(witch, day):
+        return False
+    if len(d.alive_at(phase)) <= 3:
+        return False
+    if d.role_at(seat, phase) == "Sailor" and d.working(seat, day):
+        return False
+    if _kept_alive_by_a_tea_lady(d, seat, phase):
+        return False
+    return not _a_fool_shrugs_it_off(d, seat, phase)
+
+
+def _walks_away(d, seat, day, rng):
+    """What keeps this seat alive if the town executes it today, if anything.
+
+    Five things can. A sober Sailor cannot die; a Tea Lady's neighbours
+    cannot either; a Devil's Advocate chose them last night; a Pacifist is
+    about and the Storyteller is feeling kind; and a Fool has its one free
+    death left. The Fool is asked last, so it is not spent on a day
+    something else would have done.
+
+    These seats used to be simply *not picked* — `_survives_execution`
+    took them out of the pool, because the record had no way to say
+    "executed and lived". It has now, so they go up like anybody else.
+    Until this, no played game had an execution anybody walked away from
+    (03.10.2026).
+    """
+    phase = f"D{day}"
     role = d.role_at(seat, phase)
     if role == "Sailor" and d.working(seat, day):
-        return True
-    if role == "Fool" and d.working(seat, day) and d.deaths.get(seat) is None:
-        return True
-    return _kept_alive_by_a_tea_lady(d, seat, f"D{day}")
+        return "Sailor"
+    if _kept_alive_by_a_tea_lady(d, seat, phase):
+        return "TeaLady"
+    advocate, chosen = d.spared.get(day) or (None, None)
+    if chosen == seat and advocate in d.alive_at(phase) \
+            and d.deaths.get(advocate) is None \
+            and d.role_at(advocate, phase) == "DevilsAdvocate" \
+            and d.working(advocate, day):
+        return "DevilsAdvocate"
+    pacifist = next((p for p in d.alive_at(phase)
+                     if d.role_at(p, phase) == "Pacifist"
+                     and d.deaths.get(p) is None), None)
+    if pacifist is not None and d.working(pacifist, day) \
+            and d.side_at(seat, phase) == "good":
+        # "Once per game is usually about right."
+        if rng.random() < (0.5 if d.pacifist_spared == 0 else 0.15):
+            d.pacifist_spared += 1
+            return "Pacifist"
+    if _a_fool_shrugs_it_off(d, seat, phase):
+        return "Fool"
+    return None
 
 
 def _execute(d, day, rng, allow_takeover=False):
@@ -941,9 +1326,11 @@ def _execute(d, day, rng, allow_takeover=False):
     # Fifth time the deal has been mistaken for the timeline. The sweep
     # after the fourth missed this one because it is in the *day*, and I
     # only looked at the night.
+    # And not somebody a Witch's curse has just dropped: dead since this
+    # morning's nominations, though "alive today" still lists them.
     living = [p for p in d.alive_at(phase)
               if d.role_at(p, phase) != "Saint"
-              and not _survives_execution(d, p, day)]
+              and d.deaths.get(p) is None]
     # Nor the good twin while the Evil Twin stands: evil wins on the spot,
     # the same as with the Saint, and the record would run on past the
     # end of the game.
@@ -978,7 +1365,14 @@ def _execute(d, day, rng, allow_takeover=False):
                  and mastermind in d.alive_at(phase)
                  and d.working(mastermind, day)
                  and d.game_ends_after is None)
-    if not (takeover or zombuul_first or extra_day):
+    # Or a Devil's Advocate has it covered, and it walks away.
+    advocate, chosen = d.spared.get(day) or (None, None)
+    covered = (demon is not None and chosen == demon
+               and advocate in d.alive_at(phase)
+               and d.deaths.get(advocate) is None
+               and d.role_at(advocate, phase) == "DevilsAdvocate"
+               and d.working(advocate, day))
+    if not (takeover or zombuul_first or extra_day or covered):
         living = [p for p in living if p != demon]
     if not living:
         return None
@@ -994,6 +1388,12 @@ def _execute(d, day, rng, allow_takeover=False):
         if rng.random() >= 0.8:
             return None
         victim = rng.choice(living)
+    # Executed — and whether that kills them is a separate question now.
+    why = _walks_away(d, victim, day, rng)
+    if why is not None:
+        d.executions[day] = victim
+        d.walked_because[day] = why
+        return None
     if victim == demon:
         if zombuul_first:
             d.zombuul_up = demon          # down on the board, not in fact
@@ -1064,9 +1464,12 @@ def _alive(deaths, n, phase):
 # characters can be resolved yet.
 
 
-def _living_beside(d, seat, phase):
+def _living_beside(d, seat, phase, gone=()):
     """The nearest living player on each side, going round the circle."""
-    alive = d.alive_at(phase)
+    # Not somebody already dead tonight by another hand — a Gambler that
+    # guessed wrong at 10 is no neighbour at 27.
+    alive = [p for p in d.alive_at(phase)
+             if p not in gone and d.deaths.get(p) != phase]
     out = []
     for step in (1, -1):
         for gap in range(1, d.n):
@@ -1117,7 +1520,7 @@ def _exorcised(d, night):
     return exo is not None and d.working(exo, night)
 
 
-def _protected(d, night, target, by_exorcist=True):
+def _protected(d, night, target, by_exorcist=True, gone=()):
     """Would the kill be stopped before it landed?
 
     Shared by every Demon, because none of them cares which one is
@@ -1126,6 +1529,14 @@ def _protected(d, night, target, by_exorcist=True):
     `by_exorcist` is for the one kill an Exorcist does not stop: a
     Pukka's poison coming due. The Exorcist keeps the Demon from
     *choosing*, and that death was chosen the night before.
+
+    `gone` is who this Demon has already taken tonight. A Shabaloth and
+    a Po kill one after another — "in the order chosen, each chosen
+    player dies" — so by the second kill the first is dead: a Tea Lady
+    taken first protects nobody, and one whose evil neighbour was taken
+    first now has a good one beside her. This asked about the table as
+    it stood at nightfall, and the night-walk, which goes in order, said
+    otherwise (03.10.2026).
     """
     phase = f"N{night}"
     # Working, which is every way of going wrong, not only the Poisoner.
@@ -1155,9 +1566,9 @@ def _protected(d, night, target, by_exorcist=True):
     for lady in range(d.n):
         if d.role_at(lady, phase) != "TeaLady" or lady not in d.alive_at(phase):
             continue
-        if not d.working(lady, night):
+        if not d.working(lady, night) or lady in gone:
             continue
-        around = _living_beside(d, lady, phase)
+        around = _living_beside(d, lady, phase, gone)
         if len(around) < 2 or target not in around:
             continue
         if all(d.side_at(p, phase) == "good" for p in around):
@@ -1171,7 +1582,7 @@ def _protected(d, night, target, by_exorcist=True):
         monk = next((p for p in range(d.n)
                      if d.role_at(p, phase) == "Monk"
                      and p in d.alive_at(phase)), None)
-        if monk is not None and d.working(monk, night):
+        if monk is not None and d.working(monk, night) and monk not in gone:
             return True
 
     pair = d.innkeeper_guarded.get(night)
@@ -1179,10 +1590,15 @@ def _protected(d, night, target, by_exorcist=True):
         keeper = next((p for p in range(d.n)
                        if d.role_at(p, phase) == "Innkeeper"
                        and p in d.alive_at(phase)), None)
-        if keeper is not None and d.working(keeper, night):
+        # A guard goes with whoever gave it: an Innkeeper the Shabaloth
+        # took first protects nobody from its second kill.
+        if keeper is not None and d.working(keeper, night) \
+                and keeper not in gone:
             return True
 
-    return False
+    # And a Fool, last: its one free death, spent only if nothing else
+    # had already kept it alive.
+    return _a_fool_shrugs_it_off(d, target, phase)
 
 
 def _demon_kills(d, night, rng):
@@ -1225,7 +1641,11 @@ def _demon_kills(d, night, rng):
     # was no reason to look at a night where the Demon was impaired.
     if not d.working(demon, night):
         return []
-    others = [p for p in living if p != demon]
+    # Not somebody who has already died tonight. A Gambler that guessed
+    # wrong at 10 was still "alive tonight" at 28, so the Po took it a
+    # second time — and its Grandmother died of grief for a grandchild
+    # the Demon never killed (03.10.2026, the night-walk again).
+    others = [p for p in living if p != demon and d.deaths.get(p) is None]
 
     # The Monk guards, whoever is swinging.
     monk = d.roles.index("Monk") if "Monk" in d.roles else None
@@ -1234,7 +1654,9 @@ def _demon_kills(d, night, rng):
             and rng.random() < 0.3:
         guarded = rng.choice([p for p in living if p != monk] or [monk])
 
-    def take(pool):
+    tried = d.demon_aimed[night] = []
+
+    def take(pool, gone=()):
         """One kill from a pool, or nothing if it was stopped.
 
         **Never itself.** A Demon does not choose its own seat, and no
@@ -1251,11 +1673,20 @@ def _demon_kills(d, night, rng):
         Asked here because there are four Demons with their own kill
         rules and every one of them draws from a pool.
         """
-        pool = [p for p in pool if p != demon]
+        # And two different players, when it takes more than one.
+        pool = [p for p in pool if p != demon and p not in tried]
         if not pool:
             return None
         target = rng.choice(pool)
-        if target == guarded or _protected(d, night, target):
+        # The old coin-flip Monk above is a second guard beside the one
+        # `_monk_guards` records, and nothing replaying the night is told
+        # about it. An aim it turned away is left off the record, as it
+        # always was — taking the coin out would redeal every Trouble
+        # Brewing game the tests name by seed. On the roadmap.
+        if target == guarded:
+            return None
+        tried.append(target)
+        if _protected(d, night, target, gone=gone):
             return None
         return target
 
@@ -1303,6 +1734,7 @@ def _demon_kills(d, night, rng):
         # told which seat's poison came due tonight, and the running
         # value is overwritten before anybody can ask.
         d.pukka_history[night] = (stale, fresh)
+        d.demon_aimed[night] = list(out)
         return out
 
     if kind == "Zombuul":
@@ -1312,21 +1744,38 @@ def _demon_kills(d, night, rng):
         # A death on night four let nobody wake on night five here, where
         # the rule and the solver say it does (29.09.2026).
         day = night - 1
-        if day >= 1 and any(at in (f"D{day}", f"E{day}")
-                            for at in d.deaths.values()):
+        if day >= 1 and d.died_on(f"D{day}", f"E{day}"):
             return []
         got = take(others)
         return [got] if got is not None else []
 
     if kind == "Shabaloth":
+        # "A dead player you chose last night might be regurgitated."
+        # Just before it wakes, the Storyteller may stand one of them up
+        # again — whatever they are, with their ability back. Never
+        # played here, so the solver's rule for it had no game to be held
+        # against (03.10.2026).
+        #
+        # Only its own: the same seat holding the Shabaloth both nights.
+        # And the one who came back is left alone tonight. Nothing says
+        # it must be, but a seat that returns and dies again before dawn
+        # is a night the table sees nothing of.
+        took = d.shabaloth_took.get(night - 1)
+        if took is not None and took[0] == demon:
+            lying = [p for p in took[1] if d.deaths.get(p) == f"N{night - 1}"]
+            if lying and rng.random() < 0.35:
+                back = rng.choice(lying)
+                d.raise_up(back, phase, "Shabaloth")
+                d.regurgitated[night] = back
         # Two a night, and either may be sunk into somebody already dead,
         # so the table often sees one body.
         out = []
         for _ in range(2):
             pool = [p for p in others if p not in out]
-            got = take(pool)
+            got = take(pool, out)
             if got is not None:
                 out.append(got)
+        d.shabaloth_took[night] = (demon, list(out))
         return out
 
     if kind == "Po":
@@ -1336,7 +1785,7 @@ def _demon_kills(d, night, rng):
             out = []
             for _ in range(3):
                 pool = [p for p in others if p not in out]
-                got = take(pool)
+                got = take(pool, out)
                 if got is not None:
                     out.append(got)
             return out
@@ -1416,7 +1865,7 @@ def _conditionally_woke(d, seat, role, night):
     from botc.info import phase_index
     from botc.roles import TEAM
     if role == "Undertaker":
-        return any(at == f"E{night - 1}" for at in d.deaths.values())
+        return bool(d.died_on(f"E{night - 1}"))
     if role == "Ravenkeeper":
         return d.deaths.get(seat) == f"N{night}"
     if role == "Zombuul":
@@ -1425,17 +1874,15 @@ def _conditionally_woke(d, seat, role, night):
         if night == 1:
             return False
         day = night - 1
-        return not any(at in (f"D{day}", f"E{day}")
-                       for at in d.deaths.values())
+        return not d.died_on(f"D{day}", f"E{day}")
     if role == "Godfather":
         # Learns the Outsiders on the first night; after that it is woken
         # only to kill, which is after a day an Outsider died.
         if night == 1:
             return True
         day = night - 1
-        return any(at in (f"D{day}", f"E{day}")
-                   and TEAM[d.role_at(who, f"D{day}")] == "outsider"
-                   for who, at in d.deaths.items())
+        return any(TEAM[d.role_at(who, f"D{day}")] == "outsider"
+                   for who in d.died_on(f"D{day}", f"E{day}"))
     if role == "Courtier":
         # Woken until it names a character, and here it always does so on
         # the first night.
@@ -1802,13 +2249,15 @@ def droisoned_at(d, night):
     # solver knew the table was silenced when the simulator did not.
     day = night - 1
     if day >= 1:
+        # Alive tonight, and alive when the Minion hanged: one raised
+        # since was not there for its ability to do anything.
         minstrel = next((p for p in range(d.n)
                          if d.role_at(p, phase) == "Minstrel"
-                         and p in living), None)
+                         and p in living
+                         and p in d.alive_at(f"E{day}")), None)
         if minstrel is not None:
-            executed = [p for p, at in d.deaths.items()
-                        if at == f"E{day}" and TEAM[d.role_at(p, f"D{day}")]
-                        == "minion"]
+            executed = [p for p in d.died_on(f"E{day}")
+                        if TEAM[d.role_at(p, f"D{day}")] == "minion"]
             if executed:
                 out |= {p for p in range(d.n) if p != minstrel}
 
@@ -1850,7 +2299,7 @@ def droisoned_at(d, night):
                     continue
                 k = int(gone[1:])
                 killer = d.demon_at(gone)
-                if other not in d.demon_aimed.get(k, ()) or killer is None \
+                if other not in d.demon_killed.get(k, ()) or killer is None \
                         or d.role_at(killer, gone) != "Vigormortis":
                     continue
                 # The poison triggers and registers on the night the
@@ -2571,6 +3020,15 @@ def _for_role(d, seat, role, night, rng):
                         else "Lunatic")
             char = CHARACTERS[what]
             when, patterns = char.nights, char.wake
+            # Back from the dead tonight: "they wake later tonight if they
+            # normally would". Regurgitated at the Shabaloth's turn or
+            # raised at the Professor's, and dead for every slot before
+            # it — an Innkeeper at 9 slept through, a Chambermaid at 70
+            # did not.
+            by = d.back_at(p, f"N{night}")
+            if by is not None and (char.other_night or 0) \
+                    <= (CHARACTERS[by].other_night or 0):
+                continue
             # Woken to be *shown* something rather than to do anything:
             # a Spy the grimoire, an Evil Twin its twin. Neither is their
             # own ability working, so a Chambermaid does not count them —
@@ -2591,7 +3049,10 @@ def _for_role(d, seat, role, night, rng):
             # either. The Assassin's wake set holds "first" because it is
             # shown its team then, which is not its ability.
             if what in ("Assassin", "Professor"):
-                woke += night >= 2
+                # Until it is spent: woken on the night it chooses, and
+                # not again after.
+                spent = d.professor_chose.get(p)
+                woke += night >= 2 and (spent is None or spent >= night)
                 continue
             # The Philosopher chooses on the first night here, always,
             # and choosing is waking for its ability. Its wake set says
@@ -2692,8 +3153,7 @@ def _for_role(d, seat, role, night, rng):
         return CourtierChoice(night, seat, role=named)
 
     if role == "Undertaker" and night > 1:
-        executed = [p for p, ph in d.deaths.items()
-                    if ph == f"E{night - 1}"]
+        executed = sorted(d.died_on(f"E{night - 1}"))
         if executed:
             when = f"E{night - 1}"
             return Undertaker(night, seat, target=executed[0],
@@ -2959,6 +3419,6 @@ def table_view(d, infos, rng, bluff_pool=None):
     # The day comes through too. This predates the simulator having
     # nominations and votes at all, and without them a reading about the
     # day before refers to a day the state thinks nobody voted on.
-    return GameState(n_players=d.n, claims=claims, deaths=dict(d.deaths),
+    return GameState(n_players=d.n, claims=claims, **d.record(),
                      infos=list(infos), votes=dict(d.votes),
                      nominations=dict(d.nominations))

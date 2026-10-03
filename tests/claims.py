@@ -265,7 +265,7 @@ def _was_true(deal, row):
     if kind in ("SavantInfo", "ArtistInfo"):
         return False              # never checkable; the content is free text
     state = GameState(n_players=deal.n, script=getattr(deal, "script", None),
-                      claims={}, deaths=dict(deal.deaths))
+                      claims={}, **deal.record())
     try:
         return bool(row.holds(World(tuple(deal.roles), tuple(deal.believes)),
                               state, None))

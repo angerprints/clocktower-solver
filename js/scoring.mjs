@@ -1145,10 +1145,47 @@ function nightAccounts(world, state) {
                     working: work});
       }
     }
-    accounts = grown.slice(0, 24);
+    accounts = theAccountsWorthKeeping(grown);
     if (!accounts.length) return [];
   }
   return accounts;
+}
+
+export const ACCOUNTS_KEPT = 96;
+
+/** One account per set of demands, the cheapest excuses first.
+ *
+ * What an account asks of the impairment plan is who had to be impaired
+ * and who had to be working, night by night. Two that ask the same
+ * differ only in what they cost, and the dearer can never win — so only
+ * the best of each is kept, which loses nothing.
+ *
+ * Then a cap, because the nights multiply. It used to be the first
+ * twenty-four as they came, unsorted and with every duplicate still in:
+ * by the fourth night of a Bad Moon Rising game the account that really
+ * happened was past the cut, and the world was thrown out with nothing
+ * wrong with it (03.10.2026). See solver.py.
+ */
+function theAccountsWorthKeeping(grown) {
+  const demands = sets => Object.keys(sets).map(Number)
+    .filter(n => sets[n].size).sort((a, b) => a - b)
+    .map(n => `${n}:${[...sets[n]].sort((a, b) => a - b).join(",")}`)
+    .join(";");
+  const best = new Map();
+  for (const acc of grown) {
+    let clash = false;
+    for (const [n, seats] of Object.entries(acc.impaired)) {
+      const work = acc.working[n];
+      if (!work) continue;
+      for (const s of seats) if (work.has(s)) clash = true;
+    }
+    if (clash) continue;                // impaired and working at once
+    const key = `${demands(acc.impaired)}|${demands(acc.working)}`;
+    const had = best.get(key);
+    if (had === undefined || acc.cost > had.cost) best.set(key, acc);
+  }
+  return [...best.values()].sort((a, b) => b.cost - a.cost)
+                           .slice(0, ACCOUNTS_KEPT);
 }
 
 /** Who had to be impaired each night, and what that cost.

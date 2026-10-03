@@ -159,7 +159,7 @@ class ItIsHarderThanTheHonestTable(SolverTest):
             else:
                 claims, wakes, _notes = C.claims_for(deal, rng)
             state = GameState(n_players=deal.n, claims=claims, wakes=wakes,
-                              deaths=dict(deal.deaths), infos=list(heard))
+                              **deal.record(), infos=list(heard))
             valid = S.solve(state)[1]
             if not valid:
                 continue
@@ -197,7 +197,7 @@ class RepairingABoardSomebodyLiedTo(SolverTest):
         deal, heard = simulate.play(n, rng, nights=nights)
         claims, wakes, notes = C.claims_for(deal, rng)
         state = GameState(n_players=n, claims=claims, wakes=wakes,
-                          deaths=dict(deal.deaths), infos=list(heard))
+                          **deal.record(), infos=list(heard))
         return deal, state, notes
 
     # A game the solver only makes sense of once somebody is posited to
@@ -375,8 +375,7 @@ class TheDemonGetsEasierToFind(SolverTest):
             limit = phase_index(f"N{night}")
             state = GameState(
                 n_players=n, claims=claims, wakes=wakes,
-                deaths={s: at for s, at in deal.deaths.items()
-                        if phase_index(at) <= limit},
+                **deal.record(upto=f"N{night}"),
                 infos=[r for r in heard
                        if phase_index(f"N{r.night}") <= limit])
             _all, valid, _liar = S.solve_or_repair(state)
@@ -615,7 +614,7 @@ class TheStorytellerCanShowSomethingUntrue(SolverTest):
             deal, heard = simulate.play(9, rng, nights=4)
             claims, wakes, _notes = C.claims_for(deal, rng)
             state = GameState(n_players=9, claims=claims, wakes=wakes,
-                              deaths=dict(deal.deaths), infos=list(heard),
+                              **deal.record(), infos=list(heard),
                           votes=dict(deal.votes),
                           nominations=dict(deal.nominations))
             _all, valid, _liar = S.solve_or_repair(state)
@@ -648,7 +647,7 @@ def a_confidently_wrong_game(among=range(900, 1000)):
         deal, heard = simulate.play(9, rng, nights=4)
         claims, wakes, notes = C.claims_for(deal, rng)
         state = GameState(n_players=9, claims=claims, wakes=wakes,
-                          deaths=dict(deal.deaths), infos=list(heard),
+                          **deal.record(), infos=list(heard),
                           votes=dict(deal.votes),
                           nominations=dict(deal.nominations))
         everything, valid = S.solve(state)
@@ -805,7 +804,7 @@ class BadMoonRisingPlaysAndSolves(SolverTest):
             deal, heard = simulate.play(9, rng, nights=nights, script=bmr)
             claims, wakes, _notes = C.claims_for(deal, rng, script=bmr)
             state = GameState(n_players=9, script=bmr, claims=claims,
-                              wakes=wakes, deaths=dict(deal.deaths),
+                              wakes=wakes, **deal.record(),
                               infos=list(heard))
             yield deal, state
 
@@ -886,7 +885,7 @@ class SectsAndVioletsPlaysAndSolves(SolverTest):
             # thinks nobody voted on — so a perfectly legal board came
             # out impossible.
             state = GameState(n_players=9, script=sv, claims=claims,
-                              wakes=wakes, deaths=dict(deal.deaths),
+                              wakes=wakes, **deal.record(),
                               infos=list(heard),
                               votes=dict(deal.votes),
                               nominations=dict(deal.nominations))
@@ -1007,7 +1006,7 @@ class TheSimulatorCanMoveCharactersAround(SolverTest):
             deal, heard = simulate.play(9, rng, nights=nights, script=sv)
             claims, wakes, _notes = C.claims_for(deal, rng, script=sv)
             state = GameState(n_players=9, script=sv, claims=claims,
-                              wakes=wakes, deaths=dict(deal.deaths),
+                              wakes=wakes, **deal.record(),
                               infos=list(heard), votes=dict(deal.votes),
                               nominations=dict(deal.nominations))
             yield seed, deal, state
@@ -1124,7 +1123,7 @@ class BadMoonRisingAtEveryTableSize(SolverTest):
             deal, heard = simulate.play(n, rng, nights=nights, script=bmr)
             claims, wakes, _notes = C.claims_for(deal, rng, script=bmr)
             state = GameState(n_players=n, script=bmr, claims=claims,
-                              wakes=wakes, deaths=dict(deal.deaths),
+                              wakes=wakes, **deal.record(),
                               infos=list(heard), votes=dict(deal.votes),
                               nominations=dict(deal.nominations))
             yield seed, deal, state
@@ -1178,7 +1177,7 @@ class SectsAndVioletsAtEveryTableSize(SolverTest):
             deal, heard = simulate.play(n, rng, nights=nights, script=sv)
             claims, wakes, _notes = C.claims_for(deal, rng, script=sv)
             state = GameState(n_players=n, script=sv, claims=claims,
-                              wakes=wakes, deaths=dict(deal.deaths),
+                              wakes=wakes, **deal.record(),
                               infos=list(heard), votes=dict(deal.votes),
                               nominations=dict(deal.nominations))
             yield seed, deal, state
@@ -1235,7 +1234,7 @@ class EasterTroublePlaysAndSolves(SolverTest):
             deal, heard = simulate.play(n, rng, nights=nights, script=easter)
             claims, wakes, _notes = C.claims_for(deal, rng, script=easter)
             state = GameState(n_players=n, script=easter, claims=claims,
-                              wakes=wakes, deaths=dict(deal.deaths),
+                              wakes=wakes, **deal.record(),
                               infos=list(heard), votes=dict(deal.votes),
                               nominations=dict(deal.nominations))
             yield seed, deal, state

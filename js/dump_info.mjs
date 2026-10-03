@@ -262,6 +262,13 @@ const waking = {};
       thinks("Pukka"), {}],
     "lunatic-no-token": [[...LUNATIC, "Godfather", "Zombuul"], NOBODY,
       {deaths: {5: "D2"}, executions: {2: 5}}],
+    // Back from the dead on night three. See test_js_info.py.
+    "sailor-regurgitated": [[...GOOD, "Godfather", "Shabaloth"], NOBODY,
+      {deaths: {1: "N2"}, resurrections: {1: "N3"}}],
+    "sailor-raised-by-the-professor": [[...GOOD, "Godfather", "Po"], NOBODY,
+      {deaths: {1: "N2"}, resurrections: {1: "N3"}}],
+    "professor-regurgitated": [[...GOOD, "Godfather", "Shabaloth"], NOBODY,
+      {deaths: {3: "N2"}, resurrections: {3: "N3"}}],
   };
   const {World} = await import("./worlds.mjs");
   for (const [name, [roles, believes, opts]] of Object.entries(direct)) {

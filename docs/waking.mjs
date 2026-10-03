@@ -210,7 +210,31 @@ export function woke(world, state, seat, night) {
   const phase = `N${night}`;
   const role = world.roleAt(seat, phase);
   if (!state.aliveSet(phase).has(seat) && role !== "Ravenkeeper") return false;
+  if (cameBackTonight(world, state, seat, night) === ASLEEP) return false;
   return wokeAs(world, state, seat, night, role);
+}
+
+const ASLEEP = "asleep", OPEN = "open";
+
+/** A seat that returned to life this night: was its turn still to come?
+ *
+ * "They wake later tonight if they normally would." A Shabaloth
+ * regurgitates just before its own turn and a Professor raises at its
+ * own, so whoever came back was dead for every slot before that. An
+ * Innkeeper at 9 slept through; a Chambermaid at 70 did not. Which of
+ * the two did it is not written down: before both it was ASLEEP, after
+ * both it woke as it normally would (null), between them OPEN. */
+function cameBackTonight(world, state, seat, night) {
+  const phase = `N${night}`;
+  const back = (state.resurrections || {})[seat] || [];
+  if (!back.includes(phase)) return null;
+  const acting = actsAs(world, seat, phase);
+  const slot = CHARACTERS[acting].other_night || 0;
+  const raisers = ["Shabaloth", "Professor"]
+    .filter(who => world.findAt(who, phase) !== null)
+    .map(who => CHARACTERS[who].other_night || 0);
+  if (!raisers.length || slot > Math.max(...raisers)) return null;
+  return slot <= Math.min(...raisers) ? ASLEEP : OPEN;
 }
 
 /** The character whose night this seat is living through. */
@@ -238,11 +262,17 @@ export function uncertain(world, state, seat, night) {
   const acting = actsAs(world, seat, phase);
   if (night === 1)
     return isDemon(acting) && CHARACTERS[acting].nights !== EVERY;
+  if (cameBackTonight(world, state, seat, night) === OPEN) return true;
   if (acting === "Professor") {
+    // Night two it is woken for certain: its first chance. After that it
+    // may have chosen somebody who was no Townsfolk, or chosen while
+    // drunk — nothing happens, the ability is gone, and nobody at the
+    // table can see that it went. Only a return with no Shabaloth about
+    // pins it: that was the Professor, awake until then and asleep after.
+    if (night < 3 || !state.aliveSet(phase).has(seat)) return false;
     const raised = raisedOn(state);
-    return raised !== null && night > raised &&
-           state.aliveSet(phase).has(seat) &&
-           world.findAt("Shabaloth", `N${raised}`) !== null;
+    if (raised === null) return true;
+    return world.findAt("Shabaloth", `N${raised}`) !== null;
   }
   if (!state.script.keys.includes("Exorcist")) return false;
   if (world.demonAt(phase) !== seat) return false;

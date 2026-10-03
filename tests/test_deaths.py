@@ -778,7 +778,7 @@ class ADemonWithNoRuleOfItsOwn(SolverTest):
                                "Exorcist", "Innkeeper", "Gambler", "Gossip",
                                "Godfather", demon), (None,) * 9)
                 firing = [c for c in D.causes_on(world, state, 3)
-                          if c.name == "Demon"]
+                          if c.name == "Demon" and not c.also_impaired]
                 self.assertEqual(len(firing), 1)
 
     def test_a_quiet_night_really_is_impossible_here(self):

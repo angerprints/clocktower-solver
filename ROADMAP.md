@@ -268,30 +268,63 @@ Die Frage war: Sind die Regeln beider Skripte noch richtig umgesetzt? Alle 50 Ch
 - Sects & Violets, 3.000 Partien: 22 verworfen (0,7 %, vorher 1,3 %). Alle 22 haben einen Barbier-Tausch, in 21 hat sich der Barbier nie gemeldet. Das ist nach deiner Regel Sache des Dorfs.
 - Python und JavaScript stimmen auf allen 171 Brettern des Korpus überein, darunter 18 neue für diese Regeln. 1.034 Tests grün.
 
+### Der Simulator spielt die vier fehlenden Dinge · *erledigt am 03.10.2026*
+
+Der Simulator spielt jetzt, was die Regelprüfung nur an Einzelbrettern prüfen konnte. Der volle Bericht steht in `claude/simulator-vier-dinge.md`.
+
+| Was | Wie oft in 6.000 Partien Bad Moon Rising (4 Nächte) |
+|---|---|
+| Überlebte Hinrichtung | Pazifist 1.529, Narr 667, Teedame 575, Teufelsadvokat 506, Segler 436 |
+| Wiederbelebung | Professor 769, Shabaloth 603 |
+| Mondkind stirbt nachts und wählt am Morgen | 275 Wahlen, davon 139 mit Totem |
+| Nominierender fällt durch die Hexe tot um | 836 von 6.000 Partien Sects & Violets |
+
+**Die neuen Partien haben neun Fehler im Solver gefunden,** alle behoben, in Python und JavaScript:
+
+| Nr. | Fehler | Jetzt |
+|---|---|---|
+| 1 | **Die Erzählungen der Nächte wurden bei 24 abgeschnitten,** unsortiert und mit Doppelten. Ab der vierten Nacht lag die wahre Erzählung oft dahinter, und die wahre Welt flog raus. | Eine Erzählung je Forderung, die beste zuerst, bis 96. |
+| 2 | **Ein Professor kann seine Fähigkeit unsichtbar verbrauchen** (auf einen Nicht-Bürger, oder betrunken). Der Solver hielt ihn danach weiter für geweckt. | Nacht 2 sicher geweckt, danach offen. |
+| 3 | **Eine Rückkehr ist auf eine Nacht datiert, und eine Nacht hat siebzig Plätze.** Wer in Nacht 3 zurückkam, galt die ganze Nacht als lebend: Teedame, Großmutter, Höfling, Minnesänger und Pukka-Gift waren dadurch falsch. | Was vom Lebendsein abhängt, wird nur verlangt, wenn es in beiden Lesarten gilt. Segler, Gastwirt und Exorzist handeln in der Nacht ihrer Rückkehr nicht. |
+| 4 | **Ein Narr, der tot war und zurückkam,** überlebt wieder einmal. | Abgebildet. |
+| 5 | **Eine betrunkene Pukka greift nicht an, ihr Gift ruht,** und das Opfer stirbt eine Nacht später. | Der Kill darf eine oder zwei Nächte später kommen. |
+| 6 | **Schläger:** War nur noch ein Wähler am Leben, galt er jede Nacht als betrunken. | Die Trunkenheit ist ein Angebot, kein Zwang. |
+| 7 | **Großmutter:** Trauer ist ein Tod wie jeder andere. Neben einer Teedame oder im Paar des Gastwirts stirbt sie nicht. | Abgebildet. |
+| 8 | **Teedame:** Ist nur noch ein Spieler neben ihr am Leben, ist er ihr Nachbar auf beiden Seiten. | Abgebildet. |
+| 9 | **Python und JavaScript waren bei Gleichstand uneins,** welche Störung sie wählen. | Gleiche Reihenfolge. |
+
+**Der Night-Walk hat dabei sechs Fehler im Simulator gefunden,** die schon vorher da waren: mehrere Kills einer Nacht liefen nicht nacheinander ab, der Dämon wählte jemanden, der in derselben Nacht schon tot war, die Großmutter starb trotz Teedame, beim Mondkind zählte der falsche Zeitpunkt, ein wiederbelebter Minnesänger machte rückwirkend alle betrunken, und ein Shabaloth wählte denselben Spieler zweimal. Umgekehrt fehlten dem Night-Walk der Segler und der Gastwirt bei anderen Toden als dem des Dämons.
+
+**Messung:**
+
+- Wahrheit gehalten, Bad Moon Rising: 0 von 6.000 (4 Nächte), 0 von 20.000 (5 Nächte), 0 von 26.000 (6 Nächte).
+- Trouble Brewing und das Oster-Skript: je 0 von 6.000 (5 Nächte).
+- Sects & Violets: 49 von 6.000 (4 Nächte), alle mit Barbier-Tausch, 47 davon mit verstecktem Barbier. Am Morgen waren es 45. Die Hexen-Tode bringen keine neue Klasse.
+- Simulator gegen Night-Walk, Bad Moon Rising: ohne Schläger stimmen alle 13.016 Nächte überein, mit Schläger weichen 39 von 4.639 ab. Am Morgen waren es 37 von 5.857 über alles. Trouble Brewing: 0 von 6.000. Sects & Violets: 21 von 6.000, am Morgen 14 von 3.000.
+- Korpus: 181 Bretter, 10 davon neue gespielte Partien. Python und JavaScript stimmen überein. 1.066 Tests grün.
+
 ### Als Nächstes
 
-**1 · Der Simulator spielt die neuen Regeln nicht.** Sie sind durch Einzeltests und Korpus-Bretter gedeckt, aber kein Messlauf erzeugt sie:
+**1 · Was der Simulator weiter nicht spielt.** Dieselbe Lücke wie gestern, eine Reihe weiter:
 
-- eine überlebte Hinrichtung (Teufelsadvokat, Pazifist, Narr, Segler, Teedame)
-- das Hochwürgen des Shabaloth und den Professor
-- ein Mondkind, das nachts stirbt und am Morgen wählt
-- einen Nominierenden, der durch die Hexe tot umfällt
+- den **Schläger** (wechselt die Seite und macht den ersten Wähler betrunken). Das sind die 39 Nächte oben.
+- die Kills von **Schwätzer, Meuchelmörder und Pate**
+- die **Hinrichtung wegen Wahnsinn** (Cerenovus)
+- dass ein Wiederbelebter eine einmalige Fähigkeit **noch einmal** nutzt (Höfling, Großmutter)
 
-Erst wenn der Simulator das spielt, prüfen die Messläufe diese Regeln mit.
+**2 · Wie gut findet der Solver den Dämon?** Die zweite Hälfte der Neubewertung: getrennt nach Dämon, für beide Skripte. Der erste Blick bei Bad Moon Rising vom 02.10.: Shabaloth 38 von 40 vorn, Poe 22 von 34, Pukka 22 von 41, **Zombuul 10 von 37**. Warum der Zombuul so schwach ist, ist die erste Frage. Seit heute nicht neu gemessen.
 
-**2 · Wie gut findet der Solver den Dämon?** Die zweite Hälfte der Neubewertung, jetzt wo die Regeln stimmen: getrennt nach Dämon, für beide Skripte. Der erste Blick bei Bad Moon Rising: Shabaloth 38 von 40 vorn, Poe 22 von 34, Pukka 22 von 41, **Zombuul 10 von 37**. Warum der Zombuul so schwach ist, ist die erste Frage.
-
-**3 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox) betreffen auch das Regelwerk des Einzelspieler-Spiels.
+**3 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox, Rückkehr mitten in der Nacht, Pukka eine Nacht später) betreffen auch das Regelwerk des Einzelspieler-Spiels.
 
 ### Offene Stellen
 
 | Nr. | Bereich | Was offen ist |
 |---|---|---|
 | 1 | Bad Moon Rising | **Gestörter Dämon als Erklärung für eine ruhige Nacht.** Das gibt es nur beim allgemeinen Dämon, nicht bei Zombuul, Pukka, Shabaloth und Poe. Die Bretter gehen trotzdem auf, über einen Schutz auf dem Opfer. |
-| 2 | Bad Moon Rising | **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung vom 02.10.2026). Abgebildet für Höfling und Philosoph (Tod, und Störung beim Wählen) und für die Pukka. Nicht allgemein für eine Quelle, die erst später gestört wird. |
+| 2 | Bad Moon Rising | **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung vom 02.10.2026). Abgebildet für Höfling und Philosoph (Tod, und Störung beim Wählen) und für die Pukka, seit dem 03.10. auch mit dem Kill, der dadurch später kommt. Nicht allgemein für eine Quelle, die erst später gestört wird. |
 | 3 | Bad Moon Rising | **Poe und Meuchelmörder bleiben locker:** drei Tote in zwei Nächten hintereinander, und ein Meuchelmörder ohne eingetragene Zeile kann in mehreren Nächten zuschlagen (jeder Schlag kostet 0,25). |
-| 4 | Sects & Violets | **Barbier-Tausch ohne gemeldeten Barbier** verliert die wahre Welt, in 21 von 3.000 Partien. Nach deiner Regel gewollt. |
-| 5 | Sects & Violets | **Sitze, deren Rolle gewechselt hat,** werden nicht von ihrer ursprünglichen Rolle aus gesucht (halber Barbier-Tausch). 1 von 3.000 Partien. |
+| 4 | Sects & Violets | **Barbier-Tausch ohne gemeldeten Barbier** verliert die wahre Welt, in 47 von 6.000 Partien. Nach deiner Regel gewollt. |
+| 5 | Sects & Violets | **Sitze, deren Rolle gewechselt hat,** werden nicht von ihrer ursprünglichen Rolle aus gesucht (halber Barbier-Tausch). 2 von 6.000 Partien. |
 | 6 | Sects & Violets | **Mathematiker unter einem Vortox:** Seine Zahl wird als Bereich geprüft, deshalb bleibt hier die alte, lockere Regel. |
 | 7 | Sects & Violets | **Barbier-Bretter brauchen im Browser etwa 20 Sekunden.** Die Seite friert dabei nicht mehr ein. |
 | 8 | Echte Partien | **Ein Info-Claim, den alle kennen und der nie nachts stirbt,** deutet auf Trunkenbold, Marionette oder böse. Idee aus der ersten echten Partie, nicht gebaut. |
@@ -301,6 +334,11 @@ Erst wenn der Simulator das spielt, prüfen die Messläufe diese Regeln mit.
 | 12 | Werkzeug | **Exakte Zählung früher Bretter auf der Website.** Der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten. |
 | 13 | Werkzeug | **NEXT.md** in eine kurze Roadmap und ein Archiv aufteilen. |
 | 14 | Nach Bedarf | Weitere experimentelle Charaktere. |
+| 15 | Bad Moon Rising | **Höfling nach einer Wiederbelebung.** Simulator und Solver lassen seine alte Trunkenheit weiterlaufen, sobald er wieder lebt („ruht“, nicht „endet“). Ob das an deinem Tisch so gilt, ist nicht entschieden. |
+| 16 | Bad Moon Rising | **Kammerzofe und wer in derselben Nacht stirbt.** Simulator und Solver zählen einen Sitz als geweckt, auch wenn er vor seinem Platz in der Nacht getötet wurde (Professor an Platz 43, Dämon an 27). Beide machen es gleich, deshalb sieht es kein Messlauf. |
+| 17 | Bad Moon Rising | **Meuchelmörder:** Auch er kann seine Fähigkeit unsichtbar verbrauchen (betrunken). Der Solver hält ihn bis zu einer eingetragenen Zeile für geweckt. Nicht gemessen, weil der Simulator ihn nicht spielt. |
+| 18 | Solver | **Der Plan der Störungen geht Nacht für Nacht vor** und nimmt bei Gleichstand die erste Lösung. Über mehrere Nächte gesehen kann eine andere besser sein. Das kostet Gewicht, keine Welten. |
+| 19 | Simulator | **Der Mönch schützt in manchen Nächten zwei Spieler:** ein alter Münzwurf neben der eingetragenen Wahl. Ihn zu entfernen würde alle Trouble-Brewing-Partien neu austeilen, die Tests beim Namen nennen. Der Solver ist davon nicht betroffen. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

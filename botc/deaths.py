@@ -56,6 +56,11 @@ class Cause(NamedTuple):
     # victim has to have been the one it poisoned — which is a demand on
     # a night that has already been explained. Given as a span number.
     victim_impaired_at: int = None
+    # And some need more than the victim to have been impaired back
+    # then. A Pukka that was itself drunk for a night kept its poison
+    # waiting and killed a night late: (span, seat) pairs that also had
+    # to be impaired, on nights already explained.
+    also_impaired: tuple = ()
     # Seats that die as a consequence, given who this one killed.
     # Called with (victim) and returns further seats.
     implies: object = None
@@ -255,10 +260,15 @@ def _account_for(world, state, night, causes, directly, followed,
                            and (not cause.unstoppable or s.needs is None)]
                 if any(shield.needs is None for shield in blocked):
                     continue              # nothing could undo this one
-                earlier = dict(before)
+                # The sets copied, not only the dict around them: they
+                # are shared between every account that grew from this
+                # one, and adding to one in place added to them all.
+                earlier = {span: set(seats) for span, seats in before.items()}
                 if cause.victim_impaired_at is not None:
                     earlier.setdefault(cause.victim_impaired_at,
                                        set()).add(victim)
+                for span, who in cause.also_impaired:
+                    earlier.setdefault(span, set()).add(who)
                 grown.append((
                     cost * cause.cost,
                     impaired | {s.needs for s in blocked},
@@ -281,14 +291,40 @@ def _account_for(world, state, night, causes, directly, followed,
         options = [(cost, set(impaired), set(working))]
         for hit in implied:
             grown = []
+            # A death that follows is still a death, and what keeps a
+            # seat alive keeps it alive from this too: a Grandmother
+            # beside a working Tea Lady, or in the Innkeeper's pair,
+            # does not die of grief. Not the Demon's own kill, so a Monk
+            # or a Soldier's kind of safety is no help.
+            #
+            # None of that was asked. She lived, so she "was not
+            # working" — and with nothing able to impair her the world
+            # that happened was thrown out (03.10.2026, found as soon as
+            # the simulator stopped killing her through a Tea Lady).
+            shields = shields_on(world, state, night, hit.seat, OTHER)
             for c, imp, wk in options:
-                if hit.seat in followed or hit.seat in imp:
-                    # It happened, and whatever caused it was working.
+                if hit.seat in followed:
+                    # It happened: whatever caused it was working, and
+                    # anything always-on that should have stopped it was
+                    # not.
+                    blocked = [s for s in shields if not s.chosen]
+                    if any(s.needs is None for s in blocked):
+                        continue
+                    grown.append((c, imp | {s.needs for s in blocked},
+                                  wk | {hit.needs}))
+                elif hit.seat in imp:
                     grown.append((c, imp, wk | {hit.needs}))
                 else:
-                    # It did not happen, so whatever would have caused it
-                    # was not working.
+                    # It did not happen. Whatever would have caused it
+                    # was not working —
                     grown.append((c, imp | {hit.needs}, set(wk)))
+                    # — or something kept them alive, and *that* was.
+                    for s in shields:
+                        if s.needs is not None and s.needs in imp:
+                            continue
+                        grown.append((c * s.cost, set(imp),
+                                      wk | ({s.needs} if s.needs is not None
+                                            else set())))
             options = grown
 
         for c, imp, wk in options:

@@ -32,7 +32,7 @@ class AKnownNightCanBeReplayed(SolverTest):
                 if deal.poisoned.get(night) is not None:
                     hidden[("poisoner", night)] = deal.poisoned[night]
                 phase = f"N{night}"
-                died = {p for p, at in deal.deaths.items() if at == phase}
+                died = deal.died_on(phase)
                 demon = deal.demon_at(phase)
                 kills = [p for p in died if p != demon]
                 if kills:
@@ -216,8 +216,7 @@ class EveryScriptReplays(SolverTest):
             deal, heard = simulate.play(9, rng, nights=3, script=script)
             for night in (2, 3):
                 hidden = nightwalk.hidden_from(deal, night, heard)
-                died = {p for p, at in deal.deaths.items()
-                        if at == f"N{night}"}
+                died = deal.died_on(f"N{night}")
                 yield deal, night, hidden, died
 
     def check(self, script, name):
@@ -582,19 +581,13 @@ class TheDreamerReadsWhatIsThereNow(SolverTest):
                         and h.night == night]
                 if not rows:
                     continue
-                hidden = {("asked", night): {h.player: h.target
-                                             for h in rows}}
-                if deal.poisoned.get(night) is not None:
-                    hidden[("poisoner", night)] = deal.poisoned[night]
-                if deal.demon_aimed.get(night):
-                    hidden[("demon", night)] = deal.demon_aimed[night]
-                # A Fang Gu's jump and a Barber's swap both move who holds
-                # what before the Dreamer reads at 56.
-                for key in (("fanggu_jump", night), ("barber", night),
-                            ("pithag", night)):
-                    got_it = nightwalk.hidden_from(deal, night, heard).get(key)
-                    if got_it is not None:
-                        hidden[key] = got_it
+                # Everything `hidden_from` knows, and who the Dreamer
+                # asked about. Assembled by hand here it went stale three
+                # times: no Fang Gu jump, no Pit-Hag, no Snake Charmer
+                # swap — each found when a new deal happened to need it.
+                hidden = nightwalk.hidden_from(deal, night, heard)
+                hidden[("asked", night)] = {h.player: h.target
+                                            for h in rows}
                 got = nightwalk.walk(deal, night, hidden)
                 mine = {(r[1], r[2]): r[3] for r in got.readings}
                 for row in rows:
@@ -784,7 +777,7 @@ class TheWalkRunsOverASolverWorld(SolverTest):
             deal, heard = simulate.play(9, rng, nights=3, script=script)
             claims, wakes, _notes = C.claims_for(deal, rng, script=script)
             state = GameState(n_players=9, script=script, claims=claims,
-                              wakes=wakes, deaths=dict(deal.deaths),
+                              wakes=wakes, **deal.record(),
                               infos=list(heard))
             world = World(tuple(deal.roles), tuple(deal.believes))
             # A Barber that hid and died: the swap is not looked for (a
@@ -836,8 +829,7 @@ class TheWalkRunsOverASolverWorld(SolverTest):
                     got = nightwalk.walk(
                         board, night,
                         nightwalk.hidden_from(deal, night, heard))
-                    died = {p for p, at in deal.deaths.items()
-                            if at == f"N{night}"}
+                    died = deal.died_on(f"N{night}")
                     with self.subTest(night=night, roles=deal.roles):
                         self.assertEqual(got.died, died)
                     checked += 1

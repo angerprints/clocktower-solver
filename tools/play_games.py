@@ -72,13 +72,12 @@ def board_at(deal, heard, claims, wakes, phase, script=None):
     the whole point.
     """
     limit = phase_index(phase)
-    deaths = {seat: at for seat, at in deal.deaths.items()
-              if phase_index(at) <= limit}
+    record = deal.record(upto=phase)
     infos = [row for row in heard if phase_index(f"N{row.night}") <= limit]
     from botc import scripts
     return GameState(n_players=deal.n, script=script or scripts.TROUBLE_BREWING,
                      claims=dict(claims), wakes=dict(wakes),
-                     deaths=deaths, infos=infos)
+                     infos=infos, **record)
 
 
 def reading(state, deal, reachable=True):
@@ -197,13 +196,13 @@ def one_game(n, nights, seed, script=None):
 
     timeline = []
     for phase in phases_of(deal, nights):
-        died = [s + 1 for s, at in deal.deaths.items() if at == phase]
+        died = [s + 1 for s in sorted(deal.died_on(phase))]
         # An execution is recorded as "E2", not "D2", so matching the
         # phase exactly dropped every one: the transcript showed an
         # Undertaker reading a seat that had apparently never died. The
         # simulator was right and the write-up was lying about it.
-        executed = [s + 1 for s, at in deal.deaths.items()
-                    if phase.startswith("D") and at == "E" + phase[1:]]
+        executed = [s + 1 for s in sorted(deal.died_on("E" + phase[1:]))
+                    ] if phase.startswith("D") else []
         learned = [{"seat": row.player + 1, "type": type(row).__name__,
                     "said": describe(row),
                     "misled": misled_by(deal, row)}
@@ -292,10 +291,7 @@ def save_file(deal, heard, claims, wakes, script=None):
     """
     players = []
     for seat in range(deal.n):
-        events = []
-        at = deal.deaths.get(seat)
-        if at:
-            events.append("X" + at[1:] if at.startswith("E") else at)
+        events = deal.events(seat)
         players.append({
             "name": f"Seat {seat + 1}",
             "claim": claims.get(seat, ""),

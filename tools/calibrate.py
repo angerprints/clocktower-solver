@@ -98,7 +98,7 @@ def readings(games, players, nights, script, first_seed, dives=12000):
         # never had, and flatter the very thing being measured.
         claim_model.confirm_readings(deal, heard, rng)
         state = GameState(n_players=players, script=script, claims=claims,
-                          wakes=wakes, deaths=dict(deal.deaths),
+                          wakes=wakes, **deal.record(),
                           infos=list(heard), votes=dict(deal.votes),
                           nominations=dict(deal.nominations))
         # Sample when enumerating would take too long. Two measurements

@@ -377,6 +377,18 @@ def python_side():
         "lunatic-no-token":
             (LUNATIC + ["Godfather", "Zombuul"], NOBODY,
              {"deaths": {5: "D2"}, "executions": {2: 5}}),
+        # Back from the dead on night three (03.10.2026): a Sailor acts
+        # at 4 and slept through whoever raised it; a Professor acts at
+        # 43, after a Shabaloth and at its own slot, so it is open.
+        "sailor-regurgitated":
+            (GOOD + ["Godfather", "Shabaloth"], NOBODY,
+             {"deaths": {1: "N2"}, "resurrections": {1: "N3"}}),
+        "sailor-raised-by-the-professor":
+            (GOOD + ["Godfather", "Po"], NOBODY,
+             {"deaths": {1: "N2"}, "resurrections": {1: "N3"}}),
+        "professor-regurgitated":
+            (GOOD + ["Godfather", "Shabaloth"], NOBODY,
+             {"deaths": {3: "N2"}, "resurrections": {3: "N3"}}),
     }
     for name, (roles, believes, opts) in direct.items():
         st = board(BMR, roles[:7] + ["Tinker", "Moonchild"], **opts)

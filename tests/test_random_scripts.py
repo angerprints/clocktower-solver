@@ -225,8 +225,11 @@ class EveryRuleStaysWellFormed(SolverTest):
         """Four Demons kill four different ways, and two of them
         answering for the same world would double the kills."""
         for _script, state, world, night in self.sweep(seed=11):
+            # A Pukka's kill has a second and third telling — a night or
+            # two late, after nights it was drunk. They share the name,
+            # so they share the one kill a night and double nothing.
             firing = [c for c in deaths.causes_on(world, state, night)
-                      if c.name == "Demon"]
+                      if c.name == "Demon" and not c.also_impaired]
             self.assertLessEqual(len(firing), 1, f"{firing}")
 
 

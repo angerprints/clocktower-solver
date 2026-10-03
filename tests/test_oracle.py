@@ -56,7 +56,7 @@ class TheDealItself(SolverTest):
         rng = random.Random(13)
         for _ in range(120):
             d = play(rng.choice([7, 9]), rng, nights=4)[0]
-            nights = [p for p in d.deaths.values() if p.startswith("N")]
+            nights = [p for p in d.deaths.values() if p.startswith("N")]  # Trouble Brewing: nobody comes back
             self.assertEqual(len(nights), len(set(nights)))
 
 

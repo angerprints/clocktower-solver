@@ -258,7 +258,12 @@ def plan_night(sources, required, forbidden, previous):
         return None
 
     best, best_hits = None, None
-    for arrangement in set(permutations(range(len(slots)), len(outstanding))):
+    # In the order they come, which is the order the JavaScript tries
+    # them in. Two arrangements often cost the same, the first one found
+    # is kept, and what it chose decides what the *next* night costs — so
+    # walking a `set` of them, in whatever order the hashes fell, let the
+    # two languages disagree on a tie (03.10.2026).
+    for arrangement in permutations(range(len(slots)), len(outstanding)):
         cost, hits, ok = 1.0, {}, True
         for seat, slot in zip(outstanding, arrangement):
             source = slots[slot]

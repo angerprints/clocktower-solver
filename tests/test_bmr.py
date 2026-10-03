@@ -120,10 +120,40 @@ class TheGrandmother(SolverTest):
                              "two bodies from one kill")
 
     def test_losing_only_the_grandchild_means_she_was_not_working(self):
+        """Where nothing could have kept her alive, that is. A Courtier
+        sits where the Innkeeper was: see the next one."""
         state = board(deaths={self.CHILD: "N2"}, infos=[self.reading()])
-        cost = S.explanation_cost(among(*HONEST), state)
+        nobody_to_guard_her = among(
+            *(r if r != "Innkeeper" else "Courtier" for r in HONEST))
+        cost = S.explanation_cost(nobody_to_guard_her, state)
         self.assertIsNotNone(cost)
         self.assertLess(cost, 1.0, "something had to have stopped her")
+
+    def test_or_something_was_keeping_her_alive(self):
+        """Grief is a death like any other, and what keeps a seat alive
+        keeps it alive from this too. With an Innkeeper about she may
+        simply have been one of its two; with a Tea Lady beside her and
+        both neighbours good, she cannot die at all.
+
+        The solver read "she lived" as "she was not working" and nothing
+        else — so a Grandmother a Tea Lady was keeping, with nothing on
+        the board able to impair her, had no world (03.10.2026)."""
+        state = board(deaths={self.CHILD: "N2"}, infos=[self.reading()])
+        self.assertEqual(S.explanation_cost(among(*HONEST), state), 1.0,
+                         "the Innkeeper may have chosen her")
+        # Tea Lady in the last seat: her neighbours are the Gossip and,
+        # round the circle, the Grandmother — both good. Nothing here
+        # drunks or poisons anybody.
+        beside_her = among("Grandmother", "Zombuul", "Chambermaid", "Fool",
+                           "Pacifist", "Gambler", "Mastermind", "Gossip",
+                           "TeaLady")
+        cost = S.explanation_cost(beside_her, state)
+        self.assertEqual(cost, 1.0, "the Tea Lady kept her")
+        # And had she died there, the Tea Lady was not working — which
+        # nothing on that board can arrange.
+        both = board(deaths={self.CHILD: "N2", self.GRANNY: "N2"},
+                     infos=[self.reading()])
+        self.assertIsNone(S.explanation_cost(beside_her, both))
 
     def test_the_token_sits_where_she_was_shown(self):
         """A marker the Storyteller put down, not a character anybody
@@ -913,8 +943,11 @@ class OnlyOneDemonAnswersPerWorld(SolverTest):
             with self.subTest(demon=demon):
                 w = among("Grandmother", "Sailor", "Chambermaid", "Exorcist",
                           "Innkeeper", "Gambler", "Gossip", "Godfather", demon)
+                # The kill that is owed each night. A Pukka has a second
+                # telling of the same kill — a night late, after a night
+                # it was drunk — which shares the name and is never owed.
                 firing = [c for c in deaths.causes_on(w, board(), 3)
-                          if c.name == "Demon"]
+                          if c.name == "Demon" and not c.also_impaired]
                 self.assertEqual(len(firing), 1, f"{demon} gave {firing}")
 
 
@@ -1860,3 +1893,175 @@ class TheRulebookReadAgainstTheCode(SolverTest):
         self.assertIsNone(self.cost(roles, bluffs,
                                     executions={1: 0, 2: 0},
                                     deaths={3: "N2"}))
+
+
+class WhatThePlayedGamesFound(SolverTest):
+    """The simulator learned to play four things on 03.10.2026 — an
+    execution somebody walks away from, the dead coming back, a Moonchild
+    taken at night, a Witch's curse biting — and within the hour it had
+    produced games the solver threw out. Each of these is one of them,
+    cut down to a board with one true world.
+
+    Most turn on one fact: **a return is dated to a night, and a night is
+    seventy slots long.** A Shabaloth regurgitates at 27 and a Professor
+    raises at 43, so whoever came back was dead for the first part of the
+    night and alive for the rest.
+    """
+
+    TEA = TheRulebookReadAgainstTheCode.TEA
+    EVIL = {7: "Moonchild", 8: "Courtier"}
+    cost = TheRulebookReadAgainstTheCode.cost
+
+    # --- a return in the middle of a night --------------------------------
+
+    def test_a_tea_lady_raised_late_was_not_there_to_keep_her_neighbour(self):
+        """She died on night two, her neighbour was killed on night three
+        and the Professor raised her that same night — after the kill."""
+        got = self.cost(self.TEA + ["Po"], self.EVIL,
+                        deaths={1: "N2", 2: "N3"}, resurrections={1: "N3"})
+        self.assertIsNotNone(got)
+
+    def test_a_grandmother_raised_late_did_not_see_her_grandchild_fall(self):
+        from botc.info import GrandmotherInfo
+        roles = ["Grandmother", "Pacifist", "Gossip", "Chambermaid",
+                 "Professor", "Minstrel", "Tinker", "Godfather", "Po"]
+        shown = [GrandmotherInfo(1, 0, target=2, role="Gossip")]
+        back = self.cost(roles, self.EVIL, infos=shown,
+                         deaths={0: "D1", 2: "N2"}, executions={1: 0},
+                         resurrections={0: "N2"})
+        self.assertEqual(back, 1.0, "nothing to excuse")
+        # Standing all along, with nothing on the board to impair her or
+        # keep her alive, she would have gone with the grandchild — so
+        # the only story left is that the reading was never hers.
+        self.assertLess(self.cost(roles, self.EVIL, infos=shown,
+                                  deaths={2: "N2"}), 1.0)
+
+    def test_a_courtier_raised_by_the_professor_it_had_named(self):
+        """Its drunkenness rests while it is dead, so the Professor was
+        sober when it chose — and is drunk again from the moment the
+        Courtier stands."""
+        from botc.info import CourtierChoice
+        roles = ["Courtier", "Pacifist", "Gossip", "Chambermaid",
+                 "Professor", "Minstrel", "Tinker", "Godfather", "Po"]
+        got = self.cost(roles, self.EVIL,
+                        infos=[CourtierChoice(1, 0, role="Professor")],
+                        deaths={0: "D1"}, executions={1: 0},
+                        resurrections={0: "N2"})
+        self.assertIsNotNone(got)
+
+    def test_a_minstrel_raised_since_was_not_there_to_hear_it(self):
+        roles = ["Minstrel", "Pacifist", "Gossip", "Chambermaid",
+                 "Professor", "Fool", "Tinker", "Godfather", "Po"]
+        got = self.cost(roles, self.EVIL,
+                        deaths={0: "N2", 7: "D2"}, executions={2: 7},
+                        resurrections={0: "N3"})
+        self.assertIsNotNone(got, "the Professor was sober when it chose")
+
+    def test_a_pukkas_poison_came_due_on_somebody_not_yet_back(self):
+        """Poisoned on the first night, executed that day, raised the next
+        night — after the poison had found a corpse."""
+        from botc.info import GrandmotherInfo
+        roles = ["Grandmother", "Pacifist", "Gossip", "Chambermaid",
+                 "Professor", "Minstrel", "Tinker", "Godfather", "Pukka"]
+        got = self.cost(roles, self.EVIL,
+                        infos=[GrandmotherInfo(1, 0, target=2, role="Fool")],
+                        deaths={0: "D1"}, executions={1: 0},
+                        resurrections={0: "N2"}, quiet_nights={2})
+        self.assertIsNotNone(got)
+
+    # --- the Chambermaid ---------------------------------------------------
+
+    def chambermaid(self, roles, night, a, b, count, **board):
+        from botc.info import ChambermaidInfo
+        seat = roles.index("Chambermaid")
+        return self.cost(roles, self.EVIL, infos=[
+            ChambermaidInfo(night, seat, a=a, b=b, count=count)], **board)
+
+    def test_a_professor_may_have_spent_it_where_nobody_could_see(self):
+        """On somebody who was no Townsfolk, or while drunk: nothing
+        happens and it is gone. Night two it is woken for certain; after
+        that, either number."""
+        roles = self.TEA + ["Po"]
+        professor, gossip = 4, 2
+        self.assertIsNotNone(self.chambermaid(roles, 2, professor, gossip, 1))
+        self.assertIsNone(self.chambermaid(roles, 2, professor, gossip, 0))
+        for count in (0, 1):
+            with self.subTest(night=3, count=count):
+                self.assertIsNotNone(
+                    self.chambermaid(roles, 3, professor, gossip, count))
+
+    def test_but_a_return_with_no_shabaloth_about_was_its_doing(self):
+        roles = self.TEA + ["Po"]
+        raised = {"deaths": {5: "N2"}, "resurrections": {5: "N3"}}
+        self.assertIsNotNone(self.chambermaid(roles, 3, 4, 2, 1, **raised))
+        self.assertIsNotNone(self.chambermaid(roles, 4, 4, 2, 0, **raised))
+        self.assertIsNone(self.chambermaid(roles, 4, 4, 2, 1, **raised),
+                          "spent, and seen to be")
+
+    def test_whoever_came_back_tonight_slept_through_an_earlier_turn(self):
+        """An Innkeeper acts at 9. Regurgitated at 27, it did not wake —
+        and it guarded nobody and drunk nobody either."""
+        roles = ["Gambler", "Innkeeper", "Gossip", "Chambermaid", "Fool",
+                 "Minstrel", "Tinker", "Godfather", "Shabaloth"]
+        back = {"deaths": {1: "N2"}, "resurrections": {1: "N3"}}
+        self.assertIsNotNone(self.chambermaid(roles, 3, 1, 2, 0, **back))
+        self.assertIsNone(self.chambermaid(roles, 3, 1, 2, 1, **back))
+
+    # --- once per game, and then again --------------------------------------
+
+    def test_a_fool_that_has_been_dead_and_back_walks_away_again(self):
+        roles = ["Fool", "Chambermaid", "Gossip", "Courtier", "Exorcist",
+                 "Minstrel", "Tinker", "Godfather", "Shabaloth"]
+        bluffs = {7: "Moonchild", 8: "Professor"}
+        again = self.cost(roles, bluffs, executions={1: 0, 3: 0},
+                          deaths={0: "N2"}, resurrections={0: "N3"})
+        self.assertIsNotNone(again)
+        self.assertIsNone(self.cost(roles, bluffs, executions={1: 0, 3: 0}),
+                          "not without having died in between")
+
+    # --- a Pukka that was drunk for a night ---------------------------------
+
+    def test_its_kill_comes_a_night_late(self):
+        """The Tea Lady was poisoned on night two. On night three the
+        Innkeeper made the Pukka drunk: no attack, the token stays, and
+        the poison rests. So she kept her neighbour from the gallows that
+        day — and died on night four."""
+        from botc.info import InnkeeperChoice
+        # A Grandmother beside her rather than a Gossip: nothing else on
+        # this board can have killed the Tea Lady.
+        roles = ["Gambler", "TeaLady", "Grandmother", "Chambermaid",
+                 "Innkeeper", "Minstrel", "Tinker", "Godfather", "Pukka"]
+        got = self.cost(roles, self.EVIL,
+                        infos=[InnkeeperChoice(3, 4, a=8, b=5)],
+                        deaths={6: "N2", 1: "N4"}, executions={3: 2},
+                        quiet_nights={3})
+        self.assertIsNotNone(got)
+
+    # --- the Goon -------------------------------------------------------------
+
+    def test_the_last_chooser_standing_need_not_have_chosen_the_goon(self):
+        """With one chooser left alive the Goon's drunkenness was read as
+        unavoidable, so that Sailor was drunk every night — and could not
+        have walked away from the gallows."""
+        roles = ["Sailor", "Fool", "Zombuul", "Minstrel", "Mastermind",
+                 "Chambermaid", "Goon", "Tinker", "Grandmother"]
+        got = self.cost(roles, {2: "Courtier", 4: "Gossip"},
+                        deaths={2: "D1"}, executions={1: 2, 2: 0})
+        self.assertIsNotNone(got)
+
+    # --- how many tellings of the nights are kept -------------------------------
+
+    def test_the_account_that_happened_is_not_past_the_cut(self):
+        """Four nights, and on each a Demon, a Gossip, an Assassin and a
+        Gambler able to explain the same body. The first twenty-four
+        tellings, kept as they came, did not include the true one."""
+        from botc.info import ChambermaidInfo, GamblerGuess
+        roles = ["Chambermaid", "Pukka", "Innkeeper", "Assassin", "Gossip",
+                 "Fool", "Professor", "Grandmother", "Gambler",
+                 "DevilsAdvocate"]
+        got = self.cost(
+            roles, {1: "Pacifist", 3: "Goon", 9: "Courtier"},
+            deaths={0: "E1", 8: "N2", 9: "N3", 4: "N4"},
+            infos=[ChambermaidInfo(1, 0, a=1, b=7, count=7),
+                   GamblerGuess(2, 8, target=4, role="Minstrel")])
+        self.assertIsNotNone(got)
