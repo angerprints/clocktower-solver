@@ -1550,14 +1550,24 @@ class ThePukkasPoisonIsNotLuck(SolverTest):
         self.assertEqual(pukka.price(2), S.POISON_HIT_PENALTY)
         self.assertFalse(pukka.unavoidable())
 
-    def test_the_token_reaches_only_tonights_dead(self):
+    def test_the_token_is_free_on_tonights_dead_and_a_guess_on_the_rest(self):
+        """It reached only the dead until 03.10.2026. Somebody kept alive
+        carried it into the night all the same — see
+        `test_an_innkeeper_under_the_token_and_kept_alive` below."""
         from botc import impairment
         state = self.state({6: "N2"})
-        names = {s.name: s for s in
-                 impairment.sources_on(self.world(), state, 2)}
-        self.assertEqual(set(names["Pukka's token"].seats), {6})
+        token = {s.name: s for s in
+                 impairment.sources_on(self.world(), state, 2)}["Pukka's token"]
+        self.assertEqual(token.price(6), 1.0)
+        self.assertEqual(token.price(2), S.POISON_HIT_PENALTY)
+        self.assertEqual(token.capacity, 1, "one token")
+        self.assertFalse(token.unavoidable())
+        quiet = {s.name: s for s in
+                 impairment.sources_on(self.world(), state, 3)}["Pukka's token"]
+        self.assertEqual(quiet.price(2), S.POISON_HIT_PENALTY)
         self.assertNotIn("Pukka's token", {
-            s.name for s in impairment.sources_on(self.world(), state, 3)})
+            s.name for s in impairment.sources_on(self.world(), state, 1)},
+            "nothing is carried into the first night")
 
 
 class AnExorcistAndAPukka(SolverTest):
@@ -1937,9 +1947,9 @@ class WhatThePlayedGamesFound(SolverTest):
                                   deaths={2: "N2"}), 1.0)
 
     def test_a_courtier_raised_by_the_professor_it_had_named(self):
-        """Its drunkenness rests while it is dead, so the Professor was
-        sober when it chose — and is drunk again from the moment the
-        Courtier stands."""
+        """Its drunkenness ended when it died, so the Professor was sober
+        when it chose. (And stays sober: the Courtier that stands up is
+        a new one — see `AnAbilityEndsWithItsOwner`.)"""
         from botc.info import CourtierChoice
         roles = ["Courtier", "Pacifist", "Gossip", "Chambermaid",
                  "Professor", "Minstrel", "Tinker", "Godfather", "Po"]
@@ -2065,3 +2075,200 @@ class WhatThePlayedGamesFound(SolverTest):
             infos=[ChambermaidInfo(1, 0, a=1, b=7, count=7),
                    GamblerGuess(2, 8, target=4, role="Minstrel")])
         self.assertIsNotNone(got)
+
+
+
+class AnAbilityEndsWithItsOwner(SolverTest):
+    """Table ruling, 03.10.2026: an ability always ends with the death of
+    whoever has it. Somebody raised or made anew is a **new instance** —
+    it chooses again, and what the old one set going stays ended.
+
+    Until then a Courtier's drunkenness *rested* while it was dead and
+    took up again when it stood, and a Grandmother kept the grandchild
+    of her first life.
+    """
+
+    cost = TheRulebookReadAgainstTheCode.cost
+    COURT = ["Courtier", "Fool", "Gossip", "Chambermaid", "Professor",
+             "Minstrel", "Tinker", "Godfather", "Po"]
+    EVIL = {7: "Moonchild", 8: "Exorcist"}
+
+    def named(self, *nights):
+        from botc.info import CourtierChoice
+        return [CourtierChoice(night, 0, role="Fool") for night in nights]
+
+    def test_what_a_courtier_named_stays_sober_after_it_returns(self):
+        """Named the Fool, died on night two, raised on night three. The
+        Fool walks away from the gallows on day three: sober, though the
+        three days are not up and the Courtier is standing again."""
+        got = self.cost(self.COURT, self.EVIL, infos=self.named(1),
+                        deaths={0: "N2"}, resurrections={0: "N3"},
+                        executions={3: 1}, quiet_nights={3})
+        self.assertIsNotNone(got)
+
+    def test_and_is_drunk_again_only_if_it_names_them_again(self):
+        got = self.cost(self.COURT, self.EVIL, infos=self.named(1, 4),
+                        deaths={0: "N2"}, resurrections={0: "N3"},
+                        executions={4: 1}, quiet_nights={3, 4})
+        self.assertIsNone(got, "named on night four, drunk on day four")
+
+    def test_one_that_never_died_still_has_its_three_days(self):
+        got = self.cost(self.COURT, self.EVIL, infos=self.named(1),
+                        deaths={3: "N2"}, executions={3: 1},
+                        quiet_nights={3})
+        self.assertIsNone(got)
+
+    def test_a_courtier_back_from_the_dead_is_woken_to_choose(self):
+        from botc import waking
+        from botc.info import CourtierChoice
+        world = World(tuple(self.COURT), (None,) * 9)
+
+        def woken(infos):
+            state = GameState(
+                n_players=9, script=BMR,
+                claims={i: r for i, r in enumerate(self.COURT)},
+                infos=infos, deaths={0: "N2"}, resurrections={0: "N3"})
+            return waking.woke(world, state, 0, 4)
+
+        self.assertTrue(woken(self.named(1)),
+                        "it chose in its first life, and this is its second")
+        self.assertFalse(woken(self.named(1) + [CourtierChoice(3, 0,
+                                                               role="Po")]))
+
+    def test_a_grandmother_back_from_the_dead_has_let_go_of_the_first(self):
+        """Shown the Gossip, executed, raised. The Gossip falls to the
+        Demon two nights later and she stands: no grandchild of this
+        life is on the board, and the old one is nothing to her."""
+        from botc.info import GrandmotherInfo
+        roles = ["Grandmother", "Pacifist", "Gossip", "Chambermaid",
+                 "Professor", "Minstrel", "Tinker", "Godfather", "Po"]
+        evil = {7: "Moonchild", 8: "Courtier"}
+        shown = [GrandmotherInfo(1, 0, target=2, role="Gossip")]
+        got = self.cost(roles, evil, infos=shown,
+                        deaths={0: "D1", 2: "N3"}, executions={1: 0},
+                        resurrections={0: "N2"}, quiet_nights={2})
+        self.assertEqual(got, 1.0)
+
+    def test_and_grieves_for_the_one_she_was_shown_on_her_return(self):
+        from botc.info import GrandmotherInfo
+        # No Gossip and no Assassin: only the Demon can have killed.
+        roles = ["Grandmother", "Pacifist", "Minstrel", "Chambermaid",
+                 "Professor", "Fool", "Tinker", "Mastermind", "Po"]
+        evil = {7: "Moonchild", 8: "Courtier"}
+        shown = [GrandmotherInfo(1, 0, target=2, role="Minstrel"),
+                 GrandmotherInfo(2, 0, target=3, role="Chambermaid")]
+        board = dict(infos=shown, executions={1: 0},
+                     resurrections={0: "N2"}, quiet_nights={2})
+        self.assertIsNone(self.cost(roles, evil, **board,
+                                    deaths={0: "D1", 3: "N3"}),
+                          "her new grandchild fell and she is standing")
+        self.assertEqual(self.cost(roles, evil, **board,
+                                   deaths={0: ("D1", "N3"), 3: "N3"}), 1.0)
+
+
+class WhatTheGoonAndTheOtherKillsFound(SolverTest):
+    """The simulator learned the Goon and the three kills it had never
+    played — the Assassin's, the Godfather's, a Gossip's — on 03.10.2026,
+    and again it produced games the solver threw out.
+    """
+
+    cost = TheRulebookReadAgainstTheCode.cost
+    EVIL = {7: "Moonchild", 8: "Courtier"}
+    # Seat 2 is the Tea Lady, between a Gambler and whoever `beside` is.
+    BESIDE = ["Gambler", "TeaLady", "{beside}", "Chambermaid", "Professor",
+              "Minstrel", "Tinker", "Godfather", "Po"]
+
+    def beside(self, who):
+        return [role.format(beside=who) for role in self.BESIDE]
+
+    # --- a side nobody wrote down --------------------------------------------
+
+    def test_a_tea_lady_beside_a_goon_may_not_have_been_protecting(self):
+        """The Goon turned evil in the night and her other neighbour was
+        killed. Nothing here can have impaired her — and nothing had to."""
+        died = dict(deaths={0: "N2"})
+        self.assertIsNone(self.cost(self.beside("Gossip"), self.EVIL, **died),
+                          "between two good players she keeps both")
+        self.assertIsNotNone(self.cost(self.beside("Goon"), self.EVIL,
+                                       **died))
+
+    def test_nor_at_the_gallows(self):
+        hanged = dict(deaths={0: "D1"}, executions={1: 0})
+        self.assertIsNone(self.cost(self.beside("Gossip"), self.EVIL,
+                                    **hanged))
+        self.assertIsNotNone(self.cost(self.beside("Goon"), self.EVIL,
+                                       **hanged))
+
+    def test_but_she_still_may_have_been(self):
+        """A Goon that stayed good: her neighbour walks away."""
+        got = self.cost(self.beside("Goon"), self.EVIL, executions={1: 0})
+        self.assertIsNotNone(got)
+
+    def test_a_moonchild_that_named_a_goon_proves_nothing(self):
+        """Named somebody good and they lived: that wants a reason, and
+        costs. Named the Goon and it lived: it may have been evil by
+        then."""
+        from botc.info import MoonchildChoice
+        roles = ["Gambler", "Pacifist", "Goon", "Chambermaid", "Professor",
+                 "Minstrel", "Moonchild", "Godfather", "Po"]
+        evil = {7: "Tinker", 8: "Courtier"}
+
+        def named(seat):
+            return self.cost(roles, evil,
+                             infos=[MoonchildChoice(2, 6, target=seat)],
+                             deaths={6: "D1"}, executions={1: 6},
+                             quiet_nights={2})
+
+        self.assertEqual(named(2), 1.0)
+        self.assertLess(named(0), 1.0)
+
+    # --- a kill stopped where it starts -------------------------------------------
+
+    def test_a_godfather_is_the_one_who_kills(self):
+        """So one made drunk — by the Goon it chose, among others —
+        explains a night with no body."""
+        world = among("Grandmother", "Sailor", "Chambermaid", "Exorcist",
+                      "Innkeeper", "Gambler", "Tinker", "Godfather",
+                      "Zombuul")
+        got = S.a_godfather_answers_an_outsider(
+            world, board(deaths={6: "E2"}), 3)
+        self.assertEqual(got[0].actor, 7)
+
+    # --- the Pukka's token on somebody who lived -------------------------------------
+
+    def test_an_innkeeper_under_the_token_and_kept_alive(self):
+        """Poisoned on the first night, and on the second a Tea Lady
+        beside it keeps it alive. It chose its pair before the Pukka's
+        turn, with the token still on it: nobody safe, nobody drunk. So
+        the Gambler it named guessed wrong and died of it — which a
+        working Innkeeper would not have allowed."""
+        from botc.info import GamblerGuess, InnkeeperChoice
+        roles = ["Chambermaid", "TeaLady", "Innkeeper", "Gambler",
+                 "Professor", "Minstrel", "Tinker", "Godfather", "Pukka"]
+        got = self.cost(
+            roles, self.EVIL,
+            infos=[InnkeeperChoice(2, 2, a=3, b=4),
+                   GamblerGuess(2, 3, target=4, role="Fool")],
+            deaths={3: "N2", 5: "N3"})
+        self.assertIsNotNone(got)
+
+    # --- how many tellings of a night are worth keeping ------------------------------
+
+    def test_a_telling_that_asks_for_more_and_costs_no_less_is_dropped(self):
+        none = frozenset()
+        plain = (1.0, frozenset({3}), none, {})
+        more = (1.0, frozenset({3, 4}), none, {})
+        dearer = (0.5, frozenset({3}), none, {})
+        cheaper_but_more = (1.0, frozenset({3}), frozenset({5}), {})
+        earlier = (1.0, frozenset({3}), none, {2: {6}})
+        other = (0.5, frozenset({7}), none, {})
+        got = S._the_ones_that_can_win(
+            [plain, more, dearer, cheaper_but_more, earlier, other, plain])
+        self.assertEqual(got, [plain, other])
+
+    def test_one_that_asks_for_more_but_costs_less_stays(self):
+        none = frozenset()
+        dear = (0.5, frozenset(), none, {})
+        cheap = (1.0, frozenset({3}), none, {})
+        self.assertEqual(S._the_ones_that_can_win([dear, cheap]),
+                         [dear, cheap])

@@ -238,16 +238,18 @@ class EveryScriptReplays(SolverTest):
 
 
 class AnAbilityIsJudgedWhenItActs(SolverTest):
-    """Not after its own target has answered back.
+    """And for the Goon that is *after* it has answered back.
 
-    A Demon that chooses the Goon is made drunk by it — and the choice is
-    already made, so the kill still lands. Testing whether the Demon was
-    working *after* the Goon had turned had a Goon protecting itself from
-    every Demon that picked it, which is not what the card says.
+    The first player to choose the Goon is drunk on the spot, so that
+    very choice already fails: a Demon that picks it first kills nobody
+    (the rulebook of the single-player game, confirmed at the table
+    03.10.2026). A Goon does protect itself from the first Demon that
+    picks it — once a night.
 
-    Twelve of eighty nights, and only the walk's own log found it. It is
-    exactly the kind of within-slot ordering the three-pass design cannot
-    express.
+    This class said the opposite until then: "the choice is already
+    made, so the kill still lands". That was read off the card, the walk
+    was built to it, and the simulator never played the Goon to say
+    otherwise.
     """
 
     class Board:
@@ -265,12 +267,12 @@ class AnAbilityIsJudgedWhenItActs(SolverTest):
         def alive_at(self, _phase):
             return set(range(self.n))
 
-    def test_a_demon_that_picks_the_goon_still_kills_it(self):
+    def test_a_demon_that_picks_the_goon_first_does_not_kill_it(self):
         board = self.Board(["Goon", "Chef", "Empath", "Imp", "Saint"])
         got = nightwalk.walk(board, 2, {("demon", 2): [0]})
-        self.assertIn(0, got.died)
+        self.assertEqual(got.died, set())
 
-    def test_and_is_drunk_afterwards_all_the_same(self):
+    def test_and_is_drunk_from_then_on(self):
         board = self.Board(["Goon", "Chef", "Empath", "Imp", "Saint"])
         got = nightwalk.walk(board, 2, {("demon", 2): [0]})
         self.assertIn(3, got.droisoned)

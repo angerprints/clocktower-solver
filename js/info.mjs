@@ -912,10 +912,13 @@ DreamerInfo.prototype.isTrue = function (w) {
  */
 export const GrandmotherInfo = define("GrandmotherInfo", "Grandmother",
   function (w) {
-    const shown = w.roleAt(this.target, "N1");
+    // Read on the night she was shown it: the first, or the night she
+    // came back from the dead and was shown a new one.
+    const phase = `N${this.night}`;
+    const shown = w.roleAt(this.target, phase);
     if (!registersAsRole(shown, this.role)) return false;
     // She is shown a *good* player, and the Spy can be one of those.
-    return !w.evilAt(this.target, "N1") || shown === "Spy";
+    return !w.evilAt(this.target, phase) || shown === "Spy";
   });
 
 /** Named a player and guessed their character. Wrong means they die.

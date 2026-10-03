@@ -1106,10 +1106,44 @@ function explainedNight(world, state, night, died) {
   const key = `${night}#${upto.map(changeKey).join(";")}`;
   let got = memo.got.get(key);
   if (got === undefined) {
-    got = explainNight(world, state, night, died());
+    got = theOnesThatCanWin(explainNight(world, state, night, died()));
     memo.got.set(key, got);
   }
   return got;
+}
+
+/** A night's explanations, without those another one makes pointless.
+ *
+ * One that asks for everything another asks *and more*, and is no
+ * cheaper, can never be the one that wins: any plan that grants it grants
+ * the other, at a price at least as good. Dropping it loses nothing, and
+ * the nights multiply — fewer ways per night is the only saving that is
+ * not a guess (03.10.2026). See solver.py `_the_ones_that_can_win`. */
+function theOnesThatCanWin(options) {
+  const subset = (a, b) => { for (const x of a) if (!b.has(x)) return false;
+                             return true; };
+  const within = (a, b) => Object.entries(a || {}).every(
+    ([night, seats]) => subset(seats, (b || {})[night] || new Set()));
+  const kept = [];
+  options.forEach((mine, i) => {
+    let beaten = false;
+    for (let j = 0; j < options.length && !beaten; j++) {
+      const other = options[j];
+      if (i === j || other.cost < mine.cost ||
+          !subset(other.impaired, mine.impaired) ||
+          !subset(other.working, mine.working) ||
+          !within(other.earlier, mine.earlier)) continue;
+      // Asking exactly the same at the same price: the first stays.
+      const same = other.cost === mine.cost &&
+        other.impaired.size === mine.impaired.size &&
+        other.working.size === mine.working.size &&
+        within(mine.earlier, other.earlier);
+      if (same && j > i) continue;
+      beaten = true;
+    }
+    if (!beaten) kept.push(mine);
+  });
+  return kept;
 }
 
 function nightAccounts(world, state) {
@@ -1151,7 +1185,7 @@ function nightAccounts(world, state) {
   return accounts;
 }
 
-export const ACCOUNTS_KEPT = 96;
+export const ACCOUNTS_KEPT = 400;
 
 /** One account per set of demands, the cheapest excuses first.
  *

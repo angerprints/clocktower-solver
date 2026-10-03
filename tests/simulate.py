@@ -86,6 +86,7 @@ class Deal:
         self.exorcised_last = {}            # seat -> its previous target
         self.sailor_drunk = {}              # night -> which of the two
         self.innkeeper_guarded = {}         # night -> the pair kept safe
+        self.innkeeper_void = set()         # nights it chose with no ability
         self.innkeeper_drunk = {}           # night -> which of them is drunk
         # What the table did in daylight. Only a Flowergirl and a Town
         # Crier ask, but the day is where the answer lives.
@@ -119,6 +120,22 @@ class Deal:
         self.moonchild_picked = {}          # night -> who it named
         self.cursed_by = {}                 # night -> the Witch that cursed
         self.pacifist_spared = 0            # how often it has stepped in
+        # A character that dies and comes back is a new instance of it:
+        # its old effects ended with the death, and it uses the ability
+        # afresh (table ruling, 03.10.2026). So a Courtier can name a
+        # character more than once a game, and each naming is its own
+        # three days.
+        self.courtier_chose = {}            # Courtier seat -> night, this life
+        # The Goon, and the three that kill besides the Demon. All four
+        # were dealt and never acted until 03.10.2026.
+        self.goon_first = {}                # night -> (who chose it first, Goon)
+        self.assassin_chose = {}            # Assassin seat -> the night it struck
+        self.assassin_aimed = {}            # night -> whom
+        self.godfather_aimed = {}           # night -> whom
+        self.gossip_killed = {}             # night -> whom the Storyteller took
+        self.lunatic_chose = {}             # night -> whom it thinks it attacked
+        self.courtier_nights = set()        # {(seat, night)} it ever chose on
+        self.courtier_drunks = []           # [(night, holder, courtier)]
 
     def demon_at(self, phase):
         """The seat holding the Demon at this phase."""
@@ -249,6 +266,8 @@ class Deal:
         self.resurrections.append((seat, phase, by))
         self.fool_spent.pop(seat, None)
         self.professor_chose.pop(seat, None)
+        self.courtier_chose.pop(seat, None)
+        self.assassin_chose.pop(seat, None)
 
     def record(self, upto=None):
         """What the table saw happen to its players, for a `GameState`.
@@ -308,8 +327,13 @@ class Deal:
                 out.append((phase_index(f"D{day}"), f"S{day}"))
         return [code for _at, code in sorted(out)]
 
-    def working(self, seat, night):
+    def working(self, seat, night, by_day=False):
         """Is this seat's ability actually doing anything tonight?
+
+        `by_day` asks about the day that follows instead. A night and its
+        day are one span for nearly everything, and the one thing that
+        can end between them is a drunkenness whose source died in the
+        night.
 
         Asked of `droisoned_at`, which is the one place that knows every
         way of going wrong. This used to check the Drunk and the Poisoner
@@ -321,7 +345,7 @@ class Deal:
         Demon killed straight through its own silencing: the kill asked
         `working`, which said yes, while `droisoned_at` said no.
         """
-        return seat not in droisoned_at(self, night)
+        return seat not in droisoned_at(self, night, by_day)
 
 
 def deal(n, rng, script=None):
@@ -508,7 +532,6 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # rules for them had nothing to check against.
         _monk_guards(d, night, rng)
         _witch_curses(d, night, rng)
-        _devils_advocate_picks(d, night, rng)
 
         # Choices made before the Demon swings — an Innkeeper's guard, a
         # Monk's, a Sailor's drunk. By slot they are at 9, 12 and 4, so
@@ -557,6 +580,13 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                         if info.target != victim:
                             continue
                         gran = info.player
+                        # The grandchild she has *now*. One who died and
+                        # came back is a new Grandmother with a new
+                        # grandchild; the old one is nothing to her. And
+                        # on the night she returns she has none yet.
+                        if info is not _grandchild_row(heard, gran, night) \
+                                or d.back_at(gran, f"N{night}") is not None:
+                            continue
                         # Working, not merely unpoisoned: a Courtier's drunk
                         # Grandmother does not die of grief either
                         # (29.09.2026).
@@ -607,6 +637,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             #
             # A Tinker may simply go, and the Storyteller decides when.
             # Both were dealt and never acted at all.
+            # The three that kill besides the Demon, in the order they
+            # act: Assassin 36, Godfather 37, Gossip 38.
+            _assassin_strikes(d, night, rng)
+            _godfather_kills(d, night, rng)
+            _gossip_comes_true(d, night, rng)
             # A Professor raises a dead Townsfolk, once. At 43: after
             # every Demon, before the Tinker and the Moonchild.
             _professor_raises(d, night, rng)
@@ -741,6 +776,147 @@ def _moonchild_takes_one(d, night, heard, rng):
         d.deaths[target] = phase
 
 
+def _the_goon_answers(d, night, chooser, target):
+    """Has `chooser` just been made drunk, by choosing the Goon first?
+
+    "Each night, the 1st player to choose you with their ability is drunk
+    until dusk. You become their alignment." Drunk **at once**, so the
+    choice that did it already fails: a Shabaloth that takes the Goon
+    first and somebody else second kills neither. And the Goon turns even
+    when its chooser was already drunk or poisoned.
+
+    Only a player choosing a player counts — not the Storyteller picking
+    for a Gossip or a Tinker, not a Courtier naming a character, not a
+    Moonchild pointing in daylight. A dead Goon has no ability, and a
+    droisoned one does nothing.
+
+    Dealt in a quarter of all games and never played until 03.10.2026.
+    """
+    phase = f"N{night}"
+    if night in d.goon_first or target is None or chooser == target:
+        return False
+    if d.role_at(target, phase) != "Goon" or d.deaths.get(target) is not None:
+        return False
+    if not d.working(target, night):
+        return False
+    d.goon_first[night] = (chooser, target)
+    side = d.side_at(chooser, phase)
+    if d.side_at(target, phase) != side:
+        d.side_changes.append((phase, target, "Goon", side))
+    return True
+
+
+def _stands_to_act(d, seat, role, night):
+    """Holding this character tonight, and not dead before its turn."""
+    phase = f"N{night}"
+    return (d.role_at(seat, phase) == role and seat in d.alive_at(phase)
+            and d.deaths.get(seat) is None)
+
+
+def _good_and_standing(d, night, but=()):
+    phase = f"N{night}"
+    return [p for p in d.alive_at(phase)
+            if d.deaths.get(p) is None and p not in but
+            and d.side_at(p, phase) == "good"]
+
+
+def _assassin_strikes(d, night, rng):
+    """Once a game, a player dies — "even if for some reason they could
+    not". Nothing stops it: not a Tea Lady, not a sober Sailor, not a
+    Fool's free death, not the Innkeeper's pair.
+
+    Except the Assassin's own state. Drunk or poisoned, nothing happens
+    and the ability is gone all the same.
+
+    The Goon is the one wrinkle: chosen by a working Assassin it dies
+    *and* turns evil; chosen by one that was already drunk it lives, and
+    turns evil.
+    """
+    if night < 2:
+        return
+    phase = f"N{night}"
+    for seat in range(d.n):
+        if seat in d.assassin_chose \
+                or not _stands_to_act(d, seat, "Assassin", night):
+            continue
+        targets = _good_and_standing(d, night, but=(seat,))
+        if not targets or rng.random() >= 0.3:
+            continue
+        target = rng.choice(targets)
+        d.assassin_chose[seat] = night
+        d.assassin_aimed[night] = target
+        able = d.working(seat, night)
+        _the_goon_answers(d, night, seat, target)
+        if able:
+            d.deaths[target] = phase
+
+
+def _godfather_kills(d, night, rng):
+    """An Outsider died today, so tonight the Godfather takes somebody.
+
+    In daylight only — by execution or otherwise — and one kill however
+    many Outsiders went. A death like any other: what keeps a seat alive
+    keeps it alive from this.
+    """
+    if night < 2:
+        return
+    phase, day = f"N{night}", night - 1
+    if not any(TEAM[d.role_at(who, f"D{day}")] == "outsider"
+               for who in d.died_on(f"D{day}", f"E{day}")):
+        return
+    for seat in range(d.n):
+        if not _stands_to_act(d, seat, "Godfather", night):
+            continue
+        targets = _good_and_standing(d, night, but=(seat,))
+        if not targets:
+            continue
+        target = rng.choice(targets)
+        d.godfather_aimed[night] = target
+        if _the_goon_answers(d, night, seat, target) \
+                or not d.working(seat, night):
+            continue
+        if _kept_alive_by_a_tea_lady(d, target, phase) \
+                or _a_fool_shrugs_it_off(d, target, phase):
+            continue
+        d.deaths[target] = phase
+
+
+def _gossip_comes_true(d, night, rng):
+    """It said something true today, so tonight a player dies.
+
+    The Storyteller chooses who. What counts is the Gossip's state
+    tonight: said while drunk and sober now, somebody dies; dead or
+    droisoned now, nobody does.
+
+    Never somebody who could not die anyway — a true statement would
+    then look exactly like a false one — and never the Demon, which
+    would end the game.
+    """
+    if night < 2:
+        return
+    phase, day = f"N{night}", night - 1
+    for seat in range(d.n):
+        if not _stands_to_act(d, seat, "Gossip", night):
+            continue
+        if seat not in d.alive_at(f"E{day}"):
+            continue                      # back tonight: it said nothing today
+        if not d.working(seat, night) or rng.random() >= 0.3:
+            continue
+        demon = d.demon_at(phase)
+        able_to_die = [
+            p for p in d.alive_at(phase)
+            if d.deaths.get(p) is None and p != demon
+            and d.back_at(p, phase) is None
+            and not _kept_alive_by_a_tea_lady(d, p, phase)
+            and not (d.role_at(p, phase) == "Fool" and p not in d.fool_spent
+                     and d.working(p, night))]
+        if not able_to_die:
+            continue
+        target = rng.choice(able_to_die)
+        d.gossip_killed[night] = target
+        d.deaths[target] = phase
+
+
 def _nobody_returns_only_to_die(d, night):
     """Up and down again before dawn is a night the table saw nothing of.
 
@@ -765,6 +941,16 @@ def _nobody_returns_only_to_die(d, night):
             del d.professor_raised[night]
 
 
+def _grandchild_row(heard, gran, night):
+    """The reading that makes somebody this Grandmother's grandchild
+    tonight: her latest from before tonight. (On the first night, the
+    one she is given — nobody dies then anyway.)"""
+    rows = [h for h in heard
+            if type(h).__name__ == "GrandmotherInfo" and h.player == gran
+            and (h.night < night or night == 1)]
+    return rows[-1] if rows else None
+
+
 def _a_fool_shrugs_it_off(d, seat, phase):
     """A working Fool's first death does not happen — and then it is gone.
 
@@ -777,7 +963,7 @@ def _a_fool_shrugs_it_off(d, seat, phase):
     """
     if d.role_at(seat, phase) != "Fool" or seat in d.fool_spent:
         return False
-    if not d.working(seat, int(phase[1:])):
+    if not d.working(seat, int(phase[1:]), by_day=phase[0] != "N"):
         return False
     d.fool_spent[seat] = phase
     d.fool_spent_ever.append((seat, phase))
@@ -919,6 +1105,7 @@ def _devils_advocate_picks(d, night, rng):
     # Chosen either way, so "different to last night" counts a night it
     # was drunk; but a drunk Advocate's choice protects nobody.
     d.spared[night] = (advocate, target)
+    _the_goon_answers(d, night, advocate, target)
 
 
 def _monk_guards(d, night, rng):
@@ -1008,7 +1195,7 @@ def _kept_alive_by_a_tea_lady(d, seat, phase):
         if d.role_at(seat, phase) == "Sailor" and d.working(seat, night):
             return True
         pair = d.innkeeper_guarded.get(night)
-        if pair and seat in pair:
+        if pair and seat in pair and night not in d.innkeeper_void:
             # Still standing: an Innkeeper the Demon took at 27 keeps
             # nobody from a Moonchild's pick at 50. The same for a Tea
             # Lady, below. (A Gambler at 10 asks before anybody has died.)
@@ -1022,7 +1209,8 @@ def _kept_alive_by_a_tea_lady(d, seat, phase):
         if d.role_at(lady, phase) != "TeaLady":
             continue
         if lady not in d.alive_at(phase) or not d.working(
-                lady, int(phase[1:])) or d.deaths.get(lady) is not None:
+                lady, int(phase[1:]), by_day=phase[0] != "N") \
+                or d.deaths.get(lady) is not None:
             continue
         around = []
         for step in (1, -1):
@@ -1283,7 +1471,7 @@ def _walks_away(d, seat, day, rng):
     """
     phase = f"D{day}"
     role = d.role_at(seat, phase)
-    if role == "Sailor" and d.working(seat, day):
+    if role == "Sailor" and d.working(seat, day, by_day=True):
         return "Sailor"
     if _kept_alive_by_a_tea_lady(d, seat, phase):
         return "TeaLady"
@@ -1291,12 +1479,12 @@ def _walks_away(d, seat, day, rng):
     if chosen == seat and advocate in d.alive_at(phase) \
             and d.deaths.get(advocate) is None \
             and d.role_at(advocate, phase) == "DevilsAdvocate" \
-            and d.working(advocate, day):
+            and d.working(advocate, day, by_day=True):
         return "DevilsAdvocate"
     pacifist = next((p for p in d.alive_at(phase)
                      if d.role_at(p, phase) == "Pacifist"
                      and d.deaths.get(p) is None), None)
-    if pacifist is not None and d.working(pacifist, day) \
+    if pacifist is not None and d.working(pacifist, day, by_day=True) \
             and d.side_at(seat, phase) == "good":
         # "Once per game is usually about right."
         if rng.random() < (0.5 if d.pacifist_spared == 0 else 0.15):
@@ -1506,6 +1694,21 @@ def _pukka_token_carries(d, night):
         d.pukka_due[night] = d.pukka_poisoned
 
 
+def _still_under_the_token(d, night, seat):
+    """Is this seat choosing while a Pukka's poison from before is on it?
+
+    That poison lasts into the night, until the Pukka's turn. A Sailor
+    or an Innkeeper acts well before that: its choice is made with no
+    ability and does nothing — and it stays nothing if the token comes
+    off later because something kept them alive. `droisoned_at` answers
+    for the night as a whole, and by morning such a seat reads healthy;
+    so its choice made one of its pair drunk after all, and a Chambermaid
+    was told nonsense with nothing on the board to explain it
+    (03.10.2026, a Tea Lady beside an Innkeeper the Pukka had poisoned).
+    """
+    return d.pukka_due.get(night) == seat and not d.working(seat, night)
+
+
 def _exorcised(d, night):
     """Did a working Exorcist name the Demon tonight?"""
     phase = f"N{night}"
@@ -1586,7 +1789,7 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
             return True
 
     pair = d.innkeeper_guarded.get(night)
-    if pair and target in pair:
+    if pair and target in pair and night not in d.innkeeper_void:
         keeper = next((p for p in range(d.n)
                        if d.role_at(p, phase) == "Innkeeper"
                        and p in d.alive_at(phase)), None)
@@ -1686,6 +1889,11 @@ def _demon_kills(d, night, rng):
         if target == guarded:
             return None
         tried.append(target)
+        # The Goon, chosen first, makes it drunk on the spot: this kill
+        # fails, and so does every other it makes tonight.
+        if _the_goon_answers(d, night, demon, target) \
+                or not d.working(demon, night):
+            return None
         if _protected(d, night, target, gone=gone):
             return None
         return target
@@ -1713,6 +1921,14 @@ def _demon_kills(d, night, rng):
         if not _exorcised(d, night):
             pool = [p for p in others if p != stale]
             fresh = rng.choice(pool) if pool else None
+        # It chose the Goon, first: drunk on the spot. Nobody is
+        # poisoned, the old token stays where it is and rests, and there
+        # is no attack — the flowchart's drunk Pukka, arrived at halfway
+        # through its own turn.
+        if fresh is not None and _the_goon_answers(d, night, demon, fresh):
+            d.pukka_history[night] = (None, fresh)
+            d.demon_aimed[night] = []
+            return []
         # The new poison lands *before* the old one comes due (steps 2
         # and 4), so a Tea Lady or an Innkeeper poisoned tonight is no
         # help to the one poisoned yesterday. The night-walk had this
@@ -1884,9 +2100,10 @@ def _conditionally_woke(d, seat, role, night):
         return any(TEAM[d.role_at(who, f"D{day}")] == "outsider"
                    for who in d.died_on(f"D{day}", f"E{day}"))
     if role == "Courtier":
-        # Woken until it names a character, and here it always does so on
-        # the first night.
-        return night == 1
+        # Woken until it names a character, and here it always does so
+        # at its first chance: the first night, and the first night after
+        # it has come back.
+        return (seat, night) in d.courtier_nights
     if role in ("Philosopher", "Sage", "Klutz", "Juggler",
                 "Seamstress", "Artist", "Savant"):
         # Once-a-game characters: they woke on the night they used it,
@@ -1958,6 +2175,10 @@ def _in_night_order(d, night):
 
     def slot(seat):
         what = d.apparent(seat)
+        # A Lunatic is woken before the real Demon, at its own slot,
+        # whatever Demon it thinks it is.
+        if d.roles[seat] == "Lunatic":
+            what = "Lunatic"
         # A Philosopher that has taken an ability wakes when that
         # character would. It kept its own slot 2, so one holding the
         # Mathematician counted before the Pit-Hag at 16 had turned the
@@ -2001,7 +2222,8 @@ def _in_night_order(d, night):
 # and was being read as poisoned when it did — so it lived through a
 # wrong guess the night-walk rightly said had killed it.
 CHOOSES_EARLY = frozenset({"Innkeeper", "Sailor", "Monk", "Exorcist",
-                           "SnakeCharmer", "PitHag", "Gambler", "Courtier"})
+                           "SnakeCharmer", "PitHag", "Gambler", "Courtier",
+                           "DevilsAdvocate", "Lunatic"})
 
 
 def early_choices(d, night, rng):
@@ -2147,7 +2369,7 @@ def honest_info(d, night, rng):
     return out
 
 
-def droisoned_at(d, night):
+def droisoned_at(d, night, by_day=False):
     """Everybody whose ability is not working tonight, by any cause.
 
     Not just the Poisoner. Sects & Violets droisons four other ways and
@@ -2173,6 +2395,20 @@ def droisoned_at(d, night):
 
     if d.poisoned.get(night) is not None:
         out.add(d.poisoned[night])
+
+    # Whoever chose the Goon first tonight is drunk until dusk — from
+    # that moment, so its own choice already fails. Before the Sailor and
+    # the Innkeeper below, because one of those drunk by the Goon makes
+    # nobody else drunk.
+    #
+    # An ability ends with the death of whoever has it (table ruling,
+    # 03.10.2026): a Goon killed in the night leaves its chooser sober
+    # for the day.
+    first = getattr(d, "goon_first", {}).get(night)
+    if first is not None:
+        chooser, goon = first
+        if not (by_day and d.deaths.get(goon) == phase):
+            out.add(chooser)
 
     # A Pukka's poison is added last, below: it rests while the Pukka
     # itself is drunk or poisoned, so everybody else has to be known.
@@ -2328,11 +2564,18 @@ def droisoned_at(d, night):
     # causing it dies (table ruling, 02.10.2026). It ran its three days
     # regardless, so a Gambler a dead Courtier had named went on
     # surviving wrong guesses.
-    got = getattr(d, "courtier_drunk", None)
-    if got is not None and got[0] <= night <= got[0] + 2:
-        courtier = got[2] if len(got) > 2 else None
-        if courtier is None or courtier in living:
-            out.add(got[1])
+    #
+    # And it *ends* there (03.10.2026): a Courtier that comes back is a
+    # new one, and what the old one named stays sober until it names
+    # again. So each naming runs from its night until three nights are
+    # up or the Courtier has died, whichever comes first.
+    for since, holder, courtier in getattr(d, "courtier_drunks", ()):
+        if not since <= night <= since + 2:
+            continue
+        died = any(phase_index(f"N{since}") <= phase_index(at)
+                   < phase_index(phase) for at in d.deaths_of(courtier))
+        if not died:
+            out.add(holder)
 
     # The Pukka, last. Whoever it poisoned on its turn tonight, and
     # whoever was still carrying its token from before: poisoned from the
@@ -2967,16 +3210,24 @@ def _for_role(d, seat, role, night, rng):
 
     # --- Bad Moon Rising ------------------------------------------------
 
-    if role == "Grandmother" and night == 1:
+    if role == "Grandmother" and (
+            night == 1 or d.back_at(seat, f"N{night}") is not None):
         # A good player and their character, and from then on that seat
         # is her grandchild: if the Demon kills them, she goes too.
+        #
+        # Again on the night she comes back: "who only acts on the first
+        # night does it again at once", and it is a new grandchild.
+        # Somebody still standing, so the new link starts with tomorrow.
+        phase = f"N{night}"
         others = [p for p in range(d.n)
-                  if p != seat and not is_evil(d.roles[p])]
+                  if p != seat and d.side_at(p, phase) == "good"
+                  and not is_evil(d.role_at(p, phase))
+                  and (night == 1 or d.deaths.get(p) is None)]
         if not others:
             return None
         child = rng.choice(others)
-        return GrandmotherInfo(1, seat, target=child,
-                               role=d.roles[child])
+        return GrandmotherInfo(night, seat, target=child,
+                               role=d.role_at(child, phase))
 
     if role == "Chambermaid":
         # How many of two chosen players woke for their own ability
@@ -2987,6 +3238,11 @@ def _for_role(d, seat, role, night, rng):
         if len(others) < 2:
             return None
         a, b = sorted(rng.sample(others, 2))
+        # She chooses two players, and if one is the Goon and nobody got
+        # there first tonight, she is drunk and told anything.
+        if any([_the_goon_answers(d, night, seat, p) for p in (a, b)]):
+            return ChambermaidInfo(night, seat, a=a, b=b,
+                                   count=rng.randint(0, 2))
         # Derived here rather than asked of the solver, like every other
         # rule in this file — the point of the simulator is that a shared
         # misreading shows up as an impossible board instead of agreeing
@@ -3051,7 +3307,8 @@ def _for_role(d, seat, role, night, rng):
             if what in ("Assassin", "Professor"):
                 # Until it is spent: woken on the night it chooses, and
                 # not again after.
-                spent = d.professor_chose.get(p)
+                spent = (d.professor_chose if what == "Professor"
+                         else d.assassin_chose).get(p)
                 woke += night >= 2 and (spent is None or spent >= night)
                 continue
             # The Philosopher chooses on the first night here, always,
@@ -3080,6 +3337,7 @@ def _for_role(d, seat, role, night, rng):
         # Mostly a real guess at what they claim to be, sometimes wild.
         guess = (d.apparent(target) if rng.random() < 0.6
                  else rng.choice(list(d.script.townsfolk)))
+        _the_goon_answers(d, night, seat, target)
         # And it dies if it guessed wrong, which the comment above has
         # claimed since the Gambler went in while the code did nothing
         # about it. A wrong guess and a living Gambler is not a legal
@@ -3110,6 +3368,7 @@ def _for_role(d, seat, role, night, rng):
         target = rng.choice(others)
         d.exorcised_last[seat] = target
         d.exorcised[night] = target
+        _the_goon_answers(d, night, seat, target)
         return ExorcistChoice(night, seat, target=target)
 
     if role == "Sailor":
@@ -3125,7 +3384,12 @@ def _for_role(d, seat, role, night, rng):
             return None
         target = rng.choice(others)
         drunk = rng.choice([seat, target])
-        d.sailor_drunk.setdefault(night, drunk)
+        # The Goon is asked before anything the choice does, as the board
+        # stood at that moment — and if it answers, the choice does
+        # nothing: no second drunk.
+        if not _the_goon_answers(d, night, seat, target) \
+                and not _still_under_the_token(d, night, seat):
+            d.sailor_drunk.setdefault(night, drunk)
         return SailorChoice(night, seat, target=target)
 
     if role == "Innkeeper" and night > 1:
@@ -3135,13 +3399,43 @@ def _for_role(d, seat, role, night, rng):
         if len(others) < 2:
             return None
         a, b = sorted(rng.sample(others, 2))
+        void = _still_under_the_token(d, night, seat)
         d.innkeeper_guarded.setdefault(night, (a, b))
-        d.innkeeper_drunk.setdefault(night, rng.choice([a, b]))
+        if void:
+            d.innkeeper_void.add(night)
+        drunk = rng.choice([a, b])
+        # Asked first, as with the Sailor. An Innkeeper that picked the
+        # Pukka and the Goon it had poisoned found a Goon with no ability
+        # — and only then made the Pukka drunk, which rests the poison.
+        # Applying its drunkenness first had each undoing the other.
+        if not any([_the_goon_answers(d, night, seat, picked)
+                    for picked in (a, b)]) and not void:
+            d.innkeeper_drunk.setdefault(night, drunk)
         return InnkeeperChoice(night, seat, a=a, b=b)
 
-    if role == "Courtier" and night == 1:
+    if role == "DevilsAdvocate":
+        # At 13, between the Gambler and the Exorcist — in the early pass
+        # so that who chose the Goon *first* comes out in night order.
+        _devils_advocate_picks(d, night, rng)
+        return None
+
+    if role == "Lunatic" and night > 1:
+        # It lives a Demon's night and points at somebody; nothing comes
+        # of it. But it is a player choosing a player, and that counts
+        # for the Goon (table ruling, 02.10.2026).
+        others = [p for p in d.alive_at(f"N{night}") if p != seat]
+        if others:
+            target = rng.choice(others)
+            d.lunatic_chose[night] = target
+            _the_goon_answers(d, night, seat, target)
+        return None
+
+    if role == "Courtier" and seat not in d.courtier_chose:
         # Three days and nights of drunkenness for whoever holds the
-        # character it names. Used once, and the table hears which.
+        # character it names. Used once a life — the first night, and
+        # the first night after coming back — and the table hears which.
+        d.courtier_chose[seat] = night
+        d.courtier_nights.add((seat, night))
         named = rng.choice(list(d.script.townsfolk) + list(d.script.minions))
         # And the drunkenness itself, which was never applied: the row
         # was written and nobody got drunk. Decided now, while it is
@@ -3150,6 +3444,7 @@ def _for_role(d, seat, role, night, rng):
                        if d.role_at(p, f"N{night}") == named), None)
         if holder is not None and d.working(seat, night):
             d.courtier_drunk = (night, holder, seat)
+            d.courtier_drunks.append((night, holder, seat))
         return CourtierChoice(night, seat, role=named)
 
     if role == "Undertaker" and night > 1:

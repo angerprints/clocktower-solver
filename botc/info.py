@@ -810,11 +810,14 @@ class GrandmotherInfo(Info):
     source_role = "Grandmother"
 
     def holds(self, w, s, rh, seat=None):
-        shown = w.role_at(self.target, "N1")
+        # Read on the night she was shown it: the first, or the night
+        # she came back from the dead and was shown a new one.
+        phase = f"N{self.night}"
+        shown = w.role_at(self.target, phase)
         if not registers_as_role(shown, self.role):
             return False
         # She is shown a *good* player, and the Spy can be one of those.
-        return not w.evil_at(self.target, "N1") or shown == "Spy"
+        return not w.evil_at(self.target, phase) or shown == "Spy"
 
 
 def _possible_impairment_counts(world, state, night):

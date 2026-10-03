@@ -243,6 +243,7 @@ const waking = {};
   const GOOD = ["Grandmother", "Sailor", "Chambermaid", "Professor",
                 "Innkeeper", "Gambler", "Tinker"];
   const LUNATIC = [...GOOD.slice(0, 6), "Lunatic"];
+  const COURT = [...GOOD.slice(0, 6), "Courtier", "Godfather", "Po"];
   const NOBODY = Array(9).fill(null);
   const thinks = token => [...Array(6).fill(null), token, null, null];
   const direct = {
@@ -269,6 +270,16 @@ const waking = {};
       {deaths: {1: "N2"}, resurrections: {1: "N3"}}],
     "professor-regurgitated": [[...GOOD, "Godfather", "Shabaloth"], NOBODY,
       {deaths: {3: "N2"}, resurrections: {3: "N3"}}],
+    // An Assassin's waking is open once it may have struck, and a
+    // Courtier back from the dead names again. See test_js_info.py.
+    assassin: [[...GOOD, "Assassin", "Po"], NOBODY, {}],
+    "assassin-struck": [[...GOOD, "Assassin", "Po"], NOBODY,
+      {infos: [{sourceRole: "Assassin", player: 7, night: 2}]}],
+    "courtier-came-back": [COURT, NOBODY,
+      {infos: [{sourceRole: "Courtier", player: 6, night: 1}],
+       deaths: {6: "N2"}, resurrections: {6: "N3"}}],
+    "courtier-never-died": [COURT, NOBODY,
+      {infos: [{sourceRole: "Courtier", player: 6, night: 1}]}],
   };
   const {World} = await import("./worlds.mjs");
   for (const [name, [roles, believes, opts]] of Object.entries(direct)) {

@@ -10,6 +10,12 @@ exercises is a rule nothing measures.
 These tests are about the simulator: that it plays each of the four
 often enough to count, that what it records is what happened, and that
 the solver keeps the true world when it does.
+
+The same day it learned the rest of Bad Moon Rising: the Goon answering
+whoever chooses it, and the three kills nobody had ever made — the
+Assassin's, the Godfather's and a Gossip's. And one table ruling: an
+ability ends with the death of whoever has it, so somebody raised is a
+new instance and chooses again.
 """
 
 import random
@@ -223,14 +229,11 @@ class OnBadMoonRising(SolverTest):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
 
     def test_the_night_walk_tells_every_night_the_same_way(self):
-        """The second, independent telling of a night. Where no Goon is
-        about: the simulator does not play the Goon turning or making
-        anybody drunk, and the walk does."""
+        """The second, independent telling of a night — Goon and all,
+        since the simulator plays it too now."""
         import nightwalk
         checked = 0
         for seed, deal, heard, _state in self.played:
-            if "Goon" in deal.roles:
-                continue
             for night in range(2, NIGHTS + 1):
                 if deal.game_ends_after is not None \
                         and night > deal.game_ends_after:
@@ -241,7 +244,168 @@ class OnBadMoonRising(SolverTest):
                     self.assertEqual(got.died, deal.died_on(f"N{night}"))
                     self.assertEqual(got.untold, set())
                 checked += 1
-        self.assertGreater(checked, 400)
+        self.assertGreater(checked, 700)
+
+    # --- the Goon ----------------------------------------------------------------
+
+    def goons(self):
+        for seed, deal, _heard, _state in self.played:
+            for night, (chooser, goon) in deal.goon_first.items():
+                yield seed, deal, night, chooser, goon
+
+    def test_all_sorts_choose_the_goon_first(self):
+        who = Counter(
+            "Demon" if simulate.TEAM[deal.role_at(chooser, f"N{night}")]
+            == "demon" else deal.role_at(chooser, f"N{night}")
+            for _seed, deal, night, chooser, _goon in self.goons())
+        self.assertGreater(sum(who.values()), 40)
+        for kind in ("Demon", "Sailor", "Innkeeper", "Chambermaid"):
+            with self.subTest(chooser=kind):
+                self.assertGreater(who[kind], 3)
+
+    def test_whoever_chose_it_first_is_drunk_for_the_night(self):
+        for seed, deal, night, chooser, _goon in self.goons():
+            with self.subTest(seed=seed, night=night):
+                self.assertFalse(deal.working(chooser, night))
+
+    def test_it_ends_the_night_on_its_choosers_side(self):
+        turned = 0
+        for seed, deal, night, chooser, goon in self.goons():
+            with self.subTest(seed=seed, night=night):
+                self.assertEqual(deal.side_at(goon, f"D{night}"),
+                                 deal.side_at(chooser, f"N{night}"))
+            turned += deal.side_at(goon, f"D{night}") == "evil"
+        self.assertGreater(turned, 5)
+
+    def test_a_demon_that_chose_it_first_kills_nobody_after(self):
+        """Drunk from that moment: the choice itself fails, and so does
+        a Shabaloth's second."""
+        seen = 0
+        for seed, deal, night, chooser, goon in self.goons():
+            if chooser != deal.demon_at(f"N{night}"):
+                continue
+            aimed = deal.demon_aimed.get(night) or []
+            if not aimed or aimed[0] != goon:
+                continue                  # a Pukka, or the Goon came second
+            seen += 1
+            with self.subTest(seed=seed, night=night):
+                self.assertEqual(list(deal.demon_killed.get(night, ())), [])
+        self.assertGreater(seen, 3)
+
+    # --- the three other kills -------------------------------------------------------
+
+    def test_an_assassin_strikes_once_and_it_lands(self):
+        struck = 0
+        for seed, deal, _heard, _state in self.played:
+            for seat, night in deal.assassin_chose.items():
+                target = deal.assassin_aimed[night]
+                struck += 1
+                with self.subTest(seed=seed, night=night):
+                    self.assertGreaterEqual(night, 2)
+                    # Nothing stops it but the Assassin's own state. (Dead
+                    # by morning, not "died tonight": one regurgitated and
+                    # struck down in the same night never came back as far
+                    # as the table saw.)
+                    if target in deal.alive_at(f"D{night}"):
+                        self.assertFalse(deal.working(seat, night))
+        self.assertGreater(struck, 20)
+
+    def test_it_goes_through_what_keeps_anybody_else_alive(self):
+        """A sober Sailor, a Fool with its free death still in hand."""
+        through = 0
+        for _seed, deal, _heard, _state in self.played:
+            for night, target in deal.assassin_aimed.items():
+                phase = f"N{night}"
+                if target not in deal.died_on(phase):
+                    continue
+                role = deal.role_at(target, phase)
+                if role == "Sailor" and deal.working(target, night):
+                    through += 1
+                if role == "Fool" and target not in deal.fool_spent \
+                        and deal.working(target, night):
+                    through += 1
+        self.assertGreater(through, 0)
+
+    def test_a_godfather_answers_an_outsider_lost_by_day_and_only_that(self):
+        kills = 0
+        for seed, deal, _heard, _state in self.played:
+            for night, target in deal.godfather_aimed.items():
+                day = night - 1
+                lost = [who for who in deal.died_on(f"D{day}", f"E{day}")
+                        if simulate.TEAM[deal.role_at(who, f"D{day}")]
+                        == "outsider"]
+                with self.subTest(seed=seed, night=night):
+                    self.assertTrue(lost)
+                kills += target in deal.died_on(f"N{night}")
+        self.assertGreater(kills, 5)
+
+    def test_a_gossip_kills_only_alive_and_sober_and_never_the_demon(self):
+        kills = 0
+        for seed, deal, _heard, _state in self.played:
+            for night, target in deal.gossip_killed.items():
+                phase = f"N{night}"
+                gossip = next(p for p in range(deal.n)
+                              if deal.role_at(p, phase) == "Gossip"
+                              and p in deal.alive_at(phase))
+                kills += 1
+                with self.subTest(seed=seed, night=night):
+                    self.assertTrue(deal.working(gossip, night))
+                    self.assertNotEqual(target, deal.demon_at(phase))
+                    self.assertIn(target, deal.died_on(phase))
+        self.assertGreater(kills, 20)
+
+    # --- an ability ends with whoever has it ------------------------------------------
+
+    def test_a_courtier_names_again_only_in_a_new_life(self):
+        for seed, deal, heard, _state in self.played:
+            rows = [row for row in heard
+                    if type(row).__name__ == "CourtierChoice"]
+            for earlier, later in zip(rows, rows[1:]):
+                if earlier.player != later.player:
+                    continue
+                with self.subTest(seed=seed):
+                    self.assertTrue(any(
+                        who == later.player
+                        and earlier.night < int(at[1:]) <= later.night
+                        for who, at, _by in deal.resurrections))
+
+    def test_what_a_dead_courtier_named_is_sober(self):
+        """From the night after it died — back or not."""
+        checked = 0
+        for seed, deal, _heard, _state in self.played:
+            for since, holder, courtier in deal.courtier_drunks:
+                for night in range(since + 1, min(since + 2, NIGHTS) + 1):
+                    gone = any(phase_index(f"N{since}") <= phase_index(at)
+                               < phase_index(f"N{night}")
+                               for at in deal.deaths_of(courtier))
+                    if not gone or holder not in deal.alive_at(f"N{night}"):
+                        continue
+                    others = simulate.droisoned_at(deal, night)
+                    if holder not in others:
+                        checked += 1
+                        continue
+                    # Still impaired, then by somebody else: with the
+                    # naming taken away it would be no different.
+                    kept, deal.courtier_drunks = deal.courtier_drunks, []
+                    try:
+                        with self.subTest(seed=seed, night=night):
+                            self.assertIn(
+                                holder, simulate.droisoned_at(deal, night))
+                    finally:
+                        deal.courtier_drunks = kept
+        self.assertGreater(checked, 3)
+
+    def test_a_grandmother_is_shown_somebody_new_when_she_returns(self):
+        again = 0
+        for seed, deal, heard, _state in self.played:
+            for row in heard:
+                if type(row).__name__ != "GrandmotherInfo" or row.night == 1:
+                    continue
+                again += 1
+                with self.subTest(seed=seed, night=row.night):
+                    self.assertTrue(deal.back_at(row.player,
+                                                 f"N{row.night}"))
+        self.assertGreater(again, 0)
 
 
 class OnSectsAndViolets(SolverTest):

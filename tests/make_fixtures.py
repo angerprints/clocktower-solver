@@ -562,7 +562,7 @@ def handmade():
                             (1063, 7, 4), (672, 7, 4)):
         yield played(f"sv-played-{seed}", SV, seed, n, nights)
     yield played("bmr-played-mastermind", BMR, 5, 7, 4)
-    yield played("bmr-played-zombuul", BMR, 30, 7, 4)
+    yield played("bmr-played-zombuul", BMR, 34, 7, 4)
 
     # Games with the four things the simulator learned on 03.10.2026, one
     # of each kind: somebody walking away from the gallows for each of
@@ -570,11 +570,31 @@ def handmade():
     # Moonchild taken at night that names somebody in the morning, a
     # Pukka whose kill came a night late because it was drunk, and a
     # nominator a Witch had cursed. The seeds are whichever came first.
-    for what, seed in (("walked-advocate", 41), ("walked-pacifist", 16),
-                       ("walked-sailor", 9), ("walked-tea-lady", 19),
+    #
+    # A seed names a game only until the simulator learns something new:
+    # one more character acting moves every draw after it. These were
+    # picked again when it learned the Goon and the three other kills,
+    # later the same day.
+    for what, seed in (("walked-advocate", 42), ("walked-pacifist", 16),
+                       ("walked-sailor", 21), ("walked-tea-lady", 19),
                        ("fool-and-back", 12), ("regurgitated", 1),
-                       ("professor", 6), ("moonchild-at-night", 82),
-                       ("pukka-a-night-late", 104)):
+                       ("professor", 30), ("moonchild-at-night", 82),
+                       ("pukka-a-night-late", 228)):
+        yield played(f"bmr-played-{what}", BMR, seed, 7, 4)
+
+    # And with what it learned next: a Demon that chose the Goon first
+    # and killed nobody, with a Tea Lady sitting beside the Goon it had
+    # just turned; a Sailor made drunk by the Goon it pointed at; the
+    # Assassin striking, and striking to no effect; the Godfather
+    # answering an executed Outsider; a Gossip coming true; a Courtier
+    # and a Grandmother back from the dead, each a new one (table
+    # ruling); and an Innkeeper choosing with a Pukka's token still on
+    # it, kept alive, and healthy by morning.
+    for what, seed in (("goon-and-a-quiet-night", 32), ("goon-sailor", 336),
+                       ("assassin", 29), ("assassin-nothing", 76),
+                       ("godfather", 55), ("gossip", 49),
+                       ("courtier-again", 71), ("grandmother-again", 68),
+                       ("under-the-token", 79)):
         yield played(f"bmr-played-{what}", BMR, seed, 7, 4)
     yield played("sv-played-witch", SV, 8, 7, 4)
 

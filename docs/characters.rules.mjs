@@ -47,6 +47,19 @@ function acting(world, state, key, night) {
 }
 
 /** Who came back to life at this moment. */
+/** Did this seat die after night `since` began and before `night` did?
+ *
+ * The lifetime of an ability: whatever a character set going on night
+ * `since` is over by `night` if it has been dead in between, whether or
+ * not it is standing again. */
+function diedBetween(state, seat, since, night) {
+  const from = phaseIndex(`N${since}`), to = phaseIndex(`N${night}`);
+  return state.diedAt(seat).some(at => {
+    const i = phaseIndex(at);
+    return from <= i && i < to;
+  });
+}
+
 function returnedAt(state, phase) {
   const out = new Set();
   for (const [seat, phases] of Object.entries(state.resurrections || {}))
@@ -284,9 +297,15 @@ sourceRule(function aPukkaPoisonsWhoeverItWillKill(world, state, night) {
   })];
   const dueTonight = new Set(
     [...diedOn(state, night)].filter(who => alive.has(who)));
-  if (night >= 2 && dueTonight.size)
-    out.push(new Source("Pukka's token", dueTonight,
-                        {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0}));
+  // And somebody it did not kill — a Tea Lady's neighbour, an Innkeeper's
+  // pick, a Fool. They carried the token into the night all the same, so
+  // an Innkeeper among them chose with no ability. Nothing on the board
+  // says who, so it is a guess and priced like one (03.10.2026).
+  const carried = who =>
+    (dueTonight.has(who) ? 1.0 : PRIORS.POISON_HIT_PENALTY);
+  if (night >= 2)
+    out.push(new Source("Pukka's token", alive,
+                        {capacity: 1, cost: carried, repeatCost: carried}));
   return out;
 });
 
@@ -407,10 +426,25 @@ survivesExecutionRule(function aTeaLadyKeepsHerNeighboursFromTheGallows(
   return lady === null ? [] : [lady];
 });
 
+/** Is one of her living neighbours on a side that can turn?
+ *
+ * A Goon is on whichever side last chose it, and nobody writes that down.
+ * With one beside her she may be protecting and she may not — so her
+ * protection can explain somebody living, and a death beside her proves
+ * nothing about her (03.10.2026). */
+function besideASideNobodyKnows(world, state, lady, phase, alive = null) {
+  for (const p of livingBeside(state, lady, phase, alive))
+    if (CHARACTERS[world.roleAt(p, phase)].alignment_open) return true;
+  return false;
+}
+
 /** Executed and dead beside a Tea Lady: she was not working. */
 export function teaLadyFailedAtTheGallows(world, state, day, seat) {
   if (!inBag(state, "TeaLady")) return null;
-  return teaLadyKeeping(world, state, seat, `D${day}`);
+  const lady = teaLadyKeeping(world, state, seat, `D${day}`);
+  if (lady !== null && besideASideNobodyKnows(world, state, lady, `D${day}`))
+    return null;
+  return lady;
 }
 
 /** Its one free death covers the gallows as well as the night. */
@@ -634,14 +668,17 @@ causeRule(function aGossipMayKill(world, state, night) {
  * than about the board. */
 causeRule(function aGodfatherAnswersAnOutsider(world, state, night) {
   if (!inBag(state, "Godfather") || night < 2) return [];
-  if (acting(world, state, "Godfather", night) === null) return [];
+  const seat = acting(world, state, "Godfather", night);
+  if (seat === null) return [];
   const day = `D${night - 1}`;
   const lost = Object.keys(state.deaths || {}).some(who =>
     state.diedAt(who).includes(day) &&
     world.teamAt(Number(who), day) === "outsider");
   if (!lost) return [];
+  // Drunk or poisoned it kills nobody, and so does one that chose the
+  // Goon first: a quiet night stopped at its source.
   return [new Cause("Godfather", OTHER, allSeats(state),
-                    {capacity: 1, mustFire: true})];
+                    {capacity: 1, mustFire: true, actor: seat})];
 });
 
 /** Once per game, and nothing stops it.
@@ -697,6 +734,10 @@ causeRule(function aMoonchildTakesSomebodyWithIt(world, state, night) {
                      : [];
   const aimed = new Set([...good].filter(x => picked.has(x)));
   if (!aimed.size) return [];              // it named somebody evil
+  // A Goon it named may have been turned by then, and nobody knows: the
+  // pick may kill and need not.
+  if ([...aimed].some(x => CHARACTERS[world.roleAt(x, phase)].alignment_open))
+    return [new Cause("Moonchild", OTHER, aimed, {capacity: 1})];
   return [new Cause("Moonchild", PICKED, aimed,
                     {capacity: 1, mustFire: true})];
 });
@@ -759,6 +800,14 @@ implicationRule(function aGrandmotherGrieves(world, state, night, victim, kind) 
     if (info.sourceRole !== "Grandmother" || info.target !== victim) continue;
     const seat = info.player;
     if (world.roleAt(seat, `N${night}`) !== "Grandmother") continue;
+    // The grandchild she has *now*: her latest reading, from this life.
+    // One who died and came back is a new Grandmother and is shown a new
+    // grandchild (03.10.2026); the old one is nothing to her.
+    const later = state.infos.some(
+      other => other.sourceRole === "Grandmother" && other.player === seat &&
+               info.night < other.night && other.night < night);
+    if (later || (info.night >= night && night > 1) ||
+        diedBetween(state, seat, info.night, night)) continue;
     // A Grandmother already dead cannot die again of grief.
     if (!state.aliveSet(`N${night}`).has(seat)) continue;
     // Nor one who only came back tonight and is standing at dawn: a
@@ -845,7 +894,11 @@ immunityRule(function aTeaLadyKeepsHerNeighbours(world, state, night, seat) {
   // one — so on such a night her protection may explain a survival but
   // demands nothing of a death.
   const fell = state.diedAt(lady).includes(phase);
-  return [shield("Tea Lady", {needs: lady, chosen: fell || !eitherWay})];
+  // And one living beside a Goon: its side is not on the board.
+  const unsure = rosters(state, phase).some(
+    alive => besideASideNobodyKnows(world, state, lady, phase, alive));
+  return [shield("Tea Lady",
+                 {needs: lady, chosen: fell || unsure || !eitherWay})];
 });
 
 /** The first death does not take it, whatever the death was.
@@ -1036,6 +1089,10 @@ sourceRule(function aCourtierNamesACharacter(world, state, night) {
     // Only while the Courtier lives: a drunkenness rests when the one
     // causing it dies (table ruling, 02.10.2026).
     if (!state.aliveSet(phase).has(courtier)) continue;
+    // And it *ends* there: an ability ends with the death of whoever has
+    // it, and a character that comes back is a new instance (table
+    // ruling, 03.10.2026). What the old Courtier named is sober for good.
+    if (diedBetween(state, courtier, info.night, night)) continue;
     const hit = world.findAt(info.role, phase);
     if (hit === null) continue;          // named somebody nobody is
     // In the span the Courtier dies, the named one is drunk for part of
@@ -1044,11 +1101,7 @@ sourceRule(function aCourtierNamesACharacter(world, state, night) {
     // something that worked.
     const died = state.diedAt(courtier);
     const went = died.includes(phase) || died.includes(`D${night}`);
-    // And the same on the night it comes back: dead until a Professor
-    // raised it at 43, so the one it named was sober for every slot
-    // before that — the Professor among them, if that is who it named.
-    const back = returnedAt(state, phase).has(courtier);
-    const free = went || back ? () => 1.0 : 1.0;
+    const free = went ? () => 1.0 : 1.0;
     out.push(new Source("Courtier", new Set([hit]),
                         {capacity: 1, cost: free, repeatCost: free}));
   }

@@ -389,6 +389,22 @@ def python_side():
         "professor-regurgitated":
             (GOOD + ["Godfather", "Shabaloth"], NOBODY,
              {"deaths": {3: "N2"}, "resurrections": {3: "N3"}}),
+        # Woken until it strikes, and nobody writes down when that was:
+        # certain on night two, open after — unless the strike is on
+        # the record (03.10.2026).
+        "assassin": (GOOD + ["Assassin", "Po"], NOBODY, {}),
+        "assassin-struck":
+            (GOOD + ["Assassin", "Po"], NOBODY,
+             {"infos": [Row("Assassin", 7, 2)]}),
+        # An ability ends with its owner: a Courtier that named
+        # somebody, died and came back is woken to name again.
+        "courtier-came-back":
+            (GOOD[:6] + ["Courtier", "Godfather", "Po"], NOBODY,
+             {"infos": [Row("Courtier", 6, 1)],
+              "deaths": {6: "N2"}, "resurrections": {6: "N3"}}),
+        "courtier-never-died":
+            (GOOD[:6] + ["Courtier", "Godfather", "Po"], NOBODY,
+             {"infos": [Row("Courtier", 6, 1)]}),
     }
     for name, (roles, believes, opts) in direct.items():
         st = board(BMR, roles[:7] + ["Tinker", "Moonchild"], **opts)

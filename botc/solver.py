@@ -1339,6 +1339,17 @@ def a_pacifist_may_spare_the_good(world, state, day, seat):
     return [pacifist]
 
 
+def _died_between(state, seat, since, night):
+    """Did this seat die after night `since` began and before `night` did?
+
+    The lifetime of an ability. Whatever a character set going on night
+    `since` is over by `night` if it has been dead in between, whether or
+    not it is standing again.
+    """
+    return any(phase_index(f"N{since}") <= phase_index(at)
+               < phase_index(f"N{night}") for at in state.died_at(seat))
+
+
 def _returned_at(state, phase):
     """Who came back to life at this moment."""
     return frozenset(seat for seat, phases
@@ -1385,6 +1396,19 @@ def _tea_lady_keeping(world, state, seat, phase, alive=None):
     if any(world.evil_at(p, phase) for p in around):
         return None                       # one of them is evil, so nothing
     return lady
+
+
+def _beside_a_side_nobody_knows(world, state, lady, phase, alive=None):
+    """Is one of her living neighbours on a side that can turn?
+
+    A Goon is on whichever side last chose it, and nobody writes that
+    down. With one beside her she may be protecting and she may not, and
+    the board cannot say — so her protection can explain somebody living
+    and a death beside her proves nothing about her (03.10.2026, the
+    first played games in which a Goon turned).
+    """
+    return any(CHARACTERS[world.role_at(p, phase)].alignment_open
+               for p in _living_beside(state, lady, phase, alive))
 
 
 @survives_execution_rule
@@ -1708,7 +1732,10 @@ def a_godfather_answers_an_outsider(world, state, night):
         return []
     return [death_causes.Cause(
         name="Godfather", kind=death_causes.OTHER,
-        seats=frozenset(range(state.n_players)), capacity=1, must_fire=True)]
+        seats=frozenset(range(state.n_players)), capacity=1, must_fire=True,
+        # Drunk or poisoned it kills nobody, and so does one that chose
+        # the Goon first: a quiet night stopped at its source.
+        actor=seat)]
 
 
 @death_causes.cause_rule
@@ -1802,6 +1829,13 @@ def a_moonchild_takes_somebody_with_it(world, state, night):
     good = good & picked
     if not good:
         return []                         # it named somebody evil
+    # A Goon it named may have been turned by then, and nobody knows:
+    # the pick may kill and need not.
+    if any(CHARACTERS[world.role_at(seat, phase)].alignment_open
+           for seat in good):
+        return [death_causes.Cause(name="Moonchild",
+                                   kind=death_causes.OTHER,
+                                   seats=good, capacity=1)]
     return [death_causes.Cause(name="Moonchild", kind=death_causes.PICKED,
                                seats=good, capacity=1, must_fire=True)]
 
@@ -1933,6 +1967,18 @@ def a_grandmother_grieves(world, state, night, victim, kind):
         seat = info.player
         if world.role_at(seat, f"N{night}") != "Grandmother":
             continue
+        # The grandchild she has *now*: her latest reading, from this
+        # life. One who died and came back is a new Grandmother and is
+        # shown a new grandchild (03.10.2026) — the old one is nothing to
+        # her, and if nobody wrote the new one down there is no telling
+        # who it is.
+        later = any(isinstance(other, GrandmotherInfo)
+                    and other.player == seat
+                    and info.night < other.night < night
+                    for other in state.infos)
+        if later or info.night >= night > 1 \
+                or _died_between(state, seat, info.night, night):
+            continue
         # A Grandmother already dead cannot die again of grief. She was
         # executed on day 2, her grandchild fell on night 3, and this
         # demanded a second death from a seat that had none left to give
@@ -1983,8 +2029,11 @@ def a_tea_lady_keeps_her_neighbours(world, state, night, seat, kind):
     # within one — so on such a night her protection may explain a
     # survival but demands nothing of a death.
     fell = f"N{night}" in state.died_at(lady)
+    # And one living beside a Goon: its side is not on the board.
+    unsure = any(_beside_a_side_nobody_knows(world, state, lady, phase, alive)
+                 for alive in _rosters(state, phase))
     return [death_causes.Shield("Tea Lady", needs=lady,
-                                chosen=fell or not either_way)]
+                                chosen=fell or unsure or not either_way)]
 
 
 def _living_beside(state, seat, phase, alive=None):
@@ -2351,12 +2400,51 @@ def _explained_night(world, state, night):
     got = memo.get(key)
     if got is None:
         died = set(_night_deaths(state).get(night, ()))
-        got = memo[key] = death_causes.explain_night(world, state, night,
-                                                     died)
+        got = memo[key] = _the_ones_that_can_win(
+            death_causes.explain_night(world, state, night, died))
     return got
 
 
-ACCOUNTS_KEPT = 96
+def _the_ones_that_can_win(options):
+    """A night's explanations, without those another one makes pointless.
+
+    One explanation asks for some seats impaired and some working. If a
+    second asks for all of that *and more*, and is no cheaper, it can
+    never be the one that wins: any plan that grants the second grants
+    the first, at a price at least as good. Dropping it loses nothing.
+
+    It matters because the nights multiply. Five ways to read night two
+    and thirteen to read night three are sixty-five accounts before night
+    four has begun, and the cap in `_the_accounts_worth_keeping` cuts
+    whatever does not fit — which by the sixth night of a Bad Moon Rising
+    game with an Assassin and a Gossip in it was, three times in twenty
+    thousand, the account that really happened (03.10.2026). Fewer ways
+    per night is the only saving that is not a guess.
+    """
+    def within(a, b):
+        return all(seats <= b.get(night, frozenset())
+                   for night, seats in a.items())
+
+    kept = []
+    for i, (cost, impaired, working, earlier) in enumerate(options):
+        beaten = False
+        for j, (c, imp, wrk, ear) in enumerate(options):
+            if i == j or c < cost or not imp <= impaired \
+                    or not wrk <= working or not within(ear, earlier):
+                continue
+            # Asking exactly the same at the same price: the first stays.
+            same = (c == cost and imp == impaired and wrk == working
+                    and within(earlier, ear))
+            if same and j > i:
+                continue
+            beaten = True
+            break
+        if not beaten:
+            kept.append((cost, impaired, working, earlier))
+    return kept
+
+
+ACCOUNTS_KEPT = 400
 
 
 def _night_accounts(world, state):
@@ -2675,7 +2763,8 @@ def _plain_failures(world, state, outcome=None):
         # she was not working. The mirror of her saving one.
         if _in_bag(state, "TeaLady"):
             lady = _tea_lady_keeping(world, state, seat, f"D{day}")
-            if lady is not None:
+            if lady is not None and not _beside_a_side_nobody_knows(
+                    world, state, lady, f"D{day}"):
                 failures[day].add(lady)
 
     # Somebody standing again needs a reason, and the reason has to have
@@ -3141,7 +3230,15 @@ def a_pukka_poisons_whoever_it_will_kill(world, state, night):
     the Pukka's turn comes round again — so a Sailor, a Fool or an
     Innkeeper that dies tonight was still poisoned as the night began,
     and chose, guarded or failed to survive in that state. Free for the
-    same reason, and it reaches only tonight's dead.
+    same reason for tonight's dead.
+
+    And somebody it did not kill: a Tea Lady's neighbour, an Innkeeper's
+    pick, a Fool. They carried the token into the night all the same, so
+    an Innkeeper among them chose with no ability — nobody drunk, nobody
+    safe — and is healthy again by morning. Nothing on the board says who
+    that was, so it is a guess and priced like one (03.10.2026: this
+    reached only the dead, and a poisoned Innkeeper kept alive by a Tea
+    Lady had to have made somebody drunk).
 
     Neither is forced on anybody. A night and its day share one span
     here, and a seat that acted *before* the Pukka on the night it was
@@ -3165,10 +3262,14 @@ def a_pukka_poisons_whoever_it_will_kill(world, state, night):
     out = [impairment.Source("Pukka", alive, capacity=1, cost=fresh,
                              repeat_cost=fresh_again)]
     due_tonight = _died_on(state, night) & alive
-    if night >= 2 and due_tonight:
-        out.append(impairment.Source("Pukka's token", due_tonight,
-                                     capacity=1, cost=lambda who: 1.0,
-                                     repeat_cost=lambda who: 1.0))
+
+    def carried(who):
+        return 1.0 if who in due_tonight else POISON_HIT_PENALTY
+
+    if night >= 2:
+        out.append(impairment.Source("Pukka's token", alive,
+                                     capacity=1, cost=carried,
+                                     repeat_cost=carried))
     return out
 
 
@@ -3318,6 +3419,13 @@ def a_courtier_names_a_character(world, state, night):
         # named was still "drunk" when it walked away from the gallows.
         if courtier not in state.alive_set(phase):
             continue
+        # And it *ends* there. An ability ends with the death of whoever
+        # has it, and a character that comes back is a new instance with
+        # the ability afresh (table ruling, 03.10.2026): what the old
+        # Courtier named is sober for good, and the new one names again
+        # — which is a new row, and its own three days.
+        if _died_between(state, courtier, info.night, night):
+            continue
         hit = world.find_at(info.role, phase)
         if hit is None:
             continue                      # named somebody nobody is
@@ -3328,11 +3436,7 @@ def a_courtier_names_a_character(world, state, night):
         # that worked.
         went = any(at in state.died_at(courtier)
                    for at in (phase, f"D{night}"))
-        # And the same on the night it comes back: dead until a Professor
-        # raised it at 43, so the one it named was sober for every slot
-        # before that — the Professor among them, if that is who it named.
-        back = courtier in _returned_at(state, phase)
-        free = (lambda who: 1.0) if went or back else 1.0
+        free = (lambda who: 1.0) if went else 1.0
         out.append(impairment.Source("Courtier", frozenset({hit}),
                                      capacity=1, cost=free,
                                      repeat_cost=free))

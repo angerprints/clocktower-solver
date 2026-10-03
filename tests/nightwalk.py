@@ -40,6 +40,7 @@ class Night:
     def __init__(self, roles, sides, alive):
         self.roles = dict(roles)            # seat -> character, now
         self.sides = dict(sides)            # seat -> "good"/"evil", now
+        self.sides_at_dusk = dict(sides)    # ... and as the night began
         self.alive = set(alive)
         self.droisoned = set()
         self.died = set()
@@ -291,9 +292,25 @@ def hidden_from(deal, night, heard):
     # poisoned by the Pukka on top, and subtracting the seat handed the
     # walk a sober Gambler. The token still standing from last night is
     # different. It was on the board when the night began.
+    #
+    # And the same for whoever the Goon made drunk tonight: the walk
+    # works that out for itself, at the slot it happened.
+    #
+    # But *only* that seat is lifted, and only if the Goon is the one
+    # reason for it. Asking with the Goon's doing left out altogether
+    # brought back everything it had prevented: an Innkeeper the Goon
+    # made drunk makes nobody else drunk, and without the Goon in the
+    # picture its pick was handed over as drunk when the night began.
     fresh = deal.pukka_marks.pop(night, None)
     try:
         standing = set(simulate.droisoned_at(deal, night)) - derives
+        gooned = getattr(deal, "goon_first", {}).pop(night, None)
+        if gooned is not None:
+            try:
+                if gooned[0] not in simulate.droisoned_at(deal, night):
+                    standing.discard(gooned[0])
+            finally:
+                deal.goon_first[night] = gooned
     finally:
         if fresh is not None:
             deal.pukka_marks[night] = fresh
@@ -350,6 +367,14 @@ def hidden_from(deal, night, heard):
         out[("sailor_drunk", night)] = deal.sailor_drunk[night]
     if deal.cursed.get(night) is not None:
         out[("witch", night)] = deal.cursed[night]
+    # The three that kill besides the Demon, and a Lunatic's pointing.
+    for key, where in (("assassin", "assassin_aimed"),
+                       ("godfather", "godfather_aimed"),
+                       ("gossip", "gossip_killed"),
+                       ("lunatic", "lunatic_chose")):
+        got = getattr(deal, where, {}).get(night)
+        if got is not None:
+            out[(key, night)] = got
     # A Devil's Advocate's pick, hidden like the Monk's guard.
     spared = getattr(deal, "spared", {}).get(night)
     if spared is not None:
@@ -408,9 +433,19 @@ def hidden_from(deal, night, heard):
     moon = row("MoonchildChoice")
     if moon:
         out[("moonchild", night)] = moon[0].target
-    gran = [h for h in heard if type(h).__name__ == "GrandmotherInfo"]
-    if gran:
-        out["grandchild"] = gran[0].target
+    # The grandchild a Grandmother has tonight: her latest reading from
+    # before tonight, and none at all on the night she comes back — one
+    # who died and returned is a new Grandmother (03.10.2026).
+    for seat in range(deal.n):
+        if deal.role_at(seat, phase) != "Grandmother":
+            continue
+        if getattr(deal, "back_at", lambda *_: None)(seat, phase) is not None:
+            continue
+        mine = [h for h in heard
+                if type(h).__name__ == "GrandmotherInfo"
+                and h.player == seat and (h.night < night or night == 1)]
+        if mine:
+            out["grandchild"] = mine[-1].target
     if any(deal.role_at(p, phase) == "Tinker"
            and p in deal.died_on(phase) for p in range(deal.n)):
         out[("tinker", night)] = True
@@ -455,6 +490,12 @@ def _note_what_we_were_not_told(state, deal, roles, night, hidden):
         if seat in (hidden.get(("regurgitated", night)),
                     hidden.get(("professor", night))):
             continue                      # back tonight, after its turn
+        # With one other player left there is nobody to choose: an
+        # Innkeeper needs two, an Exorcist somebody it did not name last
+        # night, a Sailor somebody at all.
+        if role in ("Innkeeper", "Exorcist", "Sailor") \
+                and len(state.alive | state.died) < 3:
+            continue
         # "If just 3 players live, you lose this ability."
         if role == "Witch" and len(state.alive | state.died) <= 3:
             continue
@@ -546,19 +587,23 @@ def walk(deal, night, hidden):
 
             if role == "Poisoner":
                 target = hidden.get(("poisoner", night))
-                if target is None or not state.working(seat):
+                if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
+                if not state.working(seat):
+                    continue      # drunk already, or by the Goon just now
                 if state.working(seat):
                     state.droison(target, slot, "Poisoner")
 
             elif role == "Sailor":
                 target = hidden.get(("sailor", night))
-                if target is None or not state.working(seat):
+                if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
+                if not state.working(seat):
+                    continue      # drunk already, or by the Goon just now
                 # One of the two is drunk; which is the Storyteller's, so the
                 # walk is told rather than deciding.
                 drunk = hidden.get(("sailor_drunk", night))
@@ -595,10 +640,12 @@ def walk(deal, night, hidden):
                 # the swap happens *before* the Demon's kill — and the seat
                 # that kills is the charmer's, holding the Demon now.
                 target = hidden.get(("snakecharmer", night))
-                if target is None or not state.working(seat):
+                if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
+                if not state.working(seat):
+                    continue      # drunk already, or by the Goon just now
                 if not state.working(seat):
                     continue
                 if TEAM.get(state.roles.get(target, ""), "") != "demon":
@@ -614,10 +661,12 @@ def walk(deal, night, hidden):
                 # Demon, which is what makes the guard mean anything: the
                 # Demon arrives later and finds the seat already protected.
                 target = hidden.get(("monk", night))
-                if target is None or not state.working(seat):
+                if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
+                if not state.working(seat):
+                    continue      # drunk already, or by the Goon just now
                 if state.working(seat):
                     state.guarded.add(target)
                     state.guards[target] = seat
@@ -631,7 +680,7 @@ def walk(deal, night, hidden):
                 picked = hidden.get(("innkeeper", night)) or ()
                 if isinstance(picked, int):
                     picked = (picked,)
-                if not picked or not state.working(seat):
+                if not picked or seat not in state.alive:
                     continue
                 for target in picked:
                     state.choose(seat, target, slot)
@@ -653,15 +702,17 @@ def walk(deal, night, hidden):
                 guess = hidden.get(("gambler", night))
                 if guess is None:
                     continue
-                # Judged when it acts, not after its target answers back —
-                # the same rule the Demon needed. A Gambler that picks the
-                # Goon is drunked by it, and the guess is already made, so
-                # the wrong guess still kills.
-                able = state.working(seat)
+                # Judged *after* its target answers back. A Gambler that
+                # picks the Goon first is drunk on the spot, so the guess
+                # it has just made costs it nothing. This had it the other
+                # way round — "the guess is already made" — which is not
+                # what the card or the table says (03.10.2026).
+                if seat not in state.alive:
+                    continue
                 target, said = guess
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
-                if able and state.roles.get(target) != said:
+                if state.working(seat) and state.roles.get(target) != said:
                     state.kill(seat, slot, "Gambler")
 
             elif role == "Tinker":
@@ -725,7 +776,10 @@ def walk(deal, night, hidden):
                 # it is handed in whether or not it did anything.
                 if seat in state.droisoned:
                     continue
-                if state.sides.get(target) == "good" and target in state.alive:
+                # Good *when it was chosen*, which was in daylight: a
+                # Goon the Demon has turned since still dies of it.
+                if state.sides_at_dusk.get(target) == "good" \
+                        and target in state.alive:
                     state.kill(target, slot, "Moonchild")
 
             elif role == "Sage":
@@ -748,15 +802,24 @@ def walk(deal, night, hidden):
                 # a Demon's night. None of them changes the board, so the
                 # walk records that they woke and moves on.
                 state.log.append((slot, "shown", seat, role))
+                # A Lunatic points at somebody, and for the Goon that is
+                # a player choosing a player (table ruling, 02.10.2026).
+                target = hidden.get(("lunatic", night))
+                if role == "Lunatic" and target is not None \
+                        and seat in state.alive:
+                    state.choose(seat, target, slot)
+                    _goon_answers(state, seat, target, slot)
 
             elif role == "Exorcist":
                 # Names the Demon, and it does not kill tonight. Acts at 21,
                 # before every Demon, which is what lets it work at all.
                 target = hidden.get(("exorcist", night))
-                if target is None or not state.working(seat):
+                if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
+                if not state.working(seat):
+                    continue      # drunk already, or by the Goon just now
                 if state.working(seat) \
                         and TEAM.get(state.roles.get(target, ""), "") == "demon":
                     state.silenced.add(target)
@@ -766,20 +829,24 @@ def walk(deal, night, hidden):
                 # Keeps somebody from dying by execution tomorrow. Nothing
                 # happens tonight, but the choice is made now.
                 target = hidden.get(("devilsadvocate", night))
-                if target is None or not state.working(seat):
+                if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
+                if not state.working(seat):
+                    continue      # drunk already, or by the Goon just now
                 state.spared.add(target)
 
             elif role == "Witch":
                 # Curses somebody: if they nominate tomorrow, they die.
                 # Again nothing tonight, but the aim is taken now.
                 target = hidden.get(("witch", night))
-                if target is None or not state.working(seat):
+                if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
+                if not state.working(seat):
+                    continue      # drunk already, or by the Goon just now
                 state.cursed.add(target)
 
             elif role == "PitHag":
@@ -803,10 +870,16 @@ def walk(deal, night, hidden):
                 # to an Assassin cost it the night: by 36 that seat is
                 # holding the Demon and this branch never runs.
                 target = hidden.get(("assassin", night))
-                if target is None or not state.working(seat):
+                if target is None or seat not in state.alive:
                     continue
+                # The one choice the Goon does not turn away: chosen by a
+                # working Assassin it dies *and* turns evil. Chosen by one
+                # that was drunk already, it lives and turns evil.
+                able = state.working(seat)
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
+                if not able:
+                    continue
                 if target in state.alive:
                     state.kill(target, slot, "Assassin", unstoppable=True)
 
@@ -825,10 +898,12 @@ def walk(deal, night, hidden):
                 # Kills if an Outsider died in daylight. Acts at 37, after
                 # the Demon, so it can add a second body to the night.
                 target = hidden.get(("godfather", night))
-                if target is None or not state.working(seat):
+                if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
+                if not state.working(seat):
+                    continue      # drunk already, or by the Goon just now
                 if target in state.alive:
                     state.kill(target, slot, "Godfather")
 
@@ -896,19 +971,18 @@ def walk(deal, night, hidden):
                     state.log.append((slot, "exorcised", seat, "no kill"))
                     continue
 
-                # Whether the ability functions is decided **when the
-                # character acts**, not after its own target has answered
-                # back. A Demon that chooses the Goon is made drunk by it —
-                # and the choice is already made, so the kill still lands.
-                #
-                # Checking afterwards had the Goon protecting itself from
-                # every Demon that picked it, which is not what the card
-                # says and cost twelve of eighty nights.
+                # Whether the ability functions is decided when the
+                # character acts — and for the Goon, after it has answered
+                # back: the first to choose it is drunk on the spot, so
+                # that very choice fails (rulebook of the game, confirmed
+                # 03.10.2026). This said the opposite until then.
                 for target in targets:
                     state.choose(seat, target, slot)
                     _goon_answers(state, seat, target, slot)
-                    if not able:
-                        break
+                    # Drunk the moment it chooses the Goon first: that
+                    # kill fails, and every later one tonight with it.
+                    if seat in state.droisoned:
+                        continue
 
                     if target not in state.alive:
                         continue              # sunk into a corpse
@@ -1411,10 +1485,11 @@ def _pukka_takes_its_turn(state, seat, slot, hidden, night):
     else:
         fresh = hidden.get(("pukka_fresh", night))
         if fresh is not None:
-            able = state.working(seat)
             state.choose(seat, fresh, slot)
             _goon_answers(state, seat, fresh, slot)
-            if not able:
+            # The Goon, first: drunk on the spot. Nobody poisoned, the
+            # old token stays and rests, no attack.
+            if not state.working(seat):
                 return
             state.droison(fresh, slot, "Pukka")
     stale = hidden.get(("pukka_due", night))
@@ -1435,6 +1510,8 @@ def _pukka_takes_its_turn(state, seat, slot, hidden, night):
             state.droisoned.discard(stale)    # lived, and healthy from here
         return
     state.kill(stale, slot, "Pukka")
+    if lifted and stale in state.alive:
+        state.droisoned.discard(stale)        # kept alive, and healthy now
     _grandmother_grieves(state, stale, slot, hidden, night)
 
 

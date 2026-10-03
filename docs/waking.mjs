@@ -94,9 +94,18 @@ condition("Seamstress", (world, state, seat, night) => night === 1);
 condition("Sage", (world, state, seat, night) =>
   state.diedAt(seat).includes(`N${night}`));
 
+// In this life: a Courtier that died and came back is a new one with the
+// ability afresh (table ruling, 03.10.2026), so what counts is whether
+// it has named anything since it last returned.
 condition("Courtier", (world, state, seat, night) => {
+  let born = 1;
+  for (const at of (state.resurrections || {})[seat] || []) {
+    const n = parseInt(String(at).slice(1), 10);
+    if (n <= night && n > born) born = n;
+  }
   for (const info of state.infos)
-    if (info.sourceRole === "Courtier" && info.player === seat)
+    if (info.sourceRole === "Courtier" && info.player === seat &&
+        info.night >= born)
       return night <= info.night;
   return true;                       // never spent, so still being woken
 });
@@ -263,6 +272,14 @@ export function uncertain(world, state, seat, night) {
   if (night === 1)
     return isDemon(acting) && CHARACTERS[acting].nights !== EVERY;
   if (cameBackTonight(world, state, seat, night) === OPEN) return true;
+  if (acting === "Assassin") {
+    // The same as the Professor below: woken until it strikes, and
+    // nobody writes down when that was. Night two is certain — its first
+    // chance — and after that either, unless the strike is on the record.
+    if (night < 3 || !state.aliveSet(phase).has(seat)) return false;
+    return !state.infos.some(
+      info => info.sourceRole === "Assassin" && info.player === seat);
+  }
   if (acting === "Professor") {
     // Night two it is woken for certain: its first chance. After that it
     // may have chosen somebody who was no Townsfolk, or chosen while

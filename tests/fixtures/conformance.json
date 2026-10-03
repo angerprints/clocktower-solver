@@ -14544,65 +14544,65 @@
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 25.7421,
-      "demon_pct": 14.0469,
-      "drunk_pct": 8.6538,
-      "lying_pct": 34.3959
+      "evil_pct": 25.7415,
+      "demon_pct": 14.0466,
+      "drunk_pct": 8.6536,
+      "lying_pct": 34.3952
      },
      {
-      "evil_pct": 25.3558,
-      "demon_pct": 13.8532,
-      "drunk_pct": 8.4815,
-      "lying_pct": 33.8373
+      "evil_pct": 25.3563,
+      "demon_pct": 13.854,
+      "drunk_pct": 8.4824,
+      "lying_pct": 33.8387
      },
      {
-      "evil_pct": 0.75,
+      "evil_pct": 0.7521,
       "demon_pct": 0.0737,
-      "drunk_pct": 11.2226,
-      "lying_pct": 11.9725
+      "drunk_pct": 11.2224,
+      "lying_pct": 11.9744
      },
      {
-      "evil_pct": 25.6565,
-      "demon_pct": 14.0041,
-      "drunk_pct": 8.611,
-      "lying_pct": 34.2675
+      "evil_pct": 25.6559,
+      "demon_pct": 14.0038,
+      "drunk_pct": 8.6108,
+      "lying_pct": 34.2668
      },
      {
-      "evil_pct": 25.3558,
-      "demon_pct": 13.8532,
-      "drunk_pct": 8.4815,
-      "lying_pct": 33.8373
+      "evil_pct": 25.3563,
+      "demon_pct": 13.854,
+      "drunk_pct": 8.4824,
+      "lying_pct": 33.8387
      },
      {
-      "evil_pct": 25.7421,
-      "demon_pct": 14.0469,
-      "drunk_pct": 8.6538,
-      "lying_pct": 34.3959
+      "evil_pct": 25.7415,
+      "demon_pct": 14.0466,
+      "drunk_pct": 8.6536,
+      "lying_pct": 34.3952
      },
      {
-      "evil_pct": 25.7421,
-      "demon_pct": 14.0469,
-      "drunk_pct": 8.6538,
-      "lying_pct": 34.3959
+      "evil_pct": 25.7415,
+      "demon_pct": 14.0466,
+      "drunk_pct": 8.6536,
+      "lying_pct": 34.3952
      },
      {
-      "evil_pct": 15.1458,
+      "evil_pct": 15.1454,
       "demon_pct": 0.3531,
-      "drunk_pct": 12.7869,
-      "lying_pct": 27.9327
+      "drunk_pct": 12.7866,
+      "lying_pct": 27.9321
      },
      {
-      "evil_pct": 30.5101,
-      "demon_pct": 15.7219,
-      "drunk_pct": 11.6098,
-      "lying_pct": 42.1199
+      "evil_pct": 30.5094,
+      "demon_pct": 15.7215,
+      "drunk_pct": 11.6095,
+      "lying_pct": 42.119
      }
     ],
     "blame": {
      "2": {
       "2": {
        "Demon": 0.7754,
-       "Assassin": 0.0572,
+       "Assassin": 0.0571,
        "Godfather": 0.1675
       }
      }
@@ -19733,59 +19733,59 @@
     }
    },
    "expect": {
-    "valid": 10975,
+    "valid": 11095,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 16.7811,
-      "demon_pct": 13.9745,
+      "evil_pct": 16.6956,
+      "demon_pct": 13.9033,
       "drunk_pct": 0.0,
-      "lying_pct": 16.7811
+      "lying_pct": 16.6956
      },
      {
-      "evil_pct": 26.9035,
-      "demon_pct": 10.161,
-      "drunk_pct": 11.527,
-      "lying_pct": 38.4305
+      "evil_pct": 26.7957,
+      "demon_pct": 10.1092,
+      "drunk_pct": 11.566,
+      "lying_pct": 38.3617
      },
      {
-      "evil_pct": 8.2433,
-      "demon_pct": 5.6501,
-      "drunk_pct": 5.8897,
-      "lying_pct": 0.5424
+      "evil_pct": 8.2015,
+      "demon_pct": 5.6215,
+      "drunk_pct": 5.9112,
+      "lying_pct": 0.5396
      },
      {
-      "evil_pct": 63.9548,
-      "demon_pct": 21.4196,
-      "drunk_pct": 13.295,
-      "lying_pct": 77.2498
+      "evil_pct": 63.629,
+      "demon_pct": 21.3105,
+      "drunk_pct": 13.2272,
+      "lying_pct": 76.8562
      },
      {
-      "evil_pct": 29.8445,
-      "demon_pct": 6.6369,
-      "drunk_pct": 15.7634,
-      "lying_pct": 45.6079
+      "evil_pct": 30.1724,
+      "demon_pct": 6.6031,
+      "drunk_pct": 15.6996,
+      "lying_pct": 45.872
      },
      {
-      "evil_pct": 0.0652,
+      "evil_pct": 0.0651,
       "demon_pct": 0.0101,
-      "drunk_pct": 2.5442,
-      "lying_pct": 0.0035
+      "drunk_pct": 2.5957,
+      "lying_pct": 0.0034
      },
      {
-      "evil_pct": 54.2076,
-      "demon_pct": 42.1479,
-      "drunk_pct": 4.3328,
-      "lying_pct": 58.5403
+      "evil_pct": 54.4407,
+      "demon_pct": 42.4424,
+      "drunk_pct": 4.3107,
+      "lying_pct": 58.7514
      }
     ],
     "blame": {
      "2": {
       "5": {
-       "Gambler": 0.4078,
-       "Demon": 0.4747,
-       "Assassin": 0.0275,
-       "Godfather": 0.09
+       "Gambler": 0.4057,
+       "Demon": 0.4773,
+       "Assassin": 0.0273,
+       "Godfather": 0.0896
       }
      }
     }
@@ -19798,29 +19798,25 @@
     "players": [
      {
       "name": "",
-      "claim": "Sailor",
+      "claim": "Pacifist",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       1,
        2,
        3
       ],
-      "nominated": [
-       3
-      ]
+      "nominated": []
      },
      {
       "name": "",
-      "claim": "Gossip",
+      "claim": "Professor",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       1,
        2,
        3
       ],
@@ -19830,11 +19826,9 @@
      },
      {
       "name": "",
-      "claim": "Chambermaid",
+      "claim": "Courtier",
       "events": [
-       "X1",
-       "R2",
-       "X2"
+       "X3"
       ],
       "certainty": "",
       "read": 0,
@@ -19844,8 +19838,42 @@
        2
       ],
       "nominated": [
-       1
+       1,
+       3
       ]
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [
+       "S1",
+       "S2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
      },
      {
       "name": "",
@@ -19855,42 +19883,7 @@
       "read": 0,
       "wake": "",
       "voted": [
-       1,
-       2,
-       3
-      ],
-      "nominated": [
-       1
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Exorcist",
-      "events": [
-       "X3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2,
-       3
-      ],
-      "nominated": [
-       1
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Courtier",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2,
-       3
+       2
       ],
       "nominated": [
        2,
@@ -19906,60 +19899,33 @@
       "wake": "other",
       "voted": [
        1,
-       3
-      ],
-      "nominated": [
        2,
        3
-      ]
+      ],
+      "nominated": []
      }
     ],
     "infos": [
      {
-      "type": "SailorChoice",
-      "night": 1,
-      "player": 0,
-      "target": 6
-     },
-     {
-      "type": "CourtierChoice",
-      "night": 1,
-      "player": 5,
-      "role": "Chambermaid"
-     },
-     {
-      "type": "ChambermaidInfo",
-      "night": 1,
-      "player": 2,
-      "a": 0,
-      "b": 4,
-      "count": 5
-     },
-     {
-      "type": "SailorChoice",
+      "type": "InnkeeperChoice",
       "night": 2,
-      "player": 0,
-      "target": 1
+      "player": 6,
+      "a": 1,
+      "b": 3
      },
      {
-      "type": "ChambermaidInfo",
-      "night": 2,
-      "player": 2,
-      "a": 3,
-      "b": 5,
-      "count": 0
-     },
-     {
-      "type": "SailorChoice",
+      "type": "InnkeeperChoice",
       "night": 3,
-      "player": 0,
-      "target": 4
+      "player": 6,
+      "a": 0,
+      "b": 2
      },
      {
-      "type": "SailorChoice",
+      "type": "InnkeeperChoice",
       "night": 4,
-      "player": 0,
-      "target": 5
+      "player": 6,
+      "a": 3,
+      "b": 5
      }
     ],
     "script": {
@@ -19994,52 +19960,60 @@
     }
    },
    "expect": {
-    "valid": 472,
+    "valid": 940,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 3.3491,
-      "demon_pct": 1.8592,
-      "drunk_pct": 0.5846,
-      "lying_pct": 3.9337
-     },
-     {
-      "evil_pct": 68.3719,
-      "demon_pct": 39.6115,
-      "drunk_pct": 6.9989,
-      "lying_pct": 75.3708
-     },
-     {
       "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 68.274,
-      "demon_pct": 39.5772,
-      "drunk_pct": 6.9286,
-      "lying_pct": 75.2026
+      "evil_pct": 67.8299,
+      "demon_pct": 42.157,
+      "drunk_pct": 0.9241,
+      "lying_pct": 68.754
      },
      {
-      "evil_pct": 56.38,
-      "demon_pct": 16.9045,
-      "drunk_pct": 10.8322,
-      "lying_pct": 67.2122
-     },
-     {
-      "evil_pct": 3.6251,
-      "demon_pct": 2.0476,
-      "drunk_pct": 0.5488,
-      "lying_pct": 4.1738
+      "evil_pct": 50.136,
+      "demon_pct": 10.4541,
+      "drunk_pct": 1.2475,
+      "lying_pct": 51.3835
      },
      {
       "evil_pct": 0.0,
       "demon_pct": 0.0,
+      "drunk_pct": 1.4882,
+      "lying_pct": 1.4882
+     },
+     {
+      "evil_pct": 8.7983,
+      "demon_pct": 2.1866,
+      "drunk_pct": 46.7131,
+      "lying_pct": 55.5113
+     },
+     {
+      "evil_pct": 67.4042,
+      "demon_pct": 41.8164,
+      "drunk_pct": 0.8866,
+      "lying_pct": 68.2908
+     },
+     {
+      "evil_pct": 5.8317,
+      "demon_pct": 3.3859,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 5.8317
      }
-    ]
+    ],
+    "blame": {
+     "2": {
+      "4": {
+       "Demon": 0.9972,
+       "Assassin": 0.0028
+      }
+     }
+    }
    }
   },
   {
@@ -20049,52 +20023,11 @@
     "players": [
      {
       "name": "",
-      "claim": "Exorcist",
+      "claim": "Gossip",
       "events": [
-       "X2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Innkeeper",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       3
-      ],
-      "nominated": [
-       1,
-       3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Grandmother",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       3
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Gambler",
-      "events": [
-       "S3"
+       "N2",
+       "R3",
+       "X3"
       ],
       "certainty": "",
       "read": 0,
@@ -20103,34 +20036,20 @@
        3
       ],
       "nominated": [
-       1
+       3
       ]
      },
      {
       "name": "",
-      "claim": "Chambermaid",
+      "claim": "Goon",
       "events": [
-       "N2"
+       "S1"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       1
-      ],
-      "nominated": [
-       1
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Pacifist",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
+       2,
        3
       ],
       "nominated": [
@@ -20139,9 +20058,9 @@
      },
      {
       "name": "",
-      "claim": "Sailor",
+      "claim": "Fool",
       "events": [
-       "S1",
+       "S2",
        "N4"
       ],
       "certainty": "",
@@ -20149,59 +20068,112 @@
       "wake": "",
       "voted": [
        1,
+       2,
        3
       ],
       "nominated": [
-       2,
        3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [
+       "N3",
+       "R4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
       ]
      }
     ],
     "infos": [
      {
-      "type": "SailorChoice",
+      "type": "CourtierChoice",
       "night": 1,
       "player": 6,
-      "target": 0
+      "role": "Godfather"
      },
      {
       "type": "GrandmotherInfo",
       "night": 1,
+      "player": 5,
+      "target": 3,
+      "role": "TeaLady"
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 2,
       "player": 2,
       "target": 5,
-      "role": "Pacifist"
+      "role": "Grandmother"
      },
      {
-      "type": "ChambermaidInfo",
-      "night": 1,
-      "player": 4,
-      "a": 1,
-      "b": 6,
-      "count": 3
-     },
-     {
-      "type": "SailorChoice",
-      "night": 2,
-      "player": 6,
-      "target": 5
-     },
-     {
-      "type": "ExorcistChoice",
-      "night": 2,
-      "player": 0,
-      "target": 3
-     },
-     {
-      "type": "SailorChoice",
+      "type": "GamblerGuess",
       "night": 3,
-      "player": 6,
-      "target": 2
+      "player": 2,
+      "target": 3,
+      "role": "TeaLady"
      },
      {
-      "type": "SailorChoice",
+      "type": "GamblerGuess",
       "night": 4,
-      "player": 6,
-      "target": 2
+      "player": 2,
+      "target": 1,
+      "role": "Shabaloth"
      }
     ],
     "script": {
@@ -20236,63 +20208,81 @@
     }
    },
    "expect": {
-    "valid": 294,
+    "valid": 1,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 28.6591,
-      "demon_pct": 1.3853,
-      "drunk_pct": 3.1034,
-      "lying_pct": 31.7624
-     },
-     {
-      "evil_pct": 76.327,
-      "demon_pct": 48.0227,
-      "drunk_pct": 1.7056,
-      "lying_pct": 78.0326
-     },
-     {
-      "evil_pct": 60.5829,
-      "demon_pct": 34.6969,
-      "drunk_pct": 1.6557,
-      "lying_pct": 62.2385
-     },
-     {
-      "evil_pct": 23.2181,
-      "demon_pct": 11.5635,
-      "drunk_pct": 12.6949,
-      "lying_pct": 35.913
-     },
-     {
-      "evil_pct": 4.5562,
-      "demon_pct": 1.0294,
-      "drunk_pct": 14.3659,
-      "lying_pct": 18.9221
-     },
-     {
-      "evil_pct": 6.6032,
-      "demon_pct": 3.3016,
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 6.6032
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 0.0536,
-      "demon_pct": 0.0006,
-      "drunk_pct": 0.3364,
-      "lying_pct": 0.3899
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      }
     ],
     "blame": {
      "2": {
+      "0": {
+       "Demon": 0.7778,
+       "Gossip": 0.2222
+      },
       "4": {
-       "Demon": 0.9758,
-       "Assassin": 0.0242
+       "Demon": 0.7778,
+       "Gossip": 0.2222
       }
      },
      "4": {
+      "2": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "3": {
+       "Demon": 0.8824,
+       "Gossip": 0.1176
+      },
       "6": {
-       "Demon": 0.9946,
-       "Assassin": 0.0054
+       "Demon": 0.6471,
+       "Gossip": 0.3529
+      },
+      "5": {
+       "followed on": 0.4118,
+       "Demon": 0.3529,
+       "Gossip": 0.2353
       }
      }
     }
@@ -20315,7 +20305,9 @@
       "voted": [
        2
       ],
-      "nominated": []
+      "nominated": [
+       2
+      ]
      },
      {
       "name": "",
@@ -20327,8 +20319,7 @@
       "read": 0,
       "wake": "",
       "voted": [
-       1,
-       2
+       1
       ],
       "nominated": [
        1,
@@ -20337,7 +20328,7 @@
      },
      {
       "name": "",
-      "claim": "Courtier",
+      "claim": "Fool",
       "events": [
        "X3"
       ],
@@ -20348,7 +20339,8 @@
        2
       ],
       "nominated": [
-       2
+       2,
+       3
       ]
      },
      {
@@ -20365,25 +20357,24 @@
       "voted": [
        3
       ],
-      "nominated": []
+      "nominated": [
+       3
+      ]
      },
      {
       "name": "",
-      "claim": "Pacifist",
+      "claim": "",
       "events": [
-       "N3",
-       "R4"
+       "N3"
       ],
       "certainty": "",
       "read": 0,
-      "wake": "",
+      "wake": "never",
       "voted": [
        1,
        2
       ],
-      "nominated": [
-       2
-      ]
+      "nominated": []
      },
      {
       "name": "",
@@ -20409,7 +20400,8 @@
       "wake": "",
       "voted": [
        1,
-       2
+       2,
+       3
       ],
       "nominated": [
        3
@@ -20429,9 +20421,9 @@
       "type": "ChambermaidInfo",
       "night": 3,
       "player": 3,
-      "a": 2,
-      "b": 6,
-      "count": 2
+      "a": 1,
+      "b": 4,
+      "count": 1
      }
     ],
     "script": {
@@ -20466,44 +20458,44 @@
     }
    },
    "expect": {
-    "valid": 27,
+    "valid": 51,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 29.6721,
+      "evil_pct": 69.0035,
       "demon_pct": 0.0,
-      "drunk_pct": 0.0722,
-      "lying_pct": 29.7443
+      "drunk_pct": 1.0359,
+      "lying_pct": 70.0395
      },
      {
-      "evil_pct": 2.9672,
+      "evil_pct": 4.1121,
       "demon_pct": 0.0,
-      "drunk_pct": 0.0722,
-      "lying_pct": 3.0394
+      "drunk_pct": 6.8366,
+      "lying_pct": 10.9487
      },
      {
-      "evil_pct": 66.9055,
+      "evil_pct": 25.7423,
       "demon_pct": 0.0,
-      "drunk_pct": 22.0861,
-      "lying_pct": 88.9915
+      "drunk_pct": 6.8298,
+      "lying_pct": 32.5721
      },
      {
-      "evil_pct": 0.4552,
+      "evil_pct": 0.0892,
       "demon_pct": 0.0,
-      "drunk_pct": 20.2091,
-      "lying_pct": 20.6643
+      "drunk_pct": 3.4395,
+      "lying_pct": 3.5286
      },
      {
-      "evil_pct": 0.0,
+      "evil_pct": 0.9749,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 0.9749
      },
      {
-      "evil_pct": 0.0,
+      "evil_pct": 0.078,
       "demon_pct": 0.0,
-      "drunk_pct": 0.0722,
-      "lying_pct": 0.0722
+      "drunk_pct": 6.8366,
+      "lying_pct": 6.9146
      },
      {
       "evil_pct": 100.0,
@@ -20515,31 +20507,35 @@
     "blame": {
      "3": {
       "1": {
-       "Demon": 0.9042,
-       "Assassin": 0.0956,
-       "Godfather": 0.0002
+       "Demon": 0.923,
+       "Gossip": 0.0485,
+       "Assassin": 0.025,
+       "Godfather": 0.0035
       },
       "4": {
-       "Demon": 0.9042,
-       "Assassin": 0.0956,
-       "Godfather": 0.0002
+       "Demon": 0.923,
+       "Gossip": 0.0485,
+       "Assassin": 0.025,
+       "Godfather": 0.0035
       }
      },
      "2": {
       "3": {
-       "Demon": 0.9044,
-       "Assassin": 0.0956
+       "Demon": 0.8791,
+       "Gossip": 0.0593,
+       "Assassin": 0.0616
       },
       "5": {
-       "Demon": 0.9044,
-       "Assassin": 0.0956
+       "Demon": 0.8791,
+       "Gossip": 0.0593,
+       "Assassin": 0.0616
       }
      },
      "4": {
       "3": {
-       "Demon": 0.9997,
-       "Assassin": 0.0001,
-       "Godfather": 0.0002
+       "Demon": 0.9999,
+       "Assassin": 0.0,
+       "Godfather": 0.0
       }
      }
     }
@@ -20552,28 +20548,68 @@
     "players": [
      {
       "name": "",
-      "claim": "Gossip",
-      "events": [
-       "X3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2,
-       3
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Goon",
+      "claim": "Moonchild",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
        2
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [
+       "S3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Lunatic",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
       ],
       "nominated": [
        1
@@ -20581,7 +20617,7 @@
      },
      {
       "name": "",
-      "claim": "Sailor",
+      "claim": "Pacifist",
       "events": [
        "S2"
       ],
@@ -20595,61 +20631,35 @@
      },
      {
       "name": "",
-      "claim": "Pacifist",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2,
-       3
-      ],
-      "nominated": [
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Professor",
-      "events": [
-       "N4"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2,
-       3
-      ],
-      "nominated": [
-       3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Innkeeper",
+      "claim": "Minstrel",
       "events": [
        "X1"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
+      "voted": [
+       1
+      ],
       "nominated": []
      },
      {
       "name": "",
-      "claim": "Exorcist",
+      "claim": "Innkeeper",
       "events": [
-       "N4"
+       "N3",
+       "R4"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       3
+       1,
+       2
       ],
-      "nominated": []
+      "nominated": [
+       2
+      ]
      }
     ],
     "infos": [
@@ -20657,42 +20667,38 @@
       "type": "SailorChoice",
       "night": 1,
       "player": 2,
-      "target": 1
-     },
-     {
-      "type": "SailorChoice",
-      "night": 2,
-      "player": 2,
-      "target": 1
-     },
-     {
-      "type": "ExorcistChoice",
-      "night": 2,
-      "player": 6,
-      "target": 0
-     },
-     {
-      "type": "SailorChoice",
-      "night": 3,
-      "player": 2,
       "target": 4
      },
      {
-      "type": "ExorcistChoice",
+      "type": "SailorChoice",
+      "night": 2,
+      "player": 2,
+      "target": 0
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 2,
+      "player": 6,
+      "a": 3,
+      "b": 4
+     },
+     {
+      "type": "SailorChoice",
+      "night": 3,
+      "player": 2,
+      "target": 1
+     },
+     {
+      "type": "InnkeeperChoice",
       "night": 3,
       "player": 6,
-      "target": 1
+      "a": 2,
+      "b": 4
      },
      {
       "type": "SailorChoice",
       "night": 4,
       "player": 2,
-      "target": 1
-     },
-     {
-      "type": "ExorcistChoice",
-      "night": 4,
-      "player": 6,
       "target": 4
      }
     ],
@@ -20728,63 +20734,67 @@
     }
    },
    "expect": {
-    "valid": 256,
+    "valid": 12,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 26.0733,
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 74.0741,
       "demon_pct": 0.0,
-      "drunk_pct": 13.9933,
-      "lying_pct": 40.0666
+      "drunk_pct": 12.963,
+      "lying_pct": 87.037
      },
      {
-      "evil_pct": 86.0827,
-      "demon_pct": 64.4145,
-      "drunk_pct": 7.1284,
-      "lying_pct": 93.2111
-     },
-     {
-      "evil_pct": 0.161,
-      "demon_pct": 0.0805,
-      "drunk_pct": 0.1825,
-      "lying_pct": 0.3434
-     },
-     {
-      "evil_pct": 57.0927,
-      "demon_pct": 35.505,
-      "drunk_pct": 7.1284,
-      "lying_pct": 64.2211
-     },
-     {
-      "evil_pct": 4.2175,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
-      "drunk_pct": 13.2348,
-      "lying_pct": 17.4523
+      "drunk_pct": 12.963,
+      "lying_pct": 12.963
      },
      {
-      "evil_pct": 26.0733,
+      "evil_pct": 25.9259,
       "demon_pct": 0.0,
-      "drunk_pct": 10.4291,
-      "lying_pct": 36.5024
+      "drunk_pct": 74.0741,
+      "lying_pct": 25.9259
      },
      {
-      "evil_pct": 0.2996,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
-      "drunk_pct": 0.8767,
-      "lying_pct": 1.1763
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      }
     ],
     "blame": {
      "4": {
-      "4": {
-       "Demon": 0.9429,
-       "Assassin": 0.0156,
-       "Godfather": 0.0416
+      "1": {
+       "Demon": 0.7778,
+       "Gossip": 0.2222
       },
+      "3": {
+       "Demon": 0.7778,
+       "Gossip": 0.2222
+      }
+     },
+     "3": {
       "6": {
-       "Demon": 0.9429,
-       "Assassin": 0.0156,
-       "Godfather": 0.0416
+       "Demon": 0.7143,
+       "Gossip": 0.2857
       }
      }
     }
@@ -21440,38 +21450,38 @@
     }
    },
    "expect": {
-    "valid": 21,
+    "valid": 22,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 3.6366,
+      "evil_pct": 3.3335,
       "demon_pct": 0.0,
-      "drunk_pct": 3.8184,
-      "lying_pct": 7.4549
+      "drunk_pct": 3.5002,
+      "lying_pct": 6.8337
      },
      {
-      "evil_pct": 7.9519,
+      "evil_pct": 7.2892,
       "demon_pct": 0.0,
-      "drunk_pct": 0.6109,
-      "lying_pct": 8.5629
+      "drunk_pct": 0.56,
+      "lying_pct": 7.8493
      },
      {
-      "evil_pct": 1.2122,
+      "evil_pct": 1.1112,
       "demon_pct": 0.0,
-      "drunk_pct": 2.291,
-      "lying_pct": 3.5032
+      "drunk_pct": 2.1001,
+      "lying_pct": 3.2113
      },
      {
-      "evil_pct": 5.0508,
+      "evil_pct": 4.6299,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 5.0508
+      "lying_pct": 4.6299
      },
      {
-      "evil_pct": 60.6092,
+      "evil_pct": 55.5582,
       "demon_pct": 0.0,
-      "drunk_pct": 5.7276,
-      "lying_pct": 66.3368
+      "drunk_pct": 5.2503,
+      "lying_pct": 60.8085
      },
      {
       "evil_pct": 100.0,
@@ -21480,33 +21490,37 @@
       "lying_pct": 100.0
      },
      {
-      "evil_pct": 21.5393,
+      "evil_pct": 28.078,
       "demon_pct": 0.0,
-      "drunk_pct": 4.0729,
-      "lying_pct": 25.6123
+      "drunk_pct": 3.7335,
+      "lying_pct": 31.8115
      }
     ],
     "blame": {
      "3": {
       "0": {
-       "Demon": 1.0
+       "Demon": 0.9833,
+       "Assassin": 0.0167
       }
      },
      "2": {
       "2": {
-       "Demon": 0.9809,
-       "Godfather": 0.0191
+       "Demon": 0.9686,
+       "Assassin": 0.0139,
+       "Godfather": 0.0175
       },
       "3": {
-       "Demon": 0.9809,
-       "Godfather": 0.0191
+       "Demon": 0.9686,
+       "Assassin": 0.0139,
+       "Godfather": 0.0175
       }
      },
      "4": {
       "6": {
-       "Demon": 0.8253,
-       "Tinker": 0.1717,
-       "Godfather": 0.0031
+       "Demon": 0.8232,
+       "Assassin": 0.0167,
+       "Tinker": 0.1574,
+       "Godfather": 0.0028
       }
      }
     }
@@ -21519,97 +21533,69 @@
     "players": [
      {
       "name": "",
-      "claim": "Pacifist",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2,
-       3
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Innkeeper",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       3
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Exorcist",
-      "events": [
-       "N3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": [
-       1
-      ]
-     },
-     {
-      "name": "",
-      "claim": "TeaLady",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Minstrel",
-      "events": [
-       "X1",
-       "R2",
-       "X3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       3
-      ],
-      "nominated": [
-       2
-      ]
-     },
-     {
-      "name": "",
       "claim": "Sailor",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
        1
       ],
       "nominated": []
      },
      {
       "name": "",
-      "claim": "Professor",
+      "claim": "Chambermaid",
       "events": [
-       "S2",
-       "N4"
+       "X1",
+       "R3"
       ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Fool",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
@@ -21617,46 +21603,94 @@
        3
       ],
       "nominated": [
-       3
+       1
       ]
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
      }
     ],
     "infos": [
      {
       "type": "SailorChoice",
       "night": 1,
+      "player": 0,
+      "target": 6
+     },
+     {
+      "type": "CourtierChoice",
+      "night": 1,
       "player": 5,
-      "target": 3
+      "role": "Chambermaid"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 1,
+      "player": 2,
+      "a": 0,
+      "b": 4,
+      "count": 5
      },
      {
       "type": "SailorChoice",
       "night": 2,
-      "player": 5,
-      "target": 6
-     },
-     {
-      "type": "ExorcistChoice",
-      "night": 2,
-      "player": 2,
-      "target": 3
+      "player": 0,
+      "target": 1
      },
      {
       "type": "SailorChoice",
       "night": 3,
-      "player": 5,
-      "target": 6
+      "player": 0,
+      "target": 5
      },
      {
-      "type": "ExorcistChoice",
+      "type": "ChambermaidInfo",
       "night": 3,
       "player": 2,
-      "target": 6
+      "a": 4,
+      "b": 6,
+      "count": 2
      },
      {
       "type": "SailorChoice",
       "night": 4,
-      "player": 5,
-      "target": 6
+      "player": 0,
+      "target": 2
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 4,
+      "player": 2,
+      "a": 0,
+      "b": 5,
+      "count": 1
      }
     ],
     "script": {
@@ -21691,66 +21725,52 @@
     }
    },
    "expect": {
-    "valid": 220,
+    "valid": 449,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 23.102,
-      "demon_pct": 11.583,
-      "drunk_pct": 0.0,
-      "lying_pct": 23.102
+      "evil_pct": 3.4322,
+      "demon_pct": 2.4355,
+      "drunk_pct": 0.4056,
+      "lying_pct": 3.8378
      },
      {
-      "evil_pct": 74.6476,
-      "demon_pct": 37.6765,
-      "drunk_pct": 0.7789,
-      "lying_pct": 75.4266
+      "evil_pct": 73.7024,
+      "demon_pct": 13.7348,
+      "drunk_pct": 18.9159,
+      "lying_pct": 92.6184
      },
      {
-      "evil_pct": 1.5453,
-      "demon_pct": 0.0296,
-      "drunk_pct": 3.804,
-      "lying_pct": 5.3493
-     },
-     {
-      "evil_pct": 97.6193,
-      "demon_pct": 49.1623,
-      "drunk_pct": 0.7837,
-      "lying_pct": 98.403
-     },
-     {
-      "evil_pct": 0.0,
+      "evil_pct": 1.8512,
       "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "drunk_pct": 0.2896,
+      "lying_pct": 2.1408
      },
      {
-      "evil_pct": 3.0857,
-      "demon_pct": 1.5485,
-      "drunk_pct": 0.6029,
-      "lying_pct": 3.6886
+      "evil_pct": 57.5978,
+      "demon_pct": 41.1449,
+      "drunk_pct": 9.4088,
+      "lying_pct": 67.0066
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     }
-    ],
-    "blame": {
-     "3": {
-      "2": {
-       "Demon": 0.957,
-       "Assassin": 0.043
-      }
+      "evil_pct": 57.784,
+      "demon_pct": 41.2795,
+      "drunk_pct": 9.4458,
+      "lying_pct": 67.2298
      },
-     "4": {
-      "6": {
-       "Demon": 0.9448,
-       "Assassin": 0.0552
-      }
+     {
+      "evil_pct": 1.7434,
+      "demon_pct": 1.2981,
+      "drunk_pct": 0.446,
+      "lying_pct": 2.1895
+     },
+     {
+      "evil_pct": 3.8889,
+      "demon_pct": 0.1071,
+      "drunk_pct": 4.0132,
+      "lying_pct": 7.9021
      }
-    }
+    ]
    }
   },
   {
@@ -22013,36 +22033,7 @@
     "players": [
      {
       "name": "",
-      "claim": "Fool",
-      "events": [
-       "N4"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       3
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Innkeeper",
-      "events": [
-       "X3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       3
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Tinker",
+      "claim": "Professor",
       "events": [],
       "certainty": "",
       "read": 0,
@@ -22050,55 +22041,17 @@
       "voted": [
        3
       ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Pacifist",
-      "events": [
-       "X2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Exorcist",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       3
-      ],
       "nominated": [
+       2,
        3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Grandmother",
-      "events": [
-       "N2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [],
-      "nominated": [
-       1
       ]
      },
      {
       "name": "",
       "claim": "",
-      "events": [],
+      "events": [
+       "X3"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "every",
@@ -22107,49 +22060,143 @@
        2,
        3
       ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
       "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [
+       "X1",
+       "R2",
+       "S2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
        2
       ]
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
      }
     ],
     "infos": [
      {
-      "type": "CourtierChoice",
+      "type": "SailorChoice",
       "night": 1,
-      "player": 6,
-      "role": "TeaLady"
-     },
-     {
-      "type": "InnkeeperChoice",
-      "night": 2,
-      "player": 1,
-      "a": 0,
-      "b": 3
-     },
-     {
-      "type": "ExorcistChoice",
-      "night": 2,
-      "player": 4,
+      "player": 3,
       "target": 5
      },
      {
       "type": "InnkeeperChoice",
+      "night": 2,
+      "player": 4,
+      "a": 2,
+      "b": 6
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 2,
+      "player": 1,
+      "target": 4,
+      "role": "Innkeeper"
+     },
+     {
+      "type": "SailorChoice",
+      "night": 3,
+      "player": 3,
+      "target": 1
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 3,
+      "player": 4,
+      "a": 1,
+      "b": 6
+     },
+     {
+      "type": "GamblerGuess",
       "night": 3,
       "player": 1,
-      "a": 0,
-      "b": 2
+      "target": 0,
+      "role": "Professor"
      },
      {
-      "type": "ExorcistChoice",
-      "night": 3,
-      "player": 4,
-      "target": 0
+      "type": "SailorChoice",
+      "night": 4,
+      "player": 3,
+      "target": 6
      },
      {
-      "type": "ExorcistChoice",
+      "type": "InnkeeperChoice",
       "night": 4,
       "player": 4,
-      "target": 2
+      "a": 2,
+      "b": 3
      }
     ],
     "script": {
@@ -22184,64 +22231,2239 @@
     }
    },
    "expect": {
-    "valid": 1595,
+    "valid": 1683,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 7.4249,
-      "demon_pct": 0.3216,
-      "drunk_pct": 13.1676,
-      "lying_pct": 20.5925
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 8.241,
-      "demon_pct": 0.2016,
-      "drunk_pct": 4.621,
-      "lying_pct": 12.8619
+      "evil_pct": 14.4376,
+      "demon_pct": 4.1361,
+      "drunk_pct": 7.156,
+      "lying_pct": 1.9821
      },
      {
-      "evil_pct": 89.3325,
-      "demon_pct": 62.8445,
-      "drunk_pct": 5.4638,
-      "lying_pct": 94.7964
+      "evil_pct": 85.4598,
+      "demon_pct": 45.5545,
+      "drunk_pct": 2.8627,
+      "lying_pct": 88.3225
      },
      {
-      "evil_pct": 44.1843,
-      "demon_pct": 2.144,
-      "drunk_pct": 7.9709,
-      "lying_pct": 52.1552
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 16.9731,
-      "demon_pct": 9.8439,
-      "drunk_pct": 1.9076,
-      "lying_pct": 18.8807
+      "evil_pct": 5.2178,
+      "demon_pct": 2.7706,
+      "drunk_pct": 0.7103,
+      "lying_pct": 5.9281
      },
      {
-      "evil_pct": 2.1251,
-      "demon_pct": 0.0231,
-      "drunk_pct": 13.779,
-      "lying_pct": 15.9042
+      "evil_pct": 9.3449,
+      "demon_pct": 1.9377,
+      "drunk_pct": 20.3707,
+      "lying_pct": 29.7156
      },
      {
-      "evil_pct": 31.7191,
-      "demon_pct": 24.6213,
-      "drunk_pct": 4.5469,
-      "lying_pct": 0.8691
+      "evil_pct": 85.54,
+      "demon_pct": 45.6012,
+      "drunk_pct": 3.0471,
+      "lying_pct": 88.5871
+     }
+    ],
+    "blame": {
+     "3": {
+      "5": {
+       "Demon": 0.9617,
+       "Assassin": 0.0383
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-played-goon-and-a-quiet-night",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Fool",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 266,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 1.4375,
+      "demon_pct": 0.0,
+      "drunk_pct": 2.2641,
+      "lying_pct": 3.7016
+     },
+     {
+      "evil_pct": 14.3751,
+      "demon_pct": 0.0,
+      "drunk_pct": 2.2641,
+      "lying_pct": 16.6392
+     },
+     {
+      "evil_pct": 33.1706,
+      "demon_pct": 18.7955,
+      "drunk_pct": 2.2641,
+      "lying_pct": 35.4347
+     },
+     {
+      "evil_pct": 91.1593,
+      "demon_pct": 64.9996,
+      "drunk_pct": 4.5282,
+      "lying_pct": 95.6875
+     },
+     {
+      "evil_pct": 1.5218,
+      "demon_pct": 0.0021,
+      "drunk_pct": 43.8441,
+      "lying_pct": 45.3659
+     },
+     {
+      "evil_pct": 27.8997,
+      "demon_pct": 16.16,
+      "drunk_pct": 2.2641,
+      "lying_pct": 30.1638
+     },
+     {
+      "evil_pct": 30.4359,
+      "demon_pct": 0.0428,
+      "drunk_pct": 31.7451,
+      "lying_pct": 62.181
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Assassin": 0.0004,
+       "Demon": 0.8905,
+       "Godfather": 0.109
+      }
+     },
+     "2": {
+      "4": {
+       "Assassin": 0.0048,
+       "Demon": 0.9839,
+       "Godfather": 0.0113
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-played-goon-sailor",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Fool",
+      "events": [
+       "S1",
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "SailorChoice",
+      "night": 1,
+      "player": 4,
+      "target": 5
+     },
+     {
+      "type": "SailorChoice",
+      "night": 2,
+      "player": 4,
+      "target": 3
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 2,
+      "player": 6,
+      "a": 3,
+      "b": 4
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 3,
+      "player": 6,
+      "a": 1,
+      "b": 3
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 4,
+      "player": 6,
+      "a": 1,
+      "b": 3
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 67,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 97.9858,
+      "demon_pct": 80.1912,
+      "drunk_pct": 1.0316,
+      "lying_pct": 99.0175
+     },
+     {
+      "evil_pct": 3.4698,
+      "demon_pct": 0.0,
+      "drunk_pct": 1.8806,
+      "lying_pct": 5.3504
+     },
+     {
+      "evil_pct": 11.9939,
+      "demon_pct": 0.0,
+      "drunk_pct": 18.9792,
+      "lying_pct": 30.9732
+     },
+     {
+      "evil_pct": 30.6356,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.5015,
+      "lying_pct": 31.1371
+     },
+     {
+      "evil_pct": 18.3114,
+      "demon_pct": 0.0,
+      "drunk_pct": 1.8806,
+      "lying_pct": 20.192
+     },
+     {
+      "evil_pct": 37.6033,
+      "demon_pct": 19.8088,
+      "drunk_pct": 0.3439,
+      "lying_pct": 37.9472
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 0.9964,
+       "Assassin": 0.0036
+      }
+     },
+     "4": {
+      "3": {
+       "Demon": 0.9986,
+       "Assassin": 0.0014
+      }
+     },
+     "3": {
+      "5": {
+       "Demon": 0.9963,
+       "Assassin": 0.002,
+       "Godfather": 0.0017
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-played-assassin",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "S2",
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Fool",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "ChambermaidInfo",
+      "night": 1,
+      "player": 1,
+      "a": 2,
+      "b": 4,
+      "count": 0
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 2,
+      "player": 5,
+      "a": 1,
+      "b": 3
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 1,
+      "a": 0,
+      "b": 5,
+      "count": 1
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 3,
+      "player": 5,
+      "a": 1,
+      "b": 2
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 3,
+      "player": 1,
+      "a": 0,
+      "b": 6,
+      "count": 0
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 65,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.6502,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.6502
+     },
+     {
+      "evil_pct": 0.289,
+      "demon_pct": 0.0,
+      "drunk_pct": 2.8524,
+      "lying_pct": 3.1414
+     },
+     {
+      "evil_pct": 15.793,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 15.793
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 70.2195,
+      "demon_pct": 0.0,
+      "drunk_pct": 3.0345,
+      "lying_pct": 73.254
+     },
+     {
+      "evil_pct": 11.9646,
+      "demon_pct": 0.0,
+      "drunk_pct": 2.6299,
+      "lying_pct": 14.5944
+     },
+     {
+      "evil_pct": 1.0837,
+      "demon_pct": 0.0,
+      "drunk_pct": 12.4717,
+      "lying_pct": 13.5555
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Demon": 0.9815,
+       "Assassin": 0.0185
+      },
+      "6": {
+       "Demon": 0.9815,
+       "Assassin": 0.0185
+      }
+     },
+     "4": {
+      "1": {
+       "Demon": 0.9863,
+       "Assassin": 0.0137
+      },
+      "2": {
+       "Demon": 0.9863,
+       "Assassin": 0.0137
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-played-assassin-nothing",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "S1",
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [
+       "S3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SailorChoice",
+      "night": 1,
+      "player": 5,
+      "target": 0
+     },
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Fool"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 1,
+      "player": 4,
+      "a": 1,
+      "b": 2,
+      "count": 0
+     },
+     {
+      "type": "SailorChoice",
+      "night": 2,
+      "player": 5,
+      "target": 1
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 2,
+      "player": 1,
+      "target": 5,
+      "role": "Sailor"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 4,
+      "a": 0,
+      "b": 5,
+      "count": 1
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 3,
+      "player": 1,
+      "target": 2,
+      "role": "Grandmother"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 3,
+      "player": 4,
+      "a": 3,
+      "b": 6,
+      "count": 1
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 4,
+      "player": 4,
+      "a": 3,
+      "b": 6,
+      "count": 3
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 161,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 41.9332,
+      "demon_pct": 1.5785,
+      "drunk_pct": 1.0154,
+      "lying_pct": 42.9486
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.4168,
+      "lying_pct": 0.4168
+     },
+     {
+      "evil_pct": 23.8062,
+      "demon_pct": 1.6108,
+      "drunk_pct": 39.0261,
+      "lying_pct": 62.8323
+     },
+     {
+      "evil_pct": 0.4619,
+      "demon_pct": 0.4619,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.4619
+     },
+     {
+      "evil_pct": 49.6268,
+      "demon_pct": 29.8428,
+      "drunk_pct": 1.8207,
+      "lying_pct": 51.4475
+     },
+     {
+      "evil_pct": 0.2827,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.4343,
+      "lying_pct": 0.717
+     },
+     {
+      "evil_pct": 83.8891,
+      "demon_pct": 66.506,
+      "drunk_pct": 1.5955,
+      "lying_pct": 85.4846
+     }
+    ],
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 0.5312,
+       "Gambler": 0.432,
+       "Gossip": 0.0275,
+       "Assassin": 0.0063,
+       "Godfather": 0.003
+      }
+     },
+     "4": {
+      "2": {
+       "Demon": 0.9602,
+       "Gossip": 0.0332,
+       "Assassin": 0.0066
+      }
+     },
+     "2": {
+      "5": {
+       "Demon": 0.9447,
+       "Gossip": 0.0408,
+       "Assassin": 0.0145
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-played-godfather",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 1,
+      "target": 3,
+      "role": "Minstrel"
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 53,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 2.2026,
+      "demon_pct": 0.0,
+      "drunk_pct": 7.5209,
+      "lying_pct": 9.7235
+     },
+     {
+      "evil_pct": 0.0351,
+      "demon_pct": 0.0,
+      "drunk_pct": 3.0084,
+      "lying_pct": 3.0435
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0439,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0439
+     },
+     {
+      "evil_pct": 47.0596,
+      "demon_pct": 0.0,
+      "drunk_pct": 27.0754,
+      "lying_pct": 74.135
+     },
+     {
+      "evil_pct": 6.6077,
+      "demon_pct": 0.0,
+      "drunk_pct": 7.5209,
+      "lying_pct": 14.1286
+     },
+     {
+      "evil_pct": 44.0512,
+      "demon_pct": 0.0,
+      "drunk_pct": 7.5209,
+      "lying_pct": 51.5721
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 0.7647,
+       "Godfather": 0.2353
+      },
+      "3": {
+       "Demon": 0.7647,
+       "Godfather": 0.2353
+      }
+     },
+     "3": {
+      "1": {
+       "Demon": 1.0
+      }
+     },
+     "4": {
+      "5": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-played-gossip",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 5,
+      "role": "Exorcist"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 1,
+      "player": 0,
+      "a": 4,
+      "b": 6,
+      "count": 0
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 0,
+      "a": 4,
+      "b": 5,
+      "count": 0
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 433,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 12.4919,
+      "demon_pct": 1.6943,
+      "drunk_pct": 5.6512,
+      "lying_pct": 18.143
+     },
+     {
+      "evil_pct": 56.9675,
+      "demon_pct": 43.1242,
+      "drunk_pct": 6.0321,
+      "lying_pct": 62.9995
+     },
+     {
+      "evil_pct": 21.8512,
+      "demon_pct": 2.4547,
+      "drunk_pct": 4.0759,
+      "lying_pct": 25.9271
+     },
+     {
+      "evil_pct": 36.4863,
+      "demon_pct": 25.0221,
+      "drunk_pct": 2.9316,
+      "lying_pct": 39.4179
+     },
+     {
+      "evil_pct": 41.9124,
+      "demon_pct": 25.7358,
+      "drunk_pct": 8.2808,
+      "lying_pct": 50.1932
+     },
+     {
+      "evil_pct": 0.923,
+      "demon_pct": 0.1005,
+      "drunk_pct": 1.7823,
+      "lying_pct": 2.7054
+     },
+     {
+      "evil_pct": 29.3677,
+      "demon_pct": 1.8684,
+      "drunk_pct": 3.8413,
+      "lying_pct": 33.209
+     }
+    ],
+    "blame": {
+     "3": {
+      "5": {
+       "Gossip": 0.2377,
+       "Demon": 0.7296,
+       "Assassin": 0.0056,
+       "Godfather": 0.0271
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-played-courtier-again",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "sometimes",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [
+       "X1",
+       "R2",
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [
+       "S2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Pacifist"
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 2,
+      "player": 0,
+      "target": 4,
+      "role": "Exorcist"
+     },
+     {
+      "type": "CourtierChoice",
+      "night": 3,
+      "player": 3,
+      "role": "Professor"
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 32,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.623,
+      "demon_pct": 0.0319,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.623
+     },
+     {
+      "evil_pct": 62.2215,
+      "demon_pct": 49.1536,
+      "drunk_pct": 0.0,
+      "lying_pct": 62.2215
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 54.1255,
+      "demon_pct": 45.0084,
+      "drunk_pct": 0.0,
+      "lying_pct": 54.1255
+     },
+     {
+      "evil_pct": 6.9929,
+      "demon_pct": 1.2171,
+      "drunk_pct": 0.0,
+      "lying_pct": 6.9929
+     },
+     {
+      "evil_pct": 76.0371,
+      "demon_pct": 4.589,
+      "drunk_pct": 0.0,
+      "lying_pct": 76.0371
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Gambler": 0.7935,
+       "Gossip": 0.0617,
+       "Assassin": 0.001,
+       "Demon": 0.1438
+      },
+      "5": {
+       "Gossip": 0.2151,
+       "Assassin": 0.0028,
+       "Demon": 0.7821
+      }
+     },
+     "3": {
+      "3": {
+       "Demon": 0.8877,
+       "Gossip": 0.1118,
+       "Assassin": 0.0005
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-played-grandmother-again",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Fool",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [
+       "X1",
+       "R2",
+       "S3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "SailorChoice",
+      "night": 1,
+      "player": 6,
+      "target": 0
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "role": "Chambermaid"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 1,
+      "player": 0,
+      "a": 1,
+      "b": 5,
+      "count": 2
+     },
+     {
+      "type": "SailorChoice",
+      "night": 2,
+      "player": 6,
+      "target": 5
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 2,
+      "player": 3,
+      "target": 6,
+      "role": "Sailor"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 0,
+      "a": 3,
+      "b": 5,
+      "count": 0
+     },
+     {
+      "type": "SailorChoice",
+      "night": 3,
+      "player": 6,
+      "target": 3
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 3,
+      "player": 0,
+      "a": 1,
+      "b": 2,
+      "count": 0
+     },
+     {
+      "type": "SailorChoice",
+      "night": 4,
+      "player": 6,
+      "target": 0
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 31,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.1552,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.4241,
+      "lying_pct": 0.5793
+     },
+     {
+      "evil_pct": 99.9133,
+      "demon_pct": 71.9091,
+      "drunk_pct": 0.0,
+      "lying_pct": 99.9133
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 87.0311,
+      "demon_pct": 21.6369,
+      "drunk_pct": 0.0382,
+      "lying_pct": 87.0692
+     },
+     {
+      "evil_pct": 12.7081,
+      "demon_pct": 6.3578,
+      "drunk_pct": 0.0,
+      "lying_pct": 12.7081
+     },
+     {
+      "evil_pct": 0.1924,
+      "demon_pct": 0.0963,
+      "drunk_pct": 0.0598,
+      "lying_pct": 0.2522
      }
     ],
     "blame": {
      "4": {
       "0": {
-       "Demon": 0.9426,
-       "Assassin": 0.0339,
-       "Godfather": 0.0235
+       "Demon": 0.9783,
+       "Assassin": 0.0217
       }
+     }
+    }
+   }
+  },
+  {
+   "name": "bmr-played-under-the-token",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
      },
-     "2": {
-      "5": {
-       "Demon": 0.967,
-       "Assassin": 0.033
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Fool",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "InnkeeperChoice",
+      "night": 2,
+      "player": 0,
+      "a": 1,
+      "b": 2
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 3,
+      "player": 0,
+      "a": 1,
+      "b": 5
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 4,
+      "player": 0,
+      "a": 1,
+      "b": 3
+     }
+    ],
+    "script": {
+     "name": "Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "pacifist",
+      "fool",
+      "tinker",
+      "moonchild",
+      "goon",
+      "lunatic",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 260,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.1095,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.374,
+      "lying_pct": 0.4835
+     },
+     {
+      "evil_pct": 71.4258,
+      "demon_pct": 44.2961,
+      "drunk_pct": 14.6356,
+      "lying_pct": 86.0614
+     },
+     {
+      "evil_pct": 11.4078,
+      "demon_pct": 0.0,
+      "drunk_pct": 5.843,
+      "lying_pct": 17.2508
+     },
+     {
+      "evil_pct": 22.8155,
+      "demon_pct": 11.4078,
+      "drunk_pct": 5.843,
+      "lying_pct": 28.6585
+     },
+     {
+      "evil_pct": 11.4078,
+      "demon_pct": 0.0,
+      "drunk_pct": 5.843,
+      "lying_pct": 17.2508
+     },
+     {
+      "evil_pct": 11.4078,
+      "demon_pct": 0.0,
+      "drunk_pct": 7.7907,
+      "lying_pct": 19.1984
+     },
+     {
+      "evil_pct": 71.4258,
+      "demon_pct": 44.2961,
+      "drunk_pct": 14.6356,
+      "lying_pct": 86.0614
+     }
+    ],
+    "blame": {
+     "4": {
+      "0": {
+       "Demon": 0.9427,
+       "Assassin": 0.0135,
+       "Godfather": 0.0438
       }
      }
     }

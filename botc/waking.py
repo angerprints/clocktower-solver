@@ -176,10 +176,18 @@ def _sage(world, state, seat, night):
 
 @condition("Courtier")
 def _courtier(world, state, seat, night):
-    """Every night until it names a character, then never again."""
+    """Every night until it names a character, then never again.
+
+    In this life. A Courtier that died and came back is a new one with
+    the ability afresh (table ruling, 03.10.2026), so what counts is
+    whether it has named anything since it last returned.
+    """
+    born = max([int(str(at)[1:])
+                for at in (state.resurrections or {}).get(seat, ())
+                if int(str(at)[1:]) <= night] or [1])
     for info in state.infos:
         if getattr(info, "source_role", None) == "Courtier" \
-                and info.player == seat:
+                and info.player == seat and info.night >= born:
             return night <= info.night
     return True                           # never spent, so still being woken
 
@@ -390,6 +398,16 @@ def uncertain(world, state, seat, night):
         return _is_demon(acting) and CHARACTERS[acting].nights != EVERY
     if _came_back_tonight(world, state, seat, night) == OPEN:
         return True
+    if acting == "Assassin":
+        # The same as the Professor below, and for the same reason: it is
+        # woken until it strikes, and nobody writes down when that was. A
+        # body it left looks like any other, and struck while drunk it
+        # leaves none. So night two is certain — its first chance — and
+        # after that either, unless the strike itself is on the record.
+        if night < 3 or seat not in state.alive_set(phase):
+            return False
+        return not any(getattr(info, "source_role", None) == "Assassin"
+                       and info.player == seat for info in state.infos)
     if acting == "Professor":
         # Night two it is woken for certain: its first chance. After
         # that, it may have chosen somebody who was no Townsfolk, or
