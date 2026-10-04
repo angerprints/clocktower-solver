@@ -2272,3 +2272,164 @@ class WhatTheGoonAndTheOtherKillsFound(SolverTest):
         cheap = (1.0, frozenset({3}), none, {})
         self.assertEqual(S._the_ones_that_can_win([dear, cheap]),
                          [dear, cheap])
+
+
+class ADemonStoppedAtItsSource(SolverTest):
+    """A night without a body because the Demon itself was drunk.
+
+    The Demons of Bad Moon Rising had one way to explain a quiet night:
+    whoever they aimed at could not die. With no Sailor, Innkeeper, Fool,
+    Tea Lady or Exorcist to lean on and nobody dead yet, a night like
+    that had no explanation at all — and the commonest real reason, a
+    Demon that pointed at the Goon first, was never on offer. Once played
+    games told the solver their quiet nights, 83 in 60,000 lost the world
+    that happened (04.10.2026).
+
+    Nothing is taken away by this: a kill still says nothing about
+    whether the Demon was sober (table decision, the same day).
+    """
+
+    GOOD = ["Gambler", "Gossip", "Chambermaid", "Professor", "Grandmother"]
+    EVIL = {6: "Courtier", 7: "Minstrel"}
+
+    def cost(self, demon, outsider="Goon", **board):
+        roles = self.GOOD + [outsider, "Assassin", demon]
+        claims = list(roles)
+        for seat, claim in self.EVIL.items():
+            claims[seat] = claim
+        state = GameState(n_players=len(roles),
+                          script=scripts.BAD_MOON_RISING,
+                          claims={i: c for i, c in enumerate(claims)},
+                          **board)
+        return S.explanation_cost(
+            World(tuple(roles), (None,) * len(roles)), state)
+
+    def test_a_quiet_night_is_one_where_it_chose_the_goon_first(self):
+        for demon in ("Shabaloth", "Zombuul", "Pukka"):
+            with self.subTest(demon=demon):
+                self.assertIsNotNone(self.cost(demon, quiet_nights={2}))
+
+    def test_but_only_where_something_could_have_stopped_it(self):
+        """A Tinker makes nobody drunk, and there is nothing else."""
+        for demon in ("Shabaloth", "Zombuul"):
+            with self.subTest(demon=demon):
+                self.assertIsNone(
+                    self.cost(demon, outsider="Tinker", quiet_nights={2}))
+
+    def test_a_pukka_can_always_have_poisoned_itself_and_that_costs(self):
+        """Its own poison reaches every seat, its own included. Legal,
+        and nobody does it: free with a Goon to blame, dear without."""
+        alone = self.cost("Pukka", outsider="Tinker", quiet_nights={2})
+        self.assertIsNotNone(alone)
+        self.assertLess(alone, 1.0)
+        self.assertEqual(self.cost("Pukka", quiet_nights={2}), 1.0)
+
+    def test_a_pukka_stopped_on_the_first_night_has_nothing_due(self):
+        """It poisoned nobody, so nobody dies on the second — and it need
+        not have been drunk on the second for that."""
+        from botc import deaths as D
+        roles = self.GOOD + ["Goon", "Assassin", "Pukka"]
+        state = GameState(n_players=8, script=scripts.BAD_MOON_RISING,
+                          claims={i: r for i, r in enumerate(roles)},
+                          quiet_nights={2})
+        world = World(tuple(roles), (None,) * 8)
+        cause = [c for c in D.causes_on(world, state, 2) if c.must_fire][0]
+        self.assertEqual(cause.excuses, ((None, ((1, 7),)),))
+
+    def test_or_on_the_second_and_the_first_token_rests(self):
+        """Stopped last night: what comes due is the token from the night
+        before that, and that player has to have been unable to die."""
+        from botc import deaths as D
+        roles = self.GOOD + ["Goon", "Assassin", "Pukka"]
+        state = GameState(n_players=8, script=scripts.BAD_MOON_RISING,
+                          claims={i: r for i, r in enumerate(roles)},
+                          quiet_nights={2, 3})
+        world = World(tuple(roles), (None,) * 8)
+        cause = [c for c in D.causes_on(world, state, 3) if c.must_fire][0]
+        seats, demands = cause.excuses[0]
+        self.assertEqual(seats, frozenset(range(8)))
+        self.assertEqual(demands, ((2, 7),))
+        self.assertEqual(cause.excuses[1], (None, ((1, 7), (2, 7))))
+
+    def test_two_quiet_nights_running(self):
+        for demon in ("Shabaloth", "Zombuul", "Pukka"):
+            with self.subTest(demon=demon):
+                self.assertIsNotNone(
+                    self.cost(demon, quiet_nights={2, 3}))
+
+    def test_a_kill_still_says_nothing_about_the_demon(self):
+        """The same price with a Goon to be drunk by and without one."""
+        for demon in ("Shabaloth", "Zombuul"):
+            with self.subTest(demon=demon):
+                self.assertEqual(self.cost(demon, deaths={0: "N2"}),
+                                 self.cost(demon, outsider="Tinker",
+                                           deaths={0: "N2"}))
+
+    def test_a_po_owes_nothing_for_a_quiet_night_as_before(self):
+        self.assertEqual(
+            self.cost("Po", outsider="Tinker", quiet_nights={2}), 1.0)
+
+
+class WhatTheBoardAlreadyAsksIsHeardFirst(SolverTest):
+    """An explanation of a night that the readings rule out is dropped
+    before the accounts are counted, not after.
+
+    The accounts kept are capped at four hundred. Each one was only
+    tested against the readings afterwards, so an account asking for a
+    seat impaired on a night a reading needs it working — dead from the
+    start — still held one of the four hundred places. Two games in
+    24,000 over six nights had all four hundred taken that way
+    (04.10.2026).
+    """
+
+    def test_one_that_needs_a_seat_the_other_way_round_is_dropped(self):
+        none = frozenset()
+        fine = (1.0, frozenset({1}), frozenset({2}), {})
+        impaired_but_working = (1.0, frozenset({3}), none, {})
+        working_but_impaired = (1.0, none, frozenset({5}), {})
+        earlier_but_working = (1.0, none, none, {2: {4}})
+        other_night = (1.0, frozenset({4}), none, {1: {3}})
+        got = S._the_ones_the_board_allows(
+            3, [fine, impaired_but_working, working_but_impaired,
+                earlier_but_working, other_night],
+            impaired_already={3: {5}}, working_already={3: {3}, 2: {4}})
+        self.assertEqual(got, [fine, other_night])
+
+    def test_with_nothing_asked_everything_stays(self):
+        options = [(1.0, frozenset({1}), frozenset({2}), {1: {3}})]
+        self.assertEqual(
+            S._the_ones_the_board_allows(2, options, {}, {}), options)
+
+    def test_the_answer_is_the_same_with_and_without_it(self):
+        """On played games that never reach the cap, dropping them early
+        changes no price."""
+        import random
+        import claims as C
+        import simulate
+        real = S._the_ones_the_board_allows
+        for seed in range(40):
+            n = [7, 8, 9, 10, 11][seed % 5]
+            rng = random.Random(seed)
+            deal, heard = simulate.play(n, rng, nights=4,
+                                        script=scripts.BAD_MOON_RISING)
+            claims, wakes, _ = C.claims_for(deal, rng,
+                                            script=scripts.BAD_MOON_RISING)
+
+            def price():
+                state = GameState(
+                    n_players=n, script=scripts.BAD_MOON_RISING,
+                    claims=claims, wakes=wakes, infos=list(heard),
+                    votes=dict(deal.votes),
+                    nominations=dict(deal.nominations), **deal.record())
+                return S.explanation_cost(
+                    World(tuple(deal.roles), tuple(deal.believes)), state)
+
+            with_it = price()
+            S._the_ones_the_board_allows = \
+                lambda night, options, a, b: options
+            try:
+                without = price()
+            finally:
+                S._the_ones_the_board_allows = real
+            with self.subTest(seed=seed):
+                self.assertEqual(with_it, without)

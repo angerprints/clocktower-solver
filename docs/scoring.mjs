@@ -1146,7 +1146,29 @@ function theOnesThatCanWin(options) {
   return kept;
 }
 
-function nightAccounts(world, state) {
+/** A night's explanations, without those the rest of the board refuses.
+ *
+ * The board asks before any night is explained: a reading that came out
+ * false had an impaired source, and whoever walked away from an execution
+ * was working. An explanation that needs one of those seats the other way
+ * round is dead whatever else happens, but is not found out until the
+ * plan is tried — after the cap has made its cut. Dropping them first
+ * loses nothing. See _the_ones_the_board_allows in solver.py. */
+function theOnesTheBoardAllows(night, options, impairedAlready, workingAlready) {
+  const hits = (seats, other) => {
+    if (!other) return false;
+    for (const s of seats) if (other.has(s)) return true;
+    return false;
+  };
+  const clash = (when, impaired, working) =>
+    hits(impaired, workingAlready[when]) || hits(working, impairedAlready[when]);
+  return options.filter(opt =>
+    !clash(night, opt.impaired, opt.working) &&
+    !Object.entries(opt.earlier || {})
+      .some(([when, seats]) => clash(when, seats, [])));
+}
+
+function nightAccounts(world, state, impairedAlready = {}, workingAlready = {}) {
   const deaths = nightDeaths(state);
   const nights = new Set([...Object.keys(deaths).map(Number),
                           ...state.quietNights]);
@@ -1154,8 +1176,10 @@ function nightAccounts(world, state) {
 
   let accounts = [{cost: 1.0, impaired: {}, working: {}}];
   for (const night of [...nights].sort((a, b) => a - b)) {
-    const options = explainedNight(world, state, night,
-                                   () => new Set(deaths[night] || []));
+    const options = theOnesTheBoardAllows(
+      night, explainedNight(world, state, night,
+                            () => new Set(deaths[night] || [])),
+      impairedAlready, workingAlready);
     if (!options.length) return [];
     const grown = [];
     for (const acc of accounts) {
@@ -1289,7 +1313,7 @@ function explainOne(world, state, outcome = null) {
   // Every way the nights could have gone. Each brings its own demands on
   // who was impaired and who was working, so the plan is solved once per
   // account and the cheapest wins.
-  const accounts = nightAccounts(world, state);
+  const accounts = nightAccounts(world, state, failures, mustWork || {});
   if (!accounts.length) return null;
 
   const settle = readings => {

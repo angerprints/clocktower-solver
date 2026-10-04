@@ -75,6 +75,19 @@ class Cause(NamedTuple):
     # What it costs to explain a quiet night by stopping the actor. A
     # Poisoner hitting its own Demon is legal and rare; see solver.py.
     actor_cost: float = 1.0
+    # Does a kill say the actor was working? It does for an Imp. For the
+    # Demons of Bad Moon Rising the actor is there to explain a quiet
+    # night and nothing more (table decision, 04.10.2026: add the missing
+    # explanation, take none away) — and a Shabaloth that takes one and
+    # then points at the Goon has killed on a night it ended drunk.
+    actor_kills_working: bool = True
+    # Other ways it can have killed nobody, each one a demand on nights
+    # already explained: (seats, ((span, seat), ...)). A Pukka that was
+    # drunk last night poisoned nobody, so nothing comes due tonight —
+    # or the token it left the night before that does, and then one of
+    # `seats` has to have been unable to die. `seats` is None when
+    # nothing was due at all.
+    excuses: tuple = ()
 
 
 CAUSE_RULES = []
@@ -353,7 +366,7 @@ def _account_for(world, state, night, causes, directly, followed,
             if used[cause.name] > 0:
                 # It did the killing, so there is nothing to explain —
                 # except that whoever did it was working.
-                if cause.actor is not None:
+                if cause.actor is not None and cause.actor_kills_working:
                     if cause.actor in impaired:
                         continue
                     working = working | {cause.actor}
@@ -375,6 +388,29 @@ def _account_for(world, state, night, causes, directly, followed,
                                    else set()),
                         used, before,
                     ))
+            # Or it was stopped on an earlier night, and tonight is only
+            # where that shows.
+            for seats, demands in cause.excuses:
+                earlier = {span: set(who) for span, who in before.items()}
+                for span, who in demands:
+                    earlier.setdefault(span, set()).add(who)
+                if seats is None:
+                    grown.append((cost, set(impaired), working, used,
+                                  earlier))
+                    continue
+                for target in sorted(seats):
+                    for shield in shields_on(world, state, night, target,
+                                             cause.kind):
+                        if shield.needs is not None \
+                                and shield.needs in impaired:
+                            continue
+                        grown.append((
+                            cost * shield.cost, set(impaired),
+                            working | ({shield.needs}
+                                       if shield.needs is not None
+                                       else set()),
+                            used, earlier,
+                        ))
         settled = grown
         if not settled:
             return []

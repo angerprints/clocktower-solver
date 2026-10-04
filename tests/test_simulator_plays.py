@@ -233,6 +233,28 @@ class OnBadMoonRising(SolverTest):
             with self.subTest(seed=seed, roles=deal.roles):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
 
+    def test_a_quiet_night_under_a_stopped_demon_keeps_the_true_world(self):
+        """Games the sweep found once quiet nights were told: a Pukka, a
+        Shabaloth and a Zombuul that chose the Goon first, a Pukka drunk
+        the night before, and two that only the cap on accounts lost
+        (04.10.2026). Named by seed, so they stand until the simulator
+        learns something new."""
+        for seed, nights in ((3156, 4), (3566, 4), (5791, 4), (8596, 4),
+                             (7731, 4), (1028, 6), (11993, 6), (20742, 6)):
+            n = [7, 8, 9, 10, 11][seed % 5]
+            rng = random.Random(seed)
+            deal, heard = simulate.play(n, rng, nights=nights, script=BMR)
+            claims, wakes, _notes = C.claims_for(deal, rng, script=BMR)
+            state = GameState(n_players=n, script=BMR, claims=claims,
+                              wakes=wakes, infos=list(heard),
+                              votes=dict(deal.votes),
+                              nominations=dict(deal.nominations),
+                              **deal.record())
+            truth = World(tuple(deal.roles), tuple(deal.believes))
+            with self.subTest(seed=seed):
+                self.assertTrue(state.quiet_nights)
+                self.assertIsNotNone(S.explanation_cost(truth, state))
+
     def test_the_night_walk_tells_every_night_the_same_way(self):
         """The second, independent telling of a night — Goon and all,
         since the simulator plays it too now."""

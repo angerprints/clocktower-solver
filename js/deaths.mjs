@@ -31,7 +31,7 @@ export class Cause {
   constructor(name, kind, seats, {
     capacity = 1, cost = 1.0, mustFire = false, unstoppable = false,
     victimImpairedAt = null, alsoImpaired = [], actor = null,
-    actorCost = 1.0,
+    actorCost = 1.0, actorKillsWorking = true, excuses = [],
   } = {}) {
     this.name = name;
     this.kind = kind;
@@ -59,6 +59,15 @@ export class Cause {
     // and one that did kill had a working source. See deaths.py.
     this.actor = actor;
     this.actorCost = actorCost;
+    // Does a kill say the actor was working? For an Imp it does. For the
+    // Demons of Bad Moon Rising the actor only explains a quiet night
+    // (table decision, 04.10.2026: add the missing explanation, take
+    // none away). See deaths.py.
+    this.actorKillsWorking = actorKillsWorking;
+    // Other ways it can have killed nobody, each a demand on nights
+    // already explained: [seats or null, [[span, seat], ...]]. A Pukka
+    // that was drunk last night poisoned nobody. See deaths.py.
+    this.excuses = excuses;
   }
 }
 
@@ -308,7 +317,7 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
       if (acc.used[cause.name] > 0) {
         // It did the killing, so there is nothing to explain — except
         // that whoever did it was working.
-        if (cause.actor !== null) {
+        if (cause.actor !== null && cause.actorKillsWorking) {
           if (acc.impaired.has(cause.actor)) continue;
           grown.push({...acc, working: new Set([...acc.working, cause.actor])});
         } else {
@@ -332,6 +341,34 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
             used: acc.used,
             earlier: acc.earlier,
           });
+        }
+      }
+      // Or it was stopped on an earlier night, and tonight is only where
+      // that shows.
+      for (const [seats, demands] of cause.excuses) {
+        const earlier = {};
+        for (const [k, v] of Object.entries(acc.earlier)) earlier[k] = new Set(v);
+        for (const [span, who] of demands) {
+          if (!earlier[span]) earlier[span] = new Set();
+          earlier[span].add(who);
+        }
+        if (seats === null) {
+          grown.push({cost: acc.cost, impaired: new Set(acc.impaired),
+                      working: new Set(acc.working), used: acc.used, earlier});
+          continue;
+        }
+        for (const target of [...seats].sort((a, b) => a - b)) {
+          for (const s of shieldsOn(world, state, night, target, cause.kind)) {
+            if (s.needs !== null && acc.impaired.has(s.needs)) continue;
+            grown.push({
+              cost: acc.cost * s.cost,
+              impaired: new Set(acc.impaired),
+              working: s.needs === null ? new Set(acc.working)
+                                        : new Set([...acc.working, s.needs]),
+              used: acc.used,
+              earlier,
+            });
+          }
         }
       }
     }

@@ -1518,6 +1518,25 @@ def _demon_kill_rule(name, kind=None):
     return name
 
 
+def _could_be_stopped(world, state, seat, night):
+    """Could anything have made this seat drunk or poisoned that night?
+
+    A Demon that has to kill and killed nobody may have been stopped at
+    its source: it chose the Goon first, a Sailor or an Innkeeper made it
+    drunk, a Courtier named it, a Minstrel silenced the town. The four
+    Demons of Bad Moon Rising had no such explanation — only "the target
+    could not die" — and once played games began telling the solver
+    their quiet nights, 83 in 60,000 lost the world that happened
+    (04.10.2026).
+
+    Offered only where something could reach it, for the reason the
+    ordinary Demon gives: a dead end on every quiet night crowds the
+    real account out of the ones that are kept.
+    """
+    return any(seat in source.seats
+               for source in impairment.sources_on(world, state, night))
+
+
 @death_causes.cause_rule
 def a_zombuul_kills_on_a_quiet_day(world, state, night):
     """Only if nobody died during the day before.
@@ -1537,7 +1556,9 @@ def a_zombuul_kills_on_a_quiet_day(world, state, night):
         return []                         # somebody went in daylight
     return [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON,
-        seats=frozenset(range(state.n_players)), capacity=1, must_fire=True)]
+        seats=frozenset(range(state.n_players)), capacity=1, must_fire=True,
+        actor=seat if _could_be_stopped(world, state, seat, night) else None,
+        actor_kills_working=False)]
 
 
 @death_causes.cause_rule
@@ -1555,10 +1576,39 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
     seat = world.find_at("Pukka", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
+    # Three ways a Pukka's night passes without a body besides "the one
+    # it poisoned could not die".
+    #
+    # Drunk or poisoned tonight: it does not attack, and the token stays
+    # where it is. That is the actor, as for any Demon.
+    #
+    # Or it was last night: it poisoned nobody then, so nothing it chose
+    # last night can come due. What does come due is the token it left
+    # the night before that, which rested — and that player could not
+    # die. Or there was no night before that: a Pukka stopped on the
+    # first night has nothing due on the second.
+    excuses = []
+    for back in (1, 2):
+        chose = night - 1 - back          # the night the resting token is from
+        if any(world.find_at("Pukka", f"N{k}") != seat
+               or seat not in state.alive_set(f"N{k}")
+               or not _could_be_stopped(world, state, seat, k)
+               for k in range(max(chose, 0) + 1, night)):
+            break
+        demands = tuple((k, seat) for k in range(max(chose, 0) + 1, night))
+        if chose < 1:
+            excuses.append((None, demands))
+            break
+        if world.find_at("Pukka", f"N{chose}") != seat \
+                or seat not in state.alive_set(f"N{chose}"):
+            break
+        excuses.append((frozenset(state.alive_set(f"N{chose}")), demands))
     out = [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON,
         seats=frozenset(state.alive_set(f"N{night - 1}")),
-        capacity=1, must_fire=True, victim_impaired_at=night - 1)]
+        capacity=1, must_fire=True, victim_impaired_at=night - 1,
+        actor=seat if _could_be_stopped(world, state, seat, night) else None,
+        actor_kills_working=False, excuses=tuple(excuses))]
     # A night late, or two. A drunk or poisoned Pukka does not attack and
     # its token stays where it is (the flowchart), and the poison rests
     # while it does (table ruling, 02.10.2026). So the one it poisoned on
@@ -1600,7 +1650,9 @@ def a_shabaloth_kills_twice(world, state, night):
         return []
     return [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON,
-        seats=frozenset(range(state.n_players)), capacity=2, must_fire=True)]
+        seats=frozenset(range(state.n_players)), capacity=2, must_fire=True,
+        actor=seat if _could_be_stopped(world, state, seat, night) else None,
+        actor_kills_working=False)]
 
 
 @death_causes.cause_rule
@@ -2447,7 +2499,36 @@ def _the_ones_that_can_win(options):
 ACCOUNTS_KEPT = 400
 
 
-def _night_accounts(world, state):
+def _the_ones_the_board_allows(night, options, impaired_already, working_already):
+    """A night's explanations, without those the rest of the board refuses.
+
+    An explanation asks for some seats impaired and some working. The
+    board asks too, before any night is explained: a reading that came
+    out false had a source that was impaired, and whoever walked away
+    from an execution was working. An explanation that needs one of
+    those seats the other way round is dead whatever else happens — the
+    plan refuses a seat asked to be both — but it is not found out until
+    the plan is tried, after the cap has made its cut. Until then it
+    holds a place among the accounts kept.
+
+    That cost two games in 24,000 over six nights once quiet nights were
+    told and a stopped Demon could explain them (04.10.2026): more ways
+    to read each night, the same four hundred places, and every one of
+    the four hundred an account the readings ruled out. Nothing is lost
+    by dropping these first — the plan would refuse every one.
+    """
+    def clash(when, impaired, working):
+        return (impaired & set(working_already.get(when, ()))
+                or working & set(impaired_already.get(when, ())))
+
+    return [option for option in options
+            if not clash(night, option[1], option[2])
+            and not any(clash(when, seats, set())
+                        for when, seats in option[3].items())]
+
+
+def _night_accounts(world, state, impaired_already=None,
+                    working_already=None):
     """How every night of this game could have gone.
 
     Returns a list of (cost, extra impaired, extra working) — one entry
@@ -2457,6 +2538,9 @@ def _night_accounts(world, state):
     A night that killed nobody is explained here rather than separately,
     because "the Demon was stopped" and "the Demon killed somebody" are
     the same question asked of the same cause.
+
+    `impaired_already` and `working_already` are what the board asks of
+    each night before any of this — see `_the_ones_the_board_allows`.
     """
     nights = set(_night_deaths(state))
     nights |= set(getattr(state, "quiet_nights", None) or ())
@@ -2465,7 +2549,9 @@ def _night_accounts(world, state):
 
     accounts = [(1.0, {}, {})]
     for night in sorted(nights):
-        options = _explained_night(world, state, night)
+        options = _the_ones_the_board_allows(
+            night, _explained_night(world, state, night),
+            impaired_already or {}, working_already or {})
         if not options:
             return []
         grown = []
@@ -3833,7 +3919,7 @@ def _explain(world, state, outcome=None):
     # Every way the nights could have gone. Each brings its own demands
     # on who was impaired and who was working, so the impairment plan is
     # solved once per account and the cheapest wins.
-    accounts = _night_accounts(world, state)
+    accounts = _night_accounts(world, state, failures, must_work)
     if not accounts:
         return None
 

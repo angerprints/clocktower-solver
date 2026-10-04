@@ -532,6 +532,19 @@ causeRule(function theDemonKills(world, state, night) {
                      actorCost: PRIORS.DEMON_POISONED_PENALTY})];
 });
 
+/** Could anything have made this seat drunk or poisoned that night?
+ *
+ * A Demon that has to kill and killed nobody may have been stopped at its
+ * source: it chose the Goon first, a Sailor or an Innkeeper made it
+ * drunk, a Courtier named it, a Minstrel silenced the town. The four
+ * Demons of Bad Moon Rising had no such explanation, and once played
+ * games told their quiet nights, 83 in 60,000 lost the world that
+ * happened (04.10.2026). Offered only where something could reach it.
+ * See _could_be_stopped in solver.py. */
+function couldBeStopped(world, state, seat, night) {
+  return sourcesOn(world, state, night).some(source => source.seats.has(seat));
+}
+
 /** A Zombuul is dead on the board before it is dead in fact.
  *
  * The first time it would die it does not — but it registers as dead, so
@@ -554,7 +567,9 @@ causeRule(function aZombuulKillsOnAQuietDay(world, state, night) {
   if (seat === null || !zombuulStillGoing(world, state, seat, phase)) return [];
   if (anyDiedAt(state, `D${night - 1}`)) return [];   // somebody went by day
   return [new Cause("Demon", DEMON, allSeats(state),
-                    {capacity: 1, mustFire: true})];
+                    {capacity: 1, mustFire: true,
+                     actor: couldBeStopped(world, state, seat, night) ? seat : null,
+                     actorKillsWorking: false})];
 });
 
 /** Poisons on one night, and that poison kills on the next.
@@ -566,9 +581,33 @@ causeRule(function aPukkaKillsWhatItPoisoned(world, state, night) {
   if (!inBag(state, "Pukka") || night < 2) return [];
   const seat = acting(world, state, "Pukka", night);
   if (seat === null) return [];
+  // Three ways a Pukka's night passes without a body besides "the one
+  // it poisoned could not die". Drunk or poisoned tonight: no attack,
+  // and that is the actor. Or it was last night: it poisoned nobody
+  // then, so what comes due is the token from the night before that —
+  // and that player could not die. Or there was no night before that.
+  // See solver.py.
+  const excuses = [];
+  for (const back of [1, 2]) {
+    const chose = night - 1 - back;
+    const from = Math.max(chose, 0) + 1;
+    let fits = true;
+    for (let k = from; k < night; k++)
+      if (acting(world, state, "Pukka", k) !== seat ||
+          !couldBeStopped(world, state, seat, k)) fits = false;
+    if (!fits) break;
+    const demands = [];
+    for (let k = from; k < night; k++) demands.push([k, seat]);
+    if (chose < 1) { excuses.push([null, demands]); break; }
+    if (acting(world, state, "Pukka", chose) !== seat) break;
+    excuses.push([state.aliveSet(`N${chose}`), demands]);
+  }
   const out = [new Cause("Demon", DEMON, state.aliveSet(`N${night - 1}`),
                          {capacity: 1, mustFire: true,
-                          victimImpairedAt: night - 1})];
+                          victimImpairedAt: night - 1,
+                          actor: couldBeStopped(world, state, seat, night)
+                            ? seat : null,
+                          actorKillsWorking: false, excuses})];
   // A night late, or two. A drunk or poisoned Pukka does not attack and
   // its token stays where it is (the flowchart), and the poison rests
   // while it does (table ruling, 02.10.2026). So the one it poisoned on
@@ -596,9 +635,12 @@ causeRule(function aPukkaKillsWhatItPoisoned(world, state, night) {
  * table may only ever see one body. */
 causeRule(function aShabalothKillsTwice(world, state, night) {
   if (!inBag(state, "Shabaloth") || night < 2) return [];
-  if (acting(world, state, "Shabaloth", night) === null) return [];
+  const seat = acting(world, state, "Shabaloth", night);
+  if (seat === null) return [];
   return [new Cause("Demon", DEMON, allSeats(state),
-                    {capacity: 2, mustFire: true})];
+                    {capacity: 2, mustFire: true,
+                     actor: couldBeStopped(world, state, seat, night) ? seat : null,
+                     actorKillsWorking: false})];
 });
 
 /** It may choose nobody — and then it takes three the next night.
