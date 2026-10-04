@@ -2433,3 +2433,90 @@ class WhatTheBoardAlreadyAsksIsHeardFirst(SolverTest):
                 S._the_ones_the_board_allows = real
             with self.subTest(seed=seed):
                 self.assertEqual(with_it, without)
+
+
+class TwoLeftAndTheGameGoesOn(SolverTest):
+    """Evil wins with two players alive. So a game that is going on with
+    two on the board has a third somewhere: a Zombuul that died once.
+
+    The solver took every game to be going on and never asked how many
+    that needs. A Zombuul playing dead led in 3 games of 44, and in half
+    of those the board showed two alive — where the living still got
+    most of the weight (04.10.2026).
+    """
+
+    # Five days, five executions, two left: seats 4 and 5.
+    HANGED = {6: "E1", 0: "E2", 1: "E3", 2: "E4", 3: "E5"}
+    GOOD = ["Gambler", "Gossip", "Chambermaid", "Professor", "Grandmother"]
+
+    def cost(self, evil, script=None, **board):
+        roles = self.GOOD + list(evil)
+        claims = self.GOOD + ["Courtier", "Minstrel"]
+        board.setdefault("deaths", dict(self.HANGED))
+        state = GameState(n_players=7,
+                          script=script or scripts.BAD_MOON_RISING,
+                          claims={i: c for i, c in enumerate(claims)},
+                          **board)
+        return S.explanation_cost(World(tuple(roles), (None,) * 7), state)
+
+    def test_a_zombuul_hanged_on_the_first_day_is_the_third(self):
+        self.assertIsNotNone(self.cost(["Godfather", "Zombuul"]))
+
+    def test_any_other_demon_still_standing_would_have_won(self):
+        """Seat 5 alive, and the Demon: two left, and evil's game."""
+        for demon in ("Po", "Pukka", "Shabaloth", "Zombuul"):
+            with self.subTest(demon=demon):
+                self.assertIsNone(self.cost([demon, "Godfather"]))
+
+    def test_unless_the_board_is_from_after_the_end(self):
+        for demon in ("Po", "Zombuul"):
+            with self.subTest(demon=demon):
+                self.assertIsNotNone(
+                    self.cost([demon, "Godfather"], game_over=True))
+
+    def test_three_on_the_board_and_nothing_is_asked(self):
+        hanged = {k: v for k, v in self.HANGED.items() if v != "E5"}
+        self.assertIsNotNone(self.cost(["Po", "Godfather"], deaths=hanged))
+
+    def test_the_last_execution_is_what_brought_it_to_two(self):
+        """Up to that day there were three, so only now is it asked —
+        and a board that ends there asks nothing."""
+        state = GameState(n_players=7, script=scripts.BAD_MOON_RISING,
+                          deaths=dict(self.HANGED))
+        self.assertEqual(S._moments_with_two_left(state), ["N6"])
+        over = GameState(n_players=7, script=scripts.BAD_MOON_RISING,
+                         deaths=dict(self.HANGED), game_over=True)
+        self.assertEqual(S._moments_with_two_left(over), [])
+
+    def test_a_game_that_went_on_past_it_asks_even_when_over(self):
+        """Two left after day five and a sixth night on the board: the
+        game was going on then, whatever happened later."""
+        deaths = dict(self.HANGED)
+        over = GameState(n_players=7, script=scripts.BAD_MOON_RISING,
+                         deaths=deaths, quiet_nights={6}, game_over=True)
+        self.assertEqual(S._moments_with_two_left(over), ["N6"])
+        self.assertIsNone(self.cost(["Po", "Godfather"], quiet_nights={6},
+                                    game_over=True))
+
+    def test_a_zombuul_and_one_other_is_two_as_well(self):
+        """It counts as alive, and then there are still only two."""
+        deaths = dict(self.HANGED)
+        deaths[4] = "E6"
+        self.assertIsNone(self.cost(["Godfather", "Zombuul"], deaths=deaths,
+                                    quiet_nights={6}))
+        self.assertIsNotNone(self.cost(["Godfather", "Zombuul"],
+                                       deaths=deaths, quiet_nights={6},
+                                       game_over=True))
+
+    def test_only_with_a_zombuul_on_the_script(self):
+        """The rule is true everywhere. Elsewhere it could only say the
+        game is over, and a board entered after the end would turn from
+        an answer into nothing (table decision, 04.10.2026)."""
+        roles = ["Washerwoman", "Librarian", "Chef", "Empath", "Monk",
+                 "Imp", "Poisoner"]
+        claims = roles[:5] + ["Slayer", "Mayor"]
+        state = GameState(n_players=7, script=scripts.TROUBLE_BREWING,
+                          claims={i: c for i, c in enumerate(claims)},
+                          deaths=dict(self.HANGED))
+        self.assertIsNotNone(
+            S.explanation_cost(World(tuple(roles), (None,) * 7), state))

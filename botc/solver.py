@@ -3924,8 +3924,81 @@ def explanation_cost(world, state):
     return best_story(world, state)[0]
 
 
+def _moments_with_two_left(state):
+    """Every moment the game was going on with two or fewer on the board
+    as alive. Almost always none, and worked out once a board.
+
+    A moment is the start of a night or of a day. The game was going on
+    at each one the board reaches — something is recorded at it or after
+    it — and at the one after the last, which is now, unless the board
+    says the game is over.
+    """
+    cached = getattr(state, "_two_left_cache", None)
+    if cached is not None:
+        return cached
+    final = phase_index(state.final_phase())
+    out = []
+    night = 1
+    while True:
+        beyond = False
+        for phase in (f"N{night}", f"D{night}"):
+            if phase_index(phase) > final:
+                beyond = True
+                if getattr(state, "game_over", False):
+                    break
+            if len(state.alive_set(phase)) <= 2:
+                out.append(phase)
+            if beyond:
+                break
+        if beyond:
+            break
+        night += 1
+    state._two_left_cache = out
+    return out
+
+
+def _the_game_went_on(world, state):
+    """Evil wins with two players alive, so while the game goes on there
+    are three.
+
+    The solver takes the game to be going on and never asked how many
+    that needs. With a Zombuul it is the whole clue: two on the board
+    and no winner means somebody the table crossed off is alive, and
+    only a Zombuul that died once is. Without the rule a Zombuul playing
+    dead led in 3 games of 44; in half of those the board showed two
+    alive, and there the solver still gave the living most of the
+    weight (04.10.2026).
+
+    So where two are left: a Zombuul on the board as dead makes three
+    and the world stands. Any other Demon still standing has won, and
+    the world goes. A Demon that is really dead leaves a Mastermind's
+    day or nothing, which the lineage settles and this does not.
+
+    **Only with a Zombuul on the script** (table decision, the same
+    day). The rule is true everywhere, but elsewhere it can only ever
+    say "this game is over" — and a board somebody enters after the end
+    would turn from an answer into "impossible".
+    """
+    if not _in_bag(state, "Zombuul"):
+        return True
+    for phase in _moments_with_two_left(state):
+        board = state.alive_set(phase)
+        demon = world.demon_at(phase)
+        if demon is None:
+            continue
+        if demon in board:
+            return False                  # it would have won there and then
+        if world.role_at(demon, phase) == "Zombuul" \
+                and _zombuul_still_going(world, state, demon, phase) \
+                and len(board) < 2:
+            return False                  # it and one other: won as well
+    return True
+
+
 def _explain(world, state, outcome=None):
     """The cost of one telling of this world, with the lineage settled."""
+    if not _the_game_went_on(world, state):
+        return None
     failures, ft_infos, invented_factor, must_work = _plain_failures(
         world, state, outcome)
     if failures is None:
@@ -4475,6 +4548,7 @@ def _without_claim(state, seat):
         executions=dict(getattr(state, "executions", {}) or {}),
         quiet_nights=set(getattr(state, "quiet_nights", ()) or ()),
         days_done=set(getattr(state, "days_done", ()) or ()),
+        game_over=bool(getattr(state, "game_over", False)),
         votes=dict(getattr(state, "votes", {}) or {}),
         nominations=dict(getattr(state, "nominations", {}) or {}),
         witch_deaths=dict(getattr(state, "witch_deaths", {}) or {}),
@@ -4954,6 +5028,7 @@ def _without(state, drop_info=None, drop_death=None, drop_quiet=None):
         executions=executions,
         quiet_nights={n for n in (getattr(state, "quiet_nights", None) or ())
                       if n != drop_quiet},
+        game_over=bool(getattr(state, "game_over", False)),
         infos=[x for i, x in enumerate(state.infos) if i != drop_info],
         names=list(state.names),
         script=state.script,

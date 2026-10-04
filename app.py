@@ -435,6 +435,7 @@ def run_solve(payload):
                         executions=executions, resurrections=resurrections,
                         quiet_nights=quiet,
         days_done={int(d) for d in payload.get("days_done", []) or []},
+        game_over=bool(payload.get("game_over")),
         votes=votes, nominations=nominations,
         witch_deaths=witch_deaths, madness_executions=madness_executions, infos=infos, names=names)
 

@@ -311,6 +311,7 @@ export function readBoard(payload) {
       nPlayers: n, script, claims, certainties, reads, wakes, suspects,
       deaths, resurrections, executions, quietNights: quiet,
       daysDone: (payload.days_done || []).map(Number),
+      gameOver: !!payload.game_over,
       votes, nominations, witchDeaths, madnessExecutions,
       fabled: scripts.fabledInPlay(script, payload.fabled || []),
       infos, names: (payload.players || []).map(s => s.name || ""),

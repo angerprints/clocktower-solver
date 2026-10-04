@@ -331,6 +331,12 @@ class Deal:
                 back[seat] = back.get(seat, ()) + (at,)
         return {
             **nothing,
+            # Whether the board is one from after the end. The solver
+            # takes a game to be going on unless told, and reads that as
+            # evidence (04.10.2026).
+            "game_over": self.ended_at is not None
+                         and (limit is None
+                              or phase_index(self.ended_at) <= limit),
             "deaths": deaths,
             "resurrections": back,
             "executions": {day: seat for day, seat in self.executions.items()

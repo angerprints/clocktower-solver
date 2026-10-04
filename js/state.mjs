@@ -37,6 +37,10 @@ export class GameState {
     // ruled out by it, but it says the game *reached* that day, which
     // bounds how long a lineage can run.
     this.daysDone = new Set(opts.daysDone || []);
+    // The game has ended. Unsaid, it is taken to be going on, which is
+    // evidence with a Zombuul on the script — see theGameWentOn in
+    // scoring.mjs.
+    this.gameOver = !!opts.gameOver;
     // Who voted, and who nominated, on each day. Only the Flowergirl and
     // the Town Crier ask, but a day is where the answer lives.
     this.votes = opts.votes || {};

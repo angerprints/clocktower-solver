@@ -96,6 +96,9 @@ dem Stand von Commit be39613.
 ausprobiert wird: Die Partie läuft, also leben wirklich mindestens drei.
 `dm_zombuul_basis.jsonl` und `dm_zombuul_regel.jsonl` sind die 90
 Zombuul-Partien ohne und mit dieser Regel (Stand Commit df17b6c).
+Seit die Regel im Solver steht, ist `rule` überflüssig, und
+`dm_zombuul_gebaut.jsonl` sind dieselben 90 Partien mit dem Solver selbst:
+dieselben Zahlen wie im Versuch.
 
 `dm_bmr_weg1.jsonl` sind dieselben 400 Partien Bad Moon Rising nach dem
 Einbau der Erklärung „der Dämon selbst wurde gestoppt“ (Commit e2d215e). Die

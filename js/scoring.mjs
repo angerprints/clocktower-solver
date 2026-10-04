@@ -1324,8 +1324,51 @@ function planAsGiven(world, state, failures, forbidden, without = null) {
   return total;
 }
 
+/** Every moment the game was going on with two or fewer on the board as
+ * alive: the start of each night and day the board reaches, and the one
+ * after the last, which is now — unless the board says the game is over.
+ * Almost always none, and worked out once a board. */
+function momentsWithTwoLeft(state) {
+  if (state._twoLeft) return state._twoLeft;
+  const final = phaseIndex(state.finalPhase());
+  const out = [];
+  for (let night = 1, beyond = false; !beyond; night++) {
+    for (const phase of [`N${night}`, `D${night}`]) {
+      if (phaseIndex(phase) > final) {
+        beyond = true;
+        if (state.gameOver) break;
+      }
+      if (state.aliveSet(phase).size <= 2) out.push(phase);
+      if (beyond) break;
+    }
+  }
+  return (state._twoLeft = out);
+}
+
+/** Evil wins with two players alive, so while the game goes on there are
+ * three. With a Zombuul on the script, two on the board and no winner
+ * means somebody crossed off is alive: a Zombuul that died once. Any
+ * other Demon still standing has won, and the world goes. Only with a
+ * Zombuul on the script (table decision, 04.10.2026). See
+ * _the_game_went_on in solver.py. */
+function theGameWentOn(world, state) {
+  if (!inBag(state, "Zombuul")) return true;
+  for (const phase of momentsWithTwoLeft(state)) {
+    const board = state.aliveSet(phase);
+    const demon = world.demonAt(phase);
+    if (demon === null) continue;
+    if (board.has(demon)) return false;   // it would have won there and then
+    if (world.roleAt(demon, phase) === "Zombuul" && board.size < 2 &&
+        state.diedAt(demon)
+          .filter(p => phaseIndex(p) < phaseIndex(phase)).length < 2)
+      return false;                       // it and one other: won as well
+  }
+  return true;
+}
+
 /** The cost of one telling of this world, with the lineage settled. */
 function explainOne(world, state, outcome = null) {
+  if (!theGameWentOn(world, state)) return null;
   const sorted = plainFailures(world, state, outcome || {});
   if (sorted === null) return null;
   const {failures, ftInfos, invented, mustWork, vortoxOr} = sorted;

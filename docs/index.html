@@ -610,14 +610,14 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=4d0013ad67f9";
+import * as solver from "./api.mjs?v=c69ef6a9715e";
 
 // The solve runs beside the page, in a worker, so a long board neither
 // freezes the page nor hides that it is busy: it reports how far along it
 // is and can be stopped. Where a browser cannot start a module worker —
 // an old one, or a page opened straight from disk — it runs here as it
 // always did, and the page freezes for the length of it as it always did.
-const WORKER_URL = "./worker.mjs?v=4d0013ad67f9";
+const WORKER_URL = "./worker.mjs?v=c69ef6a9715e";
 let WORKER = null, NO_WORKER = false, JOB = null;
 
 function worker(){

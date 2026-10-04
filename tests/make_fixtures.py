@@ -100,7 +100,8 @@ def played(name, script, seed, n, nights):
     told = deal.record()
     return board(name, script, players, infos=infos,
                  quiet_nights=sorted(told["quiet_nights"]),
-                 days_done=sorted(told["days_done"]))
+                 days_done=sorted(told["days_done"]),
+                 game_over=told["game_over"])
 
 
 def board(name, script, claims, **payload):
@@ -608,6 +609,23 @@ def handmade():
                        ("under-the-token", 79)):
         yield played(f"bmr-played-{what}", BMR, seed, 7, 4)
     yield played("sv-played-witch", SV, 8, 7, 4)
+
+    # Two on the board and the game going on: one of the dead is a
+    # Zombuul that died once, and no living player is the Demon
+    # (04.10.2026). Two played games, stopped on the morning the table
+    # had that board; and the same thing by hand — five days, five
+    # executions — once as it stands and once marked as a board from
+    # after the end, where nothing of the kind follows.
+    yield played("bmr-played-zombuul-two-left", BMR, 44, 7, 6)
+    yield played("bmr-played-zombuul-two-left-2", BMR, 124, 7, 6)
+    two_left = [{"claim": claim, "events": [code] if code else []}
+                for claim, code in (
+                    ("Gambler", "X2"), ("Gossip", "X3"),
+                    ("Chambermaid", "X4"), ("Professor", "X5"),
+                    ("Grandmother", ""), ("Courtier", ""),
+                    ("Minstrel", "X1"))]
+    yield board("bmr-7-two-left", BMR, two_left)
+    yield board("bmr-7-two-left-game-over", BMR, two_left, game_over=True)
 
     # Easter Trouble, the script with the Ogre and the Marionette. The
     # Ogre turns evil from day one, so an Empath beside it can read 0 on

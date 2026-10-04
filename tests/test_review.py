@@ -121,6 +121,25 @@ class JudgedByTheDemon(SolverTest):
         """)
         self.assertEqual(got, [0, 2])
 
+    def test_the_last_morning_is_not_taken_to_be_going_on(self):
+        """The solver reads "the game goes on" as evidence when a Zombuul
+        is on the script: two alive and no winner puts the Demon among
+        the dead. A finished game's last morning is the one board that
+        must not be told so (04.10.2026) — every earlier one is."""
+        got = node("""
+            import {review} from "./js/review.mjs";
+            const seen = [];
+            const solve = board => {
+              seen.push(!!board.game_over);
+              return {rows: [{player: 0, demon_pct: 100, evil_pct: 100}],
+                      valid: 1};
+            };
+            const board = JSON.parse(process.argv[1]);
+            review(board, ["Imp"], {solve});
+            console.log(JSON.stringify(seen));
+        """, json.dumps(BOARD))
+        self.assertEqual(got, [False, False, True])
+
 
 @unittest.skipUnless(NODE, "Node is not installed")
 class ASavedGameCanBeSentOn(SolverTest):

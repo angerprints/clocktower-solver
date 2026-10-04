@@ -94,6 +94,14 @@ class GameState:
     # bounds how long a lineage can run and how far a Mastermind's extra
     # day can stretch.
     days_done: set = field(default_factory=set)
+    # The game has ended, and the board is what it looked like then.
+    #
+    # Unsaid, the solver takes the game to be going on — which is what
+    # somebody at the table is asking about, and it is evidence: with a
+    # Zombuul on the script, two players alive and the game not over
+    # means one of the dead is not (see `_the_game_went_on` in
+    # solver.py). A board entered after the end has no such "now".
+    game_over: bool = False
     # Who voted, and who nominated, on each day. Nothing else on the
     # board needs either — they exist because the Flowergirl and the Town
     # Crier ask about them, and a day is where they belong rather than a

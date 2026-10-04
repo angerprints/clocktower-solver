@@ -134,7 +134,12 @@ export function review(payload, truth, {solve, onNight = null} = {}) {
   for (let night = 1; night <= last; night++) {
     if (onNight) onNight(night, last);
     progressPart(night - 1, last);
-    const data = solve(boardAt(payload, night));
+    // The last morning of a finished game is the board from after its
+    // end, or from the dawn it ended on. The solver takes a game to be
+    // going on unless told, and with a Zombuul on the script that is
+    // evidence — which this one morning must not be given.
+    const data = solve({...boardAt(payload, night),
+                        game_over: night === last});
     nights.push({night, ...judge(data, truth)});
   }
   return {nights, demons: trueDemons(truth), last};

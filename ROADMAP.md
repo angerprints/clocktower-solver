@@ -540,9 +540,43 @@ Der volle Bericht steht in `claude/messung-zombuul-gilt-als-tot.md`. Kein Code a
 - **Ursache 2, keine Regel greift (die anderen 22 Partien):** Das Brett zeigt drei oder mehr Lebende. Der Solver glaubt dort zu etwa einem Drittel an einen Zombuul, der wahre Sitz hat im Mittel 9 %. Hier fehlt kein Regelwissen, sondern ein Hinweis: Der Zombuul tötet im Simulator fast nie, weil das Dorf fast jeden Tag hinrichtet.
 - **Was auch mit der Regel bleibt:** Welcher der Hingerichteten der Zombuul ist. In den 22 Partien gibt es im Mittel 5,7 Tote, der wahre steht unter ihnen in 9 Partien an erster und in 8 an zweiter Stelle.
 
+### Die Partie läuft, also leben wirklich mindestens drei · *erledigt am 04.10.2026*
+
+Der volle Bericht steht in `claude/zwei-auf-dem-brett-und-die-partie-laeuft.md`.
+
+**Deine Entscheidung vom 04.10.2026:** Weg 1. Die Regel gilt nur, wenn ein Zombuul auf dem Skript steht.
+
+**Gebaut, in Python und JavaScript:** Zeigt das Brett zu einem Zeitpunkt, an dem die Partie lief, nur noch zwei Lebende, dann gilt für jede Welt:
+
+- Ein Zombuul, der einmal gestorben ist, zählt als dritter. Die Welt bleibt.
+- Jeder andere Dämon, der noch lebt, hätte gewonnen. Die Welt fällt weg. Das gilt auch für einen Zombuul, der nie gestorben ist.
+- Ein Dämon, der wirklich tot ist, lässt nur den Zusatztag des Strippenziehers. Das prüft der Solver wie bisher.
+
+„Die Partie lief“ heißt: zu Beginn jeder Nacht und jedes Tages, den das Brett erreicht, und jetzt. Auf Skripten ohne Zombuul ändert sich nichts.
+
+**Neu: ein Brett kann sagen, dass die Partie vorbei ist** (`game_over`). Dann gilt die Regel nicht für „jetzt“, nur für die Zeitpunkte davor. Gespielte Partien des Simulators setzen das selbst. Der Rückblick „After the game“ der Website setzt es für seinen letzten Morgen. Die Seite selbst hat dafür noch keinen Schalter.
+
+**Vorher geprüft, was ein Brett nach Spielende bekommt** (40 beendete Partien je Skript, zwei Lebende, kein Zombuul):
+
+| | als beendet markiert | nicht markiert |
+|---|---|---|
+| Bad Moon Rising: Dämon vorn | 32 | 1 |
+| Bad Moon Rising: ein Toter vorn | 2 | 33 |
+| Trouble Brewing: Dämon vorn | 20 | 20 |
+
+Wer auf Bad Moon Rising nach dem Ende einer Partie weiterrechnet, ohne dass das Brett es weiß, wird also auf die Toten verwiesen. Das ist der Preis von Weg 1.
+
+**Messung:**
+
+- Wahrheit gehalten, stille Nächte eingetragen: Bad Moon Rising 0 von 60.000, Trouble Brewing und Oster-Skript je 0 von 6.000, Sects & Violets unverändert 43 und 72 von je 6.000 (alle Barbier-Tausch).
+- **Dämon gefunden, Bad Moon Rising, 400 Partien: 228 statt 222 vorn (57 %).** Zombuul, der als tot gilt: 9 statt 3 von 44 vorn, 30 statt 25 unter den ersten drei. Alle anderen Partien unverändert. Die gebaute Regel gibt in allen 90 Zombuul-Partien genau die Zahlen des Versuchs.
+- Korpus: 194 Bretter, 4 neue für diese Regel. Kein altes Brett gibt eine andere Antwort. Python und JavaScript stimmen überein. 1.133 Tests grün, davon 13 neue.
+
+**Was bleibt:** In den 22 Partien, in denen das Brett drei oder mehr Lebende zeigt, greift die Regel nicht (0 von 22 vorn). Und unter den Toten ist weiter offen, welcher der Zombuul ist.
+
 ### Als Nächstes
 
-**1 · Die Regel „die Partie läuft, also leben wirklich mindestens drei“** (deine Entscheidung). Offen ist, ob sie immer gilt oder nur, wenn ein Zombuul auf dem Skript steht, und was ein Brett bekommt, das nach dem Ende einer Partie eingegeben wird.
+**1 · Ein Schalter „Partie beendet“ auf der Website** (deine Entscheidung). Ohne ihn verweist die Seite auf Bad Moon Rising nach dem Ende einer Partie auf die Toten.
 
 **2 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin.
 
@@ -584,6 +618,8 @@ Der volle Bericht steht in `claude/messung-zombuul-gilt-als-tot.md`. Kein Code a
 | 26 | Simulator | *Erledigt am 04.10.2026:* Die Partie endet, wenn Böse gewonnen hat (zwei Lebende, Tag ohne Hinrichtung unter einem Vortox). |
 | 27 | Messung | *Erledigt am 04.10.2026:* Stille Nächte und Tage ohne Hinrichtung sind in jedem Messlauf und Test mit gespielten Partien eingetragen. |
 | 31 | Messung | **Die Dämon-Messung zeigt keinen Verlauf.** Sie wertet einen Morgen je Partie aus. Wie sich der Rang des Dämons von Morgen zu Morgen entwickelt, ist nicht gemessen. |
+| 32 | Website | **Kein Schalter „Partie beendet“.** Der Solver nimmt an, dass die Partie läuft. Mit einem Zombuul auf dem Skript ist das seit dem 04.10.2026 ein Hinweis: zwei Lebende auf dem Brett heißt, der Dämon ist unter den Toten. Ein Brett von nach dem Spielende bekommt deshalb auf Bad Moon Rising eine falsche Antwort. Der Rückblick ist davon ausgenommen. |
+| 33 | Bad Moon Rising | **Der Zombuul, der als tot gilt, bei drei oder mehr Lebenden auf dem Brett:** 0 von 22 vorn. Keine Regel greift, und der Zombuul tötet im Simulator fast nie. |
 | 28 | Simulator | **Das Dorf gewinnt im Simulator nie.** Es richtet den Dämon nur hin, wenn die Partie danach weitergeht (Scharlachrote Frau, Zombuul, Strippenzieher, Teufelsadvokat). Das ist Absicht, heißt aber: Alle gespielten Partien sind solche, in denen der Dämon überlebt. |
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
 | 30 | Simulator gegen Night-Walk | **Sects & Violets weicht in 60 von 16.641 Nächten ab.** Nicht untersucht, älter als die Reparatur. |

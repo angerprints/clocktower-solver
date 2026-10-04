@@ -435,6 +435,76 @@ class OnBadMoonRising(SolverTest):
         self.assertGreater(again, 0)
 
 
+class TwoOnTheBoardAndTheGameGoesOn(SolverTest):
+    """A Zombuul playing dead, on the morning the board shows two alive.
+
+    Evil wins with two alive, so the third is one of the dead — and the
+    solver now knows it (04.10.2026). Named by seed, so these stand
+    until the simulator learns something new.
+    """
+
+    def board(self, seed, nights=6):
+        rng = random.Random(seed)
+        deal, heard = simulate.play(7, rng, nights=nights, script=BMR)
+        claims, wakes, _notes = C.claims_for(deal, rng, script=BMR)
+        state = GameState(n_players=7, script=BMR, claims=claims,
+                          wakes=wakes, infos=list(heard),
+                          votes=dict(deal.votes),
+                          nominations=dict(deal.nominations),
+                          **deal.record())
+        return deal, state
+
+    def test_every_bit_of_the_demon_is_on_the_dead(self):
+        for seed in (44, 56, 124):
+            deal, state = self.board(seed)
+            self.assertIsNone(deal.ended_at)
+            self.assertIsNotNone(deal.zombuul_up)
+            self.assertEqual(len(state.alive_set("D6")), 2)
+            answer = S.analyze(state, rng=random.Random(1))
+            living = state.alive_set("D6")
+            with self.subTest(seed=seed):
+                for row in answer["rows"]:
+                    if row["player"] in living:
+                        self.assertAlmostEqual(row["demon_pct"], 0.0)
+                self.assertGreater(
+                    answer["rows"][deal.zombuul_up]["demon_pct"], 20.0)
+
+    def test_the_true_world_is_still_there(self):
+        for seed in (44, 56, 124):
+            deal, state = self.board(seed)
+            truth = World(tuple(deal.roles), tuple(deal.believes))
+            with self.subTest(seed=seed):
+                self.assertIsNotNone(S.explanation_cost(truth, state))
+
+    def test_a_played_game_says_when_it_is_over(self):
+        """And a board cut off before the end does not."""
+        ended = 0
+        for seed, deal, _heard, state in games(BMR, count=120):
+            with self.subTest(seed=seed):
+                self.assertEqual(state.game_over, deal.ended_at is not None)
+                if deal.ended_at is not None:
+                    ended += 1
+                    self.assertFalse(deal.record(upto="N1")["game_over"])
+                    self.assertTrue(
+                        deal.record(upto=deal.ended_at)["game_over"])
+        self.assertGreater(ended, 10)
+
+    def test_a_finished_game_is_not_asked_about_now(self):
+        """Evil won with two left: the true world has a living Demon
+        among them, and stays."""
+        asked = 0
+        for seed, deal, _heard, state in games(BMR, count=300):
+            if deal.ended_why != "two alive" or deal.zombuul_up is not None:
+                continue
+            asked += 1
+            truth = World(tuple(deal.roles), tuple(deal.believes))
+            with self.subTest(seed=seed):
+                self.assertIsNotNone(S.explanation_cost(truth, state))
+                unmarked = dataclasses.replace(state, game_over=False)
+                self.assertIsNone(S.explanation_cost(truth, unmarked))
+        self.assertGreater(asked, 20)
+
+
 class WhatDidNotHappenIsOnTheRecord(SolverTest):
     """The nights nobody died and the days the town got through.
 
