@@ -149,6 +149,8 @@ main{
   margin:2px 0 8px;font-size:13px;font-style:italic;
   color:var(--crimson-deep);
 }
+/* The line closing off the game, under the last night. */
+.day-foot.game-end{margin-top:14px;border-top:1px solid var(--gold)}
 /* The line closing off a day, under that night's readings. */
 .day-foot{
   display:flex;align-items:center;gap:8px;
@@ -825,6 +827,9 @@ function blank(n){
   return {n, players:Array.from({length:15},()=>({name:"",claim:"",events:[],certainty:"",read:0,wake:"",suspect:false,
    voted:[],nominated:[]})),
           infos:[], quiet:[], done:[], history:[], fabled:[], notes:{},
+          // Has the game ended? Unticked, the solver takes it to be going
+          // on — which with a Zombuul on the script is evidence.
+          over:false,
           open:["ledger"],
           // The script travels with the game. A board saved on a custom
           // script has to stay readable once that file is long gone.
@@ -888,6 +893,7 @@ function load(){
     s.fabled = s.fabled || [];
     s.notes = s.notes || {};
     s.done = s.done || [];
+    s.over = !!s.over;
     s.open = s.open || ["ledger"];
     s.script = s.script || {name:"Trouble Brewing", author:"", characters:null};
     s.players.forEach(p=>{
@@ -2190,6 +2196,30 @@ function drawLedger(){
     const acts = dayActs(n);
     if(acts) box.appendChild(acts);
   }
+
+  // The last line of the ledger: the game has ended.
+  //
+  // The solver takes a game to be going on, which is what somebody at
+  // the table is asking about — and with a Zombuul on the script it is
+  // evidence. Evil wins with two alive, so two alive and no winner means
+  // one of the dead is not dead. A board from after the end has to be
+  // able to say so, or the last kill of a finished game points the
+  // solver at the graveyard (04.10.2026).
+  const end=document.createElement("div");
+  end.className="day-foot game-end"+(S.over?" settled":"");
+  const lab=document.createElement("label");
+  lab.className="quiet"+(S.over?" on":"");
+  lab.title="Tick this once the game has ended. Until then the solver takes "
+    +"the game to be going on, and with a Zombuul on the script that is "
+    +"evidence: two players alive and no winner means the Demon is one of "
+    +"the dead.";
+  const tick=document.createElement("input");
+  tick.type="checkbox"; tick.id="game-over"; tick.checked=!!S.over;
+  tick.onchange=e=>{ S.over=e.target.checked; touch(); drawLedger(); save(); };
+  lab.appendChild(tick);
+  lab.appendChild(document.createTextNode("the game is over"));
+  end.appendChild(lab);
+  box.appendChild(end);
 }
 
 // What became of a reading, across every world that survived.
@@ -2584,6 +2614,8 @@ async function doLookBack(){
   if(!demons.length){
     state.textContent = "Set which seat was the Demon first."; return;
   }
+  // No `game_over` here: looking back marks its own last morning, and
+  // every morning before it the game was going on.
   const payload = { n_players:S.n, allow_good_lies:false,
                     players:S.players.slice(0,S.n), infos:S.infos,
                     quiet_nights:S.quiet, days_done:S.done,
@@ -2631,7 +2663,7 @@ async function doSensitivity(){
     const data = await inBackground("guesswork", {
       n_players:S.n, allow_good_lies:false,
       players:S.players.slice(0,S.n), infos:S.infos,
-      quiet_nights:S.quiet, days_done:S.done,
+      quiet_nights:S.quiet, days_done:S.done, game_over:!!S.over,
       script:S.script, fabled:S.fabled },
       f => { btn.textContent=`working… ${Math.round(f*100)}%`; });
     if(data.error){ $("#error").innerHTML=`<div class="err">${esc(data.error)}</div>`; return; }
@@ -2663,6 +2695,7 @@ async function doSolve(){
   const payload={ n_players:S.n, allow_good_lies:false,
                   players:S.players.slice(0,S.n), infos:S.infos,
                   quiet_nights:S.quiet, days_done:S.done,
+                  game_over:!!S.over,
                   script:S.script, fabled:S.fabled };
   try{
     // Solved in the background: the page stays usable, the count shows how

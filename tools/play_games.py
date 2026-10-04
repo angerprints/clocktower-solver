@@ -322,6 +322,7 @@ def save_file(deal, heard, claims, wakes, script=None):
                       for r in heard],
             "quiet": sorted(deal.record()["quiet_nights"]),
             "done": sorted(deal.record()["days_done"]),
+            "over": deal.record()["game_over"],
             "history": [], "fabled": [],
             "notes": {}, "open": ["ledger"],
         },

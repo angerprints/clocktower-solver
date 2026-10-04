@@ -574,9 +574,11 @@ Wer auf Bad Moon Rising nach dem Ende einer Partie weiterrechnet, ohne dass das 
 
 **Was bleibt:** In den 22 Partien, in denen das Brett drei oder mehr Lebende zeigt, greift die Regel nicht (0 von 22 vorn). Und unter den Toten ist weiter offen, welcher der Zombuul ist.
 
+**Schalter „the game is over“ auf der Website** (deine Entscheidung vom 04.10.2026, gebaut am selben Tag): Er steht als letzte Zeile unter **Information**, wird mit der Partie gespeichert und geht bei **Solve** und **How much is guesswork?** an den Solver. Der Rückblick braucht ihn nicht. Im Browser geprüft an einem Brett mit zwei Lebenden auf Bad Moon Rising: ohne Haken 555 Welten und kein Lebender als Dämon, mit Haken 1.419 Welten und die beiden Lebenden mit je 30 %. Die Anleitung für den Spieleabend nennt den Haken.
+
 ### Als Nächstes
 
-**1 · Ein Schalter „Partie beendet“ auf der Website** (deine Entscheidung). Ohne ihn verweist die Seite auf Bad Moon Rising nach dem Ende einer Partie auf die Toten.
+**1 · Der Zombuul, der als tot gilt, bei drei oder mehr Lebenden auf dem Brett** (offene Stelle 33): 0 von 22 vorn. Keine Regel greift, es fehlen Hinweise.
 
 **2 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin.
 
@@ -618,7 +620,7 @@ Wer auf Bad Moon Rising nach dem Ende einer Partie weiterrechnet, ohne dass das 
 | 26 | Simulator | *Erledigt am 04.10.2026:* Die Partie endet, wenn Böse gewonnen hat (zwei Lebende, Tag ohne Hinrichtung unter einem Vortox). |
 | 27 | Messung | *Erledigt am 04.10.2026:* Stille Nächte und Tage ohne Hinrichtung sind in jedem Messlauf und Test mit gespielten Partien eingetragen. |
 | 31 | Messung | **Die Dämon-Messung zeigt keinen Verlauf.** Sie wertet einen Morgen je Partie aus. Wie sich der Rang des Dämons von Morgen zu Morgen entwickelt, ist nicht gemessen. |
-| 32 | Website | **Kein Schalter „Partie beendet“.** Der Solver nimmt an, dass die Partie läuft. Mit einem Zombuul auf dem Skript ist das seit dem 04.10.2026 ein Hinweis: zwei Lebende auf dem Brett heißt, der Dämon ist unter den Toten. Ein Brett von nach dem Spielende bekommt deshalb auf Bad Moon Rising eine falsche Antwort. Der Rückblick ist davon ausgenommen. |
+| 32 | Website | *Erledigt am 04.10.2026:* Schalter „the game is over“ unter Information. Ohne den Haken nimmt der Solver an, dass die Partie läuft. |
 | 33 | Bad Moon Rising | **Der Zombuul, der als tot gilt, bei drei oder mehr Lebenden auf dem Brett:** 0 von 22 vorn. Keine Regel greift, und der Zombuul tötet im Simulator fast nie. |
 | 28 | Simulator | **Das Dorf gewinnt im Simulator nie.** Es richtet den Dämon nur hin, wenn die Partie danach weitergeht (Scharlachrote Frau, Zombuul, Strippenzieher, Teufelsadvokat). Das ist Absicht, heißt aber: Alle gespielten Partien sind solche, in denen der Dämon überlebt. |
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |

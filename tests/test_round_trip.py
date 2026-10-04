@@ -49,9 +49,29 @@ class AGameSurvivesBeingReopened(SolverTest):
         source = (ROOT / "tests" / "harness" / "round_trip.mjs").read_text()
         for field in ("name", "claim", "events", "certainty", "read",
                       "suspect", "voted", "nominated", "quiet", "done",
-                      "notes", "infos"):
+                      "over", "notes", "infos"):
             with self.subTest(field=field):
                 self.assertIn(f'"{field}"', source)
+
+
+class TheGameIsOverReachesTheSolver(SolverTest):
+    """A switch that is saved and never sent does nothing.
+
+    The solver takes a game to be going on, and with a Zombuul on the
+    script reads two players alive as "the Demon is one of the dead". A
+    board from after the end has to say so (04.10.2026). Solving and the
+    guesswork check both send it; looking back does not, because it
+    marks its own last morning.
+    """
+
+    def test_the_page_has_the_switch_and_sends_it(self):
+        page = (ROOT / "ui" / "index.html").read_text()
+        self.assertIn('tick.id="game-over"', page)
+        self.assertEqual(page.count("game_over:!!S.over"), 2)
+
+    def test_looking_back_marks_only_its_last_morning(self):
+        source = (ROOT / "js" / "review.mjs").read_text()
+        self.assertIn("game_over: night === last", source)
 
 
 if __name__ == "__main__":

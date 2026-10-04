@@ -36,7 +36,8 @@ globalThis.window = {innerWidth:1200, addEventListener(){}};
 
 // A game with something in every field the page can record.
 const game = {
-  n: 9, quiet: [3], done: [1, 2], fabled: [], notes: {"1": "a note"},
+  n: 9, quiet: [3], done: [1, 2], over: true, fabled: [],
+  notes: {"1": "a note"},
   open: ["ledger"],
   players: ["Anna","Ben","Cara","Dan","Eve","Finn","Gita","Hugo","Ines"]
     .map((name, i) => ({
@@ -65,7 +66,7 @@ const check = (path, want, got) => {
   if (JSON.stringify(want) !== JSON.stringify(got))
     lost.push(`${path}: saved ${JSON.stringify(want)}, back ${JSON.stringify(got)}`);
 };
-for (const key of ["n", "quiet", "done", "notes"])
+for (const key of ["n", "quiet", "done", "over", "notes"])
   check(key, game[key], back[key]);
 game.players.forEach((p, i) => {
   for (const f of ["name","claim","events","certainty","read","suspect",

@@ -31,6 +31,7 @@ Es reicht, **jeden Morgen** nachzutragen, was passiert ist. Wichtig ist nur, das
 
 ## Nach dem Spiel
 
+0. Ist die Partie vorbei, hake ganz unten bei **Information** **the game is over** an. Sonst nimmt der Solver an, dass die Partie noch läuft. Auf einem Skript mit Zombuul heißt das für ihn: Leben nur noch zwei, ist der Dämon einer der Toten. Für den Rückblick ist der Haken nicht nötig, für ein weiteres **Solve** nach dem Ende schon.
 1. Sobald das Grimoire aufgedeckt ist: **…** → **After the game…**
 2. Für jeden Sitz steht dort schon seine behauptete Rolle. **Nur die korrigieren, die gelogen haben oder betrunken waren.** Auf jeden Fall muss der Dämon stimmen. Gab es einen Starpass, beide Dämon-Sitze eintragen.
 3. **Look back** drücken. Die Seite rechnet jeden Morgen der Partie neu, genau mit dem Wissen, das der Tisch damals hatte. Sie zeigt pro Morgen:

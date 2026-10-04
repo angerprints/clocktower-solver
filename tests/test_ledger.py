@@ -37,6 +37,9 @@ EXPECTED = [
     ("night-open", "Cara is back"),
     ("day-foot", "day 4: nobody executed"),
     ("day-foot", "day 5: nobody executed"),
+    # The line that closes the ledger: whether the game has ended
+    # (04.10.2026). Unticked here, so it is not "settled".
+    ("day-foot game-end", "the game is over"),
 ]
 
 
