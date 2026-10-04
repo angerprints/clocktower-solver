@@ -92,6 +92,11 @@ Rohdaten dazu in `daten/morgen/`: `dm_bmr.jsonl` und `dm_sv.jsonl`, je 400
 Partien, Seeds 0 bis 399, Spielerzahl `[7, 8, 9, 10][seed % 4]`, gemessen mit
 dem Stand von Commit be39613.
 
+`dmorgen_regel.py` ist `dmorgen.py` mit einer Regel, die nur im Speicher
+ausprobiert wird: Die Partie läuft, also leben wirklich mindestens drei.
+`dm_zombuul_basis.jsonl` und `dm_zombuul_regel.jsonl` sind die 90
+Zombuul-Partien ohne und mit dieser Regel (Stand Commit df17b6c).
+
 `dm_bmr_weg1.jsonl` sind dieselben 400 Partien Bad Moon Rising nach dem
 Einbau der Erklärung „der Dämon selbst wurde gestoppt“ (Commit e2d215e). Die
 Rechenzeiten in dieser Datei stammen von vor den beiden Beschleunigungen und

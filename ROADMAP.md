@@ -530,9 +530,19 @@ Geprüft: Der Korpus ist nach beiden Änderungen Zeichen für Zeichen derselbe.
 
 **Korpus:** 10 von 190 Brettern geben andere Zahlen, alle zehn haben eine stille Nacht. Die übrigen 180 sind unverändert. Python und JavaScript stimmen auf allen 190 überein. 1.120 Tests grün, davon 12 neue.
 
+### Messung: der Zombuul, der als tot gilt · *gemessen am 04.10.2026*
+
+Der volle Bericht steht in `claude/messung-zombuul-gilt-als-tot.md`. Kein Code am Solver geändert.
+
+- **Wo er steht** (44 Partien, letzter offener Morgen): meist auf Rang 3 oder 4, mit im Mittel 13 %. Vor ihm liegt fast immer ein lebender Spieler (35 von 41 Partien) mit im Mittel 56 %.
+- **Ursache 1, eine fehlende Regel (22 der 44 Partien):** Das Brett zeigt nur noch zwei Lebende, und die Partie läuft. Das geht nur, wenn einer der Toten in Wahrheit lebt, also ein Zombuul ist. Der Solver kennt „Böse gewinnt bei zwei Lebenden“ nicht und gibt den toten Sitzen zusammen 45 % statt fast alles.
+- **Versuch im Speicher** mit der Regel „die Partie läuft, also leben wirklich mindestens drei“: In diesen 22 Partien glaubt der Solver zu 95 % statt 52 % an einen Zombuul, der wahre Sitz steht in 9 statt 3 vorn und in 21 statt 16 unter den ersten drei. Über alle 400 Partien Bad Moon Rising: 228 statt 222 vorn. Keine wahre Welt geht verloren, und keine der 310 Partien ohne Zombuul ändert sich.
+- **Ursache 2, keine Regel greift (die anderen 22 Partien):** Das Brett zeigt drei oder mehr Lebende. Der Solver glaubt dort zu etwa einem Drittel an einen Zombuul, der wahre Sitz hat im Mittel 9 %. Hier fehlt kein Regelwissen, sondern ein Hinweis: Der Zombuul tötet im Simulator fast nie, weil das Dorf fast jeden Tag hinrichtet.
+- **Was auch mit der Regel bleibt:** Welcher der Hingerichteten der Zombuul ist. In den 22 Partien gibt es im Mittel 5,7 Tote, der wahre steht unter ihnen in 9 Partien an erster und in 8 an zweiter Stelle.
+
 ### Als Nächstes
 
-**1 · Der Zombuul, der als tot gilt.** Hier liegt die ganze Schwäche beim Zombuul (3 von 44 vorn). Sichtbar am Leben wird er so oft gefunden wie die anderen Dämonen.
+**1 · Die Regel „die Partie läuft, also leben wirklich mindestens drei“** (deine Entscheidung). Offen ist, ob sie immer gilt oder nur, wenn ein Zombuul auf dem Skript steht, und was ein Brett bekommt, das nach dem Ende einer Partie eingegeben wird.
 
 **2 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin.
 
