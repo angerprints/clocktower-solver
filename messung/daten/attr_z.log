@@ -1,0 +1,53 @@
+Partien: 33  Gewicht je Typ: {'Pukka': 1948.1, 'Zombuul': 3235.33, 'Shabaloth': 1878.8, 'Po': 2133.36}
+
+ Pukka — stille Nächte nach angebotener Erklärung (Anteil am Gewicht):
+    21.4%  frei: Innkeeper+Sailor
+    14.7%  frei: Fool+Sailor
+    12.8%  frei: Fool+Innkeeper+Sailor
+    11.4%  frei: Sailor
+     7.9%  frei: Fool
+     5.5%  frei: Innkeeper
+     4.6%  frei: Innkeeper+Tea Lady
+     4.1%  frei: Innkeeper+Sailor+Tea Lady
+     3.4%  frei: Exorcist+Sailor
+     3.0%  nur bezahlt: already dead
+     2.3%  frei: Exorcist
+     2.0%  frei: Tea Lady
+     1.5%  frei: Exorcist+Fool+Sailor
+     1.4%  (kein Pflicht-Kill in dieser Nacht)
+   ##   0.4%  0 von 2 stillen Nächten gratis
+   ##   0.5%  0 von 3 stillen Nächten gratis
+   ##   2.6%  1 von 2 stillen Nächten gratis
+   ##   0.6%  1 von 3 stillen Nächten gratis
+   ##  28.0%  2 von 2 stillen Nächten gratis
+   ##   1.7%  2 von 3 stillen Nächten gratis
+   ##  66.1%  3 von 3 stillen Nächten gratis
+
+ Shabaloth — stille Nächte nach angebotener Erklärung (Anteil am Gewicht):
+    21.8%  frei: Innkeeper+Sailor
+    16.4%  frei: Fool+Sailor
+    13.0%  frei: Sailor
+    12.7%  frei: Fool+Innkeeper+Sailor
+     6.0%  frei: Fool
+     5.5%  frei: Innkeeper
+     4.8%  frei: Innkeeper+Tea Lady
+     4.4%  frei: Exorcist+Sailor
+     4.0%  frei: Innkeeper+Sailor+Tea Lady
+     2.1%  frei: Exorcist+Fool+Sailor
+     1.3%  nur bezahlt: already dead
+     1.2%  (kein Pflicht-Kill in dieser Nacht)
+     1.2%  frei: Exorcist+Innkeeper+Sailor
+     1.0%  frei: Sailor+Tea Lady
+   ##   0.5%  0 von 2 stillen Nächten gratis
+   ##   0.3%  0 von 3 stillen Nächten gratis
+   ##   0.3%  1 von 2 stillen Nächten gratis
+   ##   0.5%  1 von 3 stillen Nächten gratis
+   ##  30.6%  2 von 2 stillen Nächten gratis
+   ##   0.4%  2 von 3 stillen Nächten gratis
+   ##  67.5%  3 von 3 stillen Nächten gratis
+
+ Po — stille Nächte nach angebotener Erklärung (Anteil am Gewicht):
+   100.0%  (kein Pflicht-Kill in dieser Nacht)
+   ##  27.9%  2 von 2 stillen Nächten gratis
+   ##  72.1%  3 von 3 stillen Nächten gratis
+exit 0
