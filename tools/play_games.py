@@ -320,7 +320,9 @@ def save_file(deal, heard, claims, wakes, script=None):
                                "died", "triggered", "nominator")
                               if getattr(r, f, None) is not None})
                       for r in heard],
-            "quiet": [], "done": [], "history": [], "fabled": [],
+            "quiet": sorted(deal.record()["quiet_nights"]),
+            "done": sorted(deal.record()["days_done"]),
+            "history": [], "fabled": [],
             "notes": {}, "open": ["ledger"],
         },
     }

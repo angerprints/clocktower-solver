@@ -14,7 +14,7 @@ for seed in map(int, sys.argv[1:]):
     cl, wk, _ = C.claims_for(d, rng, script=sc)
     quiet = {k for k in (2, 3, 4) if not d.died_on(f"N{k}")}
     st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h), votes=dict(d.votes),
-                   nominations=dict(d.nominations), **d.record(), quiet_nights=set(quiet))
+                   nominations=dict(d.nominations), **d.record(told=False), quiet_nights=set(quiet))
     if S.pilot_size(st, False) > 40000: continue
     games += 1
     for w in iter_worlds(n, st.claims, getattr(st, "certainties", None), False, S.forced_roles(st), getattr(st, "wakes", None), st.script, getattr(st, "fabled", ())):

@@ -12,7 +12,7 @@ for seed in range(int(sys.argv[2]), int(sys.argv[3])):
     if d.game_ends_after is not None: continue
     cl, wk, _ = C.claims_for(d, rng, script=sc)
     st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
-                   votes=dict(d.votes), nominations=dict(d.nominations), **d.record())
+                   votes=dict(d.votes), nominations=dict(d.nominations), **d.record(told=False))
     r = S.analyze(st, rng=random.Random(1))
     demon = d.demon_at("D4"); kind = d.role_at(demon, "D4")
     mass = {k: 0.0 for k in ("Zombuul", "Pukka", "Shabaloth", "Po")}

@@ -21,7 +21,7 @@ for seed in range(start, start + N):
     w = World(tuple(d.roles), tuple(d.believes))
     def state(**extra):
         return GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
-                         votes=dict(d.votes), nominations=dict(d.nominations), **d.record(), **extra)
+                         votes=dict(d.votes), nominations=dict(d.nominations), **d.record(told=False), **extra)
     plain = S.explanation_cost(w, state()) is not None
     told = S.explanation_cost(w, state(quiet_nights=set(quiet))) is not None
     kind = d.role_at(d.demon_at(f"N{last}"), f"N{last}") if d.demon_at(f"N{last}") is not None else "?"

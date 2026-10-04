@@ -94,7 +94,13 @@ def played(name, script, seed, n, nights):
                 value = list(value)
             got[field.name] = value
         infos.append(got)
-    return board(name, script, players, infos=infos)
+    # And what did not happen: the nights without a body and the days the
+    # town got through, which is what somebody keeping the board at the
+    # table ticks off as the game goes (04.10.2026).
+    told = deal.record()
+    return board(name, script, players, infos=infos,
+                 quiet_nights=sorted(told["quiet_nights"]),
+                 days_done=sorted(told["days_done"]))
 
 
 def board(name, script, claims, **payload):

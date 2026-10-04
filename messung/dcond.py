@@ -13,7 +13,7 @@ for i, rec in enumerate(seeds):
     d, h = simulate.play(n, rng, nights=4, script=sc)
     cl, wk, _ = C.claims_for(d, rng, script=sc)
     st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
-                   votes=dict(d.votes), nominations=dict(d.nominations), **d.record())
+                   votes=dict(d.votes), nominations=dict(d.nominations), **d.record(told=False))
     r = S.analyze(st, rng=random.Random(1))
     demon = d.demon_at("D4"); kind = rec["kind"]
     per = [dict(row["roles"]).get(kind, 0.0) for row in r["rows"]]

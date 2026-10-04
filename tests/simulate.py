@@ -103,6 +103,7 @@ class Deal:
         # nights asked for ran out (04.10.2026).
         self.ended_at = None
         self.ended_why = None               # "two alive" or "vortox"
+        self.nights_played = 0              # how far `play` got
         self.votes = {}                     # {day: {seat, ...}}
         self.nominations = {}               # {day: {seat, ...}}
         self.tally = {}                     # {day: {nominee: votes}}
@@ -286,7 +287,7 @@ class Deal:
         self.courtier_chose.pop(seat, None)
         self.assassin_chose.pop(seat, None)
 
-    def record(self, upto=None):
+    def record(self, upto=None, told=True):
         """What the table saw happen to its players, for a `GameState`.
 
         Use as `GameState(..., **deal.record())`. Handing over
@@ -296,10 +297,29 @@ class Deal:
         anybody who came back.
 
         `upto` cuts it off at a phase, for a board as it stood mid-game.
+
+        And what it saw *not* happen: the nights nobody died, and the
+        days it got through. Neither was ever handed over, so no played
+        game asked the solver what it makes of a night without a body —
+        only hand-made boards did (04.10.2026). `told=False` leaves the
+        two out again, for a measurement that wants the difference.
+
+        A day is done once the night after it has begun. The day a game
+        ended on is not one the town got through.
         """
         from botc.info import phase_index
         limit = None if upto is None else phase_index(upto)
         seen = lambda at: limit is None or phase_index(at) <= limit
+        nothing = {}
+        if told:
+            nothing = {
+                "quiet_nights": {
+                    night for night in range(2, self.nights_played + 1)
+                    if seen(f"N{night}") and not self.died_on(f"N{night}")},
+                "days_done": {
+                    day for day in range(1, self.nights_played)
+                    if seen(f"N{day + 1}")},
+            }
         deaths = {}
         for seat in range(self.n):
             got = tuple(at for at in self.deaths_of(seat) if seen(at))
@@ -310,6 +330,7 @@ class Deal:
             if seen(at):
                 back[seat] = back.get(seat, ()) + (at,)
         return {
+            **nothing,
             "deaths": deaths,
             "resurrections": back,
             "executions": {day: seat for day, seat in self.executions.items()
@@ -526,6 +547,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     heard = []
 
     for night in range(1, nights + 1):
+        d.nights_played = night
         living = d.alive_at(f"N{night}")
         # A Poisoner that catches the star stops being one. The seat was
         # worked out at deal time and never checked again, so a Poisoner

@@ -14,7 +14,7 @@ for seed in range(first, last):
     d, h = simulate.play(n, rng, nights=nights, script=sc)
     cl, wk, _ = C.claims_for(d, rng, script=sc)
     st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
-                   votes=dict(d.votes), nominations=dict(d.nominations), **d.record())
+                   votes=dict(d.votes), nominations=dict(d.nominations), **d.record(told=False))
     last_night = min(nights, d.game_ends_after or nights)
     end = f"D{last_night}"
     demon = d.demon_at(end)

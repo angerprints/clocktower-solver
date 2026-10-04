@@ -18,6 +18,7 @@ ability ends with the death of whoever has it, so somebody raised is a
 new instance and chooses again.
 """
 
+import dataclasses
 import random
 from collections import Counter
 
@@ -175,6 +176,10 @@ class OnBadMoonRising(SolverTest):
                         {s: tuple(p) for s, p in posted.resurrections.items()},
                         {s: tuple(p) for s, p in state.resurrections.items()})
                     self.assertEqual(posted.executions, state.executions)
+                    self.assertEqual(set(posted.quiet_nights),
+                                     set(state.quiet_nights))
+                    self.assertEqual(set(posted.days_done),
+                                     set(state.days_done))
         finally:
             app.analyze = real
 
@@ -406,6 +411,93 @@ class OnBadMoonRising(SolverTest):
                     self.assertTrue(deal.back_at(row.player,
                                                  f"N{row.night}"))
         self.assertGreater(again, 0)
+
+
+class WhatDidNotHappenIsOnTheRecord(SolverTest):
+    """The nights nobody died and the days the town got through.
+
+    `deal.record()` handed over deaths, returns and executions, and no
+    quiet night — so no played game ever asked the solver what it makes
+    of a night without a body. Only hand-made boards did. Since
+    04.10.2026 every sweep that builds its board from `record()` tells
+    both, these included.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.played = [(script, seed, deal, state)
+                      for script in (scripts.TROUBLE_BREWING, BMR, SV)
+                      for seed, deal, _heard, state in games(script)]
+
+    def test_every_night_without_a_body_is_quiet_and_no_other(self):
+        for _script, seed, deal, state in self.played:
+            last = deal.nights_played
+            empty = {night for night in range(2, last + 1)
+                     if not any(f"N{night}" in deal.deaths_of(seat)
+                                for seat in range(deal.n))}
+            with self.subTest(seed=seed):
+                self.assertEqual(set(state.quiet_nights), empty)
+
+    def test_the_first_night_is_never_one(self):
+        for _script, seed, _deal, state in self.played:
+            with self.subTest(seed=seed):
+                self.assertNotIn(1, state.quiet_nights)
+
+    def test_there_are_plenty_of_them(self):
+        quiet = Counter()
+        for script, _seed, _deal, state in self.played:
+            quiet[script.name] += len(state.quiet_nights)
+        self.assertGreater(quiet[BMR.name], 200)
+        self.assertGreater(quiet[scripts.TROUBLE_BREWING.name], 50)
+
+    def test_a_day_is_done_once_the_night_after_it_began(self):
+        for _script, seed, deal, state in self.played:
+            with self.subTest(seed=seed):
+                self.assertEqual(set(state.days_done),
+                                 set(range(1, deal.nights_played)))
+
+    def test_the_day_a_game_ended_on_is_not_one_the_town_got_through(self):
+        ended = 0
+        for _script, seed, deal, state in self.played:
+            if deal.ended_at is None or deal.ended_at[0] == "N":
+                continue
+            ended += 1
+            with self.subTest(seed=seed, ended=deal.ended_at):
+                self.assertNotIn(int(deal.ended_at[1:]), state.days_done)
+        self.assertGreater(ended, 50)
+
+    def test_a_board_cut_off_mid_game_tells_only_what_had_happened(self):
+        for _script, seed, deal, _state in self.played[:200]:
+            whole = deal.record()
+            for night in range(1, deal.nights_played + 1):
+                got = deal.record(upto=f"N{night}")
+                with self.subTest(seed=seed, upto=night):
+                    self.assertEqual(
+                        got["quiet_nights"],
+                        {k for k in whole["quiet_nights"] if k <= night})
+                    self.assertEqual(got["days_done"],
+                                     set(range(1, night)))
+
+    def test_it_can_be_left_untold(self):
+        for _script, seed, deal, _state in self.played[:50]:
+            with self.subTest(seed=seed):
+                got = deal.record(told=False)
+                self.assertNotIn("quiet_nights", got)
+                self.assertNotIn("days_done", got)
+
+    def test_the_true_world_survives_being_told(self):
+        """On Trouble Brewing and Sects & Violets as well; Bad Moon
+        Rising has its own sweep above."""
+        for script, seed, deal, state in self.played:
+            if script is BMR:
+                continue
+            truth = World(tuple(deal.roles), tuple(deal.believes))
+            untold = dataclasses.replace(state, quiet_nights=set(),
+                                         days_done=set())
+            if S.explanation_cost(truth, untold) is None:
+                continue                  # lost already, a Barber's swap
+            with self.subTest(script=script.name, seed=seed):
+                self.assertIsNotNone(S.explanation_cost(truth, state))
 
 
 class TheGameEndsWhenEvilHasWon(SolverTest):
