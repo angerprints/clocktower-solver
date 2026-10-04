@@ -53,7 +53,8 @@ Der Arbeitsordner des alten Chats ist weg. Was dort lag und gebraucht wird, steh
 | a560877 | Roadmap: Messung „Dämon gefunden“ |
 | 2d75583 | Roadmap: Messung „stille Nächte“ und Berichtigung |
 | ed5ea39 | `messung/` und diese Datei |
-| danach | Simulator beendet die Partie, wenn Böse gewonnen hat (zwei Lebende, oder ein Tag ohne Hinrichtung unter einem Vortox) |
+| cc2aa45 | Simulator beendet die Partie, wenn Böse gewonnen hat (zwei Lebende, oder ein Tag ohne Hinrichtung unter einem Vortox) |
+| danach | ein Kommentar berichtigt |
 
 Berichte im Projekt: `claude/regelpruefung-bmr-und-snv.md`, `claude/simulator-vier-dinge.md`, `claude/simulator-schlaeger-und-drei-kills.md`, `claude/messung-daemon-gefunden.md`, `claude/messung-stille-naechte.md`, `claude/simulator-spielende.md`.
 
@@ -129,7 +130,7 @@ Der neue Chat führt diese fünf Befehle im Repo aus. Stimmen alle fünf, ist ni
 
 | Befehl | Muss ergeben |
 |---|---|
-| `git log --oneline -1` | den Commit „Simulator beendet die Partie, wenn Böse gewonnen hat“ |
+| `git log --oneline -1` | den Commit „Kommentar zu Seed 94 berichtigt“ (davor: „Simulator beendet die Partie, wenn Böse gewonnen hat“) |
 | `git status --short` | nichts |
 | `python3 run_tests.py bmr` | 195 Tests, OK |
 | `python3 messung/dana.py messung/daten/dm_bmr.jsonl kind offen` | erste Zeile: `n= 274 vorn  143 (  52%)` |

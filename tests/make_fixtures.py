@@ -577,8 +577,9 @@ def handmade():
     # later the same day. And "regurgitated" once more when the game
     # learned to stop with two left alive (04.10.2026): seed 1 brought
     # its dead back on a fourth night that is no longer played. Not the
-    # first seed to do it now but the first whose board has worlds: in
-    # 50 two good players claim a character they are not.
+    # first seed to do it now: in 50 two good players claim a character
+    # they are not and the board has no worlds, and 94 has more of them
+    # (60) than 86 or 93.
     for what, seed in (("walked-advocate", 42), ("walked-pacifist", 16),
                        ("walked-sailor", 21), ("walked-tea-lady", 19),
                        ("fool-and-back", 12), ("regurgitated", 94),
