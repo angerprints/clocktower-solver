@@ -105,6 +105,16 @@ Einbau der Erklärung „der Dämon selbst wurde gestoppt“ (Commit e2d215e). D
 Rechenzeiten in dieser Datei stammen von vor den beiden Beschleunigungen und
 sind zu hoch, die Ergebnisse gelten.
 
+`dmorgen_preis.py` ist `dmorgen.py` mit einem Preis, der nur im Speicher
+ausprobiert wird: Eine Nacht ohne Toten kostet `PRICE` in jeder Welt, deren
+Dämon in dieser Nacht hätte töten können. `dm_preis_1.jsonl` (der Solver, wie
+er ist), `dm_preis_0.5.jsonl` und `dm_preis_0.25.jsonl` sind dieselben 400
+Partien Bad Moon Rising (Stand Commit 11f36ad). Jede Zeile trägt zusätzlich
+`mass` (Glaube des Solvers je Dämon-Typ), `zpcts` und die Toten je Tag und
+Nacht. `preis_vergleich.py 0.5 0.25` stellt die Läufe nebeneinander.
+`stillmuster.py N` zählt ohne Solver an N Partien, wie oft eine Nacht je
+Dämon still ist und wer es bei welchem Muster war.
+
     python3 messung/dana.py messung/daten/morgen/dm_bmr.jsonl kind
     python3 messung/dana.py messung/daten/morgen/dm_sv.jsonl kind
 

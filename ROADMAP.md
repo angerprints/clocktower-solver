@@ -576,11 +576,22 @@ Wer auf Bad Moon Rising nach dem Ende einer Partie weiterrechnet, ohne dass das 
 
 **Schalter „the game is over“ auf der Website** (deine Entscheidung vom 04.10.2026, gebaut am selben Tag): Er steht als letzte Zeile unter **Information**, wird mit der Partie gespeichert und geht bei **Solve** und **How much is guesswork?** an den Solver. Der Rückblick braucht ihn nicht. Im Browser geprüft an einem Brett mit zwei Lebenden auf Bad Moon Rising: ohne Haken 555 Welten und kein Lebender als Dämon, mit Haken 1.419 Welten und die beiden Lebenden mit je 30 %. Die Anleitung für den Spieleabend nennt den Haken.
 
+### Messung: der Zombuul, der als tot gilt, bei drei oder mehr Lebenden · *gemessen am 05.10.2026*
+
+Der volle Bericht steht in `claude/messung-zombuul-tot-drei-lebende.md`. Kein Code am Solver geändert.
+
+- **Woran man ihn erkennen könnte:** nur am Muster der Nächte. Ein Zombuul tötet nur nach einem Tag ohne Toten. In 4.000 gespielten Partien ist die Nacht nach einem Tag mit einem Toten beim Zombuul in 81 % still, beim Poe in 40 %, bei der Pukka in 39 %, beim Shabaloth in 24 %. Nach vier solchen stillen Nächten und keiner lauten ist es in 93 % ein Zombuul.
+- **Ob der Solver es sieht:** nein. In den 22 Partien sagt das Muster allein im Mittel 70 % Zombuul, der Solver sagt 32 % und verteilt den Rest gleichmäßig auf Poe, Pukka und Shabaloth (24, 24, 20 %). Grund: Jede stille Nacht ist bei den anderen Dämonen gratis erklärbar (das Ziel konnte nicht sterben, der Dämon wurde gestoppt, der Poe wählte niemanden). Das ist nach den Regeln richtig, also fehlt keine Regel.
+- **Preis im Versuch** (nur im Speicher, 400 Partien): Eine stille Nacht kostet jede Welt, deren Dämon hätte töten können, den Faktor 0,5 oder 0,25. In den 22 Partien steht der Zombuul dann in 3 oder 7 statt 0 vorn und in 17 oder 18 statt 9 unter den ersten drei. Über alle 400 Partien wird es aber schlechter: 225 oder 218 statt 228 vorn. Der Glaube an den Zombuul fließt auch dann zu den Toten, wenn der Zombuul lebt (dort 26 oder 21 statt 30 vorn). Keine wahre Welt geht verloren.
+- **Was auch mit dem richtigen Typ bleibt:** welcher der Toten es ist. In 13 der 22 Partien steht der wahre Sitz unter den Toten vorn, vor ihm liegen dann nur lebende Sitze.
+
+**Folgerung:** Deine Entscheidung „stille Nächte nicht bepreisen“ ist jetzt direkt gemessen und bestätigt. Die Stelle bleibt offen und hängt am Dorf im Simulator: Es richtet fast jeden Tag hin, deshalb tötet der Zombuul fast nie und hinterlässt kaum Spuren.
+
 ### Als Nächstes
 
-**1 · Der Zombuul, der als tot gilt, bei drei oder mehr Lebenden auf dem Brett** (offene Stelle 33): 0 von 22 vorn. Keine Regel greift, es fehlen Hinweise.
+**1 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin. Davon hängt auch die offene Stelle 33 ab.
 
-**2 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin.
+**2 · Der Dämon-Typ als eigene Anzeige** (Idee, nicht entschieden): Die Seite könnte neben den Sitzen zeigen, welcher Dämon nach dem Muster der Nächte naheliegt, ohne die Sitze umzugewichten.
 
 **3 · Strenge Lesart für stille Nächte** (zurückgestellt): zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst. Im Versuch verlor sie 11 von 60.000 Partien, die der Solver hält.
 
@@ -621,7 +632,7 @@ Wer auf Bad Moon Rising nach dem Ende einer Partie weiterrechnet, ohne dass das 
 | 27 | Messung | *Erledigt am 04.10.2026:* Stille Nächte und Tage ohne Hinrichtung sind in jedem Messlauf und Test mit gespielten Partien eingetragen. |
 | 31 | Messung | **Die Dämon-Messung zeigt keinen Verlauf.** Sie wertet einen Morgen je Partie aus. Wie sich der Rang des Dämons von Morgen zu Morgen entwickelt, ist nicht gemessen. |
 | 32 | Website | *Erledigt am 04.10.2026:* Schalter „the game is over“ unter Information. Ohne den Haken nimmt der Solver an, dass die Partie läuft. |
-| 33 | Bad Moon Rising | **Der Zombuul, der als tot gilt, bei drei oder mehr Lebenden auf dem Brett:** 0 von 22 vorn. Keine Regel greift, und der Zombuul tötet im Simulator fast nie. |
+| 33 | Bad Moon Rising | **Der Zombuul, der als tot gilt, bei drei oder mehr Lebenden auf dem Brett:** 0 von 22 vorn. Gemessen am 05.10.2026: Keine Regel fehlt, der Solver erkennt den Typ aus dem Muster der Nächte nicht (32 % statt 70 %). Stille Nächte zu bepreisen hebt diese 22 (bis 7 vorn), kostet über 400 Partien aber mehr (218 bis 225 statt 228). |
 | 28 | Simulator | **Das Dorf gewinnt im Simulator nie.** Es richtet den Dämon nur hin, wenn die Partie danach weitergeht (Scharlachrote Frau, Zombuul, Strippenzieher, Teufelsadvokat). Das ist Absicht, heißt aber: Alle gespielten Partien sind solche, in denen der Dämon überlebt. |
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
 | 30 | Simulator gegen Night-Walk | **Sects & Violets weicht in 60 von 16.641 Nächten ab.** Nicht untersucht, älter als die Reparatur. |
