@@ -431,11 +431,71 @@ Neu an einer gespielten Partie: `ended_at` (der Moment, zum Beispiel `N4` oder `
 - Die Dämon-Messung vom 03.10.2026 gilt weiter, weil sie nur offene Partien zählt und die sich nicht geändert haben.
 - 1.100 Tests grün, davon 9 neue für das Spielende. Die Website ist unverändert.
 
+### Stille Nächte eingetragen, Dämon am letzten offenen Morgen · *erledigt am 04.10.2026*
+
+Der volle Bericht steht in `claude/stille-naechte-eingetragen-und-letzter-morgen.md`. Am Solver und an der Website wurde nichts geändert.
+
+**Was neu ist:** Eine gespielte Partie gibt dem Solver jetzt auch, was nicht passiert ist: die Nächte ohne Toten (ab Nacht 2) und die Tage, nach denen die Partie weiterging. Das gilt für alle Tests und Messläufe mit gespielten Partien und für die 26 gespielten Bretter im Korpus.
+
+**Der große Lauf mit eingetragenen stillen Nächten** (wahre Welt gehalten):
+
+| Skript | Partien | verworfen |
+|---|---|---|
+| Bad Moon Rising, 4 Nächte | 20.000 | 16 |
+| Bad Moon Rising, 5 Nächte | 16.000 | 19 |
+| Bad Moon Rising, 6 Nächte | 24.000 | 48 |
+| Trouble Brewing, 4 und 6 Nächte | je 6.000 | 0 |
+| Oster-Skript, 4 und 6 Nächte | je 6.000 | 0 |
+| Sects & Violets, 4 Nächte | 6.000 | 43, alle Barbier-Tausch, wie ohne Eintrag |
+| Sects & Violets, 6 Nächte | 6.000 | 72, alle Barbier-Tausch |
+
+**Befund: 83 von 60.000 Partien Bad Moon Rising gehen verloren,** ohne eingetragene stille Nächte waren es 0. In allen 83 war die Nacht still, weil der **Dämon selbst gestoppt** wurde, und es gab keinen Schutz, mit dem der Solver die Nacht sonst erklären konnte. Bei vier Nächten hatte der Dämon in 15 von 16 Fällen den Schläger zuerst gewählt (in dieser Nacht, oder die Pukka in der Nacht davor). Bei sechs Nächten war er in 32 von 48 Fällen durch den Schläger gestoppt, in 16 anders betrunken oder vergiftet. Das ist die offene Stelle 1.
+
+Wie oft das überhaupt vorkommt: In 6.000 Partien gab es 6.609 stille Nächte, in 1.907 davon war der Dämon selbst gestoppt. Fast immer findet der Solver trotzdem eine andere, falsche Erklärung (einen Schutz auf dem Opfer). Deshalb fiel es bisher nicht auf.
+
+**Versuch im Speicher** (nichts im Solver geändert), verworfen von 20.000 / 16.000 / 24.000 Partien bei 4 / 5 / 6 Nächten:
+
+| Variante | 4 Nächte | 5 Nächte | 6 Nächte |
+|---|---|---|---|
+| Solver, wie er ist | 16 | 19 | 48 |
+| dazu nur die Erklärung „der Dämon selbst wurde gestoppt“ | 0 | 1 | 12 |
+| strenge Lesart (Variante `logic`) | 2 | 3 | 6 |
+
+Keine der beiden Varianten ist fertig. Die einfache lässt bei sechs Nächten 12 übrig und verliert dabei auch Partien, die der Solver heute hält. Die strenge verliert andere Partien als der Solver heute. Beides ist nicht untersucht.
+
+**Dämon gefunden am letzten offenen Morgen** (400 Partien je Skript, 7 bis 10 Spieler, höchstens sechs Nächte, stille Nächte eingetragen). Das Brett ist das, was der Tisch am letzten Morgen hat, bevor die Partie entschieden ist. Jede Partie zählt, nicht mehr nur die nach vier Nächten offenen.
+
+| Bad Moon Rising | Partien | vorn | unter den ersten drei |
+|---|---|---|---|
+| Pukka | 105 | 65 % | 96 % |
+| Poe | 102 | 58 % | 97 % |
+| Shabaloth | 103 | 58 % | 99 % |
+| **Zombuul** | 90 | **34 %** | 78 % |
+| alle | 400 | 54 % | 93 % |
+
+| Sects & Violets | Partien | vorn | unter den ersten drei |
+|---|---|---|---|
+| No Dashii | 99 | 69 % | 98 % |
+| Vigormortis | 105 | 67 % | 100 % |
+| Vortox | 92 | 63 % | 98 % |
+| Fang Gu | 104 | 62 % | 97 % |
+| alle | 400 | 65 % | 98 % |
+
+Raten unter den Lebenden träfe zu 28 % und 29 %. Jede Zahl für ein ganzes Skript schwankt um etwa 5 Punkte, für einen einzelnen Dämon um etwa 10.
+
+- **Das Bild ist dasselbe wie nach festen vier Nächten** (52 % und 68 %). Der andere Zeitpunkt ändert das Ergebnis nicht über die Schwankung hinaus.
+- **Der Zombuul ist nur schwach, solange er als tot gilt:** 3 von 44 vorn. Ist er sichtbar am Leben, steht er in 28 von 46 Partien vorn (61 %), so oft wie die anderen Dämonen.
+- **Lange Partien sind schwerer:** Bad Moon Rising, nach sechs Nächten noch offen: 48 % vorn (111 Partien). Am dritten und vierten Morgen: 60 % und 62 %.
+- Sects & Violets endet im Simulator fast immer am dritten oder vierten Tag (372 von 400).
+- In 4 Partien Sects & Violets geht die wahre Welt verloren (Barbier-Tausch). Der richtige Spieler steht in allen vier trotzdem vorn.
+
+1.108 Tests grün, davon 8 neue. Korpus: Alle 26 gespielten Bretter tragen die neuen Angaben, bei 2 ändert sich die Zahl der Welten.
+
 ### Als Nächstes
 
-**1 · Den Messaufbau richtigstellen** (bestätigt am 04.10.2026). Stille Nächte und Tage ohne Hinrichtung aus der gespielten Partie ableiten und in die Messläufe und Tests eintragen. Die Dämon-Messung am letzten Morgen wiederholen, an dem die Partie noch offen ist, statt nach festen vier Nächten.
+**1 · „Der Dämon selbst wurde gestoppt“ als Erklärung für eine stille Nacht** (deine Entscheidung B, der große Lauf dafür liegt jetzt vor). Ohne sie verliert der Solver 83 von 60.000 Partien Bad Moon Rising, sobald die stille Nacht eingetragen ist. Zu klären ist, ob nur diese Erklärung gebaut wird oder die ganze strenge Lesart, und warum beide Versuche noch Partien verlieren.
 
-**2 · Strenge Lesart für stille Nächte** (deine Entscheidung: erst nach einem großen Lauf): näher an den Regeln und schließt die offene Stelle 1.
+**2 · Der Zombuul, der als tot gilt.** Hier liegt die ganze Schwäche beim Zombuul (3 von 44 vorn).
 
 **3 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin.
 
@@ -447,7 +507,7 @@ Neu an einer gespielten Partie: `ended_at` (der Moment, zum Beispiel `N4` oder `
 
 | Nr. | Bereich | Was offen ist |
 |---|---|---|
-| 1 | Bad Moon Rising | **Gestörter Dämon als Erklärung für eine ruhige Nacht.** Das gibt es nur beim allgemeinen Dämon, nicht bei Zombuul, Pukka, Shabaloth und Poe. Die Bretter gehen trotzdem auf, über einen Schutz auf dem Opfer. Das gilt auch für einen Dämon, den der Schläger betrunken gemacht hat: in 60.000 Partien ging keine verloren. |
+| 1 | Bad Moon Rising | **Gestörter Dämon als Erklärung für eine ruhige Nacht.** Das gibt es nur beim allgemeinen Dämon, nicht bei Zombuul, Pukka, Shabaloth und Poe. Ohne eingetragene stille Nächte gehen die Bretter trotzdem auf, über einen Schutz auf dem Opfer. **Mit eingetragenen stillen Nächten gehen 83 von 60.000 Partien verloren** (gemessen am 04.10.2026), meist nach einem Dämon, der den Schläger zuerst gewählt hat. |
 | 2 | Bad Moon Rising | **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung vom 02.10.2026). Abgebildet für Höfling und Philosoph (Tod, und Störung beim Wählen) und für die Pukka, seit dem 03.10. auch mit dem Kill, der dadurch später kommt. Nicht allgemein für eine Quelle, die erst später gestört wird. |
 | 3 | Bad Moon Rising | **Poe und Meuchelmörder bleiben locker:** drei Tote in zwei Nächten hintereinander, und ein Meuchelmörder ohne eingetragene Zeile kann in mehreren Nächten zuschlagen (jeder Schlag kostet 0,25). |
 | 4 | Sects & Violets | **Barbier-Tausch ohne gemeldeten Barbier** verliert die wahre Welt, in 47 von 6.000 Partien. Nach deiner Regel gewollt. |
@@ -473,7 +533,8 @@ Neu an einer gespielten Partie: `ended_at` (der Moment, zum Beispiel `N4` oder `
 | 24 | Messung | **Nicht gemessen:** wie früh der Solver den Dämon findet (nur der Stand nach vier Nächten), und ob ein Dämon am Morgen vor seiner Hinrichtung vorn stand. Der Solver weiß nicht, dass eine Partie zu Ende ist. |
 | 25 | Messung | **Kleine Tische:** Bei 7 und 8 Spielern sind nach vier Nächten fast alle Partien entschieden. Die frühere Auffälligkeit „9 Spieler“ bei Sects & Violets war ein Artefakt davon. |
 | 26 | Simulator | *Erledigt am 04.10.2026:* Die Partie endet, wenn Böse gewonnen hat (zwei Lebende, Tag ohne Hinrichtung unter einem Vortox). |
-| 27 | Messung | **Stille Nächte werden dem Solver in keinem Messlauf und keinem Test mit gespielten Partien eingetragen.** Bestätigt als nächster Schritt. |
+| 27 | Messung | *Erledigt am 04.10.2026:* Stille Nächte und Tage ohne Hinrichtung sind in jedem Messlauf und Test mit gespielten Partien eingetragen. |
+| 31 | Messung | **Die Dämon-Messung zeigt keinen Verlauf.** Sie wertet einen Morgen je Partie aus. Wie sich der Rang des Dämons von Morgen zu Morgen entwickelt, ist nicht gemessen. |
 | 28 | Simulator | **Das Dorf gewinnt im Simulator nie.** Es richtet den Dämon nur hin, wenn die Partie danach weitergeht (Scharlachrote Frau, Zombuul, Strippenzieher, Teufelsadvokat). Das ist Absicht, heißt aber: Alle gespielten Partien sind solche, in denen der Dämon überlebt. |
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
 | 30 | Simulator gegen Night-Walk | **Sects & Violets weicht in 60 von 16.641 Nächten ab.** Nicht untersucht, älter als die Reparatur. |

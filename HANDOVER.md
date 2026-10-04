@@ -28,7 +28,7 @@ Der Arbeitsordner des alten Chats ist weg. Was dort lag und gebraucht wird, steh
 
 - **Eine Fähigkeit endet mit dem Tod ihres Trägers.** Wer wiederbelebt oder neu erschaffen wird, ist eine neue Instanz und wählt neu (03.10.2026). Höfling: Trunkenheit endet sofort, nach der Rückkehr neue Wahl, wieder drei Tage. Großmutter: neues Enkelkind.
 - **Schläger:** Der Erste, der ihn wählt, ist sofort betrunken, also schlägt schon diese Wahl fehl. Ein Dämon, der ihn zuerst wählt, tötet in der Nacht niemanden mehr.
-- **Barbier:** Ein Tausch wird nur erwogen, wenn ein gemeldeter Barbier gestorben ist. Ein versteckter Barbier ist Schuld des Dorfs. Der Solver verliert dort die wahre Welt mit Absicht (41 von 6.000 Partien Sects & Violets).
+- **Barbier:** Ein Tausch wird nur erwogen, wenn ein gemeldeter Barbier gestorben ist. Ein versteckter Barbier ist Schuld des Dorfs. Der Solver verliert dort die wahre Welt mit Absicht (41 von 6.000 Partien Sects & Violets bei vier Nächten).
 - **Ziel des Solvers:** den richtigen Spieler als Dämon benennen.
 - **Pukka:** läuft nach dem Ablaufplan von Not_Quite_Vertical. Eine gestörte Pukka greift nicht an, ihr Gift ruht.
 - Alle weiteren stehen in `ROADMAP.md` (Abschnitte „Regelabgleich“ und „Regelprüfung“).
@@ -38,8 +38,8 @@ Der Arbeitsordner des alten Chats ist weg. Was dort lag und gebraucht wird, steh
 - Zwei Solver für dieselben Regeln: Python in `botc/`, JavaScript in `js/`. **Jede Regeländerung in beiden.**
 - `python3 tools/build_site.py` baut die Website nach `docs/`.
 - `tests/fixtures/conformance.json` ist der Korpus (190 Bretter), auf dem Python und JavaScript übereinstimmen müssen. Neu schreiben mit `python3 tests/make_fixtures.py` (etwa 2,5 Minuten), immer nach einer Regeländerung.
-- `tests/simulate.py` spielt ganze Partien und hört auf, wenn Böse gewonnen hat. Dann steht in `deal.ended_at` der Moment (`N4`, `D3`, `E3`), in `deal.ended_why` der Grund (`two alive` oder `vortox`) und in `deal.game_ends_after` die letzte gespielte Nacht. Den Zusatztag des Strippenziehers liefert `deal.mastermind_day`. `tests/nightwalk.py` erzählt dieselbe Nacht ein zweites Mal, unabhängig. `tests/claims.py` macht aus einer Partie, was der Tisch sagt.
-- Tests: `python3 run_tests.py` (alles, etwa 31 Minuten, 1.100 Tests), `python3 run_tests.py bmr` (ein Filter, Sekunden).
+- `tests/simulate.py` spielt ganze Partien und hört auf, wenn Böse gewonnen hat. Dann steht in `deal.ended_at` der Moment (`N4`, `D3`, `E3`), in `deal.ended_why` der Grund (`two alive` oder `vortox`) und in `deal.game_ends_after` die letzte gespielte Nacht. Den Zusatztag des Strippenziehers liefert `deal.mastermind_day`. `deal.record()` gibt dem Solver Tode, Rückkehrer, Hinrichtungen und seit dem 04.10.2026 auch die stillen Nächte und die Tage, nach denen die Partie weiterging. `record(told=False)` lässt die beiden letzten weg. `tests/nightwalk.py` erzählt dieselbe Nacht ein zweites Mal, unabhängig. `tests/claims.py` macht aus einer Partie, was der Tisch sagt.
+- Tests: `python3 run_tests.py` (alles, etwa 31 Minuten, 1.108 Tests, mit `1/2` und `2/2` in zwei Hälften nebeneinander etwa 22 Minuten), `python3 run_tests.py bmr` (ein Filter, Sekunden).
 
 **Reihenfolge nach einer Regeländerung:** Python ändern, JavaScript spiegeln, Messlauf (`messung/sim5.py`), Tests dazu, Korpus neu, Website bauen, ganze Suite, Roadmap und Bericht, Commit und Push.
 
@@ -54,40 +54,44 @@ Der Arbeitsordner des alten Chats ist weg. Was dort lag und gebraucht wird, steh
 | 2d75583 | Roadmap: Messung „stille Nächte“ und Berichtigung |
 | ed5ea39 | `messung/` und diese Datei |
 | cc2aa45 | Simulator beendet die Partie, wenn Böse gewonnen hat (zwei Lebende, oder ein Tag ohne Hinrichtung unter einem Vortox) |
-| danach | ein Kommentar berichtigt |
+| 34421be | ein Kommentar berichtigt |
+| be39613 | Gespielte Partien tragen stille Nächte und Tage ohne Hinrichtung ein; `messung/dmorgen.py` |
+| danach | Dämon-Messung am letzten offenen Morgen, Rohdaten, Roadmap, diese Datei |
 
-Berichte im Projekt: `claude/regelpruefung-bmr-und-snv.md`, `claude/simulator-vier-dinge.md`, `claude/simulator-schlaeger-und-drei-kills.md`, `claude/messung-daemon-gefunden.md`, `claude/messung-stille-naechte.md`, `claude/simulator-spielende.md`.
+Berichte im Projekt: `claude/regelpruefung-bmr-und-snv.md`, `claude/simulator-vier-dinge.md`, `claude/simulator-schlaeger-und-drei-kills.md`, `claude/messung-daemon-gefunden.md`, `claude/messung-stille-naechte.md`, `claude/simulator-spielende.md`, `claude/stille-naechte-eingetragen-und-letzter-morgen.md`.
 
 ## 6 · Der Stand der Messungen
 
 **Wahre Welt gehalten** (verwirft der Solver die Welt, die gespielt wurde?):
 
-Stand nach der Reparatur des Simulators (04.10.2026), also nur noch mit Partien, die nicht über ihr Ende hinauslaufen:
+Stand vom 04.10.2026: Der Simulator beendet die Partie, wenn Böse gewonnen hat, und jede Partie trägt ihre stillen Nächte und Tage ein.
 
-- Bad Moon Rising: 0 von 60.000 (4 bis 6 Nächte). Trouble Brewing und Oster-Skript: je 0 von 6.000.
-- Sects & Violets: 43 von 6.000, alle mit Barbier-Tausch, 41 mit verstecktem Barbier. Vor der Reparatur waren es 49 und 47.
-- Mit eingetragenen stillen Nächten: 0 von 3.000 (Bad Moon Rising) und 0 von 3.000 (Trouble Brewing). Mehr ist dazu nicht gemessen.
+- **Bad Moon Rising: 83 von 60.000** (16 von 20.000 bei 4 Nächten, 19 von 16.000 bei 5, 48 von 24.000 bei 6). Ohne eingetragene stille Nächte: 0 von 60.000. In allen 83 war der Dämon selbst gestoppt, meist durch den Schläger. Der Solver kennt diese Erklärung bei den vier Dämonen des Skripts nicht.
+- Trouble Brewing und Oster-Skript: je 0 von 12.000 (4 und 6 Nächte).
+- Sects & Violets: 43 von 6.000 (4 Nächte) und 72 von 6.000 (6 Nächte), alle mit Barbier-Tausch, 41 und 68 mit verstecktem Barbier.
 - Simulator gegen Night-Walk: Bad Moon Rising 0 von 45.651 Nächten, Trouble Brewing 0 von 17.178. Sects & Violets 60 von 16.641, das war vorher schon so (61 von 18.000).
 
-**Dämon gefunden** (steht der wahre Dämon an der Spitze?), 400 Partien je Skript, 7 bis 10 Spieler, Stand nach vier Nächten, **nur offene Partien**:
+**Dämon gefunden** (steht der wahre Dämon an der Spitze?), 400 Partien je Skript, 7 bis 10 Spieler, **am letzten Morgen, an dem die Partie noch offen ist** (höchstens sechs Nächte), stille Nächte eingetragen:
 
-| | offene Partien | vorn |
-|---|---|---|
-| Bad Moon Rising | 274 | 52 % |
-| Shabaloth / Poe / Pukka / Zombuul | 41 / 63 / 81 / 89 | 61 / 57 / 62 / **36** % |
-| Sects & Violets | 200 | 68 % |
-| Fang Gu / Vigormortis / No Dashii / Vortox | 48 / 52 / 50 / 50 | 73 / 73 / 64 / 64 % |
+| | Partien | vorn | unter den ersten drei |
+|---|---|---|---|
+| Bad Moon Rising | 400 | 54 % | 93 % |
+| Pukka / Poe / Shabaloth / Zombuul | 105 / 102 / 103 / 90 | 65 / 58 / 58 / **34** % | 96 / 97 / 99 / 78 % |
+| Sects & Violets | 400 | 65 % | 98 % |
+| No Dashii / Vigormortis / Vortox / Fang Gu | 99 / 105 / 92 / 104 | 69 / 67 / 63 / 62 % | 98 / 100 / 98 / 97 % |
 
-Raten unter den Lebenden träfe zu 23 % und 30 %. Jede Zahl schwankt um 6 bis 7 Punkte.
+Raten unter den Lebenden träfe zu 28 % und 29 %. Ein ganzes Skript schwankt um etwa 5 Punkte, ein einzelner Dämon um etwa 10.
 
-Diese Zahlen gelten weiter: Jede Partie, die nach vier Nächten noch offen ist, spielt der reparierte Simulator Zeichen für Zeichen wie vorher.
+Der Zombuul ist nur schwach, solange er als tot gilt (3 von 44 vorn). Sichtbar am Leben steht er in 28 von 46 Partien vorn.
+
+Die ältere Messung nach festen vier Nächten, nur offene Partien, ergab 52 % (274 Partien) und 68 % (200 Partien). Ihre Rohdaten liegen weiter in `messung/daten/`, Probe 4 unten rechnet sie nach.
 
 **Stille Nächte:** Der Solver erklärt sie nur mit „das Ziel konnte nicht sterben“, gratis auf fünf Arten (Segler, Gastwirt, Narr, Teedame, Exorzist). In Wahrheit wurde beim Shabaloth in 85 % der Dämon selbst gestoppt. Eine Erklärung zu streichen ändert fast nichts, alle zu streichen schiebt den Glauben zum Poe und findet den Zombuul nicht öfter. Folgerung: Bepreisen hilft nicht beim Finden.
 
-## 7 · Zwei Mängel im Messaufbau (einer behoben)
+## 7 · Zwei Mängel im Messaufbau (beide behoben)
 
 1. *Behoben am 04.10.2026:* Der Simulator beendete eine Partie nicht, wenn Böse gewonnen hatte. Jetzt endet sie bei zwei Lebenden und an einem Tag ohne Hinrichtung unter einem Vortox. Wer nur offene Partien messen will, fragt `deal.ended_at is None`.
-2. **Stille Nächte werden dem Solver nirgends eingetragen.** `deal.record()` liefert Tode, Rückkehrer und Hinrichtungen, aber kein `quiet_nights`. Kein Test mit gespielten Partien prüft deshalb, was der Solver mit einer Nacht ohne Toten macht.
+2. *Behoben am 04.10.2026:* Stille Nächte wurden dem Solver nirgends eingetragen. Jetzt liefert `deal.record()` sie mit, zusammen mit den Tagen, nach denen die Partie weiterging.
 
 ## 8 · Was Patrick entschieden hat, und was noch offen ist
 
@@ -101,16 +105,19 @@ Aus `claude/messung-stille-naechte.md`, Abschnitt 6. Entschieden am 04.10.2026:
 | D | Dämon-Messung wiederholen, am letzten Morgen mit offener Partie statt nach festen vier Nächten | ja |
 | | Simulator reparieren oder nur im Messaufbau filtern | reparieren (erledigt) |
 
-Noch offen: **die Grenze 400** für die Erzählungen der Nächte (statt 96). Sie kostet bei langen Partien bis zum Doppelten an Rechenzeit, im Schnitt 17 %. Patrick hat sie noch nicht bestätigt. Im Browser ist die Rechenzeit nicht gemessen.
+**Jetzt zu entscheiden (B):** Der große Lauf liegt vor. Mit eingetragenen stillen Nächten verliert der Solver 83 von 60.000 Partien Bad Moon Rising. Ein Versuch im Speicher (`messung/quietsweep.py`): Nur die Erklärung „der Dämon selbst wurde gestoppt“ dazuzunehmen lässt 13 übrig, die ganze strenge Lesart 11, und beide verlieren Partien, die der Solver heute hält. Patrick muss sagen, ob gebaut wird und welche der beiden.
+
+Außerdem offen: **die Grenze 400** für die Erzählungen der Nächte (statt 96). Sie kostet bei langen Partien bis zum Doppelten an Rechenzeit, im Schnitt 17 %. Patrick hat sie noch nicht bestätigt. Im Browser ist die Rechenzeit nicht gemessen.
 
 ## 9 · Der nächste Schritt
 
-A und D sind bestätigt, Schritt 1 ist erledigt:
+A und D sind erledigt (04.10.2026). Wenn Patrick B bestätigt:
 
-1. *Erledigt:* `tests/simulate.py` lässt die Partie enden, wenn Böse gewonnen hat.
-2. `quiet_nights` und `days_done` aus der gespielten Partie ableiten und in `deal.record()` oder daneben anbieten. Dann `tests/test_simulator_plays.py` und die Messläufe damit laufen lassen.
-3. `messung/dmeas.py` so umbauen, dass das Brett am letzten offenen Morgen ausgewertet wird (`deal.record(upto=…)`, Auskünfte und Abstimmungen bis dahin).
-4. Neu messen, Bericht, Roadmap.
+1. Die verlorenen Partien einzeln ansehen: `python3 messung/quietwhy.py 6 24000` sortiert sie nach dem wahren Grund, `messung/sim4c.py` zeigt eine Partie im Detail.
+2. Klären, warum der einfache Versuch bei sechs Nächten 12 Partien übrig lässt (darunter 8 mit einer Pukka, die in Nacht 2 betrunken oder vergiftet war) und warum die strenge Lesart andere verliert (Seeds 7203, 13650, 8923).
+3. In Python bauen, in JavaScript spiegeln, dann die übliche Reihenfolge aus Abschnitt 4.
+
+Unabhängig davon der nächste Fund aus der Messung: der Zombuul, der als tot gilt.
 
 ## 10 · Stolpersteine
 
@@ -126,12 +133,13 @@ A und D sind bestätigt, Schritt 1 ist erledigt:
 
 ## 11 · Probe: Ist der neue Chat wirklich am selben Punkt?
 
-Der neue Chat führt diese fünf Befehle im Repo aus. Stimmen alle fünf, ist nichts verloren.
+Der neue Chat führt diese sechs Befehle im Repo aus. Stimmen alle sechs, ist nichts verloren.
 
 | Befehl | Muss ergeben |
 |---|---|
-| `git log --oneline -1` | den Commit „Kommentar zu Seed 94 berichtigt“ (davor: „Simulator beendet die Partie, wenn Böse gewonnen hat“) |
+| `git log --oneline -1` | den Commit „Dämon am letzten offenen Morgen gemessen“ |
 | `git status --short` | nichts |
 | `python3 run_tests.py bmr` | 195 Tests, OK |
 | `python3 messung/dana.py messung/daten/dm_bmr.jsonl kind offen` | erste Zeile: `n= 274 vorn  143 (  52%)` |
 | `python3 messung/sim6.py BMR 60 4` | in jeder Zeile „verworfen wegen stiller Nacht 0“ |
+| `python3 messung/dana.py messung/daten/morgen/dm_bmr.jsonl kind` | erste Zeile: `n= 400 vorn  218 (  54%)` |

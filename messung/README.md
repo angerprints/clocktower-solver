@@ -15,8 +15,12 @@ Stellen 26 und 27):
   den Moment (`None` heißt offen), `deal.game_ends_after` die letzte
   gespielte Nacht. Vorher lief sie weiter, und entschiedene Partien mussten
   herausgefiltert werden.
-- `deal.record()` trägt dem Solver keine stillen Nächte ein. Wer sie haben
-  will, übergibt `quiet_nights=...` selbst (wie `sim6.py` und `quiet.py`).
+- Seit dem 04.10.2026 trägt `deal.record()` die stillen Nächte und die Tage
+  ein, nach denen die Partie weiterging (`quiet_nights`, `days_done`). Jeder
+  Lauf, der sein Brett aus `record()` baut, sagt dem Solver also beides.
+  `record(told=False)` lässt beides weg. Die Skripte der Messungen vom 03.
+  und 04.10. (`dmeas.py`, `dtype.py`, `dcond.py`, `quiet.py`, `attr.py`,
+  `sim6.py`) benutzen das, damit ihre Rohdaten nachstellbar bleiben.
 
 ## Wahre Welt gehalten
 
@@ -74,6 +78,22 @@ Pukka schützt sich nicht selbst).
 `quiet.py` findet seine Stelle über den Quelltext von `_account_for`. Ändert
 sich diese Funktion, bricht das Skript mit einer Meldung ab, statt falsch zu
 messen.
+
+## Stille Nächte eingetragen, Dämon am letzten offenen Morgen (04.10.2026)
+
+| Skript | Aufruf | Was es tut |
+|---|---|---|
+| `sim5.py` | wie oben | Seit dem 04.10. mit eingetragenen stillen Nächten und Tagen. |
+| `quietwhy.py` | `NÄCHTE N` | Bad Moon Rising: sortiert die Partien, in denen eine eingetragene stille Nacht die wahre Welt kostet, nach dem wahren Grund der Nacht. |
+| `quietsweep.py` | `NÄCHTE N VARIANTEN` | Dieselbe Frage für `base`, `source` (dazu die Erklärung „der Dämon selbst wurde gestoppt“) und `logic` (strenge Lesart), im Speicher wie `quiet.py`. |
+| `dmorgen.py` | `SKRIPT aus.jsonl ERSTER LETZTER [NÄCHTE] [untold]` | Spielt jede Partie bis zu ihrem Ende (höchstens 6 Nächte) und wertet das Brett am letzten Morgen aus, an dem sie noch offen ist. Stille Nächte und Tage sind eingetragen. Eine Zeile je Partie, lesbar mit `dana.py` (ohne `offen`, Schlüssel zum Beispiel `kind`, `morning`, `how`, `n`). |
+
+Rohdaten dazu in `daten/morgen/`: `dm_bmr.jsonl` und `dm_sv.jsonl`, je 400
+Partien, Seeds 0 bis 399, Spielerzahl `[7, 8, 9, 10][seed % 4]`, gemessen mit
+dem Stand von Commit be39613.
+
+    python3 messung/dana.py messung/daten/morgen/dm_bmr.jsonl kind
+    python3 messung/dana.py messung/daten/morgen/dm_sv.jsonl kind
 
 ## Rohdaten in `daten/`
 
