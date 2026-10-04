@@ -1168,82 +1168,102 @@ function theOnesTheBoardAllows(night, options, impairedAlready, workingAlready) 
       .some(([when, seats]) => clash(when, seats, [])));
 }
 
+const NOBODY = new Set();
+const seatList = seats => [...seats].sort((a, b) => a - b).join(",");
+const entryFor = (night, impaired, working) =>
+  `${night}:${seatList(impaired)}/${seatList(working)};`;
+
+export const ACCOUNTS_KEPT = 400;
+
+/** How every night of this game could have gone.
+ *
+ * One account per set of demands, the cheapest excuses first. What an
+ * account asks of the impairment plan is who had to be impaired and who
+ * had to be working, night by night. Two that ask the same differ only
+ * in what they cost, and the dearer can never win — so only the best of
+ * each is kept, which loses nothing.
+ *
+ * Then a cap, because the nights multiply. It used to be the first
+ * twenty-four as they came, unsorted and with every duplicate still in:
+ * by the fourth night of a Bad Moon Rising game the account that really
+ * happened was past the cut, and the world was thrown out with nothing
+ * wrong with it (03.10.2026).
+ *
+ * Built without copying: the sets are shared and never changed, an
+ * account's key grows by one night's entry, and an account that another
+ * already beats is never built. Only those that put a demand on an
+ * earlier night — a Pukka's — are made the long way (04.10.2026). See
+ * _night_accounts in solver.py.
+ */
 function nightAccounts(world, state, impairedAlready = {}, workingAlready = {}) {
   const deaths = nightDeaths(state);
   const nights = new Set([...Object.keys(deaths).map(Number),
                           ...state.quietNights]);
   if (!nights.size) return [{cost: 1.0, impaired: {}, working: {}}];
 
-  let accounts = [{cost: 1.0, impaired: {}, working: {}}];
+  let accounts = [{cost: 1.0, impaired: {}, working: {}, key: ""}];
+  const done = [];
   for (const night of [...nights].sort((a, b) => a - b)) {
-    const options = theOnesTheBoardAllows(
-      night, explainedNight(world, state, night,
-                            () => new Set(deaths[night] || [])),
-      impairedAlready, workingAlready);
+    const options = [];
+    for (const opt of theOnesTheBoardAllows(
+        night, explainedNight(world, state, night,
+                              () => new Set(deaths[night] || [])),
+        impairedAlready, workingAlready)) {
+      let clash = false;
+      for (const s of opt.impaired) if (opt.working.has(s)) clash = true;
+      if (clash) continue;              // asked to be both at once
+      // A kill that started on an earlier night puts its demand back
+      // where it belongs.
+      const early = Object.entries(opt.earlier || {})
+        .filter(([, seats]) => seats.size)
+        .sort((a, b) => Number(a[0]) - Number(b[0]));
+      options.push({opt, early,
+                    entry: entryFor(night, opt.impaired, opt.working)});
+    }
     if (!options.length) return [];
-    const grown = [];
+    done.push(night);
+    const best = new Map();
     for (const acc of accounts) {
-      for (const opt of options) {
-        let clash = false;
-        for (const s of opt.impaired) if (opt.working.has(s)) clash = true;
-        if (clash) continue;              // asked to be both at once
-        const merged = {};
-        for (const [n, v] of Object.entries(acc.impaired)) merged[n] = new Set(v);
-        merged[night] = new Set(opt.impaired);
-        // A kill that started on an earlier night puts its demand back
-        // where it belongs.
-        for (const [when, seats] of Object.entries(opt.earlier || {})) {
-          merged[when] = merged[when] || new Set();
-          for (const s of seats) merged[when].add(s);
+      for (const {opt, early, entry} of options) {
+        const cost = acc.cost * opt.cost;
+        let impaired = null, key;
+        if (!early.length) {
+          key = acc.key + entry;
+        } else {
+          impaired = {...acc.impaired};
+          impaired[night] = opt.impaired;
+          let clash = false;
+          for (const [when, seats] of early) {
+            const merged = new Set(impaired[when] || NOBODY);
+            for (const s of seats) merged.add(s);
+            impaired[when] = merged;
+            const work = acc.working[when];
+            if (work) for (const s of merged) if (work.has(s)) clash = true;
+          }
+          if (clash) continue;          // impaired and working at once
+          const all = new Set([...done, ...Object.keys(impaired).map(Number)]);
+          key = [...all].sort((a, b) => a - b)
+            .map(n => entryFor(n, impaired[n] || NOBODY,
+                               n === night ? opt.working
+                                           : (acc.working[n] || NOBODY)))
+            .join("");
         }
-        const work = {};
-        for (const [n, v] of Object.entries(acc.working)) work[n] = new Set(v);
-        work[night] = new Set(opt.working);
-        grown.push({cost: acc.cost * opt.cost, impaired: merged,
-                    working: work});
+        const had = best.get(key);
+        if (had !== undefined && cost <= had.cost) continue;
+        if (impaired === null) {
+          impaired = {...acc.impaired};
+          impaired[night] = opt.impaired;
+        }
+        const working = {...acc.working};
+        working[night] = opt.working;
+        best.set(key, {cost, impaired, working, key});
       }
     }
-    accounts = theAccountsWorthKeeping(grown);
+    accounts = [...best.values()].sort((a, b) => b.cost - a.cost)
+                                 .slice(0, ACCOUNTS_KEPT);
     if (!accounts.length) return [];
   }
   return accounts;
-}
-
-export const ACCOUNTS_KEPT = 400;
-
-/** One account per set of demands, the cheapest excuses first.
- *
- * What an account asks of the impairment plan is who had to be impaired
- * and who had to be working, night by night. Two that ask the same
- * differ only in what they cost, and the dearer can never win — so only
- * the best of each is kept, which loses nothing.
- *
- * Then a cap, because the nights multiply. It used to be the first
- * twenty-four as they came, unsorted and with every duplicate still in:
- * by the fourth night of a Bad Moon Rising game the account that really
- * happened was past the cut, and the world was thrown out with nothing
- * wrong with it (03.10.2026). See solver.py.
- */
-function theAccountsWorthKeeping(grown) {
-  const demands = sets => Object.keys(sets).map(Number)
-    .filter(n => sets[n].size).sort((a, b) => a - b)
-    .map(n => `${n}:${[...sets[n]].sort((a, b) => a - b).join(",")}`)
-    .join(";");
-  const best = new Map();
-  for (const acc of grown) {
-    let clash = false;
-    for (const [n, seats] of Object.entries(acc.impaired)) {
-      const work = acc.working[n];
-      if (!work) continue;
-      for (const s of seats) if (work.has(s)) clash = true;
-    }
-    if (clash) continue;                // impaired and working at once
-    const key = `${demands(acc.impaired)}|${demands(acc.working)}`;
-    const had = best.get(key);
-    if (had === undefined || acc.cost > had.cost) best.set(key, acc);
-  }
-  return [...best.values()].sort((a, b) => b.cost - a.cost)
-                           .slice(0, ACCOUNTS_KEPT);
 }
 
 /** Who had to be impaired each night, and what that cost.
@@ -1319,6 +1339,10 @@ function explainOne(world, state, outcome = null) {
   const settle = readings => {
     let best = null;
     for (const acc of accounts) {
+      // Dearest last, and a plan never improves an account: once the
+      // best this one could reach is no more than what is in hand,
+      // nothing after it can win. See settle in solver.py.
+      if (best !== null && acc.cost * invented <= best) break;
       const wanted = {};
       for (const [n, seats] of Object.entries(readings))
         wanted[n] = new Set(seats);

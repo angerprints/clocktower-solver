@@ -491,13 +491,52 @@ Raten unter den Lebenden träfe zu 28 % und 29 %. Jede Zahl für ein ganzes Skri
 
 1.108 Tests grün, davon 8 neue. Korpus: Alle 26 gespielten Bretter tragen die neuen Angaben, bei 2 ändert sich die Zahl der Welten.
 
+### Stille Nacht: der Dämon selbst wurde gestoppt · *erledigt am 04.10.2026*
+
+Der volle Bericht steht in `claude/stille-nacht-daemon-gestoppt.md`.
+
+**Deine Entscheidungen vom 04.10.2026:** Die Grenze 400 für die Erzählungen der Nächte bleibt. Zu B: Weg 1, also nur die fehlende Erklärung bauen und keine wegnehmen.
+
+**Gebaut, in Python und JavaScript:**
+
+- **Zombuul, Pukka und Shabaloth** können eine stille Nacht jetzt damit erklären, dass der Dämon selbst betrunken oder vergiftet war. Angeboten wird das nur, wenn ihn in dieser Nacht etwas erreichen kann (Schläger, Segler, Gastwirt, Höfling, Minnesänger, Gift). Es kostet nichts extra: Die Störquelle kostet, was sie immer kostet, und der Schläger ist gratis.
+- **Pukka:** War sie in der Nacht davor gestört, hat sie niemanden vergiftet. Dann ist in dieser Nacht nichts fällig (von Nacht 1 auf Nacht 2), oder die Marke aus der Nacht davor wird fällig, und deren Träger konnte nicht sterben.
+- **Der Poe** braucht nichts davon, er darf ohnehin niemanden wählen.
+- **Nichts weggenommen:** Ein Kill sagt bei diesen Dämonen weiterhin nichts darüber, ob der Dämon nüchtern war.
+
+**Die letzten zwei Partien gingen an der Grenze 400 verloren, nicht an einer Regel.** Mit mehr Erklärungen je Nacht waren alle 400 Plätze mit Erzählungen belegt, die das Brett ohnehin ausschließt (ein Sitz soll gestört sein, den eine Auskunft arbeitend braucht, oder umgekehrt). Diese fallen jetzt weg, bevor die Plätze vergeben werden. Das verliert nichts, weil der Plan jede davon abgelehnt hätte. Die Grenze selbst bleibt bei 400. Beide Partien gehen jetzt sogar mit der alten Grenze 96 auf.
+
+**Messung, wahre Welt gehalten, stille Nächte eingetragen:**
+
+| Skript | Partien | vorher | jetzt |
+|---|---|---|---|
+| Bad Moon Rising, 4 / 5 / 6 Nächte | 20.000 / 16.000 / 24.000 | 16 / 19 / 48 | **0 / 0 / 0** |
+| Trouble Brewing, Oster-Skript | je 12.000 | 0 | 0 |
+| Sects & Violets, 4 / 6 Nächte | je 6.000 | 43 / 72 | 43 / 72, alle Barbier-Tausch |
+
+**Dämon gefunden** (Bad Moon Rising, dieselben 400 Partien wie am Mittag): 222 statt 218 vorn, also 56 % statt 54 %. In 391 von 400 Partien hat der Dämon denselben Rang wie vorher, in 6 einen besseren, in 3 einen schlechteren. Der Zombuul, der als tot gilt, steht weiter in 3 von 44 Partien vorn. Die Erklärung rettet also Welten, den Dämon findet der Solver dadurch nicht öfter. So war es erwartet.
+
+**Rechenzeit.** Die neue Erklärung hätte lange Bretter mit stillen Nächten um die Hälfte langsamer gemacht. Zwei Änderungen ohne Einfluss auf das Ergebnis gleichen das aus:
+
+| 48 Bretter Bad Moon Rising | vor der Änderung | mit der Erklärung allein | jetzt |
+|---|---|---|---|
+| Python | 316 s | 497 s | 329 s |
+| JavaScript (die Website) | 138 s | etwa 207 s | 134 s |
+
+- Der Solver rechnet den Störungsplan einer Erzählung nicht mehr aus, wenn sie nicht mehr gewinnen kann.
+- Beim Kombinieren der Nächte werden die Mengen geteilt statt jedes Mal kopiert, und eine Erzählung, die schon geschlagen ist, wird gar nicht erst gebaut.
+
+Geprüft: Der Korpus ist nach beiden Änderungen Zeichen für Zeichen derselbe.
+
+**Korpus:** 10 von 190 Brettern geben andere Zahlen, alle zehn haben eine stille Nacht. Die übrigen 180 sind unverändert. Python und JavaScript stimmen auf allen 190 überein. 1.120 Tests grün, davon 12 neue.
+
 ### Als Nächstes
 
-**1 · „Der Dämon selbst wurde gestoppt“ als Erklärung für eine stille Nacht** (deine Entscheidung B, der große Lauf dafür liegt jetzt vor). Ohne sie verliert der Solver 83 von 60.000 Partien Bad Moon Rising, sobald die stille Nacht eingetragen ist. Zu klären ist, ob nur diese Erklärung gebaut wird oder die ganze strenge Lesart, und warum beide Versuche noch Partien verlieren.
+**1 · Der Zombuul, der als tot gilt.** Hier liegt die ganze Schwäche beim Zombuul (3 von 44 vorn). Sichtbar am Leben wird er so oft gefunden wie die anderen Dämonen.
 
-**2 · Der Zombuul, der als tot gilt.** Hier liegt die ganze Schwäche beim Zombuul (3 von 44 vorn).
+**2 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin.
 
-**3 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin.
+**3 · Strenge Lesart für stille Nächte** (zurückgestellt): zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst. Im Versuch verlor sie 11 von 60.000 Partien, die der Solver hält.
 
 **4 · Was der Simulator weiter nicht spielt:** die **Hinrichtung wegen Wahnsinn** (Cerenovus) in Sects & Violets.
 
@@ -507,7 +546,7 @@ Raten unter den Lebenden träfe zu 28 % und 29 %. Jede Zahl für ein ganzes Skri
 
 | Nr. | Bereich | Was offen ist |
 |---|---|---|
-| 1 | Bad Moon Rising | **Gestörter Dämon als Erklärung für eine ruhige Nacht.** Das gibt es nur beim allgemeinen Dämon, nicht bei Zombuul, Pukka, Shabaloth und Poe. Ohne eingetragene stille Nächte gehen die Bretter trotzdem auf, über einen Schutz auf dem Opfer. **Mit eingetragenen stillen Nächten gehen 83 von 60.000 Partien verloren** (gemessen am 04.10.2026), meist nach einem Dämon, der den Schläger zuerst gewählt hat. |
+| 1 | Bad Moon Rising | *Erledigt am 04.10.2026:* Gestörter Dämon als Erklärung für eine ruhige Nacht, jetzt auch bei Zombuul, Pukka und Shabaloth. Mit eingetragenen stillen Nächten gingen 83 von 60.000 Partien verloren, jetzt 0. |
 | 2 | Bad Moon Rising | **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung vom 02.10.2026). Abgebildet für Höfling und Philosoph (Tod, und Störung beim Wählen) und für die Pukka, seit dem 03.10. auch mit dem Kill, der dadurch später kommt. Nicht allgemein für eine Quelle, die erst später gestört wird. |
 | 3 | Bad Moon Rising | **Poe und Meuchelmörder bleiben locker:** drei Tote in zwei Nächten hintereinander, und ein Meuchelmörder ohne eingetragene Zeile kann in mehreren Nächten zuschlagen (jeder Schlag kostet 0,25). |
 | 4 | Sects & Violets | **Barbier-Tausch ohne gemeldeten Barbier** verliert die wahre Welt, in 47 von 6.000 Partien. Nach deiner Regel gewollt. |
@@ -528,7 +567,7 @@ Raten unter den Lebenden träfe zu 28 % und 29 %. Jede Zahl für ein ganzes Skri
 | 19 | Simulator | **Der Mönch schützt in manchen Nächten zwei Spieler:** ein alter Münzwurf neben der eingetragenen Wahl. Ihn zu entfernen würde alle Trouble-Brewing-Partien neu austeilen, die Tests beim Namen nennen. Der Solver ist davon nicht betroffen. |
 | 20 | Solver | **Der Solver rechnet in ganzen Nächten.** Das Pukka-Gift auf einem Überlebenden gilt bei ihm für die ganze Nacht und den Tag danach, am Tisch nur bis zum Zug der Pukka. Das hält zu viele Welten, verliert aber keine. |
 | 21 | Simulator | **Ein Seitenwechsel des Schlägers gilt für die ganze Nacht,** nicht erst ab dem Platz, an dem er gewählt wurde. Simulator und Night-Walk machen es gleich. |
-| 22 | Solver | **Grenze 400 für die Erzählungen der Nächte** bleibt eine Grenze. In 60.000 Partien ging keine wahre Welt verloren, ausgeschlossen ist es bei sieben und mehr Nächten nicht. Sauber wäre, die Nächte einzeln statt als Produkt zu führen. |
+| 22 | Solver | **Grenze 400 für die Erzählungen der Nächte** bleibt eine Grenze (von dir bestätigt am 04.10.2026). Seit demselben Tag fallen Erzählungen, die das Brett ausschließt, vor dem Schnitt weg. In 60.000 Partien ging keine wahre Welt verloren, ausgeschlossen ist es bei sieben und mehr Nächten nicht. Sauber wäre, die Nächte einzeln statt als Produkt zu führen. |
 | 23 | Solver | **Der Dämon-Typ wird aus stillen Nächten kaum erkannt.** Nach drei stillen Nächten ist es in 65 % ein Zombuul, der Solver sagt 38 %. Gemessen am 04.10.2026: Das zu ändern findet den Dämon nicht öfter. |
 | 24 | Messung | **Nicht gemessen:** wie früh der Solver den Dämon findet (nur der Stand nach vier Nächten), und ob ein Dämon am Morgen vor seiner Hinrichtung vorn stand. Der Solver weiß nicht, dass eine Partie zu Ende ist. |
 | 25 | Messung | **Kleine Tische:** Bei 7 und 8 Spielern sind nach vier Nächten fast alle Partien entschieden. Die frühere Auffälligkeit „9 Spieler“ bei Sects & Violets war ein Artefakt davon. |

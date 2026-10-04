@@ -92,6 +92,11 @@ Rohdaten dazu in `daten/morgen/`: `dm_bmr.jsonl` und `dm_sv.jsonl`, je 400
 Partien, Seeds 0 bis 399, Spielerzahl `[7, 8, 9, 10][seed % 4]`, gemessen mit
 dem Stand von Commit be39613.
 
+`dm_bmr_weg1.jsonl` sind dieselben 400 Partien Bad Moon Rising nach dem
+Einbau der Erklärung „der Dämon selbst wurde gestoppt“ (Commit e2d215e). Die
+Rechenzeiten in dieser Datei stammen von vor den beiden Beschleunigungen und
+sind zu hoch, die Ergebnisse gelten.
+
     python3 messung/dana.py messung/daten/morgen/dm_bmr.jsonl kind
     python3 messung/dana.py messung/daten/morgen/dm_sv.jsonl kind
 

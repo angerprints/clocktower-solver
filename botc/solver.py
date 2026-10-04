@@ -2467,7 +2467,7 @@ def _the_ones_that_can_win(options):
 
     It matters because the nights multiply. Five ways to read night two
     and thirteen to read night three are sixty-five accounts before night
-    four has begun, and the cap in `_the_accounts_worth_keeping` cuts
+    four has begun, and the cap in `_night_accounts` cuts
     whatever does not fit — which by the sixth night of a Bad Moon Rising
     game with an Assassin and a Gossip in it was, three times in twenty
     thousand, the account that really happened (03.10.2026). Fewer ways
@@ -2547,74 +2547,90 @@ def _night_accounts(world, state, impaired_already=None,
     if not nights:
         return [(1.0, {}, {})]
 
-    accounts = [(1.0, {}, {})]
+    # One account per set of demands, the cheapest excuses first.
+    #
+    # What an account asks of the impairment plan is who had to be
+    # impaired and who had to be working, night by night. Two accounts
+    # that ask the same differ only in what they cost, and the dearer one
+    # can never win — so only the best of each is kept, which loses
+    # nothing.
+    #
+    # Then a cap, because the nights multiply. It used to be the first
+    # twenty-four *as they came*, unsorted and with every duplicate still
+    # in: a Bad Moon Rising night has a Demon, a Gossip, an Assassin and a
+    # Gambler all able to explain the same body, ten ways for one night
+    # and seven for the next, and by the fourth night the account that
+    # really happened was past the cut. The world was then thrown out
+    # with nothing wrong with it (03.10.2026, found when the simulator
+    # began playing games with more in them).
+    #
+    # Built without copying. Every account times every explanation used
+    # to be made in full — each night's sets copied, each key sorted out
+    # of them — and only then compared, which is where a long board
+    # spent its time once a stopped Demon gave quiet nights more
+    # explanations (04.10.2026). The sets are frozen now and shared, an
+    # account's key grows by one night's entry, and an account that
+    # another already beats is never built. The only ones made the long
+    # way are those that put a demand on an earlier night: a Pukka's.
+    none = frozenset()
+    accounts = [(1.0, {}, {}, ())]
+    done = []
     for night in sorted(nights):
-        options = _the_ones_the_board_allows(
-            night, _explained_night(world, state, night),
-            impaired_already or {}, working_already or {})
+        options = []
+        for extra_cost, extra_impaired, extra_working, earlier \
+                in _the_ones_the_board_allows(
+                    night, _explained_night(world, state, night),
+                    impaired_already or {}, working_already or {}):
+            if extra_impaired & extra_working:
+                continue                  # asked to be both at once
+            extra_impaired = frozenset(extra_impaired)
+            extra_working = frozenset(extra_working)
+            # A kill that started on an earlier night puts its demand
+            # back where it belongs.
+            early = tuple((when, frozenset(seats))
+                          for when, seats in sorted(earlier.items()) if seats)
+            options.append((extra_cost, extra_impaired, extra_working, early,
+                            (night, extra_impaired, extra_working)))
         if not options:
             return []
-        grown = []
-        for cost, impaired, working in accounts:
-            for extra_cost, extra_impaired, extra_working, earlier in options:
-                if extra_impaired & extra_working:
-                    continue              # asked to be both at once
-                # The sets copied, not only the dict around them. With
-                # `{**impaired, ...}` every option of this night shared the
-                # previous nights' sets, and the `update` below wrote each
-                # option's demand into all of them: a Pukka's victim from
-                # one account and another account's victim piled up on the
-                # same night until no single Pukka could have poisoned
-                # both. The JavaScript always copied; Python did not, and
-                # six Bad Moon Rising games in three hundred were
-                # impossible for it alone (29.09.2026).
-                merged = {n: set(seats) for n, seats in impaired.items()}
-                merged[night] = set(extra_impaired)
-                # A kill that started on an earlier night puts its demand
-                # back where it belongs.
-                for when, seats in earlier.items():
-                    merged.setdefault(when, set()).update(seats)
-                grown.append((
-                    cost * extra_cost,
-                    merged,
-                    {**working, night: set(extra_working)},
-                ))
-        accounts = _the_accounts_worth_keeping(grown)
+        done.append(night)
+        best = {}
+        for cost, impaired, working, key in accounts:
+            for extra_cost, extra_impaired, extra_working, early, entry \
+                    in options:
+                total = cost * extra_cost
+                merged = None
+                if not early:
+                    grown = key + (entry,)
+                else:
+                    merged = dict(impaired)
+                    merged[night] = extra_impaired
+                    clash = False
+                    for when, seats in early:
+                        merged[when] = merged.get(when, none) | seats
+                        if merged[when] & working.get(when, none):
+                            clash = True  # impaired and working at once
+                    if clash:
+                        continue
+                    grown = tuple(
+                        (n, merged.get(n, none),
+                         extra_working if n == night
+                         else working.get(n, none))
+                        for n in sorted(set(done) | set(merged)))
+                had = best.get(grown)
+                if had is not None and total <= had[0]:
+                    continue              # the same demands, no cheaper
+                if merged is None:
+                    merged = dict(impaired)
+                    merged[night] = extra_impaired
+                best[grown] = (total, merged,
+                               {**working, night: extra_working}, grown)
+        accounts = sorted(best.values(),
+                          key=lambda account: -account[0])[:ACCOUNTS_KEPT]
         if not accounts:
             return []
-    return accounts
-
-
-def _the_accounts_worth_keeping(grown):
-    """One account per set of demands, the cheapest excuses first.
-
-    What an account asks of the impairment plan is who had to be impaired
-    and who had to be working, night by night. Two accounts that ask the
-    same differ only in what they cost, and the dearer one can never win
-    — so only the best of each is kept, which loses nothing.
-
-    Then a cap, because the nights multiply. It used to be the first
-    twenty-four *as they came*, unsorted and with every duplicate still
-    in: a Bad Moon Rising night has a Demon, a Gossip, an Assassin and a
-    Gambler all able to explain the same body, ten ways for one night and
-    seven for the next, and by the fourth night the account that really
-    happened was past the cut. The world was then thrown out with nothing
-    wrong with it (03.10.2026, found when the simulator began playing
-    games with more in them).
-    """
-    best = {}
-    for cost, impaired, working in grown:
-        if any(seats & working.get(night, set())
-               for night, seats in impaired.items()):
-            continue                      # impaired and working at once
-        key = (tuple(sorted((n, tuple(sorted(s)))
-                            for n, s in impaired.items() if s)),
-               tuple(sorted((n, tuple(sorted(s)))
-                            for n, s in working.items() if s)))
-        if key not in best or cost > best[key][0]:
-            best[key] = (cost, impaired, working)
-    kept = sorted(best.values(), key=lambda account: -account[0])
-    return kept[:ACCOUNTS_KEPT]
+    return [(cost, impaired, working)
+            for cost, impaired, working, _key in accounts]
 
 
 def forced_roles(state):
@@ -3959,6 +3975,19 @@ def _explain(world, state, outcome=None):
     def settle(readings):
         best = None
         for night_cost, impaired, working in accounts:
+            # The accounts come dearest last, and a plan never makes one
+            # better than it is: every price a source asks is at most
+            # one. So once what an account could reach at best is no
+            # more than what is already in hand, neither this one nor
+            # any after it can win, and their plans need not be tried.
+            #
+            # A stopped Demon made this worth having (04.10.2026). A
+            # quiet night gained explanations, the accounts multiplied,
+            # and a long Bad Moon Rising board took half as long again
+            # — nearly all of it spent planning accounts that had
+            # already lost.
+            if best is not None and night_cost * invented_factor <= best:
+                break
             wanted = {n: set(seats) for n, seats in readings.items()}
             for night, seats in acro_wanted.items():
                 wanted.setdefault(night, set()).update(seats)
