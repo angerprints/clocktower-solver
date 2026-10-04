@@ -574,10 +574,14 @@ def handmade():
     # A seed names a game only until the simulator learns something new:
     # one more character acting moves every draw after it. These were
     # picked again when it learned the Goon and the three other kills,
-    # later the same day.
+    # later the same day. And "regurgitated" once more when the game
+    # learned to stop with two left alive (04.10.2026): seed 1 brought
+    # its dead back on a fourth night that is no longer played. Not the
+    # first seed to do it now but the first whose board has worlds: in
+    # 50 two good players claim a character they are not.
     for what, seed in (("walked-advocate", 42), ("walked-pacifist", 16),
                        ("walked-sailor", 21), ("walked-tea-lady", 19),
-                       ("fool-and-back", 12), ("regurgitated", 1),
+                       ("fool-and-back", 12), ("regurgitated", 94),
                        ("professor", 30), ("moonchild-at-night", 82),
                        ("pukka-a-night-late", 228)):
         yield played(f"bmr-played-{what}", BMR, seed, 7, 4)

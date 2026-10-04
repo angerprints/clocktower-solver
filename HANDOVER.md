@@ -28,7 +28,7 @@ Der Arbeitsordner des alten Chats ist weg. Was dort lag und gebraucht wird, steh
 
 - **Eine Fähigkeit endet mit dem Tod ihres Trägers.** Wer wiederbelebt oder neu erschaffen wird, ist eine neue Instanz und wählt neu (03.10.2026). Höfling: Trunkenheit endet sofort, nach der Rückkehr neue Wahl, wieder drei Tage. Großmutter: neues Enkelkind.
 - **Schläger:** Der Erste, der ihn wählt, ist sofort betrunken, also schlägt schon diese Wahl fehl. Ein Dämon, der ihn zuerst wählt, tötet in der Nacht niemanden mehr.
-- **Barbier:** Ein Tausch wird nur erwogen, wenn ein gemeldeter Barbier gestorben ist. Ein versteckter Barbier ist Schuld des Dorfs. Der Solver verliert dort die wahre Welt mit Absicht (47 von 6.000 Partien Sects & Violets).
+- **Barbier:** Ein Tausch wird nur erwogen, wenn ein gemeldeter Barbier gestorben ist. Ein versteckter Barbier ist Schuld des Dorfs. Der Solver verliert dort die wahre Welt mit Absicht (41 von 6.000 Partien Sects & Violets).
 - **Ziel des Solvers:** den richtigen Spieler als Dämon benennen.
 - **Pukka:** läuft nach dem Ablaufplan von Not_Quite_Vertical. Eine gestörte Pukka greift nicht an, ihr Gift ruht.
 - Alle weiteren stehen in `ROADMAP.md` (Abschnitte „Regelabgleich“ und „Regelprüfung“).
@@ -38,8 +38,8 @@ Der Arbeitsordner des alten Chats ist weg. Was dort lag und gebraucht wird, steh
 - Zwei Solver für dieselben Regeln: Python in `botc/`, JavaScript in `js/`. **Jede Regeländerung in beiden.**
 - `python3 tools/build_site.py` baut die Website nach `docs/`.
 - `tests/fixtures/conformance.json` ist der Korpus (190 Bretter), auf dem Python und JavaScript übereinstimmen müssen. Neu schreiben mit `python3 tests/make_fixtures.py` (etwa 2,5 Minuten), immer nach einer Regeländerung.
-- `tests/simulate.py` spielt ganze Partien. `tests/nightwalk.py` erzählt dieselbe Nacht ein zweites Mal, unabhängig. `tests/claims.py` macht aus einer Partie, was der Tisch sagt.
-- Tests: `python3 run_tests.py` (alles, etwa 31 Minuten, 1.091 Tests), `python3 run_tests.py bmr` (ein Filter, Sekunden).
+- `tests/simulate.py` spielt ganze Partien und hört auf, wenn Böse gewonnen hat. Dann steht in `deal.ended_at` der Moment (`N4`, `D3`, `E3`), in `deal.ended_why` der Grund (`two alive` oder `vortox`) und in `deal.game_ends_after` die letzte gespielte Nacht. Den Zusatztag des Strippenziehers liefert `deal.mastermind_day`. `tests/nightwalk.py` erzählt dieselbe Nacht ein zweites Mal, unabhängig. `tests/claims.py` macht aus einer Partie, was der Tisch sagt.
+- Tests: `python3 run_tests.py` (alles, etwa 31 Minuten, 1.100 Tests), `python3 run_tests.py bmr` (ein Filter, Sekunden).
 
 **Reihenfolge nach einer Regeländerung:** Python ändern, JavaScript spiegeln, Messlauf (`messung/sim5.py`), Tests dazu, Korpus neu, Website bauen, ganze Suite, Roadmap und Bericht, Commit und Push.
 
@@ -52,18 +52,21 @@ Der Arbeitsordner des alten Chats ist weg. Was dort lag und gebraucht wird, steh
 | 605d1d4 | Simulator spielt Schläger, Meuchelmörder, Pate, Schwätzer; Regel „neue Instanz“; sechs Solver-Fehler behoben; Grenze der Erzählungen 96 → 400 |
 | a560877 | Roadmap: Messung „Dämon gefunden“ |
 | 2d75583 | Roadmap: Messung „stille Nächte“ und Berichtigung |
-| danach | `messung/` und diese Datei |
+| ed5ea39 | `messung/` und diese Datei |
+| danach | Simulator beendet die Partie, wenn Böse gewonnen hat (zwei Lebende, oder ein Tag ohne Hinrichtung unter einem Vortox) |
 
-Berichte im Projekt: `claude/regelpruefung-bmr-und-snv.md`, `claude/simulator-vier-dinge.md`, `claude/simulator-schlaeger-und-drei-kills.md`, `claude/messung-daemon-gefunden.md`, `claude/messung-stille-naechte.md`.
+Berichte im Projekt: `claude/regelpruefung-bmr-und-snv.md`, `claude/simulator-vier-dinge.md`, `claude/simulator-schlaeger-und-drei-kills.md`, `claude/messung-daemon-gefunden.md`, `claude/messung-stille-naechte.md`, `claude/simulator-spielende.md`.
 
 ## 6 · Der Stand der Messungen
 
 **Wahre Welt gehalten** (verwirft der Solver die Welt, die gespielt wurde?):
 
+Stand nach der Reparatur des Simulators (04.10.2026), also nur noch mit Partien, die nicht über ihr Ende hinauslaufen:
+
 - Bad Moon Rising: 0 von 60.000 (4 bis 6 Nächte). Trouble Brewing und Oster-Skript: je 0 von 6.000.
-- Sects & Violets: 49 von 6.000, alle mit Barbier-Tausch, 47 mit verstecktem Barbier.
+- Sects & Violets: 43 von 6.000, alle mit Barbier-Tausch, 41 mit verstecktem Barbier. Vor der Reparatur waren es 49 und 47.
 - Mit eingetragenen stillen Nächten: 0 von 3.000 (Bad Moon Rising) und 0 von 3.000 (Trouble Brewing). Mehr ist dazu nicht gemessen.
-- Simulator gegen Night-Walk, Bad Moon Rising mit Schläger: 0 von 52.565 Nächten.
+- Simulator gegen Night-Walk: Bad Moon Rising 0 von 45.651 Nächten, Trouble Brewing 0 von 17.178. Sects & Violets 60 von 16.641, das war vorher schon so (61 von 18.000).
 
 **Dämon gefunden** (steht der wahre Dämon an der Spitze?), 400 Partien je Skript, 7 bis 10 Spieler, Stand nach vier Nächten, **nur offene Partien**:
 
@@ -76,31 +79,34 @@ Berichte im Projekt: `claude/regelpruefung-bmr-und-snv.md`, `claude/simulator-vi
 
 Raten unter den Lebenden träfe zu 23 % und 30 %. Jede Zahl schwankt um 6 bis 7 Punkte.
 
+Diese Zahlen gelten weiter: Jede Partie, die nach vier Nächten noch offen ist, spielt der reparierte Simulator Zeichen für Zeichen wie vorher.
+
 **Stille Nächte:** Der Solver erklärt sie nur mit „das Ziel konnte nicht sterben“, gratis auf fünf Arten (Segler, Gastwirt, Narr, Teedame, Exorzist). In Wahrheit wurde beim Shabaloth in 85 % der Dämon selbst gestoppt. Eine Erklärung zu streichen ändert fast nichts, alle zu streichen schiebt den Glauben zum Poe und findet den Zombuul nicht öfter. Folgerung: Bepreisen hilft nicht beim Finden.
 
-## 7 · Zwei Mängel im Messaufbau (nicht behoben)
+## 7 · Zwei Mängel im Messaufbau (einer behoben)
 
-1. **Der Simulator beendet eine Partie nicht, wenn Böse gewonnen hat.** Mit zwei Lebenden wird weitergespielt. Jede Messung über mehrere Nächte muss solche Partien herausfiltern (`alive > 2`).
+1. *Behoben am 04.10.2026:* Der Simulator beendete eine Partie nicht, wenn Böse gewonnen hatte. Jetzt endet sie bei zwei Lebenden und an einem Tag ohne Hinrichtung unter einem Vortox. Wer nur offene Partien messen will, fragt `deal.ended_at is None`.
 2. **Stille Nächte werden dem Solver nirgends eingetragen.** `deal.record()` liefert Tode, Rückkehrer und Hinrichtungen, aber kein `quiet_nights`. Kein Test mit gespielten Partien prüft deshalb, was der Solver mit einer Nacht ohne Toten macht.
 
-## 8 · Was Patrick noch entscheiden muss
+## 8 · Was Patrick entschieden hat, und was noch offen ist
 
-Aus `claude/messung-stille-naechte.md`, Abschnitt 6. Er hat sich noch nicht geäußert.
+Aus `claude/messung-stille-naechte.md`, Abschnitt 6. Entschieden am 04.10.2026:
 
-| | Was | Empfehlung |
+| | Was | Entscheidung |
 |---|---|---|
 | A | Stille Nächte in Messläufe und Tests eintragen | ja, zuerst |
-| B | Strenge Lesart für stille Nächte einbauen (gestörter Dämon als eigene Erklärung, zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst). Liegt als Variante `logic` in `messung/quiet.py`, nicht im Solver. | danach, erst nach einem großen Lauf |
+| B | Strenge Lesart für stille Nächte einbauen (gestörter Dämon als eigene Erklärung, zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst). Liegt als Variante `logic` in `messung/quiet.py`, nicht im Solver. | erst nach einem großen Lauf |
 | C | Stille Nächte bepreisen | nein |
-| D | Dämon-Messung wiederholen, am letzten Morgen mit offener Partie statt nach festen vier Nächten | ja, zuerst |
+| D | Dämon-Messung wiederholen, am letzten Morgen mit offener Partie statt nach festen vier Nächten | ja |
+| | Simulator reparieren oder nur im Messaufbau filtern | reparieren (erledigt) |
 
-Außerdem offen: **die Grenze 400** für die Erzählungen der Nächte (statt 96). Sie kostet bei langen Partien bis zum Doppelten an Rechenzeit, im Schnitt 17 %. Patrick hat sie noch nicht bestätigt. Im Browser ist die Rechenzeit nicht gemessen.
+Noch offen: **die Grenze 400** für die Erzählungen der Nächte (statt 96). Sie kostet bei langen Partien bis zum Doppelten an Rechenzeit, im Schnitt 17 %. Patrick hat sie noch nicht bestätigt. Im Browser ist die Rechenzeit nicht gemessen.
 
 ## 9 · Der nächste Schritt
 
-Wenn Patrick A und D bestätigt:
+A und D sind bestätigt, Schritt 1 ist erledigt:
 
-1. In `tests/simulate.py` die Partie enden lassen, wenn Böse gewonnen hat, **oder** im Messaufbau filtern. Das Erste ändert alle gespielten Partien (benannte Seeds in `tests/make_fixtures.py` prüfen, `messung/find5.py`), das Zweite nichts.
+1. *Erledigt:* `tests/simulate.py` lässt die Partie enden, wenn Böse gewonnen hat.
 2. `quiet_nights` und `days_done` aus der gespielten Partie ableiten und in `deal.record()` oder daneben anbieten. Dann `tests/test_simulator_plays.py` und die Messläufe damit laufen lassen.
 3. `messung/dmeas.py` so umbauen, dass das Brett am letzten offenen Morgen ausgewertet wird (`deal.record(upto=…)`, Auskünfte und Abstimmungen bis dahin).
 4. Neu messen, Bericht, Roadmap.
@@ -114,6 +120,8 @@ Wenn Patrick A und D bestätigt:
 - Ein Seed benennt eine Partie nur, bis der Simulator etwas Neues lernt. Danach ergibt derselbe Seed eine andere Partie.
 - `messung/tbhash.py` zeigt, ob eine Änderung am Simulator die Partien von Trouble Brewing, Oster-Skript und Sects & Violets unberührt lässt.
 - Kein ungeschütztes `rm` mit Variablen.
+- Wer wissen will, was eine Änderung am Simulator an den Partien ändert: das Repo ein zweites Mal klonen, dieselben Seeds mit beiden Ständen spielen und Partie für Partie vergleichen. So ist die Reparatur vom 04.10.2026 geprüft.
+- Eine gespielte Partie kann kürzer sein als die verlangten Nächte. Schleifen über die Nächte hören bei `deal.game_ends_after` auf.
 
 ## 11 · Probe: Ist der neue Chat wirklich am selben Punkt?
 
@@ -121,7 +129,7 @@ Der neue Chat führt diese fünf Befehle im Repo aus. Stimmen alle fünf, ist ni
 
 | Befehl | Muss ergeben |
 |---|---|
-| `git log --oneline -1` | den Commit „Messskripte, Rohdaten und Handover“ |
+| `git log --oneline -1` | den Commit „Simulator beendet die Partie, wenn Böse gewonnen hat“ |
 | `git status --short` | nichts |
 | `python3 run_tests.py bmr` | 195 Tests, OK |
 | `python3 messung/dana.py messung/daten/dm_bmr.jsonl kind offen` | erste Zeile: `n= 274 vorn  143 (  52%)` |

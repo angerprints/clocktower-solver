@@ -1144,7 +1144,7 @@ class BadMoonRisingAtEveryTableSize(SolverTest):
         extra = zombuul = followed = 0
         for _seed, deal, state in self.played():
             zombuul += deal.zombuul_up is not None
-            if deal.game_ends_after is None:
+            if deal.mastermind_day is None:
                 continue
             extra += 1
             truth = World(tuple(deal.roles), tuple(deal.believes))

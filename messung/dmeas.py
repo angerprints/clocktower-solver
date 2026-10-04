@@ -33,7 +33,7 @@ for seed in range(first, last):
     tied = sum(abs(p - dp) <= 1e-9 for p in pcts) if rows else None
     # among the living only: who would you execute next?
     lrank = (1 + sum(pcts[p] > dp + 1e-9 for p in alive)) if rows and demon in alive else None
-    rec = dict(seed=seed, n=n, dealt=dealt, kind=kind, demon=demon, ended=d.game_ends_after,
+    rec = dict(seed=seed, n=n, dealt=dealt, kind=kind, demon=demon, ended=d.game_ends_after, ended_at=d.ended_at,
                demon_alive=demon in alive, alive=len(alive), ok=ok, valid=r["valid"],
                sampled=bool(r.get("sampled")), dp=dp, rank=rank, tied=tied, lrank=lrank,
                top=max(pcts) if pcts else None, ep=rows[demon]["evil_pct"] if rows else None,

@@ -10,8 +10,11 @@ gehört zu den Tests oder zur Website.
 Zwei Dinge, die jede Messung über mehrere Nächte betreffen (ROADMAP, offene
 Stellen 26 und 27):
 
-- Der Simulator spielt weiter, wenn nur noch zwei Spieler leben. Solche
-  Partien sind entschieden und müssen herausgefiltert werden.
+- Seit dem 04.10.2026 beendet der Simulator eine Partie, wenn Böse gewonnen
+  hat. Eine Partie kann also kürzer sein als verlangt: `deal.ended_at` nennt
+  den Moment (`None` heißt offen), `deal.game_ends_after` die letzte
+  gespielte Nacht. Vorher lief sie weiter, und entschiedene Partien mussten
+  herausgefiltert werden.
 - `deal.record()` trägt dem Solver keine stillen Nächte ein. Wer sie haben
   will, übergibt `quiet_nights=...` selbst (wie `sim6.py` und `quiet.py`).
 
@@ -76,6 +79,12 @@ messen.
 
 Alle mit dem Code von Commit 605d1d4 (Solver) gemessen, je 400 Partien,
 Seeds 0 bis 399, Spielerzahl `[7, 8, 9, 10][seed % 4]`, vier Nächte.
+
+Gemessen mit dem Simulator **vor** der Reparatur vom 04.10.2026. Die Zeilen
+der offenen Partien gelten weiter, denn die spielt der Simulator Zeichen für
+Zeichen wie vorher. Die Zeilen der entschiedenen Partien (`alive` höchstens 2)
+lassen sich nicht mehr nachstellen: Dort endet die Partie jetzt früher und
+bekommt andere Claims.
 
 | Datei | Woraus | Inhalt |
 |---|---|---|

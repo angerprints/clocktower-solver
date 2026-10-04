@@ -57,9 +57,14 @@ def show(key):
 
 def phases_of(deal, nights):
     """Every phase the game reached, in order."""
+    # Reached, not asked for: a game evil won, or one a Mastermind's
+    # extra day finished, has no phases after its last (04.10.2026).
+    last = min(nights, deal.game_ends_after or nights)
     out = []
-    for night in range(1, nights + 1):
+    for night in range(1, last + 1):
         out.append(f"N{night}")
+        if deal.ended_at == f"N{night}":
+            break                         # over at dawn: no day follows
         out.append(f"D{night}")
     return out
 

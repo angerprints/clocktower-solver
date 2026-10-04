@@ -11,7 +11,7 @@ def tags(d, h, nights):
     for seat, at, by in d.resurrections: t.add("raised:" + by)
     if d.fool_spent_ever and d.resurrections: t.add("fool and back")
     if d.zombuul_up is not None: t.add("zombuul up")
-    if d.game_ends_after is not None and "Mastermind" in d.roles: t.add("mastermind?%s" % d.game_ends_after)
+    if d.mastermind_day is not None: t.add("mastermind?%s" % d.mastermind_day)
     for night, target in d.moonchild_picked.items():
         m = [r for r in h if type(r).__name__ == "MoonchildChoice" and r.night == night][0].player
         if d.deaths_of(m)[-1][0] == "N" and target in d.died_on(f"N{night}"): t.add("moonchild night kill")

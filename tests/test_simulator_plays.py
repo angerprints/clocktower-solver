@@ -408,6 +408,163 @@ class OnBadMoonRising(SolverTest):
         self.assertGreater(again, 0)
 
 
+class TheGameEndsWhenEvilHasWon(SolverTest):
+    """Two players alive and one of them the Demon: evil wins, and the
+    game stops there.
+
+    It did not, until 04.10.2026. The simulator played every night it was
+    asked for, down to one player, and each measurement taken over
+    several nights counted those as games: of 6,000 Trouble Brewing games
+    over six nights, 5,608 were already won by evil, and 5,147 of them
+    ran on.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.played = [(script, seed, deal, heard)
+                      for script in (None, BMR, SV)
+                      for seed, deal, heard, _state
+                      in games(script or scripts.TROUBLE_BREWING, nights=6)]
+
+    @staticmethod
+    def standing(deal):
+        """Who is really alive at the end — a Zombuul on the board as
+        dead included."""
+        return [p for p in range(deal.n)
+                if deal.deaths.get(p) is None or p == deal.zombuul_up]
+
+    def test_it_happens_on_every_script(self):
+        ended = Counter(script.name if script else "TB"
+                        for script, _s, deal, _h in self.played
+                        if deal.ended_at is not None)
+        self.assertEqual(len(ended), 3)
+        for name, count in ended.items():
+            with self.subTest(script=name):
+                self.assertGreater(count, 100)
+
+    def test_it_ends_at_night_and_by_day(self):
+        when = Counter(deal.ended_at[0] for _sc, _s, deal, _h in self.played
+                       if deal.ended_at is not None)
+        self.assertGreater(when["N"], 100)
+        self.assertGreater(when["E"], 100)
+
+    def test_a_game_that_ended_has_two_left_and_the_demon_is_one(self):
+        for _script, seed, deal, _heard in self.played:
+            if deal.ended_why != "two alive":
+                continue
+            with self.subTest(seed=seed, ended=deal.ended_at):
+                left = self.standing(deal)
+                self.assertLessEqual(len(left), 2)
+                self.assertIn(deal.demon_at(deal.ended_at), left)
+
+    def test_a_game_still_open_has_three_or_a_masterminds_day(self):
+        for _script, seed, deal, _heard in self.played:
+            if deal.ended_at is not None or deal.mastermind_day is not None:
+                continue
+            with self.subTest(seed=seed):
+                self.assertGreater(len(self.standing(deal)), 2)
+
+    def test_nothing_happens_after_the_end(self):
+        """No death, no return, no reading and no vote later than the
+        moment evil won."""
+        for _script, seed, deal, heard in self.played:
+            if deal.ended_at is None:
+                continue
+            end = phase_index(deal.ended_at)
+            last = int(deal.ended_at[1:])
+            with self.subTest(seed=seed, ended=deal.ended_at):
+                self.assertEqual(deal.game_ends_after, last)
+                for seat in range(deal.n):
+                    for at in deal.deaths_of(seat):
+                        self.assertLessEqual(phase_index(at), end)
+                for _seat, at, _by in deal.resurrections:
+                    self.assertLessEqual(phase_index(at), end)
+                self.assertLessEqual(
+                    max((row.night for row in heard), default=0), last)
+                # A game that ended at dawn has no day after that night.
+                days = last - 1 if deal.ended_at[0] == "N" else last
+                for day in list(deal.votes) + list(deal.nominations) \
+                        + list(deal.executions):
+                    self.assertLessEqual(day, days)
+
+    def test_a_day_without_an_execution_ends_it_under_a_vortox(self):
+        """"Each day, if no-one is executed, evil wins." The solver takes
+        a day like that as proof no Vortox was working, so a game that
+        went on past one would be a board it is right to refuse."""
+        ended = 0
+        for script, seed, deal, _heard in self.played:
+            if script is not SV:
+                self.assertNotEqual(deal.ended_why, "vortox")
+                continue
+            last = deal.game_ends_after or 6
+            for day in range(1, last + 1):
+                if deal.ended_at in (f"N{day}", f"D{day}") or day == 6:
+                    break                 # that day was never finished
+                hanged = deal.died_on(f"E{day}") or day in deal.executions
+                demon = deal.demon_at(f"E{day}")
+                under = (deal.role_at(demon, f"E{day}") == "Vortox"
+                         and deal.working(demon, day, by_day=True))
+                if hanged or not under:
+                    continue
+                with self.subTest(seed=seed, day=day):
+                    self.assertEqual(deal.ended_at, f"E{day}")
+                    self.assertEqual(deal.ended_why, "vortox")
+                ended += 1
+        self.assertGreater(ended, 2)
+
+    def test_a_zombuul_on_the_board_as_dead_still_counts(self):
+        """The game goes on with it and two others: three are alive."""
+        went_on = 0
+        for script, seed, deal, _heard in self.played:
+            up = deal.zombuul_up
+            if up is None:
+                continue
+            others = [p for p in self.standing(deal) if p != up]
+            if deal.ended_at is None and len(others) == 2:
+                went_on += 1
+            if deal.ended_at is not None:
+                with self.subTest(seed=seed):
+                    self.assertLessEqual(len(others), 1)
+        self.assertGreater(went_on, 0)
+
+    def test_nobody_is_raised_into_a_game_already_won(self):
+        """A Professor acts after the Demon. With two left when its turn
+        comes, there is no turn."""
+        for _script, seed, deal, _heard in self.played:
+            for seat, at, by in deal.resurrections:
+                if by != "Professor":
+                    continue
+                # Everybody dead before the Professor's turn that night:
+                # all earlier deaths, and tonight's by the Demon.
+                night = int(at[1:])
+                before = {p for p in range(deal.n) if p != seat
+                          and any(phase_index(x) < phase_index(at)
+                                  for x in deal.deaths_of(p))
+                          and p != deal.zombuul_up
+                          and p in deal.deaths}
+                before |= set(deal.demon_killed.get(night, ()))
+                with self.subTest(seed=seed, night=night):
+                    self.assertGreater(deal.n - len(before) - 1, 2)
+
+    def test_the_night_walk_tells_the_last_night_too(self):
+        """The last night is played to its end, so the second telling of
+        it has everything to go on."""
+        import nightwalk
+        checked = 0
+        for script, seed, deal, heard in self.played:
+            if script is not BMR or deal.ended_at is None \
+                    or deal.ended_at[0] != "N":
+                continue
+            night = int(deal.ended_at[1:])
+            got = nightwalk.walk(
+                deal, night, nightwalk.hidden_from(deal, night, heard))
+            with self.subTest(seed=seed, night=night):
+                self.assertEqual(got.died, deal.died_on(f"N{night}"))
+                self.assertEqual(got.untold, set())
+            checked += 1
+        self.assertGreater(checked, 50)
+
+
 class OnSectsAndViolets(SolverTest):
 
     @classmethod

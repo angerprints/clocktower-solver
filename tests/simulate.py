@@ -96,6 +96,13 @@ class Deal:
         self.zombuul_up = None
         self.fanggu_jumped = False
         self.game_ends_after = None
+        # The moment evil won, if it did: "N4" at dawn, "D3" when a Witch's
+        # curse took the third from last, "E3" at an execution. The game
+        # stops there, and `game_ends_after` is then the last night that
+        # was played. `None` for a game that was still open when the
+        # nights asked for ran out (04.10.2026).
+        self.ended_at = None
+        self.ended_why = None               # "two alive" or "vortox"
         self.votes = {}                     # {day: {seat, ...}}
         self.nominations = {}               # {day: {seat, ...}}
         self.tally = {}                     # {day: {nominee: votes}}
@@ -194,6 +201,16 @@ class Deal:
     @property
     def n(self):
         return len(self.roles)
+
+    @property
+    def mastermind_day(self):
+        """The extra day a Mastermind bought, or None.
+
+        `game_ends_after` alone said so while a Mastermind was the only
+        thing that could end a game. Evil winning with two left sets it
+        too, and those games have `ended_at` beside it.
+        """
+        return self.game_ends_after if self.ended_at is None else None
 
     def world(self):
         return World(tuple(self.roles), tuple(self.believes))
@@ -644,7 +661,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             _gossip_comes_true(d, night, rng)
             # A Professor raises a dead Townsfolk, once. At 43: after
             # every Demon, before the Tinker and the Moonchild.
-            _professor_raises(d, night, rng)
+            #
+            # Not once two are left standing. Evil won at that moment,
+            # and nobody is brought back into a game that is over.
+            if not _evil_has_won(d, f"N{night}"):
+                _professor_raises(d, night, rng)
             _moonchild_takes_one(d, night, heard, rng)
             _tinker_may_go(d, night, rng)
 
@@ -678,6 +699,16 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             _ogre_picks(d, heard, rng)
         _cerenovus_maddens(d, night, heard, rng)
 
+        # Dawn, and just two players alive: evil has won and the game
+        # stops here. It used to run on — three more nights with one
+        # player left — and every measurement taken over several nights
+        # counted those as games (04.10.2026). The night itself is played
+        # to its end, so the record of the last night is a whole one.
+        if _evil_has_won(d, f"N{night}"):
+            d.ended_at, d.ended_why = f"N{night}", "two alive"
+            d.game_ends_after = night
+            break
+
         if night < nights:
             # A Savant visits the Storyteller in daylight.
             _savant_visits(d, night, heard, rng)
@@ -693,15 +724,63 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 break
 
             _hold_a_day(d, night, rng)
+            # A Witch's curse can take the third from last in daylight.
+            if _evil_has_won(d, f"D{night}"):
+                d.ended_at, d.ended_why = f"D{night}", "two alive"
+                d.game_ends_after = night
+                break
             executed = _execute(d, night, rng, allow_takeover)
             if executed is not None:
                 d.deaths[executed] = f"E{night}"
+            # Or the town hangs one of the last three.
+            if _evil_has_won(d, f"E{night}"):
+                d.ended_at, d.ended_why = f"E{night}", "two alive"
+                d.game_ends_after = night
+                break
+            # Or it hangs nobody, under a Vortox: "each day, if no-one is
+            # executed, evil wins". The solver reads a day like that as
+            # proof there was no working Vortox, so a game that ran on
+            # past one is a game it is right to refuse.
+            if executed is None and night not in d.executions \
+                    and _a_vortox_takes_the_day(d, night):
+                d.ended_at, d.ended_why = f"E{night}", "vortox"
+                d.game_ends_after = night
+                break
             # The Mastermind's extra day was this one: whoever went up,
             # or nobody, the game is over now.
             if d.game_ends_after is not None and night >= d.game_ends_after:
                 break
 
     return d, heard
+
+
+def _evil_has_won(d, phase):
+    """Just two players alive, one of them the Demon: evil wins.
+
+    Counted from who is really standing *now*, in the middle of a phase
+    if need be — `alive_at` answers for the start of one. A Zombuul that
+    survived its first death is on the board as dead and counts all the
+    same: "the game goes on, even with only two alive besides it; evil
+    wins when really only two live, it and one other" (the table's rule
+    book, 02.10.2026).
+
+    Not during a Mastermind's extra day. The Demon is dead by then, and
+    the day is played out however few are left.
+    """
+    if d.game_ends_after is not None:
+        return False
+    standing = [p for p in range(d.n)
+                if d.deaths.get(p) is None or p == d.zombuul_up]
+    return len(standing) <= 2 and d.demon_at(phase) in standing
+
+
+def _a_vortox_takes_the_day(d, day):
+    """Is the Demon a Vortox today, with its ability working?"""
+    phase = f"E{day}"
+    seat = d.demon_at(phase)
+    return (seat is not None and d.role_at(seat, phase) == "Vortox"
+            and d.deaths.get(seat) is None
+            and d.working(seat, day, by_day=True))
 
 
 def _ogre_picks(d, heard, rng):
@@ -1979,7 +2058,9 @@ def _demon_kills(d, night, rng):
         took = d.shabaloth_took.get(night - 1)
         if took is not None and took[0] == demon:
             lying = [p for p in took[1] if d.deaths.get(p) == f"N{night - 1}"]
-            if lying and rng.random() < 0.35:
+            # Nor into a game a Gambler's wrong guess has just ended.
+            if lying and not _evil_has_won(d, phase) \
+                    and rng.random() < 0.35:
                 back = rng.choice(lying)
                 d.raise_up(back, phase, "Shabaloth")
                 d.regurgitated[night] = back

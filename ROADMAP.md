@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 02.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 04.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -386,13 +386,58 @@ Der volle Bericht steht in `claude/messung-stille-naechte.md`. Kein Code geände
 
 **Folgerung:** Stille Nächte zu bepreisen hilft nicht, den Dämon zu finden.
 
+### Der Simulator beendet die Partie, wenn Böse gewonnen hat · *erledigt am 04.10.2026*
+
+Der volle Bericht steht in `claude/simulator-spielende.md`. Am Solver und an der Website wurde nichts geändert.
+
+**Deine Entscheidungen vom 04.10.2026:** Stille Nächte in Messläufe und Tests eintragen: ja, zuerst. Strenge Lesart für stille Nächte: erst nach einem großen Lauf. Stille Nächte bepreisen: nein. Dämon-Messung am letzten offenen Morgen wiederholen: ja. Den Simulator reparieren, statt nur im Messaufbau zu filtern.
+
+**Wie groß der Mangel war** (je 6.000 Partien, 7 bis 11 Spieler, vor der Reparatur). „Entschieden“ heißt: Böse hatte nach den Regeln schon gewonnen. „Lief weiter“ heißt: Der Simulator hat danach noch mindestens einen Tag oder eine Nacht gespielt.
+
+| Skript | 4 Nächte: entschieden / lief weiter | 5 Nächte | 6 Nächte |
+|---|---|---|---|
+| Trouble Brewing | 1.885 / 822 | 4.053 / 3.061 | 5.608 / 5.147 |
+| Oster-Skript | 2.175 / 1.014 | 4.447 / 3.328 | 5.848 / 5.514 |
+| Sects & Violets | 2.464 / 1.233 | 4.927 / 3.782 | 5.948 / 5.826 |
+| Bad Moon Rising | 1.356 / 705 | 2.588 / 1.991 | 3.616 / 3.208 |
+
+Die Läufe über sechs Nächte („0 von 24.000“) haben also zum größten Teil Partien geprüft, die es am Tisch nicht gibt.
+
+**Was der Simulator jetzt tut:**
+
+- **Zwei Lebende:** Leben nur noch zwei Spieler und einer ist der Dämon, endet die Partie. Geprüft wird am Morgen, nach einem Hexen-Tod am Tag und nach der Hinrichtung. Die letzte Nacht wird zu Ende gespielt, damit ihr Protokoll vollständig ist.
+- **Zombuul:** Ein Zombuul, der als tot gilt, zählt als lebend. Die Partie läuft mit ihm und zwei anderen weiter (Regelwerk, Teil 2).
+- **Strippenzieher:** Der Zusatztag läuft, egal wie wenige noch leben (Regelwerk, Teil 6, Punkt 7).
+- **Niemand kommt in eine entschiedene Partie zurück:** Sind vor dem Zug des Professors nur noch zwei am Leben, belebt er niemanden. Dasselbe gilt für das Hochwürgen des Shabaloth. Zusammen kam das in 2 von 6.000 Partien vor.
+- **Vortox:** Ein Tag ohne Hinrichtung unter einem funktionierenden Vortox beendet die Partie. Der Solver kennt diese Regel und liest einen solchen Tag als Beweis gegen einen Vortox. Das betraf 75 von 6.000 Partien Sects & Violets und wäre beim Eintragen der Tage ohne Hinrichtung als falscher Alarm aufgefallen.
+
+Neu an einer gespielten Partie: `ended_at` (der Moment, zum Beispiel `N4` oder `E3`), `ended_why` (`two alive` oder `vortox`), `mastermind_day` (der Zusatztag). `game_ends_after` ist jetzt in jedem Fall die letzte gespielte Nacht.
+
+**Was sich an den Partien ändert,** Partie für Partie verglichen, 72.000 Partien (vier Skripte, 4 bis 6 Nächte, je 6.000):
+
+- Jede Partie, die offen bleibt, ist Zeichen für Zeichen dieselbe wie vorher, mit Claims.
+- Jede Partie, die endet, ist bis zu ihrem Ende dieselbe wie vorher. Ausnahme sind die 2 Partien, in denen der Professor jemanden in eine entschiedene Partie zurückgeholt hätte.
+- Weil die Claims nach dem Spielen gewürfelt werden, bekommt eine verkürzte Partie andere Claims als vorher.
+
+**Korpus:** 8 von 190 Brettern ändern sich. Sieben sind dieselbe Partie, nur kürzer. `bmr-played-regurgitated` hat einen neuen Seed (94 statt 1), weil das Hochwürgen bei Seed 1 in einer Nacht lag, die es nicht mehr gibt. Python und JavaScript stimmen auf allen 190 überein.
+
+**Messung nach der Reparatur:**
+
+- Wahrheit gehalten, Bad Moon Rising: 0 von 20.000 (4 Nächte), 0 von 16.000 (5 Nächte), 0 von 24.000 (6 Nächte).
+- Trouble Brewing und Oster-Skript: je 0 von 6.000 (4 Nächte).
+- Sects & Violets: 43 von 6.000 (vorher 49), alle mit Barbier-Tausch, 41 mit verstecktem Barbier.
+- Mit eingetragenen stillen Nächten: 0 von 3.000 (Bad Moon Rising), 0 von 3.000 (Trouble Brewing).
+- Simulator gegen Night-Walk: Bad Moon Rising 0 von 22.558 Nächten (4 Nächte) und 0 von 23.093 (6 Nächte), Trouble Brewing 0 von 17.178. Sects & Violets 60 von 16.641. Vor der Reparatur waren es dort 61 von 18.000, die Abweichung ist also alt.
+- Die Dämon-Messung vom 03.10.2026 gilt weiter, weil sie nur offene Partien zählt und die sich nicht geändert haben.
+- 1.100 Tests grün, davon 9 neue für das Spielende. Die Website ist unverändert.
+
 ### Als Nächstes
 
-**1 · Den Messaufbau richtigstellen.** Stille Nächte in die Messläufe und Tests eintragen. Die Dämon-Messung am letzten Morgen wiederholen, an dem die Partie noch offen ist, statt nach festen vier Nächten.
+**1 · Den Messaufbau richtigstellen** (bestätigt am 04.10.2026). Stille Nächte und Tage ohne Hinrichtung aus der gespielten Partie ableiten und in die Messläufe und Tests eintragen. Die Dämon-Messung am letzten Morgen wiederholen, an dem die Partie noch offen ist, statt nach festen vier Nächten.
 
-**2 · Strenge Lesart für stille Nächte** (deine Entscheidung): näher an den Regeln und schließt die offene Stelle 1, braucht vorher einen großen Lauf.
+**2 · Strenge Lesart für stille Nächte** (deine Entscheidung: erst nach einem großen Lauf): näher an den Regeln und schließt die offene Stelle 1.
 
-**3 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin, und der Simulator beendet eine Partie nicht, wenn Böse gewonnen hat.
+**3 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin.
 
 **4 · Was der Simulator weiter nicht spielt:** die **Hinrichtung wegen Wahnsinn** (Cerenovus) in Sects & Violets.
 
@@ -427,8 +472,11 @@ Der volle Bericht steht in `claude/messung-stille-naechte.md`. Kein Code geände
 | 23 | Solver | **Der Dämon-Typ wird aus stillen Nächten kaum erkannt.** Nach drei stillen Nächten ist es in 65 % ein Zombuul, der Solver sagt 38 %. Gemessen am 04.10.2026: Das zu ändern findet den Dämon nicht öfter. |
 | 24 | Messung | **Nicht gemessen:** wie früh der Solver den Dämon findet (nur der Stand nach vier Nächten), und ob ein Dämon am Morgen vor seiner Hinrichtung vorn stand. Der Solver weiß nicht, dass eine Partie zu Ende ist. |
 | 25 | Messung | **Kleine Tische:** Bei 7 und 8 Spielern sind nach vier Nächten fast alle Partien entschieden. Die frühere Auffälligkeit „9 Spieler“ bei Sects & Violets war ein Artefakt davon. |
-| 26 | Simulator | **Die Partie endet nicht, wenn Böse gewonnen hat.** Mit zwei Lebenden wird weitergespielt. Betrifft jede Messung über mehrere Nächte. |
-| 27 | Messung | **Stille Nächte werden dem Solver in keinem Messlauf und keinem Test mit gespielten Partien eingetragen.** |
+| 26 | Simulator | *Erledigt am 04.10.2026:* Die Partie endet, wenn Böse gewonnen hat (zwei Lebende, Tag ohne Hinrichtung unter einem Vortox). |
+| 27 | Messung | **Stille Nächte werden dem Solver in keinem Messlauf und keinem Test mit gespielten Partien eingetragen.** Bestätigt als nächster Schritt. |
+| 28 | Simulator | **Das Dorf gewinnt im Simulator nie.** Es richtet den Dämon nur hin, wenn die Partie danach weitergeht (Scharlachrote Frau, Zombuul, Strippenzieher, Teufelsadvokat). Das ist Absicht, heißt aber: Alle gespielten Partien sind solche, in denen der Dämon überlebt. |
+| 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
+| 30 | Simulator gegen Night-Walk | **Sects & Violets weicht in 60 von 16.641 Nächten ab.** Nicht untersucht, älter als die Reparatur. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 
