@@ -317,7 +317,8 @@ def save_file(deal, heard, claims, wakes, script=None):
                            player=r.player,
                            **{f: getattr(r, f) for f in
                               ("a", "b", "target", "role", "count", "yes",
-                               "died", "triggered", "nominator")
+                               "died", "triggered", "nominator",
+                               "clockwise", "shown")
                               if getattr(r, f, None) is not None})
                       for r in heard],
             "quiet": sorted(deal.record()["quiet_nights"]),

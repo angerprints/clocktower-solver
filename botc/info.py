@@ -1774,6 +1774,295 @@ class KlutzChoice(Info):
         return not w.evil_at(self.target, f"N{self.night}")
 
 
+# --------------------------------------------------------------------------
+# Experimental, one at a time (from 05.10.2026)
+# --------------------------------------------------------------------------
+
+@dataclass
+class StewardInfo(Info):
+    """One player, who is good.
+
+    **By registration**, like the Noble: the wiki's own second example is
+    a Steward shown a Spy that is registering as good. So this asks
+    whether the seat *could* have been shown as good, and says which seat
+    it leaned on when that took a misregistration.
+
+    Learned on its first night — night one, or the night it was made.
+    """
+
+    target: int = 0
+    source_role = "Steward"
+
+    def holds(self, w, s, rh, seat=None):
+        phase = f"N{self.night}"
+        return False in evil_registrations(
+            w.role_at(self.target, phase), w.alignment_at(self.target, phase))
+
+    def is_true(self, w, s, seat=None):
+        """Whether that seat really is good, which is what a Vortox must
+        not let it be told."""
+        return not w.evil_at(self.target, f"N{self.night}")
+
+    def leaned_on(self, w, s, seat=None):
+        phase = f"N{self.night}"
+        if w.evil_at(self.target, phase) and self.holds(w, s, None, seat):
+            return (self.target,)
+        return ()
+
+
+@dataclass
+class KnightInfo(Info):
+    """Two players, neither of whom is the Demon.
+
+    Truth rather than registration: a Recluse is not the Demon however
+    it registers, so it may be shown, and nothing that merely *reads* as
+    a Demon is one. "The Knight can learn Townsfolk, Outsiders or even
+    Minions" — so this says what was so **that night**. A Minion it was
+    shown can be the Demon by the next one, which is why the night is
+    asked rather than the present.
+
+    Under a Vortox the two "must include the Demon" (the wiki's example),
+    which is this reading being false and needs nothing of its own.
+    """
+
+    a: int = 0
+    b: int = 0
+    source_role = "Knight"
+
+    def holds(self, w, s, rh, seat=None):
+        phase = f"N{self.night}"
+        if self.a == self.b:
+            return False                  # "2 players"
+        return all(TEAM[w.role_at(x, phase)] != "demon"
+                   for x in (self.a, self.b))
+
+
+def _round_the_circle(n, seat):
+    """Every other seat as (steps, way): the shorter way round, and which
+    way that is — 1 clockwise, -1 anticlockwise, 0 for the seat exactly
+    opposite, which is as far one way as the other.
+
+    Seats run clockwise, as the page draws them.
+    """
+    out = []
+    for gap in range(1, n):
+        other = (seat + gap) % n
+        back = n - gap
+        way = 1 if gap < back else (-1 if gap > back else 0)
+        out.append((min(gap, back), way, other))
+    return out
+
+
+@dataclass
+class ShugenjaInfo(Info):
+    """Which way round its closest evil player sits.
+
+    "If equidistant, this info is arbitrary", so a tie allows either
+    answer — and the Shugenja is never told that it was one.
+
+    **By registration** (table decision, 05.10.2026): a Recluse may be
+    the closest evil player and a Spy may be passed over, as for the
+    Chef and the Empath. So the direction given is legal when *some* way
+    of registering puts the closest evil player there or makes a tie:
+    the nearest seat that **can** read evil that way is no further than
+    the nearest that **must** the other way.
+
+    Like the counts, this names no seat it leaned on. Which Recluse the
+    Storyteller used is not a question the answer can settle.
+    """
+
+    clockwise: bool = True
+    source_role = "Shugenja"
+
+    def _nearest(self, w, who, must):
+        """The nearest seat each way that can — or must — read evil."""
+        phase = f"N{self.night}"
+        best = {1: None, -1: None}
+        for steps, way, other in _round_the_circle(len(w.roles), who):
+            reads = evil_registrations(w.role_at(other, phase),
+                                       w.alignment_at(other, phase))
+            if (reads != (True,)) if must else (True not in reads):
+                continue
+            for side in ((1, -1) if way == 0 else (way,)):
+                if best[side] is None or steps < best[side]:
+                    best[side] = steps
+        return best
+
+    def holds(self, w, s, rh, seat=None):
+        who = self.player if seat is None else seat
+        said = 1 if self.clockwise else -1
+        can = self._nearest(w, who, must=False)[said]
+        must = self._nearest(w, who, must=True)[-said]
+        if can is None:
+            # Nobody that way could read evil. Only with nobody the
+            # other way either is there nothing to contradict.
+            return must is None
+        return must is None or can <= must
+
+    def is_true(self, w, s, seat=None):
+        """Strictly closer that way, by what the seats really are.
+
+        A tie is not true and not false — it is arbitrary — so under a
+        Vortox either answer may be given, and this says no.
+        """
+        who = self.player if seat is None else seat
+        phase = f"N{self.night}"
+        said = 1 if self.clockwise else -1
+        mine = other = None
+        for steps, way, there in _round_the_circle(len(w.roles), who):
+            if not w.evil_at(there, phase):
+                continue
+            if way == said:
+                mine = steps if mine is None else min(mine, steps)
+            else:
+                other = steps if other is None else min(other, steps)
+        return mine is not None and (other is None or mine < other)
+
+
+def really_living(w, s, night):
+    """Who is alive when the King counts, which is late in the night.
+
+    After tonight's deaths: the King acts once every kill has landed, so
+    whoever fell tonight is among the dead already (table decision,
+    05.10.2026).
+
+    And by what is so rather than by what the board shows: a Zombuul
+    that has died once is on the board as dead and is not (table
+    decision, 05.10.2026). So the King counts it among the living, and
+    may be shown it as a living character.
+    """
+    phase = f"N{night}"
+    living = {q for q in s.alive_at(phase) if phase not in s.died_at(q)}
+    if "Zombuul" in s.script.keys:
+        zombuul = w.find_at("Zombuul", phase)
+        if zombuul is not None and zombuul not in living:
+            now = phase_index(phase)
+            gone = [at for at in s.died_at(zombuul) if phase_index(at) <= now]
+            if len(gone) == 1:
+                living.add(zombuul)
+    return living
+
+
+def the_dead_outnumber_or_equal(w, s, night):
+    """The King's condition, at the King's turn."""
+    living = really_living(w, s, night)
+    return s.n_players - len(living) >= len(living)
+
+
+@dataclass
+class KingInfo(Info):
+    """A character that is alive — or, said aloud, that it learned nothing.
+
+    "Each night, if the dead equal or outnumber the living, you learn 1
+    alive character." Two things are said by a row like this: that the
+    condition was met, and that somebody alive holds the character.
+
+    The character is **by registration**, as an Undertaker's is: a Spy
+    may be shown as a Townsfolk. A Drunk is alive as the Drunk, not as
+    the token it holds.
+
+    `role` left empty is the King saying it learned **nothing** tonight.
+    That is worth entering on a board that looks as though it should
+    have: with a Zombuul on the script, a King told nothing while the
+    board shows as many dead as living means one of the dead is not.
+    The empty row is not information a Vortox can falsify — a King whose
+    condition is not met is simply not woken — so under a Vortox it is
+    kept and not weighed, which errs towards keeping worlds.
+    """
+
+    role: str = ""
+    source_role = "King"
+
+    def is_information(self, state):
+        return bool(self.role)
+
+    def holds(self, w, s, rh, seat=None):
+        met = the_dead_outnumber_or_equal(w, s, self.night)
+        if not self.role:
+            return not met
+        if not met:
+            return False
+        phase = f"N{self.night}"
+        return any(registers_as_role(w.role_at(p, phase), self.role)
+                   for p in really_living(w, s, self.night))
+
+    def is_true(self, w, s, seat=None):
+        """Whether somebody alive really holds it. Under a Vortox the
+        King is shown a character that is not alive."""
+        if not self.role:
+            return False
+        phase = f"N{self.night}"
+        return any(w.role_at(p, phase) == self.role
+                   for p in really_living(w, s, self.night))
+
+
+@dataclass
+class NightwatchmanChoice(Info):
+    """Who the Nightwatchman pointed at, said by the Nightwatchman.
+
+    Kept, and it dates the choice — the Nightwatchman is woken every
+    night until this one and never after, which is what a Chambermaid
+    counts. It proves nothing about the player chosen (table decision,
+    05.10.2026): only that player saying they were woken does, and that
+    is `NightwatchmanSeen`.
+    """
+
+    is_a_choice = True
+
+    target: int = 0
+    source_role = "Nightwatchman"
+
+    def holds(self, w, s, rh, seat=None):
+        return True
+
+
+@dataclass
+class NightwatchmanSeen(Info):
+    """"I was woken and shown that X is the Nightwatchman", said by the
+    player the Nightwatchman chose.
+
+    The ability is the Nightwatchman's and the words are somebody
+    else's, so this row is never attributed to a claim: it belongs to
+    whoever holds the Nightwatchman in the world being asked.
+
+    Three things follow, all from the wiki's examples:
+
+      * It is true only of the seat that really is the Nightwatchman,
+        alive at its turn — which is late, after the kills.
+      * A drunk or poisoned Nightwatchman wakes **nobody**. So a row
+        that held needed it working that night, and a row that did not
+        hold cannot be excused by poisoning it: nobody was told
+        anything, and the words were made up. The same goes for a Drunk
+        holding the token.
+      * Under a Vortox the chosen player is shown the **wrong** player,
+        which is the ordinary inversion and needs nothing of its own.
+
+    Whether the speaker was drunk is beside the point. It is not their
+    ability.
+    """
+
+    # Told to somebody other than the holder: see the reading loop in
+    # solver.py, which is the one place that asks.
+    witnessed = True
+
+    shown: int = 0
+    source_role = "Nightwatchman"
+
+    def source_seat(self, state):
+        return None                       # whoever holds it, never a claim
+
+    def holds(self, w, s, rh, seat=None):
+        if seat is None or self.shown != seat:
+            return False
+        phase = f"N{self.night}"
+        return seat in s.alive_set(phase) and phase not in s.died_at(seat)
+
+    def leaned_on(self, w, s, seat=None):
+        # Not a misregistration — but the same demand: for this to have
+        # been said, that seat was not drunk or poisoned that night.
+        return (seat,) if seat is not None else ()
+
+
 _UNBUILT = {}
 
 

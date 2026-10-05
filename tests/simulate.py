@@ -15,6 +15,8 @@ from botc.info import (registers_as_role,
                        Chef, ChambermaidInfo, ClockmakerInfo, CourtierChoice,
                        AcrobatChoice, AlsaahirGuess, ArtistInfo,
                        NobleInfo,
+                       StewardInfo, KnightInfo, ShugenjaInfo, KingInfo,
+                       NightwatchmanChoice, NightwatchmanSeen,
                        BalloonistInfo,
                        DreamerInfo,
                        ExorcistChoice, InnkeeperChoice,
@@ -144,6 +146,12 @@ class Deal:
         self.lunatic_chose = {}             # night -> whom it thinks it attacked
         self.courtier_nights = set()        # {(seat, night)} it ever chose on
         self.courtier_drunks = []           # [(night, holder, courtier)]
+        # The Nightwatchman points once a life. Whom, by night, for the
+        # replay; and the row its choice put in *another* seat's mouth,
+        # which `_for_role` cannot return since it is not that seat's own.
+        self.nightwatchman_chose = {}       # seat -> the night it chose
+        self.nightwatchman_aimed = {}       # night -> {seat: whom}
+        self.said_by_others = []            # rows waiting to be heard
 
     def demon_at(self, phase):
         """The seat holding the Demon at this phase."""
@@ -286,6 +294,7 @@ class Deal:
         self.professor_chose.pop(seat, None)
         self.courtier_chose.pop(seat, None)
         self.assassin_chose.pop(seat, None)
+        self.nightwatchman_chose.pop(seat, None)
 
     def record(self, upto=None, told=True):
         """What the table saw happen to its players, for a `GameState`.
@@ -721,6 +730,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
 
         heard += [row for row in honest_info(d, night, rng)
                   if d.role_at(row.player, f"N{night}") not in CHOOSES_EARLY]
+        # What an ability put in somebody else's mouth: the player a
+        # Nightwatchman woke, saying so.
+        heard += d.said_by_others
+        d.said_by_others = []
 
         # The Ogre picks late on its first night, after every reading.
         if night == 1:
@@ -2220,7 +2233,34 @@ def _conditionally_woke(d, seat, role, night):
         return False
     if role == "Assassin":
         return False                      # once, and the row would say
+    if role == "Nightwatchman":
+        # Woken every night until it has pointed, the night it points
+        # included — "at night" with no asterisk, so from the first.
+        spent = d.nightwatchman_chose.get(seat)
+        return spent is None or spent >= night
+    if role == "King":
+        # Only once the dead equal or outnumber the living, counted when
+        # its turn comes — after tonight's kills, itself among them.
+        if night < 2 or d.deaths.get(seat) is not None:
+            return False
+        return _the_dead_have_it(d)
     return False
+
+
+def _really_standing(d):
+    """Who is alive right now, a Zombuul under its shroud included.
+
+    Asked in the middle of a night, of the deaths as they stand at that
+    moment — the same count `_evil_has_won` makes, for the same reason.
+    """
+    return [p for p in range(d.n)
+            if d.deaths.get(p) is None or p == d.zombuul_up]
+
+
+def _the_dead_have_it(d):
+    """The King's condition: as many dead as living, or more."""
+    standing = len(_really_standing(d))
+    return d.n - standing >= standing
 
 
 def _droisoned_info(d, seat, night, rng):
@@ -2789,6 +2829,49 @@ def _make_false(d, info, night, rng):
         return NobleInfo(info.night, info.player,
                          a=picked[0], b=picked[1], c=picked[2])
 
+    if kind == "StewardInfo":
+        # Shown somebody who is not good. A Spy will do: it is evil
+        # however it registers, so naming it is already false.
+        evil = [p for p in range(d.n) if p != info.player
+                and d.side_at(p, f"N{night}") == "evil"]
+        if not evil:
+            return None
+        info.target = rng.choice(evil)
+        return info
+
+    if kind == "KnightInfo":
+        # "Must include the Demon" — the wiki's own Vortox example.
+        demon = d.demon_at(f"N{night}")
+        others = [p for p in range(d.n) if p not in (info.player, demon)]
+        if demon is None or demon == info.player or not others:
+            return None
+        info.a, info.b = sorted([demon, rng.choice(others)])
+        return info
+
+    if kind == "ShugenjaInfo":
+        # The other way — unless it was a tie, which is arbitrary and so
+        # has no false version. Then either answer is as good as before.
+        nearest = _nearest_evil_each_way(d, info.player, night)
+        if nearest[1] == nearest[-1]:
+            return info
+        truly = nearest[-1] is None or (
+            nearest[1] is not None and nearest[1] < nearest[-1])
+        info.clockwise = not truly
+        return info
+
+    if kind == "KingInfo":
+        # A character nobody alive holds. A King told nothing was not
+        # told anything false either: it simply was not woken.
+        if not info.role:
+            return info
+        phase = f"N{night}"
+        held = {d.role_at(p, phase) for p in _really_standing(d)}
+        spare = [k for k in d.script.keys if k not in held]
+        if not spare:
+            return None
+        info.role = rng.choice(spare)
+        return info
+
     if kind == "DreamerInfo":
         # Neither of the two is what the seat really is.
         #
@@ -2930,6 +3013,95 @@ def _for_role(d, seat, role, night, rng):
         picked = [one] + rng.sample(rest, 2)
         rng.shuffle(picked)
         return NobleInfo(1, seat, a=picked[0], b=picked[1], c=picked[2])
+
+    if role == "Steward" and night == 1:
+        # One good player. Usually really good; now and then a Spy the
+        # Storyteller chose to show as good, which is the wiki's example.
+        phase = "N1"
+        good = [p for p in range(d.n) if p != seat
+                and d.side_at(p, phase) == "good"]
+        # A droisoned character cannot misregister (table rule): a
+        # poisoned Spy is a Spy and reads as one.
+        spies = [p for p in range(d.n) if p != seat
+                 and d.side_at(p, phase) == "evil"
+                 and False in evil_registrations(d.role_at(p, phase))
+                 and d.working(p, night)]
+        if spies and rng.random() < 0.25:
+            return StewardInfo(1, seat, target=rng.choice(spies))
+        if not good:
+            return None
+        return StewardInfo(1, seat, target=rng.choice(good))
+
+    if role == "Knight" and night == 1:
+        # Two players who are not the Demon — Minions among them, as
+        # likely as anybody else.
+        demon = d.demon_at("N1")
+        others = [p for p in range(d.n) if p not in (seat, demon)]
+        if len(others) < 2:
+            return None
+        a, b = sorted(rng.sample(others, 2))
+        return KnightInfo(1, seat, a=a, b=b)
+
+    if role == "Shugenja" and night == 1:
+        # Which way its closest evil player sits; a coin on a tie.
+        nearest = _nearest_evil_each_way(d, seat, night)
+        if nearest[1] is None and nearest[-1] is None:
+            return None
+        if nearest[1] == nearest[-1]:
+            return ShugenjaInfo(1, seat, clockwise=rng.random() < 0.5)
+        clockwise = nearest[-1] is None or (
+            nearest[1] is not None and nearest[1] < nearest[-1])
+        return ShugenjaInfo(1, seat, clockwise=clockwise)
+
+    if role == "King" and night > 1:
+        # A living character, once the dead equal or outnumber the
+        # living. Counted now — this runs after the night's kills — and
+        # with a Zombuul under its shroud among the living.
+        phase = f"N{night}"
+        standing = _really_standing(d)
+        if not _the_dead_have_it(d):
+            # It learned nothing, and mostly nobody remarks on that. But
+            # it is said when the board *looks* as though it should have
+            # — as many crossed off as not — which is the one time it
+            # tells the table something.
+            shown = sum(1 for p in range(d.n) if d.deaths.get(p) is None)
+            if d.n - shown >= shown or rng.random() < 0.3:
+                return KingInfo(night, seat, role="")
+            return None
+        who = rng.choice(standing)
+        return KingInfo(night, seat, role=d.role_at(who, phase))
+
+    if role == "Nightwatchman" and seat not in d.nightwatchman_chose \
+            and rng.random() < 0.4:
+        # Points at somebody, once a life, on a night of its choosing —
+        # any player, alive or dead. That player is woken and shown who
+        # the Nightwatchman is: unless it has no ability tonight, and
+        # then nobody is woken at all.
+        phase = f"N{night}"
+        target = rng.choice([p for p in range(d.n) if p != seat])
+        d.nightwatchman_chose[seat] = night
+        real = (d.role_at(seat, phase) == "Nightwatchman"
+                or d.philosophies.get(seat) == "Nightwatchman")
+        # A Drunk holding the token points too, and nothing comes of it:
+        # it has no ability to choose anybody *with*, so a Goon does not
+        # stir and the replay is told nothing.
+        gooned = False
+        if real:
+            d.nightwatchman_aimed.setdefault(night, {})[seat] = target
+            gooned = _the_goon_answers(d, night, seat, target)
+        if real and not gooned and d.working(seat, night) \
+                and d.side_at(target, phase) == "good" \
+                and rng.random() < 0.85:
+            shown = seat
+            if _vortox_working(d, night):
+                # False, like everything else a Townsfolk's ability
+                # yields under a Vortox: the wrong player is pointed at.
+                wrong = [p for p in range(d.n) if p not in (seat, target)]
+                shown = rng.choice(wrong) if wrong else None
+            if shown is not None:
+                d.said_by_others.append(
+                    NightwatchmanSeen(night, target, shown=shown))
+        return NightwatchmanChoice(night, seat, target=target)
 
     if role == "Balloonist":
         # A player whose character *type* differs from the one shown last
@@ -3579,6 +3751,26 @@ def _for_role(d, seat, role, night, rng):
         return Ravenkeeper(night, seat, target=pick,
                            role=d.role_at(pick, f"N{night}"))
     return None
+
+
+def _nearest_evil_each_way(d, seat, night):
+    """How many steps to the closest evil player, each way round.
+
+    {1: clockwise, -1: anticlockwise}, None where there is nobody. Seats
+    run clockwise. By the side each seat is really on tonight — the
+    simulator's Storyteller does not use a Recluse here, though it could.
+    A seat exactly opposite is as far one way as the other.
+    """
+    phase = f"N{night}"
+    out = {1: None, -1: None}
+    for gap in range(1, d.n):
+        other = (seat + gap) % d.n
+        if d.side_at(other, phase) != "evil":
+            continue
+        for way, steps in ((1, gap), (-1, d.n - gap)):
+            if steps <= d.n - steps and (out[way] is None or steps < out[way]):
+                out[way] = steps
+    return out
 
 
 def _neighbours(d, seat, night):

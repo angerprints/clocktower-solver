@@ -14,7 +14,8 @@ import {CHARACTERS} from "./catalogue.mjs";
 import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./roles.mjs";
 import {killedByAVigormortis, sourcesOn} from "./impairment.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {possibleCounts} from "./waking.mjs";
+import {possibleCounts, reallyLiving, theDeadOutnumberOrEqual}
+  from "./waking.mjs";
 import {OTHER, shieldsOn} from "./deaths.mjs";
 
 const DEMONS = new Set(Object.entries(TEAM)
@@ -758,6 +759,130 @@ export const Alsaahir = define("Alsaahir", "Alsaahir",
     return !exact;
   });
 
+// Experimental, one at a time (from 05.10.2026). Each is the mirror of
+// the class of the same name in info.py, where the reasons are.
+
+/** One player, who is good — by registration, so a Spy may be the one. */
+export const StewardInfo = define("StewardInfo", "Steward",
+  function (w) {
+    const phase = `N${this.night}`;
+    return evilRegistrations(w.roleAt(this.target, phase),
+                             w.alignmentAt(this.target, phase))
+      .includes(false);
+  }, {
+    isTrue(w) { return !w.evilAt(this.target, `N${this.night}`); },
+    leanedOn(w, s, seat) {
+      return w.evilAt(this.target, `N${this.night}`)
+          && this.holds(w, s, null, seat) ? [this.target] : [];
+    },
+  });
+
+/** Two players, neither of whom is the Demon — that night. */
+export const KnightInfo = define("KnightInfo", "Knight",
+  function (w) {
+    const phase = `N${this.night}`;
+    if (this.a === this.b) return false;         // "2 players"
+    return [this.a, this.b].every(
+      x => TEAM[w.roleAt(x, phase)] !== "demon");
+  });
+
+/** Every other seat as [steps, way, seat]: the shorter way round, and
+ * which way that is — 1 clockwise, -1 anticlockwise, 0 exactly opposite. */
+function roundTheCircle(n, seat) {
+  const out = [];
+  for (let gap = 1; gap < n; gap++) {
+    const back = n - gap;
+    out.push([Math.min(gap, back), gap < back ? 1 : (gap > back ? -1 : 0),
+              (seat + gap) % n]);
+  }
+  return out;
+}
+
+/** Which way round its closest evil player sits. By registration, and a
+ * tie allows either answer. */
+export const ShugenjaInfo = define("ShugenjaInfo", "Shugenja",
+  function (w, s, rh, seat) {
+    const who = (seat === null || seat === undefined) ? this.player : seat;
+    const said = this.clockwise ? 1 : -1;
+    const can = this.nearest(w, who, false)[said];
+    const must = this.nearest(w, who, true)[-said];
+    if (can === null) return must === null;
+    return must === null || can <= must;
+  }, {
+    /** The nearest seat each way that can — or must — read evil. */
+    nearest(w, who, must) {
+      const phase = `N${this.night}`;
+      const best = {"1": null, "-1": null};
+      for (const [steps, way, other] of roundTheCircle(w.roles.length, who)) {
+        const reads = evilRegistrations(w.roleAt(other, phase),
+                                        w.alignmentAt(other, phase));
+        const only = reads.length === 1 && reads[0] === true;
+        if (must ? !only : !reads.includes(true)) continue;
+        for (const side of (way === 0 ? [1, -1] : [way]))
+          if (best[side] === null || steps < best[side]) best[side] = steps;
+      }
+      return best;
+    },
+    /** Strictly closer that way, by what the seats really are. A tie is
+     * arbitrary rather than true, so a Vortox allows either answer. */
+    isTrue(w, s, seat) {
+      const who = (seat === null || seat === undefined) ? this.player : seat;
+      const phase = `N${this.night}`;
+      const said = this.clockwise ? 1 : -1;
+      let mine = null, other = null;
+      for (const [steps, way, there] of roundTheCircle(w.roles.length, who)) {
+        if (!w.evilAt(there, phase)) continue;
+        if (way === said) mine = mine === null ? steps : Math.min(mine, steps);
+        else other = other === null ? steps : Math.min(other, steps);
+      }
+      return mine !== null && (other === null || mine < other);
+    },
+  });
+
+/** A character that is alive — or, with no character, that the King
+ * learned nothing tonight. */
+export const KingInfo = define("KingInfo", "King",
+  function (w, s) {
+    const met = theDeadOutnumberOrEqual(w, s, this.night);
+    if (!this.role) return !met;
+    if (!met) return false;
+    const phase = `N${this.night}`;
+    for (const p of reallyLiving(w, s, this.night))
+      if (registersAsRole(w.roleAt(p, phase), this.role)) return true;
+    return false;
+  }, {
+    isInformation() { return !!this.role; },
+    isTrue(w, s) {
+      if (!this.role) return false;
+      const phase = `N${this.night}`;
+      for (const p of reallyLiving(w, s, this.night))
+        if (w.roleAt(p, phase) === this.role) return true;
+      return false;
+    },
+  });
+
+/** Who the Nightwatchman pointed at, said by the Nightwatchman. Kept,
+ * and it dates the choice; it proves nothing about the player chosen. */
+export const NightwatchmanChoice =
+  define("NightwatchmanChoice", "Nightwatchman", () => true);
+
+/** "I was woken and shown that X is the Nightwatchman", said by the
+ * player it chose. Never attributed to a claim; a droisoned one wakes
+ * nobody, so a row that held needed it working. */
+export const NightwatchmanSeen = define("NightwatchmanSeen", "Nightwatchman",
+  function (w, s, rh, seat) {
+    if (seat === null || seat === undefined || this.shown !== seat)
+      return false;
+    const phase = `N${this.night}`;
+    return s.aliveSet(phase).has(seat) && !s.diedAt(seat).includes(phase);
+  }, {
+    witnessed: true,
+    sourceSeat() { return null; },
+    leanedOn(w, s, seat) {
+      return (seat === null || seat === undefined) ? [] : [seat];
+    },
+  });
+
 /** A seat was handed a character it was not dealt, and says so. */
 export const Became = define("Became", null,
   function (w) {
@@ -1040,6 +1165,7 @@ InnkeeperChoice.isAChoice = true;
 SailorChoice.isAChoice = true;
 OgreChoice.isAChoice = true;
 CerenovusMadness.isAChoice = true;
+NightwatchmanChoice.isAChoice = true;
 
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
@@ -1051,6 +1177,8 @@ export const KINDS = {
   SageInfo, KlutzChoice, EvilTwinPair, PhilosopherChoice,
   SnakeCharmerChoice, PitHagChoice,
   Noble, Acrobat, Balloonist, Alsaahir, Became,
+  StewardInfo, KnightInfo, ShugenjaInfo, KingInfo,
+  NightwatchmanChoice, NightwatchmanSeen,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
 };
@@ -1060,5 +1188,8 @@ export function makeInfo(row) {
   const Kind = KINDS[row.type];
   if (!Kind) throw new Error(`Unknown kind of reading: ${row.type}`);
   const {type, ...fields} = row;
+  // A King that says it learned nothing is sent with the tick off, and
+  // whatever character the page still shows beside it does not count.
+  if (type === "KingInfo" && fields.learned === false) fields.role = "";
   return new Kind(fields);
 }

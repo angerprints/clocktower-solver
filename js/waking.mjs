@@ -172,6 +172,58 @@ condition("Assassin", (world, state, seat, night) => {
 });
 
 /** Woken on the schedule of whatever they think they are. */
+/** The night this seat said it used a once-a-game choice, or null.
+ *
+ * Its own row, not one somebody else filed about the same character: the
+ * player a Nightwatchman woke speaks a row with that source too. */
+function choseOn(state, seat, role) {
+  for (const info of state.infos)
+    if (info.sourceRole === role && info.player === seat && info.isAChoice)
+      return info.night;
+  return null;
+}
+
+/** Every night until it points at somebody, then never again. "Once per
+ * game, at night" with no asterisk, so from the first. See waking.py. */
+condition("Nightwatchman", (world, state, seat, night) => {
+  const spent = choseOn(state, seat, "Nightwatchman");
+  return spent === null || night <= spent;
+});
+
+/** Who is alive when the King counts, which is late in the night.
+ *
+ * After tonight's deaths, and by what is so rather than by what the
+ * board shows: a Zombuul that has died once is on the board as dead and
+ * is not (table decisions, 05.10.2026). See info.py. */
+export function reallyLiving(world, state, night) {
+  const phase = `N${night}`;
+  const living = new Set(state.aliveAt(phase)
+    .filter(q => !state.diedAt(q).includes(phase)));
+  if (state.script.keys.includes("Zombuul")) {
+    const zombuul = world.findAt("Zombuul", phase);
+    if (zombuul !== null && zombuul !== undefined && !living.has(zombuul)) {
+      const now = phaseIndex(phase);
+      const gone = state.diedAt(zombuul).filter(at => phaseIndex(at) <= now);
+      if (gone.length === 1) living.add(zombuul);
+    }
+  }
+  return living;
+}
+
+/** The King's condition, at the King's turn. */
+export function theDeadOutnumberOrEqual(world, state, night) {
+  const living = reallyLiving(world, state, night).size;
+  return state.nPlayers - living >= living;
+}
+
+/** Only once the dead equal or outnumber the living. On the first night
+ * the Demon is shown who the King is, which is not the King waking. */
+condition("King", (world, state, seat, night) => {
+  if (night < 2) return false;
+  if (state.diedAt(seat).includes(`N${night}`)) return false;
+  return theDeadOutnumberOrEqual(world, state, night);
+});
+
 const believer = (world, state, seat, night) => {
   const token = world.believes[seat];
   return token ? wokeAs(world, state, seat, night, token) : false;
@@ -279,6 +331,12 @@ export function uncertain(world, state, seat, night) {
     if (night < 3 || !state.aliveSet(phase).has(seat)) return false;
     return !state.infos.some(
       info => info.sourceRole === "Assassin" && info.player === seat);
+  }
+  if (acting === "Nightwatchman") {
+    // The first night is certain. After that it may have chosen and
+    // nobody wrote it down; its own row settles it either way.
+    if (night < 2 || !state.aliveSet(phase).has(seat)) return false;
+    return choseOn(state, seat, "Nightwatchman") === null;
   }
   if (acting === "Professor") {
     // Night two it is woken for certain: its first chance. After that it

@@ -652,6 +652,80 @@ def handmade():
         {"type": "Noble", "night": 1, "player": 0, "a": 4, "b": 5,
          "c": 6}])
 
+    # The experimental characters added singly, from 05.10.2026. They have
+    # no script, so two are made for them (tests/test_experimental.py):
+    # one with a Spy, a Recluse and a Zombuul, one with a Vortox. One
+    # board for each row and each table decision, then games that were
+    # played: a Nightwatchman's choice and the player it woke, a King
+    # that learned a character and one that learned nothing beside a
+    # Zombuul under its shroud, a Steward shown a Spy, and all of it
+    # turned round by a Vortox.
+    from test_experimental import SPY as XSPY, VORTOX as XVORTOX
+    X7 = ["Steward", "Knight", "Shugenja", "Nightwatchman", "King",
+          "Empath", "Chef"]
+    X8 = X7 + ["Recluse"]
+    V7 = ["Steward", "Knight", "Shugenja", "Nightwatchman", "King",
+          "Oracle", "Dreamer"]
+    yield board("x-spy-7-bare", XSPY, X7)
+    yield board("x-spy-7-steward", XSPY, X7, infos=[
+        {"type": "StewardInfo", "night": 1, "player": 0, "target": 3}])
+    yield board("x-spy-7-knight", XSPY, X7, infos=[
+        {"type": "KnightInfo", "night": 1, "player": 1, "a": 0, "b": 5}])
+    yield board("x-spy-8-shugenja-clockwise", XSPY, X8, infos=[
+        {"type": "ShugenjaInfo", "night": 1, "player": 2,
+         "clockwise": True}])
+    yield board("x-spy-8-shugenja-anticlockwise", XSPY, X8, infos=[
+        {"type": "ShugenjaInfo", "night": 1, "player": 2,
+         "clockwise": False}])
+    yield board("x-spy-7-nightwatchman-seen", XSPY, X7, infos=[
+        {"type": "NightwatchmanChoice", "night": 2, "player": 3,
+         "target": 5},
+        {"type": "NightwatchmanSeen", "night": 2, "player": 5, "shown": 3}],
+        days_done=[1])
+    yield board("x-spy-7-nightwatchman-seen-wrong", XSPY, X7, infos=[
+        {"type": "NightwatchmanSeen", "night": 1, "player": 5, "shown": 1}])
+    yield board("x-spy-7-nightwatchman-chose-night-one", XSPY, X7, infos=[
+        {"type": "NightwatchmanChoice", "night": 1, "player": 3,
+         "target": 6}], quiet_nights=[2], days_done=[1])
+    yield board("x-spy-7-king", XSPY, X7,
+                players_override={6: ["X1"], 0: ["N2"], 1: ["X2"],
+                                  2: ["N3"]},
+                infos=[{"type": "KingInfo", "night": 3, "player": 4,
+                        "role": "Nightwatchman"}])
+    yield board("x-spy-7-king-too-early", XSPY, X7,
+                players_override={6: ["X1"], 0: ["N2"]},
+                infos=[{"type": "KingInfo", "night": 2, "player": 4,
+                        "role": "Nightwatchman"}])
+    # As many crossed off as not, and the King says it learned nothing:
+    # one of the dead is a Zombuul.
+    yield board("x-spy-7-king-nothing-zombuul", XSPY, X7,
+                players_override={0: ["X1"], 1: ["X2"], 6: ["X3"],
+                                  2: ["X4"]},
+                quiet_nights=[2, 3, 4, 5],
+                infos=[{"type": "KingInfo", "night": 5, "player": 4,
+                        "role": "", "learned": False}])
+    yield board("x-spy-8-all-five", XSPY, X8, infos=[
+        {"type": "StewardInfo", "night": 1, "player": 0, "target": 3},
+        {"type": "KnightInfo", "night": 1, "player": 1, "a": 0, "b": 5},
+        {"type": "ShugenjaInfo", "night": 1, "player": 2, "clockwise": True},
+        {"type": "NightwatchmanSeen", "night": 1, "player": 6, "shown": 3},
+        {"type": "Empath", "night": 1, "player": 5, "count": 1}])
+    yield board("x-vortox-7-bare", XVORTOX, V7)
+    yield board("x-vortox-7-all-five", XVORTOX, V7, infos=[
+        {"type": "StewardInfo", "night": 1, "player": 0, "target": 3},
+        {"type": "KnightInfo", "night": 1, "player": 1, "a": 0, "b": 5},
+        {"type": "ShugenjaInfo", "night": 1, "player": 2,
+         "clockwise": False},
+        {"type": "NightwatchmanSeen", "night": 1, "player": 6, "shown": 3}])
+    for what, seed, nights in (("nightwatchman-and-king-nothing", 63, 5),
+                               ("king-learned", 158, 5),
+                               ("steward-shown-a-spy", 272, 5),
+                               ("king-beside-a-zombuul", 70, 5)):
+        yield played(f"x-spy-played-{what}", XSPY, seed, 7, nights)
+    for what, seed in (("nightwatchman-and-king", 4), ("all-turned-round", 85)):
+        yield played(f"x-vortox-played-{what}", XVORTOX, seed, 7, 4)
+
+
 
 def generated(how_many=60):
     """Random boards, so the corpus covers combinations nobody chose."""

@@ -998,6 +998,10 @@ function plainFailures(world, state, outcome = {}) {
                            : abilityState(world, seat, role, phase,
                                           gained, vortoxed);
     }
+    // A row told to somebody other than the holder. A Drunk holding the
+    // token has no ability, so nobody else is woken for it. See solver.py.
+    const witnessed = !!info.witnessed;
+    if (witnessed && held === ARBITRARY) held = ABSENT;
     if (held === ABSENT) {
       invented *= inventionCost(info);    // no such source in this world
       outcome[idx] = INVENTED;
@@ -1054,6 +1058,11 @@ function plainFailures(world, state, outcome = {}) {
       // Whether it held depends on where the red herring was, which is
       // settled later. Left open until then.
       ftInfos.push([info, seat, idx]);
+    } else if (witnessed && !info.holds(world, state, null, seat)) {
+      // Nothing excuses it: a droisoned source tells the other player
+      // nothing at all, so the words did not come from the game.
+      invented *= inventionCost(info);
+      outcome[idx] = INVENTED;
     } else if (!info.holds(world, state, null, seat)) {
       // Poison has to land on whoever the information came from —
       // poisoning the messenger changes nothing.

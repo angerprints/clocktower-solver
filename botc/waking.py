@@ -271,6 +271,49 @@ def _assassin(world, state, seat, night):
     return True
 
 
+def _chose_on(state, seat, role):
+    """The night this seat said it used a once-a-game choice, or None.
+
+    Its own row, not one somebody else filed about the same character:
+    the player a Nightwatchman woke speaks a row with that source too,
+    and it is theirs.
+    """
+    for info in state.infos:
+        if getattr(info, "source_role", None) == role \
+                and info.player == seat \
+                and getattr(info, "is_a_choice", False):
+            return info.night
+    return None
+
+
+@condition("Nightwatchman")
+def _nightwatchman(world, state, seat, night):
+    """Every night until it points at somebody, then never again.
+
+    "Once per game, at night" with no asterisk, so from the first night:
+    it is woken, and shakes its head or points. What records the night
+    is its own row. Without one, see `uncertain`.
+    """
+    spent = _chose_on(state, seat, "Nightwatchman")
+    return spent is None or night <= spent
+
+
+@condition("King")
+def _king(world, state, seat, night):
+    """Only once the dead equal or outnumber the living.
+
+    Counted at its own turn, after tonight's kills, and by who is really
+    alive — a Zombuul under its shroud is. On the first night the Demon
+    is shown who the King is, which is not the King waking.
+    """
+    from .info import the_dead_outnumber_or_equal
+    if night < 2:
+        return False
+    if f"N{night}" in state.died_at(seat):
+        return False                      # dead before its turn came
+    return the_dead_outnumber_or_equal(world, state, night)
+
+
 @condition("Drunk")
 @condition("Marionette")
 def _believer(world, state, seat, night):
@@ -408,6 +451,14 @@ def uncertain(world, state, seat, night):
             return False
         return not any(getattr(info, "source_role", None) == "Assassin"
                        and info.player == seat for info in state.infos)
+    if acting == "Nightwatchman":
+        # The first night is certain: its first chance. After that it
+        # may have chosen and nobody wrote it down — the player it woke
+        # need not have said so, and chosen while drunk it woke nobody.
+        # Its own row settles it either way.
+        if night < 2 or seat not in state.alive_set(phase):
+            return False
+        return _chose_on(state, seat, "Nightwatchman") is None
     if acting == "Professor":
         # Night two it is woken for certain: its first chance. After
         # that, it may have chosen somebody who was no Townsfolk, or

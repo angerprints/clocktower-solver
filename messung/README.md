@@ -123,6 +123,24 @@ Dämon still ist und wer es bei welchem Muster war.
     python3 messung/dana.py messung/daten/morgen/dm_bmr.jsonl kind
     python3 messung/dana.py messung/daten/morgen/dm_sv.jsonl kind
 
+## Das Tor für neue Charaktere (05.10.2026)
+
+| Skript | Aufruf | Was es tut |
+|---|---|---|
+| `tor.py` | `N NÄCHTE START CHARAKTER…` | Spielt N gemischte Partien, die alle genannten Charaktere auf dem Skript haben (`tools/play_games.py`, `an_awkward_script`). Zählt: wahre Welt verworfen, davon wegen der Zeilen der neuen Charaktere; Nächte, in denen der Night-Walk andere Tote hat oder etwas nicht gesagt bekam; Auskünfte der neuen Charaktere, bei denen Night-Walk und Simulator sich widersprechen. Ohne `CHARAKTER` misst es die gemischten Skripte, wie sie sind. |
+| `sim5.py`, `nw2.py` | `XSPY` oder `XVORTOX` als Skript | Die zwei Skripte, die für die experimentellen Charaktere gebaut sind (`tests/test_experimental.py`): eines mit Spion, Einsiedler und Zombuul, eines mit Vortox. |
+
+    python3 messung/tor.py 40 4 0 Steward Knight Shugenja Nightwatchman King
+    python3 messung/tor.py 1000 4 0
+
+**Die gemischten Skripte sind nicht sauber, auch ohne neue Charaktere.** Mit
+dem Stand von Commit 1458a95 verwirft der Solver in 35 von 1.000 gemischten
+Partien die wahre Welt, und der Night-Walk weicht in 43 von 2.813 Nächten ab.
+Die Ursachen sind Paarungen, die es auf keinem der drei Grundskripte gibt
+(ROADMAP, offene Stelle 37). Wer einen neuen Charakter misst, liest deshalb
+die Zahl „davon wegen der neuen Zeilen“ und vergleicht den Rest mit dem Lauf
+ohne `CHARAKTER`.
+
 ## Rohdaten in `daten/`
 
 Alle mit dem Code von Commit 605d1d4 (Solver) gemessen, je 400 Partien,

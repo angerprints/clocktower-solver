@@ -75,6 +75,9 @@ class Night:
         # holding, a Soldier surviving. By the rules a prevented ability
         # is one that went wrong, so a Mathematician counts it.
         self.prevented = set()
+        # Nightwatchman seat -> the player it woke, or None when it
+        # pointed and nobody was woken because it had no ability.
+        self.woken_by_nightwatchman = {}
 
     def choose(self, chooser, target, slot):
         """Somebody's ability aimed at somebody.
@@ -428,6 +431,12 @@ def hidden_from(deal, night, heard):
         out[("devilsadvocate", night)] = spared[1]
     # Who came back tonight, and by whose hand: they were dead when the
     # night began, and the walk has to stand them up at the right slot.
+    # Whom a Nightwatchman pointed at, by seat. Announced, but by the
+    # Nightwatchman's own row rather than one row a night, so it is read
+    # off the game.
+    aimed = (getattr(deal, "nightwatchman_aimed", None) or {}).get(night)
+    if aimed:
+        out[("nightwatchman", night)] = dict(aimed)
     back = getattr(deal, "regurgitated", {}).get(night)
     if back is not None:
         out[("regurgitated", night)] = back
@@ -632,6 +641,9 @@ def walk(deal, night, hidden):
     stops_being_droisoned = set(hidden.get(("standing_lifted", night)) or ())
     last_cause = getattr(CHARACTERS["Sweetheart"], field, 0)
     charmer_slot = getattr(CHARACTERS["SnakeCharmer"], field, 0)
+    # The same for a Philosopher that took the Nightwatchman: it points
+    # when the Nightwatchman would.
+    watch_slot = getattr(CHARACTERS["Nightwatchman"], field, 0)
     settled = False
     for slot in _turns(night):
         # Who holds a character with this slot **now**.
@@ -648,7 +660,9 @@ def walk(deal, night, hidden):
         here = [p for p in sorted(state.roles)
                 if getattr(CHARACTERS.get(state.roles[p]), field, 0) == slot
                 or (state.roles[p] == "Philosopher" and slot == charmer_slot
-                    and state.gained.get(p) == "SnakeCharmer")]
+                    and state.gained.get(p) == "SnakeCharmer")
+                or (state.roles[p] == "Philosopher" and slot == watch_slot
+                    and state.gained.get(p) == "Nightwatchman")]
         for seat in here:
             role = state.roles[seat]
             # A Philosopher that took the Snake Charmer's ability on an
@@ -660,6 +674,9 @@ def walk(deal, night, hidden):
             if role == "Philosopher" and slot == charmer_slot \
                     and state.gained.get(seat) == "SnakeCharmer":
                 role = "SnakeCharmer"
+            if role == "Philosopher" and slot == watch_slot \
+                    and state.gained.get(seat) == "Nightwatchman":
+                role = "Nightwatchman"
 
             if role == "Poisoner":
                 target = hidden.get(("poisoner", night))
@@ -986,6 +1003,20 @@ def walk(deal, night, hidden):
                 if target in state.alive:
                     state.kill(target, slot, "Godfather")
 
+            elif role == "Nightwatchman":
+                # Points at somebody once a game, late: 47 on the first
+                # night and 65 after, when every kill has landed. The
+                # player is woken and shown who it is — unless it has no
+                # ability by then, and then nobody is woken at all. A
+                # player choosing a player, so the Goon is asked.
+                target = (hidden.get(("nightwatchman", night)) or {}).get(seat)
+                if target is None or seat not in state.alive:
+                    continue
+                state.choose(seat, target, slot)
+                _goon_answers(state, seat, target, slot)
+                state.woken_by_nightwatchman[seat] = (
+                    target if state.working(seat) else None)
+
             elif role == "Sweetheart":
                 # From the night it dies, somebody is drunk for good. Acts at
                 # 41, so whoever it drunks has already acted tonight — the
@@ -1137,6 +1168,7 @@ READS = frozenset({
     "Seamstress", "Juggler", "Flowergirl", "TownCrier", "Clockmaker",
     "Mathematician", "Chambermaid", "Professor", "Sage", "Gossip",
     "Moonchild", "Klutz", "Farmer",
+    "Steward", "Knight", "Shugenja", "King",
 })
 
 
@@ -1329,6 +1361,63 @@ def _reads(state, seat, role):
     # The solver treats them the same way: `weighed` returns False, so
     # they are kept rather than solved. Listing them here with a
     # derivation that returned None would look like coverage and be none.
+
+    if role == "Steward":
+        # One player, and whether they are good as the board stands at
+        # its slot — late on the first night, before an Ogre has picked.
+        target = state.asked.get(seat)
+        if target is None:
+            return None
+        # Good, or a Spy the Storyteller may show as good — while its
+        # ability to misregister is working.
+        held = state.roles.get(target, "")
+        passes = held in CHARACTERS and bool(
+            {"townsfolk", "outsider"} & set(CHARACTERS[held].registers))
+        return state.sides.get(target) == "good" or (
+            passes and target not in state.droisoned)
+
+    if role == "Knight":
+        # Two players, and whether neither holds a Demon *now* — so a
+        # Snake Charmer that swapped at 20 is the Demon it reads.
+        pair = state.asked.get(seat)
+        if not pair:
+            return None
+        return all(TEAM.get(state.roles.get(p, ""), "") != "demon"
+                   for p in pair)
+
+    if role == "Shugenja":
+        # Which way the closest evil player sits: True clockwise, False
+        # anticlockwise, None for a tie, which is the Storyteller's.
+        n = len(state.roles)
+        best = {1: None, -1: None}
+        for gap in range(1, n):
+            other = (seat + gap) % n
+            if state.sides.get(other) != "evil":
+                continue
+            back = n - gap
+            if gap <= back and (best[1] is None or gap < best[1]):
+                best[1] = gap
+            if back <= gap and (best[-1] is None or back < best[-1]):
+                best[-1] = back
+        if best[1] == best[-1]:
+            return None
+        return best[-1] is None or (best[1] is not None
+                                    and best[1] < best[-1])
+
+    if role == "King":
+        # Reads at 63, after every kill — so it counts the dead as they
+        # are *now*, tonight's among them, and a Zombuul under its
+        # shroud among the living. False for a night it learns nothing;
+        # otherwise every character somebody alive holds, since which
+        # one it is shown is the Storyteller's choice.
+        if state.night < 2:
+            return None
+        living = set(state.alive)
+        if state.undead is not None:
+            living.add(state.undead)
+        if len(state.roles) - len(living) < len(living):
+            return False
+        return sorted({state.roles[p] for p in living})
 
     if role == "Chef":
         alive = sorted(state.alive)

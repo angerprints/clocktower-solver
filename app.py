@@ -102,6 +102,25 @@ def build_info(d):
     if kind == "Noble":
         return I.NobleInfo(night, player, trust,
                            a=_int(d, "a"), b=_int(d, "b"), c=_int(d, "c"))
+    if kind == "StewardInfo":
+        return I.StewardInfo(night, player, trust, target=_int(d, "target"))
+    if kind == "KnightInfo":
+        return I.KnightInfo(night, player, trust,
+                            a=_int(d, "a"), b=_int(d, "b"))
+    if kind == "ShugenjaInfo":
+        return I.ShugenjaInfo(night, player, trust,
+                              clockwise=bool(d.get("clockwise")))
+    if kind == "KingInfo":
+        # "Learned nothing" is a row too, and is sent with no character.
+        learned = d.get("learned", True)
+        return I.KingInfo(night, player, trust,
+                          role=str(d.get("role") or "") if learned else "")
+    if kind == "NightwatchmanChoice":
+        return I.NightwatchmanChoice(night, player, trust,
+                                     target=_int(d, "target"))
+    if kind == "NightwatchmanSeen":
+        return I.NightwatchmanSeen(night, player, trust,
+                                   shown=_int(d, "shown"))
     if kind == "Became":
         return I.BecameInfo(night, player, trust,
                             role=d.get("role") or "",
@@ -392,7 +411,11 @@ def run_solve(payload):
                     "GamblerGuess", "MoonchildChoice",
                     "SnakeCharmerChoice", "PitHagChoice", "InnkeeperChoice",
                     "SailorChoice", "ExorcistChoice", "PhilosopherChoice",
-                    "CourtierChoice", "CerenovusMadness")
+                    "CourtierChoice", "CerenovusMadness",
+                    # Woken late, at the Nightwatchman's turn, and "choose
+                    # a player" means any player: one killed earlier that
+                    # night is still shown who it is.
+                    "NightwatchmanSeen")
     for d in raw_infos:
         speaker = _int(d, "player", 0)
         night = _int(d, "night", 1)
@@ -627,6 +650,10 @@ INFO_SOURCES = {
     "Noble": "Noble",
     "Acrobat": "Acrobat", "Balloonist": "Balloonist",
     "Alsaahir": "Alsaahir",
+    "StewardInfo": "Steward", "KnightInfo": "Knight",
+    "ShugenjaInfo": "Shugenja", "KingInfo": "King",
+    "NightwatchmanChoice": "Nightwatchman",
+    "NightwatchmanSeen": "Nightwatchman",
     "Washerwoman": "Washerwoman", "Librarian": "Librarian",
     "Investigator": "Investigator", "Chef": "Chef", "Empath": "Empath",
     "FortuneTeller": "FortuneTeller", "Undertaker": "Undertaker",

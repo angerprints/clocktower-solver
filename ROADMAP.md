@@ -626,15 +626,80 @@ Deine Entscheidung „Weg 1“. Eine Zeile in `tests/simulate.py`: Die Reihenfol
 - **Nicht neu gemessen:** „Dämon gefunden“ für Sects & Violets (65 %, 400 Partien). Etwa 5 % der Partien sind neu, der Wert kann sich um wenige Punkte verschieben.
 - 1.149 Tests, drei davon neu.
 
+### Die ersten fünf experimentellen Charaktere · *erledigt am 05.10.2026*
+
+Der volle Bericht steht in `claude/experimentelle-charaktere-batch-1.md`.
+
+**Deine Entscheidungen vom 05.10.2026:** Der erste Batch ist Gutsverwalter, Ritter, Shugenja, Nachtwächter und König. Der Dorftrottel aus dem Vorschlag ist nicht dabei: Sein Aufbau bringt denselben Charakter bis zu dreimal ins Spiel, und die Suche lässt jeden Charakter nur einmal zu. Dazu fünfmal Weg 1:
+
+| | Entscheidung |
+|---|---|
+| A | Der Shugenja liest nach dem, wie ein Spieler registriert, wie Koch und Empath. |
+| B | Beim Nachtwächter zählt nur die Zeile des Gewählten. Was der Nachtwächter selbst sagt, wird aufgezeichnet. |
+| C | Der König zählt an seinem Platz in der Nacht, also mit den Toten dieser Nacht. |
+| D | Ein Zombuul, der als tot gilt, zählt für den König als lebend. |
+| E | Die drei Plätze, die die Nachtreihenfolge im Repo nicht kennt, sind von Hand eingetragen. |
+
+**Gebaut, in Python und JavaScript:**
+
+| Charakter | Zeile auf der Website | Was der Solver prüft |
+|---|---|---|
+| Gutsverwalter | „X ist gut“ | X registriert als gut. Ein Spion darf es sein, dann war er in dieser Nacht nicht gestört. Unter einem Vortox ist X böse. |
+| Ritter | „X und Y sind nicht der Dämon“ | Keiner der beiden hält in dieser Nacht einen Dämon. Schergen sind erlaubt und können später Dämon werden. Unter einem Vortox ist der Dämon dabei. |
+| Shugenja | „im Uhrzeigersinn“ oder „gegen den Uhrzeigersinn“ | Der nächste Sitz, der dort als böse registrieren kann, ist nicht weiter weg als der nächste auf der anderen Seite, der es muss. Bei gleicher Entfernung passt beides, auch unter einem Vortox. |
+| Nachtwächter | „wählte X“, gesagt vom Nachtwächter | Aufgezeichnet. Datiert die Wahl: Bis zu dieser Nacht wird er geweckt, danach nicht mehr (Kammerzofe). |
+| | „wurde geweckt: Y ist der Nachtwächter“, gesagt vom Gewählten | Y ist der Nachtwächter, lebte an seinem Platz in der Nacht und war nicht gestört. Ein falscher Name lässt sich nicht mit Gift erklären, denn ein gestörter Nachtwächter weckt niemanden. Ein Trunkenbold mit dem Plättchen auch nicht. Unter einem Vortox wird ein falscher Spieler gezeigt. |
+| König | „Charakter C lebt“ | Es gibt mindestens so viele Tote wie Lebende, und ein Lebender registriert als C. Unter einem Vortox hält kein Lebender C. |
+| | „erfuhr nichts“ | Es gibt weniger Tote als Lebende. Zeigt das Brett es anders, lebt einer der Toten: ein Zombuul. |
+
+**Das Tor:**
+
+| Nr. | Schritt | Ergebnis |
+|---|---|---|
+| 1 | Solver in Python und JavaScript | 20 neue Bretter im Korpus, beide stimmen überein. |
+| 2 | Simulator | Spielt alle fünf, auch betrunken, vergiftet und unter einem Vortox. |
+| 3 | Night-Walk | 0 von 17.593 und 0 von 16.203 Nächten weichen ab (zwei eigene Skripte). |
+| 4 | Vierzig gemischte Partien | 1 von 40 verliert die wahre Welt, nicht wegen der fünf (siehe Befund). |
+| 5 | Website | Sechs Zeilen eintragbar, der Prüftest ist grün, im Browser geprüft. |
+| 6 | Korpus und Suite | 214 Bretter, 1.210 Tests grün (61 neue). |
+
+**Messung:**
+
+- **Zwei eigene Skripte**, weil die fünf kein Skript haben (`tests/test_experimental.py`): eines mit Spion, Einsiedler und Zombuul, eines mit Vortox. Wahre Welt gehalten: 0 von 24.000 verloren (je 6.000 Partien über 4 und 6 Nächte).
+- **Auskünfte, Night-Walk gegen Simulator:** 1 von 4.254 weicht ab. Dort wählt das Grubenweib den Schläger, und der Simulator fragt den Schläger nicht.
+- **Grundskripte unverändert:** Trouble Brewing, Oster-Skript und Sects & Violets spielen Zeichen für Zeichen dieselben Partien (Prüfsummen gleich). Bad Moon Rising, Trouble Brewing und Oster-Skript: je 0 von 6.000 verloren. Sects & Violets: 43 von 6.000, wie vorher.
+- **Korpus:** 134 alte Bretter geben dieselbe Antwort. Die 60 Zufallsbretter sind neu gezogen, weil ihr Vorrat an Charakteren um fünf gewachsen ist.
+
+**Befund: Die gemischten Skripte waren schon vorher nicht sauber** (offene Stelle 37). `messung/tor.py` spielt gemischte Partien, einmal mit den fünf auf jedem Skript und einmal mit dem alten Stand ohne sie:
+
+| 3.000 gemischte Partien, 4 Nächte | wahre Welt verloren | Night-Walk weicht ab |
+|---|---|---|
+| alter Stand, nichts Neues | 107 (3,6 %) | 129 von 8.456 Nächten |
+| mit den fünf auf jedem Skript | 50 (1,7 %) | 45 von 8.367 Nächten |
+
+Keine der 45 Nächte hängt am Nachtwächter, dem einzigen der fünf, der jemanden wählt. Von den 50 Partien bleiben 48 verloren, wenn man die Zeilen der fünf wegnimmt. Die anderen 2 haben ihre Ursache ebenfalls anderswo (Philosoph neben Kammerzofe, Barbier-Tausch mit einem Philosophen). Mit den fünf sind es weniger, weil sie auf jedem Skript fünf Plätze belegen, auf denen sonst etwas Schwieriges stünde.
+
+Die Ursachen sind Paarungen, die es auf keinem Grundskript gibt:
+
+| Paarung | Wo der Fehler sitzt |
+|---|---|
+| Vortox neben Rabenhüter oder Totengräber | Simulator: Der Rabenhüter bekommt unter einem Vortox die Wahrheit, beim Totengräber geht der Sitz verloren. |
+| Vortox neben Koch, Empath, Orakel oder Schneiderin, mit Spion, Einsiedler oder Schläger | Solver: Eine falsche Auskunft, die durch Registrieren legal wäre, gilt ihm als wahr. Hier ist eine Lesart zu wählen. |
+| Kammerzofe neben Schlangenbeschwörer | Simulator: Die Kammerzofe zählt nach dem ausgeteilten Charakter, nicht nach dem aktuellen. |
+| Kammerzofe neben Philosoph | Solver: In der Nacht seiner Wahl gilt der Philosoph nicht als geweckt. Simulator: Danach weckt er ihn nie mehr. |
+| Grubenweib wählt den Schläger | Simulator: Der Schläger antwortet nicht. |
+
 ### Als Nächstes
 
-**1 · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Die Charaktere kommen einzeln dazu, ohne ein zugehöriges Skript. Welche fünf in einen Batch kommen, entscheidest du.
+**1 · Die gemischten Skripte aufräumen oder Batch 2** (zu entscheiden). Der erste Batch ist durch das Tor, aber das Tor selbst steht nicht mehr auf null: Auch ohne neue Charaktere verliert der Solver in 3,6 % der gemischten Partien die wahre Welt (offene Stelle 37). Jeder weitere Batch wird gegen diesen Hintergrund gemessen.
 
-Stand des Katalogs: 83 Charaktere. Die 72 der drei Grundskripte sind modelliert, bis auf den Künstler (nur aufgezeichnet). Von den 11 weiteren sind 8 modelliert (Akrobatin, Alsaahir, Ballonfahrer, Farmer, Marionette, Adlige, Oger, Wächter) und 3 nicht (Atheist, Legion, Riot). 56 offizielle Charaktere fehlen ganz, nach meiner Zählung 24 Bürger, 10 Außenseiter, 14 Schergen und 8 Dämonen. Die Zählung ist vor dem ersten Batch gegen die App-Referenz (`claude/deutsche-charaktertexte-referenz.md`) zu prüfen.
+**1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Ein Charakter gilt als fertig, wenn er durch dieses Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`tools/play_games.py`) ohne unmögliches Brett, und eintragbar auf der Website.
+Stand des Katalogs: 88 Charaktere. Von den 138 Spielercharakteren der App sind 87 im Katalog (dazu der Wächter, ein Fabled), 51 fehlen: 19 Bürger, 10 Außenseiter, 14 Schergen, 8 Dämonen. Nach meiner Einschätzung sind davon 14 klein, 20 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer). Klein sind noch: Banshee, Magierin, Mohnzüchter, Unschuld, Eiferer, Ketzer, Politiker, Petze, Angstmacher, Goblin, Wesir, Drehorgelspieler, Geist und Ojo.
 
-Vorschlag für den ersten Batch, nicht entschieden: Gutsverwalter, Ritter, Shugenja, Dorftrottel, Nachtwächter. Alle fünf geben nur Information und ändern nichts am Ablauf der Nacht.
+Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
+
+**1b · Die Nachtreihenfolge erneuern** (zurückgestellt, deine Entscheidung E). Die Datei im Repo kennt 130 Charaktere, die aktuelle des Herausgebers 181. Für Batch 1 sind drei Plätze von Hand eingetragen. Sinnvoll vor einem Batch mit Charakteren, die in die Nacht eingreifen.
 
 **2 · Zwei kleine Stellen in Sects & Violets,** die nebenher gehen:
 - Wer früh in der Nacht handelt und in derselben Nacht vom Grubenweib verwandelt wird (offene Stelle 36).
@@ -661,7 +726,7 @@ Vorschlag für den ersten Batch, nicht entschieden: Gutsverwalter, Ritter, Shuge
 | 11 | Werkzeug | **Die alte lokale Python-App lehnt einen Tod in Nacht 1 ab,** die Seite nicht. Ein Bastler kann in Nacht 1 sterben. Der Night-Walk kennt den Fall auch nicht. |
 | 12 | Werkzeug | **Exakte Zählung früher Bretter auf der Website.** Der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten. |
 | 13 | Werkzeug | **NEXT.md** in eine kurze Roadmap und ein Archiv aufteilen. |
-| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). 56 offizielle Charaktere fehlen im Katalog. |
+| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). Batch 1 ist am 05.10.2026 erledigt, 51 offizielle Charaktere fehlen noch im Katalog. |
 | 15 | Bad Moon Rising | *Erledigt am 03.10.2026:* Höfling nach einer Wiederbelebung. Deine Regel: Die Fähigkeit endet mit dem Tod, der Wiederbelebte ist eine neue Instanz. |
 | 16 | Bad Moon Rising | **Kammerzofe und wer in derselben Nacht stirbt.** Simulator und Solver zählen einen Sitz als geweckt, auch wenn er vor seinem Platz in der Nacht getötet wurde (Professor an Platz 43, Dämon an 27). Beide machen es gleich, deshalb sieht es kein Messlauf. |
 | 17 | Bad Moon Rising | *Erledigt am 03.10.2026:* Meuchelmörder, der seine Fähigkeit unsichtbar verbraucht. Gemessen und behoben. |
@@ -684,6 +749,9 @@ Vorschlag für den ersten Batch, nicht entschieden: Gutsverwalter, Ritter, Shuge
 | 30 | Simulator gegen Night-Walk | *Erledigt am 05.10.2026:* Die 60 abweichenden Nächte in Sects & Violets waren zwei Lücken des Night-Walk, beide repariert. Jetzt 0 von 16.641. |
 | 35 | Simulator | *Erledigt am 05.10.2026:* Die Reihenfolge der Nacht liest den aktuellen Charakter, nicht den ausgeteilten. |
 | 36 | Sects & Violets | **Wer früh in der Nacht handelt und in derselben Nacht verwandelt wird:** Ein Schlangenbeschwörer wählt an Platz 11, das Grubenweib macht ihn an Platz 16 zu etwas anderem. Der Solver rechnet in ganzen Nächten und verwirft die Wahl. 1 von 6.000 Partien (Seed 1078, 4 Nächte). Gefunden am 05.10.2026, nicht gebaut. |
+| 37 | Gemischte Skripte | **Der Solver verliert in 3,6 % der gemischten Partien die wahre Welt** (107 von 3.000, Stand vor Batch 1), und der Night-Walk weicht in 129 von 8.456 Nächten ab. Ursachen sind Paarungen, die es auf keinem Grundskript gibt: Vortox neben Auskünften aus Trouble Brewing, Kammerzofe neben Schlangenbeschwörer oder Philosoph, Grubenweib und Schläger. Gefunden am 05.10.2026 beim Tor für Batch 1, nicht behoben. |
+| 38 | Solver | **Vortox und Registrieren:** Unter einem Vortox muss eine Auskunft falsch sein. Bei Koch, Empath, Orakel und Schneiderin gilt dem Solver eine Auskunft schon als wahr, wenn sie durch Registrieren (Spion, Einsiedler, Schläger) legal wäre. Auf Sects & Violets kommt das nicht vor. Eine Lesart ist zu wählen. |
+| 39 | Werkzeug | **Die Nachtreihenfolge im Repo ist veraltet** (130 von 181 Charakteren). Für Gutsverwalter, Ritter und Shugenja sind die Plätze von Hand eingetragen. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

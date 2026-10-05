@@ -49,6 +49,9 @@ export const INFO_SOURCES = {
   Became: null,
   Noble: "Noble",
   Acrobat: "Acrobat", Balloonist: "Balloonist", Alsaahir: "Alsaahir",
+  StewardInfo: "Steward", KnightInfo: "Knight", ShugenjaInfo: "Shugenja",
+  KingInfo: "King", NightwatchmanChoice: "Nightwatchman",
+  NightwatchmanSeen: "Nightwatchman",
   Washerwoman: "Washerwoman", Librarian: "Librarian",
   Investigator: "Investigator", Chef: "Chef", Empath: "Empath",
   FortuneTeller: "FortuneTeller", Undertaker: "Undertaker",
@@ -287,7 +290,9 @@ export function readBoard(payload) {
                          "SnakeCharmerChoice", "PitHagChoice",
                          "InnkeeperChoice", "SailorChoice", "ExorcistChoice",
                          "PhilosopherChoice", "CourtierChoice",
-                         "CerenovusMadness"];
+                         "CerenovusMadness",
+                         // Woken late, and "choose a player" means any.
+                         "NightwatchmanSeen"];
     const speaker = Number(row.player || 0);
     const night = Number(row.night || 1);
     if ((deaths[speaker] || []).includes(`N${night}`) &&

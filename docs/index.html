@@ -623,14 +623,14 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=2be52e0a9435";
+import * as solver from "./api.mjs?v=5c73571c100a";
 
 // The solve runs beside the page, in a worker, so a long board neither
 // freezes the page nor hides that it is busy: it reports how far along it
 // is and can be stopped. Where a browser cannot start a module worker —
 // an old one, or a page opened straight from disk — it runs here as it
 // always did, and the page freezes for the length of it as it always did.
-const WORKER_URL = "./worker.mjs?v=2be52e0a9435";
+const WORKER_URL = "./worker.mjs?v=5c73571c100a";
 let WORKER = null, NO_WORKER = false, JOB = null;
 
 function worker(){
@@ -737,6 +737,22 @@ const SCHEMA = {
   Became:       [["player","player"],["role","role:all"],
                  ["was","role:all"]],
   Noble:        [["a","player"],["b","player"],["c","player"]],
+  // The first five experimental characters added singly. Each reads and
+  // changes nothing; see info.py for what the rows mean.
+  StewardInfo:  [["target","player"]],
+  KnightInfo:   [["a","player"],["b","player"]],
+  // Seats run clockwise, so clockwise is towards the next seat number.
+  ShugenjaInfo: [["clockwise","bool:Clockwise|Anticlockwise"]],
+  // "Learned nothing" is worth entering: with a Zombuul on the script, a
+  // King told nothing while as many are dead as alive says one of the
+  // dead is not.
+  KingInfo:     [["learned","bool:Learned a character|Learned nothing"],
+                 ["role","role:all"]],
+  // Two rows for one character. What the Nightwatchman says it did is
+  // kept and dates the choice; what the player it woke says is the one
+  // that confirms anybody.
+  NightwatchmanChoice: [["target","player"]],
+  NightwatchmanSeen:   [["shown","player"]],
   Acrobat:      [["target","player"]],
   // A daytime guess at the whole evil team. Two lists and whether it
   // won, because naming the Demon as a Minion is a failed guess.
@@ -786,6 +802,9 @@ const SCHEMA = {
   CourtierChoice:  [["role","role:all"]],
 };
 const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
+  StewardInfo:"Steward", KnightInfo:"Knight", ShugenjaInfo:"Shugenja",
+  KingInfo:"King", NightwatchmanChoice:"Nightwatchman",
+  NightwatchmanSeen:"Nightwatchman",
   GrandmotherInfo:"Grandmother", ChambermaidInfo:"Chambermaid",
   GamblerGuess:"Gambler", CourtierChoice:"Courtier",
   ClockmakerInfo:"Clockmaker", DreamerInfo:"Dreamer",
@@ -801,7 +820,12 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor", OgreChoice:"Ogre" };
 const DAY_EVENTS   = ["SlayerShot","VirginNomination"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
-  CerenovusMadness:"made mad" };
+  CerenovusMadness:"made mad", NightwatchmanSeen:"woken player" };
+// Rows spoken by somebody the ability was used *on*, not by whoever
+// holds the character. They are never somebody relaying the holder's
+// information, so the speaker is not moved to the claimant and nothing
+// offers to move it.
+const WITNESS_ROWS = ["NightwatchmanSeen"];
 // A few readings are named for the *act* rather than the character,
 // because that is what the table saw: a Slayer shot, a Gambler's guess.
 // Everything else is just the character, and is worked out rather than
@@ -814,7 +838,9 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   KlutzChoice:"Klutz", EvilTwinPair:"Evil Twin",
   MoonchildChoice:"Moonchild", ExorcistChoice:"Exorcist",
   InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor", OgreChoice:"Ogre",
-  CerenovusMadness:"Cerenovus madness" };
+  CerenovusMadness:"Cerenovus madness",
+  NightwatchmanChoice:"Nightwatchman choice",
+  NightwatchmanSeen:"Woken by the Nightwatchman" };
 // Not produced by a character, so it has no source role to be labelled
 // with — and falling back to the type name printed "Became" as though it
 // were a character somebody claimed.
@@ -1550,6 +1576,7 @@ function bubbleFor(seat){
 // A reading spoken by one seat but sourced from another — somebody
 // passing on what the Empath told them.
 function relaysTo(rec){
+  if(WITNESS_ROWS.includes(rec.type)) return -1;
   const claimant = claimantOf(sourceRole(rec.type));
   return (claimant !== null && claimant !== rec.player) ? claimant : -1;
 }
@@ -1601,6 +1628,21 @@ function describeRow(r){
       return `${r.count} evil neighbour${r.count === 1 ? "" : "s"}`;
     case "Noble":
       return `${who(r.a)}, ${who(r.b)} and ${who(r.c)} — exactly one is evil`;
+    case "StewardInfo":
+      return `${who(r.target)} is good`;
+    case "KnightInfo":
+      return `${who(r.a)} and ${who(r.b)} are not the Demon`;
+    case "ShugenjaInfo":
+      return `the closest evil player is ${
+        r.clockwise ? "clockwise" : "anticlockwise"}`;
+    case "KingInfo":
+      return r.learned === false || !r.role
+        ? `learned nothing — fewer dead than living`
+        : `the ${role(r.role)} is alive`;
+    case "NightwatchmanChoice":
+      return `chose ${who(r.target)}`;
+    case "NightwatchmanSeen":
+      return `was woken and shown that ${who(r.shown)} is the Nightwatchman`;
     case "Became":
       return r.was
         ? `claimed ${role(r.was)} until now, ${role(r.role)} from here on`
@@ -2092,8 +2134,10 @@ function drawTimeline(){
 function addInfo(night){
   const type=$("#new-type").value;
   const claimant=claimantOf(sourceRole(type));
+  const witness=WITNESS_ROWS.includes(type);
   const rec={type, night, trust:0, confirmed:false,
-             player: claimant!==null?claimant:(selected===null?0:selected)};
+             player: claimant!==null&&!witness?claimant
+                                              :(selected===null?0:selected)};
   SCHEMA[type].forEach(([k,t])=>{
     rec[k] = t.startsWith("role:") ? allRoles(t.split(":")[1])[0]
            : t.startsWith("bool:") ? false
@@ -2103,6 +2147,12 @@ function addInfo(night){
            : 0;
   });
   if(type==="VirginNomination"||type==="SlayerShot") rec[SCHEMA[type][1][0]]=true;
+  // A yes-or-no starts at "no", which for these two would be the rarer
+  // answer; and the player a Nightwatchman woke was shown whoever claims
+  // to be one, if anybody does.
+  if(type==="ShugenjaInfo") rec.clockwise=true;
+  if(type==="KingInfo") rec.learned=true;
+  if(type==="NightwatchmanSeen" && claimant!==null) rec.shown=claimant;
   S.infos.push(rec); touch(); drawLedger(); save();
 }
 
@@ -2355,6 +2405,8 @@ function infoCard(rec, idx){
   body.appendChild(tag(SPEAKER_LABEL[rec.type]||"said by"));
   body.appendChild(playerSel(rec,"player"));
   SCHEMA[rec.type].forEach(([k,t])=>{
+    // A King that learned nothing has no character to name.
+    if(rec.type==="KingInfo" && k==="role" && rec.learned===false) return;
     if(t==="player" && rec.type==="Undertaker" && k==="target")
       body.appendChild(executedSel(rec, (rec.night||2)-1));
     else if(t==="player") body.appendChild(playerSel(rec,k));
@@ -2404,6 +2456,9 @@ function infoCard(rec, idx){
             && S.players.findIndex(p=>eventOn(p,(rec.night||2)-1)==="X"+((rec.night||2)-1))<0){
     note.innerHTML=`<span class="warn">mark whoever was executed on day ${
       (rec.night||2)-1} first</span>`;
+  } else if(WITNESS_ROWS.includes(rec.type)){
+    // Said by the player the ability was used on. Whoever claims the
+    // character is not the one whose words these are.
   } else if(rec.type==="Became"){
     // Nothing to say. Every other reading is produced by a character and
     // the note asks whether the speaker claims to be it; a claim change

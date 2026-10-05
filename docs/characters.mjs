@@ -982,6 +982,62 @@ export const DATA = {
     }
    ],
    "seated": false
+  },
+  "Steward": {
+   "id": "steward",
+   "name": "Steward",
+   "team": "townsfolk",
+   "wake": [
+    "first"
+   ],
+   "nights": "first",
+   "first_night": 44
+  },
+  "Knight": {
+   "id": "knight",
+   "name": "Knight",
+   "team": "townsfolk",
+   "wake": [
+    "first"
+   ],
+   "nights": "first",
+   "first_night": 44
+  },
+  "Shugenja": {
+   "id": "shugenja",
+   "name": "Shugenja",
+   "team": "townsfolk",
+   "wake": [
+    "first"
+   ],
+   "nights": "first",
+   "first_night": 46
+  },
+  "Nightwatchman": {
+   "id": "nightwatchman",
+   "name": "Nightwatchman",
+   "team": "townsfolk",
+   "wake": [
+    "every",
+    "first",
+    "sometimes"
+   ],
+   "chooses": true,
+   "nights": "conditional",
+   "first_night": 47,
+   "other_night": 65
+  },
+  "King": {
+   "id": "king",
+   "name": "King",
+   "team": "townsfolk",
+   "wake": [
+    "never",
+    "sometimes"
+   ],
+   "nights": "conditional",
+   "first_night": 10,
+   "other_night": 63
   }
  },
  "scripts": {

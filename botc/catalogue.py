@@ -393,6 +393,37 @@ _SV = [
 ]
 
 
+# --------------------------------------------------------------------------
+# Experimental, one at a time
+# --------------------------------------------------------------------------
+# Added singly and without a script of their own (05.10.2026). The first
+# five all give information and leave the night as it was.
+_EXPERIMENTAL = [
+    # Shown one good player on its first night — by registration, so a
+    # Spy may be the one (the wiki's own example).
+    _c("Steward", "steward", "Steward", "townsfolk", {FIRST},
+       nights="first"),
+    # Shown two players who are not the Demon. They may be Minions, so
+    # what it says holds for that night: a Minion it was shown can take
+    # the star later.
+    _c("Knight", "knight", "Knight", "townsfolk", {FIRST}, nights="first"),
+    # Told which way round the circle its closest evil player sits. A
+    # tie is the Storyteller's to break either way.
+    _c("Shugenja", "shugenja", "Shugenja", "townsfolk", {FIRST},
+       nights="first"),
+    # Woken every night until it points at somebody, once; that player is
+    # then woken and shown who the Nightwatchman is. A drunk or poisoned
+    # one wakes nobody. It points at a player, so a Goon notices.
+    _c("Nightwatchman", "nightwatchman", "Nightwatchman", "townsfolk",
+       {FIRST, EVERY, SOMETIMES}, nights="conditional", chooses=True),
+    # Learns a living character each night once the dead equal or
+    # outnumber the living — counted at its own turn, which is after
+    # every kill. The Demon is told who it is, which leaves no mark.
+    _c("King", "king", "King", "townsfolk", {NEVER, SOMETIMES},
+       nights="conditional"),
+]
+
+
 # Who can stop somebody else's ability working.
 #
 # Only the Mathematician asks, and for a narrow reason: its number is the
@@ -416,7 +447,8 @@ IMPAIRS = frozenset({
     "PitHag",
 })
 
-CHARACTERS = {c.key: c for c in _TB + _SV + _UNMODELLED + _FABLED}
+CHARACTERS = {c.key: c for c in _TB + _SV + _UNMODELLED + _FABLED
+              + _EXPERIMENTAL}
 CHARACTERS = {k: c._replace(impairs=k in IMPAIRS)
               for k, c in CHARACTERS.items()}
 
@@ -453,8 +485,19 @@ def _night_order():
 # the General (50) in the official order. There is no whole number in
 # between, so it shares the General's slot — nothing on any script here
 # holds both, and the file wins the moment a refresh brings the real one.
+#
+# The Steward, the Knight and the Shugenja are missing the same way
+# (05.10.2026). In the publisher's current order the first night runs
+# ... Seamstress, Steward, Knight, Noble, Balloonist, Shugenja, Village
+# Idiot, Bounty Hunter, Nightwatchman ... — so the first two belong
+# between 43 and 44 and the third between 45 and 46. They share the slot
+# that follows them, for the Ogre's reason: all three only read, nothing
+# acts between them and their neighbour, and nothing else is renumbered.
 _NOT_IN_THE_FILE = {
     "ogre": (50, 0),
+    "steward": (44, 0),
+    "knight": (44, 0),
+    "shugenja": (46, 0),
 }
 
 

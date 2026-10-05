@@ -2987,6 +2987,13 @@ def _plain_failures(world, state, outcome=None):
             held = (ABSENT if seat is None
                     else ability_state(world, seat, role, phase, gained,
                                        vortoxed))
+        # A row told to somebody *other* than the holder — the player a
+        # Nightwatchman chose saying they were woken. A Drunk holding the
+        # token has no ability, so the Storyteller wakes nobody for it:
+        # there is no made-up answer for anybody else to have heard.
+        witnessed = getattr(info, "witnessed", False)
+        if witnessed and held is ARBITRARY:
+            held = ABSENT
         if held is ABSENT:
             invented *= invention_cost(info)   # no such source in this world
             outcome[idx] = INVENTED
@@ -3070,6 +3077,12 @@ def _plain_failures(world, state, outcome=None):
             # Whether it held depends on where the red herring was, which
             # is settled later. Left open until then.
             ft_infos.append((info, seat, idx))
+        elif witnessed and not info.holds(world, state, None, seat):
+            # Nothing excuses it. A droisoned source does not tell the
+            # other player something false — it tells them nothing, they
+            # are never woken. So the words did not come from the game.
+            invented *= invention_cost(info)
+            outcome[idx] = INVENTED
         elif not info.holds(world, state, None, seat):
             # Poison has to land on whoever the information came from -
             # poisoning the messenger changes nothing.
