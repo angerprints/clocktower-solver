@@ -2275,6 +2275,15 @@ def _in_night_order(d, night):
     it experiences: a Drunk holding a Fortune Teller token acts in the
     Fortune Teller's slot.
 
+    And off the character it holds **tonight**, not the one it was
+    dealt. This read the deal, so an Oracle a Pit-Hag had made a Snake
+    Charmer went on acting at the Oracle's 59 — after the Pit-Hag at 16,
+    which turned it into a Barber before it swapped with the Demon. At a
+    table the Snake Charmer at 11 goes first. One night in 9,458 of
+    Sects & Violets, found once the night-walk stopped disagreeing for
+    reasons of its own (05.10.2026). The deal mistaken for the timeline,
+    a sixth time.
+
     A seat with no slot keeps its place at the end. It does not act at
     night, so where it sits does not matter — but dropping it would lose
     the ones whose ability fires on their own death.
@@ -2283,10 +2292,11 @@ def _in_night_order(d, night):
     field = "first_night" if night == 1 else "other_night"
 
     def slot(seat):
-        what = d.apparent(seat)
+        held = d.role_at(seat, f"N{night}")
+        what = d.believes[seat] or held
         # A Lunatic is woken before the real Demon, at its own slot,
         # whatever Demon it thinks it is.
-        if d.roles[seat] == "Lunatic":
+        if held == "Lunatic":
             what = "Lunatic"
         # A Philosopher that has taken an ability wakes when that
         # character would. It kept its own slot 2, so one holding the

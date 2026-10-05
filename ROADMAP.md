@@ -615,14 +615,29 @@ Der volle Bericht steht in `claude/sv-simulator-gegen-night-walk.md`. Am Solver 
 - **Die eine verbliebene Nacht ist ein Fehler im Simulator** (offene Stelle 35): Er ordnet die Nacht nach dem Charakter, den ein Sitz **ausgeteilt** bekam, nicht nach dem, den er jetzt hat. Ein Sitz, den das Grubenweib zum Schlangenbeschwörer gemacht hat, handelt deshalb zu spät. Im Versuch (nur im Speicher) behebt die richtige Reihenfolge auch diese Nacht. Sie ändert 283 von 6.000 Partien Sects & Violets, keine auf den anderen Skripten und keines der sechs Bretter im Korpus.
 - **Der Solver** hält in 57 der 60 betroffenen Partien die wahre Welt. Die 3 anderen sind Barbier-Tausche ohne gemeldeten Barbier (offene Stelle 4).
 
+### Der Simulator ordnet die Nacht nach dem aktuellen Charakter · *erledigt am 05.10.2026*
+
+Deine Entscheidung „Weg 1“. Eine Zeile in `tests/simulate.py`: Die Reihenfolge der Nacht liest den Charakter, den ein Sitz in dieser Nacht hat, nicht den ausgeteilten.
+
+- **Night-Walk:** jetzt 0 Abweichungen auf allen Skripten, auch bei sechs Nächten (Sects & Violets 0 von 9.456).
+- **Was sich ändert:** 283 von 6.000 Partien Sects & Violets laufen anders. Bad Moon Rising, Trouble Brewing, das Oster-Skript und alle Bretter im Korpus sind unverändert.
+- **Wahre Welt gehalten, Sects & Violets neu gemessen:** 43 von 6.000 verloren (4 Nächte, wie vorher) und 69 von 6.000 (6 Nächte, vorher 72). Davon mit verstecktem Barbier 40 und 64.
+- **Ein neuer Fund im Solver** (offene Stelle 36): In einer der neu gespielten Partien (Seed 1078) wählt ein Schlangenbeschwörer an Platz 11 und wird in derselben Nacht vom Grubenweib an Platz 16 zum Uhrmacher gemacht. Der Solver rechnet in ganzen Nächten, hält den Sitz in dieser Nacht für einen Uhrmacher und verwirft seine Wahl als Schlangenbeschwörer. Damit geht die wahre Welt verloren, in 1 von 6.000 Partien.
+- **Nicht neu gemessen:** „Dämon gefunden“ für Sects & Violets (65 %, 400 Partien). Etwa 5 % der Partien sind neu, der Wert kann sich um wenige Punkte verschieben.
+- 1.149 Tests, drei davon neu.
+
 ### Als Nächstes
 
-**Die Arbeit an den stillen Nächten und am Zombuul ist abgeschlossen** (05.10.2026). Nichts auf dieser Liste hält die experimentellen Charaktere auf.
+**1 · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Die Charaktere kommen einzeln dazu, ohne ein zugehöriges Skript. Welche fünf in einen Batch kommen, entscheidest du.
 
-**1 · Experimentelle Charaktere** (offene Stelle 14). Im Katalog stehen 83 Charaktere. Die 72 der drei Grundskripte sind modelliert, bis auf den Artist (nur aufgezeichnet). Von den 11 weiteren sind 8 modelliert (Acrobat, Alsaahir, Balloonist, Farmer, Marionette, Noble, Ogre, Sentinel) und 3 nicht (Atheist, Legion, Riot). Welche Charaktere als Nächstes kommen, entscheidest du, am besten nach den Skripten, die ihr wirklich spielt.
+Stand des Katalogs: 83 Charaktere. Die 72 der drei Grundskripte sind modelliert, bis auf den Künstler (nur aufgezeichnet). Von den 11 weiteren sind 8 modelliert (Akrobatin, Alsaahir, Ballonfahrer, Farmer, Marionette, Adlige, Oger, Wächter) und 3 nicht (Atheist, Legion, Riot). 56 offizielle Charaktere fehlen ganz, nach meiner Zählung 24 Bürger, 10 Außenseiter, 14 Schergen und 8 Dämonen. Die Zählung ist vor dem ersten Batch gegen die App-Referenz (`claude/deutsche-charaktertexte-referenz.md`) zu prüfen.
 
-**2 · Zwei kleine Stellen in Sects & Violets,** die vorher oder nebenher gehen und je etwa einen Arbeitsschritt brauchen:
-- Der Simulator ordnet die Nacht nach dem ausgeteilten Charakter (offene Stelle 35). Gemessen, nicht entschieden.
+Ein Charakter gilt als fertig, wenn er durch dieses Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`tools/play_games.py`) ohne unmögliches Brett, und eintragbar auf der Website.
+
+Vorschlag für den ersten Batch, nicht entschieden: Gutsverwalter, Ritter, Shugenja, Dorftrottel, Nachtwächter. Alle fünf geben nur Information und ändern nichts am Ablauf der Nacht.
+
+**2 · Zwei kleine Stellen in Sects & Violets,** die nebenher gehen:
+- Wer früh in der Nacht handelt und in derselben Nacht vom Grubenweib verwandelt wird (offene Stelle 36).
 - Der Simulator spielt die **Hinrichtung wegen Besessenheit** (Cerenovus) nicht.
 
 **3 · Strenge Lesart für stille Nächte** (zurückgestellt): zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst. Im Versuch verlor sie 11 von 60.000 Partien, die der Solver hält.
@@ -636,7 +651,7 @@ Der volle Bericht steht in `claude/sv-simulator-gegen-night-walk.md`. Am Solver 
 | 1 | Bad Moon Rising | *Erledigt am 04.10.2026:* Gestörter Dämon als Erklärung für eine ruhige Nacht, jetzt auch bei Zombuul, Pukka und Shabaloth. Mit eingetragenen stillen Nächten gingen 83 von 60.000 Partien verloren, jetzt 0. |
 | 2 | Bad Moon Rising | **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung vom 02.10.2026). Abgebildet für Höfling und Philosoph (Tod, und Störung beim Wählen) und für die Pukka, seit dem 03.10. auch mit dem Kill, der dadurch später kommt. Nicht allgemein für eine Quelle, die erst später gestört wird. |
 | 3 | Bad Moon Rising | **Poe und Meuchelmörder bleiben locker:** drei Tote in zwei Nächten hintereinander, und ein Meuchelmörder ohne eingetragene Zeile kann in mehreren Nächten zuschlagen (jeder Schlag kostet 0,25). |
-| 4 | Sects & Violets | **Barbier-Tausch ohne gemeldeten Barbier** verliert die wahre Welt, in 47 von 6.000 Partien. Nach deiner Regel gewollt. |
+| 4 | Sects & Violets | **Barbier-Tausch ohne gemeldeten Barbier** verliert die wahre Welt, in 40 von 6.000 Partien (4 Nächte, Stand 05.10.2026). Nach deiner Regel gewollt. |
 | 5 | Sects & Violets | **Sitze, deren Rolle gewechselt hat,** werden nicht von ihrer ursprünglichen Rolle aus gesucht (halber Barbier-Tausch). 2 von 6.000 Partien. |
 | 6 | Sects & Violets | **Mathematiker unter einem Vortox:** Seine Zahl wird als Bereich geprüft, deshalb bleibt hier die alte, lockere Regel. |
 | 7 | Sects & Violets | **Barbier-Bretter brauchen im Browser etwa 20 Sekunden.** Die Seite friert dabei nicht mehr ein. |
@@ -646,7 +661,7 @@ Der volle Bericht steht in `claude/sv-simulator-gegen-night-walk.md`. Am Solver 
 | 11 | Werkzeug | **Die alte lokale Python-App lehnt einen Tod in Nacht 1 ab,** die Seite nicht. Ein Bastler kann in Nacht 1 sterben. Der Night-Walk kennt den Fall auch nicht. |
 | 12 | Werkzeug | **Exakte Zählung früher Bretter auf der Website.** Der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten. |
 | 13 | Werkzeug | **NEXT.md** in eine kurze Roadmap und ein Archiv aufteilen. |
-| 14 | Nach Bedarf | Weitere experimentelle Charaktere. |
+| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). 56 offizielle Charaktere fehlen im Katalog. |
 | 15 | Bad Moon Rising | *Erledigt am 03.10.2026:* Höfling nach einer Wiederbelebung. Deine Regel: Die Fähigkeit endet mit dem Tod, der Wiederbelebte ist eine neue Instanz. |
 | 16 | Bad Moon Rising | **Kammerzofe und wer in derselben Nacht stirbt.** Simulator und Solver zählen einen Sitz als geweckt, auch wenn er vor seinem Platz in der Nacht getötet wurde (Professor an Platz 43, Dämon an 27). Beide machen es gleich, deshalb sieht es kein Messlauf. |
 | 17 | Bad Moon Rising | *Erledigt am 03.10.2026:* Meuchelmörder, der seine Fähigkeit unsichtbar verbraucht. Gemessen und behoben. |
@@ -667,7 +682,8 @@ Der volle Bericht steht in `claude/sv-simulator-gegen-night-walk.md`. Am Solver 
 | 28 | Simulator | **Das Dorf gewinnt im Simulator nie.** Es richtet den Dämon nur hin, wenn die Partie danach weitergeht (Scharlachrote Frau, Zombuul, Strippenzieher, Teufelsadvokat). Das ist Absicht, heißt aber: Alle gespielten Partien sind solche, in denen der Dämon überlebt. |
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
 | 30 | Simulator gegen Night-Walk | *Erledigt am 05.10.2026:* Die 60 abweichenden Nächte in Sects & Violets waren zwei Lücken des Night-Walk, beide repariert. Jetzt 0 von 16.641. |
-| 35 | Simulator | **Die Reihenfolge der Nacht liest den ausgeteilten Charakter,** nicht den aktuellen. Ein Sitz mit gewechseltem Charakter handelt an der alten Stelle. Sichtbar in 1 von 9.458 Nächten (Sects & Violets, 6 Nächte). Die Reparatur würde 283 von 6.000 Partien Sects & Violets ändern, kein Brett im Korpus, und alle 1.146 Tests laufen mit ihr unverändert durch. Gemessen am 05.10.2026, nicht entschieden. |
+| 35 | Simulator | *Erledigt am 05.10.2026:* Die Reihenfolge der Nacht liest den aktuellen Charakter, nicht den ausgeteilten. |
+| 36 | Sects & Violets | **Wer früh in der Nacht handelt und in derselben Nacht verwandelt wird:** Ein Schlangenbeschwörer wählt an Platz 11, das Grubenweib macht ihn an Platz 16 zu etwas anderem. Der Solver rechnet in ganzen Nächten und verwirft die Wahl. 1 von 6.000 Partien (Seed 1078, 4 Nächte). Gefunden am 05.10.2026, nicht gebaut. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

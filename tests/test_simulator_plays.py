@@ -801,3 +801,49 @@ class OnSectsAndViolets(SolverTest):
                 self.assertTrue(hid, "impossible, and not a hidden Barber")
             lost += 1
         self.assertLessEqual(lost, 8)
+
+
+class TheNightIsOrderedByWhatASeatHoldsNow(SolverTest):
+    """A seat acts when the character it holds tonight acts.
+
+    The order was read off the deal. A seat whose character had changed
+    went on acting in its old place (05.10.2026).
+    """
+
+    def deal(self):
+        roles = ["Oracle", "PitHag", "Vortox", "Clockmaker", "Dreamer",
+                 "Mutant", "Savant"]
+        d = simulate.Deal(roles, [None] * 7, None, {}, {}, None)
+        d.script = SV
+        return d
+
+    def test_a_seat_made_a_snake_charmer_acts_before_the_pit_hag(self):
+        """Snake Charmer 11, Pit-Hag 16, Oracle 59."""
+        d = self.deal()
+        order = simulate._in_night_order(d, 3)
+        self.assertGreater(order.index(0), order.index(1))
+        d.changes.append(("N2", 0, "SnakeCharmer"))
+        order = simulate._in_night_order(d, 3)
+        self.assertLess(order.index(0), order.index(1))
+
+    def test_before_the_change_it_keeps_its_old_place(self):
+        d = self.deal()
+        d.changes.append(("N3", 0, "SnakeCharmer"))
+        order = simulate._in_night_order(d, 2)
+        self.assertGreater(order.index(0), order.index(1))
+
+    def test_six_nights_of_sects_and_violets_walk_as_played(self):
+        """The night this was found in is among them (seed 1258)."""
+        import nightwalk
+        for seed in range(1100, 1400):
+            n = [7, 8, 9, 10, 11][seed % 5]
+            deal, heard = simulate.play(n, random.Random(seed), nights=6,
+                                        script=SV)
+            for night in range(2, 7):
+                if deal.game_ends_after is not None \
+                        and night > deal.game_ends_after:
+                    continue
+                got = nightwalk.walk(deal, night,
+                                     nightwalk.hidden_from(deal, night, heard))
+                with self.subTest(seed=seed, night=night):
+                    self.assertEqual(got.died, deal.died_on(f"N{night}"))
