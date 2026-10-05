@@ -587,17 +587,32 @@ Der volle Bericht steht in `claude/messung-zombuul-tot-drei-lebende.md`. Kein Co
 
 **Folgerung:** Deine Entscheidung „stille Nächte nicht bepreisen“ ist jetzt direkt gemessen und bestätigt. Die Stelle bleibt offen und hängt am Dorf im Simulator: Es richtet fast jeden Tag hin, deshalb tötet der Zombuul fast nie und hinterlässt kaum Spuren.
 
+### Messung: das Dorf im Simulator · *gemessen am 05.10.2026*
+
+Der volle Bericht steht in `claude/dorf-im-simulator-und-nachtmuster.md`. Am Simulator ist nichts geändert. Je 4.000 Partien mit `messung/dorf.py`.
+
+- **Es richtet fast jeden Tag hin:** an 97 bis 99 % der Tage. In Bad Moon Rising überlebt der Hingerichtete an 21 % der Tage (Teufelsadvokat, Pazifist, Teedame, Narr, Segler), tot ist am Ende an 78 % der Tage jemand.
+- **Es stimmt nicht ab wie ein Tisch.** Wer die meisten Stimmen hat, geht, auch mit einer einzigen. Nur 54 bis 59 % der Hinrichtungen hatten die halbe Zahl der Lebenden hinter sich, bei 6 bis 12 % hatte niemand gestimmt und ein Sitz wurde gezogen. Nach der Tischregel (meiste Stimmen, mindestens die Hälfte der Lebenden, kein Gleichstand) gäbe es an etwa 55 % der Tage eine Hinrichtung.
+- **Es weiß nichts.** Nominiert wird ein gezogener Sitz, jeder Lebende stimmt mit 45 % zu, Böse für Böse mit 20 %. Der Dämon ist ausgenommen, solange die Partie mit ihm enden würde: 0 % der Hinrichtungen in Trouble Brewing und Sects & Violets, 6 % in Bad Moon Rising.
+- **Folge für den Zombuul:** Er darf nur in 22 % seiner Nächte töten.
+
+**Offen, deine Entscheidung:** ob das Dorf nach der Tischregel abstimmen soll. Das würde alle gespielten Partien neu austeilen (Tests mit festen Seeds, Korpus, alle Messwerte).
+
+### Website: das Muster der Nächte · *erledigt am 05.10.2026*
+
+Unter den Nächten steht ein Kasten „Night pattern“, wenn ein Zombuul auf dem Skript ist. Er zählt die Nächte, getrennt nach dem Tag davor: nach einem Tag mit einem Toten und nach einem Tag ohne Toten, jeweils still oder mit Toten. Darunter steht die Regel „A Zombuul kills only after a day with no death“ und, je nach Zählung, „This pattern fits one“ oder „If the Demon is a Zombuul, something else killed on N nights“.
+
+Der Kasten zählt nur, was auf dem Brett steht. Er ändert keine Zahl, und der Solver bleibt, wie er ist (deine Entscheidung „nur Fakten“ vom 05.10.2026). Geprüft in `tests/test_night_pattern.py` und im Browser.
+
 ### Als Nächstes
 
-**1 · Das Dorf im Simulator.** Es richtet an 2,3 von 3 Tagen hin. Davon hängt auch die offene Stelle 33 ab.
+**1 · Das Dorf im Simulator: Tischregel beim Abstimmen** (gemessen, nicht entschieden, offene Stelle 34). Davon hängt auch die offene Stelle 33 ab.
 
-**2 · Der Dämon-Typ als eigene Anzeige** (Idee, nicht entschieden): Die Seite könnte neben den Sitzen zeigen, welcher Dämon nach dem Muster der Nächte naheliegt, ohne die Sitze umzugewichten.
+**2 · Strenge Lesart für stille Nächte** (zurückgestellt): zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst. Im Versuch verlor sie 11 von 60.000 Partien, die der Solver hält.
 
-**3 · Strenge Lesart für stille Nächte** (zurückgestellt): zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst. Im Versuch verlor sie 11 von 60.000 Partien, die der Solver hält.
+**3 · Was der Simulator weiter nicht spielt:** die **Hinrichtung wegen Wahnsinn** (Cerenovus) in Sects & Violets.
 
-**4 · Was der Simulator weiter nicht spielt:** die **Hinrichtung wegen Wahnsinn** (Cerenovus) in Sects & Violets.
-
-**5 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox, Rückkehr mitten in der Nacht, Pukka eine Nacht später, Teedame neben dem Schläger, Gift auf einem Überlebenden) betreffen auch das Regelwerk des Einzelspieler-Spiels.
+**4 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox, Rückkehr mitten in der Nacht, Pukka eine Nacht später, Teedame neben dem Schläger, Gift auf einem Überlebenden) betreffen auch das Regelwerk des Einzelspieler-Spiels.
 
 ### Offene Stellen
 
@@ -633,6 +648,7 @@ Der volle Bericht steht in `claude/messung-zombuul-tot-drei-lebende.md`. Kein Co
 | 31 | Messung | **Die Dämon-Messung zeigt keinen Verlauf.** Sie wertet einen Morgen je Partie aus. Wie sich der Rang des Dämons von Morgen zu Morgen entwickelt, ist nicht gemessen. |
 | 32 | Website | *Erledigt am 04.10.2026:* Schalter „the game is over“ unter Information. Ohne den Haken nimmt der Solver an, dass die Partie läuft. |
 | 33 | Bad Moon Rising | **Der Zombuul, der als tot gilt, bei drei oder mehr Lebenden auf dem Brett:** 0 von 22 vorn. Gemessen am 05.10.2026: Keine Regel fehlt, der Solver erkennt den Typ aus dem Muster der Nächte nicht (32 % statt 70 %). Stille Nächte zu bepreisen hebt diese 22 (bis 7 vorn), kostet über 400 Partien aber mehr (218 bis 225 statt 228). |
+| 34 | Simulator | **Das Dorf stimmt nicht ab wie ein Tisch.** Die meisten Stimmen reichen, auch eine einzige, und ohne Stimmen wird ein Sitz gezogen. Hinrichtung an 97 bis 99 % der Tage, nach der Tischregel wären es etwa 55 %. Gemessen am 05.10.2026, nicht entschieden. |
 | 28 | Simulator | **Das Dorf gewinnt im Simulator nie.** Es richtet den Dämon nur hin, wenn die Partie danach weitergeht (Scharlachrote Frau, Zombuul, Strippenzieher, Teufelsadvokat). Das ist Absicht, heißt aber: Alle gespielten Partien sind solche, in denen der Dämon überlebt. |
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
 | 30 | Simulator gegen Night-Walk | **Sects & Violets weicht in 60 von 16.641 Nächten ab.** Nicht untersucht, älter als die Reparatur. |

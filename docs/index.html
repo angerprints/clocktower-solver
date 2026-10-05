@@ -149,6 +149,17 @@ main{
   margin:2px 0 8px;font-size:13px;font-style:italic;
   color:var(--crimson-deep);
 }
+/* What the nights add up to, set against the day before each. Facts
+   counted off the board, no weighing. */
+.night-pattern{
+  margin:14px 0 0;padding:8px 10px;border:1px dashed var(--gold);border-radius:4px;
+  font-size:13px;line-height:1.5;color:var(--ink-soft);
+}
+.night-pattern b{
+  display:block;margin-bottom:2px;font-size:11.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--crimson-deep);
+}
+.night-pattern .says{margin-top:4px;font-style:italic;color:var(--ink)}
 /* The line closing off the game, under the last night. */
 .day-foot.game-end{margin-top:14px;border-top:1px solid var(--gold)}
 /* The line closing off a day, under that night's readings. */
@@ -612,14 +623,14 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=ad0a41f8b669";
+import * as solver from "./api.mjs?v=2be52e0a9435";
 
 // The solve runs beside the page, in a worker, so a long board neither
 // freezes the page nor hides that it is busy: it reports how far along it
 // is and can be stopped. Where a browser cannot start a module worker —
 // an old one, or a page opened straight from disk — it runs here as it
 // always did, and the page freezes for the length of it as it always did.
-const WORKER_URL = "./worker.mjs?v=ad0a41f8b669";
+const WORKER_URL = "./worker.mjs?v=2be52e0a9435";
 let WORKER = null, NO_WORKER = false, JOB = null;
 
 function worker(){
@@ -2111,6 +2122,65 @@ function blameLine(night){
   return `what killed them &mdash; ${bits.join(" &middot; ")}`;
 }
 
+/** What the nights add up to, set against the day before each.
+ *
+ * A Zombuul kills only after a day on which nobody died; every other
+ * Demon kills whatever the day did. So which nights were quiet, sorted
+ * by whether the day before had a death, is the one place its type
+ * shows — and the solver does not read it, because every quiet night
+ * has a legal account under the other Demons too (a target that could
+ * not die, a Demon that was stopped). Weighing those accounts was
+ * measured and found to cost more than it finds (05.10.2026), so this
+ * counts and says what it counted. It changes no number on the page.
+ *
+ * Counted off the board alone: a night is one with "nobody died" ticked
+ * or with a body on it, and the day before had a death if a seat says
+ * so. Returns the four counts, or null with no Zombuul on the script or
+ * no such night yet.
+ */
+function nightPatternCounts(){
+  if(!SCRIPT || !(SCRIPT.demons || []).includes("Zombuul")) return null;
+  const seats = S.players.slice(0, S.n);
+  const has = (kinds, day) => seats.some(p => eventsOf(p).some(
+    c => kinds.includes(c[0]) && +c.slice(1) === day));
+  const got = {quietAfterDeath:0, loudAfterDeath:0,
+               quietAfterNone:0, loudAfterNone:0};
+  for(let n = 2; n <= currentNight(); n++){
+    const loud = has("N", n), quiet = (S.quiet || []).includes(n);
+    if(loud === quiet) continue;        // not written down, or both at once
+    const dayDeath = has("XDWM", n - 1);
+    got[(quiet ? "quiet" : "loud") + (dayDeath ? "AfterDeath" : "AfterNone")]++;
+  }
+  const seen = got.quietAfterDeath + got.loudAfterDeath
+             + got.quietAfterNone + got.loudAfterNone;
+  return seen ? got : null;
+}
+
+function nightPattern(){
+  const got = nightPatternCounts();
+  if(!got) return null;
+  const nights = k => `${k} night${k === 1 ? "" : "s"}`;
+  const row = (when, quiet, loud) => (quiet + loud)
+    ? `<div>After a day ${when}: ${nights(quiet)} quiet &middot; `
+      + `${nights(loud)} with deaths</div>` : "";
+  let verdict = "";
+  if(got.loudAfterDeath)
+    verdict = ` If the Demon is a Zombuul, something else killed on `
+      + `${nights(got.loudAfterDeath)}.`;
+  else if(got.quietAfterDeath)
+    verdict = " This pattern fits one.";
+  const box = document.createElement("div");
+  box.className = "night-pattern";
+  box.title = "Counted off the board. It changes none of the numbers: "
+    + "the solver does not weigh quiet nights.";
+  box.innerHTML = "<b>Night pattern</b>"
+    + row("with a death", got.quietAfterDeath, got.loudAfterDeath)
+    + row("with no death", got.quietAfterNone, got.loudAfterNone)
+    + `<div class="says">A Zombuul kills only after a day with no death.`
+    + `${verdict}</div>`;
+  return box;
+}
+
 function drawLedger(){
   const box=$("#rows"); box.innerHTML="";
   const columns=Math.min(8, currentNight()+1);
@@ -2196,6 +2266,10 @@ function drawLedger(){
     const acts = dayActs(n);
     if(acts) box.appendChild(acts);
   }
+
+  // What the nights add up to, where a Zombuul could be playing.
+  const pattern = nightPattern();
+  if(pattern) box.appendChild(pattern);
 
   // The last line of the ledger: the game has ended.
   //

@@ -112,6 +112,8 @@ er ist), `dm_preis_0.5.jsonl` und `dm_preis_0.25.jsonl` sind dieselben 400
 Partien Bad Moon Rising (Stand Commit 11f36ad). Jede Zeile trägt zusätzlich
 `mass` (Glaube des Solvers je Dämon-Typ), `zpcts` und die Toten je Tag und
 Nacht. `preis_vergleich.py 0.5 0.25` stellt die Läufe nebeneinander.
+`dorf.py N` misst ohne Solver an je N Partien der drei Skripte, was das Dorf
+am Tag tut: wie oft es hinrichtet, mit wie vielen Stimmen, und wen.
 `stillmuster.py N` zählt ohne Solver an N Partien, wie oft eine Nacht je
 Dämon still ist und wer es bei welchem Muster war.
 

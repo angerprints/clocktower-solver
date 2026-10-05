@@ -46,4 +46,5 @@ Es reicht, **jeden Morgen** nachzutragen, was passiert ist. Wichtig ist nur, das
 
 - **Eine Partie ist ein Anfang.** Mehrere Partien sagen deutlich mehr. Jede Datei hilft.
 - **Nicht alles eintragen zu können ist in Ordnung.** Lieber weniger, aber jede Eintragung bei der richtigen Nacht.
+- **Der Kasten „Night pattern“** erscheint unter den Nächten, wenn ein Zombuul auf dem Skript steht. Er zählt, welche Nächte still waren, getrennt nach Tagen mit und ohne Toten. Damit er stimmt, hake stille Nächte bei **nobody died** an. Er ändert keine Zahl des Solvers, er ist ein Hinweis für euch.
 - **Wo steht was:** Die Auswertung liegt auf der Seite und in `tools/review_game.mjs`, die Logik dahinter in `js/review.mjs`.
