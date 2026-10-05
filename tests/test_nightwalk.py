@@ -113,6 +113,72 @@ class TheGoonTakesTheFirstAlignment(SolverTest):
                         CHARACTERS["Poisoner"].other_night)
 
 
+
+class WhatHappenedLaterTonightDoesNotReachBack(unittest.TestCase):
+    """Who is droisoned is asked of the moment, not of the night.
+
+    The walk used to be handed everybody droisoned by the time the night
+    *ended*, as standing since it began. Sixty nights in 16,641 of Sects
+    & Violets came out wrong for that, or for a Philosopher's swap the
+    walk never made (05.10.2026). One played night for each, by name.
+    """
+
+    def night(self, seed, night):
+        from botc import scripts
+        n = [7, 8, 9, 10, 11][seed % 5]
+        deal, heard = simulate.play(n, random.Random(seed), nights=4,
+                                    script=scripts.SECTS_AND_VIOLETS)
+        hidden = nightwalk.hidden_from(deal, night, heard)
+        return deal, hidden, nightwalk.walk(deal, night, hidden)
+
+    def test_a_demon_kills_the_sweetheart_before_she_makes_it_drunk(self):
+        """She acts at 41 and the Demon at 31. The Vortox is the one
+        made drunk, and it had already killed her."""
+        deal, hidden, got = self.night(392, 3)
+        self.assertEqual(deal.roles[1], "Sweetheart")
+        self.assertEqual(deal.died_on("N3"), {1})
+        self.assertEqual(hidden[("standing_later", 3)], {2})
+        self.assertNotIn(("standing", 3), hidden)
+        self.assertEqual(got.died, {1})
+
+    def test_a_demon_kills_before_a_barbers_swap_moves_it(self):
+        """The Barber's swap is at 40. After it the old No Dashii is a
+        Clockmaker beside the new one, and poisoned — which says
+        nothing about its kill at 30."""
+        deal, hidden, got = self.night(37, 4)
+        self.assertIn(6, hidden[("barber", 4)])
+        self.assertIn(6, hidden[("standing_later", 4)])
+        self.assertEqual(got.died, deal.died_on("N4"))
+        self.assertEqual(got.died, {1})
+
+    def test_a_philosopher_with_the_snake_charmers_ability_swaps(self):
+        """It took the ability on night one and points at the Fang Gu on
+        night two. The Philosopher's seat is the Fang Gu from then, so
+        it is the one that kills an Outsider and dies of the jump."""
+        deal, hidden, got = self.night(232, 2)
+        self.assertEqual(hidden["gained"], {1: "SnakeCharmer"})
+        self.assertEqual(hidden[("snakecharmers", 2)], {1: 7})
+        self.assertIn((11, "swapped", 1, 7), got.log)
+        self.assertEqual(got.died, deal.died_on("N2"))
+        self.assertEqual(got.died, {1})
+
+    def test_no_night_of_sects_and_violets_disagrees(self):
+        from botc import scripts
+        for seed in range(400):
+            n = [7, 8, 9, 10, 11][seed % 5]
+            deal, heard = simulate.play(n, random.Random(seed), nights=4,
+                                        script=scripts.SECTS_AND_VIOLETS)
+            for night in (2, 3, 4):
+                if deal.game_ends_after is not None \
+                        and night > deal.game_ends_after:
+                    continue
+                got = nightwalk.walk(deal, night,
+                                     nightwalk.hidden_from(deal, night, heard))
+                with self.subTest(seed=seed, night=night):
+                    self.assertEqual(got.died, deal.died_on(f"N{night}"))
+                    self.assertEqual(got.untold, set())
+
+
 if __name__ == "__main__":
     unittest.main()
 

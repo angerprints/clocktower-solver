@@ -241,6 +241,33 @@ class AsBoard:
         return self.world.demon_at(phase)
 
 
+def _droisoned_as_the_night_began(deal, night):
+    """`droisoned_at`, asked of the board before tonight had happened.
+
+    Tonight's changes of character and tonight's deaths are put aside
+    for the asking, and with them the poison on a Demon a Snake Charmer
+    swapped with tonight — recorded apart from the change that caused it.
+    """
+    import simulate
+    phase = f"N{night}"
+    changes, deaths = deal.changes, deal.deaths
+    poisoned = getattr(deal, "perma_poisoned", set())
+    deal.changes = [c for c in changes if c[0] != phase]
+    deal.deaths = {p: at for p, at in deaths.items() if at != phase}
+    deal.perma_poisoned = {
+        p for p in poisoned
+        if any(seat == p and role == "SnakeCharmer"
+               for _at, seat, role in deal.changes)}
+    fresh = deal.pukka_marks.pop(night, None)
+    try:
+        return set(simulate.droisoned_at(deal, night))
+    finally:
+        deal.changes, deal.deaths = changes, deaths
+        deal.perma_poisoned = poisoned
+        if fresh is not None:
+            deal.pukka_marks[night] = fresh
+
+
 def hidden_from(deal, night, heard):
     """Everything the walk needs to be told, read off a played game.
 
@@ -324,10 +351,30 @@ def hidden_from(deal, night, heard):
         # not, that token comes off". A dead Moonchild's pick at 50 lands.
         token_only = came_due[0] not in standing
         standing.add(came_due[0])
+    out = {}
+    # ...and "when the night began" has to mean that. `droisoned_at`
+    # answers for the board as the night *ended*: a Sweetheart the Demon
+    # killed tonight has already made somebody drunk, a Barber's swap at
+    # 40 has already moved the No Dashii and its poison with it. Handed
+    # over as standing, that reached back to slot 29 — the Demon that
+    # killed the Sweetheart was drunk before it killed her, and the walk
+    # had nobody die on a night the record shows a body.
+    #
+    # Sixty nights in 16,641 of Sects & Violets, and every one of them
+    # this or the Philosopher below (05.10.2026). Third time a set that
+    # means "by the end" has been given as the answer to an earlier
+    # moment. So the walk is told three things: who was droisoned as the
+    # night began, who became so in the course of it, and who stopped.
+    began = _droisoned_as_the_night_began(deal, night) - derives
+    ended = set(simulate.droisoned_at(deal, night)) - derives
+    later, lifted = ended - began, began - ended
+    standing = (standing - later) | lifted
     if standing:
-        out = {("standing", night): standing}
-    else:
-        out = {}
+        out[("standing", night)] = standing
+    if later:
+        out[("standing_later", night)] = later
+    if lifted:
+        out[("standing_lifted", night)] = lifted
     out.update({"red_herring": deal.red_herring,
                 "gained": dict(getattr(deal, "philosophies", {}) or {})})
     if token_only:
@@ -409,6 +456,10 @@ def hidden_from(deal, night, heard):
     charm = row("SnakeCharmerChoice")
     if charm:
         out[("snakecharmer_swapped", night)] = bool(charm[0].swapped)
+        # By seat as well, because a table can hold two: the real one and
+        # a Philosopher that took its ability. One key could only name
+        # one of them, and the walk gave both the same target.
+        out[("snakecharmers", night)] = {c.player: c.target for c in charm}
 
     for kind, key in (("SailorChoice", "sailor"),
                       ("SnakeCharmerChoice", "snakecharmer"),
@@ -572,6 +623,16 @@ def walk(deal, night, hidden):
     state.minion_nominated = hidden.get(("minion_nominated", night))
 
     field = "first_night" if night == 1 else "other_night"
+    # What became droisoned in the course of tonight, and what stopped
+    # being so, by causes the walk is told rather than works out: a
+    # Sweetheart dying, a Barber's swap moving a No Dashii. The last of
+    # those acts at the Sweetheart's slot, and everybody who reads acts
+    # after it — so that is where the board is brought up to date.
+    becomes_droisoned = set(hidden.get(("standing_later", night)) or ())
+    stops_being_droisoned = set(hidden.get(("standing_lifted", night)) or ())
+    last_cause = getattr(CHARACTERS["Sweetheart"], field, 0)
+    charmer_slot = getattr(CHARACTERS["SnakeCharmer"], field, 0)
+    settled = False
     for slot in _turns(night):
         # Who holds a character with this slot **now**.
         #
@@ -580,10 +641,25 @@ def walk(deal, night, hidden):
         # goes. A seat may act twice if two characters pass through it,
         # which is correct: the Storyteller wakes whoever holds the
         # token when that token's turn comes.
+        if not settled and slot > last_cause:
+            settled = True
+            state.droisoned |= becomes_droisoned
+            state.droisoned -= stops_being_droisoned
         here = [p for p in sorted(state.roles)
-                if getattr(CHARACTERS.get(state.roles[p]), field, 0) == slot]
+                if getattr(CHARACTERS.get(state.roles[p]), field, 0) == slot
+                or (state.roles[p] == "Philosopher" and slot == charmer_slot
+                    and state.gained.get(p) == "SnakeCharmer")]
         for seat in here:
             role = state.roles[seat]
+            # A Philosopher that took the Snake Charmer's ability on an
+            # earlier night chooses when the Snake Charmer does. It only
+            # ever *read* with what it had taken, so its swap never
+            # happened here: the Demon stayed where it was, and a Fang Gu
+            # that should have jumped from the Philosopher's seat jumped
+            # from its own (05.10.2026).
+            if role == "Philosopher" and slot == charmer_slot \
+                    and state.gained.get(seat) == "SnakeCharmer":
+                role = "SnakeCharmer"
 
             if role == "Poisoner":
                 target = hidden.get(("poisoner", night))
@@ -639,7 +715,9 @@ def walk(deal, night, hidden):
                 # Swaps with the Demon if it points at one. Acts at 11, so
                 # the swap happens *before* the Demon's kill — and the seat
                 # that kills is the charmer's, holding the Demon now.
-                target = hidden.get(("snakecharmer", night))
+                by_seat = hidden.get(("snakecharmers", night))
+                target = (by_seat.get(seat) if by_seat is not None
+                          else hidden.get(("snakecharmer", night)))
                 if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
@@ -652,6 +730,7 @@ def walk(deal, night, hidden):
                     continue
                 became = state.roles[target]
                 state.roles[seat], state.roles[target] = became, "SnakeCharmer"
+                state.gained.pop(seat, None)     # a Philosopher no longer
                 state.sides[seat], state.sides[target] = "evil", "good"
                 state.droison(target, slot, "SnakeCharmer swap")
                 state.log.append((slot, "swapped", seat, target))

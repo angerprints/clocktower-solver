@@ -114,6 +114,9 @@ Partien Bad Moon Rising (Stand Commit 11f36ad). Jede Zeile trägt zusätzlich
 Nacht. `preis_vergleich.py 0.5 0.25` stellt die Läufe nebeneinander.
 `dorf.py N` misst ohne Solver an je N Partien der drei Skripte, was das Dorf
 am Tag tut: wie oft es hinrichtet, mit wie vielen Stimmen, und wen.
+`nachtordnung.py` probiert nur im Speicher aus, was sich ändert, wenn der
+Simulator die Nacht nach dem aktuellen statt dem ausgeteilten Charakter
+ordnet: wie viele Partien anders laufen und wie oft der Night-Walk abweicht.
 `stillmuster.py N` zählt ohne Solver an N Partien, wie oft eine Nacht je
 Dämon still ist und wer es bei welchem Muster war.
 

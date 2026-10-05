@@ -129,7 +129,7 @@ Geprüft: 2000 S&V-Partien mit 7 bis 11 Spielern und 4 Nächten, keine verwirft 
 
 - **Mutant:** Er darf nicht sagen, dass er ein Außenseiter ist, sonst wird er vielleicht hingerichtet. Also steht er **immer hinter einem Townsfolk-Claim**, und das kostet die Welt nichts. Vorher baute der Solver eine Welt mit Mutant nur, wenn jemand „Mutant" behauptete, also genau dann, wenn der Mutant es nie tut. Gemessen an 60 S&V-Partien mit 7 bis 9 Spielern: Auf dem Sitz des echten Mutanten stieg die Wahrscheinlichkeit „Mutant" von 0 % (17 von 18 Partien) auf 17 % im Mittel, und kein Brett ist mehr ohne Welten (vorher 6 von 60). Der Dämon steht im Median auf Rang 1 statt 2. **Preis:** Viele S&V-Bretter haben jetzt mehr legale Welten, eines 7.320 statt 1.104. Das Lösen dauert im Mittel 6,8 statt 2,9 Sekunden, einzelne Bretter über 40 Sekunden.
 - **Savant:** Die zwei Sätze bleiben Freitext. Zusätzlich kann jeder Satz in einer von neun prüfbaren Formen eingegeben werden: „X ist böse", „X ist gut", „X und Y sind auf derselben Seite", „auf verschiedenen Seiten", „X ist der C", „C ist im Spiel", „C ist nicht im Spiel", „es gibt N Außenseiter", „der Dämon ist einer von …". Sind beide Sätze so eingegeben, wird das Paar gewogen: Genau einer war wahr, unter dem Vortox beide falsch, ein gestörter Savant kann alles hören. Fehlregistrierung (Einsiedler, Spion) ist erlaubt. Der Simulator lässt den Savant jetzt jeden Tag fragen: 538 gewogene Paare in 1000 Partien, keines verwirft die Wahrheit. Zur Gegenprobe wurde je ein Paar in zwei gleiche Sätze verfälscht, dann verwirft der Solver 120 von 201 Brettern (der Rest ist mit Gift oder Vortox erklärbar).
-- **Cerenovus:** Der Wahnsinn selbst hinterlässt keine Spur. Drei Dinge sieht der Tisch aber: eine Hinrichtung wegen gebrochenem Wahnsinn (gab es schon), die neue Zeile **„wurde verrückt gemacht als X"**, die der Gewählte selbst sagt und die einen lebenden Cerenovus in jener Nacht belegt, und einen guten Spieler, der etwas Falsches behauptet. Diese Lüge kostet in einer Welt mit lebendem Cerenovus 0,25 statt 0,02, höchstens eine pro Nacht. Das wirkt, wenn der Sitz als „unsicher" markiert ist.
+- **Cerenovus:** Die Besessenheit selbst hinterlässt keine Spur. Drei Dinge sieht der Tisch aber: eine Hinrichtung wegen gebrochener Besessenheit (gab es schon), die neue Zeile **„war besessen davon, X zu sein"**, die der Gewählte selbst sagt und die einen lebenden Cerenovus in jener Nacht belegt, und einen guten Spieler, der etwas Falsches behauptet. Diese Lüge kostet in einer Welt mit lebendem Cerenovus 0,25 statt 0,02, höchstens eine pro Nacht. Das wirkt, wenn der Sitz als „unsicher" markiert ist.
 
 **Offen:** Zwei seltene S&V-Partien verwirft der Solver noch, beide mit einem Philosophen, der den Schlangenbeschwörer nahm und tauschte, während der echte Beschwörer in derselben Nacht auch tauschte (Seed 836 bei 4 Nächten, vermutlich auch Seed 181 bei 5 Nächten). Die Regeln sind dort selbst unklar: Endet die Trunkenheit des echten Beschwörers, sobald der Philosoph kein Philosoph mehr ist?
 
@@ -160,7 +160,7 @@ Gemessen an 129 simulierten S&V-Partien mit genanntem totem Barbier (7 bis 9 Spi
 
 **Dabei gefunden, noch offen:** Die Zeile „wurde X" wird nur aufgeschrieben, für die Suche zählt der aktuelle Claim. Ein guter Spieler, dessen Rolle sich geändert hat und der die neue nennt (nach Pit-Hag oder Barbier), wird nie mit seiner wahren Anfangsrolle durchgerechnet. Eine Lösung müsste beide Sitze eines Tauschs zusammen denken.
 
-**Mastermind.** Die Grundidee war schon da: Nach der Hinrichtung des Dämons darf das Spiel einen Tag weiterlaufen. Gefehlt haben drei Bedingungen aus dem Wiki. Nur eine **Hinrichtung** zählt, auch der Nominierende einer Jungfrau und eine Wahnsinns-Hinrichtung, aber kein Schuss des Dämonenjägers. Der Mastermind muss **funktionieren**. Und eine Scharlachrote Frau, die übernehmen könnte, **hat Vorrang**. Die Mastermind-Geschichte ist jetzt markiert und wird zu Forderungen an den Störungsplan: Mastermind nicht gestört, Scharlachrote Frau gestört. Vorher standen beide Geschichten kostenlos nebeneinander.
+**Mastermind.** Die Grundidee war schon da: Nach der Hinrichtung des Dämons darf das Spiel einen Tag weiterlaufen. Gefehlt haben drei Bedingungen aus dem Wiki. Nur eine **Hinrichtung** zählt, auch der Nominierende einer Jungfrau und eine Hinrichtung wegen Besessenheit, aber kein Schuss des Dämonenjägers. Der Mastermind muss **funktionieren**. Und eine Scharlachrote Frau, die übernehmen könnte, **hat Vorrang**. Die Mastermind-Geschichte ist jetzt markiert und wird zu Forderungen an den Störungsplan: Mastermind nicht gestört, Scharlachrote Frau gestört. Vorher standen beide Geschichten kostenlos nebeneinander.
 
 **Der breitere Test hat mehr gefunden als den Mastermind.** Der bisherige BMR-Test spielte 6 Partien mit 9 Spielern. 300 Partien mit 7 bis 11 Spielern und 4 Nächten verwarfen die Wahrheit **32-mal** – schon vor dem Mastermind. Behoben, jetzt 0 von 1000:
 
@@ -260,7 +260,7 @@ Die Frage war: Sind die Regeln beider Skripte noch richtig umgesetzt? Alle 50 Ch
 
 **Berichtigung zum 29.09.2026:** Damals hatte ich beim Vortox das Gegenteil eingebaut, weil der Simulator ein betrunkenes Orakel die Wahrheit sagen ließ. Solver und Simulator hatten denselben Fehler. Beide folgen jetzt dem Wiki.
 
-**Nebenbei gefunden:** Die alte lokale Python-App speicherte den Tag bei Hexen-Tod und Wahnsinns-Hinrichtung als Text statt als Zahl. Die Seite war richtig.
+**Nebenbei gefunden:** Die alte lokale Python-App speicherte den Tag bei Hexen-Tod und Hinrichtung wegen Besessenheit als Text statt als Zahl. Die Seite war richtig.
 
 **Messung:**
 
@@ -604,6 +604,17 @@ Unter den Nächten steht ein Kasten „Night pattern“, wenn ein Zombuul auf de
 
 Der Kasten zählt nur, was auf dem Brett steht. Er ändert keine Zahl, und der Solver bleibt, wie er ist (deine Entscheidung „nur Fakten“ vom 05.10.2026). Geprüft in `tests/test_night_pattern.py` und im Browser.
 
+### Sects & Violets: Simulator gegen Night-Walk · *untersucht und Night-Walk repariert am 05.10.2026*
+
+Der volle Bericht steht in `claude/sv-simulator-gegen-night-walk.md`. Am Solver und am Simulator ist nichts geändert.
+
+- **Ergebnis:** Alle 60 abweichenden Nächte (von 16.641) waren Lücken des Night-Walk, kein Regelfehler in Simulator oder Solver.
+- **Lücke 1 (53 Nächte):** Der Night-Walk bekam gesagt, wer am **Ende** der Nacht betrunken oder vergiftet ist, und las das schon am Anfang. Tötet der Dämon das Liebchen und wird dadurch selbst betrunken, galt er schon vor dem Kill als betrunken. Dasselbe nach einem Barbier-Tausch, der den No Dashii und sein Gift erst nach dem Kill versetzt. Jetzt bekommt er drei Dinge gesagt: wer zu Beginn der Nacht gestört war, wer es im Lauf der Nacht wurde und wer es nicht mehr ist.
+- **Lücke 2 (7 Nächte):** Ein Philosoph mit der Fähigkeit des Schlangenbeschwörers tauschte im Night-Walk nie. Jetzt wählt er an der Stelle des Schlangenbeschwörers, und zwei Schlangenbeschwörer in einer Nacht haben je ihr eigenes Ziel.
+- **Nachher:** 0 von 16.641 Nächten (4 Nächte), 1 von 9.458 (6 Nächte, vorher 35). Bad Moon Rising, Trouble Brewing und das Oster-Skript bleiben bei 0.
+- **Die eine verbliebene Nacht ist ein Fehler im Simulator** (offene Stelle 35): Er ordnet die Nacht nach dem Charakter, den ein Sitz **ausgeteilt** bekam, nicht nach dem, den er jetzt hat. Ein Sitz, den das Grubenweib zum Schlangenbeschwörer gemacht hat, handelt deshalb zu spät. Im Versuch (nur im Speicher) behebt die richtige Reihenfolge auch diese Nacht. Sie ändert 283 von 6.000 Partien Sects & Violets, keine auf den anderen Skripten und keines der sechs Bretter im Korpus.
+- **Der Solver** hält in 57 der 60 betroffenen Partien die wahre Welt. Die 3 anderen sind Barbier-Tausche ohne gemeldeten Barbier (offene Stelle 4).
+
 ### Als Nächstes
 
 **Die Arbeit an den stillen Nächten und am Zombuul ist abgeschlossen** (05.10.2026). Nichts auf dieser Liste hält die experimentellen Charaktere auf.
@@ -611,8 +622,8 @@ Der Kasten zählt nur, was auf dem Brett steht. Er ändert keine Zahl, und der S
 **1 · Experimentelle Charaktere** (offene Stelle 14). Im Katalog stehen 83 Charaktere. Die 72 der drei Grundskripte sind modelliert, bis auf den Artist (nur aufgezeichnet). Von den 11 weiteren sind 8 modelliert (Acrobat, Alsaahir, Balloonist, Farmer, Marionette, Noble, Ogre, Sentinel) und 3 nicht (Atheist, Legion, Riot). Welche Charaktere als Nächstes kommen, entscheidest du, am besten nach den Skripten, die ihr wirklich spielt.
 
 **2 · Zwei kleine Stellen in Sects & Violets,** die vorher oder nebenher gehen und je etwa einen Arbeitsschritt brauchen:
-- Der Simulator weicht in 60 von 16.641 Nächten vom Night-Walk ab (offene Stelle 30). Nicht untersucht. Das kann ein Regelfehler in einem der beiden sein.
-- Der Simulator spielt die **Hinrichtung wegen Wahnsinn** (Cerenovus) nicht.
+- Der Simulator ordnet die Nacht nach dem ausgeteilten Charakter (offene Stelle 35). Gemessen, nicht entschieden.
+- Der Simulator spielt die **Hinrichtung wegen Besessenheit** (Cerenovus) nicht.
 
 **3 · Strenge Lesart für stille Nächte** (zurückgestellt): zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst. Im Versuch verlor sie 11 von 60.000 Partien, die der Solver hält.
 
@@ -655,7 +666,8 @@ Der Kasten zählt nur, was auf dem Brett steht. Er ändert keine Zahl, und der S
 | 34 | Simulator | *Entschieden am 05.10.2026, bleibt so:* Das Dorf stimmt nicht ab wie ein Tisch (die meisten Stimmen reichen, auch eine einzige). Es richtet an 97 bis 99 % der Tage hin, und das passt zu deinem Tisch. |
 | 28 | Simulator | **Das Dorf gewinnt im Simulator nie.** Es richtet den Dämon nur hin, wenn die Partie danach weitergeht (Scharlachrote Frau, Zombuul, Strippenzieher, Teufelsadvokat). Das ist Absicht, heißt aber: Alle gespielten Partien sind solche, in denen der Dämon überlebt. |
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
-| 30 | Simulator gegen Night-Walk | **Sects & Violets weicht in 60 von 16.641 Nächten ab.** Nicht untersucht, älter als die Reparatur. |
+| 30 | Simulator gegen Night-Walk | *Erledigt am 05.10.2026:* Die 60 abweichenden Nächte in Sects & Violets waren zwei Lücken des Night-Walk, beide repariert. Jetzt 0 von 16.641. |
+| 35 | Simulator | **Die Reihenfolge der Nacht liest den ausgeteilten Charakter,** nicht den aktuellen. Ein Sitz mit gewechseltem Charakter handelt an der alten Stelle. Sichtbar in 1 von 9.458 Nächten (Sects & Violets, 6 Nächte). Die Reparatur würde 283 von 6.000 Partien Sects & Violets ändern. Gemessen am 05.10.2026, nicht entschieden. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 
