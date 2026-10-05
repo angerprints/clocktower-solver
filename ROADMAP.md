@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 04.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 05.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -596,7 +596,7 @@ Der volle Bericht steht in `claude/dorf-im-simulator-und-nachtmuster.md`. Am Sim
 - **Es weiß nichts.** Nominiert wird ein gezogener Sitz, jeder Lebende stimmt mit 45 % zu, Böse für Böse mit 20 %. Der Dämon ist ausgenommen, solange die Partie mit ihm enden würde: 0 % der Hinrichtungen in Trouble Brewing und Sects & Violets, 6 % in Bad Moon Rising.
 - **Folge für den Zombuul:** Er darf nur in 22 % seiner Nächte töten.
 
-**Offen, deine Entscheidung:** ob das Dorf nach der Tischregel abstimmen soll. Das würde alle gespielten Partien neu austeilen (Tests mit festen Seeds, Korpus, alle Messwerte).
+**Deine Entscheidung vom 05.10.2026:** Der Simulator bleibt, wie er ist. An deinem Tisch wird fast jeden Tag hingerichtet, die Rate passt also. Die Tischregel beim Abstimmen wird nicht gebaut, und keine Partie wird neu ausgeteilt.
 
 ### Website: das Muster der Nächte · *erledigt am 05.10.2026*
 
@@ -606,13 +606,17 @@ Der Kasten zählt nur, was auf dem Brett steht. Er ändert keine Zahl, und der S
 
 ### Als Nächstes
 
-**1 · Das Dorf im Simulator: Tischregel beim Abstimmen** (gemessen, nicht entschieden, offene Stelle 34). Davon hängt auch die offene Stelle 33 ab.
+**Die Arbeit an den stillen Nächten und am Zombuul ist abgeschlossen** (05.10.2026). Nichts auf dieser Liste hält die experimentellen Charaktere auf.
 
-**2 · Strenge Lesart für stille Nächte** (zurückgestellt): zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst. Im Versuch verlor sie 11 von 60.000 Partien, die der Solver hält.
+**1 · Experimentelle Charaktere** (offene Stelle 14). Im Katalog stehen 83 Charaktere. Die 72 der drei Grundskripte sind modelliert, bis auf den Artist (nur aufgezeichnet). Von den 11 weiteren sind 8 modelliert (Acrobat, Alsaahir, Balloonist, Farmer, Marionette, Noble, Ogre, Sentinel) und 3 nicht (Atheist, Legion, Riot). Welche Charaktere als Nächstes kommen, entscheidest du, am besten nach den Skripten, die ihr wirklich spielt.
 
-**3 · Was der Simulator weiter nicht spielt:** die **Hinrichtung wegen Wahnsinn** (Cerenovus) in Sects & Violets.
+**2 · Zwei kleine Stellen in Sects & Violets,** die vorher oder nebenher gehen und je etwa einen Arbeitsschritt brauchen:
+- Der Simulator weicht in 60 von 16.641 Nächten vom Night-Walk ab (offene Stelle 30). Nicht untersucht. Das kann ein Regelfehler in einem der beiden sein.
+- Der Simulator spielt die **Hinrichtung wegen Wahnsinn** (Cerenovus) nicht.
 
-**4 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox, Rückkehr mitten in der Nacht, Pukka eine Nacht später, Teedame neben dem Schläger, Gift auf einem Überlebenden) betreffen auch das Regelwerk des Einzelspieler-Spiels.
+**3 · Strenge Lesart für stille Nächte** (zurückgestellt): zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst. Im Versuch verlor sie 11 von 60.000 Partien, die der Solver hält.
+
+**4 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox, Rückkehr mitten in der Nacht, Pukka eine Nacht später, Teedame neben dem Schläger, Gift auf einem Überlebenden) betreffen auch das Regelwerk des Einzelspieler-Spiels. Das gehört in den anderen Chat.
 
 ### Offene Stellen
 
@@ -647,8 +651,8 @@ Der Kasten zählt nur, was auf dem Brett steht. Er ändert keine Zahl, und der S
 | 27 | Messung | *Erledigt am 04.10.2026:* Stille Nächte und Tage ohne Hinrichtung sind in jedem Messlauf und Test mit gespielten Partien eingetragen. |
 | 31 | Messung | **Die Dämon-Messung zeigt keinen Verlauf.** Sie wertet einen Morgen je Partie aus. Wie sich der Rang des Dämons von Morgen zu Morgen entwickelt, ist nicht gemessen. |
 | 32 | Website | *Erledigt am 04.10.2026:* Schalter „the game is over“ unter Information. Ohne den Haken nimmt der Solver an, dass die Partie läuft. |
-| 33 | Bad Moon Rising | **Der Zombuul, der als tot gilt, bei drei oder mehr Lebenden auf dem Brett:** 0 von 22 vorn. Gemessen am 05.10.2026: Keine Regel fehlt, der Solver erkennt den Typ aus dem Muster der Nächte nicht (32 % statt 70 %). Stille Nächte zu bepreisen hebt diese 22 (bis 7 vorn), kostet über 400 Partien aber mehr (218 bis 225 statt 228). |
-| 34 | Simulator | **Das Dorf stimmt nicht ab wie ein Tisch.** Die meisten Stimmen reichen, auch eine einzige, und ohne Stimmen wird ein Sitz gezogen. Hinrichtung an 97 bis 99 % der Tage, nach der Tischregel wären es etwa 55 %. Gemessen am 05.10.2026, nicht entschieden. |
+| 33 | Bad Moon Rising | **Bekannte Grenze:** Der Zombuul, der als tot gilt, steht bei drei oder mehr Lebenden auf dem Brett in 0 von 22 Partien vorn. Keine Regel fehlt. Stille Nächte zu bepreisen kostet mehr, als es findet (gemessen am 05.10.2026). Als Hilfe zeigt die Website seit dem 05.10.2026 den Kasten „Night pattern“. |
+| 34 | Simulator | *Entschieden am 05.10.2026, bleibt so:* Das Dorf stimmt nicht ab wie ein Tisch (die meisten Stimmen reichen, auch eine einzige). Es richtet an 97 bis 99 % der Tage hin, und das passt zu deinem Tisch. |
 | 28 | Simulator | **Das Dorf gewinnt im Simulator nie.** Es richtet den Dämon nur hin, wenn die Partie danach weitergeht (Scharlachrote Frau, Zombuul, Strippenzieher, Teufelsadvokat). Das ist Absicht, heißt aber: Alle gespielten Partien sind solche, in denen der Dämon überlebt. |
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
 | 30 | Simulator gegen Night-Walk | **Sects & Violets weicht in 60 von 16.641 Nächten ab.** Nicht untersucht, älter als die Reparatur. |
