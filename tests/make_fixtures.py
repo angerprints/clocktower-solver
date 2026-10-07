@@ -744,6 +744,26 @@ def handmade():
     # script, each board a game the solver used to throw out or one the
     # simulator used to play wrongly. Found with `messung/tor.py`, which
     # draws the script from the seed — so each has a script of its own.
+    # What is so, not what could have been said (table ruling,
+    # 07.10.2026): a Recluse beside a Vortox makes untrue answers legal,
+    # and they are still untrue. The Noble among them, which had been
+    # the one character read the other way.
+    from test_mixed_scripts import REGISTERING
+    R8 = ["Chef", "Empath", "Recluse", "Clockmaker", "Seamstress", "Noble",
+          "FortuneTeller", "Dreamer"]
+    yield board("mixed-vortox-recluse-chef-one", REGISTERING, R8, infos=[
+        {"type": "Chef", "night": 1, "player": 0, "count": 1}])
+    yield board("mixed-vortox-recluse-empath-one", REGISTERING, R8, infos=[
+        {"type": "Empath", "night": 1, "player": 1, "count": 1}])
+    yield board("mixed-vortox-recluse-seamstress", REGISTERING, R8, infos=[
+        {"type": "SeamstressInfo", "night": 1, "player": 4, "a": 2, "b": 0,
+         "same": False}])
+    yield board("mixed-vortox-recluse-noble", REGISTERING, R8, infos=[
+        {"type": "Noble", "night": 1, "player": 5, "a": 0, "b": 1, "c": 2}])
+    yield board("mixed-vortox-recluse-fortune-teller", REGISTERING, R8,
+                infos=[{"type": "FortuneTeller", "night": 1, "player": 6,
+                        "a": 2, "b": 0, "yes": True}])
+
     for what, seed in (
             ("gambler-right-before-a-swap", 1250),
             ("philosopher-gambler-dies", 8725),

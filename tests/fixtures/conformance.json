@@ -30197,6 +30197,792 @@
    }
   },
   {
+   "name": "mixed-vortox-recluse-chef-one",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Recluse",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Noble",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "Chef",
+      "night": 1,
+      "player": 0,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Mixed, a Recluse under a Vortox",
+     "characters": [
+      "chef",
+      "empath",
+      "seamstress",
+      "noble",
+      "fortuneteller",
+      "oracle",
+      "clockmaker",
+      "dreamer",
+      "flowergirl",
+      "juggler",
+      "recluse",
+      "mutant",
+      "klutz",
+      "witch",
+      "eviltwin",
+      "cerenovus",
+      "vortox"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 294,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 12.5654,
+      "demon_pct": 6.2827,
+      "drunk_pct": 0.0,
+      "lying_pct": 18.8482
+     },
+     {
+      "evil_pct": 15.1832,
+      "demon_pct": 7.5916,
+      "drunk_pct": 0.0,
+      "lying_pct": 26.7016
+     },
+     {
+      "evil_pct": 64.9215,
+      "demon_pct": 32.4607,
+      "drunk_pct": 0.0,
+      "lying_pct": 64.9215
+     },
+     {
+      "evil_pct": 12.5654,
+      "demon_pct": 6.2827,
+      "drunk_pct": 0.0,
+      "lying_pct": 24.0838
+     },
+     {
+      "evil_pct": 23.0366,
+      "demon_pct": 11.5183,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.9372
+     },
+     {
+      "evil_pct": 23.0366,
+      "demon_pct": 11.5183,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.9372
+     },
+     {
+      "evil_pct": 23.0366,
+      "demon_pct": 11.5183,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.9372
+     },
+     {
+      "evil_pct": 25.6545,
+      "demon_pct": 12.8272,
+      "drunk_pct": 0.0,
+      "lying_pct": 34.555
+     }
+    ]
+   }
+  },
+  {
+   "name": "mixed-vortox-recluse-empath-one",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Recluse",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Noble",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Mixed, a Recluse under a Vortox",
+     "characters": [
+      "chef",
+      "empath",
+      "seamstress",
+      "noble",
+      "fortuneteller",
+      "oracle",
+      "clockmaker",
+      "dreamer",
+      "flowergirl",
+      "juggler",
+      "recluse",
+      "mutant",
+      "klutz",
+      "witch",
+      "eviltwin",
+      "cerenovus",
+      "vortox"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 198,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 26.1261,
+      "demon_pct": 13.0631,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.4324
+     },
+     {
+      "evil_pct": 44.1441,
+      "demon_pct": 22.0721,
+      "drunk_pct": 0.0,
+      "lying_pct": 44.1441
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     }
+    ]
+   }
+  },
+  {
+   "name": "mixed-vortox-recluse-seamstress",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Recluse",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Noble",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "SeamstressInfo",
+      "night": 1,
+      "player": 4,
+      "a": 2,
+      "b": 0,
+      "same": false
+     }
+    ],
+    "script": {
+     "name": "Mixed, a Recluse under a Vortox",
+     "characters": [
+      "chef",
+      "empath",
+      "seamstress",
+      "noble",
+      "fortuneteller",
+      "oracle",
+      "clockmaker",
+      "dreamer",
+      "flowergirl",
+      "juggler",
+      "recluse",
+      "mutant",
+      "klutz",
+      "witch",
+      "eviltwin",
+      "cerenovus",
+      "vortox"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 198,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 26.1261,
+      "demon_pct": 13.0631,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     },
+     {
+      "evil_pct": 44.1441,
+      "demon_pct": 22.0721,
+      "drunk_pct": 0.0,
+      "lying_pct": 44.1441
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.4324
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     },
+     {
+      "evil_pct": 21.6216,
+      "demon_pct": 10.8108,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.9279
+     }
+    ]
+   }
+  },
+  {
+   "name": "mixed-vortox-recluse-noble",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Recluse",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Noble",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "Noble",
+      "night": 1,
+      "player": 5,
+      "a": 0,
+      "b": 1,
+      "c": 2
+     }
+    ],
+    "script": {
+     "name": "Mixed, a Recluse under a Vortox",
+     "characters": [
+      "chef",
+      "empath",
+      "seamstress",
+      "noble",
+      "fortuneteller",
+      "oracle",
+      "clockmaker",
+      "dreamer",
+      "flowergirl",
+      "juggler",
+      "recluse",
+      "mutant",
+      "klutz",
+      "witch",
+      "eviltwin",
+      "cerenovus",
+      "vortox"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 210,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 28.0992,
+      "demon_pct": 14.0496,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.8843
+     },
+     {
+      "evil_pct": 28.0992,
+      "demon_pct": 14.0496,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.8843
+     },
+     {
+      "evil_pct": 61.157,
+      "demon_pct": 30.5785,
+      "drunk_pct": 0.0,
+      "lying_pct": 61.157
+     },
+     {
+      "evil_pct": 15.7025,
+      "demon_pct": 7.8512,
+      "drunk_pct": 0.0,
+      "lying_pct": 25.6198
+     },
+     {
+      "evil_pct": 15.7025,
+      "demon_pct": 7.8512,
+      "drunk_pct": 0.0,
+      "lying_pct": 25.6198
+     },
+     {
+      "evil_pct": 19.8347,
+      "demon_pct": 9.9174,
+      "drunk_pct": 0.0,
+      "lying_pct": 29.7521
+     },
+     {
+      "evil_pct": 15.7025,
+      "demon_pct": 7.8512,
+      "drunk_pct": 0.0,
+      "lying_pct": 25.6198
+     },
+     {
+      "evil_pct": 15.7025,
+      "demon_pct": 7.8512,
+      "drunk_pct": 0.0,
+      "lying_pct": 25.6198
+     }
+    ]
+   }
+  },
+  {
+   "name": "mixed-vortox-recluse-fortune-teller",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Recluse",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Noble",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 6,
+      "a": 2,
+      "b": 0,
+      "yes": true
+     }
+    ],
+    "script": {
+     "name": "Mixed, a Recluse under a Vortox",
+     "characters": [
+      "chef",
+      "empath",
+      "seamstress",
+      "noble",
+      "fortuneteller",
+      "oracle",
+      "clockmaker",
+      "dreamer",
+      "flowergirl",
+      "juggler",
+      "recluse",
+      "mutant",
+      "klutz",
+      "witch",
+      "eviltwin",
+      "cerenovus",
+      "vortox"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 258,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 10.2484,
+      "demon_pct": 1.2422,
+      "drunk_pct": 0.0,
+      "lying_pct": 19.2547
+     },
+     {
+      "evil_pct": 24.2236,
+      "demon_pct": 16.7702,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.677
+     },
+     {
+      "evil_pct": 53.7267,
+      "demon_pct": 7.4534,
+      "drunk_pct": 0.0,
+      "lying_pct": 53.7267
+     },
+     {
+      "evil_pct": 24.2236,
+      "demon_pct": 16.7702,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.677
+     },
+     {
+      "evil_pct": 24.2236,
+      "demon_pct": 16.7702,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.677
+     },
+     {
+      "evil_pct": 24.2236,
+      "demon_pct": 16.7702,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.677
+     },
+     {
+      "evil_pct": 14.9068,
+      "demon_pct": 7.4534,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.3602
+     },
+     {
+      "evil_pct": 24.2236,
+      "demon_pct": 16.7702,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.677
+     }
+    ]
+   }
+  },
+  {
    "name": "mixed-gambler-right-before-a-swap",
    "payload": {
     "n_players": 7,

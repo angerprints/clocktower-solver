@@ -1475,11 +1475,12 @@ function explainOne(world, state, outcome = null) {
       combined[n] = new Set(seats);
     const marks = {};
     for (const [info, source, idx, vortox] of ftInfos) {
-      let fits = info.holds(world, state, rh, source);
-      let src = source;
-      // Under a Vortox the other way about: an answer that fits was
-      // true, and then the Vortox was not working.
-      if (vortox !== null) { fits = !fits; src = vortox; }
+      let fits, src = source;
+      // Under a Vortox the other way about: an answer that was true
+      // means the Vortox was not working. True, not legal — a yes on a
+      // Recluse is false.
+      if (vortox !== null) { fits = !info.isTrueWith(world, rh); src = vortox; }
+      else fits = info.holds(world, state, rh, source);
       if (fits) marks[idx] = HELD;
       else {
         combined[info.night] = combined[info.night] || new Set();

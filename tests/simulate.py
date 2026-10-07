@@ -2883,13 +2883,15 @@ def _make_false(d, info, night, rng):
         # It has no count to spoil and no role to swap, so the generic
         # paths above walked straight past it and left a true reading on
         # a Vortox board. The solver rightly refused the whole game.
+        #
+        # **Really** evil, since 07.10.2026 ("Adlige auch"): this drew
+        # only from seats that could register one way, so that no
+        # registration made the three exactly one. What is so is what
+        # counts — two good players and a Recluse is nobody evil, and
+        # that is false enough for any Vortox.
         phase = f"N{night}"
-
-        def could(p):
-            return sorted(evil_registrations(d.role_at(p, phase)))
-
-        evil = [p for p in range(d.n) if could(p) == [True]]
-        good = [p for p in range(d.n) if could(p) == [False]]
+        evil = [p for p in range(d.n) if d.side_at(p, phase) == "evil"]
+        good = [p for p in range(d.n) if d.side_at(p, phase) == "good"]
         if len(good) >= 3:
             picked = rng.sample(good, 3)          # nobody evil: false
         elif len(evil) >= 2 and good:

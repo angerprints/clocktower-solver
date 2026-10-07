@@ -534,21 +534,25 @@ class LegalIsNotTrue(SolverTest):
                 self.assertTrue(row.holds(self.world(), state, None))
                 self.assertFalse(row.is_true(self.world(), state))
 
-    def test_count_readings_have_none_and_that_is_deliberate(self):
-        """A Chef holds if its number falls anywhere in a range built
-        from every combination of how everybody could register, so there
-        is no single fact that was "the true one". A Chef told one beside
-        two Recluses leaned on *one of them*, and which is not a question
-        the reading can answer.
+    def test_count_readings_have_one_too_and_lean_on_nobody(self):
+        """What is so is a number, and a count can be held to it.
 
-        Written down rather than half-built: handling it means carrying
-        alternative explanations rather than one.
+        This said the opposite until 07.10.2026: "there is no single fact
+        that was the true one", and so a Chef told one at a table with no
+        evil pair but a Recluse beside the Demon read as *true* under a
+        Vortox. The table ruling that day: the truth is how many really
+        are evil, whatever anybody could have registered as.
+
+        What stays as it was is `leaned_on`. A Chef told one beside two
+        Recluses leaned on *one of them*, and which is not a question the
+        reading can answer — that still needs alternative explanations
+        rather than one.
         """
-        from botc.info import Chef, Empath, OracleInfo
+        from botc.info import Chef, Empath, Info, OracleInfo
         for kind in (Chef, Empath, OracleInfo):
             with self.subTest(reading=kind.__name__):
-                self.assertFalse(hasattr(kind, "is_true")
-                                 and "is_true" in vars(kind))
+                self.assertIn("is_true", vars(kind))
+                self.assertIs(kind.leaned_on, Info.leaned_on)
 
 
 class ADroisonedCharacterCannotMisregister(SolverTest):

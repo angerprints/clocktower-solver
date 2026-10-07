@@ -251,6 +251,89 @@ class AFortuneTellerUnderAVortox(SolverTest):
         self.assertIsNone(cost(SEERS, roles, [shut]))
 
 
+REGISTERING = scripts.from_ids("Mixed, a Recluse under a Vortox", [
+    "chef", "empath", "seamstress", "noble", "fortuneteller", "oracle",
+    "clockmaker", "dreamer", "flowergirl", "juggler", "recluse", "mutant",
+    "klutz", "witch", "eviltwin", "cerenovus", "vortox"])
+#         0       1         2          3         4             5
+EIGHT = ["Chef", "Empath", "Recluse", "Vortox", "Seamstress", "Noble",
+         "FortuneTeller", "Witch"]                            # 6, 7
+
+
+class WhatIsSoNotWhatCouldBeSaid(SolverTest):
+    """Table ruling, 07.10.2026 ("Weg 1", and "Adlige auch").
+
+    Under a Vortox a reading must be false, and false means *not what is
+    so*. The Recluse sits beside the Vortox here and could register as
+    evil, which makes several untrue answers legal ones — and they were
+    read as true, so the Vortox had to be off, and nothing on this script
+    can turn a Vortox off.
+
+    Each pair: the answer that is untrue is kept, the one that is true
+    cannot have been given.
+    """
+
+    def kept(self, row):
+        return cost(REGISTERING, EIGHT, [row]) is not None
+
+    def test_a_chef(self):
+        """No two evil players sit together; the Recluse could make one."""
+        self.assertTrue(self.kept(I.Chef(1, 0, count=1)))
+        self.assertFalse(self.kept(I.Chef(1, 0, count=0)))
+
+    def test_an_empath(self):
+        """Between the Chef and the Recluse: nobody evil, really."""
+        self.assertTrue(self.kept(I.Empath(1, 1, count=1)))
+        self.assertFalse(self.kept(I.Empath(1, 1, count=0)))
+
+    def test_a_seamstress(self):
+        """The Recluse and the Chef are on one side."""
+        self.assertTrue(self.kept(
+            I.SeamstressInfo(1, 4, a=2, b=0, same=False)))
+        self.assertFalse(self.kept(
+            I.SeamstressInfo(1, 4, a=2, b=0, same=True)))
+
+    def test_a_noble(self):
+        """Two good players and the Recluse is nobody evil, whatever the
+        Recluse could have been shown as. The Noble was the one
+        character read the other way."""
+        self.assertTrue(self.kept(I.NobleInfo(1, 5, a=0, b=1, c=2)))
+        self.assertFalse(self.kept(I.NobleInfo(1, 5, a=0, b=1, c=3)))
+
+    def test_a_fortune_teller(self):
+        """A yes on the Recluse is legal and false; a yes on the Vortox
+        is neither."""
+        yes = lambda a, b: I.FortuneTeller(1, 6, a=a, b=b, yes=True)
+        self.assertTrue(self.kept(yes(2, 0)))
+        self.assertFalse(self.kept(yes(3, 0)))
+
+    def test_without_a_vortox_nothing_has_moved(self):
+        """Legal is still what an honest reading has to be."""
+        roles = EIGHT[:3] + ["Imp"] + EIGHT[4:]
+        script = scripts.from_ids("the same, with an Imp", [
+            "chef", "empath", "seamstress", "noble", "fortuneteller",
+            "recluse", "witch", "imp"])
+        for row in (I.Chef(1, 0, count=1), I.Chef(1, 0, count=0),
+                    I.Empath(1, 1, count=1), I.Empath(1, 1, count=0),
+                    I.NobleInfo(1, 5, a=0, b=1, c=3),
+                    I.NobleInfo(1, 5, a=4, b=1, c=2)):
+            with self.subTest(row=row):
+                self.assertIsNotNone(cost(script, roles, [row]))
+
+    def test_the_simulator_makes_a_noble_false_by_what_is_so(self):
+        for seed in range(40):
+            deal, _heard, _state, _world = game(seed)
+            row = I.NobleInfo(1, 0, a=0, b=1, c=2)
+            made = simulate._make_false(deal, row, 1, random.Random(seed))
+            if made is None:
+                continue
+            evil = sum(deal.side_at(p, "N1") == "evil"
+                       for p in (made.a, made.b, made.c))
+            with self.subTest(seed=seed):
+                self.assertNotEqual(evil, 1)
+                self.assertEqual(len({made.a, made.b, made.c}), 3)
+
+
 class ANightIsNotOneMoment(SolverTest):
     """Each of these is a game the sweep found, kept by name: the script
     is drawn from the seed, so the seed is the whole board."""
@@ -350,7 +433,6 @@ STILL_LOST = {
         146: "a Barber's swap nobody announced",
     },
     FIVE: {
-        34: "a Vortox and a Seamstress shown somebody who misregisters",
         205: "an Innkeeper guarding a Fang Gu that jumps",
         461: "a Drunk Snake Charmer, a Philosopher's and a jump",
     },
@@ -383,7 +465,7 @@ class TheBoardsInTheCorpus(SolverTest):
                             .read_text())
         mixed = [c for c in corpus["cases"]
                  if c["name"].startswith("mixed-")]
-        self.assertGreaterEqual(len(mixed), 9)
+        self.assertGreaterEqual(len(mixed), 14)
         for case in mixed:
             with self.subTest(board=case["name"]):
                 self.assertNotIn("error", case["expect"])

@@ -259,6 +259,18 @@ export const Chef = define("Chef", "Chef",
       if (pairs === this.count) return true;
     }
     return false;
+  }, {
+    /** Whether that is how many evil pairs there really are. What is so,
+     * not what could have been said: a Recluse beside the Demon makes
+     * "one" legal at a table with no evil pair, and it is still false —
+     * so a Vortox may give it (table ruling, 07.10.2026). */
+    isTrue(w) {
+      const n = w.roles.length, phase = `N${this.night}`;
+      let pairs = 0;
+      for (let i = 0; i < n; i++)
+        if (w.evilAt(i, phase) && w.evilAt((i + 1) % n, phase)) pairs += 1;
+      return pairs === this.count;
+    },
   });
 
 // --- every night ------------------------------------------------------
@@ -270,6 +282,16 @@ export const Empath = define("Empath", "Empath",
     if (s.diedAt(who).includes(`N${this.night}`)) return true;
     const nb = livingNeighbours(s, this.night, who);
     return possibleEvilCounts(w, nb, `N${this.night}`).has(this.count);
+  }, {
+    /** Whether that many of its neighbours really are evil. What is so,
+     * not what could have been said (table ruling, 07.10.2026). */
+    isTrue(w, s, seat = null) {
+      const who = seat === null ? this.player : seat;
+      const phase = `N${this.night}`;
+      if (s.diedAt(who).includes(phase)) return false;   // never woke
+      const nb = livingNeighbours(s, this.night, who);
+      return this.count === nb.filter(p => w.evilAt(p, phase)).length;
+    },
   });
 
 export const FortuneTeller = define("FortuneTeller", "FortuneTeller",
@@ -287,6 +309,16 @@ export const FortuneTeller = define("FortuneTeller", "FortuneTeller",
     // A "no" means no actual Demon and not the red herring. The Recluse
     // *may* register as good, so it does not interfere.
     return !hardDemon && !herring;
+  }, {
+    /** Whether the answer is what its ability really yields, with the
+     * herring on this seat. A yes on a Recluse is legal and false. */
+    isTrueWith(w, rh) {
+      const pair = [this.a, this.b];
+      const phase = `N${this.night}`;
+      const really = pair.some(x => TEAM[w.roleAt(x, phase)] === "demon")
+        || pair.includes(rh);
+      return !!this.yes === really;
+    },
   });
 
 export const Undertaker = define("Undertaker", "Undertaker",
@@ -408,6 +440,15 @@ export const OracleInfo = define("OracleInfo", "Oracle",
     const dead = w.roles.map((_r, p) => p)
       .filter(p => !alive.has(p) || s.diedAt(p).includes(phase));
     return possibleEvilCounts(w, dead, phase).has(this.count);
+  }, {
+    /** Whether that many of the dead really are evil. */
+    isTrue(w, s) {
+      const phase = `N${this.night}`;
+      const alive = s.aliveSet(phase);
+      return this.count === w.roles.map((_r, p) => p)
+        .filter(p => (!alive.has(p) || s.diedAt(p).includes(phase))
+                     && w.evilAt(p, phase)).length;
+    },
   });
 
 /** Whether two players are the same side.
@@ -425,6 +466,13 @@ export const SeamstressInfo = define("SeamstressInfo", "Seamstress",
                                              w.alignmentAt(this.b, phase)))
         if ((first === second) === !!this.same) return true;
     return false;
+  }, {
+    /** Whether the two really are on the same side. */
+    isTrue(w) {
+      const phase = `N${this.night}`;
+      return (w.evilAt(this.a, phase) === w.evilAt(this.b, phase))
+        === !!this.same;
+    },
   });
 
 /** How many of the day's guesses were right.
@@ -450,6 +498,18 @@ export const JugglerInfo = define("JugglerInfo", "Juggler",
         right += 1;
     }
     return right === this.count;
+  }, {
+    /** Whether that many guesses named what the seat really was. */
+    isTrue(w) {
+      const phase = `D${this.night - 1}`;
+      let right = 0;
+      for (const guess of this.guesses || []) {
+        const [who, role] = Array.isArray(guess)
+          ? guess : [guess.player, guess.role];
+        if (role && w.roleAt(Number(who), phase) === role) right += 1;
+      }
+      return right === this.count;
+    },
   });
 
 /** What a Savant can be told, when it is one of these. Anything else
@@ -733,6 +793,14 @@ export const Noble = define("Noble", "Noble",
     for (const x of opts[0]) for (const y of opts[1]) for (const z of opts[2])
       if (Number(x) + Number(y) + Number(z) === 1) return true;
     return false;
+  }, {
+    /** Whether exactly one of the three really is evil. Read strictly
+     * until 07.10.2026, the one character that was ("Adlige auch"). */
+    isTrue(w) {
+      const phase = `N${this.night}`;
+      return [this.a, this.b, this.c]
+        .filter(p => w.evilAt(p, phase)).length === 1;
+    },
   });
 
 export const Acrobat = define("Acrobat", "Acrobat",
@@ -1050,6 +1118,13 @@ export const GrandmotherInfo = define("GrandmotherInfo", "Grandmother",
     if (!registersAsRole(shown, this.role)) return false;
     // She is shown a *good* player, and the Spy can be one of those.
     return !w.evilAt(this.target, phase) || shown === "Spy";
+  }, {
+    /** Whether that seat really is that character, and good. */
+    isTrue(w) {
+      const phase = `N${this.night}`;
+      return w.roleAt(this.target, phase) === this.role
+        && !w.evilAt(this.target, phase);
+    },
   });
 
 /** Named a player and guessed their character. Wrong means they die.

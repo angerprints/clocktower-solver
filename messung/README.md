@@ -134,10 +134,10 @@ Dämon still ist und wer es bei welchem Muster war.
     python3 messung/tor.py 1000 4 0
 
 **Stand der gemischten Skripte seit dem 07.10.2026:** Ohne neue Charaktere
-verwirft der Solver in 16 von 3.000 gemischten Partien die wahre Welt (4
+verwirft der Solver in 11 von 3.000 gemischten Partien die wahre Welt (4
 Nächte), und der Night-Walk weicht in 25 von 8.316 Nächten ab. Vorher waren
 es 96 und 32. Was übrig ist, steht in ROADMAP unter „Die gemischten Skripte
-aufgeräumt“ und in den offenen Stellen 4, 36, 38 und 40 bis 44. Wer einen
+aufgeräumt“ und in den offenen Stellen 4, 36 und 40 bis 44. Wer einen
 neuen Charakter misst, liest deshalb die Zahl „davon wegen der neuen
 Zeilen“ und vergleicht den Rest mit einem Lauf ohne `CHARAKTER`.
 
@@ -147,11 +147,12 @@ Zahl „43 von 2.813 Nächten“ (und „129 von 8.456“ in ROADMAP) war deshal
 hoch. Jetzt zählt `deal.nights_played`.
 
 **Neue Prüfsummen von `tbhash.py` seit dem 07.10.2026:** `TB
-b26e6eaaf04cdd90`, `EASTER 4773de1f2a2123be`, `SV fc480a8d2311d52b`. Der
+b26e6eaaf04cdd90`, `EASTER b58eb3f2d8074508`, `SV fc480a8d2311d52b`. Der
 Simulator spielt seitdem einige Partien anders (ROADMAP, derselbe
 Abschnitt): eine berichtigte Totengräber-Zeile, ein Rabenhüter, der etwas
 Falsches hören kann, und vergiftete Sitze, die nach einem Tausch zu ihrem
-neuen Charakter befragt werden.
+neuen Charakter befragt werden. Im Oster-Skript hört außerdem eine
+vergiftete Adlige eine andere falsche Auskunft.
 
 ## Rohdaten in `daten/`
 

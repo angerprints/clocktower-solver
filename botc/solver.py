@@ -4191,12 +4191,14 @@ def _explain(world, state, outcome=None):
         combined = {night: set(seats) for night, seats in failures.items()}
         marks = {}
         for info, src, idx, vortox in ft_infos:
-            fits = info.holds(world, state, rh, src)
             if vortox is not None:
                 # Under a Vortox it is the other way about: an answer
-                # that fits was true, and then the Vortox was not
-                # working. The seat's own droisoning excuses nothing.
-                fits, src = not fits, vortox
+                # that was true means the Vortox was not working. The
+                # seat's own droisoning excuses nothing. And true, not
+                # legal — a yes on a Recluse is false.
+                fits, src = not info.is_true_with(world, rh), vortox
+            else:
+                fits = info.holds(world, state, rh, src)
             if fits:
                 marks[idx] = HELD
             else:

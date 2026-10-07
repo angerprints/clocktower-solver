@@ -756,20 +756,38 @@ Der volle Bericht steht in `claude/gemischte-skripte-aufgeraeumt.md`.
 | Klasse | ohne die fünf | mit den fünf | Stand |
 |---|---|---|---|
 | Barbier-Tausch, den niemand gemeldet hat | 10 | 6 | Offene Stelle 4, nach deiner Regel gewollt. |
-| Vortox und Registrieren (Koch, Empath, Orakel, Schneiderin, Wahrsagerin) | 5 | 3 | Offene Stelle 38. Eine Lesart ist zu wählen, siehe unten. |
+| Vortox und Registrieren (Koch, Empath, Orakel, Schneiderin, Wahrsagerin) | 5 | 3 | *Behoben am selben Tag,* siehe unten. Danach sind es 11 und 11. |
 | Gastwirt schützt einen Fang Gu, der springt | 0 | 2 | Offene Stelle 41, Regelfrage. |
 | Mathematiker unter einem Vortox | 0 | 1 | Offene Stelle 6. |
 | Eine Auskunft stimmt nur durch Registrieren, in einer Nacht, in der alle betrunken sind | 1 | 0 | Offene Stelle 42. |
 | Einzelfälle | 0 | 2 | Einer ist die offene Stelle 36 (Gastwirt wählt und wird in derselben Nacht verwandelt). Den anderen habe ich nicht zugeordnet (Seed 461: Trunkenbold mit dem Plättchen des Schlangenbeschwörers neben einem Philosophen, der dieselbe Fähigkeit nahm). |
 
-**Die Lesart, die du wählen musst (offene Stelle 38):** Unter einem Vortox muss die Auskunft eines Bürgers falsch sein. Beispiel: Ein Koch sitzt an einem Tisch ohne böses Paar, aber mit einem Einsiedler neben dem Dämon. Der Erzähler sagt ihm „1“.
+**Vortox und Registrieren · *entschieden und gebaut am 07.10.2026*** (frühere offene Stelle 38). Unter einem Vortox muss die Auskunft eines Bürgers falsch sein. **Deine Entscheidung: Weg 1, die Wirklichkeit zählt, und die Adlige auch.** Beispiel: Ein Koch sitzt an einem Tisch ohne böses Paar, neben dem Dämon sitzt ein Einsiedler. Sagt der Erzähler „1“, ist das falsch, weil es in Wirklichkeit kein böses Paar gibt. Dass der Einsiedler als böse registrieren dürfte, macht die Zahl nicht wahr.
 
-- **Weg 1, die Wirklichkeit zählt:** „1“ ist falsch, weil es in Wirklichkeit kein böses Paar gibt. Dass der Einsiedler als böse registrieren dürfte, macht die Zahl nicht wahr. So rechnet der Solver schon bei Wäscherin, Bibliothekarin, Ermittler, Träumer, Totengräber und Rabenhüter. Im Versuch gehen damit 11 statt 16 und 12 statt 14 Partien verloren.
-- **Weg 2, streng:** „1“ ist nicht falsch genug, weil ein ehrlicher Erzähler sie auch ohne Vortox hätte sagen dürfen. Der Erzähler muss eine Zahl nennen, die auch mit Registrieren nicht stimmen kann. So rechnen Simulator und Solver heute nur beim Adligen: Nach deiner Regel dürfen unter den drei Gezeigten nicht genau ein Böser sein, und der Code liest das nach Registrieren. Dann ändere ich den Simulator statt des Solvers.
+| Charakter | Unter einem Vortox gilt als wahr (und kann deshalb nicht gesagt worden sein) |
+|---|---|
+| Koch | Die Zahl der Paare, die wirklich böse sind. |
+| Empath | Die Zahl der Nachbarn, die wirklich böse sind. |
+| Orakel | Die Zahl der Toten, die wirklich böse sind. |
+| Schneiderin | Ob die zwei wirklich auf derselben Seite stehen. |
+| Wahrsagerin | „Ja“, wenn ein Dämon oder der rote Hering im Paar ist. Ein „Ja“ auf einen Einsiedler ist falsch. |
+| Jongleur | Die Zahl der Tipps, die den wirklichen Charakter treffen. |
+| Großmutter | Der wirkliche Charakter eines wirklich guten Spielers. |
+| Adlige | Genau einer der drei ist wirklich böse. Vorher las der Code hier als einziger streng: falsch war nur, was auch mit Registrieren nicht „genau einer“ ergeben konnte. Der Simulator verfälscht jetzt ebenfalls nach der Wirklichkeit. |
+
+Ohne Vortox ändert sich nichts: Eine ehrliche Auskunft muss weiter nur legal sein, also mit Registrieren stimmen können. Wäscherin, Bibliothekarin, Ermittler, Träumer, Totengräber, Rabenhüter, Gutsverwalter und König rechneten schon so.
+
+| 3.000 gemischte Partien | wahre Welt verloren, vor der Entscheidung | danach |
+|---|---|---|
+| 4 Nächte, nichts Neues | 16 | 11 (0,4 %) |
+| 4 Nächte, mit den fünf aus Batch 1 | 14 | 11 (0,4 %) |
+| 6 Nächte, nichts Neues | 20 | 15 (0,5 %) |
+
+Die Grundskripte verlieren dieselben Partien wie vorher (Sects & Violets 23 und 39 von je 3.000, alle anderen 0). Das Oster-Skript spielt einige Partien anders, weil eine vergiftete Adlige jetzt eine andere falsche Auskunft hört. Neue Prüfsumme: `EASTER b58eb3f2d8074508`. Python und JavaScript kosten die wahre Welt von 4.446 gemischten Partien gleich. Im Korpus stehen 5 neue Bretter für diese Regel (228 insgesamt, alle 223 alten geben dieselbe Antwort). 1.239 Tests sind grün.
 
 ### Als Nächstes
 
-**1 · Batch 2 der experimentellen Charaktere.** Die gemischten Skripte sind aufgeräumt (07.10.2026): Ohne neue Charaktere gehen noch 0,5 % der gemischten Partien verloren, fast alle in Klassen, die schon bekannt und entschieden sind. Vorher zu klären ist die Lesart „Vortox und Registrieren“ (offene Stelle 38).
+**1 · Batch 2 der experimentellen Charaktere.** Die gemischten Skripte sind aufgeräumt (07.10.2026): Ohne neue Charaktere gehen noch 0,5 % der gemischten Partien verloren, fast alle in Klassen, die schon bekannt und entschieden sind (nach der Entscheidung zum Vortox noch 0,4 %). Die Lesart „Vortox und Registrieren“ ist entschieden und gebaut (Weg 1, die Adlige auch).
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -827,8 +845,8 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 30 | Simulator gegen Night-Walk | *Erledigt am 05.10.2026:* Die 60 abweichenden Nächte in Sects & Violets waren zwei Lücken des Night-Walk, beide repariert. Jetzt 0 von 16.641. |
 | 35 | Simulator | *Erledigt am 05.10.2026:* Die Reihenfolge der Nacht liest den aktuellen Charakter, nicht den ausgeteilten. |
 | 36 | Sects & Violets | **Wer früh in der Nacht handelt und in derselben Nacht verwandelt wird:** Ein Schlangenbeschwörer wählt an Platz 11, das Grubenweib macht ihn an Platz 16 zu etwas anderem. Der Solver rechnet in ganzen Nächten und verwirft die Wahl. 1 von 6.000 Partien (Seed 1078, 4 Nächte). Gefunden am 05.10.2026, nicht gebaut. |
-| 37 | Gemischte Skripte | *Erledigt am 07.10.2026:* Der Solver verlor in 3,2 % der gemischten Partien die wahre Welt (96 von 3.000), jetzt in 0,5 % (16 von 3.000). Der Rest steht in den Stellen 4, 6, 36, 38, 41 und 42. |
-| 38 | Solver | **Vortox und Registrieren:** Unter einem Vortox muss eine Auskunft falsch sein. Bei Koch, Empath, Orakel, Schneiderin und Wahrsagerin gilt dem Solver eine Auskunft schon als wahr, wenn sie durch Registrieren (Spion, Einsiedler, Schläger) legal wäre. Auf Sects & Violets kommt das nicht vor. 5 von 3.000 gemischten Partien. **Eine Lesart ist zu wählen** (Weg 1: die Wirklichkeit zählt, Weg 2: streng wie beim Adligen). |
+| 37 | Gemischte Skripte | *Erledigt am 07.10.2026:* Der Solver verlor in 3,2 % der gemischten Partien die wahre Welt (96 von 3.000), jetzt in 0,4 % (11 von 3.000). Der Rest steht in den Stellen 4, 6, 36, 41 und 42. |
+| 38 | Solver | *Erledigt am 07.10.2026:* Vortox und Registrieren. Deine Entscheidung: Die Wirklichkeit zählt, auch bei der Adligen. Gebaut für Koch, Empath, Orakel, Schneiderin, Wahrsagerin, Jongleur, Großmutter und Adlige. |
 | 39 | Werkzeug | **Die Nachtreihenfolge im Repo ist veraltet** (130 von 181 Charakteren). Für Gutsverwalter, Ritter und Shugenja sind die Plätze von Hand eingetragen. |
 | 40 | Simulator | **Der Schläger antwortet nicht auf verdeckte Wahlen.** Giftmischer, Mönch, Hexe und Grubenweib wählen im Simulator, ohne dass der Schläger reagiert. Der Night-Walk macht es richtig, deshalb weichen 9 von 8.316 Nächten ab. Kommt nur auf gemischten Skripten vor. Sauber wäre, diese Wahlen in die Reihenfolge der Nacht einzuordnen. Das teilt alle Partien mit einem Giftmischer neu aus. |
 | 41 | Regelfrage | **Ein Gastwirt schützt den Fang Gu, der in derselben Nacht in einen Außenseiter springt.** Im Simulator stirbt der alte Fang Gu trotzdem, der Solver hält ihn für geschützt. 2 von 3.000 gemischten Partien. Zu entscheiden ist, was am Tisch passiert. |

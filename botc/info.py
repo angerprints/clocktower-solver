@@ -690,6 +690,21 @@ class Chef(Info):
             possible.add(pairs)
         return self.count in possible
 
+    def is_true(self, w, s, seat=None):
+        """Whether that is how many evil pairs there really are.
+
+        **What is so, not what could have been said** (table ruling,
+        07.10.2026). A Recluse beside the Demon may register as evil,
+        which makes "one" a legal answer at a table with no evil pair —
+        and it is still a false one, so a Vortox may give it. Asked of
+        `holds`, it read as true and the Vortox had to be off.
+        """
+        n = len(w.roles)
+        phase = f"N{self.night}"
+        return self.count == sum(
+            1 for i in range(n)
+            if w.evil_at(i, phase) and w.evil_at((i + 1) % n, phase))
+
 
 def _living_neighbours(state, night, p):
     """The nearest living seat each way, as the Empath sees it.
@@ -718,6 +733,16 @@ class Empath(Info):
             return True
         nb = _living_neighbours(s, self.night, who)
         return self.count in _possible_evil_counts(w, nb, f"N{self.night}")
+
+    def is_true(self, w, s, seat=None):
+        """Whether that many of its neighbours really are evil — see
+        `Chef.is_true`."""
+        who = self.player if seat is None else seat
+        phase = f"N{self.night}"
+        if phase in s.died_at(who):
+            return False                  # never woke: nothing was said
+        nb = _living_neighbours(s, self.night, who)
+        return self.count == sum(1 for p in nb if w.evil_at(p, phase))
 
 
 @dataclass
@@ -748,6 +773,22 @@ class FortuneTeller(Info):
         # A "no" means: no actual Demon and not the red herring.
         # The Recluse MAY register as good, so it does not interfere.
         return (not hard_demon) and (not herring)
+
+    def is_true_with(self, w, rh):
+        """Whether the answer is what its ability really yields, with the
+        red herring on this seat.
+
+        A Demon in the pair, or the herring: the herring is the Fortune
+        Teller's own ability and is as real to it as the Demon. A Recluse
+        is not — a yes on one is legal and false (table ruling,
+        07.10.2026; see `Chef.is_true`). Takes the herring, which
+        `is_true` elsewhere has no need of, hence the other name.
+        """
+        pair = (self.a, self.b)
+        phase = f"N{self.night}"
+        really = any(TEAM[w.role_at(x, phase)] == "demon" for x in pair) \
+            or rh in pair
+        return self.yes == really
 
 
 @dataclass
@@ -826,6 +867,13 @@ class GrandmotherInfo(Info):
             return False
         # She is shown a *good* player, and the Spy can be one of those.
         return not w.evil_at(self.target, phase) or shown == "Spy"
+
+    def is_true(self, w, s, seat=None):
+        """Whether that seat really is that character, and good — see
+        `Chef.is_true`."""
+        phase = f"N{self.night}"
+        return w.role_at(self.target, phase) == self.role \
+            and not w.evil_at(self.target, phase)
 
 
 def _possible_impairment_counts(world, state, night):
@@ -1003,6 +1051,15 @@ class OracleInfo(Info):
                 if p not in s.alive_set(phase) or phase in s.died_at(p)]
         return self.count in _possible_evil_counts(w, dead, phase)
 
+    def is_true(self, w, s, seat=None):
+        """Whether that many of the dead really are evil — see
+        `Chef.is_true`."""
+        phase = f"N{self.night}"
+        return self.count == sum(
+            1 for p in range(len(w.roles))
+            if (p not in s.alive_set(phase) or phase in s.died_at(p))
+            and w.evil_at(p, phase))
+
 
 @dataclass
 class SeamstressInfo(Info):
@@ -1031,6 +1088,13 @@ class SeamstressInfo(Info):
                 if (first == second) == self.same:
                     return True
         return False
+
+    def is_true(self, w, s, seat=None):
+        """Whether the two really are on the same side — see
+        `Chef.is_true`."""
+        phase = f"N{self.night}"
+        return (w.evil_at(self.a, phase) == w.evil_at(self.b, phase)) \
+            == self.same
 
 
 @dataclass
@@ -1073,6 +1137,20 @@ class JugglerInfo(Info):
             else:
                 who, role = guess
             if role and registers_as_role(w.role_at(int(who), phase), role):
+                right += 1
+        return right == self.count
+
+    def is_true(self, w, s, seat=None):
+        """Whether that many guesses named what the seat really was —
+        see `Chef.is_true`."""
+        phase = f"D{self.night - 1}"
+        right = 0
+        for guess in self.guesses:
+            if isinstance(guess, dict):
+                who, role = guess.get("player"), guess.get("role")
+            else:
+                who, role = guess
+            if role and w.role_at(int(who), phase) == role:
                 right += 1
         return right == self.count
 
@@ -1574,6 +1652,19 @@ class NobleInfo(Info):
                    for x in options[0]
                    for y in options[1]
                    for z in options[2])
+
+    def is_true(self, w, s, seat=None):
+        """Whether exactly one of the three really is evil.
+
+        The Noble was the one character read strictly under a Vortox —
+        false only if no registration could make it exactly one. Brought
+        into line with the rest on 07.10.2026 ("Adlige auch"): two good
+        players and a Recluse is nobody evil, which is false, whatever
+        the Recluse could have been shown as. See `Chef.is_true`.
+        """
+        phase = f"N{self.night}"
+        return sum(1 for p in (self.a, self.b, self.c)
+                   if w.evil_at(p, phase)) == 1
 
 
 @dataclass
