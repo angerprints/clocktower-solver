@@ -785,13 +785,71 @@ Ohne Vortox ändert sich nichts: Eine ehrliche Auskunft muss weiter nur legal se
 
 Die Grundskripte verlieren dieselben Partien wie vorher (Sects & Violets 23 und 39 von je 3.000, alle anderen 0). Das Oster-Skript spielt einige Partien anders, weil eine vergiftete Adlige jetzt eine andere falsche Auskunft hört. Neue Prüfsumme: `EASTER b58eb3f2d8074508`. Python und JavaScript kosten die wahre Welt von 4.446 gemischten Partien gleich. Im Korpus stehen 5 neue Bretter für diese Regel (228 insgesamt, alle 223 alten geben dieselbe Antwort). 1.239 Tests sind grün.
 
+### Die zweiten fünf experimentellen Charaktere · *erledigt am 07.10.2026*
+
+Der volle Bericht steht in `claude/experimentelle-charaktere-batch-2.md`.
+
+**Dein Auftrag vom 07.10.2026:** „Such fünf kleine aus und mach direkt weiter.“ Ausgesucht: **Banshee, Eiferer, Ketzer, Goblin und Ojo**, also ein Bürger, zwei Außenseiter, ein Scherge und ein Dämon. Keiner von ihnen liest etwas, nur der Ojo handelt nachts. Die Regeln sind aus dem Wiki gelesen.
+
+**Sechs Lesarten habe ich selbst gewählt,** weil du nicht gefragt werden wolltest. Jede lässt sich umdrehen:
+
+| | Was ich gewählt habe | Warum |
+|---|---|---|
+| A | Die Ansage der Banshee ist eine Tatsache ohne Sitz: „Heute Nacht starb die Banshee.“ Welcher der Toten sie war, sagt die Welt. | Das Wiki lässt den Erzähler nur ansagen, dass sie starb. |
+| B | Geprüft wird, dass eine Banshee in dieser Nacht starb und nicht gestört war. Nicht geprüft wird, dass der Dämon sie getötet hat. | Was einen Sitz getötet hat, kann eine Zeile den Solver nicht fragen. Das lässt eher zu viel durch als zu wenig. |
+| C | Ein Eiferer, der nicht abgestimmt hat, kostet die Welt den Faktor 0,1. Er macht sie nicht unmöglich. | Nach dem Wiki wäre es Betrug. Am Tisch ist eine nicht eingetragene Stimme aber wahrscheinlicher, und eine fehlende Stimme darf die wahre Welt nicht kosten. |
+| D | Der Goblin wird nur geprüft, wenn der Sprecher hingerichtet wurde, daran starb und die Partie weiterging. Wurde er hingerichtet und überlebte, sagt das Brett nichts. | Ob „hingerichtet“ ohne Tod für den Sieg reicht, steht nicht im Wiki. |
+| E | Nennt der Ojo den Charakter des Schlägers, gilt der Schläger als gewählt. | Das Wiki zum Schläger nennt als Beispiel einen Höfling, der den Schläger wählt (siehe offene Stelle 45). |
+| F | Der Platz des Ojo in der Nacht ist von Hand eingetragen (nach der Vigormortis). | Die Nachtreihenfolge im Repo kennt ihn nicht (offene Stelle 39). |
+
+**Gebaut, in Python und JavaScript:**
+
+| Charakter | Zeile auf der Website | Was der Solver prüft |
+|---|---|---|
+| Banshee | „Banshee announced“ (Nacht) | Eine Banshee starb in dieser Nacht und war nicht gestört. Eine Welt ohne solche Banshee ist unmöglich. Ein Trunkenbold mit dem Plättchen zählt nicht, ein Philosoph mit der Fähigkeit schon. Ein Vortox ändert nichts (ihr Jinx). |
+| Eiferer | keine | An einem Tag mit eingetragenen Stimmen, einer Nominierung und fünf oder mehr Lebenden hat der Eiferer abgestimmt. Sonst kostet die Welt den Faktor 0,1 je Tag. |
+| Ketzer | keine | Nichts. Die Partie endet im selben Moment, nur der Sieger ist vertauscht. |
+| Goblin | „Goblin claim“ (Tag) | Wer das sagt, hingerichtet wird und stirbt, während die Partie weitergeht, war kein arbeitender Goblin. War er der Goblin, muss er an diesem Tag gestört gewesen sein. Jeder darf es sagen. |
+| Ojo | keine | Tötet wie jeder Dämon einen Spieler je Nacht. Er gibt den Stern nicht weiter, wenn er nachts stirbt. |
+
+Der Simulator spielt alle fünf: Der Eiferer stimmt immer ab, der Goblin sagt es in 70 % der Fälle, wenn er hingerichtet wird, und beendet damit die Partie, wenn er nicht gestört ist. In 6 % der Hinrichtungen sagt es jemand anderes.
+
+**Das Tor:**
+
+| Nr. | Schritt | Ergebnis |
+|---|---|---|
+| 1 | Solver in Python und JavaScript | 15 neue Bretter im Korpus, beide stimmen überein. Die wahre Welt von 4.453 gemischten Partien kostet in beiden gleich. |
+| 2 | Simulator | Spielt alle fünf. 3.000 gemischte Partien: 305 Ansagen der Banshee, 687 Goblin-Sätze, etwa 220 Partien, die ein Goblin gewinnt. |
+| 3 | Night-Walk | Alle 305 Ansagen der Banshee passen zum Night-Walk. Auf den zwei eigenen Skripten weicht 1 von 16.360 Nächten ab (offene Stelle 46). |
+| 4 | Gemischte Partien mit den fünf | 6 von 3.000 verlieren die wahre Welt (4 Nächte), 11 von 3.000 bei 6 Nächten. Keine wegen der Zeilen der fünf. |
+| 5 | Website | Zwei neue Zeilen eintragbar, im Browser geprüft. |
+| 6 | Korpus und Suite | 243 Bretter, 1.280 Tests grün (41 neue). |
+
+**Messung:**
+
+- **Zwei eigene Skripte** (`tests/test_experimental_2.py`), eines wie Trouble Brewing und eines wie Bad Moon Rising. Wahre Welt gehalten: 1 von 12.000 verloren. Diese eine Partie (Seed 2118, 6 Nächte) geht an der Grenze von 400 Erzählungen verloren, nicht an den fünf: Mit einer höheren Grenze hält der Solver sie. Das ist das erste Mal, dass die Grenze messbar eine wahre Welt kostet (offene Stelle 22).
+- **Grundskripte:** Trouble Brewing, Bad Moon Rising, Oster-Skript und die zwei Skripte aus Batch 1 verlieren 0 von je 6.000. Sects & Violets 62 von 6.000 wie vorher.
+- **Gemischte Partien ohne Pflicht-Charaktere:** 15 von 3.000 (0,5 %). Das ist nicht mit den 11 von vorher zu vergleichen: Die Skripte werden jetzt aus 93 statt 88 Charakteren gezogen, es sind andere Partien. Von den 15 sind 10 die Barbier-Klasse, 2 die offene Stelle 41, 2 der Mathematiker unter einem Vortox (Stelle 6) und 1 ein Philosoph mit der Fähigkeit des Höflings.
+- **Korpus:** 168 alte Bretter geben dieselbe Antwort. Die 60 Zufallsbretter sind neu gezogen, weil ihr Vorrat um fünf gewachsen ist.
+- **Benannte gemischte Partien bleiben stabil:** Tests und Korpus ziehen ihre gemischten Skripte aus dem Vorrat vom 07.10.2026 (88 Charaktere), damit „Seed 1250“ nach jedem Batch dieselbe Partie bleibt (`an_awkward_script(as_named=True)`). Das Tor zieht aus allem.
+
+**Nebenbei gefunden und behoben:**
+
+| Wo | Fehler | Folge |
+|---|---|---|
+| Website | Hielt eine feste Tatsache in einer Welt nicht (ein Schuss, der tötete, eine Nominierung, die den Nominierenden tötete) und stand danach noch eine erfundene Zeile auf dem Brett, zählte JavaScript die Welt als möglich mit Gewicht null. Python verwarf sie. | Die Zahl „worlds remain“ konnte auf der Website zu hoch sein. Die Prozente stimmten. |
+| Simulator | Ein gestörter Spion oder Einsiedler wurde Wäscherin, Bibliothekarin und Ermittler trotzdem als etwas anderes gezeigt. Deine Regel sagt: Wer gestört ist, registriert nicht anders. | Trouble Brewing spielt deshalb einige Partien anders (neue Prüfsumme `TB 4ff5ece3d7c1f8a7`). Verloren ging dort nichts. |
+| Simulator | Das Dorf richtete den Dämon hin und spielte den Extratag des Strippenziehers, obwohl eine Scharlachrote Frau bereitstand. Sie übernimmt zuerst. | Nur auf gemischten Skripten. |
+| Solver | Meine Regel für den Exorzisten vom selben Tag griff zu weit: Tauschte ein Schlangenbeschwörer vorher mit dem Dämon und tötete der neue Dämon den alten, galt der alte als genannt. | Jetzt zählt der alte Dämon nur, wenn er als Dämon starb (Sprung, Stern). |
+
+
 ### Als Nächstes
 
-**1 · Batch 2 der experimentellen Charaktere.** Die gemischten Skripte sind aufgeräumt (07.10.2026): Ohne neue Charaktere gehen noch 0,5 % der gemischten Partien verloren, fast alle in Klassen, die schon bekannt und entschieden sind (nach der Entscheidung zum Vortox noch 0,4 %). Die Lesart „Vortox und Registrieren“ ist entschieden und gebaut (Weg 1, die Adlige auch).
+**1 · Batch 3 der experimentellen Charaktere.** Batch 2 ist durch das Tor (Banshee, Eiferer, Ketzer, Goblin, Ojo). Klein sind noch: Magierin, Mohnzüchter, Unschuld, Politiker, Petze, Angstmacher, Wesir, Drehorgelspieler und Geist.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 88 Charaktere. Von den 138 Spielercharakteren der App sind 87 im Katalog (dazu der Wächter, ein Fabled), 51 fehlen: 19 Bürger, 10 Außenseiter, 14 Schergen, 8 Dämonen. Nach meiner Einschätzung sind davon 14 klein, 20 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer). Klein sind noch: Banshee, Magierin, Mohnzüchter, Unschuld, Eiferer, Ketzer, Politiker, Petze, Angstmacher, Goblin, Wesir, Drehorgelspieler, Geist und Ojo.
+Stand des Katalogs: 93 Charaktere. Von den 138 Spielercharakteren der App sind 92 im Katalog (dazu der Wächter, ein Fabled), 46 fehlen: 18 Bürger, 8 Außenseiter, 13 Schergen, 7 Dämonen. Nach meiner Einschätzung sind davon 9 klein, 20 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer).
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -822,7 +880,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 11 | Werkzeug | **Die alte lokale Python-App lehnt einen Tod in Nacht 1 ab,** die Seite nicht. Ein Bastler kann in Nacht 1 sterben. Der Night-Walk kennt den Fall auch nicht. |
 | 12 | Werkzeug | **Exakte Zählung früher Bretter auf der Website.** Der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten. |
 | 13 | Werkzeug | **NEXT.md** in eine kurze Roadmap und ein Archiv aufteilen. |
-| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). Batch 1 ist am 05.10.2026 erledigt, 51 offizielle Charaktere fehlen noch im Katalog. |
+| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). Batch 1 ist am 05.10.2026 erledigt, Batch 2 am 07.10.2026. 46 offizielle Charaktere fehlen noch im Katalog. |
 | 15 | Bad Moon Rising | *Erledigt am 03.10.2026:* Höfling nach einer Wiederbelebung. Deine Regel: Die Fähigkeit endet mit dem Tod, der Wiederbelebte ist eine neue Instanz. |
 | 16 | Bad Moon Rising | **Kammerzofe und wer in derselben Nacht stirbt.** Simulator und Solver zählen einen Sitz als geweckt, auch wenn er vor seinem Platz in der Nacht getötet wurde (Professor an Platz 43, Dämon an 27). Beide machen es gleich, deshalb sieht es kein Messlauf. |
 | 17 | Bad Moon Rising | *Erledigt am 03.10.2026:* Meuchelmörder, der seine Fähigkeit unsichtbar verbraucht. Gemessen und behoben. |
@@ -830,7 +888,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 19 | Simulator | **Der Mönch schützt in manchen Nächten zwei Spieler:** ein alter Münzwurf neben der eingetragenen Wahl. Ihn zu entfernen würde alle Trouble-Brewing-Partien neu austeilen, die Tests beim Namen nennen. Der Solver ist davon nicht betroffen. |
 | 20 | Solver | **Der Solver rechnet in ganzen Nächten.** Das Pukka-Gift auf einem Überlebenden gilt bei ihm für die ganze Nacht und den Tag danach, am Tisch nur bis zum Zug der Pukka. Das hält zu viele Welten, verliert aber keine. |
 | 21 | Simulator | **Ein Seitenwechsel des Schlägers gilt für die ganze Nacht,** nicht erst ab dem Platz, an dem er gewählt wurde. Simulator und Night-Walk machen es gleich. |
-| 22 | Solver | **Grenze 400 für die Erzählungen der Nächte** bleibt eine Grenze (von dir bestätigt am 04.10.2026). Seit demselben Tag fallen Erzählungen, die das Brett ausschließt, vor dem Schnitt weg. In 60.000 Partien ging keine wahre Welt verloren, ausgeschlossen ist es bei sieben und mehr Nächten nicht. Sauber wäre, die Nächte einzeln statt als Produkt zu führen. |
+| 22 | Solver | **Grenze 400 für die Erzählungen der Nächte** bleibt eine Grenze (von dir bestätigt am 04.10.2026). Seit demselben Tag fallen Erzählungen, die das Brett ausschließt, vor dem Schnitt weg. In 60.000 Partien ging keine wahre Welt verloren, ausgeschlossen ist es bei sieben und mehr Nächten nicht. Sauber wäre, die Nächte einzeln statt als Produkt zu führen. **Erster gemessener Fall am 07.10.2026:** 1 von 3.000 Partien über 6 Nächte auf dem Skript „Second five, like Bad Moon Rising“ (Seed 2118). Mit einer Grenze von 2.000 hält der Solver sie. |
 | 23 | Solver | **Der Dämon-Typ wird aus stillen Nächten kaum erkannt.** Nach drei stillen Nächten ist es in 65 % ein Zombuul, der Solver sagt 38 %. Gemessen am 04.10.2026: Das zu ändern findet den Dämon nicht öfter. |
 | 24 | Messung | **Nicht gemessen:** wie früh der Solver den Dämon findet (nur der Stand nach vier Nächten), und ob ein Dämon am Morgen vor seiner Hinrichtung vorn stand. Der Solver weiß nicht, dass eine Partie zu Ende ist. |
 | 25 | Messung | **Kleine Tische:** Bei 7 und 8 Spielern sind nach vier Nächten fast alle Partien entschieden. Die frühere Auffälligkeit „9 Spieler“ bei Sects & Violets war ein Artefakt davon. |
@@ -853,6 +911,8 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 42 | Solver | **Eine Auskunft, die nur durch Registrieren stimmt, verlangt, dass der registrierende Sitz nicht gestört war.** Die andere Erklärung, dass die Quelle selbst gestört war, prüft der Solver dann nicht mehr. Gefunden an einem Totengräber, dem ein Spion als Soldat gezeigt wurde, in einer Nacht, in der ein Minnesänger alle betrunken gemacht hatte. 1 von 3.000 gemischten Partien. |
 | 43 | Simulator | **Ein Philosoph nimmt einen Charakter, der echte Halter nennt seine Rolle nicht.** Dann rechnet der Solver die Auskunft des echten Halters dem Philosophen zu. 1 von 3.000 Partien in Sects & Violets (Seed 1698). |
 | 44 | Night-Walk | **Akrobatin neben getauschten oder betrunkenen Sitzen:** Simulator und Night-Walk sind sich in etwa 12 von 8.316 Nächten nicht einig, ob das Ziel der Akrobatin gestört ist. Der Simulator vergiftet einen getauschten Dämon erst ab der nächsten Nacht, der Night-Walk sofort. |
+| 45 | Regelfrage | **Ein Höfling nennt den Schläger.** Der Code sagt: Das zählt nicht, weil der Höfling einen Charakter nennt und keinen Spieler wählt. Das Wiki zum Schläger nennt genau diesen Fall als Beispiel: Der Schläger wird gut, der Höfling betrunken. Gefunden am 07.10.2026 beim Ojo, der ebenfalls einen Charakter nennt und bei dem ich nach dem Wiki gebaut habe. Betrifft auch das Einzelspieler-Spiel. Zu entscheiden. |
+| 46 | Night-Walk | **Ein Seemann wählt den Schläger zuerst, und der Gastwirt macht den Schläger in derselben Nacht betrunken.** Der Night-Walk bekommt den Schläger als von Anfang an betrunken gesagt und lässt ihn nicht antworten. 1 von 8.219 Nächten. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

@@ -17,6 +17,7 @@ from botc.info import (registers_as_role,
                        NobleInfo,
                        StewardInfo, KnightInfo, ShugenjaInfo, KingInfo,
                        NightwatchmanChoice, NightwatchmanSeen,
+                       BansheeAnnounced, GoblinClaim,
                        BalloonistInfo,
                        DreamerInfo,
                        ExorcistChoice, InnkeeperChoice,
@@ -694,6 +695,16 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                                 and not _kept_alive_by_a_tea_lady(
                                     d, gran, f"N{night}"):
                             d.deaths[gran] = f"N{night}"
+                # "If the Demon kills you, all players learn this" — that
+                # a Banshee died, not which seat. Only one whose ability
+                # was working: a poisoned Banshee goes quietly.
+                for victim in aimed:
+                    held = d.role_at(victim, f"N{night}")
+                    if (held == "Banshee" or (
+                            held == "Philosopher"
+                            and d.philosophies.get(victim) == "Banshee")) \
+                            and d.working(victim, night):
+                        heard.append(BansheeAnnounced(night, victim))
 
         # Board-changing steps run **before** the readings, because by
         # slot they happen before every character that reads.
@@ -813,6 +824,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             executed = _execute(d, night, rng, allow_takeover)
             if executed is not None:
                 d.deaths[executed] = f"E{night}"
+                # A Goblin that said so and went to the gallows: its team
+                # has won, and the game stops there.
+                if _a_goblin_said_so(d, night, executed, rng, heard):
+                    d.ended_at, d.ended_why = f"E{night}", "goblin"
+                    d.game_ends_after = night
+                    break
             # Or the town hangs one of the last three.
             if _evil_has_won(d, f"E{night}"):
                 d.ended_at, d.ended_why = f"E{night}", "two alive"
@@ -1562,6 +1579,14 @@ def _hold_a_day(d, day, rng):
     if cursed is not None and cursed == d.demon_at(phase):
         nominators = [p for p in nominators if p != cursed]
 
+    # A Zealot must vote on every nomination while five or more are
+    # alive — and so does whoever only thinks it is one. Drunk or
+    # poisoned changes nothing: it cannot know.
+    zealots = set()
+    if "Zealot" in d.script.keys:
+        zealots = {p for p in living
+                   if (d.token(p, phase) or d.role_at(p, phase)) == "Zealot"}
+
     tally = {}
     for who in nominators:
         if d.deaths.get(who) is not None:
@@ -1586,10 +1611,40 @@ def _hold_a_day(d, day, rng):
                 chance = 0.2
             if rng.random() < chance:
                 votes.add(voter)
+            elif voter in zealots and d.deaths.get(voter) is None \
+                    and sum(1 for p in living
+                            if d.deaths.get(p) is None) >= 5:
+                votes.add(voter)
         if votes:
             d.votes.setdefault(day, set()).update(votes)
         tally[nominee] = max(tally.get(nominee, 0), len(votes))
     d.tally[day] = tally
+
+
+def _a_goblin_said_so(d, day, executed, rng, heard):
+    """Did a working Goblin just win the game by being executed?
+
+    "If you publicly claim to be the Goblin when nominated & are executed
+    that day, your team wins." It usually says so — that is what it is
+    for — and now and then somebody who is no Goblin says it too, hoping
+    the town flinches. The town here does not flinch, which is the one
+    case the words can be checked: the claimant hangs, and the game
+    either ends or it does not.
+
+    A drunk or poisoned Goblin says it just the same and wins nothing.
+
+    Nothing is drawn on a script without one, so no other game moves.
+    """
+    if "Goblin" not in d.script.keys:
+        return False
+    if d.role_at(executed, f"D{day}") == "Goblin":
+        if rng.random() >= 0.7:
+            return False                  # kept quiet, and simply died
+        heard.append(GoblinClaim(day, executed))
+        return d.working(executed, day, by_day=True)
+    if rng.random() < 0.06:
+        heard.append(GoblinClaim(day, executed))
+    return False
 
 
 def _the_curse_bites(d, seat, day):
@@ -1706,8 +1761,18 @@ def _execute(d, day, rng, allow_takeover=False):
                      and d.role_at(demon, phase) == "Zombuul"
                      and d.zombuul_up is None
                      and d.deaths.get(demon) is None)
+    # "Comes first" has to hold when takeovers are switched off as well:
+    # a Scarlet Woman standing by takes the Demon whether or not this
+    # run wants to play that, so the game would not have ended and a
+    # Mastermind has no extra day to buy. On a mixed script the town
+    # hanged a Vortox between the two, the simulator played the extra
+    # day and the solver — rightly — had the Scarlet Woman holding the
+    # Vortox (07.10.2026). No published script has both.
+    she_would = (heir is not None
+                 and d.role_at(heir, phase) == "ScarletWoman"
+                 and len(d.alive_at(phase)) >= 5)
     mastermind = d.seat_of("Mastermind")
-    extra_day = (not takeover and not zombuul_first
+    extra_day = (not takeover and not zombuul_first and not she_would
                  and mastermind is not None
                  and d.role_at(mastermind, phase) == "Mastermind"
                  and mastermind in d.alive_at(phase)
@@ -4057,7 +4122,15 @@ def _pair_info(d, seat, night, rng, cls, matches, team=None,
     if team is not None:
         liars = [p for p in range(d.n)
                  if p != seat and p not in honest
-                 and _registers_as(d.role_at(p, f"N{night}"), team)]
+                 and _registers_as(d.role_at(p, f"N{night}"), team)
+                 # A droisoned character cannot misregister (table
+                 # rule): a Spy the Courtier has made drunk, or a Pukka
+                 # poisoned, is a Spy and reads as one. Never asked here,
+                 # so a Librarian was shown a drunk Spy as the Drunk
+                 # (07.10.2026, on a mixed script; a poisoned Spy in
+                 # Trouble Brewing was shown wrongly too, and nothing
+                 # there could tell).
+                 and d.working(p, night)]
 
     # Prefer the truth, but take the lie often enough to matter.
     if liars and (not honest or rng.random() < misregister):

@@ -121,6 +121,10 @@ def build_info(d):
     if kind == "NightwatchmanSeen":
         return I.NightwatchmanSeen(night, player, trust,
                                    shown=_int(d, "shown"))
+    if kind == "BansheeAnnounced":
+        return I.BansheeAnnounced(night, player, trust)
+    if kind == "GoblinClaim":
+        return I.GoblinClaim(night, player, trust)
     if kind == "Became":
         return I.BecameInfo(night, player, trust,
                             role=d.get("role") or "",
@@ -421,7 +425,9 @@ def run_solve(payload):
                     # Woken late, at the Nightwatchman's turn, and "choose
                     # a player" means any player: one killed earlier that
                     # night is still shown who it is.
-                    "NightwatchmanSeen")
+                    "NightwatchmanSeen",
+                    # The table is told, whoever writes it down.
+                    "BansheeAnnounced")
     for d in raw_infos:
         speaker = _int(d, "player", 0)
         night = _int(d, "night", 1)
@@ -660,6 +666,7 @@ INFO_SOURCES = {
     "ShugenjaInfo": "Shugenja", "KingInfo": "King",
     "NightwatchmanChoice": "Nightwatchman",
     "NightwatchmanSeen": "Nightwatchman",
+    "BansheeAnnounced": "Banshee", "GoblinClaim": "Goblin",
     "Washerwoman": "Washerwoman", "Librarian": "Librarian",
     "Investigator": "Investigator", "Chef": "Chef", "Empath": "Empath",
     "FortuneTeller": "FortuneTeller", "Undertaker": "Undertaker",

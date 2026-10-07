@@ -49,7 +49,10 @@ SIZES = [7, 8, 9, 10, 11]
 def game(seed, nights=4, must_have=()):
     """One mixed game, as `messung/tor.py` plays it."""
     rng = random.Random(seed)
-    script = play_games.an_awkward_script(rng, must_have=must_have)
+    # From the pool as it stood when these seeds were picked: every
+    # character added since would otherwise redraw each of them.
+    script = play_games.an_awkward_script(rng, must_have=must_have,
+                                          as_named=True)
     n = SIZES[seed % 5]
     deal, heard = simulate.play(n, rng, nights=nights, script=script)
     claims, wakes, _ = claim_model.claims_for(deal, rng, script=script)
@@ -113,7 +116,7 @@ class TheSimulatorReadsTheBoardAsItStandsTonight(SolverTest):
         both = 0
         for seed in range(400):
             rng = random.Random(seed)
-            script = play_games.an_awkward_script(rng)
+            script = play_games.an_awkward_script(rng, as_named=True)
             roles, _believes = simulate.deal(SIZES[seed % 5], rng, script)
             both += len(changers & set(script.keys)) > 1
             with self.subTest(seed=seed):
@@ -133,6 +136,65 @@ class TheSimulatorReadsTheBoardAsItStandsTonight(SolverTest):
         deal.changes.append(("N2", seat, "FangGu"))
         self.assertEqual(deal.token(seat, "N1"), deal.believes[seat])
         self.assertIsNone(deal.token(seat, "N2"))
+
+    def test_a_droisoned_seat_is_not_shown_as_something_else(self):
+        """Table rule: a droisoned character cannot misregister. The
+        pair readings never asked, so a poisoned Spy was shown to a
+        Washerwoman as a Townsfolk — in Trouble Brewing too."""
+        tb = scripts.TROUBLE_BREWING
+        for seed in range(2000):
+            # Ten, so there are two Minions: a Poisoner to do it and a
+            # Spy to have it done to.
+            deal, _heard = simulate.play(10, random.Random(seed), nights=1,
+                                         script=tb)
+            hit = deal.poisoned.get(1)
+            if hit is not None and deal.roles[hit] == "Spy":
+                break
+        self.assertEqual(deal.roles[hit], "Spy")
+        asker = next(p for p in range(deal.n) if p != hit)
+        really = lambda p: simulate.TEAM[deal.roles[p]] == "townsfolk"
+
+        def shown(attempt):
+            # `misregister=1.0`: a seat that can lie is always preferred.
+            return simulate._pair_info(deal, asker, 1, random.Random(attempt),
+                                       I.Washerwoman, really,
+                                       team="townsfolk", misregister=1.0)
+
+        for attempt in range(20):
+            row = shown(attempt)
+            with self.subTest(attempt=attempt):
+                self.assertIn(row.role, (deal.roles[row.a], deal.roles[row.b]))
+        # Working, it is the one shown: take the poison off and ask again.
+        deal.poisoned.pop(1)
+        row = shown(0)
+        self.assertIn(hit, (row.a, row.b))
+        self.assertNotIn(row.role, (deal.roles[row.a], deal.roles[row.b]))
+
+    def test_a_scarlet_woman_comes_before_a_masterminds_extra_day(self):
+        """With takeovers switched off the Demon is simply not hanged
+        while she stands by — it was, and the extra day was played."""
+        hanged = both = 0
+        for seed in range(600):
+            deal, _heard, _state, _world = game(seed)
+            if "ScarletWoman" not in deal.roles \
+                    or "Mastermind" not in deal.roles:
+                continue
+            both += 1
+            woman = deal.roles.index("ScarletWoman")
+            for seat, at in deal.deaths.items():
+                if at[0] != "E":
+                    continue
+                day = int(at[1:])
+                held = deal.role_at(seat, f"D{day}")
+                if simulate.TEAM[held] != "demon" or held == "Zombuul":
+                    continue
+                hanged += 1
+                standing = deal.alive_at(at)
+                with self.subTest(seed=seed):
+                    self.assertFalse(
+                        woman in standing and len(standing) >= 5
+                        and deal.role_at(woman, at) == "ScarletWoman")
+        self.assertGreater(both, 3, "no game here had the two together")
 
     def test_once_a_game_characters_woke_on_the_night_they_acted(self):
         """The comment said so and the code answered no for all of them."""
@@ -367,6 +429,25 @@ class ANightIsNotOneMoment(SolverTest):
                      and (f"N{r.night}", r.target, "FangGu") in deal.changes)
         self.assertTrue(deal.died_on(f"N{named.night}"))
         self.assertIsNotNone(S.explanation_cost(world, state))
+
+
+    def test_but_a_snake_charmer_has_swapped_before_it_chooses(self):
+        """At eleven, ten places ahead. The Demon the Exorcist finds at
+        twenty-one is the new one, and the old — a charmer by then — may
+        be the one it kills tonight. Dying *as* the Demon is what marks
+        a jump; this one died as something else."""
+        script = scripts.from_ids("Mixed, an Exorcist and a swap", [
+            "exorcist", "snakecharmer", "clockmaker", "dreamer", "oracle",
+            "flowergirl", "mutant", "witch", "imp"])
+        roles = ["Exorcist", "SnakeCharmer", "Imp", "Clockmaker", "Dreamer",
+                 "Oracle", "Witch"]
+        swap = I.SnakeCharmerChoice(2, 1, target=2, swapped=True)
+        names_the_old_one = I.ExorcistChoice(2, 0, target=2)
+        names_the_new_one = I.ExorcistChoice(2, 0, target=1)
+        self.assertIsNotNone(cost(script, roles, [swap, names_the_old_one],
+                                  deaths={2: "N2"}))
+        self.assertIsNone(cost(script, roles, [swap, names_the_new_one],
+                               deaths={2: "N2"}))
 
 
 class TwoMayHoldOneAbility(SolverTest):

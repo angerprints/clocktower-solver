@@ -1038,6 +1038,50 @@ export const DATA = {
    "nights": "conditional",
    "first_night": 10,
    "other_night": 63
+  },
+  "Banshee": {
+   "id": "banshee",
+   "name": "Banshee",
+   "team": "townsfolk",
+   "wake": [
+    "never"
+   ]
+  },
+  "Zealot": {
+   "id": "zealot",
+   "name": "Zealot",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ]
+  },
+  "Heretic": {
+   "id": "heretic",
+   "name": "Heretic",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ]
+  },
+  "Goblin": {
+   "id": "goblin",
+   "name": "Goblin",
+   "team": "minion",
+   "wake": [
+    "first"
+   ]
+  },
+  "Ojo": {
+   "id": "ojo",
+   "name": "Ojo",
+   "team": "demon",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "chooses": true,
+   "nights": "other",
+   "other_night": 32
   }
  },
  "scripts": {

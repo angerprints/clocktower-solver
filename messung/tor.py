@@ -139,6 +139,16 @@ for seed in range(start, start + N):
                 if not any(who == row.player for who in woke.values()):
                     read_bad.append((seed, night, kind, row.player, woke))
                 continue
+            if kind == "BansheeAnnounced":
+                # Announced by the simulator; the walk should have seen
+                # that seat fall to whoever holds the Demon.
+                walked["Banshee"] += 1
+                fell = [by for _slot, what, who, by, *_ in
+                        (e + (None,) for e in got.log if len(e) >= 3)
+                        if what == "died" and who == row.player]
+                if not any(simulate.TEAM.get(by) == "demon" for by in fell):
+                    read_bad.append((seed, night, kind, row.player, fell))
+                continue
             if kind == "NightwatchmanChoice" or vortox:
                 continue
             if not deal.working(row.player, night):

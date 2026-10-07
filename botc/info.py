@@ -2485,3 +2485,124 @@ class SlayerShot(Info):
         # A shot that did nothing is only evidence if a real Slayer fired
         # it, and that is handled by the usual claim gate.
         return t not in DEMONS
+
+
+# --------------------------------------------------------------------------
+# The second five experimental characters (07.10.2026)
+# --------------------------------------------------------------------------
+
+def went_on_after(state, day):
+    """Did the game carry on past the end of this day?
+
+    A day ticked off as got through, or anything at all on the record
+    from the night after. A board with nothing later is one being read
+    that evening, and says nothing either way.
+    """
+    if day in (state.days_done or ()):
+        return True
+    return phase_index(state.final_phase()) > phase_index(f"D{day}")
+
+
+@dataclass
+class BansheeAnnounced(Info):
+    """The Storyteller told the table that the Banshee died tonight.
+
+    "If the Demon kills you, all players learn this." **Not which seat**
+    — only that it happened, and the table works the seat out from who
+    is dead in the morning. So the row carries a night and nothing else;
+    whoever is entered as saying it is beside the point, and it is the
+    world that says where the Banshee was.
+
+    A fact, like a Slayer's shot that killed: the Storyteller said it to
+    everybody, so no world gets to call it made up. And it is only said
+    for a Banshee whose ability worked — "if the Banshee is killed by the
+    Demon but does not have their ability at that time ... do not tell
+    the group" — so whoever it was cannot have been droisoned that night.
+    A Drunk holding the token is no Banshee and is never announced.
+
+    Not information a Vortox reaches: "if the Vortox kills the Banshee,
+    all players learn that the Banshee has died" (their Jinx).
+
+    **Not checked: that it was the Demon.** What killed a seat is the
+    death machinery's business and a row cannot ask it. A Banshee taken
+    by an Assassin on the night of the announcement would pass here.
+    """
+
+    source_role = "Banshee"
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None                       # nobody's claim: the world's
+
+    def _who(self, w, s):
+        phase = f"N{self.night}"
+        began = f"D{self.night - 1}" if self.night > 1 else phase
+        took = s.philosophies() or {}
+        out = []
+        for seat in range(len(w.roles)):
+            if phase not in s.died_at(seat):
+                continue
+            held = {w.role_at(seat, began), w.role_at(seat, phase)}
+            gained = took.get(seat)
+            if "Banshee" in held or (
+                    gained is not None and gained[0] == "Banshee"
+                    and "Philosopher" in held
+                    and phase_index(phase) >= phase_index(gained[1])):
+                out.append(seat)
+        return tuple(out)
+
+    def holds(self, w, s, rh, seat=None):
+        return bool(self._who(w, s))
+
+    def leaned_on(self, w, s, seat=None):
+        return self._who(w, s)[:1]
+
+
+@dataclass
+class GoblinClaim(Info):
+    """Nominated, a player said "I am the Goblin". `night` is the day.
+
+    "If you publicly claim to be the Goblin when nominated & are executed
+    that day, your team wins." Anybody may say it, and the Storyteller
+    acts as though it were so — which is the point of saying it.
+
+    So the words alone prove nothing. What does is the town calling the
+    bluff: executed that day, dead of it, and the game carried on. Then
+    the speaker was no Goblin — or was one whose ability was not working,
+    which is the only excuse and has to be paid for like any other.
+
+    An *event* rather than a reading: it is judged by what the day did,
+    and whoever said it is whoever said it. A world where they are not
+    the Goblin has nothing to explain.
+
+    Left alone: a claimant executed who did not die. Whether "executed"
+    is enough for the win when a Devil's Advocate stands by is not on
+    the wiki page, so a board like that rules nothing out.
+    """
+
+    is_a_choice = True
+    event = True
+    source_role = "Goblin"
+
+    def source_seat(self, state):
+        return self.player
+
+    def holds(self, w, s, rh, seat=None):
+        return not self.must_have_failed(w, s)
+
+    def must_have_failed(self, w, s):
+        """Whose ability cannot have been working for this to be so."""
+        day = self.night
+        if w.role_at(self.player, f"D{day}") != "Goblin":
+            return ()
+        if s.execution_death(day) != self.player:
+            return ()
+        if not went_on_after(s, day):
+            return ()
+        return (self.player,)
+

@@ -1038,8 +1038,12 @@ immunityRule(function anExorcistSendsTheDemonToBed(
   // itself (07.10.2026).
   let demonThen = world.demonAt(`N${night}`);
   const began = world.demonAt(`D${night - 1}`);
+  // Only a Demon that died *as* one: a Snake Charmer swaps at 11, ahead
+  // of the Exorcist, and the new Demon may then kill the old.
   if (began !== null && began !== demonThen
-      && state.diedAt(began).includes(`N${night}`)) demonThen = began;
+      && state.diedAt(began).includes(`N${night}`)
+      && CHARACTERS[world.roleAt(began, `N${night}`)].team === "demon")
+    demonThen = began;
   if (named !== null && !named.has(demonThen)) return [];
   // And it cuts the other way. Named and written down, the Demon does not
   // act tonight — so a Demon kill on that night says the Exorcist was not

@@ -753,6 +753,11 @@ const SCHEMA = {
   // that confirms anybody.
   NightwatchmanChoice: [["target","player"]],
   NightwatchmanSeen:   [["shown","player"]],
+  // The second five. Neither row carries anything but when: the table
+  // is told a Banshee died without being told which seat, and a claim
+  // to be the Goblin is just somebody saying so on the block.
+  BansheeAnnounced: [],
+  GoblinClaim:      [],
   Acrobat:      [["target","player"]],
   // A daytime guess at the whole evil team. Two lists and whether it
   // won, because naming the Demon as a Minion is a failed guess.
@@ -805,6 +810,7 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   StewardInfo:"Steward", KnightInfo:"Knight", ShugenjaInfo:"Shugenja",
   KingInfo:"King", NightwatchmanChoice:"Nightwatchman",
   NightwatchmanSeen:"Nightwatchman",
+  BansheeAnnounced:"Banshee", GoblinClaim:"Goblin",
   GrandmotherInfo:"Grandmother", ChambermaidInfo:"Chambermaid",
   GamblerGuess:"Gambler", CourtierChoice:"Courtier",
   ClockmakerInfo:"Clockmaker", DreamerInfo:"Dreamer",
@@ -818,14 +824,17 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   CerenovusMadness:"Cerenovus",
   MoonchildChoice:"Moonchild", ExorcistChoice:"Exorcist",
   InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor", OgreChoice:"Ogre" };
-const DAY_EVENTS   = ["SlayerShot","VirginNomination"];
+const DAY_EVENTS   = ["SlayerShot","VirginNomination","GoblinClaim"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
-  CerenovusMadness:"made mad", NightwatchmanSeen:"woken player" };
+  CerenovusMadness:"made mad", NightwatchmanSeen:"woken player",
+  BansheeAnnounced:"noted by", GoblinClaim:"claimed by" };
 // Rows spoken by somebody the ability was used *on*, not by whoever
 // holds the character. They are never somebody relaying the holder's
 // information, so the speaker is not moved to the claimant and nothing
 // offers to move it.
-const WITNESS_ROWS = ["NightwatchmanSeen"];
+// A Banshee's death is announced to the table and a claim to be the
+// Goblin is made by whoever makes it: neither belongs to a claimant.
+const WITNESS_ROWS = ["NightwatchmanSeen","BansheeAnnounced","GoblinClaim"];
 // A few readings are named for the *act* rather than the character,
 // because that is what the table saw: a Slayer shot, a Gambler's guess.
 // Everything else is just the character, and is worked out rather than
@@ -840,7 +849,8 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor", OgreChoice:"Ogre",
   CerenovusMadness:"Cerenovus madness",
   NightwatchmanChoice:"Nightwatchman choice",
-  NightwatchmanSeen:"Woken by the Nightwatchman" };
+  NightwatchmanSeen:"Woken by the Nightwatchman",
+  BansheeAnnounced:"Banshee announced", GoblinClaim:"Goblin claim" };
 // Not produced by a character, so it has no source role to be labelled
 // with — and falling back to the type name printed "Became" as though it
 // were a character somebody claimed.
@@ -1643,6 +1653,10 @@ function describeRow(r){
       return `chose ${who(r.target)}`;
     case "NightwatchmanSeen":
       return `was woken and shown that ${who(r.shown)} is the Nightwatchman`;
+    case "BansheeAnnounced":
+      return `the table was told the Banshee died — killed by the Demon`;
+    case "GoblinClaim":
+      return `said "I am the Goblin" when nominated`;
     case "Became":
       return r.was
         ? `claimed ${role(r.was)} until now, ${role(r.role)} from here on`

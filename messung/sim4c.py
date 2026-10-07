@@ -8,6 +8,10 @@ from botc.worlds import World
 from test_js_worlds import EASTER
 which = {"TB": scripts.TROUBLE_BREWING, "BMR": scripts.BAD_MOON_RISING,
          "SV": scripts.SECTS_AND_VIOLETS, "EASTER": scripts.from_json(EASTER)}
+# The scripts made for the experimental characters.
+from test_experimental import SPY, VORTOX
+from test_experimental_2 import OJO, OJO_BMR
+which.update({"XSPY": SPY, "XVORTOX": VORTOX, "XOJO": OJO, "XOJOB": OJO_BMR})
 sc = which[sys.argv[1]]; nights = int(sys.argv[2])
 for seed in map(int, sys.argv[3:]):
     n = [7, 8, 9, 10, 11][seed % 5]

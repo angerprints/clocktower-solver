@@ -421,6 +421,32 @@ _EXPERIMENTAL = [
     # every kill. The Demon is told who it is, which leaves no mark.
     _c("King", "king", "King", "townsfolk", {NEVER, SOMETIMES},
        nights="conditional"),
+
+    # The second five (07.10.2026), chosen for being small: none of them
+    # reads anything, and only the Ojo acts at night.
+    #
+    # Killed by the Demon, and the whole table is told a Banshee died —
+    # not which seat. Only while its ability works: a poisoned one dies
+    # like anybody. It then nominates and votes twice, dead as it is.
+    _c("Banshee", "banshee", "Banshee", "townsfolk", {NEVER}),
+    # Must vote on every nomination while five or more are alive, and
+    # "must" is the player's to keep — drunk or poisoned makes no
+    # difference to somebody who cannot know.
+    _c("Zealot", "zealot", "Zealot", "outsider", {NEVER}),
+    # Turns the result round, and nothing else: the game ends at the same
+    # moment it would have. So nothing here reads it.
+    _c("Heretic", "heretic", "Heretic", "outsider", {NEVER}),
+    # Says "I am the Goblin" when nominated, and if it is then executed
+    # its team wins. Anybody may say it. Shown its team on the first
+    # night like any Minion, which is not an ability.
+    _c("Goblin", "goblin", "Goblin", "minion", {FIRST}),
+    # Names a *character*, and whoever holds it dies; if nobody does, the
+    # Storyteller picks. Seen from the board that is a Demon that kills
+    # one player a night, which is the ordinary kill. It names the
+    # Goon's character to reach the Goon, and that counts as choosing it
+    # (the wiki has a Courtier doing the same).
+    _c("Ojo", "ojo", "Ojo", "demon", {FIRST, EVERY}, nights="other",
+       chooses=True),
 ]
 
 
@@ -498,6 +524,11 @@ _NOT_IN_THE_FILE = {
     "steward": (44, 0),
     "knight": (44, 0),
     "shugenja": (46, 0),
+    # The publisher's other nights run ... Vortox, Lord of Typhon,
+    # Vigormortis, Ojo, Al-Hadikhia ... — after the Vigormortis at 32 and
+    # before anything the file numbers 33, so it shares the Vigormortis's
+    # slot. Only one of them is the Demon on any night.
+    "ojo": (0, 32),
 }
 
 

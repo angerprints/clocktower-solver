@@ -386,7 +386,20 @@ def transcript(got):
     return "\n".join(out)
 
 
-def an_awkward_script(rng, name="Mixed", must_have=()):
+# Characters added since the mixed games in the tests and the corpus
+# were picked out by seed. A script is drawn from everything modelled, so
+# each new character redraws every one of them — and a test that says
+# "seed 1250 is a Gambler guessing a moment before the swap" would be
+# talking about some other game after the next batch.
+#
+# `as_named=True` draws from the pool as it stood when those seeds were
+# chosen (the 88 of 07.10.2026). Add every later character here. The
+# measurement in `messung/tor.py` draws from everything, which is its
+# job.
+SINCE_THE_NAMED_GAMES = ("Banshee", "Zealot", "Heretic", "Goblin", "Ojo")
+
+
+def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):
     """A script chosen to make characters meet who never have.
 
     The published three are three selections out of an enormous number,
@@ -407,7 +420,8 @@ def an_awkward_script(rng, name="Mixed", must_have=()):
     """
     from botc.catalogue import CHARACTERS, IMPAIRS
     from botc import scripts as _s
-    every = {k: c for k, c in CHARACTERS.items() if c.modelled}
+    every = {k: c for k, c in CHARACTERS.items() if c.modelled
+             and not (as_named and k in SINCE_THE_NAMED_GAMES)}
     by = lambda team: [k for k, c in every.items() if c.team == team]
 
     # At least two droison sources, and at least one character that moves

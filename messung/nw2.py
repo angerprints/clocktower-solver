@@ -5,10 +5,13 @@ import simulate, nightwalk
 from botc import scripts
 from test_js_worlds import EASTER
 from test_experimental import SPY, VORTOX
+from test_experimental_2 import OJO, OJO_BMR
 which = {"TB": scripts.TROUBLE_BREWING, "BMR": scripts.BAD_MOON_RISING,
          "SV": scripts.SECTS_AND_VIOLETS, "EASTER": scripts.from_json(EASTER),
          # The two scripts made for the experimental characters.
-         "XSPY": SPY, "XVORTOX": VORTOX}
+         "XSPY": SPY, "XVORTOX": VORTOX,
+         # And for the second five.
+         "XOJO": OJO, "XOJOB": OJO_BMR}
 sc = which[sys.argv[1]]; N = int(sys.argv[2]); nights = int(sys.argv[3])
 tot = collections.Counter(); bad = collections.Counter(); ex = []
 for seed in range(N):

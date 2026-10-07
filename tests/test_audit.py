@@ -192,7 +192,11 @@ class EveryLayerOffersTheSameReadings(SolverTest):
         import re
         html = (pathlib.Path(__file__).resolve().parent.parent
                 / "ui" / "index.html").read_text()
-        fields = set(re.findall(r"^\s*(\w+):\s*\[\[", html, re.M))
+        # `Name: [[...` — or `Name: [],` for a row that carries nothing
+        # but when and who: the table told a Banshee died, somebody
+        # saying they are the Goblin (07.10.2026). A row type starts
+        # with a capital, which is what keeps `infos: [],` out.
+        fields = set(re.findall(r"^\s*([A-Z]\w+):\s*\[(?:\[|\],)", html, re.M))
         for kind in app.INFO_SOURCES:
             with self.subTest(reading=kind):
                 self.assertIn(kind, fields,
@@ -203,7 +207,11 @@ class EveryLayerOffersTheSameReadings(SolverTest):
         import re
         html = (pathlib.Path(__file__).resolve().parent.parent
                 / "ui" / "index.html").read_text()
-        fields = set(re.findall(r"^\s*(\w+):\s*\[\[", html, re.M))
+        # `Name: [[...` — or `Name: [],` for a row that carries nothing
+        # but when and who: the table told a Banshee died, somebody
+        # saying they are the Goblin (07.10.2026). A row type starts
+        # with a capital, which is what keeps `infos: [],` out.
+        fields = set(re.findall(r"^\s*([A-Z]\w+):\s*\[(?:\[|\],)", html, re.M))
         self.assertEqual(fields - set(app.INFO_SOURCES), set())
 
     def test_each_script_only_offers_what_it_can_produce(self):

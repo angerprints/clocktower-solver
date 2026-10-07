@@ -60,7 +60,8 @@ def mixed(name, seed, nights=4):
     sys.path.insert(0, str(HERE.parent / "tools"))
     import play_games
     rng = random.Random(seed)
-    script = play_games.an_awkward_script(rng, name=f"Mixed {seed}")
+    script = play_games.an_awkward_script(rng, name=f"Mixed {seed}",
+                                          as_named=True)
     return played(name, script, seed, [7, 8, 9, 10, 11][seed % 5], nights,
                   rng=rng)
 
@@ -779,6 +780,48 @@ def handmade():
             ("acrobat-fell", 195)):
         yield mixed(f"mixed-{what}", seed)
 
+
+    # The second five experimental characters (07.10.2026), on the two
+    # scripts made for them in tests/test_experimental_2.py: what a
+    # Banshee's announcement pins down, a Zealot that did not vote, a
+    # claim to be the Goblin the town called, and games that were played.
+    from test_experimental_2 import OJO as XOJO, OJO_BMR as XOJOB
+    O7 = ["Banshee", "Chef", "Empath", "Zealot", "Undertaker", "Monk",
+          "Soldier"]
+    announced = {"type": "BansheeAnnounced", "night": 2, "player": 1}
+    yield board("x-ojo-7-bare", XOJO, O7)
+    yield board("x-ojo-7-banshee-announced", XOJO, O7, infos=[announced],
+                players_override={0: ["N2"]})
+    yield board("x-ojo-7-banshee-announced-somebody-else-died", XOJO, O7,
+                infos=[announced], players_override={1: ["N2"]})
+    # Two bodies and one announcement: which of them was the Banshee is
+    # the world's to say. On the other script, where two can die.
+    B7 = ["Banshee", "Sailor", "Chambermaid", "Zealot", "Gambler", "Gossip",
+          "Banshee"]
+    yield board("x-ojo-bmr-7-banshee-announced-two-died", XOJOB, B7,
+                infos=[announced], players_override={0: ["N2"], 6: ["N2"]})
+    said = {"type": "GoblinClaim", "night": 1, "player": 4}
+    yield board("x-ojo-7-goblin-claim-only", XOJO, O7, infos=[said])
+    yield board("x-ojo-7-goblin-claim-hanged-and-on", XOJO, O7, infos=[said],
+                players_override={4: ["X1"]}, days_done=[1])
+    yield board("x-ojo-7-goblin-claim-hanged-that-evening", XOJO, O7,
+                infos=[said], players_override={4: ["X1"]})
+    voting = [{"claim": c, "voted": [1] if i in (0, 1, 4) else [],
+               "nominated": [1] if i == 1 else []}
+              for i, c in enumerate(O7)]
+    yield board("x-ojo-7-zealot-kept-its-hand-down", XOJO, voting)
+    voting = [{"claim": c, "voted": [1] if i in (0, 3, 4) else [],
+               "nominated": [1] if i == 1 else []}
+              for i, c in enumerate(O7)]
+    yield board("x-ojo-7-zealot-voted", XOJO, voting)
+    for what, seed in (("banshee-and-a-goblin-wins", 19),
+                       ("banshee-killed-by-the-ojo", 40),
+                       ("banshee-and-a-claim", 108)):
+        yield played(f"x-ojo-played-{what}", XOJO, seed, 7, 4)
+    for what, seed in (("banshee-and-a-claim", 103),
+                       ("zealot-and-a-claim-by-another", 294),
+                       ("a-goblin-wins", 119)):
+        yield played(f"x-ojo-bmr-played-{what}", XOJOB, seed, 7, 4)
 
 
 def generated(how_many=60):

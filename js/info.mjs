@@ -1257,6 +1257,62 @@ OgreChoice.isAChoice = true;
 CerenovusMadness.isAChoice = true;
 NightwatchmanChoice.isAChoice = true;
 
+// --------------------------------------------------------------------
+// The second five experimental characters (07.10.2026). See info.py.
+// --------------------------------------------------------------------
+
+/** Did the game carry on past the end of this day? */
+export function wentOnAfter(state, day) {
+  if (state.daysDone.has(day)) return true;
+  return phaseIndex(state.finalPhase()) > phaseIndex(`D${day}`);
+}
+
+/** Every seat that could be the Banshee the table was told died. */
+function bansheesThatFell(row, w, s) {
+  const phase = `N${row.night}`;
+  const began = row.night > 1 ? `D${row.night - 1}` : phase;
+  const took = s.philosophies() || {};
+  const out = [];
+  for (let seat = 0; seat < w.roles.length; seat++) {
+    if (!s.diedAt(seat).includes(phase)) continue;
+    const held = [w.roleAt(seat, began), w.roleAt(seat, phase)];
+    const gained = took[seat];
+    if (held.includes("Banshee") || (
+        gained && gained[0] === "Banshee" && held.includes("Philosopher")
+        && phaseIndex(phase) >= phaseIndex(gained[1]))) out.push(seat);
+  }
+  return out;
+}
+
+/** The Storyteller told the table that the Banshee died tonight — not
+ * which seat. A fact, and only said for one whose ability worked. */
+export const BansheeAnnounced = define("BansheeAnnounced", "Banshee",
+  function (w, s) { return bansheesThatFell(this, w, s).length > 0; },
+  {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },        // nobody's claim: the world's
+    leanedOn(w, s) { return bansheesThatFell(this, w, s).slice(0, 1); },
+  });
+
+/** Nominated, a player said "I am the Goblin". `night` is the day.
+ * Judged by what the day did: executed, dead of it and the game went on
+ * means no working Goblin said it. */
+export const GoblinClaim = define("GoblinClaim", "Goblin",
+  function (w, s) { return this.mustHaveFailed(w, s).length === 0; },
+  {
+    event: true,
+    sourceSeat() { return this.player; },
+    mustHaveFailed(w, s) {
+      const day = this.night;
+      if (w.roleAt(this.player, `D${day}`) !== "Goblin") return [];
+      if (s.executionDeath(day) !== this.player) return [];
+      if (!wentOnAfter(s, day)) return [];
+      return [this.player];
+    },
+  });
+GoblinClaim.isAChoice = true;
+
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
   Undertaker, Ravenkeeper, GrandmotherInfo, ChambermaidInfo, GamblerGuess,
@@ -1269,6 +1325,7 @@ export const KINDS = {
   Noble, Acrobat, Balloonist, Alsaahir, Became,
   StewardInfo, KnightInfo, ShugenjaInfo, KingInfo,
   NightwatchmanChoice, NightwatchmanSeen,
+  BansheeAnnounced, GoblinClaim,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
 };

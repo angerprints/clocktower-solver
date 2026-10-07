@@ -2243,7 +2243,12 @@ def an_exorcist_sends_the_demon_to_bed(world, state, night, seat, kind):
     # impossible, and the game was lost (07.10.2026).
     demon = world.demon_at(phase)
     began = world.demon_at(f"D{night - 1}")
-    if began is not None and began != demon and phase in state.died_at(began):
+    # Only a Demon that died *as* one. A Snake Charmer swaps at 11, ahead
+    # of the Exorcist, and the new Demon may then kill the old — which
+    # is a charmer by now, and was already one when the Exorcist chose.
+    if began is not None and began != demon \
+            and phase in state.died_at(began) \
+            and TEAM[world.role_at(began, phase)] == "demon":
         demon = began
     if picked is not None and demon not in picked:
         return []
@@ -2753,6 +2758,42 @@ def rh_for(info):
     return None
 
 
+# A Zealot that did not vote on a day with a nomination and five alive.
+#
+# "Must" is the player's to keep: the wiki calls not voting cheating,
+# says the Storyteller does not police it, and that it holds drunk or
+# poisoned — so there is no excuse the plan could pay for. That would
+# make it impossible, and it is priced instead, because the likelier
+# story at a real table is a vote nobody wrote down. One tick missing
+# must not be what loses the true world.
+ZEALOT_SILENT_PENALTY = 0.1
+
+
+def _a_zealot_kept_its_hand_down(world, state):
+    """What it costs this world that its Zealot did not vote."""
+    if not _in_bag(state, "Zealot"):
+        return 1.0
+    cost = 1.0
+    for day, voted in (state.votes or {}).items():
+        # Only a day somebody wrote votes down for, with a nomination
+        # to have voted on.
+        if not voted or not (state.nominations or {}).get(day):
+            continue
+        phase = f"D{day}"
+        alive = state.alive_set(phase)
+        # Five alive at every nomination: whoever dropped during the day
+        # other than at the gallows may have gone before the vote.
+        fell = sum(1 for p in alive if phase in state.died_at(p)
+                   and state.execution_death(day) != p)
+        if len(alive) - fell < 5:
+            continue
+        for seat in alive:
+            if seat not in voted and phase not in state.died_at(seat) \
+                    and world.role_at(seat, phase) == "Zealot":
+                cost *= ZEALOT_SILENT_PENALTY
+    return cost
+
+
 def _plain_failures(world, state, outcome=None):
     """Sort every ledger row into: fits, contradicts, or was invented.
 
@@ -2965,6 +3006,8 @@ def _plain_failures(world, state, outcome=None):
         if len(survivors) == 1:
             working.setdefault(day, set()).update(survivors)
 
+    invented *= _a_zealot_kept_its_hand_down(world, state)
+
     spent = _spent_nominations(state)
     for idx, (info, src) in enumerate(zip(state.infos, _source_seats(state))):
         if idx in spent:
@@ -2974,6 +3017,22 @@ def _plain_failures(world, state, outcome=None):
             if not info.holds(world, state, None):
                 return None, None, 1.0, None   # this cannot have happened
             outcome[idx] = HELD
+            # A fact can lean on somebody too: a Banshee announced was a
+            # Banshee whose ability worked that night.
+            for who in info.leaned_on(world, state):
+                working.setdefault(info.night, set()).add(who)
+            continue
+
+        # Something that happened in front of everybody and is judged by
+        # what the day did with it — a claim to be the Goblin, and the
+        # town executing the claimant. Nobody is its source, so there is
+        # nobody to have invented it: either the world has nothing to
+        # explain, or somebody's ability has to have been off.
+        if getattr(info, "event", False):
+            failed = info.must_have_failed(world, state)
+            for who in failed:
+                failures[info.night].add(who)
+            outcome[idx] = EXCUSED if failed else HELD
             continue
 
         role = info.source_role

@@ -129,14 +129,17 @@ Dämon still ist und wer es bei welchem Muster war.
 |---|---|---|
 | `tor.py` | `N NÄCHTE START CHARAKTER…` | Spielt N gemischte Partien, die alle genannten Charaktere auf dem Skript haben (`tools/play_games.py`, `an_awkward_script`). Zählt: wahre Welt verworfen, davon wegen der Zeilen der neuen Charaktere; Nächte, in denen der Night-Walk andere Tote hat oder etwas nicht gesagt bekam; Auskünfte der neuen Charaktere, bei denen Night-Walk und Simulator sich widersprechen. Ohne `CHARAKTER` misst es die gemischten Skripte, wie sie sind. |
 | `sim5.py`, `nw2.py` | `XSPY` oder `XVORTOX` als Skript | Die zwei Skripte, die für die experimentellen Charaktere gebaut sind (`tests/test_experimental.py`): eines mit Spion, Einsiedler und Zombuul, eines mit Vortox. |
+| `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XOJO` oder `XOJOB` als Skript | Die zwei Skripte für die zweiten fünf (`tests/test_experimental_2.py`): eines wie Trouble Brewing, eines wie Bad Moon Rising, beide mit Banshee, Eiferer, Ketzer, Goblin und Ojo. |
 
     python3 messung/tor.py 40 4 0 Steward Knight Shugenja Nightwatchman King
     python3 messung/tor.py 1000 4 0
 
-**Stand der gemischten Skripte seit dem 07.10.2026:** Ohne neue Charaktere
-verwirft der Solver in 11 von 3.000 gemischten Partien die wahre Welt (4
-Nächte), und der Night-Walk weicht in 25 von 8.316 Nächten ab. Vorher waren
-es 96 und 32. Was übrig ist, steht in ROADMAP unter „Die gemischten Skripte
+**Stand der gemischten Skripte seit dem 07.10.2026:** Ohne Pflicht-Charaktere
+verwirft der Solver in 15 von 3.000 gemischten Partien die wahre Welt (4
+Nächte), und der Night-Walk weicht in 22 von 8.224 Nächten ab. Vor dem
+Aufräumen waren es 96 und 32, danach 11 und 25. Seit Batch 2 werden die
+Skripte aus 93 statt 88 Charakteren gezogen, es sind also andere Partien
+als vorher, und die Zahlen sind nur der Größe nach vergleichbar. Was übrig ist, steht in ROADMAP unter „Die gemischten Skripte
 aufgeräumt“ und in den offenen Stellen 4, 36 und 40 bis 44. Wer einen
 neuen Charakter misst, liest deshalb die Zahl „davon wegen der neuen
 Zeilen“ und vergleicht den Rest mit einem Lauf ohne `CHARAKTER`.
@@ -147,12 +150,18 @@ Zahl „43 von 2.813 Nächten“ (und „129 von 8.456“ in ROADMAP) war deshal
 hoch. Jetzt zählt `deal.nights_played`.
 
 **Neue Prüfsummen von `tbhash.py` seit dem 07.10.2026:** `TB
-b26e6eaaf04cdd90`, `EASTER b58eb3f2d8074508`, `SV fc480a8d2311d52b`. Der
+4ff5ece3d7c1f8a7`, `EASTER b58eb3f2d8074508`, `SV fc480a8d2311d52b`. Der
 Simulator spielt seitdem einige Partien anders (ROADMAP, derselbe
 Abschnitt): eine berichtigte Totengräber-Zeile, ein Rabenhüter, der etwas
 Falsches hören kann, und vergiftete Sitze, die nach einem Tausch zu ihrem
 neuen Charakter befragt werden. Im Oster-Skript hört außerdem eine
-vergiftete Adlige eine andere falsche Auskunft.
+vergiftete Adlige eine andere falsche Auskunft. Und ein gestörter Spion
+oder Einsiedler wird niemandem mehr als etwas anderes gezeigt.
+
+**Benannte Seeds bleiben dieselben Partien:** Tests und Korpus ziehen
+gemischte Skripte mit `an_awkward_script(as_named=True)` aus dem Vorrat vom
+07.10.2026. `tor.py` zieht aus allem, deshalb verschieben sich seine Seeds
+mit jedem neuen Charakter.
 
 ## Rohdaten in `daten/`
 

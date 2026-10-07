@@ -772,6 +772,31 @@ export function forcedRoles(state) {
  * The ability only fires the first time a Townsfolk nominates, so once
  * one nomination is on the record the later quiet ones say nothing.
  */
+/** What it costs this world that its Zealot did not vote, on a day with
+ * a nomination and five alive. Priced, not impossible: the likelier
+ * story at a real table is a vote nobody wrote down. See solver.py. */
+function aZealotKeptItsHandDown(world, state) {
+  if (!inBag(state, "Zealot")) return 1.0;
+  let cost = 1.0;
+  for (const key of Object.keys(state.votes || {})) {
+    const day = Number(key);
+    const voted = new Set(state.votes[key] || []);
+    const named = (state.nominations || {})[key];
+    if (!voted.size || !named || !new Set(named).size) continue;
+    const phase = `D${day}`;
+    const alive = [...state.aliveSet(phase)];
+    const hanged = state.executionDeath(day);
+    const fell = alive.filter(p => state.diedAt(p).includes(phase)
+                                   && hanged !== p).length;
+    if (alive.length - fell < 5) continue;
+    for (const seat of alive)
+      if (!voted.has(seat) && !state.diedAt(seat).includes(phase)
+          && world.roleAt(seat, phase) === "Zealot")
+        cost *= PRIORS.ZEALOT_SILENT_PENALTY;
+  }
+  return cost;
+}
+
 function spentNominations(state) {
   if (state._spentNoms) return state._spentNoms;
   const spent = new Set(), seen = new Set();
@@ -804,6 +829,12 @@ function plainFailures(world, state, outcome = {}) {
   const working = {};
   const ftInfos = [];
   let invented = 1.0;
+  // A hard fact that did not hold. Kept apart from the cost: this was
+  // `invented = null`, and the next made-up row multiplied it —
+  // null times anything is nought in JavaScript, so the world came back
+  // costing nothing instead of impossible, and was counted (found by
+  // the first board with a Banshee announced, 07.10.2026).
+  let impossible = false;
   const fail = (night, seat) =>
     ((failures[night] = failures[night] || new Set()).add(seat));
   // Nights where a reading came out true under a Vortox: either the
@@ -938,13 +969,32 @@ function plainFailures(world, state, outcome = {}) {
     }
   }
 
+  invented *= aZealotKeptItsHandDown(world, state);
+
   const spent = spentNominations(state);
   const seats = sourceSeats(state);
   state.infos.forEach((info, idx) => {
     if (spent.has(idx)) { outcome[idx] = SPENT; return; }
     if (info.hard()) {
-      if (!info.holds(world, state, null)) { invented = null; }
-      else outcome[idx] = HELD;
+      if (!info.holds(world, state, null)) { impossible = true; }
+      else {
+        outcome[idx] = HELD;
+        // A fact can lean on somebody too: a Banshee announced was a
+        // Banshee whose ability worked that night.
+        for (const who of info.leanedOn(world, state)) {
+          working[info.night] = working[info.night] || new Set();
+          working[info.night].add(who);
+        }
+      }
+      return;
+    }
+    // Something that happened in front of everybody and is judged by what
+    // the day did with it — a claim to be the Goblin. Nobody is its
+    // source, so there is nobody to have invented it.
+    if (info.event) {
+      const failed = info.mustHaveFailed(world, state);
+      for (const who of failed) fail(info.night, who);
+      outcome[idx] = failed.length ? EXCUSED : HELD;
       return;
     }
     const role = info.sourceRole;
@@ -1087,7 +1137,7 @@ function plainFailures(world, state, outcome = {}) {
         (working[info.night] || (working[info.night] = new Set())).add(who);
     }
   });
-  if (invented === null) return null;     // a hard fact did not hold
+  if (impossible) return null;            // a hard fact did not hold
 
   return {failures, ftInfos, invented, mustWork: working, vortoxOr};
 }
