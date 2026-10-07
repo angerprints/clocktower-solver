@@ -490,6 +490,11 @@ def hidden_from(deal, night, heard):
     guess = row("GamblerGuess")
     if guess:
         out[("gambler", night)] = (guess[0].target, guess[0].role)
+        # Each its own, as with the Snake Charmers above: a Philosopher
+        # that took the Gambler guesses beside the real one, and the
+        # walk gave both the first row's guess (07.10.2026).
+        out[("gamblers", night)] = {g.player: (g.target, g.role)
+                                    for g in guess}
     moon = row("MoonchildChoice")
     if moon:
         out[("moonchild", night)] = moon[0].target
@@ -644,6 +649,10 @@ def walk(deal, night, hidden):
     # The same for a Philosopher that took the Nightwatchman: it points
     # when the Nightwatchman would.
     watch_slot = getattr(CHARACTERS["Nightwatchman"], field, 0)
+    # And one that took the Gambler guesses when the Gambler would — and
+    # dies of a wrong guess, where the real one beside it is drunk and
+    # dies of nothing (07.10.2026).
+    gamble_slot = getattr(CHARACTERS["Gambler"], field, 0)
     settled = False
     for slot in _turns(night):
         # Who holds a character with this slot **now**.
@@ -662,7 +671,10 @@ def walk(deal, night, hidden):
                 or (state.roles[p] == "Philosopher" and slot == charmer_slot
                     and state.gained.get(p) == "SnakeCharmer")
                 or (state.roles[p] == "Philosopher" and slot == watch_slot
-                    and state.gained.get(p) == "Nightwatchman")]
+                    and state.gained.get(p) == "Nightwatchman")
+                or (state.roles[p] == "Philosopher" and gamble_slot
+                    and slot == gamble_slot
+                    and state.gained.get(p) == "Gambler")]
         for seat in here:
             role = state.roles[seat]
             # A Philosopher that took the Snake Charmer's ability on an
@@ -677,6 +689,9 @@ def walk(deal, night, hidden):
             if role == "Philosopher" and slot == watch_slot \
                     and state.gained.get(seat) == "Nightwatchman":
                 role = "Nightwatchman"
+            if role == "Philosopher" and gamble_slot and slot == gamble_slot \
+                    and state.gained.get(seat) == "Gambler":
+                role = "Gambler"
 
             if role == "Poisoner":
                 target = hidden.get(("poisoner", night))
@@ -795,7 +810,9 @@ def walk(deal, night, hidden):
                 # wrong. Acts at 10, so a Poisoner at 7 has already had its
                 # say — and a droisoned Gambler dies of nothing, because a
                 # plain ability simply does not function.
-                guess = hidden.get(("gambler", night))
+                by_seat = hidden.get(("gamblers", night))
+                guess = (by_seat.get(seat) if by_seat is not None
+                         else hidden.get(("gambler", night)))
                 if guess is None:
                     continue
                 # Judged *after* its target answers back. A Gambler that

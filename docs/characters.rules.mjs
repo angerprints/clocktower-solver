@@ -805,22 +805,44 @@ causeRule(function anAcrobatMayFall(world, state, night) {
   const picked = state.infos.some(
     i => i.sourceRole === "Acrobat" && i.night === night);
   if (!picked) return [];
-  return [cause("Acrobat", OTHER, new Set([seat]), {capacity: 1,
+  return [new Cause("Acrobat", OTHER, new Set([seat]), {capacity: 1,
                                                    mustFire: false})];
 });
 
 causeRule(function aGamblerMayLose(world, state, night) {
   if (!inBag(state, "Gambler") || night < 2) return [];
-  const seat = acting(world, state, "Gambler", night);
-  if (seat === null) return [];
+  // Whoever held it as the night began: it guesses tenth, and a Pit-Hag
+  // at sixteen may have made the dead Gambler something else. And
+  // everybody who has the ability — a Philosopher that took it stands
+  // beside the real one, drunk and harmless (both 07.10.2026).
+  const phase = `N${night}`, began = `D${night - 1}`;
+  const holders = [];
+  for (const at of [began, phase]) {
+    const seat = world.findAt("Gambler", at);
+    if (seat !== null && !holders.includes(seat)) holders.push(seat);
+  }
+  const took = state.philosophies() || {};
+  for (const who of Object.keys(took).map(Number).sort((x, y) => x - y)) {
+    const [taken, since] = took[who];
+    if (taken === "Gambler" && !holders.includes(who)
+        && world.roleAt(who, began) === "Philosopher"
+        && phaseIndex(phase) >= phaseIndex(since)) holders.push(who);
+  }
   const guesses = state.infos.filter(
     i => i.sourceRole === "Gambler" && i.night === night);
-  if (!guesses.length) return [];        // no guess recorded, no risk
-  // And a guess that was right kills nobody: a Gambler dead by morning
-  // then went some other way, and that way has to be found.
-  if (guesses.every(i => world.roleAt(i.target, `N${night}`) === i.role))
-    return [];
-  return [new Cause("Gambler", OTHER, new Set([seat]), {capacity: 1})];
+  const causes = [];
+  for (const seat of holders) {
+    if (!state.aliveSet(phase).has(seat)) continue;
+    // Its own guess where the row says whose it was; a guess relayed by
+    // somebody with no such ability could be anybody's.
+    let mine = guesses.filter(g => g.player === seat);
+    if (!mine.length) mine = guesses.filter(g => !holders.includes(g.player));
+    if (!mine.length) continue;            // no guess recorded, no risk
+    // A guess that was right kills nobody, judged as it was made.
+    if (mine.every(g => world.roleAt(g.target, began) === g.role)) continue;
+    causes.push(new Cause("Gambler", OTHER, new Set([seat]), {capacity: 1}));
+  }
+  return causes;
 });
 
 // --------------------------------------------------------------------
@@ -1011,7 +1033,14 @@ immunityRule(function anExorcistSendsTheDemonToBed(
   if (returnedAt(state, `N${night}`).has(exorcist)) return []; // back tonight
   // Recorded, it only stops the Demon if it named the seat holding it.
   const named = chosen(state, "Exorcist", night, ["target"], exorcist);
-  if (named !== null && !named.has(world.demonAt(`N${night}`))) return [];
+  // The Demon as the Exorcist's turn came, at 21. One that died tonight
+  // handed the star on after that — a Fang Gu jumping, an Imp killing
+  // itself (07.10.2026).
+  let demonThen = world.demonAt(`N${night}`);
+  const began = world.demonAt(`D${night - 1}`);
+  if (began !== null && began !== demonThen
+      && state.diedAt(began).includes(`N${night}`)) demonThen = began;
+  if (named !== null && !named.has(demonThen)) return [];
   // And it cuts the other way. Named and written down, the Demon does not
   // act tonight — so a Demon kill on that night says the Exorcist was not
   // working, or that this seat is not the Demon.

@@ -50,7 +50,22 @@ _KIND = {"NobleInfo": "Noble", "BecameInfo": "Became",
          "BalloonistInfo": "Balloonist"}
 
 
-def played(name, script, seed, n, nights):
+def mixed(name, seed, nights=4):
+    """A game on a script drawn for that seed, as `messung/tor.py` plays
+    them: the script first, then the game, from one run of the dice.
+
+    Seven at the table, which is what a seed divisible by five gives
+    there — so a seed found by that sweep is the same game here.
+    """
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    rng = random.Random(seed)
+    script = play_games.an_awkward_script(rng, name=f"Mixed {seed}")
+    return played(name, script, seed, [7, 8, 9, 10, 11][seed % 5], nights,
+                  rng=rng)
+
+
+def played(name, script, seed, n, nights, rng=None):
     """A simulator game, as the page would post it.
 
     The boards the simulator found hardest to explain are the ones worth
@@ -63,7 +78,7 @@ def played(name, script, seed, n, nights):
     sys.path.insert(0, str(HERE))
     import claims as claim_model
     import simulate
-    rng = random.Random(seed)
+    rng = rng or random.Random(seed)
     deal, heard = simulate.play(n, rng, nights=nights, script=script)
     claims, wakes, _notes = claim_model.claims_for(deal, rng, script=script)
     players = []
@@ -724,6 +739,25 @@ def handmade():
         yield played(f"x-spy-played-{what}", XSPY, seed, 7, nights)
     for what, seed in (("nightwatchman-and-king", 4), ("all-turned-round", 85)):
         yield played(f"x-vortox-played-{what}", XVORTOX, seed, 7, 4)
+
+    # Mixed scripts, from 07.10.2026: characters that have never shared a
+    # script, each board a game the solver used to throw out or one the
+    # simulator used to play wrongly. Found with `messung/tor.py`, which
+    # draws the script from the seed — so each has a script of its own.
+    for what, seed in (
+            ("gambler-right-before-a-swap", 1250),
+            ("philosopher-gambler-dies", 8725),
+            ("exorcist-names-the-heir", 1725),
+            ("drunk-becomes-the-fang-gu", 3375),
+            ("fortune-teller-herring-vortox", 450),
+            ("ravenkeeper-vortox", 6420),
+            ("undertaker-vortox", 1345),
+            ("chambermaid-beside-a-philosopher", 790),
+            # An Acrobat dead of its own pick: the page refused the row,
+            # and the JavaScript rule for it called a name that did not
+            # exist, so no board with one had ever been solved there.
+            ("acrobat-fell", 195)):
+        yield mixed(f"mixed-{what}", seed)
 
 
 

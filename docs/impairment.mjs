@@ -119,13 +119,17 @@ export const aliveThrough = (world, state, seat, night) =>
  * Drunk is not a piece of luck, it is what they are. Elsewhere the
  * Marionette and the Lunatic are the same story.
  */
-sourceRule(function alwaysImpaired(world) {
+sourceRule(function alwaysImpaired(world, state, night) {
   // Holding a token *is* being a believer, and the tokens are already on
   // the world — so this is a scan rather than a character lookup per
   // seat per night.
   const seats = new Set();
   world.believes.forEach((token, seat) => {
-    if (token !== null && token !== undefined) seats.add(seat);
+    // Until the seat's character changes: a Drunk a Fang Gu jumped into
+    // is the Fang Gu and kills like one (07.10.2026).
+    if (token !== null && token !== undefined
+        && world.roleAt(seat, `N${night}`) === world.roles[seat])
+      seats.add(seat);
   });
   if (!seats.size) return [];
   return [new Source("believer", seats,

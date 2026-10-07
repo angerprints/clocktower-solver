@@ -738,8 +738,14 @@ export const Noble = define("Noble", "Noble",
 export const Acrobat = define("Acrobat", "Acrobat",
   function (w) { return true; });          // the walk judges the death
 
+// Kept, not weighed — and said so, as Python always has. Without it a
+// Vortox reached the row: `holds` answers yes to everything, a yes is a
+// true reading, and every world with a working Vortox beside a
+// Balloonist was thrown out here and kept there (found by the first
+// mixed board in the corpus, 07.10.2026).
 export const Balloonist = define("Balloonist", "Balloonist",
-  function (w) { return true; });          // the chain is judged as a whole
+  function (w) { return true; },           // the chain is judged as a whole
+  {weighed: () => false});
 
 export const Alsaahir = define("Alsaahir", "Alsaahir",
   function (w) {
@@ -1056,8 +1062,10 @@ export const GrandmotherInfo = define("GrandmotherInfo", "Grandmother",
 export const GamblerGuess = define("GamblerGuess", "Gambler",
   function (w, s, _rh, seat = null) {
     const who = seat === null ? this.player : seat;
-    const right = registersAsRole(w.roleAt(this.target, `N${this.night}`),
-                                  this.role);
+    // What the seat held when the guess was made: the Gambler is tenth in
+    // the night, ahead of everything that moves a character (07.10.2026).
+    const right = registersAsRole(
+      w.roleAt(this.target, `D${this.night - 1}`), this.role);
     // Dead by morning is not the same as guessed wrong: it guesses before
     // the Demon acts, so one that guessed right can be killed all the
     // same. What killed it is the night's business — the guess is only
@@ -1138,6 +1146,13 @@ export const SlayerShot = define("SlayerShot", "Slayer",
 export const ChambermaidInfo = define("ChambermaidInfo", "Chambermaid",
   function (w, s) {
     return possibleCounts(w, s, [this.a, this.b], this.night).has(this.count);
+  }, {
+    // Whether the number *has* to be right. Inside a range of two it may
+    // still be the wrong one, which is what a Vortox needs (07.10.2026).
+    isTrue(w, s) {
+      const could = possibleCounts(w, s, [this.a, this.b], this.night);
+      return could.size === 1 && could.has(this.count);
+    },
   });
 
 

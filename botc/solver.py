@@ -1980,21 +1980,50 @@ def a_gambler_may_lose(world, state, night):
     if not _in_bag(state, "Gambler") or night < 2:
         return []
     phase = f"N{night}"
-    seat = _whoever_works(world, state, "Gambler", phase)
-    if seat is None or seat not in state.alive_set(phase):
-        return []
+    began = f"D{night - 1}"
+    # Whoever held it as the night began: it guesses tenth, and a Gambler
+    # that guessed wrong and died was then made the Mathematician by a
+    # Pit-Hag at sixteen — the night ended with no Gambler on the board
+    # and a death nothing accounted for (07.10.2026).
+    #
+    # And *everybody* who has the ability, not the first seat found. A
+    # Philosopher that took the Gambler stands beside the real one, drunk
+    # and harmless; looking only at the seat holding the character found
+    # that one, and the Philosopher's wrong guess killed nobody
+    # (07.10.2026, the same sweep).
+    holders = []
+    for at in (began, phase):
+        seat = world.find_at("Gambler", at)
+        if seat is not None and seat not in holders:
+            holders.append(seat)
+    for who, (taken, since) in sorted((state.philosophies() or {}).items()):
+        if taken == "Gambler" and who not in holders \
+                and world.role_at(who, began) == "Philosopher" \
+                and phase_index(phase) >= phase_index(since):
+            holders.append(who)
     guesses = [info for info in state.infos
                if getattr(info, "source_role", None) == "Gambler"
                and info.night == night]
-    if not guesses:
-        return []                         # no guess recorded, no risk
-    # And a guess that was right kills nobody. Then a Gambler dead by
-    # morning went some other way, and that way has to be found.
-    if all(world.role_at(info.target, phase) == info.role
-           for info in guesses):
-        return []
-    return [death_causes.Cause(name="Gambler", kind=death_causes.OTHER,
-                               seats=frozenset({seat}), capacity=1)]
+    causes = []
+    for seat in holders:
+        if seat not in state.alive_set(phase):
+            continue
+        # Its own guess where the row says whose it was; a guess relayed
+        # by somebody who has no such ability could be anybody's.
+        mine = [g for g in guesses if g.player == seat] \
+            or [g for g in guesses if g.player not in holders]
+        if not mine:
+            continue                      # no guess recorded, no risk
+        # And a guess that was right kills nobody. Then a Gambler dead by
+        # morning went some other way, and that way has to be found.
+        # Judged as the guess was made, before anything moved tonight —
+        # see `GamblerGuess.holds`.
+        if all(world.role_at(g.target, began) == g.role for g in mine):
+            continue
+        causes.append(death_causes.Cause(
+            name="Gambler", kind=death_causes.OTHER,
+            seats=frozenset({seat}), capacity=1))
+    return causes
 
 
 @death_causes.implication_rule
@@ -2206,7 +2235,17 @@ def an_exorcist_sends_the_demon_to_bed(world, state, night, seat, kind):
     # from a silent night, and it cannot be drawn while the choice is a
     # secret — which is why the row is worth having.
     picked = _chosen(state, "Exorcist", night, by=exorcist)
-    if picked is not None and world.demon_at(phase) not in picked:
+    # The Demon as the Exorcist's turn came, at 21 — before any Demon
+    # acts. One that died tonight handed the star on *after* that: a
+    # Fang Gu jumping, an Imp killing itself. The night is one moment
+    # here, so the Outsider the Fang Gu was about to jump into read as
+    # the Demon the Exorcist had named, the kill that followed as
+    # impossible, and the game was lost (07.10.2026).
+    demon = world.demon_at(phase)
+    began = world.demon_at(f"D{night - 1}")
+    if began is not None and began != demon and phase in state.died_at(began):
+        demon = began
+    if picked is not None and demon not in picked:
         return []
     # And it cuts the other way. Named and written down, the Demon does
     # not act tonight — so a Demon kill on that night says the Exorcist
@@ -2706,9 +2745,10 @@ SPENT = "spent"        # the ability had already been used, so it says nothing
 def rh_for(info):
     """The red herring to use while checking a Vortox'd reading.
 
-    None: a Fortune Teller under a Vortox is handled here rather than in
-    the herring search, because what is being asked is only "did this
-    come out false", and the herring cannot make a false answer true.
+    None, for every row but the Fortune Teller's, which no longer comes
+    here: its answer under a Vortox is settled in the herring search
+    with the others, because the herring *can* make an answer false —
+    a no on the pair it sits in (07.10.2026).
     """
     return None
 
@@ -3021,6 +3061,18 @@ def _plain_failures(world, state, outcome=None):
             outcome[idx] = HELD
             continue
 
+        if held is INVERTED and isinstance(info, FortuneTeller):
+            # Whether it came out false depends on the red herring, like
+            # everything else about a Fortune Teller. Chosen with the
+            # herring in the pair, the true answer is yes and a Vortox
+            # makes it no — and a no on two players of whom neither is
+            # the Demon was read here as true, with no herring to say
+            # otherwise, so the Vortox had to be off and the true world
+            # of nine mixed games in three thousand was thrown out
+            # (07.10.2026). Settled with the herring, below.
+            ft_infos.append((info, seat, idx, vortox))
+            continue
+
         if held is INVERTED:
             # It had to come out false. A reading that is *true* means
             # the Vortox itself was not working that night, which the
@@ -3076,7 +3128,7 @@ def _plain_failures(world, state, outcome=None):
         if isinstance(info, FortuneTeller):
             # Whether it held depends on where the red herring was, which
             # is settled later. Left open until then.
-            ft_infos.append((info, seat, idx))
+            ft_infos.append((info, seat, idx, None))
         elif witnessed and not info.holds(world, state, None, seat):
             # Nothing excuses it. A droisoned source does not tell the
             # other player something false — it tells them nothing, they
@@ -4120,14 +4172,14 @@ def _explain(world, state, outcome=None):
         return None
     if not ft_infos:
         return ceiling
-    for _info, _src, idx in ft_infos:
+    for _info, _src, idx, _vortox in ft_infos:
         if outcome is not None:
             outcome[idx] = HELD           # replaced below if a herring is used
 
     # The herring only matters when it sits in one of the pairs the
     # Fortune Teller asked about, so those are the only seats worth
     # trying - plus one uninvolved seat to stand for "somewhere else".
-    asked = {x for info, _src, _i in ft_infos for x in (info.a, info.b)}
+    asked = {x for info, *_rest in ft_infos for x in (info.a, info.b)}
     herrings = [p for p in asked if not is_evil(world.roles[p])]
     for p in range(state.n_players):
         if p not in asked and not is_evil(world.roles[p]):
@@ -4138,8 +4190,14 @@ def _explain(world, state, outcome=None):
     for rh in herrings:
         combined = {night: set(seats) for night, seats in failures.items()}
         marks = {}
-        for info, src, idx in ft_infos:
-            if info.holds(world, state, rh, src):
+        for info, src, idx, vortox in ft_infos:
+            fits = info.holds(world, state, rh, src)
+            if vortox is not None:
+                # Under a Vortox it is the other way about: an answer
+                # that fits was true, and then the Vortox was not
+                # working. The seat's own droisoning excuses nothing.
+                fits, src = not fits, vortox
+            if fits:
                 marks[idx] = HELD
             else:
                 combined.setdefault(info.night, set()).add(src)

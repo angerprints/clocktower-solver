@@ -60,6 +60,7 @@ class Deal:
         # {seat: the character a Philosopher took}. Not a change of
         # character, so it cannot live in `changes`.
         self.philosophies = {}
+        self.poisoned_by = {}
         self.side_changes = []              # [(phase, seat, role, side)]
         # State a Demon carries between nights. A Pukka's poison kills on
         # the night after it lands; a Po that took nobody takes three the
@@ -227,6 +228,21 @@ class Deal:
     def apparent(self, seat):
         """The character this seat believes they are."""
         return self.believes[seat] or self.roles[seat]
+
+    def token(self, seat, phase):
+        """The wrong token this seat is still living by at this phase.
+
+        Until its character changes. A Drunk a Fang Gu jumped into *is*
+        the Fang Gu, is told so and kills like one; it was droisoned for
+        the rest of the game because the token was read off the deal,
+        so the new Demon never killed and the solver could not say why
+        the nights had gone quiet (07.10.2026).
+        """
+        if self.believes[seat] is None:
+            return None
+        if self.role_at(seat, phase) != self.roles[seat]:
+            return None
+        return self.believes[seat]
 
     def seat_of(self, role):
         return self.roles.index(role) if role in self.roles else None
@@ -449,13 +465,25 @@ def deal(n, rng, script=None):
         else:
             changer = None
 
+    # "One at most" has to hold on both teams. With a Baron chosen the
+    # Demon was drawn from all of them, so a mixed script could put a
+    # Fang Gu beside it in a bag counted for the Baron alone — one
+    # Outsider short, and no legal world at all (07.10.2026). No
+    # published script has a changer on each team, so nothing they deal
+    # moves: the lists below are the whole lists there.
+    plain_minions = [m for m in minions if m not in ("Baron", "Godfather")]
+    plain_demons = [d for d in demons if d not in ("FangGu", "Vigormortis")]
     if changer in ("Baron", "Godfather"):
-        rest = [m for m in minions if m != changer]
+        rest = [m for m in plain_minions]
+        if len(rest) < mi - 1:
+            rest = [m for m in minions if m != changer]
         picked_minions = [changer] + rng.sample(rest, mi - 1)
-        picked_demons = list(rng.sample(demons, de))
+        picked_demons = list(rng.sample(
+            plain_demons if len(plain_demons) >= de else demons, de))
     elif changer in ("FangGu", "Vigormortis"):
-        picked_minions = rng.sample(minions, mi)
-        rest = [d for d in demons if d not in ("FangGu", "Vigormortis")]
+        picked_minions = rng.sample(
+            plain_minions if len(plain_minions) >= mi else minions, mi)
+        rest = plain_demons
         picked_demons = [changer] + list(rng.sample(rest, de - 1))
     else:
         # A setup changer that is not chosen must stay out of the bag:
@@ -569,9 +597,21 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # promoted to Imp went on poisoning as well as killing — and the
         # solver rightly called those boards impossible, because a Demon
         # poisons nobody.
+        #
+        # And whoever holds the character *tonight* is the one poisoning
+        # — the same thing said properly. On a mixed script a Pit-Hag
+        # unmakes a Poisoner and makes one, and the dealt seat went on
+        # poisoning as a Philosopher while the new one never did
+        # (07.10.2026). Nothing a published script deals moves by this:
+        # the only way out of the character there is the star.
+        if poisoner is not None or "Poisoner" in script.keys:
+            poisoner = next((p for p in living
+                             if d.role_at(p, f"N{night}") == "Poisoner"),
+                            None)
         if (poisoner is not None and poisoner in living
                 and d.demon_at(f"N{night}") != poisoner):
             d.poisoned[night] = rng.choice(living)
+            d.poisoned_by[night] = poisoner
 
         # A Pukka's token carries into the night: whoever it poisoned
         # stays poisoned until the Pukka has had its turn.
@@ -2226,11 +2266,23 @@ def _conditionally_woke(d, seat, role, night):
         # at its first chance: the first night, and the first night after
         # it has come back.
         return (seat, night) in d.courtier_nights
-    if role in ("Philosopher", "Sage", "Klutz", "Juggler",
-                "Seamstress", "Artist", "Savant"):
-        # Once-a-game characters: they woke on the night they used it,
-        # which the simulator records by having produced a row.
-        return False
+    # Once-a-game characters woke on the night they used it. This said
+    # so and then answered "no" for every one of them on every night, so
+    # a Chambermaid beside a Seamstress on the first night counted one
+    # too few (07.10.2026). When each uses it is this simulator's habit,
+    # and the same nights `_for_role` hands out their rows.
+    if role == "Seamstress":
+        return night == 1
+    if role == "Juggler":
+        return night == 2                 # answered after the first day
+    if role == "Sage":
+        return d.deaths.get(seat) == f"N{night}"
+    if role == "Philosopher":
+        # Only reached before it has chosen; after that the caller asks
+        # about the character it took.
+        return night == 1 and seat in d.philosophies
+    if role in ("Klutz", "Artist", "Savant"):
+        return False                      # by day, which is not waking
     if role == "Assassin":
         return False                      # once, and the row would say
     if role == "Nightwatchman":
@@ -2275,11 +2327,12 @@ def _droisoned_info(d, seat, night, rng):
     """
     if d.deaths.get(seat) is not None and _died_before(d, seat, night):
         return None
-    apparent = d.apparent(seat)
-    if apparent == d.roles[seat] and d.believes[seat] is None:
-        # Poisoned rather than drunk: it is still its own character and
-        # wakes on its own schedule.
-        apparent = d.roles[seat]
+    # The token while it lasts, and otherwise what the seat holds
+    # *tonight*: poisoned rather than drunk, it is still its own
+    # character and wakes on its own schedule. Read off the deal, a seat
+    # a Snake Charmer had swapped went on hearing answers for the
+    # character it had given away (07.10.2026).
+    apparent = d.token(seat, f"N{night}") or d.role_at(seat, f"N{night}")
     made = _for_role(d, seat, apparent, night, rng)
     if made is None:
         return None
@@ -2292,7 +2345,7 @@ def _droisoned_info(d, seat, night, rng):
     # solver was taught to allow it rather than the simulator to stop
     # (both corrected 02.10.2026).
     false = rng.random() < 0.75
-    if (d.believes[seat] is None
+    if (d.token(seat, f"N{night}") is None
             and TEAM[d.role_at(seat, f"N{night}")] == "townsfolk"
             and _vortox_working(d, night)
             and not getattr(made, "is_a_choice", False)):
@@ -2333,7 +2386,7 @@ def _in_night_order(d, night):
 
     def slot(seat):
         held = d.role_at(seat, f"N{night}")
-        what = d.believes[seat] or held
+        what = d.token(seat, f"N{night}") or held
         # A Lunatic is woken before the real Demon, at its own slot,
         # whatever Demon it thinks it is.
         if held == "Lunatic":
@@ -2549,11 +2602,18 @@ def droisoned_at(d, night, by_day=False):
 
     # Handed the wrong token: wrong every night of the game.
     for p in range(d.n):
-        if d.believes[p] is not None:
+        if d.token(p, phase) is not None:
             out.add(p)
 
+    # While the seat that did it is still the Poisoner. Made something
+    # else by a Pit-Hag later the same night, its poison is gone with
+    # the ability, and a Mathematician asked after that is sober — the
+    # solver, which sees no Poisoner that night, already said so
+    # (07.10.2026).
     if d.poisoned.get(night) is not None:
-        out.add(d.poisoned[night])
+        by = getattr(d, "poisoned_by", {}).get(night)
+        if by is None or d.role_at(by, phase) == "Poisoner":
+            out.add(d.poisoned[night])
 
     # Whoever chose the Goon first tonight is drunk until dusk — from
     # that moment, so its own choice already fails. Before the Sailor and
@@ -2788,7 +2848,7 @@ def _make_false(d, info, night, rng):
             setattr(info, field, not getattr(info, field))
             return info
 
-    if kind == "Undertaker" and getattr(info, "role", None):
+    if kind in ("Undertaker", "Ravenkeeper") and getattr(info, "role", None):
         # A Vortox makes it name the wrong character.
         #
         # There was no case for a row that carries a *role*, so an
@@ -2797,10 +2857,23 @@ def _make_false(d, info, night, rng):
         # was working the ability, which is why it looked like a
         # Philosopher problem — it is not, a plain Undertaker was always
         # wrong here too.
-        wrong = [k for k in d.script.keys if k != info.role]
+        #
+        # Twice mended (07.10.2026). The case rebuilt the row from night,
+        # player and character and so dropped `target`: every falsified
+        # Undertaker was speaking of seat 0, executed or not. And the
+        # Ravenkeeper had no case at all — no script the sweep knew put
+        # one beside a Vortox, and the mixed ones do.
+        #
+        # Wrong means: not what the seat really was. What it could
+        # register as is beside the point — showing a Spy as the Mayor is
+        # legal and still false.
+        when = f"E{night - 1}" if kind == "Undertaker" else f"N{night}"
+        real = d.role_at(info.target, when)
+        wrong = [k for k in d.script.keys if k != real]
         if not wrong:
             return None
-        return type(info)(info.night, info.player, role=rng.choice(wrong))
+        info.role = rng.choice(wrong)
+        return info
 
     if kind == "NobleInfo":
         # A Vortox makes it false, and false here means the three shown
@@ -2935,7 +3008,9 @@ def _make_false(d, info, night, rng):
         pool = {"Washerwoman": d.script.townsfolk,
                 "Librarian": d.script.outsiders,
                 "Investigator": d.script.minions}[kind]
-        spare = [k for k in pool if k not in (d.roles[info.a], d.roles[info.b])]
+        spare = [k for k in pool
+                 if k not in (d.role_at(info.a, f"N{night}"),
+                              d.role_at(info.b, f"N{night}"))]
         if not spare:
             return None
         info.role = rng.choice(spare)
@@ -2973,15 +3048,17 @@ def _for_role(d, seat, role, night, rng):
                               lambda p: TEAM[d.role_at(p, here)] == "minion",
                               team="minion")
         if role == "Librarian":
-            outsiders = [p for p in range(d.n) if TEAM[d.roles[p]] == "outsider"]
+            outsiders = [p for p in range(d.n)
+                         if TEAM[d.role_at(p, here)] == "outsider"]
             if not outsiders:
                 return Librarian(1, seat, a=None, b=None, role="")
             return _pair_info(d, seat, night, rng, Librarian,
-                              lambda p: TEAM[d.roles[p]] == "outsider",
+                              lambda p: TEAM[d.role_at(p, here)] == "outsider",
                               team="outsider")
         if role == "Chef":
             pairs = sum(1 for i in range(d.n)
-                        if is_evil(d.roles[i]) and is_evil(d.roles[(i + 1) % d.n]))
+                        if d.side_at(i, here) == "evil"
+                        and d.side_at((i + 1) % d.n, here) == "evil")
             return Chef(1, seat, count=pairs)
 
     if role == "Noble" and night == 1:
@@ -3166,7 +3243,8 @@ def _for_role(d, seat, role, night, rng):
         # likes, so a Fortune Teller can ping on one — which is the whole
         # reason a Recluse is a nuisance to its own team, and something
         # the simulator never produced.
-        recluse = [p for p in (a, b) if d.roles[p] == "Recluse"]
+        recluse = [p for p in (a, b)
+                   if d.role_at(p, f"N{night}") == "Recluse"]
         yes = (demon in (a, b) or d.red_herring in (a, b)
                or (bool(recluse) and rng.random() < 0.35))
         return FortuneTeller(night, seat, a=a, b=b, yes=yes)
@@ -3557,7 +3635,18 @@ def _for_role(d, seat, role, night, rng):
         #     for other tables; this Storyteller is the table's own.
         woke = 0
         for p in (a, b):
-            what = d.apparent(p)             # a Drunk wakes on its token
+            # A Drunk wakes on its token, and everybody else on what they
+            # hold *tonight*. This read the deal, so a seat a Snake Charmer
+            # or a Pit-Hag had moved was counted on the schedule of a
+            # character it no longer was (tenth place the deal has been
+            # mistaken for the timeline, 07.10.2026).
+            what = d.token(p, f"N{night}") or d.role_at(p, f"N{night}")
+            # A Philosopher that has taken an ability wakes when that
+            # character would — settled at the table, and what the night
+            # order above has done since 29.09. Here it fell through to
+            # "once a game, so not tonight" and never woke again.
+            if what == "Philosopher" and p in d.philosophies and night > 1:
+                what = d.philosophies[p]
             # A Lunatic lives the night of the Demon it thinks it is —
             # here always the real one — and choosing who it thinks it
             # kills counts (table ruling, 02.10.2026).
@@ -3799,7 +3888,7 @@ def _registers_as(role, team):
     return TEAM[role] == team or team in CHARACTERS[role].registers
 
 
-def _shown_as(d, seat, team, rng):
+def _shown_as(d, seat, team, rng, night=1):
     """A character the Storyteller could show this seat as, for that team.
 
     A Recluse shown to an Investigator is not shown *as the Recluse* — it
@@ -3809,7 +3898,7 @@ def _shown_as(d, seat, team, rng):
     ever names Minions.
     """
     from botc.catalogue import CHARACTERS
-    role = d.roles[seat]
+    role = d.role_at(seat, f"N{night}")
     if TEAM[role] == team:
         return role
     # Misregistering. Pick something of the right team that is not
@@ -3817,7 +3906,8 @@ def _shown_as(d, seat, team, rng):
     # somebody else really holds is asking to be caught.
     pool = {"townsfolk": TOWNSFOLK, "outsider": OUTSIDERS,
             "minion": MINIONS, "demon": DEMONS}[team]
-    spare = [k for k in pool if k not in d.roles]
+    held = {d.role_at(p, f"N{night}") for p in range(d.n)}
+    spare = [k for k in pool if k not in held]
     return rng.choice(spare or pool)
 
 
@@ -3965,7 +4055,7 @@ def _pair_info(d, seat, night, rng, cls, matches, team=None,
     if team is not None:
         liars = [p for p in range(d.n)
                  if p != seat and p not in honest
-                 and _registers_as(d.roles[p], team)]
+                 and _registers_as(d.role_at(p, f"N{night}"), team)]
 
     # Prefer the truth, but take the lie often enough to matter.
     if liars and (not honest or rng.random() < misregister):
@@ -3979,7 +4069,11 @@ def _pair_info(d, seat, night, rng, cls, matches, team=None,
     if not others:
         return None
     a, b = sorted([shown, rng.choice(others)])
-    role = d.roles[shown] if team is None else _shown_as(d, shown, team, rng)
+    # What the seat holds tonight. This read the deal, and a Washerwoman
+    # at slot 33 was shown the character a seat had held before the
+    # Snake Charmer at 20 swapped it away (07.10.2026).
+    role = (d.role_at(shown, f"N{night}") if team is None
+            else _shown_as(d, shown, team, rng, night))
     return cls(night, seat, a=a, b=b, role=role)
 
 

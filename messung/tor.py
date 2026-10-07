@@ -103,7 +103,11 @@ for seed in range(start, start + N):
         if NEW and cost([r for r in heard if not is_new(r)]) is not None:
             lost_to_new.append(seed)
 
-    played = min(nights, deal.game_ends_after or nights)
+    # How far the game really got. `game_ends_after` is only set when
+    # evil wins; an Alsaahir guessing right ends it too, and this then
+    # walked nights nobody had played and counted every choosing
+    # character on the board as untold (corrected 07.10.2026).
+    played = deal.nights_played
     vortox = "Vortox" in deal.roles or any(
         became == "Vortox" for _at, _who, became in deal.changes)
     for night in range(1, played + 1):

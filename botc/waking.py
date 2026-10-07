@@ -150,8 +150,19 @@ def _philosopher(world, state, seat, night):
     took = (state.philosophies() or {}).get(seat)
     if took:
         taken, since = took
-        if phase_index(f"N{night}") < phase_index(since):
-            return True               # the night it chose
+        # `<` until 07.10.2026, which made the comment a lie: on the
+        # night it chose it was asked whether the *taken* character
+        # wakes, and one that took the Saint had not woken at all.
+        if phase_index(f"N{night}") <= phase_index(since):
+            return True               # up to and on the night it chose
+        # Nothing to wake for, if what it took is no ability of its own:
+        # a Lunatic's nights are the Demon's it thinks it is, and a
+        # Philosopher thinks nothing of the kind. Asked anyway, the
+        # Lunatic's rule asked whose night this seat was living, heard
+        # "a Philosopher's", and the two called each other until the
+        # stack ran out (found on the 3,265th mixed game, 07.10.2026).
+        if taken == "Philosopher" or CHARACTERS[taken].believes:
+            return False
         return woke_as(world, state, seat, night, taken)
     return True
 

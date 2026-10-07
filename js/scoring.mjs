@@ -1020,6 +1020,15 @@ function plainFailures(world, state, outcome = {}) {
       return;
     }
 
+    if (held === INVERTED && info.type === "FortuneTeller") {
+      // Whether it came out false depends on the red herring: chosen
+      // with the herring in the pair the true answer is yes, and a
+      // Vortox makes it no. Read without a herring that no looked true
+      // (07.10.2026). Settled with the herring, below.
+      ftInfos.push([info, seat, idx, vortox]);
+      return;
+    }
+
     if (held === INVERTED) {
       // It had to come out false. A reading that is *true* means the
       // Vortox itself was not working that night, which the plan can pay
@@ -1057,7 +1066,7 @@ function plainFailures(world, state, outcome = {}) {
     if (info.type === "FortuneTeller") {
       // Whether it held depends on where the red herring was, which is
       // settled later. Left open until then.
-      ftInfos.push([info, seat, idx]);
+      ftInfos.push([info, seat, idx, null]);
     } else if (witnessed && !info.holds(world, state, null, seat)) {
       // Nothing excuses it: a droisoned source tells the other player
       // nothing at all, so the words did not come from the game.
@@ -1465,8 +1474,13 @@ function explainOne(world, state, outcome = null) {
     for (const [n, seats] of Object.entries(failures))
       combined[n] = new Set(seats);
     const marks = {};
-    for (const [info, src, idx] of ftInfos) {
-      if (info.holds(world, state, rh, src)) marks[idx] = HELD;
+    for (const [info, source, idx, vortox] of ftInfos) {
+      let fits = info.holds(world, state, rh, source);
+      let src = source;
+      // Under a Vortox the other way about: an answer that fits was
+      // true, and then the Vortox was not working.
+      if (vortox !== null) { fits = !fits; src = vortox; }
+      if (fits) marks[idx] = HELD;
       else {
         combined[info.night] = combined[info.night] || new Set();
         combined[info.night].add(src);

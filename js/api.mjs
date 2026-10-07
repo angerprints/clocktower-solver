@@ -291,6 +291,8 @@ export function readBoard(payload) {
                          "InnkeeperChoice", "SailorChoice", "ExorcistChoice",
                          "PhilosopherChoice", "CourtierChoice",
                          "CerenovusMadness",
+                         // Dead *because* it picked, like the Gambler.
+                         "Acrobat",
                          // Woken late, and "choose a player" means any.
                          "NightwatchmanSeen"];
     const speaker = Number(row.player || 0);

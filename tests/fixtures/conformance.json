@@ -19344,13 +19344,11 @@
        2,
        3
       ],
-      "nominated": [
-       3
-      ]
+      "nominated": []
      },
      {
       "name": "",
-      "claim": "Mathematician",
+      "claim": "Clockmaker",
       "events": [
        "N3"
       ],
@@ -30199,6 +30197,2383 @@
    }
   },
   {
+   "name": "mixed-gambler-right-before-a-swap",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Librarian",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Fool",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 4,
+      "target": 0,
+      "swapped": false
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 2,
+      "a": null,
+      "b": null,
+      "role": ""
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 6,
+      "a": 0,
+      "b": 5,
+      "yes": true
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 2,
+      "player": 0,
+      "target": 1,
+      "role": "Assassin"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 4,
+      "target": 0,
+      "swapped": false
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 3,
+      "player": 0,
+      "target": 4,
+      "role": "SnakeCharmer"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 4,
+      "target": 5,
+      "swapped": true
+     }
+    ],
+    "script": {
+     "name": "Mixed 1250",
+     "characters": [
+      "poisoner",
+      "philosopher",
+      "snakecharmer",
+      "clockmaker",
+      "flowergirl",
+      "mathematician",
+      "mayor",
+      "fool",
+      "exorcist",
+      "librarian",
+      "gambler",
+      "ravenkeeper",
+      "fortuneteller",
+      "tealady",
+      "klutz",
+      "tinker",
+      "barber",
+      "mutant",
+      "assassin",
+      "spy",
+      "scarletwoman",
+      "po",
+      "pukka",
+      "shabaloth",
+      "nodashii"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 246,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 24.5831,
+      "demon_pct": 7.3529,
+      "drunk_pct": 0.0,
+      "lying_pct": 4.0542
+     },
+     {
+      "evil_pct": 53.2911,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 53.2911
+     },
+     {
+      "evil_pct": 0.7568,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.7568
+     },
+     {
+      "evil_pct": 4.3118,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 4.3118
+     },
+     {
+      "evil_pct": 99.5727,
+      "demon_pct": 92.6471,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.1219
+     },
+     {
+      "evil_pct": 1.1096,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 64.7622
+     },
+     {
+      "evil_pct": 16.3748,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.3748
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 0.9358,
+       "Assassin": 0.0642
+      }
+     },
+     "3": {
+      "3": {
+       "Demon": 0.9802,
+       "Assassin": 0.0198
+      },
+      "5": {
+       "Demon": 0.9802,
+       "Assassin": 0.0198
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "mixed-philosopher-gambler-dies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Knight",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 1,
+      "target": 4,
+      "swapped": false
+     },
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 6,
+      "role": "Gambler"
+     },
+     {
+      "type": "Washerwoman",
+      "night": 1,
+      "player": 2,
+      "a": 1,
+      "b": 6,
+      "role": "Philosopher"
+     },
+     {
+      "type": "KnightInfo",
+      "night": 1,
+      "player": 0,
+      "a": 1,
+      "b": 4
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 2,
+      "player": 6,
+      "target": 0,
+      "role": "Courtier"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 1,
+      "target": 6,
+      "swapped": false
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 1,
+      "target": 3,
+      "swapped": true
+     }
+    ],
+    "script": {
+     "name": "Mixed 8725",
+     "characters": [
+      "poisoner",
+      "snakecharmer",
+      "philosopher",
+      "grandmother",
+      "pacifist",
+      "washerwoman",
+      "gambler",
+      "tealady",
+      "monk",
+      "seamstress",
+      "mayor",
+      "knight",
+      "empath",
+      "courtier",
+      "butler",
+      "klutz",
+      "drunk",
+      "lunatic",
+      "scarletwoman",
+      "pithag",
+      "mastermind",
+      "shabaloth",
+      "po",
+      "pukka",
+      "imp"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 426,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 43.8738,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.8738
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 98.0207,
+      "drunk_pct": 0.0,
+      "lying_pct": 5.9138
+     },
+     {
+      "evil_pct": 42.1254,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.1254
+     },
+     {
+      "evil_pct": 2.1525,
+      "demon_pct": 1.9793,
+      "drunk_pct": 0.0,
+      "lying_pct": 96.2386
+     },
+     {
+      "evil_pct": 1.2976,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.9755
+     },
+     {
+      "evil_pct": 10.5314,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.5314
+     },
+     {
+      "evil_pct": 0.0194,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0194
+     }
+    ],
+    "blame": {
+     "2": {
+      "4": {
+       "Demon": 1.0
+      },
+      "6": {
+       "Demon": 0.125,
+       "Gambler": 0.875
+      }
+     },
+     "3": {
+      "5": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "mixed-exorcist-names-the-heir",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Fool",
+      "events": [
+       "S2",
+       "S3",
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Librarian",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Flowergirl",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Barber",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 4,
+      "a": 2,
+      "b": 6,
+      "role": "Saint"
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 3,
+      "player": 0,
+      "target": 2
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 4,
+      "player": 0,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Mixed 1725",
+     "characters": [
+      "pithag",
+      "snakecharmer",
+      "philosopher",
+      "king",
+      "washerwoman",
+      "chef",
+      "fortuneteller",
+      "slayer",
+      "librarian",
+      "flowergirl",
+      "mayor",
+      "fool",
+      "exorcist",
+      "innkeeper",
+      "drunk",
+      "moonchild",
+      "barber",
+      "saint",
+      "cerenovus",
+      "marionette",
+      "devilsadvocate",
+      "pukka",
+      "fanggu",
+      "vigormortis",
+      "nodashii"
+     ]
+    },
+    "quiet_nights": [
+     2
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 41,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 1.0217,
+      "demon_pct": 1.5171,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.0217
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 88.3142,
+      "demon_pct": 19.204,
+      "drunk_pct": 0.0,
+      "lying_pct": 74.6328
+     },
+     {
+      "evil_pct": 1.9955,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.9955
+     },
+     {
+      "evil_pct": 78.2248,
+      "demon_pct": 68.781,
+      "drunk_pct": 0.0,
+      "lying_pct": 70.2427
+     },
+     {
+      "evil_pct": 15.9642,
+      "demon_pct": 10.4979,
+      "drunk_pct": 0.0,
+      "lying_pct": 15.9642
+     },
+     {
+      "evil_pct": 36.143,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.143
+     }
+    ],
+    "blame": {
+     "4": {
+      "1": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "mixed-drunk-becomes-the-fang-gu",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Librarian",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Noble",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [
+       "S1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 4,
+      "role": "Courtier"
+     },
+     {
+      "type": "Washerwoman",
+      "night": 1,
+      "player": 3,
+      "a": 5,
+      "b": 6,
+      "role": "Courtier"
+     },
+     {
+      "type": "Noble",
+      "night": 1,
+      "player": 2,
+      "a": 6,
+      "b": 4,
+      "c": 2
+     },
+     {
+      "type": "CourtierChoice",
+      "night": 2,
+      "player": 4,
+      "role": "Baron"
+     },
+     {
+      "type": "MathematicianInfo",
+      "night": 2,
+      "player": 5,
+      "count": 1
+     },
+     {
+      "type": "MathematicianInfo",
+      "night": 3,
+      "player": 5,
+      "count": 0
+     }
+    ],
+    "script": {
+     "name": "Mixed 3375",
+     "characters": [
+      "pithag",
+      "philosopher",
+      "snakecharmer",
+      "courtier",
+      "undertaker",
+      "washerwoman",
+      "dreamer",
+      "chef",
+      "steward",
+      "towncrier",
+      "noble",
+      "librarian",
+      "mathematician",
+      "pacifist",
+      "tinker",
+      "butler",
+      "drunk",
+      "lunatic",
+      "assassin",
+      "witch",
+      "baron",
+      "vigormortis",
+      "zombuul",
+      "fanggu",
+      "vortox"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 482,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 92.4445,
+      "demon_pct": 79.9897,
+      "drunk_pct": 0.1296,
+      "lying_pct": 92.5
+     },
+     {
+      "evil_pct": 8.0672,
+      "demon_pct": 0.0,
+      "drunk_pct": 5.7713,
+      "lying_pct": 13.8385
+     },
+     {
+      "evil_pct": 60.0668,
+      "demon_pct": 0.002,
+      "drunk_pct": 11.2883,
+      "lying_pct": 65.719
+     },
+     {
+      "evil_pct": 20.0076,
+      "demon_pct": 20.0076,
+      "drunk_pct": 43.8081,
+      "lying_pct": 28.3807
+     },
+     {
+      "evil_pct": 1.2601,
+      "demon_pct": 0.0,
+      "drunk_pct": 7.2625,
+      "lying_pct": 1.2601
+     },
+     {
+      "evil_pct": 9.7654,
+      "demon_pct": 0.0,
+      "drunk_pct": 36.6157,
+      "lying_pct": 19.6563
+     },
+     {
+      "evil_pct": 28.5255,
+      "demon_pct": 0.0005,
+      "drunk_pct": 41.9432,
+      "lying_pct": 60.7403
+     }
+    ],
+    "blame": {
+     "2": {
+      "4": {
+       "Demon": 0.9696,
+       "Assassin": 0.0161,
+       "Tinker": 0.0143
+      }
+     },
+     "4": {
+      "5": {
+       "Demon": 0.9902,
+       "Assassin": 0.0098
+      }
+     },
+     "3": {
+      "6": {
+       "Demon": 0.9845,
+       "Assassin": 0.0155
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "mixed-fortune-teller-herring-vortox",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Librarian",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "first",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Monk",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 1,
+      "a": 3,
+      "b": 6,
+      "role": "Recluse"
+     },
+     {
+      "type": "Chef",
+      "night": 1,
+      "player": 4,
+      "count": 4
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 3,
+      "a": 4,
+      "b": 6,
+      "yes": false
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 1,
+      "player": 0,
+      "a": 1,
+      "b": 4,
+      "count": 0
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 2,
+      "player": 3,
+      "a": 6,
+      "b": 0,
+      "yes": false
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 0,
+      "a": 1,
+      "b": 6,
+      "count": 5
+     }
+    ],
+    "script": {
+     "name": "Mixed 450",
+     "characters": [
+      "poisoner",
+      "philosopher",
+      "snakecharmer",
+      "juggler",
+      "chef",
+      "monk",
+      "chambermaid",
+      "innkeeper",
+      "nightwatchman",
+      "librarian",
+      "soldier",
+      "sailor",
+      "fool",
+      "fortuneteller",
+      "moonchild",
+      "sweetheart",
+      "recluse",
+      "mutant",
+      "scarletwoman",
+      "spy",
+      "devilsadvocate",
+      "po",
+      "pukka",
+      "imp",
+      "vortox"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 14,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 23.4973,
+      "demon_pct": 23.4973,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 76.5027,
+      "demon_pct": 76.5027,
+      "drunk_pct": 0.0,
+      "lying_pct": 76.5027
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "1": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "mixed-ravenkeeper-vortox",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [
+       "S3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Balloonist",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Steward",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Ravenkeeper",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "Balloonist",
+      "night": 1,
+      "player": 1,
+      "target": 4
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 1,
+      "player": 5,
+      "a": 0,
+      "b": 4,
+      "count": 2
+     },
+     {
+      "type": "SavantInfo",
+      "night": 1,
+      "player": 2,
+      "first": "evil {'kind': 'evil', 'seat': 5}",
+      "second": "good {'kind': 'good', 'seat': 0}",
+      "first_says": {
+       "kind": "evil",
+       "seat": 5
+      },
+      "second_says": {
+       "kind": "good",
+       "seat": 0
+      }
+     },
+     {
+      "type": "PitHagChoice",
+      "night": 2,
+      "player": 0,
+      "target": 6,
+      "role": "DevilsAdvocate"
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 2,
+      "player": 6,
+      "target": 3
+     },
+     {
+      "type": "Ravenkeeper",
+      "night": 2,
+      "player": 4,
+      "target": 6,
+      "role": "FangGu"
+     },
+     {
+      "type": "Balloonist",
+      "night": 2,
+      "player": 1,
+      "target": 3
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 5,
+      "a": 1,
+      "b": 6,
+      "count": 5
+     }
+    ],
+    "script": {
+     "name": "Mixed 6420",
+     "characters": [
+      "pithag",
+      "snakecharmer",
+      "philosopher",
+      "exorcist",
+      "ravenkeeper",
+      "empath",
+      "mathematician",
+      "balloonist",
+      "steward",
+      "innkeeper",
+      "undertaker",
+      "savant",
+      "virgin",
+      "chambermaid",
+      "moonchild",
+      "recluse",
+      "saint",
+      "drunk",
+      "devilsadvocate",
+      "cerenovus",
+      "poisoner",
+      "nodashii",
+      "imp",
+      "fanggu",
+      "vortox"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 283,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 96.2989,
+      "demon_pct": 45.373,
+      "drunk_pct": 0.0,
+      "lying_pct": 96.13
+     },
+     {
+      "evil_pct": 0.0832,
+      "demon_pct": 0.0,
+      "drunk_pct": 14.8096,
+      "lying_pct": 0.0832
+     },
+     {
+      "evil_pct": 11.7349,
+      "demon_pct": 0.0,
+      "drunk_pct": 13.8626,
+      "lying_pct": 11.7349
+     },
+     {
+      "evil_pct": 81.9969,
+      "demon_pct": 54.4709,
+      "drunk_pct": 2.6307,
+      "lying_pct": 81.9932
+     },
+     {
+      "evil_pct": 1.0671,
+      "demon_pct": 0.0,
+      "drunk_pct": 22.1453,
+      "lying_pct": 1.0671
+     },
+     {
+      "evil_pct": 7.0007,
+      "demon_pct": 0.0,
+      "drunk_pct": 22.9481,
+      "lying_pct": 7.0007
+     },
+     {
+      "evil_pct": 1.9908,
+      "demon_pct": 0.1561,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.9908
+     }
+    ],
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "4": {
+       "Demon": 1.0
+      }
+     },
+     "4": {
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "mixed-undertaker-vortox",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Undertaker",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Gossip"
+     },
+     {
+      "type": "Balloonist",
+      "night": 1,
+      "player": 6,
+      "target": 4
+     },
+     {
+      "type": "SavantInfo",
+      "night": 1,
+      "player": 5,
+      "first": "outsiders {'kind': 'outsiders', 'count': 1}",
+      "second": "is {'kind': 'is', 'seat': 0, 'role': 'Exorcist'}",
+      "first_says": {
+       "kind": "outsiders",
+       "count": 1
+      },
+      "second_says": {
+       "kind": "is",
+       "seat": 0,
+       "role": "Exorcist"
+      }
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 2,
+      "player": 4,
+      "target": 2
+     },
+     {
+      "type": "Undertaker",
+      "night": 2,
+      "player": 3,
+      "target": 5,
+      "role": "Flowergirl"
+     },
+     {
+      "type": "Balloonist",
+      "night": 2,
+      "player": 6,
+      "target": 2
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 3,
+      "player": 4,
+      "target": 1
+     },
+     {
+      "type": "Balloonist",
+      "night": 3,
+      "player": 6,
+      "target": 5
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 4,
+      "player": 4,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Mixed 1345",
+     "characters": [
+      "poisoner",
+      "philosopher",
+      "snakecharmer",
+      "king",
+      "towncrier",
+      "undertaker",
+      "savant",
+      "exorcist",
+      "shugenja",
+      "balloonist",
+      "professor",
+      "minstrel",
+      "flowergirl",
+      "gossip",
+      "sweetheart",
+      "tinker",
+      "ogre",
+      "lunatic",
+      "witch",
+      "scarletwoman",
+      "devilsadvocate",
+      "pukka",
+      "vortox",
+      "fanggu",
+      "shabaloth"
+     ]
+    },
+    "quiet_nights": [
+     3
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 3065,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.8303,
+      "demon_pct": 0.0,
+      "drunk_pct": 11.5885,
+      "lying_pct": 12.4188
+     },
+     {
+      "evil_pct": 95.8289,
+      "demon_pct": 94.5481,
+      "drunk_pct": 0.9373,
+      "lying_pct": 96.7662
+     },
+     {
+      "evil_pct": 31.974,
+      "demon_pct": 0.0,
+      "drunk_pct": 24.404,
+      "lying_pct": 56.378
+     },
+     {
+      "evil_pct": 38.5915,
+      "demon_pct": 0.0,
+      "drunk_pct": 22.257,
+      "lying_pct": 60.8484
+     },
+     {
+      "evil_pct": 6.7325,
+      "demon_pct": 5.4519,
+      "drunk_pct": 1.0489,
+      "lying_pct": 7.7814
+     },
+     {
+      "evil_pct": 25.9638,
+      "demon_pct": 0.0,
+      "drunk_pct": 16.0599,
+      "lying_pct": 42.0237
+     },
+     {
+      "evil_pct": 0.2008,
+      "demon_pct": 0.0,
+      "drunk_pct": 2.1199,
+      "lying_pct": 0.0425
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
+     "4": {
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "mixed-chambermaid-beside-a-philosopher",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Mutant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Pacifist"
+     },
+     {
+      "type": "DreamerInfo",
+      "night": 1,
+      "player": 4,
+      "target": 5,
+      "good_role": "Minstrel",
+      "evil_role": "Vortox"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 2,
+      "count": 2
+     },
+     {
+      "type": "DreamerInfo",
+      "night": 2,
+      "player": 4,
+      "target": 3,
+      "good_role": "Chambermaid",
+      "evil_role": "Poisoner"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 3,
+      "a": 2,
+      "b": 4,
+      "count": 1
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 3,
+      "player": 3,
+      "a": 0,
+      "b": 6,
+      "count": 3
+     }
+    ],
+    "script": {
+     "name": "Mixed 790",
+     "characters": [
+      "marionette",
+      "philosopher",
+      "snakecharmer",
+      "fortuneteller",
+      "innkeeper",
+      "gossip",
+      "chambermaid",
+      "ravenkeeper",
+      "mayor",
+      "minstrel",
+      "investigator",
+      "clockmaker",
+      "dreamer",
+      "pacifist",
+      "mutant",
+      "sweetheart",
+      "drunk",
+      "goon",
+      "mastermind",
+      "poisoner",
+      "scarletwoman",
+      "shabaloth",
+      "pukka",
+      "vigormortis",
+      "vortox"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 208,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 93.8638,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 3.3561,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.777,
+      "lying_pct": 2.5792
+     },
+     {
+      "evil_pct": 18.773,
+      "demon_pct": 1.8809,
+      "drunk_pct": 0.0,
+      "lying_pct": 18.773
+     },
+     {
+      "evil_pct": 11.9514,
+      "demon_pct": 4.2553,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.4184
+     },
+     {
+      "evil_pct": 31.0854,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.0854
+     },
+     {
+      "evil_pct": 25.7658,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 25.7658
+     },
+     {
+      "evil_pct": 9.0682,
+      "demon_pct": 0.0,
+      "drunk_pct": 1.554,
+      "lying_pct": 7.5143
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.7239,
+       "Gossip": 0.2761
+      }
+     },
+     "3": {
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "mixed-acrobat-fell",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Acrobat",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "other",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 4,
+      "target": 2,
+      "swapped": false
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 5,
+      "a": 6,
+      "b": 0,
+      "yes": false
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 4,
+      "target": 1,
+      "swapped": true
+     },
+     {
+      "type": "Acrobat",
+      "night": 2,
+      "player": 3,
+      "target": 2
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 2,
+      "player": 5,
+      "a": 2,
+      "b": 4,
+      "yes": true
+     },
+     {
+      "type": "JugglerInfo",
+      "night": 2,
+      "player": 2,
+      "guesses": [
+       {
+        "player": 4,
+        "role": "Steward"
+       },
+       {
+        "player": 6,
+        "role": "Flowergirl"
+       },
+       {
+        "player": 1,
+        "role": "Acrobat"
+       },
+       {
+        "player": 3,
+        "role": "Acrobat"
+       },
+       {
+        "player": 0,
+        "role": "Mathematician"
+       }
+      ],
+      "count": 2
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 1,
+      "target": 4,
+      "swapped": false
+     }
+    ],
+    "script": {
+     "name": "Mixed 195",
+     "characters": [
+      "marionette",
+      "philosopher",
+      "snakecharmer",
+      "steward",
+      "acrobat",
+      "shugenja",
+      "farmer",
+      "juggler",
+      "fortuneteller",
+      "mathematician",
+      "minstrel",
+      "nightwatchman",
+      "flowergirl",
+      "towncrier",
+      "saint",
+      "drunk",
+      "goon",
+      "moonchild",
+      "assassin",
+      "scarletwoman",
+      "spy",
+      "shabaloth",
+      "zombuul",
+      "imp",
+      "po"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 45,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 2.9734,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.7434,
+      "lying_pct": 2.2301
+     },
+     {
+      "evil_pct": 0.6066,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 65.4149,
+      "demon_pct": 0.0,
+      "drunk_pct": 29.734,
+      "lying_pct": 35.6808
+     },
+     {
+      "evil_pct": 0.5278,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.5278
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.6066
+     },
+     {
+      "evil_pct": 0.7434,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.7434
+     },
+     {
+      "evil_pct": 29.734,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 29.734
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 0.9686,
+       "Assassin": 0.0314
+      },
+      "3": {
+       "Demon": 0.2599,
+       "Assassin": 0.0159,
+       "Acrobat": 0.7242
+      }
+     },
+     "3": {
+      "1": {
+       "Demon": 0.9988,
+       "Assassin": 0.0012
+      },
+      "5": {
+       "Demon": 0.9988,
+       "Assassin": 0.0012
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "random-00",
    "payload": {
     "n_players": 12,
@@ -40014,38 +42389,38 @@
     }
    },
    "expect": {
-    "valid": 141,
+    "valid": 150,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 35.8139,
-      "demon_pct": 21.1032,
-      "drunk_pct": 64.1861,
-      "lying_pct": 35.8139
+      "evil_pct": 36.4675,
+      "demon_pct": 21.8558,
+      "drunk_pct": 63.5325,
+      "lying_pct": 35.5
      },
      {
-      "evil_pct": 29.0629,
+      "evil_pct": 28.767,
       "demon_pct": 0.0,
-      "drunk_pct": 2.4119,
-      "lying_pct": 31.4748
+      "drunk_pct": 2.3873,
+      "lying_pct": 31.1543
      },
      {
-      "evil_pct": 77.0233,
-      "demon_pct": 49.508,
-      "drunk_pct": 3.1816,
-      "lying_pct": 79.7162
+      "evil_pct": 77.2573,
+      "demon_pct": 49.0547,
+      "drunk_pct": 3.1492,
+      "lying_pct": 79.9228
      },
      {
-      "evil_pct": 3.395,
+      "evil_pct": 4.3787,
       "demon_pct": 0.0,
-      "drunk_pct": 2.5658,
-      "lying_pct": 5.9608
+      "drunk_pct": 2.5397,
+      "lying_pct": 6.9184
      },
      {
-      "evil_pct": 55.1935,
-      "demon_pct": 29.3888,
-      "drunk_pct": 2.2408,
-      "lying_pct": 57.4343
+      "evil_pct": 54.6315,
+      "demon_pct": 29.0895,
+      "drunk_pct": 2.218,
+      "lying_pct": 56.8495
      }
     ],
     "blame": {

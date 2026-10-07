@@ -133,13 +133,25 @@ Dämon still ist und wer es bei welchem Muster war.
     python3 messung/tor.py 40 4 0 Steward Knight Shugenja Nightwatchman King
     python3 messung/tor.py 1000 4 0
 
-**Die gemischten Skripte sind nicht sauber, auch ohne neue Charaktere.** Mit
-dem Stand von Commit 1458a95 verwirft der Solver in 35 von 1.000 gemischten
-Partien die wahre Welt, und der Night-Walk weicht in 43 von 2.813 Nächten ab.
-Die Ursachen sind Paarungen, die es auf keinem der drei Grundskripte gibt
-(ROADMAP, offene Stelle 37). Wer einen neuen Charakter misst, liest deshalb
-die Zahl „davon wegen der neuen Zeilen“ und vergleicht den Rest mit dem Lauf
-ohne `CHARAKTER`.
+**Stand der gemischten Skripte seit dem 07.10.2026:** Ohne neue Charaktere
+verwirft der Solver in 16 von 3.000 gemischten Partien die wahre Welt (4
+Nächte), und der Night-Walk weicht in 25 von 8.316 Nächten ab. Vorher waren
+es 96 und 32. Was übrig ist, steht in ROADMAP unter „Die gemischten Skripte
+aufgeräumt“ und in den offenen Stellen 4, 36, 38 und 40 bis 44. Wer einen
+neuen Charakter misst, liest deshalb die Zahl „davon wegen der neuen
+Zeilen“ und vergleicht den Rest mit einem Lauf ohne `CHARAKTER`.
+
+**Berichtigt am 07.10.2026:** `tor.py` lief bis dahin auch Nächte nach, die
+nie gespielt wurden, wenn ein Alsaahir die Partie beendet hatte. Die frühere
+Zahl „43 von 2.813 Nächten“ (und „129 von 8.456“ in ROADMAP) war deshalb zu
+hoch. Jetzt zählt `deal.nights_played`.
+
+**Neue Prüfsummen von `tbhash.py` seit dem 07.10.2026:** `TB
+b26e6eaaf04cdd90`, `EASTER 4773de1f2a2123be`, `SV fc480a8d2311d52b`. Der
+Simulator spielt seitdem einige Partien anders (ROADMAP, derselbe
+Abschnitt): eine berichtigte Totengräber-Zeile, ein Rabenhüter, der etwas
+Falsches hören kann, und vergiftete Sitze, die nach einem Tausch zu ihrem
+neuen Charakter befragt werden.
 
 ## Rohdaten in `daten/`
 

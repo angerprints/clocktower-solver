@@ -2222,6 +2222,20 @@ class ChambermaidInfo(Info):
         return self.count in possible_counts(w, s, (self.a, self.b),
                                              self.night)
 
+    def is_true(self, w, s, seat=None):
+        """Whether the number *has* to be the right one.
+
+        `holds` answers with a range where a waking is not written down
+        — a Demon an Exorcist may have sent to bed, the first night of a
+        Demon. A number inside a range of two may still be the wrong
+        one, and wrong is what a Vortox needs: it was called true, the
+        Vortox had to be off, and the game was lost (07.10.2026). Only a
+        range of one leaves the Vortox no room.
+        """
+        from .waking import possible_counts
+        return possible_counts(w, s, (self.a, self.b),
+                               self.night) == {self.count}
+
 
 @dataclass
 class GamblerGuess(Info):
@@ -2243,8 +2257,15 @@ class GamblerGuess(Info):
 
     def holds(self, w, s, rh, seat=None):
         who = self.player if seat is None else seat
-        right = registers_as_role(w.role_at(self.target, f"N{self.night}"),
-                                  self.role)
+        # What the seat held when the guess was made: the Gambler is
+        # tenth in the night, ahead of everything that moves a character
+        # — the Snake Charmer at 11, the Pit-Hag at 16, a Barber's swap
+        # at 40, every Demon. This asked about the night as a whole, so
+        # a Gambler that named the Snake Charmer rightly, a moment before
+        # it swapped with the Demon, had guessed wrong and lived
+        # (07.10.2026).
+        right = registers_as_role(
+            w.role_at(self.target, f"D{self.night - 1}"), self.role)
         if f"N{self.night}" in s.died_at(who):
             # Dead by morning is not the same as guessed wrong. It
             # guesses before the Demon acts, so one that guessed right

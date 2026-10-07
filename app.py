@@ -412,6 +412,12 @@ def run_solve(payload):
                     "SnakeCharmerChoice", "PitHagChoice", "InnkeeperChoice",
                     "SailorChoice", "ExorcistChoice", "PhilosopherChoice",
                     "CourtierChoice", "CerenovusMadness",
+                    # Dead *because* it picked, like the Gambler: "if
+                    # they are drunk or poisoned, you die". Its row is
+                    # the cause of the death the board shows, and was
+                    # refused for it — one mixed board in twenty-five
+                    # could not be entered at all (07.10.2026).
+                    "Acrobat",
                     # Woken late, at the Nightwatchman's turn, and "choose
                     # a player" means any player: one killed earlier that
                     # night is still shown who it is.

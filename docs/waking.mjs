@@ -80,7 +80,13 @@ condition("Philosopher", (world, state, seat, night) => {
   const took = state.philosophies()[seat];
   if (!took) return true;
   const [taken, since] = took;
-  if (phaseIndex(`N${night}`) < phaseIndex(since)) return true;
+  // `<` until 07.10.2026: on the night it chose it was asked whether the
+  // *taken* character wakes, and one that took the Saint had not woken.
+  if (phaseIndex(`N${night}`) <= phaseIndex(since)) return true;
+  // Nothing to wake for, if what it took is no ability of its own: asked
+  // anyway, the Lunatic's rule and this one called each other until the
+  // stack ran out (07.10.2026).
+  if (taken === "Philosopher" || CHARACTERS[taken].believes) return false;
   return wokeAs(world, state, seat, night, taken);
 });
 

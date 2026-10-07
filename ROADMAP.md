@@ -689,9 +689,87 @@ Die Ursachen sind Paarungen, die es auf keinem Grundskript gibt:
 | Kammerzofe neben Philosoph | Solver: In der Nacht seiner Wahl gilt der Philosoph nicht als geweckt. Simulator: Danach weckt er ihn nie mehr. |
 | Grubenweib wählt den Schläger | Simulator: Der Schläger antwortet nicht. |
 
+### Die gemischten Skripte aufgeräumt · *erledigt am 07.10.2026*
+
+Der volle Bericht steht in `claude/gemischte-skripte-aufgeraeumt.md`.
+
+**Deine Entscheidung vom 07.10.2026:** erst die gemischten Skripte aufräumen, dann Batch 2.
+
+**Ergebnis:** `messung/tor.py` spielt gemischte Partien auf Skripten, die Charaktere zusammenbringen, die sich auf keinem Grundskript begegnen.
+
+| 3.000 gemischte Partien | wahre Welt verloren, vorher | jetzt | Night-Walk weicht ab, vorher | jetzt |
+|---|---|---|---|---|
+| 4 Nächte, nichts Neues | 96 (3,2 %) | 16 (0,5 %) | 32 von 8.325 Nächten | 25 von 8.316 |
+| 4 Nächte, mit den fünf aus Batch 1 | 50 (1,7 %) | 14 (0,5 %) | 12 von 8.301 | 9 von 8.284 |
+| 6 Nächte, nichts Neues | 106 (3,5 %) | 20 (0,7 %) | 39 von 10.461 | 30 von 10.451 |
+
+„Vorher“ ist der Stand nach Batch 1. Vor Batch 1 waren es 107, seitdem werden die Skripte aus einem um fünf Charaktere größeren Vorrat gezogen.
+
+**Berichtigung zum 05.10.2026:** Die Zahl „Night-Walk weicht in 129 von 8.456 Nächten ab“ war zum größten Teil ein Fehler in meinem Messskript. Es lief Nächte nach, die nie gespielt wurden, wenn ein Alsaahir die Partie beendet hatte. Richtig gemessen waren es 32 von 8.325. Die Zahl der verlorenen wahren Welten war davon nicht betroffen.
+
+**Was falsch war, im Simulator** (er las die ausgeteilten Charaktere, wo er die von heute Nacht meinte, oder spielte etwas nicht):
+
+| Paarung | Fehler | Behoben |
+|---|---|---|
+| Vortox neben Totengräber | Die falsche Auskunft verlor ihren Sitz und sprach immer von Sitz 1. Das galt auch für einen vergifteten Totengräber in Trouble Brewing. | Der Sitz bleibt, nur der Charakter ist falsch. |
+| Vortox neben Rabenhüter | Er bekam immer die Wahrheit, auch vergiftet. | Er bekommt jetzt etwas Falsches. |
+| Kammerzofe neben Schlangenbeschwörer oder Grubenweib | Sie zählte nach dem ausgeteilten Charakter. | Sie zählt nach dem Charakter von heute Nacht. |
+| Kammerzofe neben Philosoph | Nach seiner Wahl wurde er nie mehr geweckt. | Er wird geweckt wie der Charakter, den er genommen hat. |
+| Kammerzofe neben Charakteren, die ihre Fähigkeit einmal nutzen | Die Nacht, in der sie sie nutzen, zählte nicht (Schneiderin in Nacht 1). | Sie zählt. |
+| Wäscherin, Bibliothekarin, Koch nach einem Tausch in Nacht 1 | Sie lasen die Charaktere vor dem Tausch. | Sie lesen den Stand an ihrem Platz in der Nacht. |
+| Baron neben Fang Gu | Beide konnten im selben Beutel liegen, der nur für einen gezählt war. Diese Welt ist nicht legal. | Höchstens ein Charakter, der den Aufbau ändert. |
+| Fang Gu springt in den Trunkenbold | Der neue Fang Gu galt für den Rest der Partie als betrunken und tötete nie. | Das falsche Plättchen endet, wenn der Sitz einen anderen Charakter bekommt. |
+| Giftmischer neben Grubenweib | Der ausgeteilte Sitz vergiftete weiter, nachdem er verwandelt war, und ein neu erschaffener Giftmischer vergiftete nie. | Es vergiftet, wer den Charakter heute Nacht hält. Wird er in derselben Nacht verwandelt, endet das Gift. |
+| Gestörter Sitz nach einem Tausch | Er hörte Auskünfte für den Charakter, den er abgegeben hatte. | Er hört, was zu seinem heutigen Charakter passt. |
+
+**Was falsch war, im Solver** (Python und JavaScript):
+
+| Paarung | Fehler | Behoben |
+|---|---|---|
+| Kammerzofe neben Philosoph | In der Nacht seiner Wahl galt er nur als geweckt, wenn der genommene Charakter aufwacht. | Er ist in dieser Nacht wach, weil er wählt. |
+| Wahrsagerin unter einem Vortox | Ein „Nein“ auf zwei gute Spieler galt als wahr. Liegt der rote Hering im Paar, ist es falsch. | Der rote Hering wird auch unter einem Vortox gesucht. |
+| Kammerzofe unter einem Vortox | Eine Zahl galt als wahr, sobald sie möglich war, auch wenn eine zweite genauso möglich war. | Wahr ist sie nur, wenn keine andere möglich ist. |
+| Glücksspieler neben Schlangenbeschwörer, Grubenweib oder Barbier | Der Tipp wurde am Stand nach der Nacht geprüft. Der Glücksspieler rät aber an Platz 10, vor allen, die Charaktere bewegen. | Geprüft wird der Stand vor der Nacht. Stirbt er und wird danach verwandelt, bleibt sein Tod erklärt. |
+| Philosoph mit der Fähigkeit des Glücksspielers | Sein falscher Tipp tötete ihn nicht, weil die Regel nur den echten Glücksspieler kannte. | Jeder, der die Fähigkeit hat, riskiert seinen eigenen Tipp. Auch im Night-Walk. |
+| Exorzist neben Fang Gu | Nannte er den Außenseiter, in den der Fang Gu gleich danach sprang, galt der Dämon als gestoppt. | Es zählt der Dämon, den es an Platz 21 gab. |
+| Fang Gu springt in den Trunkenbold | Das falsche Plättchen störte den Sitz weiter. | Es endet mit dem Charakter, wie im Simulator. |
+| Philosoph nimmt die Verrückte | Zwei Regeln riefen sich endlos gegenseitig auf, der Solver stürzte ab. | Er wacht dafür nicht auf. |
+
+**Drei Fehler der Website,** die erst die gemischten Bretter gezeigt haben:
+
+| Fehler | Folge | Behoben |
+|---|---|---|
+| Die Regel für den Tod der Akrobatin rief in JavaScript einen Namen auf, den es nicht gab. | Jedes Brett mit einer eingetragenen Wahl der Akrobatin brach auf der Website mit einem Fehler ab. Python war nicht betroffen. | Ja. |
+| Die Zeile einer Akrobatin, die in derselben Nacht stirbt, wurde abgelehnt („wurde getötet und ist nie aufgewacht“). | Etwa jedes 25. gemischte Brett ließ sich nicht eintragen. Sie stirbt aber gerade wegen ihrer Wahl, wie der Glücksspieler. | Ja, in Python und JavaScript. |
+| Die Zeile des Ballonfahrers galt in JavaScript unter einem Vortox als gewogene Auskunft. | JavaScript verwarf jede Welt mit einem arbeitenden Vortox neben einem Ballonfahrer, Python nicht. | Ja. |
+
+**Messung:**
+
+- **Python gegen JavaScript:** Die wahre Welt von 4.446 gemischten Partien kostet in beiden Sprachen dasselbe (vorher brach JavaScript bei 82 von 1.421 ab). Im Korpus stehen 9 gemischte Bretter, je eines pro behobener Klasse.
+- **Grundskripte:** Trouble Brewing, Bad Moon Rising, Oster-Skript und die zwei eigenen Skripte aus Batch 1 verlieren weiter 0 von je 6.000 Partien (4 und 6 Nächte). Sects & Violets: 62 von 6.000, vorher ebenfalls 62, davon 58 die Barbier-Klasse aus Stelle 4. Night-Walk: 0 abweichende Nächte auf allen sechs Skripten.
+- **Der Simulator spielt einige Partien anders als vorher.** Bad Moon Rising: keine. Trouble Brewing und Oster-Skript: 4 % der Partien haben eine berichtigte Totengräber-Zeile, 0,4 % verlaufen anders (wegen des Rabenhüters). Sects & Violets: 8 % verlaufen anders, weil ein vergifteter Sitz nach einem Tausch jetzt zu seinem neuen Charakter befragt wird. Die Prüfsummen in `messung/tbhash.py` sind deshalb neu.
+- **Tests:** 1.232 grün, davon 22 neue in `tests/test_mixed_scripts.py`. Der letzte davon spielt 600 gemischte Partien je Lauf und lässt nur die Seeds durch, die mit Grund auf der Liste stehen.
+- **Korpus:** 223 Bretter. 212 alte geben dieselbe Antwort. `sv-played-672` ist eine der Partien, die jetzt anders verlaufen. `random-58` behält 150 statt 141 Welten: Dort kann der Fang Gu in eine Verrückte springen, die danach wirklich tötet.
+
+**Was noch verloren geht** (16 von 3.000 ohne die fünf, 14 von 3.000 mit ihnen):
+
+| Klasse | ohne die fünf | mit den fünf | Stand |
+|---|---|---|---|
+| Barbier-Tausch, den niemand gemeldet hat | 10 | 6 | Offene Stelle 4, nach deiner Regel gewollt. |
+| Vortox und Registrieren (Koch, Empath, Orakel, Schneiderin, Wahrsagerin) | 5 | 3 | Offene Stelle 38. Eine Lesart ist zu wählen, siehe unten. |
+| Gastwirt schützt einen Fang Gu, der springt | 0 | 2 | Offene Stelle 41, Regelfrage. |
+| Mathematiker unter einem Vortox | 0 | 1 | Offene Stelle 6. |
+| Eine Auskunft stimmt nur durch Registrieren, in einer Nacht, in der alle betrunken sind | 1 | 0 | Offene Stelle 42. |
+| Einzelfälle | 0 | 2 | Einer ist die offene Stelle 36 (Gastwirt wählt und wird in derselben Nacht verwandelt). Den anderen habe ich nicht zugeordnet (Seed 461: Trunkenbold mit dem Plättchen des Schlangenbeschwörers neben einem Philosophen, der dieselbe Fähigkeit nahm). |
+
+**Die Lesart, die du wählen musst (offene Stelle 38):** Unter einem Vortox muss die Auskunft eines Bürgers falsch sein. Beispiel: Ein Koch sitzt an einem Tisch ohne böses Paar, aber mit einem Einsiedler neben dem Dämon. Der Erzähler sagt ihm „1“.
+
+- **Weg 1, die Wirklichkeit zählt:** „1“ ist falsch, weil es in Wirklichkeit kein böses Paar gibt. Dass der Einsiedler als böse registrieren dürfte, macht die Zahl nicht wahr. So rechnet der Solver schon bei Wäscherin, Bibliothekarin, Ermittler, Träumer, Totengräber und Rabenhüter. Im Versuch gehen damit 11 statt 16 und 12 statt 14 Partien verloren.
+- **Weg 2, streng:** „1“ ist nicht falsch genug, weil ein ehrlicher Erzähler sie auch ohne Vortox hätte sagen dürfen. Der Erzähler muss eine Zahl nennen, die auch mit Registrieren nicht stimmen kann. So rechnen Simulator und Solver heute nur beim Adligen: Nach deiner Regel dürfen unter den drei Gezeigten nicht genau ein Böser sein, und der Code liest das nach Registrieren. Dann ändere ich den Simulator statt des Solvers.
+
 ### Als Nächstes
 
-**1 · Die gemischten Skripte aufräumen oder Batch 2** (zu entscheiden). Der erste Batch ist durch das Tor, aber das Tor selbst steht nicht mehr auf null: Auch ohne neue Charaktere verliert der Solver in 3,6 % der gemischten Partien die wahre Welt (offene Stelle 37). Jeder weitere Batch wird gegen diesen Hintergrund gemessen.
+**1 · Batch 2 der experimentellen Charaktere.** Die gemischten Skripte sind aufgeräumt (07.10.2026): Ohne neue Charaktere gehen noch 0,5 % der gemischten Partien verloren, fast alle in Klassen, die schon bekannt und entschieden sind. Vorher zu klären ist die Lesart „Vortox und Registrieren“ (offene Stelle 38).
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -749,9 +827,14 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 30 | Simulator gegen Night-Walk | *Erledigt am 05.10.2026:* Die 60 abweichenden Nächte in Sects & Violets waren zwei Lücken des Night-Walk, beide repariert. Jetzt 0 von 16.641. |
 | 35 | Simulator | *Erledigt am 05.10.2026:* Die Reihenfolge der Nacht liest den aktuellen Charakter, nicht den ausgeteilten. |
 | 36 | Sects & Violets | **Wer früh in der Nacht handelt und in derselben Nacht verwandelt wird:** Ein Schlangenbeschwörer wählt an Platz 11, das Grubenweib macht ihn an Platz 16 zu etwas anderem. Der Solver rechnet in ganzen Nächten und verwirft die Wahl. 1 von 6.000 Partien (Seed 1078, 4 Nächte). Gefunden am 05.10.2026, nicht gebaut. |
-| 37 | Gemischte Skripte | **Der Solver verliert in 3,6 % der gemischten Partien die wahre Welt** (107 von 3.000, Stand vor Batch 1), und der Night-Walk weicht in 129 von 8.456 Nächten ab. Ursachen sind Paarungen, die es auf keinem Grundskript gibt: Vortox neben Auskünften aus Trouble Brewing, Kammerzofe neben Schlangenbeschwörer oder Philosoph, Grubenweib und Schläger. Gefunden am 05.10.2026 beim Tor für Batch 1, nicht behoben. |
-| 38 | Solver | **Vortox und Registrieren:** Unter einem Vortox muss eine Auskunft falsch sein. Bei Koch, Empath, Orakel und Schneiderin gilt dem Solver eine Auskunft schon als wahr, wenn sie durch Registrieren (Spion, Einsiedler, Schläger) legal wäre. Auf Sects & Violets kommt das nicht vor. Eine Lesart ist zu wählen. |
+| 37 | Gemischte Skripte | *Erledigt am 07.10.2026:* Der Solver verlor in 3,2 % der gemischten Partien die wahre Welt (96 von 3.000), jetzt in 0,5 % (16 von 3.000). Der Rest steht in den Stellen 4, 6, 36, 38, 41 und 42. |
+| 38 | Solver | **Vortox und Registrieren:** Unter einem Vortox muss eine Auskunft falsch sein. Bei Koch, Empath, Orakel, Schneiderin und Wahrsagerin gilt dem Solver eine Auskunft schon als wahr, wenn sie durch Registrieren (Spion, Einsiedler, Schläger) legal wäre. Auf Sects & Violets kommt das nicht vor. 5 von 3.000 gemischten Partien. **Eine Lesart ist zu wählen** (Weg 1: die Wirklichkeit zählt, Weg 2: streng wie beim Adligen). |
 | 39 | Werkzeug | **Die Nachtreihenfolge im Repo ist veraltet** (130 von 181 Charakteren). Für Gutsverwalter, Ritter und Shugenja sind die Plätze von Hand eingetragen. |
+| 40 | Simulator | **Der Schläger antwortet nicht auf verdeckte Wahlen.** Giftmischer, Mönch, Hexe und Grubenweib wählen im Simulator, ohne dass der Schläger reagiert. Der Night-Walk macht es richtig, deshalb weichen 9 von 8.316 Nächten ab. Kommt nur auf gemischten Skripten vor. Sauber wäre, diese Wahlen in die Reihenfolge der Nacht einzuordnen. Das teilt alle Partien mit einem Giftmischer neu aus. |
+| 41 | Regelfrage | **Ein Gastwirt schützt den Fang Gu, der in derselben Nacht in einen Außenseiter springt.** Im Simulator stirbt der alte Fang Gu trotzdem, der Solver hält ihn für geschützt. 2 von 3.000 gemischten Partien. Zu entscheiden ist, was am Tisch passiert. |
+| 42 | Solver | **Eine Auskunft, die nur durch Registrieren stimmt, verlangt, dass der registrierende Sitz nicht gestört war.** Die andere Erklärung, dass die Quelle selbst gestört war, prüft der Solver dann nicht mehr. Gefunden an einem Totengräber, dem ein Spion als Soldat gezeigt wurde, in einer Nacht, in der ein Minnesänger alle betrunken gemacht hatte. 1 von 3.000 gemischten Partien. |
+| 43 | Simulator | **Ein Philosoph nimmt einen Charakter, der echte Halter nennt seine Rolle nicht.** Dann rechnet der Solver die Auskunft des echten Halters dem Philosophen zu. 1 von 3.000 Partien in Sects & Violets (Seed 1698). |
+| 44 | Night-Walk | **Akrobatin neben getauschten oder betrunkenen Sitzen:** Simulator und Night-Walk sind sich in etwa 12 von 8.316 Nächten nicht einig, ob das Ziel der Akrobatin gestört ist. Der Simulator vergiftet einen getauschten Dämon erst ab der nächsten Nacht, der Night-Walk sofort. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

@@ -131,8 +131,15 @@ def always_impaired(world, state, night):
     # Holding a token *is* being a believer, and the tokens are already
     # on the world — so this is a tuple scan rather than a character
     # lookup per seat per night.
+    #
+    # Until the seat's character changes. A Drunk a Fang Gu jumped into
+    # *is* the Fang Gu and kills like one; kept impaired by a token it
+    # no longer lives by, it could not have made the kills the board
+    # shows, and the true world had no plan at all (07.10.2026).
+    phase = f"N{night}"
     seats = frozenset(seat for seat, token in enumerate(world.believes)
-                      if token is not None)
+                      if token is not None
+                      and world.role_at(seat, phase) == world.roles[seat])
     if not seats:
         return []
     return [Source("believer", seats, capacity=len(seats), cost=1.0,
