@@ -11,7 +11,9 @@ which = {"TB": scripts.TROUBLE_BREWING, "BMR": scripts.BAD_MOON_RISING,
 # The scripts made for the experimental characters.
 from test_experimental import SPY, VORTOX
 from test_experimental_2 import OJO, OJO_BMR
-which.update({"XSPY": SPY, "XVORTOX": VORTOX, "XOJO": OJO, "XOJOB": OJO_BMR})
+from test_experimental_3 import WRAITH, WRAITH_BMR
+which.update({"XSPY": SPY, "XVORTOX": VORTOX, "XOJO": OJO, "XOJOB": OJO_BMR,
+              "XWRAITH": WRAITH, "XWRAITHB": WRAITH_BMR})
 sc = which[sys.argv[1]]; nights = int(sys.argv[2])
 for seed in map(int, sys.argv[3:]):
     n = [7, 8, 9, 10, 11][seed % 5]

@@ -230,6 +230,39 @@ condition("King", (world, state, seat, night) => {
   return theDeadOutnumberOrEqual(world, state, night);
 });
 
+/** Did another evil seat open its eyes tonight — [certain, maybe]?
+ *
+ * `certain` if one surely woke for its own ability, `maybe` if one's
+ * waking is open (a Demon on the first night, an Exorcist's choice, an
+ * Assassin that may have struck). Woken to be shown something counts
+ * here, a Spy its grimoire: that is still somebody evil with their eyes
+ * open, which is all a Wraith asks. */
+function evilEyesOpen(world, state, seat, night) {
+  const phase = `N${night}`;
+  let certain = false, maybe = false;
+  const poppy = world.findAt("PoppyGrower", phase);
+  const poppyLives = poppy !== null && poppy !== undefined
+    && state.aliveSet(phase).has(poppy);
+  for (const other of state.aliveSet(phase)) {
+    if (other === seat || !world.evilAt(other, phase)
+        || world.roleAt(other, phase) === "Wraith") continue;
+    // "If the Poppy Grower has their ability, the Spy doesn't see the
+    // Grimoire" (their jinx) — and whether it has it is not known here.
+    if (poppyLives && world.roleAt(other, phase) === "Spy"
+        && woke(world, state, other, night)) { maybe = true; continue; }
+    if (uncertain(world, state, other, night)) maybe = true;
+    else if (woke(world, state, other, night)) certain = true;
+  }
+  return [certain, maybe];
+}
+
+/** Whenever another evil player wakes, the Wraith is woken first, and a
+ * Chambermaid counts it (my reading, 08.10.2026). Being shown your team
+ * on the first night is nobody's ability. Drunk or poisoned it is still
+ * woken, to be told it cannot look. */
+condition("Wraith", (world, state, seat, night) =>
+  evilEyesOpen(world, state, seat, night)[0]);
+
 const believer = (world, state, seat, night) => {
   const token = world.believes[seat];
   return token ? wokeAs(world, state, seat, night, token) : false;
@@ -327,6 +360,13 @@ function actsAs(world, seat, phase) {
 export function uncertain(world, state, seat, night) {
   const phase = `N${night}`;
   const acting = actsAs(world, seat, phase);
+  if (acting === "Wraith") {
+    // Open exactly when no other evil seat surely woke and one may have —
+    // a Demon on the first night is the usual one.
+    if (!state.aliveSet(phase).has(seat)) return false;
+    const [certain, maybe] = evilEyesOpen(world, state, seat, night);
+    return maybe && !certain;
+  }
   if (night === 1)
     return isDemon(acting) && CHARACTERS[acting].nights !== EVERY;
   if (cameBackTonight(world, state, seat, night) === OPEN) return true;

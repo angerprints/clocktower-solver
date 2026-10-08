@@ -1082,6 +1082,53 @@ export const DATA = {
    "chooses": true,
    "nights": "other",
    "other_night": 32
+  },
+  "Magician": {
+   "id": "magician",
+   "name": "Magician",
+   "team": "townsfolk",
+   "wake": [
+    "never"
+   ],
+   "first_night": 5
+  },
+  "PoppyGrower": {
+   "id": "poppygrower",
+   "name": "Poppy Grower",
+   "team": "townsfolk",
+   "wake": [
+    "never"
+   ],
+   "first_night": 4,
+   "other_night": 3
+  },
+  "Politician": {
+   "id": "politician",
+   "name": "Politician",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ]
+  },
+  "Snitch": {
+   "id": "snitch",
+   "name": "Snitch",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ],
+   "first_night": 7
+  },
+  "Wraith": {
+   "id": "wraith",
+   "name": "Wraith",
+   "team": "minion",
+   "wake": [
+    "every",
+    "first",
+    "sometimes"
+   ],
+   "nights": "conditional"
   }
  },
  "scripts": {

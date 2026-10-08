@@ -396,7 +396,9 @@ def transcript(got):
 # chosen (the 88 of 07.10.2026). Add every later character here. The
 # measurement in `messung/tor.py` draws from everything, which is its
 # job.
-SINCE_THE_NAMED_GAMES = ("Banshee", "Zealot", "Heretic", "Goblin", "Ojo")
+SINCE_THE_NAMED_GAMES = ("Banshee", "Zealot", "Heretic", "Goblin", "Ojo",
+                         "Magician", "PoppyGrower", "Politician", "Snitch",
+                         "Wraith")
 
 
 def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):

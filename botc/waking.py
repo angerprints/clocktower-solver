@@ -325,6 +325,53 @@ def _king(world, state, seat, night):
     return the_dead_outnumber_or_equal(world, state, night)
 
 
+def _evil_eyes_open(world, state, seat, night):
+    """Did another evil seat open its eyes tonight, for certain or maybe?
+
+    (certain, maybe): `certain` if one surely woke for its own ability,
+    `maybe` if one's waking is open — a Demon on the first night, an
+    Exorcist's choice, an Assassin that may have struck. Woken to be
+    shown something counts here, a Spy its grimoire: that is still
+    somebody evil with their eyes open, which is all a Wraith asks.
+    """
+    phase = f"N{night}"
+    certain = maybe = False
+    poppy = world.find_at("PoppyGrower", phase)
+    poppy_lives = poppy is not None and poppy in state.alive_set(phase)
+    for other in state.alive_set(phase):
+        if other == seat or not world.evil_at(other, phase) \
+                or world.role_at(other, phase) == "Wraith":
+            continue
+        # "If the Poppy Grower has their ability, the Spy doesn't see the
+        # Grimoire" (their jinx). Whether it has it, drunk or sober, is
+        # not this question's to know, so a Spy beside a living one may
+        # or may not have looked.
+        if poppy_lives and world.role_at(other, phase) == "Spy" \
+                and woke(world, state, other, night):
+            maybe = True
+            continue
+        if uncertain(world, state, other, night):
+            maybe = True
+        elif woke(world, state, other, night):
+            certain = True
+    return certain, maybe
+
+
+@condition("Wraith")
+def _wraith(world, state, seat, night):
+    """Whenever another evil player wakes, the Wraith is woken first.
+
+    "You wake when other evil players do" — the Storyteller wakes it for
+    every evil player who opens their eyes for their own ability, and
+    that is the Wraith's ability doing what it does, so a Chambermaid
+    counts it (my reading, 08.10.2026). Being shown your team on the
+    first night is not anybody's ability, the same line as for the
+    Demon there. Drunk or poisoned it is still woken, to be told it
+    cannot look — the same as everybody impaired.
+    """
+    return _evil_eyes_open(world, state, seat, night)[0]
+
+
 @condition("Drunk")
 @condition("Marionette")
 def _believer(world, state, seat, night):
@@ -437,7 +484,8 @@ def _acts_as(world, seat, phase):
 def uncertain(world, state, seat, night):
     """Could this seat's waking have gone either way?
 
-    Three things do this, and each is something nobody writes down:
+    Three things do this, and each is something nobody writes down (and
+    a Wraith, which follows whoever else evil woke):
 
       * An Exorcist sending the Demon to bed.
       * The Demon on the first night, told its Minions and its bluffs.
@@ -448,6 +496,13 @@ def uncertain(world, state, seat, night):
     """
     phase = f"N{night}"
     acting = _acts_as(world, seat, phase)
+    if acting == "Wraith":
+        # Open exactly when no other evil seat surely woke and one may
+        # have — a Demon on the first night is the usual one.
+        if seat not in state.alive_set(phase):
+            return False
+        certain, maybe = _evil_eyes_open(world, state, seat, night)
+        return maybe and not certain
     if night == 1:
         return _is_demon(acting) and CHARACTERS[acting].nights != EVERY
     if _came_back_tonight(world, state, seat, night) == OPEN:

@@ -447,6 +447,31 @@ _EXPERIMENTAL = [
     # (the wiki has a Courtier doing the same).
     _c("Ojo", "ojo", "Ojo", "demon", {FIRST, EVERY}, nights="other",
        chooses=True),
+
+    # The third five (08.10.2026), chosen for being the smallest left:
+    # four of them change only what the evil team knows or how the game
+    # is scored, which no board shows, and the fifth only who is awake.
+    #
+    # Shown to the Demon as a Minion and to the Minions as the Demon, on
+    # the first night. Wakes for nothing. Its jinx with the Wraith — a
+    # public guess after an execution — is not built.
+    _c("Magician", "magician", "Magician", "townsfolk", {NEVER}),
+    # While it lives the evil team does not learn each other; the night
+    # it dies they are woken and told. Being told is not their ability,
+    # so a Chambermaid counts none of it.
+    _c("PoppyGrower", "poppygrower", "Poppy Grower", "townsfolk", {NEVER}),
+    # Changes side and wins if the Storyteller judges it lost the game
+    # for its team. Decided after the game, so nothing here reads it.
+    _c("Politician", "politician", "Politician", "outsider", {NEVER}),
+    # Every Minion is shown three bluffs on the first night. Being shown
+    # them is not the Minions' ability, and the Snitch itself never wakes.
+    _c("Snitch", "snitch", "Snitch", "outsider", {NEVER}),
+    # "You may choose to open your eyes at night. You wake when other
+    # evil players do." Woken first whenever another evil player opens
+    # their eyes for their own ability (waking._wraith). Its wake set is
+    # wide on purpose: an evil seat says what it likes about its nights.
+    _c("Wraith", "wraith", "Wraith", "minion", {FIRST, EVERY, SOMETIMES},
+       nights="conditional"),
 ]
 
 

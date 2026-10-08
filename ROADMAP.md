@@ -870,13 +870,61 @@ Der Nachtrag steht im Bericht `claude/experimentelle-charaktere-batch-2.md`.
 | Suite | 1.287 Tests grün, 4 davon neu (der Höfling, der den Schläger nennt). |
 
 
+### Die dritten fünf experimentellen Charaktere · *erledigt am 08.10.2026*
+
+Der volle Bericht steht in `claude/experimentelle-charaktere-batch-3.md`.
+
+**Dein Auftrag vom 08.10.2026:** „Such aus.“ Ausgesucht habe ich die fünf kleinsten, die noch übrig waren: **Magierin, Mohnzüchter, Politiker, Petze und Geist**. Das sind zwei Bürger, zwei Außenseiter und ein Scherge. Vier von ihnen ändern nur, was das böse Team weiß oder wer am Ende gewinnt. Das zeigt kein Brett. Der Geist ändert, wer nachts wach ist, und das sieht die Kammerzofe.
+
+| Charakter | Was der Solver daraus macht |
+|---|---|
+| Magierin | Nichts. Sie wacht nie für sich auf. |
+| Mohnzüchter | Nichts. Wenn das böse Team in der Nacht seines Todes geweckt wird, ist das nicht ihre eigene Fähigkeit. Die Kammerzofe zählt es nicht. |
+| Politiker | Nichts. Ob er die Seite wechselt, entscheidet sich erst nach der Partie. |
+| Petze | Nichts. Die Schergen bekommen ihre Bluffs, ohne dass das als Aufwachen durch ihre eigene Fähigkeit zählt. |
+| Geist | Er wacht in jeder Nacht auf, in der ein anderer böser Spieler durch seine eigene Fähigkeit aufwacht. Die Kammerzofe zählt ihn. Ist das Aufwachen des anderen Bösen offen (der Dämon in Nacht 1, der Exorzist), ist es auch beim Geist offen. |
+
+**Vier Lesarten habe ich selbst gewählt.** Jede lässt sich umdrehen:
+
+| | Was ich gewählt habe | Warum |
+|---|---|---|
+| A | Der Geist zählt für die Kammerzofe als durch seine eigene Fähigkeit geweckt. | Der Erzähler weckt ihn nur wegen seiner Fähigkeit. Das Wiki sagt zur Kammerzofe nichts. |
+| B | Geweckt wird er nur, wenn ein anderer Böser durch seine eigene Fähigkeit aufwacht. Schergen- und Dämonen-Info in Nacht 1 zählen nicht. Ein Spion, der das Grimoire sieht, zählt. Ein Böser Zwilling nur in Nacht 1. | Deine Regel vom 02.10.2026: Der Dämon in Nacht 1 zählt nicht für die Kammerzofe. Der Spion öffnet die Augen, auch wenn er nur etwas gezeigt bekommt. |
+| C | Ein betrunkener oder vergifteter Geist zählt trotzdem. | Er wird geweckt, um zu erfahren, dass er nicht schauen darf. So rechnet der Solver bei jedem gestörten Charakter. |
+| D | Lebt ein Mohnzüchter, ist offen, ob der Spion das Grimoire gesehen hat. | Ihr Jinx: Hat der Mohnzüchter seine Fähigkeit, sieht der Spion das Grimoire nicht. Ob er sie hat, weiß der Solver an dieser Stelle nicht. |
+
+Nicht gebaut: der Jinx von Magierin und Geist. Nach jeder Hinrichtung darf eine lebende Magierin öffentlich raten, wer der Geist ist. Liegt sie richtig, muss der Dämon in dieser Nacht den Geist wählen.
+
+**Das Tor:**
+
+| Nr. | Schritt | Ergebnis |
+|---|---|---|
+| 1 | Solver in Python und JavaScript | 10 neue Bretter im Korpus, beide stimmen überein. Die wahre Welt von 2.984 gemischten Partien kostet in beiden gleich. |
+| 2 | Simulator | Spielt alle fünf. Die Kammerzofe zählt den Geist nach derselben Regel. In 3.000 gemischten Partien fragte sie 50-mal nach einem Geist. |
+| 3 | Night-Walk | Keiner der fünf handelt nachts. Auf den zwei eigenen Skripten weicht 1 von 17.222 Nächten ab, nicht wegen der fünf (offene Stelle 47). |
+| 4 | Gemischte Partien mit den fünf | 6 von 3.000 verlieren die wahre Welt bei 4 Nächten, 8 bei 6 Nächten. Keine wegen der fünf. |
+| 5 | Website | Ein Brett mit Geist-Skript und Kammerzofe im Browser gelöst. |
+| 6 | Korpus und Suite | 253 Bretter, 1.308 Tests grün (21 neue). |
+
+**Messung:**
+
+| Was | Ergebnis |
+|---|---|
+| Zwei eigene Skripte (eines wie Trouble Brewing, eines wie Bad Moon Rising mit Kammerzofe und Spion) | 0 von 12.000 Partien verlieren die wahre Welt. |
+| Grundskripte | Prüfsummen von Trouble Brewing, Oster-Skript und Sects & Violets unverändert. Bad Moon Rising 0 von 6.000, Sects & Violets 62 von 6.000 wie vorher. |
+| Gemischte Partien mit den fünf | 6 von 3.000: 3 Barbier-Klasse, 1 Mathematiker unter einem Vortox (Stelle 6), 1 Philosoph und ein Trunkenbold mit demselben Plättchen (Stelle 43), 1 Fang Gu springt in einen Schläger, den vorher in derselben Nacht ein Glücksspieler gewählt hat (Stelle 36). Bei 6 Nächten sind es 8, dieselben Klassen, davon 5 Barbier-Klasse. |
+| Gemischte Partien ohne Pflicht-Charaktere | 11 von 3.000. Wieder andere Partien als bei Batch 2, weil der Vorrat um fünf gewachsen ist. |
+| Korpus | 183 alte Bretter geben dieselbe Antwort. Die 60 Zufallsbretter sind neu gezogen, weil ihr Vorrat gewachsen ist. |
+
+**Nebenbei gefunden und behoben:** Der Simulator weckte den Geist neben einem Bösen Zwilling in jeder Nacht. Der Böse Zwilling sieht seinen Zwilling aber nur in Nacht 1. Gefunden am Tor (Seed 1623), bevor etwas gemessen war.
+
 ### Als Nächstes
 
-**1 · Batch 3 der experimentellen Charaktere.** Batch 2 ist durch das Tor (Banshee, Eiferer, Ketzer, Goblin, Ojo). Klein sind noch: Magierin, Mohnzüchter, Unschuld, Politiker, Petze, Angstmacher, Wesir, Drehorgelspieler und Geist.
+**1 · Batch 4 der experimentellen Charaktere.** Batch 3 ist durch das Tor (Magierin, Mohnzüchter, Politiker, Petze, Geist). Klein sind nur noch vier: Unschuld, Angstmacher, Wesir und Drehorgelspieler. Alle vier bringen eine eigene Zeile oder ändern die Abstimmung: Die Unschuld und der Angstmacher können die Partie beenden, der Wesir ist öffentlich bekannt und kann tagsüber nicht sterben, beim Drehorgelspieler sind die Stimmen geheim.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 93 Charaktere. Von den 138 Spielercharakteren der App sind 92 im Katalog (dazu der Wächter, ein Fabled), 46 fehlen: 18 Bürger, 8 Außenseiter, 13 Schergen, 7 Dämonen. Nach meiner Einschätzung sind davon 9 klein, 20 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer).
+Stand des Katalogs: 98 Charaktere. Von den 138 Spielercharakteren der App sind 97 im Katalog (dazu der Wächter, ein Fabled), 41 fehlen: 16 Bürger, 6 Außenseiter, 12 Schergen, 7 Dämonen. Nach meiner Einschätzung sind davon 4 klein, 20 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer).
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -907,7 +955,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 11 | Werkzeug | **Die alte lokale Python-App lehnt einen Tod in Nacht 1 ab,** die Seite nicht. Ein Bastler kann in Nacht 1 sterben. Der Night-Walk kennt den Fall auch nicht. |
 | 12 | Werkzeug | **Exakte Zählung früher Bretter auf der Website.** Der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten. |
 | 13 | Werkzeug | **NEXT.md** in eine kurze Roadmap und ein Archiv aufteilen. |
-| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). Batch 1 ist am 05.10.2026 erledigt, Batch 2 am 07.10.2026. 46 offizielle Charaktere fehlen noch im Katalog. |
+| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). Batch 1 ist am 05.10.2026 erledigt, Batch 2 am 07.10.2026, Batch 3 am 08.10.2026. 41 offizielle Charaktere fehlen noch im Katalog. |
 | 15 | Bad Moon Rising | *Erledigt am 03.10.2026:* Höfling nach einer Wiederbelebung. Deine Regel: Die Fähigkeit endet mit dem Tod, der Wiederbelebte ist eine neue Instanz. |
 | 16 | Bad Moon Rising | **Kammerzofe und wer in derselben Nacht stirbt.** Simulator und Solver zählen einen Sitz als geweckt, auch wenn er vor seinem Platz in der Nacht getötet wurde (Professor an Platz 43, Dämon an 27). Beide machen es gleich, deshalb sieht es kein Messlauf. |
 | 17 | Bad Moon Rising | *Erledigt am 03.10.2026:* Meuchelmörder, der seine Fähigkeit unsichtbar verbraucht. Gemessen und behoben. |
@@ -929,17 +977,18 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
 | 30 | Simulator gegen Night-Walk | *Erledigt am 05.10.2026:* Die 60 abweichenden Nächte in Sects & Violets waren zwei Lücken des Night-Walk, beide repariert. Jetzt 0 von 16.641. |
 | 35 | Simulator | *Erledigt am 05.10.2026:* Die Reihenfolge der Nacht liest den aktuellen Charakter, nicht den ausgeteilten. |
-| 36 | Sects & Violets | **Wer früh in der Nacht handelt und in derselben Nacht verwandelt wird:** Ein Schlangenbeschwörer wählt an Platz 11, das Grubenweib macht ihn an Platz 16 zu etwas anderem. Der Solver rechnet in ganzen Nächten und verwirft die Wahl. 1 von 6.000 Partien (Seed 1078, 4 Nächte). Gefunden am 05.10.2026, nicht gebaut. |
+| 36 | Sects & Violets | **Wer früh in der Nacht handelt und in derselben Nacht verwandelt wird:** Ein Schlangenbeschwörer wählt an Platz 11, das Grubenweib macht ihn an Platz 16 zu etwas anderem. Der Solver rechnet in ganzen Nächten und verwirft die Wahl. 1 von 6.000 Partien (Seed 1078, 4 Nächte). Gefunden am 05.10.2026, nicht gebaut. Am 08.10.2026 dieselbe Klasse in einer gemischten Partie: Ein Glücksspieler wählt den Schläger und wird betrunken, später in derselben Nacht springt ein Fang Gu in den Schläger. Der Solver sieht ab dem Sprung keinen Schläger mehr und hält den Glücksspieler für nüchtern, der Mathematiker zählt ihn aber (Tor, Seed 55). |
 | 37 | Gemischte Skripte | *Erledigt am 07.10.2026:* Der Solver verlor in 3,2 % der gemischten Partien die wahre Welt (96 von 3.000), jetzt in 0,4 % (11 von 3.000). Der Rest steht in den Stellen 4, 6, 36, 41 und 42. |
 | 38 | Solver | *Erledigt am 07.10.2026:* Vortox und Registrieren. Deine Entscheidung: Die Wirklichkeit zählt, auch bei der Adligen. Gebaut für Koch, Empath, Orakel, Schneiderin, Wahrsagerin, Jongleur, Großmutter und Adlige. |
 | 39 | Werkzeug | **Die Nachtreihenfolge im Repo ist veraltet** (130 von 181 Charakteren). Für Gutsverwalter, Ritter und Shugenja sind die Plätze von Hand eingetragen. |
 | 40 | Simulator | **Der Schläger antwortet nicht auf verdeckte Wahlen.** Giftmischer, Mönch, Hexe und Grubenweib wählen im Simulator, ohne dass der Schläger reagiert. Der Night-Walk macht es richtig, deshalb weichen 9 von 8.316 Nächten ab. Kommt nur auf gemischten Skripten vor. Sauber wäre, diese Wahlen in die Reihenfolge der Nacht einzuordnen. Das teilt alle Partien mit einem Giftmischer neu aus. |
 | 41 | Regelfrage | **Ein Gastwirt schützt den Fang Gu, der in derselben Nacht in einen Außenseiter springt.** Im Simulator stirbt der alte Fang Gu trotzdem, der Solver hält ihn für geschützt. 2 von 3.000 gemischten Partien. Zu entscheiden ist, was am Tisch passiert. |
 | 42 | Solver | **Eine Auskunft, die nur durch Registrieren stimmt, verlangt, dass der registrierende Sitz nicht gestört war.** Die andere Erklärung, dass die Quelle selbst gestört war, prüft der Solver dann nicht mehr. Gefunden an einem Totengräber, dem ein Spion als Soldat gezeigt wurde, in einer Nacht, in der ein Minnesänger alle betrunken gemacht hatte. 1 von 3.000 gemischten Partien. |
-| 43 | Simulator | **Ein Philosoph nimmt einen Charakter, der echte Halter nennt seine Rolle nicht.** Dann rechnet der Solver die Auskunft des echten Halters dem Philosophen zu. 1 von 3.000 Partien in Sects & Violets (Seed 1698). |
+| 43 | Simulator | **Ein Philosoph nimmt einen Charakter, der echte Halter nennt seine Rolle nicht.** Dann rechnet der Solver die Auskunft des echten Halters dem Philosophen zu. 1 von 3.000 Partien in Sects & Violets (Seed 1698). Am 08.10.2026 dasselbe mit einem Trunkenbold, der glaubt, Träumer zu sein, und etwas anderes angibt: Seine Auskunft als Träumer wird dem Philosophen zugerechnet, der den Träumer genommen hat (Tor, Seed 2461). |
 | 44 | Night-Walk | **Akrobatin neben getauschten oder betrunkenen Sitzen:** Simulator und Night-Walk sind sich in etwa 12 von 8.316 Nächten nicht einig, ob das Ziel der Akrobatin gestört ist. Der Simulator vergiftet einen getauschten Dämon erst ab der nächsten Nacht, der Night-Walk sofort. |
 | 45 | erledigt | **Ein Höfling nennt den Schläger.** Deine Entscheidung vom 08.10.2026: Weg 1, wie im Wiki. Das zählt als Wahl des Schlägers. Gebaut in Solver, Simulator und Night-Walk. Die Abweichung für das Einzelspieler-Spiel steht in `claude/handover-hoefling-schlaeger.md`. |
 | 46 | Night-Walk | **Ein Seemann wählt den Schläger zuerst, und der Gastwirt macht den Schläger in derselben Nacht betrunken.** Der Night-Walk bekommt den Schläger als von Anfang an betrunken gesagt und lässt ihn nicht antworten. 1 von 8.219 Nächten. |
+| 47 | Night-Walk | **Gift der Pukka aus der Vornacht, und die Pukka wird in dieser Nacht vom Schläger betrunken.** Ein Glücksspieler, den die Pukka in der Nacht davor gewählt hat, ist an seinem frühen Platz noch vergiftet und überlebt einen falschen Tipp. Der Night-Walk weiß das nicht und lässt ihn sterben. 1 von 8.617 Nächten auf dem eigenen Skript aus Batch 3 (Seed 1571), nicht wegen der fünf. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

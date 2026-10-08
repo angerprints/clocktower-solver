@@ -127,9 +127,10 @@ Dämon still ist und wer es bei welchem Muster war.
 
 | Skript | Aufruf | Was es tut |
 |---|---|---|
-| `tor.py` | `N NÄCHTE START CHARAKTER…` | Spielt N gemischte Partien, die alle genannten Charaktere auf dem Skript haben (`tools/play_games.py`, `an_awkward_script`). Zählt: wahre Welt verworfen, davon wegen der Zeilen der neuen Charaktere; Nächte, in denen der Night-Walk andere Tote hat oder etwas nicht gesagt bekam; Auskünfte der neuen Charaktere, bei denen Night-Walk und Simulator sich widersprechen. Ohne `CHARAKTER` misst es die gemischten Skripte, wie sie sind. |
+| `tor.py` | `N NÄCHTE START CHARAKTER…` | Spielt N gemischte Partien, die alle genannten Charaktere auf dem Skript haben (`tools/play_games.py`, `an_awkward_script`). Zählt: wahre Welt verworfen, davon wegen der Zeilen der neuen Charaktere; Nächte, in denen der Night-Walk andere Tote hat oder etwas nicht gesagt bekam; Auskünfte der neuen Charaktere, bei denen Night-Walk und Simulator sich widersprechen. Seit dem 08.10.2026 zählt eine Kammerzofe, die nach einem Geist fragt, zu den Zeilen der neuen Charaktere. Ohne `CHARAKTER` misst es die gemischten Skripte, wie sie sind. |
 | `sim5.py`, `nw2.py` | `XSPY` oder `XVORTOX` als Skript | Die zwei Skripte, die für die experimentellen Charaktere gebaut sind (`tests/test_experimental.py`): eines mit Spion, Einsiedler und Zombuul, eines mit Vortox. |
 | `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XOJO` oder `XOJOB` als Skript | Die zwei Skripte für die zweiten fünf (`tests/test_experimental_2.py`): eines wie Trouble Brewing, eines wie Bad Moon Rising, beide mit Banshee, Eiferer, Ketzer, Goblin und Ojo. |
+| `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XWRAITH` oder `XWRAITHB` als Skript | Die zwei Skripte für die dritten fünf (`tests/test_experimental_3.py`), beide mit Magierin, Mohnzüchter, Politiker, Petze und Geist. Das zweite hat die Kammerzofe, die den Geist sieht. |
 
     python3 messung/tor.py 40 4 0 Steward Knight Shugenja Nightwatchman King
     python3 messung/tor.py 1000 4 0

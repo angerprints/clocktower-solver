@@ -2299,6 +2299,91 @@ def _demon_kill(d, night, rng):
 ON_DEATH = frozenset({"Ravenkeeper", "Sage", "Klutz"})
 
 
+def _woke_for_own_ability(d, p, night, shown=False):
+    """Did this seat wake tonight for its own ability — what a Chambermaid
+    counts.
+
+    `shown` also says yes for a seat woken to be *shown* something, a Spy
+    its grimoire or an Evil Twin its twin. That is still somebody evil
+    opening their eyes, which is what a Wraith wakes for.
+
+    Was the body of the Chambermaid's loop until the Wraith needed to ask
+    the same question about somebody else (08.10.2026).
+    """
+    from botc.catalogue import CHARACTERS
+    # A Drunk wakes on its token, and everybody else on what they
+    # hold *tonight*. This read the deal, so a seat a Snake Charmer
+    # or a Pit-Hag had moved was counted on the schedule of a
+    # character it no longer was (tenth place the deal has been
+    # mistaken for the timeline, 07.10.2026).
+    what = d.token(p, f"N{night}") or d.role_at(p, f"N{night}")
+    # A Philosopher that has taken an ability wakes when that
+    # character would — settled at the table, and what the night
+    # order above has done since 29.09. Here it fell through to
+    # "once a game, so not tonight" and never woke again.
+    if what == "Philosopher" and p in d.philosophies and night > 1:
+        what = d.philosophies[p]
+    # A Lunatic lives the night of the Demon it thinks it is —
+    # here always the real one — and choosing who it thinks it
+    # kills counts (table ruling, 02.10.2026).
+    if d.role_at(p, f"N{night}") == "Lunatic":
+        real = d.demon_at(f"N{night}")
+        what = (d.role_at(real, f"N{night}") if real is not None
+                else "Lunatic")
+    char = CHARACTERS[what]
+    when, patterns = char.nights, char.wake
+    # Back from the dead tonight: "they wake later tonight if they
+    # normally would". Regurgitated at the Shabaloth's turn or
+    # raised at the Professor's, and dead for every slot before
+    # it — an Innkeeper at 9 slept through, a Chambermaid at 70
+    # did not.
+    by = d.back_at(p, f"N{night}")
+    if by is not None and (char.other_night or 0) \
+            <= (CHARACTERS[by].other_night or 0):
+        return False
+    # Woken to be *shown* something rather than to do anything:
+    # a Spy the grimoire, an Evil Twin its twin. Neither is their
+    # own ability working, so a Chambermaid does not count them —
+    # the same rule as a Baron being shown its team.
+    #
+    # A Marionette is not here. `apparent` has already turned it
+    # into the token it was handed, and it counts as that token
+    # does (table ruling, 02.10.2026) — which this always did,
+    # while the solver said otherwise and no script on the sweep
+    # had both characters to show it.
+    #
+    # Asked with `shown`, they did open their eyes — on their own nights
+    # all the same: an Evil Twin is shown its twin on the first night and
+    # never again. Returning `shown` here woke a Wraith beside it every
+    # night of the game (seed 1623 of the gate, 08.10.2026).
+    if what in ("Spy", "EvilTwin") and not shown:
+        return False
+    if when == "never":
+        return False
+    # The Assassin and the Professor are woken every night but
+    # the first ("at night*") until they spend it, pointing or
+    # shaking their head — and this simulator never spends
+    # either. The Assassin's wake set holds "first" because it is
+    # shown its team then, which is not its ability.
+    if what in ("Assassin", "Professor"):
+        # Until it is spent: woken on the night it chooses, and
+        # not again after.
+        spent = (d.professor_chose if what == "Professor"
+                 else d.assassin_chose).get(p)
+        return night >= 2 and (spent is None or spent >= night)
+    # The Philosopher chooses on the first night here, always,
+    # and choosing is waking for its ability. Its wake set says
+    # "never" or "sometimes", so night one never counted it.
+    if what == "Philosopher" and night == 1:
+        return p in d.philosophies
+    if when == "conditional":
+        return bool(_conditionally_woke(d, p, what, night))
+    if night == 1:
+        return when == "every" or ("first" in patterns
+                                   and char.team != "demon")
+    return when in ("every", "other")
+
+
 def _conditionally_woke(d, seat, role, night):
     """Did a character that wakes *sometimes* wake tonight?
 
@@ -2333,6 +2418,24 @@ def _conditionally_woke(d, seat, role, night):
         day = night - 1
         return any(TEAM[d.role_at(who, f"D{day}")] == "outsider"
                    for who in d.died_on(f"D{day}", f"E{day}"))
+    if role == "Wraith":
+        # "You wake when other evil players do": whenever another evil
+        # seat opens its eyes tonight for its own ability, the Wraith is
+        # woken first. Being shown the grimoire counts as opening them;
+        # being shown your team on the first night does not, which is the
+        # same line the Chambermaid draws (08.10.2026).
+        #
+        # A Spy does not look while a Poppy Grower has its ability (their
+        # jinx), so then it opens no eyes.
+        phase = f"N{night}"
+        poppy = next((q for q in d.alive_at(phase)
+                      if d.role_at(q, phase) == "PoppyGrower"), None)
+        blind = poppy is not None and poppy not in droisoned_at(d, night)
+        return any(q != seat and d.side_at(q, phase) == "evil"
+                   and d.role_at(q, phase) != "Wraith"
+                   and not (blind and d.role_at(q, phase) == "Spy")
+                   and _woke_for_own_ability(d, q, night, shown=True)
+                   for q in d.alive_at(phase))
     if role == "Courtier":
         # Woken until it names a character, and here it always does so
         # at its first chance: the first night, and the first night after
@@ -3707,78 +3810,7 @@ def _for_role(d, seat, role, night, rng):
         #     (table ruling, 02.10.2026) — only a Pukka, which already
         #     chooses then, counts. The solver keeps both counts legal
         #     for other tables; this Storyteller is the table's own.
-        woke = 0
-        for p in (a, b):
-            # A Drunk wakes on its token, and everybody else on what they
-            # hold *tonight*. This read the deal, so a seat a Snake Charmer
-            # or a Pit-Hag had moved was counted on the schedule of a
-            # character it no longer was (tenth place the deal has been
-            # mistaken for the timeline, 07.10.2026).
-            what = d.token(p, f"N{night}") or d.role_at(p, f"N{night}")
-            # A Philosopher that has taken an ability wakes when that
-            # character would — settled at the table, and what the night
-            # order above has done since 29.09. Here it fell through to
-            # "once a game, so not tonight" and never woke again.
-            if what == "Philosopher" and p in d.philosophies and night > 1:
-                what = d.philosophies[p]
-            # A Lunatic lives the night of the Demon it thinks it is —
-            # here always the real one — and choosing who it thinks it
-            # kills counts (table ruling, 02.10.2026).
-            if d.role_at(p, f"N{night}") == "Lunatic":
-                real = d.demon_at(f"N{night}")
-                what = (d.role_at(real, f"N{night}") if real is not None
-                        else "Lunatic")
-            char = CHARACTERS[what]
-            when, patterns = char.nights, char.wake
-            # Back from the dead tonight: "they wake later tonight if they
-            # normally would". Regurgitated at the Shabaloth's turn or
-            # raised at the Professor's, and dead for every slot before
-            # it — an Innkeeper at 9 slept through, a Chambermaid at 70
-            # did not.
-            by = d.back_at(p, f"N{night}")
-            if by is not None and (char.other_night or 0) \
-                    <= (CHARACTERS[by].other_night or 0):
-                continue
-            # Woken to be *shown* something rather than to do anything:
-            # a Spy the grimoire, an Evil Twin its twin. Neither is their
-            # own ability working, so a Chambermaid does not count them —
-            # the same rule as a Baron being shown its team.
-            #
-            # A Marionette is not here. `apparent` has already turned it
-            # into the token it was handed, and it counts as that token
-            # does (table ruling, 02.10.2026) — which this always did,
-            # while the solver said otherwise and no script on the sweep
-            # had both characters to show it.
-            if what in ("Spy", "EvilTwin"):
-                continue
-            if when == "never":
-                continue
-            # The Assassin and the Professor are woken every night but
-            # the first ("at night*") until they spend it, pointing or
-            # shaking their head — and this simulator never spends
-            # either. The Assassin's wake set holds "first" because it is
-            # shown its team then, which is not its ability.
-            if what in ("Assassin", "Professor"):
-                # Until it is spent: woken on the night it chooses, and
-                # not again after.
-                spent = (d.professor_chose if what == "Professor"
-                         else d.assassin_chose).get(p)
-                woke += night >= 2 and (spent is None or spent >= night)
-                continue
-            # The Philosopher chooses on the first night here, always,
-            # and choosing is waking for its ability. Its wake set says
-            # "never" or "sometimes", so night one never counted it.
-            if what == "Philosopher" and night == 1:
-                woke += p in d.philosophies
-                continue
-            if when == "conditional":
-                woke += bool(_conditionally_woke(d, p, what, night))
-            elif night == 1:
-                if when == "every" or ("first" in patterns
-                                       and char.team != "demon"):
-                    woke += 1
-            elif when in ("every", "other"):
-                woke += 1
+        woke = sum(_woke_for_own_ability(d, p, night) for p in (a, b))
         return ChambermaidInfo(night, seat, a=a, b=b, count=woke)
 
     if role == "Gambler" and night > 1:

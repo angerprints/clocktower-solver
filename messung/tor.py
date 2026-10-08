@@ -45,6 +45,15 @@ def is_new(row):
     return getattr(row, "source_role", None) in NEW
 
 
+def touches_new(row, deal):
+    """A row the new characters show up in without producing it: a
+    Chambermaid that asked about a Wraith (08.10.2026)."""
+    if type(row).__name__ != "ChambermaidInfo" or "Wraith" not in NEW:
+        return False
+    return any(deal.role_at(p, f"N{row.night}") == "Wraith"
+               for p in (row.a, row.b))
+
+
 def asked_of(row):
     """What the walk has to be handed to answer for this row."""
     kind = type(row).__name__
@@ -93,14 +102,15 @@ for seed in range(start, start + N):
         if role in NEW:
             dealt[role] += 1
     for row in heard:
-        if is_new(row):
+        if is_new(row) or touches_new(row, deal):
             kind = type(row).__name__
             if kind == "KingInfo" and not row.role:
                 kind += ", nothing"
             rows[kind] += 1
     if cost(heard) is None:
         lost.append(seed)
-        if NEW and cost([r for r in heard if not is_new(r)]) is not None:
+        if NEW and cost([r for r in heard if not is_new(r)
+                         and not touches_new(r, deal)]) is not None:
             lost_to_new.append(seed)
 
     # How far the game really got. `game_ends_after` is only set when

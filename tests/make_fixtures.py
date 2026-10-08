@@ -823,6 +823,29 @@ def handmade():
                        ("a-goblin-wins", 119)):
         yield played(f"x-ojo-bmr-played-{what}", XOJOB, seed, 7, 4)
 
+    # The third five (08.10.2026), on the scripts of
+    # tests/test_experimental_3.py. Only the Wraith shows on a board, and
+    # only to a Chambermaid: a count of one beside two players whose
+    # claims never wake says one of them is evil and woke.
+    from test_experimental_3 import WRAITH as XW, WRAITH_BMR as XWB
+    W7 = ["Chambermaid", "Grandmother", "Gambler", "Gossip", "Professor",
+          "Magician", "PoppyGrower"]
+    yield board("x-wraith-bmr-7-bare", XWB, W7)
+    for night in (1, 2):
+        for count in (0, 1):
+            yield board(f"x-wraith-bmr-7-chambermaid-n{night}-counts-{count}",
+                        XWB, W7, infos=[{
+                            "type": "ChambermaidInfo", "night": night,
+                            "player": 0, "a": 3, "b": 5, "count": count}])
+    yield board("x-wraith-9-snitch-politician", XW,
+                ["Magician", "PoppyGrower", "Chef", "Empath", "Undertaker",
+                 "Politician", "Snitch", "Monk", "Soldier"])
+    for what, seed in (("chambermaid-asks-the-wraith-n1", 15),
+                       ("chambermaid-asks-the-wraith-n2", 128),
+                       ("poppy-grower-died", 6)):
+        yield played(f"x-wraith-bmr-played-{what}", XWB, seed, 7, 4)
+    yield played("x-wraith-played-magician-and-wraith", XW, 14, 7, 4)
+
 
 def generated(how_many=60):
     """Random boards, so the corpus covers combinations nobody chose."""
