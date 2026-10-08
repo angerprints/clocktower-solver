@@ -842,6 +842,33 @@ Der Simulator spielt alle fünf: Der Eiferer stimmt immer ab, der Goblin sagt es
 | Simulator | Das Dorf richtete den Dämon hin und spielte den Extratag des Strippenziehers, obwohl eine Scharlachrote Frau bereitstand. Sie übernimmt zuerst. | Nur auf gemischten Skripten. |
 | Solver | Meine Regel für den Exorzisten vom selben Tag griff zu weit: Tauschte ein Schlangenbeschwörer vorher mit dem Dämon und tötete der neue Dämon den alten, galt der alte als genannt. | Jetzt zählt der alte Dämon nur, wenn er als Dämon starb (Sprung, Stern). |
 
+### Deine Antworten zu Batch 2 und der Höfling · *erledigt am 08.10.2026*
+
+Der Nachtrag steht im Bericht `claude/experimentelle-charaktere-batch-2.md`.
+
+**Deine Antworten vom 08.10.2026:** A, E und F bleiben. B, C und D sind umgedreht. Beim Höfling gilt Weg 1, wie im Wiki.
+
+| | Deine Regel | Was der Solver jetzt tut |
+|---|---|---|
+| B | Die Banshee wird nur angesagt, wenn der Dämon sie getötet hat. Auch ihre Fähigkeit im Tod gilt nur dann. | Steht „Banshee announced“ auf dem Brett, muss die Banshee in dieser Nacht durch den Dämon gestorben sein. Eine Welt, in der sie anders starb (Attentäter, Klatschbase, Pate), ist unmöglich. Gebaut in der Todes-Mechanik: Jede andere Ursache prallt an ihr ab. |
+| C | Ein Eiferer, der nicht abstimmt, ist kein Eiferer. | An einem Tag mit eingetragenen Stimmen, einer Nominierung und fünf oder mehr Lebenden ist eine Welt unmöglich, in der der Eiferer nicht abgestimmt hat. Der Faktor 0,1 ist weg. Eine Vergiftung entschuldigt das nicht, weil ein Eiferer seine Fähigkeit nicht nutzt, sondern einhalten muss. |
+| D | Ein Goblin, der hingerichtet wird und nicht stirbt, beendet die Partie trotzdem. | Geprüft wird jetzt jeder hingerichtete Sprecher, nicht nur einer, der daran starb. Ging die Partie danach weiter, war er kein arbeitender Goblin. Im Simulator gewinnt ein hingerichteter Goblin auch, wenn er überlebt. |
+| Höfling | Nennt der Höfling den Schläger, zählt das als Wahl des Schlägers. | Ist der Höfling in dieser Nacht der Erste, wird er betrunken, und der Schläger bleibt nüchtern. Solver, Simulator und Night-Walk rechnen so. Die Abweichung für das Einzelspieler-Spiel steht in `claude/handover-hoefling-schlaeger.md`. |
+
+**Messung:**
+
+| Was | Ergebnis |
+|---|---|
+| Bad Moon Rising | 0 von 6.000 verloren, Night-Walk 0 von 8.467 Nächten abweichend. Die Partien sind etwas anders, weil der Höfling eine Wahl mehr hat. |
+| Zwei eigene Skripte aus Batch 2 | 1 von 12.000 verloren (Seed 1073, 6 Nächte). Wie vorher an der Grenze von 400 Erzählungen: Mit 2.000 hält der Solver sie. Seed 2118 ist jetzt eine andere Partie und wird gehalten. |
+| Andere Grundskripte | Trouble Brewing, Oster-Skript, Sects & Violets: Prüfsummen unverändert. Sects & Violets 62 von 6.000 wie vorher, die anderen 0. |
+| Gemischte Partien mit den fünf | 7 von 3.000 bei 4 Nächten, 11 von 3.000 bei 6 Nächten. Keine wegen der Zeilen der fünf. Neu verloren ist Seed 304: Weil der Höfling jetzt auch den Schläger nennen kann, verläuft die Partie anders und landet in der bekannten Klasse „Philosoph mit der Fähigkeit des Höflings“. |
+| Gemischte Partien ohne Pflicht-Charaktere | 16 von 3.000. Neu ist Seed 1576, aus demselben Grund eine andere Partie, und sie gehört zur Barbier-Klasse. |
+| Banshee, Simulator gegen Night-Walk | 316 Ansagen, 0 abweichend. |
+| Python gegen JavaScript | Die wahre Welt von 2.972 gemischten Partien kostet in beiden gleich. |
+| Korpus | 237 von 243 Brettern geben dieselbe Antwort. Zwei Bad-Moon-Rising-Partien sind neu gespielt (Höfling). Vier Bretter auf dem eigenen Skript mit Banshee geben andere Prozente, weil ihr Tod jetzt dem Dämon gehören muss. |
+| Suite | 1.287 Tests grün, 4 davon neu (der Höfling, der den Schläger nennt). |
+
 
 ### Als Nächstes
 
@@ -861,7 +888,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 
 **3 · Strenge Lesart für stille Nächte** (zurückgestellt): zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst. Im Versuch verlor sie 11 von 60.000 Partien, die der Solver hält.
 
-**4 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox, Rückkehr mitten in der Nacht, Pukka eine Nacht später, Teedame neben dem Schläger, Gift auf einem Überlebenden) betreffen auch das Regelwerk des Einzelspieler-Spiels. Das gehört in den anderen Chat.
+**4 · Die Regeln an das Spiel zurückgeben.** Mehrere Funde (Teedame, Höfling, Glücksspieler, Vortox, Rückkehr mitten in der Nacht, Pukka eine Nacht später, Teedame neben dem Schläger, Gift auf einem Überlebenden, Höfling nennt den Schläger) betreffen auch das Regelwerk des Einzelspieler-Spiels. Das gehört in den anderen Chat.
 
 ### Offene Stellen
 
@@ -888,7 +915,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 19 | Simulator | **Der Mönch schützt in manchen Nächten zwei Spieler:** ein alter Münzwurf neben der eingetragenen Wahl. Ihn zu entfernen würde alle Trouble-Brewing-Partien neu austeilen, die Tests beim Namen nennen. Der Solver ist davon nicht betroffen. |
 | 20 | Solver | **Der Solver rechnet in ganzen Nächten.** Das Pukka-Gift auf einem Überlebenden gilt bei ihm für die ganze Nacht und den Tag danach, am Tisch nur bis zum Zug der Pukka. Das hält zu viele Welten, verliert aber keine. |
 | 21 | Simulator | **Ein Seitenwechsel des Schlägers gilt für die ganze Nacht,** nicht erst ab dem Platz, an dem er gewählt wurde. Simulator und Night-Walk machen es gleich. |
-| 22 | Solver | **Grenze 400 für die Erzählungen der Nächte** bleibt eine Grenze (von dir bestätigt am 04.10.2026). Seit demselben Tag fallen Erzählungen, die das Brett ausschließt, vor dem Schnitt weg. In 60.000 Partien ging keine wahre Welt verloren, ausgeschlossen ist es bei sieben und mehr Nächten nicht. Sauber wäre, die Nächte einzeln statt als Produkt zu führen. **Erster gemessener Fall am 07.10.2026:** 1 von 3.000 Partien über 6 Nächte auf dem Skript „Second five, like Bad Moon Rising“ (Seed 2118). Mit einer Grenze von 2.000 hält der Solver sie. |
+| 22 | Solver | **Grenze 400 für die Erzählungen der Nächte** bleibt eine Grenze (von dir bestätigt am 04.10.2026). Seit demselben Tag fallen Erzählungen, die das Brett ausschließt, vor dem Schnitt weg. In 60.000 Partien ging keine wahre Welt verloren, ausgeschlossen ist es bei sieben und mehr Nächten nicht. Sauber wäre, die Nächte einzeln statt als Produkt zu führen. **Erster gemessener Fall am 07.10.2026:** 1 von 3.000 Partien über 6 Nächte auf dem Skript „Second five, like Bad Moon Rising“ (Seed 2118). Mit einer Grenze von 2.000 hält der Solver sie. Seit dem Höfling vom 08.10.2026 ist es dort Seed 1073, weiter 1 von 3.000. |
 | 23 | Solver | **Der Dämon-Typ wird aus stillen Nächten kaum erkannt.** Nach drei stillen Nächten ist es in 65 % ein Zombuul, der Solver sagt 38 %. Gemessen am 04.10.2026: Das zu ändern findet den Dämon nicht öfter. |
 | 24 | Messung | **Nicht gemessen:** wie früh der Solver den Dämon findet (nur der Stand nach vier Nächten), und ob ein Dämon am Morgen vor seiner Hinrichtung vorn stand. Der Solver weiß nicht, dass eine Partie zu Ende ist. |
 | 25 | Messung | **Kleine Tische:** Bei 7 und 8 Spielern sind nach vier Nächten fast alle Partien entschieden. Die frühere Auffälligkeit „9 Spieler“ bei Sects & Violets war ein Artefakt davon. |
@@ -911,7 +938,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 42 | Solver | **Eine Auskunft, die nur durch Registrieren stimmt, verlangt, dass der registrierende Sitz nicht gestört war.** Die andere Erklärung, dass die Quelle selbst gestört war, prüft der Solver dann nicht mehr. Gefunden an einem Totengräber, dem ein Spion als Soldat gezeigt wurde, in einer Nacht, in der ein Minnesänger alle betrunken gemacht hatte. 1 von 3.000 gemischten Partien. |
 | 43 | Simulator | **Ein Philosoph nimmt einen Charakter, der echte Halter nennt seine Rolle nicht.** Dann rechnet der Solver die Auskunft des echten Halters dem Philosophen zu. 1 von 3.000 Partien in Sects & Violets (Seed 1698). |
 | 44 | Night-Walk | **Akrobatin neben getauschten oder betrunkenen Sitzen:** Simulator und Night-Walk sind sich in etwa 12 von 8.316 Nächten nicht einig, ob das Ziel der Akrobatin gestört ist. Der Simulator vergiftet einen getauschten Dämon erst ab der nächsten Nacht, der Night-Walk sofort. |
-| 45 | Regelfrage | **Ein Höfling nennt den Schläger.** Der Code sagt: Das zählt nicht, weil der Höfling einen Charakter nennt und keinen Spieler wählt. Das Wiki zum Schläger nennt genau diesen Fall als Beispiel: Der Schläger wird gut, der Höfling betrunken. Gefunden am 07.10.2026 beim Ojo, der ebenfalls einen Charakter nennt und bei dem ich nach dem Wiki gebaut habe. Betrifft auch das Einzelspieler-Spiel. Zu entscheiden. |
+| 45 | erledigt | **Ein Höfling nennt den Schläger.** Deine Entscheidung vom 08.10.2026: Weg 1, wie im Wiki. Das zählt als Wahl des Schlägers. Gebaut in Solver, Simulator und Night-Walk. Die Abweichung für das Einzelspieler-Spiel steht in `claude/handover-hoefling-schlaeger.md`. |
 | 46 | Night-Walk | **Ein Seemann wählt den Schläger zuerst, und der Gastwirt macht den Schläger in derselben Nacht betrunken.** Der Night-Walk bekommt den Schläger als von Anfang an betrunken gesagt und lässt ihn nicht antworten. 1 von 8.219 Nächten. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.

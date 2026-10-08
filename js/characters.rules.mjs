@@ -1051,6 +1051,19 @@ immunityRule(function anExorcistSendsTheDemonToBed(
   return [shield("Exorcist", {needs: exorcist, chosen: named === null})];
 });
 
+/** The Banshee the table was told about died to the Demon and to nothing
+ * else: the announcement comes only from a Demon's kill (table ruling,
+ * 08.10.2026). A shield nothing had to be working for. */
+immunityRule(function anAnnouncedBansheeFellToTheDemon(
+    world, state, night, seat, kind) {
+  if (kind === DEMON || !inBag(state, "Banshee")) return [];
+  for (const info of state.infos)
+    if (info.sourceRole === "Banshee" && info.night === night && info.hard()
+        && info.leanedOn(world, state).includes(seat))
+      return [shield("Banshee announced")];
+  return [];
+});
+
 /** The Demon went for the Mayor, and the Storyteller sent it elsewhere —
  * including into somebody already dead.
  *
@@ -1135,6 +1148,14 @@ sourceRule(function aGoonDrunksWhoeverChoseIt(world, state, night) {
   if (goon === null) return [];
   const pickers = new Set([...state.aliveSet(phase)].filter(
     seat => seat !== goon && CHARACTERS[world.roleAt(seat, phase)].chooses));
+  // And a Courtier that named the Goon tonight: "The Courtier chooses the
+  // Goon. The Goon turns good, and the Courtier becomes drunk" (the wiki;
+  // table ruling, 08.10.2026).
+  for (const info of state.infos)
+    if (info.sourceRole === "Courtier" && info.night === night
+        && info.role === "Goon" && info.player !== goon
+        && world.roleAt(info.player, phase) === "Courtier"
+        && state.aliveSet(phase).has(info.player)) pickers.add(info.player);
   if (!pickers.size) return [];
   // On offer, never forced. With one chooser left alive this was a free
   // source that could reach everybody it could reach — which the plan
@@ -1175,7 +1196,10 @@ sourceRule(function aCourtierNamesACharacter(world, state, night) {
     // forced: free to explain something that went wrong, and no bar to
     // something that worked.
     const died = state.diedAt(courtier);
-    const went = died.includes(phase) || died.includes(`D${night}`);
+    // Named the Goon, it may have been the first to choose it — then the
+    // Courtier was drunk on the spot and nothing happened (08.10.2026).
+    const went = died.includes(phase) || died.includes(`D${night}`)
+      || info.role === "Goon";
     const free = went ? () => 1.0 : 1.0;
     out.push(new Source("Courtier", new Set([hit]),
                         {capacity: 1, cost: free, repeatCost: free}));

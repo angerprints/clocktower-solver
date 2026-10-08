@@ -2523,9 +2523,10 @@ class BansheeAnnounced(Info):
     Not information a Vortox reaches: "if the Vortox kills the Banshee,
     all players learn that the Banshee has died" (their Jinx).
 
-    **Not checked: that it was the Demon.** What killed a seat is the
-    death machinery's business and a row cannot ask it. A Banshee taken
-    by an Assassin on the night of the announcement would pass here.
+    **And that it was the Demon** — only a Demon's kill is announced
+    (table ruling, 08.10.2026). That is the death machinery's question,
+    so it is asked there: `an_announced_banshee_fell_to_the_demon` closes
+    every other way of dying to that seat on that night.
     """
 
     source_role = "Banshee"
@@ -2580,9 +2581,8 @@ class GoblinClaim(Info):
     and whoever said it is whoever said it. A world where they are not
     the Goblin has nothing to explain.
 
-    Left alone: a claimant executed who did not die. Whether "executed"
-    is enough for the win when a Devil's Advocate stands by is not on
-    the wiki page, so a board like that rules nothing out.
+    Executed is what counts, dead or not: a claimant a Devil's Advocate
+    saved has still won (table ruling, 08.10.2026).
     """
 
     is_a_choice = True
@@ -2600,7 +2600,9 @@ class GoblinClaim(Info):
         day = self.night
         if w.role_at(self.player, f"D{day}") != "Goblin":
             return ()
-        if s.execution_death(day) != self.player:
+        # Executed is enough: "an ability that triggers on execution does
+        # not need the execution to kill" (table ruling, 08.10.2026).
+        if s.executed_on(day) != self.player:
             return ()
         if not went_on_after(s, day):
             return ()

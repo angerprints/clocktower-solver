@@ -5,14 +5,16 @@ of them reads anything and only the Ojo acts at night, so what is checked
 here is what each one *leaves on the board*:
 
   * A **Banshee** the Demon kills is announced to the table — that one
-    died, not which seat. A fact, and only for one whose ability worked.
-  * A **Zealot** votes on every nomination while five are alive. Not
-    voting is priced rather than forbidden: a vote nobody wrote down is
-    the likelier story at a real table.
+    died, not which seat. A fact, only for one whose ability worked, and
+    only for a death by the Demon (table ruling, 08.10.2026).
+  * A **Zealot** votes on every nomination while five are alive. One
+    that did not is no Zealot (table ruling, 08.10.2026: the votes are
+    to be entered correctly).
   * A **Heretic** turns the result round and nothing else. The game ends
     when it would have, so nothing here reads it.
-  * A **Goblin** that says so when nominated and is executed has won.
-    The town calling the bluff and the game going on says it was none.
+  * A **Goblin** that says so when nominated and is executed has won —
+    dead of it or not (table ruling, 08.10.2026). The town calling the
+    bluff and the game going on says it was none.
   * An **Ojo** names a character and its holder dies. From the board that
     is a Demon killing one player a night.
 
@@ -136,6 +138,28 @@ class ABansheeTheDemonKilled(SolverTest):
         self.assertIsNone(cost(OJO, SEVEN, [self.ROW],
                                deaths={1: "N2", 0: "N3"}))
 
+    def test_only_for_a_death_by_the_demon(self):
+        """Nothing but the Demon kills on this script, so the Banshee
+        dying at all says the Demon did it. A Gossip could have — and
+        then there would be no announcement."""
+        gossiping = scripts.from_ids("with a Gossip", LIKE_BMR)
+        roles = ["Banshee", "Gossip", "Chambermaid", "Sailor", "Gambler",
+                 "Goblin", "Ojo"]
+        world = World(tuple(roles), (None,) * 7)
+        state = GameState(n_players=7, script=gossiping,
+                          claims=dict(enumerate(roles)), infos=[self.ROW],
+                          deaths={0: "N2"})
+        from botc import deaths as D
+        others = D.shields_on(world, state, 2, 0, D.OTHER)
+        self.assertEqual([s.by for s in others], ["Banshee announced"])
+        self.assertEqual(D.shields_on(world, state, 2, 0, D.DEMON), [])
+        # Two bodies, the Banshee and the Chambermaid: one Demon kill, so
+        # the other has to be the Gossip's — and it cannot be the
+        # Banshee's. With the Gossip's words true, the board fits.
+        kept = cost(gossiping, roles, [self.ROW],
+                    deaths={0: "N2", 2: "N2"})
+        self.assertIsNotNone(kept)
+
     def test_a_drunk_holding_the_token_is_never_announced(self):
         roles = ["Drunk"] + SEVEN[1:]
         believes = ["Banshee"] + [None] * 6
@@ -182,7 +206,8 @@ class ABansheeTheDemonKilled(SolverTest):
 
 class AZealotVotes(SolverTest):
     """"If there are 5 or more players alive, you must vote for every
-    nomination." Priced when it did not, never forbidden."""
+    nomination." A Zealot that did not is no Zealot (table ruling,
+    08.10.2026) — and drunk or poisoned is no excuse, the wiki says."""
 
     def board(self, voted, **kw):
         return cost(OJO, SEVEN, votes={1: set(voted)},
@@ -191,13 +216,22 @@ class AZealotVotes(SolverTest):
     def test_a_zealot_that_voted_costs_nothing(self):
         self.assertEqual(self.board({1, 3, 4}), 1.0)
 
-    def test_one_that_did_not_is_priced(self):
-        self.assertAlmostEqual(self.board({1, 4}), S.ZEALOT_SILENT_PENALTY)
+    def test_one_that_did_not_is_no_zealot(self):
+        self.assertIsNone(self.board({1, 4}))
 
-    def test_and_on_every_such_day(self):
-        got = cost(OJO, SEVEN, votes={1: {1}, 2: {2}},
+    def test_on_any_such_day(self):
+        got = cost(OJO, SEVEN, votes={1: {1, 3}, 2: {2}},
                    nominations={1: {1}, 2: {4}}, deaths={0: "N2"})
-        self.assertAlmostEqual(got, S.ZEALOT_SILENT_PENALTY ** 2)
+        self.assertIsNone(got)
+        got = cost(OJO, SEVEN, votes={1: {1, 3}, 2: {2, 3}},
+                   nominations={1: {1}, 2: {4}}, deaths={0: "N2"})
+        self.assertEqual(got, 1.0)
+
+    def test_poisoned_is_no_excuse(self):
+        """Ten at the table and a Poisoner beside it: still ruled out."""
+        roles = ["Zealot"] + TEN[1:]
+        self.assertIsNone(cost(OJO, roles, votes={1: {1, 2}},
+                               nominations={1: {1}}))
 
     def test_not_with_four_alive(self):
         deaths = {0: "N2", 1: "E1", 2: "E2"}
@@ -240,6 +274,24 @@ class AGoblinSaysSo(SolverTest):
         # Went on, shown by a death the night after instead.
         self.assertIsNone(cost(OJO, SEVEN, [said],
                                deaths={5: "E1", 1: "N2"}))
+
+    def test_executed_is_enough_dead_or_not(self):
+        """"An ability that triggers on execution does not need the
+        execution to kill" (table ruling, 08.10.2026). Executed and
+        walked away — a Devil's Advocate, say — is still the win."""
+        # Nobody here who could have made the Goblin drunk.
+        roles = ["Banshee", "Grandmother", "Chambermaid", "Exorcist",
+                 "TeaLady", "Gambler", "Gossip", "Goblin",
+                 "DevilsAdvocate", "Ojo"]
+        on = dict(executions={1: 7}, days_done={1})
+        # Walked away, a Devil's Advocate beside it: legal on its own...
+        self.assertIsNotNone(cost(OJO_BMR, roles, **on))
+        # ...and not after saying it was the Goblin.
+        self.assertIsNone(cost(OJO_BMR, roles, [I.GoblinClaim(1, 7)], **on))
+        # The Gossip saying it and walking away is nothing.
+        gossip = dict(executions={1: 6}, days_done={1})
+        self.assertIsNotNone(cost(OJO_BMR, roles, [I.GoblinClaim(1, 6)],
+                                  **gossip))
 
     def test_anybody_else_saying_it_and_hanging_is_fine(self):
         said = I.GoblinClaim(1, 1)
@@ -294,6 +346,59 @@ class AnOjoKillsLikeAnyDemon(SolverTest):
                           claims=dict(enumerate(roles)))
         shields = D.shields_on(world, state, 2, 0, D.DEMON)
         self.assertEqual([s.by for s in shields], ["Soldier"])
+
+
+class ACourtierNamingTheGoonChoosesIt(SolverTest):
+    """"The Courtier chooses the Goon. The Goon turns good, and the
+    Courtier becomes drunk" — the wiki's Goon page (table ruling,
+    08.10.2026). Found while building the Ojo, which also names a
+    character rather than pointing at a player."""
+
+    ROLES = ["Courtier", "Goon", "Chambermaid", "Sailor", "Gambler",
+             "Godfather", "Po"]
+
+    def sources(self, row, night):
+        from botc import impairment
+        world = World(tuple(self.ROLES), (None,) * 7)
+        state = GameState(n_players=7, script=scripts.BAD_MOON_RISING,
+                          claims=dict(enumerate(self.ROLES)), infos=[row])
+        return {s.name: s for s in impairment.sources_on(world, state,
+                                                          night)}
+
+    def test_the_courtier_may_be_the_goons_first_chooser(self):
+        got = self.sources(I.CourtierChoice(1, 0, role="Goon"), 1)
+        self.assertIn(0, got["Goon"].seats)
+
+    def test_and_then_the_goon_is_not_drunk_for_certain(self):
+        """Drunk on the spot, it made nobody drunk: the three days are
+        on offer rather than forced."""
+        got = self.sources(I.CourtierChoice(1, 0, role="Goon"), 1)
+        self.assertFalse(got["Courtier"].unavoidable())
+        other = self.sources(I.CourtierChoice(1, 0, role="Godfather"), 1)
+        self.assertTrue(other["Courtier"].unavoidable())
+
+    def test_only_on_the_night_it_named_the_goon(self):
+        got = self.sources(I.CourtierChoice(1, 0, role="Goon"), 2)
+        self.assertNotIn(0, got.get("Goon").seats if "Goon" in got else ())
+
+    def test_the_simulator_plays_it(self):
+        import simulate
+        first = 0
+        for seed in range(1500):
+            deal, heard = simulate.play(9, random.Random(seed), nights=3,
+                                        script=scripts.BAD_MOON_RISING)
+            for row in heard:
+                if not isinstance(row, I.CourtierChoice) or row.role != "Goon":
+                    continue
+                chose = deal.goon_first.get(row.night)
+                if chose and chose[0] == row.player:
+                    first += 1
+                    with self.subTest(seed=seed):
+                        self.assertFalse(deal.working(row.player, row.night))
+                        self.assertNotIn(
+                            (row.night, chose[1], row.player),
+                            deal.courtier_drunks)
+        self.assertGreater(first, 3)
 
 
 class TheSimulatorPlaysThem(SolverTest):
@@ -391,9 +496,12 @@ class TheSimulatorPlaysThem(SolverTest):
                     if not isinstance(row, I.GoblinClaim):
                         continue
                     day = row.night
-                    # Hanged that day — and perhaps raised and hanged
-                    # again since, so every death it has had is asked.
-                    self.assertIn(f"E{day}", deal.deaths_of(row.player))
+                    # Hanged that day: dead of it — perhaps raised and
+                    # hanged again since, so every death is asked — or
+                    # walked away and recorded as executed.
+                    self.assertTrue(
+                        f"E{day}" in deal.deaths_of(row.player)
+                        or deal.executions.get(day) == row.player)
                     if deal.role_at(row.player, f"D{day}") != "Goblin":
                         others += 1
                         continue

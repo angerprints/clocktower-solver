@@ -75,8 +75,6 @@ export const PRIORS = {
   // A Storyteller treats the Sailor's drunkenness as the price the town
   // pays for having somebody unkillable, not as a weapon.
   SAILOR_ON_EVIL_PENALTY: 0.15,
-  // A Zealot that did not vote: cheating, or a vote nobody wrote down.
-  ZEALOT_SILENT_PENALTY: 0.1,
 };
 
 // The ranges I would defend as equally plausible. Running the solve

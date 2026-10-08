@@ -737,7 +737,17 @@ def walk(deal, night, hidden):
                 # Three days and nights of drunkenness for whoever holds the
                 # character it names. Acts at 8, before the Demon.
                 named = hidden.get(("courtier", night))
-                if named is None or not state.working(seat):
+                if named is None:
+                    continue
+                # Naming the Goon is choosing it (the wiki's example, and
+                # the table's ruling of 08.10.2026). It answers first, and
+                # a Courtier it makes drunk names nobody into drunkenness.
+                if named == "Goon":
+                    for other, role_there in state.roles.items():
+                        if role_there == "Goon":
+                            state.choose(seat, other, slot)
+                            _goon_answers(state, seat, other, slot)
+                if not state.working(seat):
                     continue
                 for other, role_there in state.roles.items():
                     if role_there == named:

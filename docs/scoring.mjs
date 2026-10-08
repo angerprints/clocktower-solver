@@ -772,12 +772,11 @@ export function forcedRoles(state) {
  * The ability only fires the first time a Townsfolk nominates, so once
  * one nomination is on the record the later quiet ones say nothing.
  */
-/** What it costs this world that its Zealot did not vote, on a day with
- * a nomination and five alive. Priced, not impossible: the likelier
- * story at a real table is a vote nobody wrote down. See solver.py. */
+/** Did this world's Zealot sit out a vote it had to cast, on a day with a
+ * nomination and five alive? A Zealot that did not vote is no Zealot
+ * (table ruling, 08.10.2026). See solver.py. */
 function aZealotKeptItsHandDown(world, state) {
-  if (!inBag(state, "Zealot")) return 1.0;
-  let cost = 1.0;
+  if (!inBag(state, "Zealot")) return false;
   for (const key of Object.keys(state.votes || {})) {
     const day = Number(key);
     const voted = new Set(state.votes[key] || []);
@@ -792,9 +791,9 @@ function aZealotKeptItsHandDown(world, state) {
     for (const seat of alive)
       if (!voted.has(seat) && !state.diedAt(seat).includes(phase)
           && world.roleAt(seat, phase) === "Zealot")
-        cost *= PRIORS.ZEALOT_SILENT_PENALTY;
+        return true;
   }
-  return cost;
+  return false;
 }
 
 function spentNominations(state) {
@@ -969,7 +968,7 @@ function plainFailures(world, state, outcome = {}) {
     }
   }
 
-  invented *= aZealotKeptItsHandDown(world, state);
+  if (aZealotKeptItsHandDown(world, state)) return null;  // did not vote
 
   const spent = spentNominations(state);
   const seats = sourceSeats(state);

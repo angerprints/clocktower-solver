@@ -824,12 +824,18 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             executed = _execute(d, night, rng, allow_takeover)
             if executed is not None:
                 d.deaths[executed] = f"E{night}"
-                # A Goblin that said so and went to the gallows: its team
-                # has won, and the game stops there.
-                if _a_goblin_said_so(d, night, executed, rng, heard):
-                    d.ended_at, d.ended_why = f"E{night}", "goblin"
-                    d.game_ends_after = night
-                    break
+            # A Goblin that said so and went to the gallows: its team has
+            # won, and the game stops there — dead of it or not. An
+            # ability that triggers on execution does not need the
+            # execution to kill (table ruling, 08.10.2026).
+            hanged = executed if executed is not None else (
+                d.executions.get(night) if night in d.walked_because
+                else None)
+            if hanged is not None \
+                    and _a_goblin_said_so(d, night, hanged, rng, heard):
+                d.ended_at, d.ended_why = f"E{night}", "goblin"
+                d.game_ends_after = night
+                break
             # Or the town hangs one of the last three.
             if _evil_has_won(d, f"E{night}"):
                 d.ended_at, d.ended_why = f"E{night}", "two alive"
@@ -963,8 +969,9 @@ def _the_goon_answers(d, night, chooser, target):
     when its chooser was already drunk or poisoned.
 
     Only a player choosing a player counts — not the Storyteller picking
-    for a Gossip or a Tinker, not a Courtier naming a character, not a
-    Moonchild pointing in daylight. A dead Goon has no ability, and a
+    for a Gossip or a Tinker, not a Moonchild pointing in daylight. A
+    Courtier naming the Goon's character does count: the wiki's Goon page
+    has exactly that (table ruling, 08.10.2026), and so does an Ojo. A dead Goon has no ability, and a
     droisoned one does nothing.
 
     Dealt in a quarter of all games and never played until 03.10.2026.
@@ -3883,12 +3890,22 @@ def _for_role(d, seat, role, night, rng):
         # the first night after coming back — and the table hears which.
         d.courtier_chose[seat] = night
         d.courtier_nights.add((seat, night))
-        named = rng.choice(list(d.script.townsfolk) + list(d.script.minions))
+        # The Goon too, where there is one: naming it is choosing it,
+        # and it turns to the Courtier's side — the wiki's own example on
+        # the Goon's page (table ruling, 08.10.2026). Never offered until
+        # then, so every Bad Moon Rising game with a Courtier is dealt a
+        # little differently from that day.
+        pool = list(d.script.townsfolk) + list(d.script.minions)
+        if "Goon" in d.script.outsiders:
+            pool.append("Goon")
+        named = rng.choice(pool)
         # And the drunkenness itself, which was never applied: the row
         # was written and nobody got drunk. Decided now, while it is
         # known whether the Courtier itself was working tonight.
         holder = next((p for p in range(d.n)
                        if d.role_at(p, f"N{night}") == named), None)
+        if holder is not None and named == "Goon":
+            _the_goon_answers(d, night, seat, holder)
         if holder is not None and d.working(seat, night):
             d.courtier_drunk = (night, holder, seat)
             d.courtier_drunks.append((night, holder, seat))

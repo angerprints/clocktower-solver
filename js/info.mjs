@@ -1306,7 +1306,8 @@ export const GoblinClaim = define("GoblinClaim", "Goblin",
     mustHaveFailed(w, s) {
       const day = this.night;
       if (w.roleAt(this.player, `D${day}`) !== "Goblin") return [];
-      if (s.executionDeath(day) !== this.player) return [];
+      // Executed is enough, dead or not (table ruling, 08.10.2026).
+      if (s.executedOn(day) !== this.player) return [];
       if (!wentOnAfter(s, day)) return [];
       return [this.player];
     },

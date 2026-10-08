@@ -2262,6 +2262,30 @@ def an_exorcist_sends_the_demon_to_bed(world, state, night, seat, kind):
 
 
 @death_causes.immunity_rule
+def an_announced_banshee_fell_to_the_demon(world, state, night, seat, kind):
+    """The Banshee the table was told about died to the Demon, and to
+    nothing else.
+
+    "If the Demon kills you, all players learn this" — and only then: a
+    Banshee taken by an Assassin, a Gossip or a grieving grandchild goes
+    quietly (table ruling, 08.10.2026: the announcement, and the
+    ability with it, comes only from a Demon's kill). So on the night of
+    an announcement, every other way of dying is closed to that seat.
+
+    Written as a shield nothing had to be working for, the same shape
+    as a corpse that cannot be killed again.
+    """
+    if kind == death_causes.DEMON or not _in_bag(state, "Banshee"):
+        return []
+    for info in state.infos:
+        if getattr(info, "source_role", None) == "Banshee" \
+                and info.night == night and info.hard() \
+                and seat in info.leaned_on(world, state):
+            return [death_causes.Shield("Banshee announced")]
+    return []
+
+
+@death_causes.immunity_rule
 def a_mayors_death_may_be_moved(world, state, night, seat, kind):
     """The Demon went for the Mayor, and the Storyteller sent it
     elsewhere — including into somebody already dead.
@@ -2762,18 +2786,18 @@ def rh_for(info):
 #
 # "Must" is the player's to keep: the wiki calls not voting cheating,
 # says the Storyteller does not police it, and that it holds drunk or
-# poisoned — so there is no excuse the plan could pay for. That would
-# make it impossible, and it is priced instead, because the likelier
-# story at a real table is a vote nobody wrote down. One tick missing
-# must not be what loses the true world.
-ZEALOT_SILENT_PENALTY = 0.1
+# poisoned — so there is no excuse the plan could pay for.
+#
+# Priced at first (0.1), on the reasoning that a vote nobody wrote down
+# is likelier at a real table. Table ruling, 08.10.2026: the votes are
+# to be entered correctly, and a Zealot that did not vote is no Zealot.
+# So it rules the world out.
 
 
 def _a_zealot_kept_its_hand_down(world, state):
-    """What it costs this world that its Zealot did not vote."""
+    """Did this world's Zealot sit out a vote it had to cast?"""
     if not _in_bag(state, "Zealot"):
-        return 1.0
-    cost = 1.0
+        return False
     for day, voted in (state.votes or {}).items():
         # Only a day somebody wrote votes down for, with a nomination
         # to have voted on.
@@ -2790,8 +2814,8 @@ def _a_zealot_kept_its_hand_down(world, state):
         for seat in alive:
             if seat not in voted and phase not in state.died_at(seat) \
                     and world.role_at(seat, phase) == "Zealot":
-                cost *= ZEALOT_SILENT_PENALTY
-    return cost
+                return True
+    return False
 
 
 def _plain_failures(world, state, outcome=None):
@@ -3006,7 +3030,8 @@ def _plain_failures(world, state, outcome=None):
         if len(survivors) == 1:
             working.setdefault(day, set()).update(survivors)
 
-    invented *= _a_zealot_kept_its_hand_down(world, state)
+    if _a_zealot_kept_its_hand_down(world, state):
+        return None, None, 1.0, None      # a Zealot that did not vote
 
     spent = _spent_nominations(state)
     for idx, (info, src) in enumerate(zip(state.infos, _source_seats(state))):
@@ -3601,6 +3626,16 @@ def a_goon_drunks_whoever_chose_it(world, state, night):
     pickers = frozenset(
         seat for seat in state.alive_set(phase)
         if seat != goon and CHARACTERS[world.role_at(seat, phase)].chooses)
+    # And a Courtier that named the Goon tonight. It names a character,
+    # not a player — but the wiki's own Goon page has exactly this: "The
+    # Courtier chooses the Goon. The Goon turns good, and the Courtier
+    # becomes drunk" (table ruling, 08.10.2026: as the wiki has it).
+    for info in state.infos:
+        if isinstance(info, CourtierChoice) and info.night == night \
+                and info.role == "Goon" and info.player != goon \
+                and world.role_at(info.player, phase) == "Courtier" \
+                and info.player in state.alive_set(phase):
+            pickers |= {info.player}
     if not pickers:
         return []
     # On offer, never forced. With one chooser left alive this was a free
@@ -3662,6 +3697,10 @@ def a_courtier_names_a_character(world, state, night):
         # that worked.
         went = any(at in state.died_at(courtier)
                    for at in (phase, f"D{night}"))
+        # Named the Goon, it may have been the first to choose it — then
+        # the Courtier was drunk on the spot and nothing happened to the
+        # Goon. Whether it was first nobody writes down, so on offer.
+        went = went or info.role == "Goon"
         free = (lambda who: 1.0) if went else 1.0
         out.append(impairment.Source("Courtier", frozenset({hit}),
                                      capacity=1, cost=free,
