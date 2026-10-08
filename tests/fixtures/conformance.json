@@ -36957,6 +36957,318 @@
    }
   },
   {
+   "name": "x-wraith-bmr-7-courtier-named-it-counts-0",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Magician",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 1,
+      "role": "Wraith"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 0,
+      "a": 3,
+      "b": 5,
+      "count": 0
+     }
+    ],
+    "script": {
+     "name": "Third five, like Bad Moon Rising",
+     "characters": [
+      "magician",
+      "poppygrower",
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "politician",
+      "snitch",
+      "goon",
+      "lunatic",
+      "wraith",
+      "godfather",
+      "assassin",
+      "spy",
+      "po",
+      "pukka"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 634,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 20.472,
+      "demon_pct": 10.236,
+      "drunk_pct": 3.4952,
+      "lying_pct": 23.9672
+     },
+     {
+      "evil_pct": 17.1546,
+      "demon_pct": 8.9804,
+      "drunk_pct": 2.9054,
+      "lying_pct": 20.06
+     },
+     {
+      "evil_pct": 36.6534,
+      "demon_pct": 19.6632,
+      "drunk_pct": 5.5159,
+      "lying_pct": 42.1693
+     },
+     {
+      "evil_pct": 28.9343,
+      "demon_pct": 11.7105,
+      "drunk_pct": 3.5498,
+      "lying_pct": 32.4841
+     },
+     {
+      "evil_pct": 36.6534,
+      "demon_pct": 19.6632,
+      "drunk_pct": 5.5159,
+      "lying_pct": 42.1693
+     },
+     {
+      "evil_pct": 28.9343,
+      "demon_pct": 11.7105,
+      "drunk_pct": 3.5498,
+      "lying_pct": 32.4841
+     },
+     {
+      "evil_pct": 31.1979,
+      "demon_pct": 18.0362,
+      "drunk_pct": 4.7731,
+      "lying_pct": 35.971
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-wraith-bmr-7-courtier-named-it-counts-1",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Magician",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 1,
+      "role": "Wraith"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 0,
+      "a": 3,
+      "b": 5,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Third five, like Bad Moon Rising",
+     "characters": [
+      "magician",
+      "poppygrower",
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "minstrel",
+      "tealady",
+      "politician",
+      "snitch",
+      "goon",
+      "lunatic",
+      "wraith",
+      "godfather",
+      "assassin",
+      "spy",
+      "po",
+      "pukka"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 618,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 21.3597,
+      "demon_pct": 10.6799,
+      "drunk_pct": 3.6468,
+      "lying_pct": 25.0065
+     },
+     {
+      "evil_pct": 14.9182,
+      "demon_pct": 7.0993,
+      "drunk_pct": 2.53,
+      "lying_pct": 17.4481
+     },
+     {
+      "evil_pct": 31.3705,
+      "demon_pct": 14.4428,
+      "drunk_pct": 5.0599,
+      "lying_pct": 36.4304
+     },
+     {
+      "evil_pct": 38.1819,
+      "demon_pct": 21.6281,
+      "drunk_pct": 6.4332,
+      "lying_pct": 44.615
+     },
+     {
+      "evil_pct": 31.3705,
+      "demon_pct": 14.4428,
+      "drunk_pct": 5.0599,
+      "lying_pct": 36.4304
+     },
+     {
+      "evil_pct": 38.1819,
+      "demon_pct": 21.6281,
+      "drunk_pct": 6.4332,
+      "lying_pct": 44.615
+     },
+     {
+      "evil_pct": 24.6174,
+      "demon_pct": 10.0791,
+      "drunk_pct": 4.4787,
+      "lying_pct": 29.0961
+     }
+    ]
+   }
+  },
+  {
    "name": "x-wraith-9-snitch-politician",
    "payload": {
     "n_players": 9,
@@ -37267,7 +37579,7 @@
       "player": 0,
       "a": 1,
       "b": 3,
-      "count": 2
+      "count": 1
      },
      {
       "type": "InnkeeperChoice",
@@ -37316,20 +37628,20 @@
     "game_over": true
    },
    "expect": {
-    "valid": 53,
+    "valid": 67,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 29.0862,
+      "evil_pct": 24.693,
       "demon_pct": 0.0,
-      "drunk_pct": 2.6684,
-      "lying_pct": 31.7546
+      "drunk_pct": 2.2653,
+      "lying_pct": 26.9584
      },
      {
-      "evil_pct": 0.8756,
+      "evil_pct": 3.3627,
       "demon_pct": 0.0,
-      "drunk_pct": 1.8446,
-      "lying_pct": 2.7202
+      "drunk_pct": 4.4461,
+      "lying_pct": 7.8088
      },
      {
       "evil_pct": 100.0,
@@ -37338,50 +37650,50 @@
       "lying_pct": 100.0
      },
      {
-      "evil_pct": 3.0869,
+      "evil_pct": 12.2026,
       "demon_pct": 0.0,
-      "drunk_pct": 2.5961,
-      "lying_pct": 5.6831
+      "drunk_pct": 2.2266,
+      "lying_pct": 14.4292
      },
      {
-      "evil_pct": 0.3446,
+      "evil_pct": 0.9649,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.3446
+      "lying_pct": 0.9649
      },
      {
-      "evil_pct": 2.564,
+      "evil_pct": 4.3281,
       "demon_pct": 0.0,
-      "drunk_pct": 0.2923,
-      "lying_pct": 2.8563
+      "drunk_pct": 0.2481,
+      "lying_pct": 4.5762
      },
      {
-      "evil_pct": 64.0427,
+      "evil_pct": 54.4487,
       "demon_pct": 0.0,
-      "drunk_pct": 3.0155,
-      "lying_pct": 67.0581
+      "drunk_pct": 2.6465,
+      "lying_pct": 57.0953
      }
     ],
     "blame": {
      "2": {
       "1": {
-       "Demon": 0.9671,
-       "Assassin": 0.011,
-       "Gossip": 0.008,
-       "Godfather": 0.014
+       "Demon": 0.9585,
+       "Assassin": 0.0221,
+       "Gossip": 0.0071,
+       "Godfather": 0.0122
       }
      },
      "4": {
       "3": {
-       "Demon": 0.983,
-       "Assassin": 0.0033,
-       "Gossip": 0.0137,
+       "Demon": 0.9738,
+       "Assassin": 0.0137,
+       "Gossip": 0.0124,
        "Godfather": 0.0001
       },
       "4": {
-       "Demon": 0.983,
-       "Assassin": 0.0033,
-       "Gossip": 0.0137,
+       "Demon": 0.9738,
+       "Assassin": 0.0137,
+       "Gossip": 0.0124,
        "Godfather": 0.0001
       }
      }
@@ -37534,7 +37846,7 @@
       "player": 5,
       "a": 2,
       "b": 6,
-      "count": 2
+      "count": 1
      },
      {
       "type": "SailorChoice",
@@ -37576,7 +37888,7 @@
       "player": 5,
       "a": 0,
       "b": 6,
-      "count": 2
+      "count": 1
      }
     ],
     "script": {
@@ -37620,25 +37932,25 @@
     "game_over": false
    },
    "expect": {
-    "valid": 204,
+    "valid": 198,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 96.6511,
-      "demon_pct": 44.1184,
-      "drunk_pct": 0.9262,
-      "lying_pct": 97.5773
+      "evil_pct": 93.9124,
+      "demon_pct": 60.2219,
+      "drunk_pct": 1.6664,
+      "lying_pct": 95.5788
      },
      {
-      "evil_pct": 2.7917,
-      "demon_pct": 1.2182,
-      "drunk_pct": 0.1139,
-      "lying_pct": 2.9056
+      "evil_pct": 4.8404,
+      "demon_pct": 2.6154,
+      "drunk_pct": 0.372,
+      "lying_pct": 5.2125
      },
      {
       "evil_pct": 0.0,
       "demon_pct": 0.0,
-      "drunk_pct": 0.4525,
+      "drunk_pct": 1.1608,
       "lying_pct": 0.0
      },
      {
@@ -37650,20 +37962,20 @@
      {
       "evil_pct": 0.0,
       "demon_pct": 0.0,
-      "drunk_pct": 3.2764,
-      "lying_pct": 3.2764
+      "drunk_pct": 9.239,
+      "lying_pct": 9.239
      },
      {
-      "evil_pct": 5.6845,
-      "demon_pct": 2.8422,
-      "drunk_pct": 0.7641,
-      "lying_pct": 6.4486
+      "evil_pct": 10.2079,
+      "demon_pct": 5.104,
+      "drunk_pct": 1.3722,
+      "lying_pct": 11.5801
      },
      {
-      "evil_pct": 94.8727,
-      "demon_pct": 51.8212,
-      "drunk_pct": 0.9778,
-      "lying_pct": 95.8505
+      "evil_pct": 91.0392,
+      "demon_pct": 32.0587,
+      "drunk_pct": 1.4543,
+      "lying_pct": 92.4935
      }
     ]
    }

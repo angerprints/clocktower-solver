@@ -884,7 +884,7 @@ Der volle Bericht steht in `claude/experimentelle-charaktere-batch-3.md`.
 | Petze | Nichts. Die Schergen bekommen ihre Bluffs, ohne dass das als Aufwachen durch ihre eigene Fähigkeit zählt. |
 | Geist | Er wacht in jeder Nacht auf, in der ein anderer böser Spieler durch seine eigene Fähigkeit aufwacht. Die Kammerzofe zählt ihn. Ist das Aufwachen des anderen Bösen offen (der Dämon in Nacht 1, der Exorzist), ist es auch beim Geist offen. |
 
-**Vier Lesarten habe ich selbst gewählt.** Jede lässt sich umdrehen:
+**Vier Lesarten hatte ich selbst gewählt:**
 
 | | Was ich gewählt habe | Warum |
 |---|---|---|
@@ -894,6 +894,17 @@ Der volle Bericht steht in `claude/experimentelle-charaktere-batch-3.md`.
 | D | Lebt ein Mohnzüchter, ist offen, ob der Spion das Grimoire gesehen hat. | Ihr Jinx: Hat der Mohnzüchter seine Fähigkeit, sieht der Spion das Grimoire nicht. Ob er sie hat, weiß der Solver an dieser Stelle nicht. |
 
 Nicht gebaut: der Jinx von Magierin und Geist. Nach jeder Hinrichtung darf eine lebende Magierin öffentlich raten, wer der Geist ist. Liegt sie richtig, muss der Dämon in dieser Nacht den Geist wählen.
+
+**Deine Antworten vom 08.10.2026:** A und B sind richtig. C und D sind umgedreht, und das ist gebaut:
+
+| | Deine Regel | Was der Solver jetzt tut |
+|---|---|---|
+| C | Ein betrunkener oder vergifteter Geist wacht nicht auf. | Die Kammerzofe zählt ihn dann nicht. Braucht ihre Zahl einen wachen Geist, muss er nüchtern gewesen sein. Braucht sie einen schlafenden, muss er gestört gewesen sein. In beiden Fällen darf stattdessen die Kammerzofe selbst gestört gewesen sein. Der Solver probiert beide Wege. |
+| D | Der Spion sieht das Grimoire nicht, solange der Mohnzüchter lebt. | Ob der Mohnzüchter dabei gestört ist, spielt keine Rolle. Ein Spion neben einem lebenden Mohnzüchter weckt den Geist nicht. |
+
+Dass der Jinx von Magierin und Geist nicht gebaut ist, passt für dich.
+
+Für C kann eine Zeile jetzt sagen: „entweder die Kammerzofe war gestört oder der Geist“. Der Solver probiert beide Wege, so wie beim Vortox mit dem Mathematiker. Gemessen: Auf dem Skript wie Bad Moon Rising fragte die Kammerzofe 324-mal nach einem Geist, 70-mal war er gestört, und 0 von 6.000 Partien verlieren die wahre Welt. Die gemischten Partien verlieren dieselben 6 von 3.000 wie vorher, Python und JavaScript stimmen auf 2.984 Partien überein. Im Korpus stehen zwei neue Bretter mit einem Höfling, der den Geist nennt (255 insgesamt). 1.311 Tests sind grün.
 
 **Das Tor:**
 

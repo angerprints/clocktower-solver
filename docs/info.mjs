@@ -14,7 +14,7 @@ import {CHARACTERS} from "./catalogue.mjs";
 import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./roles.mjs";
 import {killedByAVigormortis, sourcesOn} from "./impairment.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {possibleCounts, reallyLiving, theDeadOutnumberOrEqual}
+import {possibleCounts, reallyLiving, theDeadOutnumberOrEqual, wokenWraiths}
   from "./waking.mjs";
 import {OTHER, shieldsOn} from "./deaths.mjs";
 
@@ -1218,15 +1218,41 @@ export const SlayerShot = define("SlayerShot", "Slayer",
  * was woken to be told something, not to do anything, and does not count
  * — which is why the answer can be a range rather than a number.
  */
+//
+// A drunk or poisoned Wraith is not woken (table ruling, 08.10.2026), so
+// a count may need it sober or need it stopped — or the Chambermaid off.
+// See `instead` in info.py.
+function chambermaidCounts(row, w, s) {
+  const seats = [row.a, row.b];
+  const wraiths = wokenWraiths(w, s, seats, row.night);
+  const awake = possibleCounts(w, s, seats, row.night);
+  const asleep = wraiths.size
+    ? possibleCounts(w, s, seats, row.night, wraiths) : awake;
+  return {awake, asleep, wraiths};
+}
+
 export const ChambermaidInfo = define("ChambermaidInfo", "Chambermaid",
   function (w, s) {
-    return possibleCounts(w, s, [this.a, this.b], this.night).has(this.count);
+    const {awake, asleep} = chambermaidCounts(this, w, s);
+    return awake.has(this.count) || asleep.has(this.count);
   }, {
     // Whether the number *has* to be right. Inside a range of two it may
-    // still be the wrong one, which is what a Vortox needs (07.10.2026).
+    // still be the wrong one, which is what a Vortox needs (07.10.2026);
+    // a Wraith that may have been stopped leaves it open too.
     isTrue(w, s) {
-      const could = possibleCounts(w, s, [this.a, this.b], this.night);
+      const {awake, asleep} = chambermaidCounts(this, w, s);
+      const could = new Set([...awake, ...asleep]);
       return could.size === 1 && could.has(this.count);
+    },
+    // What else could explain the number than the Chambermaid failing:
+    // [impaired, working], or null. See `instead` in info.py.
+    instead(w, s) {
+      const {awake, asleep, wraiths} = chambermaidCounts(this, w, s);
+      if (awake.has(this.count) && !asleep.has(this.count))
+        return [[], [...wraiths]];
+      if (asleep.has(this.count) && !awake.has(this.count))
+        return [[...wraiths], []];
+      return null;
     },
   });
 

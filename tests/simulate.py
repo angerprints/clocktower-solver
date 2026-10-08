@@ -2425,12 +2425,14 @@ def _conditionally_woke(d, seat, role, night):
         # being shown your team on the first night does not, which is the
         # same line the Chambermaid draws (08.10.2026).
         #
-        # A Spy does not look while a Poppy Grower has its ability (their
-        # jinx), so then it opens no eyes.
+        # Drunk or poisoned it is not woken at all (table ruling,
+        # 08.10.2026). And a Spy does not look while a Poppy Grower lives
+        # (their jinx, as the table reads it), so it opens no eyes.
         phase = f"N{night}"
-        poppy = next((q for q in d.alive_at(phase)
-                      if d.role_at(q, phase) == "PoppyGrower"), None)
-        blind = poppy is not None and poppy not in droisoned_at(d, night)
+        if seat in droisoned_at(d, night):
+            return False
+        blind = any(d.role_at(q, phase) == "PoppyGrower"
+                    for q in d.alive_at(phase))
         return any(q != seat and d.side_at(q, phase) == "evil"
                    and d.role_at(q, phase) != "Wraith"
                    and not (blind and d.role_at(q, phase) == "Spy")

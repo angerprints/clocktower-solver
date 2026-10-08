@@ -18,7 +18,8 @@ rather than a single number:
     play the Demon's waking is genuinely open.
   * Anybody impaired still wakes. Being drunk or poisoned does not let
     you sleep through the night; the Storyteller wakes you and makes an
-    answer up. So impairment never changes this count.
+    answer up. So impairment never changes this count — except for a
+    Wraith, whose ability *is* waking (table ruling, 08.10.2026).
   * The Demon on the first night. It is woken to learn its Minions and
     its bluffs, which is not its ability — the same reason a Baron does
     not count. That is the table's ruling (02.10.2026), and only the
@@ -342,13 +343,10 @@ def _evil_eyes_open(world, state, seat, night):
         if other == seat or not world.evil_at(other, phase) \
                 or world.role_at(other, phase) == "Wraith":
             continue
-        # "If the Poppy Grower has their ability, the Spy doesn't see the
-        # Grimoire" (their jinx). Whether it has it, drunk or sober, is
-        # not this question's to know, so a Spy beside a living one may
-        # or may not have looked.
-        if poppy_lives and world.role_at(other, phase) == "Spy" \
-                and woke(world, state, other, night):
-            maybe = True
+        # The Spy does not see the Grimoire while a Poppy Grower lives
+        # (their jinx, as the table reads it: 08.10.2026), so it opens no
+        # eyes.
+        if poppy_lives and world.role_at(other, phase) == "Spy":
             continue
         if uncertain(world, state, other, night):
             maybe = True
@@ -364,10 +362,16 @@ def _wraith(world, state, seat, night):
     "You wake when other evil players do" — the Storyteller wakes it for
     every evil player who opens their eyes for their own ability, and
     that is the Wraith's ability doing what it does, so a Chambermaid
-    counts it (my reading, 08.10.2026). Being shown your team on the
+    counts it (table ruling, 08.10.2026). Being shown your team on the
     first night is not anybody's ability, the same line as for the
-    Demon there. Drunk or poisoned it is still woken, to be told it
-    cannot look — the same as everybody impaired.
+    Demon there.
+
+    Drunk or poisoned it is **not** woken (table ruling, 08.10.2026) —
+    the one character whose waking impairment changes, because waking
+    is all its ability is. This says what a sober one does; who was
+    impaired is the plan's to choose, so the Chambermaid's row asks for
+    it (`info.ChambermaidInfo`) and `possible_counts(asleep=...)` gives
+    the count with the Wraith stopped.
     """
     return _evil_eyes_open(world, state, seat, night)[0]
 
@@ -546,13 +550,30 @@ def uncertain(world, state, seat, night):
     return exorcist is not None and exorcist in state.alive_set(phase)
 
 
-def possible_counts(world, state, seats, night):
-    """Every value "how many of these woke" could have taken."""
+def possible_counts(world, state, seats, night, asleep=()):
+    """Every value "how many of these woke" could have taken.
+
+    `asleep` are seats taken as impaired tonight and so not woken —
+    only a Wraith changes by that.
+    """
     fixed = 0
     open_ended = 0
     for seat in seats:
         if uncertain(world, state, seat, night):
             open_ended += 1
+        elif seat in asleep:
+            continue
         elif woke_for_own_ability(world, state, seat, night):
             fixed += 1
     return {fixed + extra for extra in range(open_ended + 1)}
+
+
+def woken_wraiths(world, state, seats, night):
+    """The seats among these that are a Wraith a sober one would surely
+    have woken tonight — the ones whose impairment changes the count."""
+    phase = f"N{night}"
+    return frozenset(
+        seat for seat in seats
+        if _acts_as(world, seat, phase) == "Wraith"
+        and not uncertain(world, state, seat, night)
+        and woke_for_own_ability(world, state, seat, night))

@@ -2308,10 +2308,40 @@ class ChambermaidInfo(Info):
     count: int = 0
     source_role = "Chambermaid"
 
+    def _counts(self, w, s):
+        """(counts with every Wraith sober, counts with them stopped, the
+        Wraiths that make the difference)."""
+        from .waking import possible_counts, woken_wraiths
+        seats = (self.a, self.b)
+        wraiths = woken_wraiths(w, s, seats, self.night)
+        awake = possible_counts(w, s, seats, self.night)
+        if not wraiths:
+            return awake, awake, wraiths
+        return awake, possible_counts(w, s, seats, self.night,
+                                      asleep=wraiths), wraiths
+
     def holds(self, w, s, rh, seat=None):
-        from .waking import possible_counts
-        return self.count in possible_counts(w, s, (self.a, self.b),
-                                             self.night)
+        """Legal one way or the other. A drunk or poisoned Wraith is not
+        woken (table ruling, 08.10.2026), so a count may need it sober or
+        need it stopped — see `instead`."""
+        awake, asleep, _ = self._counts(w, s)
+        return self.count in awake or self.count in asleep
+
+    def instead(self, w, s, seat=None):
+        """What else could explain the number than the Chambermaid's own
+        failing: (impaired, working), or None when nothing is needed.
+
+        A count only a sober Wraith gives asks for it working; one only a
+        stopped Wraith gives, for it impaired. Either way the Chambermaid
+        being off would do as well, and the plan holds sets rather than
+        alternatives — so the solver tries both (`_explain`).
+        """
+        awake, asleep, wraiths = self._counts(w, s)
+        if self.count in awake and self.count not in asleep:
+            return frozenset(), frozenset(wraiths)
+        if self.count in asleep and self.count not in awake:
+            return frozenset(wraiths), frozenset()
+        return None
 
     def is_true(self, w, s, seat=None):
         """Whether the number *has* to be the right one.
@@ -2323,9 +2353,9 @@ class ChambermaidInfo(Info):
         Vortox had to be off, and the game was lost (07.10.2026). Only a
         range of one leaves the Vortox no room.
         """
-        from .waking import possible_counts
-        return possible_counts(w, s, (self.a, self.b),
-                               self.night) == {self.count}
+        awake, asleep, _ = self._counts(w, s)
+        # A Wraith that may have been stopped leaves the number open too.
+        return awake | asleep == {self.count}
 
 
 @dataclass

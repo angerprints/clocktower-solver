@@ -837,6 +837,17 @@ def handmade():
                         XWB, W7, infos=[{
                             "type": "ChambermaidInfo", "night": night,
                             "player": 0, "a": 3, "b": 5, "count": count}])
+    # A Courtier that named the Wraith, which then sleeps (table ruling,
+    # 08.10.2026): a count of nought says nothing against anybody.
+    C7 = ["Chambermaid", "Courtier", "Gambler", "Gossip", "Professor",
+          "Magician", "Sailor"]
+    for count in (0, 1):
+        yield board(f"x-wraith-bmr-7-courtier-named-it-counts-{count}", XWB,
+                    C7, infos=[
+                        {"type": "CourtierChoice", "night": 1, "player": 1,
+                         "role": "Wraith"},
+                        {"type": "ChambermaidInfo", "night": 2, "player": 0,
+                         "a": 3, "b": 5, "count": count}])
     yield board("x-wraith-9-snitch-politician", XW,
                 ["Magician", "PoppyGrower", "Chef", "Empath", "Undertaker",
                  "Politician", "Snitch", "Monk", "Soldier"])

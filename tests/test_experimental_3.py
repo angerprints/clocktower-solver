@@ -14,10 +14,11 @@ game is scored, and no board shows either:
 The fifth changes who is awake:
 
   * A **Wraith** is woken whenever another evil player opens their eyes
-    for their own ability, and a Chambermaid counts it (my reading,
-    08.10.2026). Being shown your team on the first night does not wake
-    it; a Spy looking at the grimoire does, unless a Poppy Grower has its
-    ability (their jinx).
+    for their own ability, and a Chambermaid counts it. Being shown your
+    team on the first night does not wake it; a Spy looking at the
+    grimoire does, but not while a Poppy Grower lives (their jinx). A
+    drunk or poisoned Wraith is not woken at all. All four are table
+    rulings of 08.10.2026.
 
 They have no script, like the first ten, so two are made for them here.
 """
@@ -166,12 +167,26 @@ class AWraithWakesWithTheEvil(SolverTest):
         roles = SEVEN[:4] + ["Spy", "Wraith", "Po"]
         self.assertEqual(counts(roles, (5, 3), 1), {1})
 
-    def test_unless_a_poppy_grower_keeps_the_grimoire_shut(self):
+    def test_not_while_a_poppy_grower_lives(self):
+        """The Spy does not see the Grimoire while a Poppy Grower lives
+        (their jinx, as the table reads it: 08.10.2026). A Zombuul sleeps
+        after a day somebody died, so the Spy is the only one who could
+        have woken the Wraith."""
+        script = scripts.from_ids("Third five, with a Zombuul",
+                                  LIKE_BMR + ["zombuul"])
         roles = ["Chambermaid", "PoppyGrower", "Gambler", "Gossip", "Spy",
-                 "Wraith", "Po"]
-        self.assertEqual(counts(roles, (5, 3), 1), {0, 1})
-        # A dead Poppy Grower keeps nothing shut.
-        self.assertEqual(counts(roles, (5, 3), 2, deaths={1: "E1"}), {1})
+                 "Wraith", "Zombuul", "Professor"]
+        spy_only = {"deaths": {7: "E1"}}
+        self.assertEqual(counts(roles, (5, 3), 2, script=script,
+                                **spy_only), {0})
+        # Drunk or sober, it is the Poppy Grower being alive that counts.
+        roles[1] = "Grandmother"
+        self.assertEqual(counts(roles, (5, 3), 2, script=script,
+                                **spy_only), {1})
+        # And dead it keeps nothing shut.
+        roles[1] = "PoppyGrower"
+        self.assertEqual(counts(roles, (5, 3), 2, script=script,
+                                deaths={7: "E1", 1: "E1"}), {1})
 
     def test_an_evil_twin_opens_its_eyes_on_the_first_night_only(self):
         """Shown its twin then, and never again — so it wakes a Wraith
@@ -191,6 +206,42 @@ class AWraithWakesWithTheEvil(SolverTest):
         world, state = board(WRAITH_BMR, roles)
         self.assertFalse(world.evil_at(1, "N2"))
         self.assertEqual(counts(roles, (5, 3), 2), {1})        # the Pukka
+
+    def test_drunk_or_poisoned_it_is_not_woken(self):
+        """Table ruling, 08.10.2026. A Courtier that named the Wraith
+        makes it drunk for three nights, and a Chambermaid then counts it
+        asleep beside a Demon that killed."""
+        roles = ["Chambermaid", "Courtier", "Gambler", "Gossip", "Professor",
+                 "Wraith", "Po"]
+        named = I.CourtierChoice(1, 1, role="Wraith")
+        asleep = I.ChambermaidInfo(2, 0, a=5, b=3, count=0)
+        awake = I.ChambermaidInfo(2, 0, a=5, b=3, count=1)
+        self.assertIsNotNone(cost(WRAITH_BMR, roles, [named, asleep]))
+        # Without anything to stop it, a count of nought is the
+        # Chambermaid's own failing — and nothing here could cause that.
+        self.assertIsNone(cost(WRAITH_BMR, roles, [asleep]))
+        self.assertEqual(cost(WRAITH_BMR, roles, [awake]), 1.0)
+
+    def test_a_count_that_needs_it_awake_needs_it_sober(self):
+        """Named by the Courtier it is drunk, so a count of one says the
+        Chambermaid was off — which nothing here can do."""
+        roles = ["Chambermaid", "Courtier", "Gambler", "Gossip", "Professor",
+                 "Wraith", "Po"]
+        named = I.CourtierChoice(1, 1, role="Wraith")
+        awake = I.ChambermaidInfo(2, 0, a=5, b=3, count=1)
+        self.assertIsNone(cost(WRAITH_BMR, roles, [named, awake]))
+
+    def test_either_one_off_will_do(self):
+        """With a Sailor about, the drunk one may be the Chambermaid
+        rather than the Wraith — the solver tries both."""
+        roles = ["Chambermaid", "Sailor", "Gambler", "Gossip", "Professor",
+                 "Wraith", "Po"]
+        asleep = I.ChambermaidInfo(2, 0, a=5, b=3, count=0)
+        for target in (0, 5):
+            with self.subTest(sailor_chose=target):
+                chose = I.SailorChoice(2, 1, target=target)
+                self.assertIsNotNone(cost(WRAITH_BMR, roles,
+                                          [chose, asleep]))
 
     def test_the_chambermaids_row_holds_it_to_that(self):
         right = I.ChambermaidInfo(2, 0, a=5, b=1, count=1)
@@ -241,7 +292,7 @@ class TheSimulatorPlaysThem(SolverTest):
 
     def test_its_count_is_one_the_solver_allows(self):
         """Read off the simulator's own rule, then asked of the solver's,
-        seat by seat — a sober Chambermaid only."""
+        seat by seat."""
         import simulate
         checked = 0
         for seed in range(400):
@@ -263,7 +314,12 @@ class TheSimulatorPlaysThem(SolverTest):
                                   claims={}, infos=list(heard),
                                   **deal.record())
                 world = World(tuple(deal.roles), tuple(deal.believes))
-                got = waking.possible_counts(world, state, (wraith,), night)
+                # Drunk or poisoned it sleeps, which the solver leaves to
+                # the plan; here the simulator's droisoning is handed in.
+                stopped = ({wraith} if wraith in simulate.droisoned_at(
+                    deal, night) else set())
+                got = waking.possible_counts(world, state, (wraith,), night,
+                                             asleep=stopped)
                 checked += 1
                 with self.subTest(seed=seed, night=night):
                     self.assertIn(int(said), got)

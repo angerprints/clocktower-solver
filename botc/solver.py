@@ -2853,6 +2853,12 @@ def _plain_failures(world, state, outcome=None):
     # Nights where a reading came out true under a Vortox: {night:
     # (vortox, the readings' sources)}. Either will do — see `_explain`.
     state._vortox_or = vortox_or = {}
+    # Rows that held only if somebody other than their source was
+    # impaired or working: (night, the source, impaired, working). Either
+    # that or the source off will do, and the plan holds sets rather than
+    # alternatives, so `_explain` tries both. So far only a Chambermaid
+    # whose count turns on a Wraith (table ruling, 08.10.2026).
+    state._either = either = []
     working = {}
     ft_infos = []
     invented = 1.0
@@ -3240,6 +3246,16 @@ def _plain_failures(world, state, outcome=None):
             # the first caller to use it for registration.
             for who in info.leaned_on(world, state, seat):
                 working.setdefault(info.night, set()).add(who)
+            # And one that held only if somebody else was impaired or
+            # working: a Chambermaid's count that turns on a Wraith, which
+            # a drunk one does not wake (table ruling, 08.10.2026). Its
+            # own source being off explains it just as well.
+            instead = getattr(info, "instead", None)
+            needs = instead(world, state, seat) if instead else None
+            if needs is not None:
+                either.append((info.night, frozenset({seat})) + tuple(needs))
+                if needs[0]:
+                    outcome[idx] = EXCUSED
 
     return failures, ft_infos, invented, working
 
@@ -4208,7 +4224,7 @@ def _explain(world, state, outcome=None):
         # sets of seats, not disjunctions. Forbidding the pick outright
         # rules out a legal board where both were poisoned.
 
-    def settle(readings):
+    def settle(readings, extra_working=None):
         best = None
         for night_cost, impaired, working in accounts:
             # The accounts come dearest last, and a plan never makes one
@@ -4237,6 +4253,8 @@ def _explain(world, state, outcome=None):
                 needed.setdefault(night, set()).update(seats)
             for day, seats in (must_work or {}).items():
                 needed.setdefault(day, set()).update(seats)
+            for day, seats in (extra_working or {}).items():
+                needed.setdefault(day, set()).update(seats)
             planned = _impairment_plan(world, state, wanted, needed)
             if planned is None:
                 continue
@@ -4245,22 +4263,39 @@ def _explain(world, state, outcome=None):
                 best = got
         return best
 
+    either = getattr(state, "_either", None) or []
+
     def settle_either(readings):
         """`settle`, trying each way a true reading under a Vortox can be
         excused: per night, the Vortox off, or every source droisoned.
         One of the two covers the whole night, so this is two choices a
-        night rather than one per reading."""
-        nights = sorted(vortox_or)
-        if not nights:
+        night rather than one per reading.
+
+        And each row that held only with somebody else impaired or
+        working: that, or its source off (a Chambermaid and a Wraith,
+        08.10.2026). Six choices at most are tried both ways; past that
+        the first is taken, which for a row is the Wraith."""
+        choices = [("vortox", night) for night in sorted(vortox_or)]
+        choices += [("row", i) for i in range(len(either))]
+        if not choices:
             return settle(readings)
         best = None
-        for picks in product((True, False), repeat=min(len(nights), 6)):
+        for picks in product((True, False), repeat=min(len(choices), 6)):
             trial = {n: set(seats) for n, seats in readings.items()}
-            for night, off in zip(nights, picks + (True,) * 6):
-                vortox, sources = vortox_or[night]
-                trial.setdefault(night, set()).update(
-                    {vortox} if off else sources)
-            got = settle(trial)
+            working = {}
+            for (kind, key), first in zip(choices, picks + (True,) * len(choices)):
+                if kind == "vortox":
+                    vortox, sources = vortox_or[key]
+                    trial.setdefault(key, set()).update(
+                        {vortox} if first else sources)
+                    continue
+                night, source, impaired, needed = either[key]
+                if first:
+                    trial.setdefault(night, set()).update(impaired)
+                    working.setdefault(night, set()).update(needed)
+                else:
+                    trial.setdefault(night, set()).update(source)
+            got = settle(trial, working)
             if got is not None and (best is None or got > best):
                 best = got
         return best

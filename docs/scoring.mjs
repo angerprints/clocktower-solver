@@ -839,6 +839,11 @@ function plainFailures(world, state, outcome = {}) {
   // Nights where a reading came out true under a Vortox: either the
   // Vortox was off or the sources were droisoned. See solver.py.
   const vortoxOr = {};
+  // Rows that held only if somebody other than their source was impaired
+  // or working: {night, source, impaired, working}. That or the source off
+  // will do; `explainOne` tries both. So far only a Chambermaid whose count
+  // turns on a Wraith (table ruling, 08.10.2026).
+  const either = [];
 
   // Executing the Saint ends the game on the spot — while it is
   // *working*. A poisoned or drunk Saint is executed and the game carries
@@ -1134,11 +1139,20 @@ function plainFailures(world, state, outcome = {}) {
       // from having been droisoned that night.
       for (const who of (info.leanedOn ? info.leanedOn(world, state, seat) : []))
         (working[info.night] || (working[info.night] = new Set())).add(who);
+      // And one that held only if somebody else was impaired or working:
+      // a Chambermaid's count that turns on a Wraith, which a drunk one
+      // does not wake. Its own source being off explains it as well.
+      const needs = info.instead ? info.instead(world, state, seat) : null;
+      if (needs) {
+        either.push({night: info.night, source: [seat],
+                     impaired: needs[0], working: needs[1]});
+        if (needs[0].length) outcome[idx] = EXCUSED;
+      }
     }
   });
   if (impossible) return null;            // a hard fact did not hold
 
-  return {failures, ftInfos, invented, mustWork: working, vortoxOr};
+  return {failures, ftInfos, invented, mustWork: working, vortoxOr, either};
 }
 
 // --------------------------------------------------------------------
@@ -1438,7 +1452,7 @@ function explainOne(world, state, outcome = null) {
   if (!theGameWentOn(world, state)) return null;
   const sorted = plainFailures(world, state, outcome || {});
   if (sorted === null) return null;
-  const {failures, ftInfos, invented, mustWork, vortoxOr} = sorted;
+  const {failures, ftInfos, invented, mustWork, vortoxOr, either} = sorted;
 
   // Every way the nights could have gone. Each brings its own demands on
   // who was impaired and who was working, so the plan is solved once per
@@ -1446,7 +1460,7 @@ function explainOne(world, state, outcome = null) {
   const accounts = nightAccounts(world, state, failures, mustWork || {});
   if (!accounts.length) return null;
 
-  const settle = readings => {
+  const settle = (readings, extraWorking = {}) => {
     let best = null;
     for (const acc of accounts) {
       // Dearest last, and a plan never improves an account: once the
@@ -1470,6 +1484,10 @@ function explainOne(world, state, outcome = null) {
         needed[day] = needed[day] || new Set();
         for (const s of seats) needed[day].add(s);
       }
+      for (const [day, seats] of Object.entries(extraWorking)) {
+        needed[day] = needed[day] || new Set();
+        for (const s of seats) needed[day].add(s);
+      }
       const planned = impairmentPlan(world, state, wanted, needed);
       if (planned === null) continue;
       const got = planned * acc.cost * invented;
@@ -1479,26 +1497,42 @@ function explainOne(world, state, outcome = null) {
   };
 
   // `settle`, trying each way a true reading under a Vortox can be
-  // excused: per night, the Vortox off or every source droisoned.
+  // excused: per night, the Vortox off or every source droisoned. And each
+  // row that held only with somebody else impaired or working: that, or
+  // its source off. Six choices at most are tried both ways; past that the
+  // first.
   const nights = Object.keys(vortoxOr || {}).map(Number).sort((a, b) => a - b);
+  const choices = [...nights.map(night => ({vortox: night})),
+                   ...(either || []).map(row => ({row}))];
   const settleEither = readings => {
-    if (!nights.length) return settle(readings);
-    const k = Math.min(nights.length, 6);
+    if (!choices.length) return settle(readings);
+    const k = Math.min(choices.length, 6);
     let best = null;
     for (let mask = 0; mask < (1 << k); mask++) {
-      const trial = {};
+      const trial = {}, working = {};
       for (const [n, seats] of Object.entries(readings))
         trial[n] = new Set(seats);
-      nights.forEach((night, i) => {
-        // Bit clear means the Vortox was off, which is the first choice
-        // tried, as in Python's `product((True, False))`.
-        const off = i >= k || !((mask >> (k - 1 - i)) & 1);
-        const {vortox, sources} = vortoxOr[night];
-        trial[night] = trial[night] || new Set();
-        if (off) trial[night].add(vortox);
-        else for (const s of sources) trial[night].add(s);
+      choices.forEach((choice, i) => {
+        // Bit clear means the first choice, which is tried first, as in
+        // Python's `product((True, False))`.
+        const first = i >= k || !((mask >> (k - 1 - i)) & 1);
+        if (choice.row === undefined) {
+          const night = choice.vortox;
+          const {vortox, sources} = vortoxOr[night];
+          trial[night] = trial[night] || new Set();
+          if (first) trial[night].add(vortox);
+          else for (const s of sources) trial[night].add(s);
+        } else {
+          const {night, source, impaired, working: needed} = choice.row;
+          trial[night] = trial[night] || new Set();
+          if (first) {
+            for (const s of impaired) trial[night].add(s);
+            working[night] = working[night] || new Set();
+            for (const s of needed) working[night].add(s);
+          } else for (const s of source) trial[night].add(s);
+        }
       });
-      const got = settle(trial);
+      const got = settle(trial, working);
       if (got !== null && (best === null || got > best)) best = got;
     }
     return best;

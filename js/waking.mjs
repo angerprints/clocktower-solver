@@ -246,10 +246,9 @@ function evilEyesOpen(world, state, seat, night) {
   for (const other of state.aliveSet(phase)) {
     if (other === seat || !world.evilAt(other, phase)
         || world.roleAt(other, phase) === "Wraith") continue;
-    // "If the Poppy Grower has their ability, the Spy doesn't see the
-    // Grimoire" (their jinx) — and whether it has it is not known here.
-    if (poppyLives && world.roleAt(other, phase) === "Spy"
-        && woke(world, state, other, night)) { maybe = true; continue; }
+    // The Spy does not see the Grimoire while a Poppy Grower lives (their
+    // jinx, as the table reads it: 08.10.2026), so it opens no eyes.
+    if (poppyLives && world.roleAt(other, phase) === "Spy") continue;
     if (uncertain(world, state, other, night)) maybe = true;
     else if (woke(world, state, other, night)) certain = true;
   }
@@ -257,9 +256,10 @@ function evilEyesOpen(world, state, seat, night) {
 }
 
 /** Whenever another evil player wakes, the Wraith is woken first, and a
- * Chambermaid counts it (my reading, 08.10.2026). Being shown your team
- * on the first night is nobody's ability. Drunk or poisoned it is still
- * woken, to be told it cannot look. */
+ * Chambermaid counts it (table ruling, 08.10.2026). Being shown your team
+ * on the first night is nobody's ability. Drunk or poisoned it is *not*
+ * woken (table ruling, 08.10.2026): this says what a sober one does, and
+ * the Chambermaid's row asks the plan for the rest. */
 condition("Wraith", (world, state, seat, night) =>
   evilEyesOpen(world, state, seat, night)[0]);
 
@@ -421,13 +421,26 @@ export function wokeForOwnAbility(world, state, seat, night) {
   return !SHOWN_NOT_ACTING.has(world.roleAt(seat, `N${night}`));
 }
 
-export function possibleCounts(world, state, seats, night) {
+/** `asleep` are seats taken as impaired tonight and so not woken — only
+ * a Wraith changes by that (table ruling, 08.10.2026). */
+export function possibleCounts(world, state, seats, night, asleep = null) {
   let fixed = 0, openEnded = 0;
   for (const seat of seats) {
     if (uncertain(world, state, seat, night)) openEnded += 1;
+    else if (asleep && asleep.has(seat)) continue;
     else if (wokeForOwnAbility(world, state, seat, night)) fixed += 1;
   }
   const out = new Set();
   for (let extra = 0; extra <= openEnded; extra++) out.add(fixed + extra);
   return out;
+}
+
+/** The seats among these that are a Wraith a sober one would surely have
+ * woken tonight — the ones whose impairment changes the count. */
+export function wokenWraiths(world, state, seats, night) {
+  const phase = `N${night}`;
+  return new Set(seats.filter(seat =>
+    actsAs(world, seat, phase) === "Wraith"
+    && !uncertain(world, state, seat, night)
+    && wokeForOwnAbility(world, state, seat, night)));
 }
