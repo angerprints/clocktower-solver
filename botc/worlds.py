@@ -621,6 +621,10 @@ def seated_legally(roles):
         if team and not any(TEAM[roles[(seat + step) % n]] == team
                             for step in (-1, 1)):
             return False
+        # "[+the King]": a Choirboy dealt means a King dealt (10.10.2026).
+        for other in CHARACTERS[role].brings:
+            if other not in roles:
+                return False
     return True
 
 

@@ -20,6 +20,8 @@ from botc.info import (registers_as_role,
                        BansheeAnnounced, GoblinClaim,
                        DamselGuess, FearmongerChose, VizierAnnounced,
                        BlindVote,
+                       ChoirboyInfo, PrincessNominated, GolemNomination,
+                       PsychopathKill, PsychopathRoshambo, WidowKnown,
                        BalloonistInfo,
                        DreamerInfo,
                        ExorcistChoice, InnkeeperChoice,
@@ -167,6 +169,14 @@ class Deal:
         self.blind_days = set()             # days voted with eyes closed
         self.hidden_votes = {}              # {day: {seat, ...}} on those days
         self.voted_for = {}                 # {day: {nominee: {seat, ...}}}
+        # The fifth five (10.10.2026).
+        self.princess_nominated = {}        # day -> (Princess, her nominee)
+        self.princess_stop = {}             # night -> the Princess stopping it
+        self.golem_spent = set()            # Golems whose nomination is gone
+        self.psychopath_struck = {}         # day -> (Psychopath, target)
+        self.roshambo = {}                  # day -> the Psychopath executed
+        self.widow_poison = []              # [(Widow, target, night)]
+        self.day_heard = []                 # rows the day produced
 
     def demon_at(self, phase):
         """The seat holding the Demon at this phase."""
@@ -521,6 +531,24 @@ def deal(n, rng, script=None):
         if o == "Drunk":
             believes_for[o] = spare.pop()      # a token nobody else can hold
     chosen += spare[:tf]
+    # "[+the King]": a Choirboy in the bag brings the King with it, in
+    # place of another Townsfolk (10.10.2026). A script with a Choirboy
+    # and no King is built wrong, and then nothing is added.
+    if "Choirboy" in chosen and "King" not in chosen \
+            and "King" in townsfolk:
+        out_go = [r for r in spare[:tf] if r != "Choirboy"]
+        if out_go:
+            gone = rng.choice(out_go)
+            chosen[chosen.index(gone)] = "King"
+            i = spare.index(gone)
+            if "King" in spare:
+                j = spare.index("King")
+                spare[i], spare[j] = "King", gone
+            else:
+                # A Drunk was handed the King's token. It takes the one
+                # that just left the bag instead: the King is in play now.
+                spare[i] = "King"
+                believes_for["Drunk"] = gone
     chosen += picked_minions
     chosen += picked_demons
 
@@ -622,8 +650,13 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             poisoner = next((p for p in living
                              if d.role_at(p, f"N{night}") == "Poisoner"),
                             None)
+        # And only with its ability: a Poisoner the Widow poisoned on the
+        # first night poisons nobody while that lasts (10.10.2026). It
+        # poisoned all the same, and the night-walk, which asks, found a
+        # Monk nobody had told it about.
         if (poisoner is not None and poisoner in living
-                and d.demon_at(f"N{night}") != poisoner):
+                and d.demon_at(f"N{night}") != poisoner
+                and d.working(poisoner, night)):
             d.poisoned[night] = rng.choice(living)
             d.poisoned_by[night] = poisoner
 
@@ -672,7 +705,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         if night > 1:
             demon = d.demon_at(f"N{night}")
             heir = _heir(d, f"N{night}", rng)
-            if heir is not None and rng.random() < starpass_chance:
+            # A Princess that had her nominee executed yesterday: the
+            # Demon kills nobody tonight, itself included (10.10.2026).
+            if heir is not None and rng.random() < starpass_chance \
+                    and not _the_princess_stops(d, night):
                 # The Imp kills itself and the star passes on. This always
                 # leaves a body, so it can never make a night quiet.
                 d.deaths[demon] = f"N{night}"
@@ -847,7 +883,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 d.game_ends_after = night
                 break
 
+            # A Psychopath may kill somebody in the open, before the
+            # nominations (10.10.2026).
+            _psychopath_strikes(d, night, rng, heard)
             _hold_a_day(d, night, rng)
+            heard += d.day_heard
+            d.day_heard = []
             if night in d.blind_days:
                 grinder = next(p for p in d.alive_at(f"E{night}")
                                if d.role_at(p, f"E{night}") == "OrganGrinder")
@@ -860,6 +901,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             executed = _execute(d, night, rng, allow_takeover)
             if executed is not None:
                 d.deaths[executed] = f"E{night}"
+            # Roshambo on the gallows: only ever a working Psychopath.
+            if night in d.roshambo:
+                heard.append(PsychopathRoshambo(night, d.roshambo[night]))
             # A Goblin that said so and went to the gallows: its team has
             # won, and the game stops there — dead of it or not. An
             # ability that triggers on execution does not need the
@@ -867,6 +911,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             hanged = executed if executed is not None else (
                 d.executions.get(night) if night in d.walked_because
                 else None)
+            # The Princess's nominee went up: the Demon kills nobody
+            # tonight, if she has her ability then.
+            picked = d.princess_nominated.get(night)
+            if hanged is not None and picked is not None \
+                    and picked[1] == hanged:
+                d.princess_stop[night + 1] = picked[0]
             if hanged is not None \
                     and _a_goblin_said_so(d, night, hanged, rng, heard):
                 d.ended_at, d.ended_why = f"E{night}", "goblin"
@@ -1628,8 +1678,82 @@ def _a_vizier_stands(d, seat, day):
 
 
 def _spy_ever(d):
-    return "Spy" in d.roles or any(became == "Spy"
+    """A Spy or a Widow in play, ever: either poisons the Damsel (their
+    jinxes; the Widow's 10.10.2026)."""
+    return any(r in d.roles or any(became == r
                                    for _at, _who, became in d.changes)
+               for r in ("Spy", "Widow"))
+
+
+def _the_princess_stops(d, night):
+    """ "On your 1st day, if you nominated & executed a player, the Demon
+    doesn't kill tonight." Her ability is asked at night: alive then, and
+    working (10.10.2026)."""
+    princess = d.princess_stop.get(night)
+    if princess is None:
+        return False
+    phase = f"N{night}"
+    return (d.role_at(princess, phase) == "Princess"
+            and princess in d.alive_at(phase)
+            and d.working(princess, night))
+
+
+def _can_die_by_day(d, seat, day):
+    """Would a daylight kill land on this seat? A sober Sailor, a Vizier,
+    a Tea Lady's good neighbour and a Fool's first death say no — the
+    Fool's spent by the asking, so this is asked last."""
+    phase = f"D{day}"
+    if d.role_at(seat, phase) == "Sailor" and d.working(seat, day, by_day=True):
+        return False
+    if _a_vizier_stands(d, seat, day):
+        return False
+    if _kept_alive_by_a_tea_lady(d, seat, phase):
+        return False
+    return not _a_fool_shrugs_it_off(d, seat, phase)
+
+
+def _psychopath_strikes(d, day, rng, heard):
+    """ "Each day, before nominations, you may publicly choose a player:
+    they die." Now and then, and never its own Demon. Drunk or poisoned
+    it says so all the same and nobody dies (10.10.2026)."""
+    if "Psychopath" not in d.script.keys:
+        return
+    phase = f"D{day}"
+    living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    psycho = next((p for p in living
+                   if d.role_at(p, phase) == "Psychopath"), None)
+    if psycho is None or len(living) < 4 or rng.random() >= 0.3:
+        return
+    demon = d.demon_at(phase)
+    pool = [p for p in living if p not in (psycho, demon)]
+    if not pool:
+        return
+    target = rng.choice(pool)
+    died = d.working(psycho, day, by_day=True) \
+        and _can_die_by_day(d, target, day)
+    if died:
+        d.deaths[target] = phase
+    d.psychopath_struck[day] = (psycho, target)
+    heard.append(PsychopathKill(day, psycho, target=target, died=died))
+
+
+def _golem_strikes(d, golem, nominee, day, rng):
+    """ "When you [nominate], if the nominee is not the Demon, they die."
+    Once a game, drunk or not; a Recluse may register as the Demon."""
+    phase = f"D{day}"
+    d.golem_spent.add(golem)
+    if not d.working(golem, day, by_day=True):
+        return False
+    held = d.role_at(nominee, phase)
+    if TEAM[held] == "demon":
+        return False
+    if held == "Recluse" and d.working(nominee, day, by_day=True) \
+            and rng.random() < 0.5:
+        return False
+    if not _can_die_by_day(d, nominee, day):
+        return False
+    d.deaths[nominee] = phase
+    return True
 
 
 def _a_minion_guesses_the_damsel(d, day, rng, heard):
@@ -1743,6 +1867,27 @@ def _hold_a_day(d, day, rng):
         else:
             fear = None
 
+    # A Princess nominates on her first day as the Princess, mostly, and a
+    # Golem now and then spends its one nomination (10.10.2026).
+    princess = golem = None
+    if "Princess" in d.script.keys:
+        princess = next((p for p in living
+                         if d.role_at(p, phase) == "Princess"
+                         and (day == 1 or d.role_at(p, f"D{day - 1}")
+                              != "Princess")), None)
+        if princess is not None and rng.random() < 0.6:
+            nominators = [princess] + [p for p in nominators if p != princess]
+        else:
+            princess = None
+    if "Golem" in d.script.keys:
+        golem = next((p for p in living
+                      if d.role_at(p, phase) == "Golem"
+                      and p not in d.golem_spent and p != cursed), None)
+        if golem is not None and rng.random() < 0.3:
+            nominators = [golem] + [p for p in nominators if p != golem]
+        else:
+            golem = None
+
     tally = {}
     for who in nominators:
         if d.deaths.get(who) is not None:
@@ -1754,6 +1899,10 @@ def _hold_a_day(d, day, rng):
             nominee = fear_pick
             d.fear_nominated[day] = fear_pick
         d.nominations.setdefault(day, set()).add(who)
+        if who == princess and nominee != who:
+            d.princess_nominated[day] = (princess, nominee)
+            d.day_heard.append(PrincessNominated(day, princess,
+                                                 target=nominee))
         # "If they nominate tomorrow, they die" — at once, and the
         # nomination still counts. The Witch was dealt, aimed every night
         # and never killed anybody, so a death the solver reads as "a
@@ -1761,6 +1910,14 @@ def _hold_a_day(d, day, rng):
         if who == cursed and _the_curse_bites(d, who, day):
             d.deaths[who] = f"D{day}"
             d.witch_deaths[day] = who
+        if who == golem and nominee != who:
+            died = (d.deaths.get(golem) is None
+                    and _golem_strikes(d, golem, nominee, day, rng))
+            d.golem_spent.add(golem)
+            d.day_heard.append(GolemNomination(day, golem, target=nominee,
+                                               died=died))
+            if died:
+                continue                  # nobody votes on a corpse
         votes = set()
         for voter in living:
             # Evil is a shade less willing to put its own up, which is
@@ -1864,6 +2021,13 @@ def _walks_away(d, seat, day, rng):
             and d.role_at(advocate, phase) == "DevilsAdvocate" \
             and d.working(advocate, day, by_day=True):
         return "DevilsAdvocate"
+    # "If executed, you only die if you lose roshambo." Played only by a
+    # Psychopath with its ability, and won two times in three.
+    if role == "Psychopath" and d.working(seat, day, by_day=True):
+        d.roshambo[day] = seat
+        if rng.random() < 2 / 3:
+            return "Psychopath"
+        return None
     pacifist = next((p for p in d.alive_at(phase)
                      if d.role_at(p, phase) == "Pacifist"
                      and d.deaths.get(p) is None), None)
@@ -2157,6 +2321,11 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
     otherwise (03.10.2026).
     """
     phase = f"N{night}"
+    # A Princess's day stops the Demon whatever it aims at, the poison of
+    # a Pukka's coming due included (10.10.2026). Asked first, so nothing
+    # else — a Fool's free death above all — is spent on it.
+    if _the_princess_stops(d, night):
+        return True
     # Working, which is every way of going wrong, not only the Poisoner.
     if d.role_at(target, phase) == "Soldier" and d.working(target, night):
         return True
@@ -2657,6 +2826,12 @@ def _conditionally_woke(d, seat, role, night):
         # included — "at night" with no asterisk, so from the first.
         spent = d.nightwatchman_chose.get(seat)
         return spent is None or spent >= night
+    if role == "Choirboy":
+        # Woken on the night the Demon killed the King, if alive to wake.
+        return d.deaths.get(seat) is None and _a_king_fell(d, night)
+    if role == "Widow":
+        # Its first night as the Widow, and never again (10.10.2026).
+        return night == 1 or d.role_at(seat, f"D{night - 1}") != "Widow"
     if role == "King":
         # Only once the dead equal or outnumber the living, counted when
         # its turn comes — after tonight's kills, itself among them.
@@ -2664,6 +2839,13 @@ def _conditionally_woke(d, seat, role, night):
             return False
         return _the_dead_have_it(d)
     return False
+
+
+def _a_king_fell(d, night):
+    """Did the Demon kill a King tonight? Its own kill only."""
+    phase = f"N{night}"
+    return any(d.role_at(p, phase) == "King"
+               for p in d.demon_killed.get(night, ()))
 
 
 def _really_standing(d):
@@ -2804,7 +2986,8 @@ def _in_night_order(d, night):
 # Demon (17), so a Goon it chose answers before the kills.
 CHOOSES_EARLY = frozenset({"Innkeeper", "Sailor", "Monk", "Exorcist",
                            "SnakeCharmer", "PitHag", "Gambler", "Courtier",
-                           "DevilsAdvocate", "Lunatic", "Fearmonger"})
+                           "DevilsAdvocate", "Lunatic", "Fearmonger",
+                           "Widow"})
 
 
 def early_choices(d, night, rng):
@@ -2836,11 +3019,17 @@ def early_choices(d, night, rng):
         # the Pit-Hag has just unmade chooses nothing, and one it has just
         # made a Fearmonger chooses tonight (the gate, seeds 898 and 2928,
         # 10.10.2026). Asked of the board as it stands at its turn.
+        # The Widow at 18 the same (10.10.2026).
         now = d.role_at(seat, f"N{night}")
-        if "Fearmonger" in (role, now):
-            if now != "Fearmonger":
-                continue
-            role = now
+        for late in ("Fearmonger", "Widow"):
+            if late in (role, now):
+                if now != late:
+                    role = None
+                else:
+                    role = now
+                break
+        if role is None:
+            continue
         if role not in CHOOSES_EARLY:
             continue
         if seat not in d.alive_at(f"N{night}"):
@@ -3174,6 +3363,17 @@ def droisoned_at(d, night, by_day=False):
         if not died:
             out.add(holder)
 
+    # A Widow's poison, for as long as it lives — resting while it is
+    # drunk or poisoned itself (10.10.2026). After everybody else, so its
+    # own state is known; before the Pukka, whose poison it can stop.
+    for widow, target, since in getattr(d, "widow_poison", ()):
+        if since > night or d.role_at(widow, phase) != "Widow":
+            continue
+        if widow not in (d.alive_at(f"D{night}") if by_day else living):
+            continue
+        if widow not in out:
+            out.add(target)
+
     # The Pukka, last. Whoever it poisoned on its turn tonight, and
     # whoever was still carrying its token from before: poisoned from the
     # Pukka's turn, through the day, and into the next night until the
@@ -3212,6 +3412,22 @@ def _make_false(d, info, night, rng):
     if hasattr(info, "count") and info.count is not None:
         wrong = [n for n in range(0, d.n) if n != info.count]
         info.count = rng.choice(wrong)
+        return info
+
+    if kind == "FortuneTeller" and _vortox_working(d, night):
+        # A yes on a Recluse is already false (table ruling, 07.10.2026),
+        # so flipping an honest yes that came from one gave a *true* no —
+        # found beside a Widow's batch, a Vortox board where the Widow had
+        # poisoned the Recluse one night and not the next (10.10.2026).
+        # False means: yes exactly when neither is a Demon or the herring.
+        # Only under a Vortox, the one place falseness is asked: a drunk
+        # Fortune Teller may be told anything, and flipping stays as it
+        # was so no Trouble Brewing game is dealt anew.
+        phase = f"N{night}"
+        really = any(TEAM[d.role_at(x, phase)] == "demon"
+                     for x in (info.a, info.b)) \
+            or d.red_herring in (info.a, info.b)
+        info.yes = not really
         return info
 
     # Every yes-or-no field, by name. A single `yes` was enough until
@@ -3290,6 +3506,15 @@ def _make_false(d, info, night, rng):
         if not evil:
             return None
         info.target = rng.choice(evil)
+        return info
+
+    if kind == "ChoirboyInfo":
+        # Anybody but the Demon.
+        demon = d.demon_at(f"N{night}")
+        others = [p for p in range(d.n) if p not in (info.player, demon)]
+        if not others:
+            return None
+        info.target = rng.choice(others)
         return info
 
     if kind == "KnightInfo":
@@ -3857,6 +4082,12 @@ def _for_role(d, seat, role, night, rng):
             if not spare:
                 return None
         became = rng.choice(spare)
+        # Drunk or poisoned it chooses and nothing happens. It made its
+        # change all the same until a Widow poisoned one (10.10.2026): the
+        # night-walk, which asks, kept the seat as it was. Asked after the
+        # draws, so every other game is dealt as before.
+        if not d.working(seat, night):
+            return None
         # The side does not move: a Townsfolk turned into the Poisoner is
         # a *good* Poisoner.
         d.changes.append((phase, target, became))
@@ -4062,6 +4293,39 @@ def _for_role(d, seat, role, night, rng):
         d.exorcised[night] = target
         _the_goon_answers(d, night, seat, target)
         return ExorcistChoice(night, seat, target=target)
+
+    if role == "Choirboy":
+        # "If the Demon kills the King, you learn which player is the
+        # Demon." Its own kill only, and a drunk or poisoned King is still
+        # the King (10.10.2026).
+        if not _a_king_fell(d, night) or d.deaths.get(seat) is not None:
+            return None
+        demon = d.demon_at(f"N{night}")
+        if demon is None:
+            return None
+        return ChoirboyInfo(night, seat, target=demon)
+
+    if role == "Widow":
+        # "On your 1st night, look at the Grimoire & choose a player: they
+        # are poisoned. 1 good player knows a Widow is in play." Anybody,
+        # itself included — which here does nothing. Drunk or poisoned, or
+        # drunk by the Goon it chose, it poisons nobody and nobody is told
+        # (10.10.2026).
+        if night > 1 and d.role_at(seat, f"D{night - 1}") == "Widow":
+            return None
+        phase = f"N{night}"
+        living = d.alive_at(phase)
+        target = rng.choice(living)
+        gooned = _the_goon_answers(d, night, seat, target)
+        if gooned or not d.working(seat, night):
+            return None
+        if target != seat:
+            d.widow_poison.append((seat, target, night))
+        told = [p for p in living if p != seat and d.deaths.get(p) is None
+                and d.side_at(p, phase) == "good"]
+        if told:
+            d.said_by_others.append(WidowKnown(night, rng.choice(told)))
+        return None
 
     if role == "Fearmonger":
         # Chooses a player every night, and the table is told when it is

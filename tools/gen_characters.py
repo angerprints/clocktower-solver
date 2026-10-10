@@ -35,6 +35,7 @@ DEFAULTS = {
     "chooses": False, "alignment_open": False, "nights": "never",
     "seated": True, "impairs": False, "handled": "fully", "settled": False,
     "first_night": 0, "other_night": 0, "beside": "", "hides": False,
+    "brings": (),
 }
 
 

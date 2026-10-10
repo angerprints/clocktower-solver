@@ -959,13 +959,44 @@ Daraus folgt auch: Das Blumenmädchen wird an einem blinden Tag nicht gewertet, 
 
 **Nebenbei gefunden und behoben:** Im Simulator wählte ein Angstmacher, den das Grubenweib in derselben Nacht vorher verwandelt hatte (Platz 16 vor 17). Der Night-Walk meldete einen Charakter als „nicht gesagt bekommen“, obwohl der Sitz in dieser Nacht vorher zu etwas anderem gemacht worden war. Ohne die vier weicht er jetzt in 15 statt 19 von gut 8.000 gemischten Nächten ab.
 
+### Die fünften fünf experimentellen Charaktere · *erledigt am 10.10.2026*
+
+Der volle Bericht steht in `claude/experimentelle-charaktere-batch-5.md`.
+
+**Dein Auftrag vom 10.10.2026:** „such aus“. Ich habe Chorknabe, Prinzessin, Golem, Psychopath und Witwe mit den Lesarten A bis P vorgelegt. Deine Antworten: alles wie vorgeschlagen. Dazu zwei Hinweise: Ein Skript mit Chorknabe und ohne König ist falsch gebaut. Und wer bei der Hinrichtung Schere-Stein-Papier spielen muss, ist zu 100 % der Psychopath. Ein Tagestod durch den Yaggababble kommt erst, wenn dieser Dämon gebaut ist.
+
+| Charakter | Zeile auf der Website | Was der Solver daraus macht |
+|---|---|---|
+| Chorknabe | „Choirboy“ (Nacht) | Nie ohne König. Starb in der Nacht ein König, ist der Gezeigte der Dämon oder ein Einsiedler. Arbeitet der Chorknabe, hat der Dämon den König getötet. Wacht nur in dieser Nacht. |
+| Prinzessin | „Princess nominated“ (Tag) | Erster Tag als Prinzessin, Nominierter hingerichtet: In der Nacht danach tötet der Dämon niemanden, wenn sie lebt und arbeitet. Auch das alte Gift der Pukka tötet nicht. |
+| Golem | „Golem nomination“ (Tag), mit „died“ | Tot: arbeitender Golem, erste Nominierung, kein Dämon. Überlebt: registriert als Dämon, konnte nicht sterben, oder der Golem war gestört. Einmal pro Spiel, auch gestört. |
+| Psychopath | „Psychopath kill“ (Tag), mit „died“; „Roshambo at the execution“ (Tag) | Tot: lebender, arbeitender Psychopath. Schere-Stein-Papier heißt sicher Psychopath, arbeitend. Eine überlebte Hinrichtung kostet nichts. |
+| Witwe | „Widow known“ (Nacht) | Wahr nur in ihrer ersten Nacht, wenn sie arbeitete. Ihr Gift darf auf jedem liegen, solange sie lebt, kostenlos. Vergiftet die Unschuld (Jinx). Die Kammerzofe zählt sie in der ersten Nacht. |
+
+Daraus folgt auch: Vergiftet die Pukka oder nennt der Höfling die Witwe nach ihrem Zug in derselben Nacht, hatte sie trotzdem schon gewählt. Bei der Hinrichtung sind die Nachbarn der Teedame die, die dann noch leben.
+
+**Das Tor:**
+
+| Nr. | Schritt | Ergebnis |
+|---|---|---|
+| 1 | Solver in Python und JavaScript | 20 neue Bretter, beide stimmen überein. 1.490 gemischte Partien mit den fünf kosten die wahre Welt in beiden gleich. |
+| 2 | Simulator | Spielt alle fünf. In 3.000 gemischten Partien: 202 Auskünfte des Chorknaben, 730 Nominierungen der Prinzessin, 345 des Golems, 762 Tötungen des Psychopathen, 348-mal Schere-Stein-Papier, 1.083 Hinweise der Witwe. |
+| 3 | Night-Walk | Kennt die Wahl der Witwe und die Prinzessin. Auf den eigenen Skripten 0 von 16.899 Nächten abweichend. |
+| 4 | Gemischte Partien mit den fünf | 1 von 3.000 bei 4 Nächten, 5 bei 6 Nächten. Keine wegen der fünf. |
+| 5 | Website | Sechs neue Zeilen, im Browser geprüft. |
+| 6 | Korpus und Suite | 292 Bretter, 1.380 Tests grün (38 neue). |
+
+**Messung:** Die zwei eigenen Skripte verlieren 0 von 12.000 Partien. Grundskripte unverändert (Prüfsummen gleich, Bad Moon Rising 0, Sects & Violets 62 von 6.000). Gemischte Partien ohne Pflicht: 10 von 3.000, davon 6 Barbier-Klasse, 1 Stelle 6, 1 Stelle 48 c und 2 neue kleine Klassen (Stelle 48 e und f). Bei den fünf über 6 Nächte: 4 Barbier-Klasse und 1 neue kleine Klasse (Stelle 48 d).
+
+**Nebenbei gefunden und behoben:** Im Simulator vergiftete ein vergifteter Giftmischer trotzdem und ein gestörtes Grubenweib verwandelte trotzdem. Unter einem Vortox wurde ein „Ja“ der Wahrsagerin auf einen Einsiedler zu einem wahren „Nein“. Im Solver galten bei der Hinrichtung die Nachbarn der Teedame vom Morgen, auch wenn einer davon am selben Tag schon gestorben war. Der Night-Walk bekam das Gift der Pukka aus der Vornacht zu spät gesagt, wenn ein Schlangenbeschwörer in derselben Nacht mit der Pukka tauschte.
+
 ### Als Nächstes
 
-**1 · Batch 5 der experimentellen Charaktere.** Alle kleinen sind durch das Tor. Ab jetzt kommen die mittleren. Wie bei Batch 4 lege ich zuerst die Kandidaten mit meinen Lesarten vor und baue erst nach deinen Antworten.
+**1 · Batch 6 der experimentellen Charaktere.** Die ersten fünf mittleren sind durch das Tor. Wie bei Batch 4 und 5 lege ich zuerst fünf Kandidaten mit meinen Lesarten vor und baue erst nach deinen Antworten.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 102 Charaktere. Von den 138 Spielercharakteren der App sind 101 im Katalog (dazu der Wächter, ein Fabled), 37 fehlen: 16 Bürger, 5 Außenseiter, 9 Schergen, 7 Dämonen. Nach meiner Einschätzung sind davon keiner mehr klein, 20 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer).
+Stand des Katalogs: 107 Charaktere. Von den 138 Spielercharakteren der App sind 106 im Katalog (dazu der Wächter, ein Fabled), 32 fehlen: 14 Bürger, 4 Außenseiter, 7 Schergen, 7 Dämonen. Nach meiner Einschätzung sind davon keiner mehr klein, 15 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer).
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1030,7 +1061,9 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 45 | erledigt | **Ein Höfling nennt den Schläger.** Deine Entscheidung vom 08.10.2026: Weg 1, wie im Wiki. Das zählt als Wahl des Schlägers. Gebaut in Solver, Simulator und Night-Walk. Die Abweichung für das Einzelspieler-Spiel steht in `claude/handover-hoefling-schlaeger.md`. |
 | 46 | Night-Walk | **Ein Seemann wählt den Schläger zuerst, und der Gastwirt macht den Schläger in derselben Nacht betrunken.** Der Night-Walk bekommt den Schläger als von Anfang an betrunken gesagt und lässt ihn nicht antworten. 1 von 8.219 Nächten. |
 | 47 | Night-Walk | **Gift der Pukka aus der Vornacht, und die Pukka wird in dieser Nacht vom Schläger betrunken.** Ein Glücksspieler, den die Pukka in der Nacht davor gewählt hat, ist an seinem frühen Platz noch vergiftet und überlebt einen falschen Tipp. Der Night-Walk weiß das nicht und lässt ihn sterben. 1 von 8.617 Nächten auf dem eigenen Skript aus Batch 3 (Seed 1571), nicht wegen der fünf. Auf dem Skript aus Batch 4 dasselbe einmal in 7.827 Nächten (Seed 2824). |
-| 48 | Solver | **Drei kleine Klassen aus dem Tor von Batch 4, nicht wegen der vier.** (a) Ein Philosoph nimmt die Fähigkeit des Schlangenbeschwörers: 2 von 3.000 gemischten Partien (Seeds 535, 1393), noch nicht untersucht. (b) Ein vergifteter Höfling nennt einen Charakter, und der Mathematiker zählt dessen Trunkenheit vermutlich trotzdem mit: 1 Partie (Seed 1408). (c) Ein Bauer gibt seinen Charakter weiter, danach erschafft das Grubenweib einen Charakter, und der Solver hält die Erschaffung für unmöglich: 1 Partie (Seed 2009). (b) und (c) sind noch nicht im Einzelnen untersucht. |
+| 48 | Solver | **Drei kleine Klassen aus dem Tor von Batch 4, nicht wegen der vier.** (a) Ein Philosoph nimmt die Fähigkeit des Schlangenbeschwörers: 2 von 3.000 gemischten Partien (Seeds 535, 1393), noch nicht untersucht. (b) Ein vergifteter Höfling nennt einen Charakter, und der Mathematiker zählt dessen Trunkenheit vermutlich trotzdem mit: 1 Partie (Seed 1408). (c) Ein Bauer gibt seinen Charakter weiter, danach erschafft das Grubenweib einen Charakter, und der Solver hält die Erschaffung für unmöglich: 1 Partie (Seed 2009). (b) und (c) sind noch nicht im Einzelnen untersucht. Drei weitere aus dem Tor von Batch 5, nicht wegen der fünf: (d) ein Philosoph mit der Fähigkeit des Professors, der selbst hingerichtet und zurückgeholt wurde (Seed 2099, mit den fünf); (e) ein Mondkind, dessen Ziel in derselben Nacht durch einen Tausch mit dem Shabaloth zum Dämon wurde (Seed 2027); (f) ein Bauer gibt an einen Sitz weiter, der in derselben Nacht getauscht wurde (Seed 2264). Je 1 von 3.000 gemischten Partien, noch nicht untersucht. |
+| 49 | Night-Walk | **Ein Tausch mitten in der Nacht verschiebt Gift, und der Night-Walk merkt es erst am Platz der Süßen.** Ein Philosoph mit der Fähigkeit des Schlangenbeschwörers tauscht an Platz 11 mit dem No Dashii, dessen Gift wandert mit. Der Night-Walk ändert die Störungen aus solchen Gründen erst an Platz 41, die Prinzessin galt beim Dämon an Platz 30 also noch als vergiftet. 1 von 8.246 Nächten im Tor von Batch 5 (Seed 879). |
+| 50 | Simulator | **Der Mönch wählt vor dem Gastwirt.** Im Simulator schützt der Mönch vor allen frühen Wahlen, am Tisch handelt der Gastwirt (Platz 9) vor ihm (Platz 12). Macht der Gastwirt die Witwe betrunken, ruht ihr Gift auf dem Mönch schon, der Simulator lässt den Mönch aber vergiftet wählen. 3 von 8.246 Nächten im Tor von Batch 5 (Seed 2053). Das zu ändern teilt alle Partien mit einem Mönch neu aus, wie Stelle 19. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

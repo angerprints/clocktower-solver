@@ -2662,10 +2662,12 @@ class GoblinClaim(Info):
 # --------------------------------------------------------------------------
 
 def _spy_ever(w, day):
-    """Is or was a Spy in play by the end of this day?"""
+    """Is or was a Spy — or a Widow — in play by the end of this day?
+    Either poisons the Damsel (their jinxes; the Widow's 10.10.2026)."""
     for k in range(1, day + 1):
         for phase in (f"N{k}", f"D{k}"):
-            if w.find_at("Spy", phase) is not None:
+            if w.find_at("Spy", phase) is not None \
+                    or w.find_at("Widow", phase) is not None:
                 return True
     return False
 
@@ -2834,3 +2836,253 @@ class BlindVote(Info):
     def leaned_on(self, w, s, seat=None):
         got = self._grinder(w, s)
         return () if got is None else (got,)
+
+
+
+# --------------------------------------------------------------------------
+# The fifth five (10.10.2026): Choirboy, Princess, Golem, Psychopath, Widow.
+# Read with the table before anything was built; every reading below is
+# its ruling of that day.
+# --------------------------------------------------------------------------
+
+def _could_register_as_demon(role):
+    from .catalogue import CHARACTERS
+    return TEAM[role] == "demon" or "demon" in CHARACTERS[role].registers
+
+
+def _cannot_die_by_day(w, s, seat, phase):
+    """Something that may have kept this seat alive through a daylight
+    kill: a Sailor, a Fool, a Vizier, a Tea Lady's neighbour. Whether it
+    was working is the plan's question; this only says it could have
+    been, which is the direction that keeps worlds."""
+    role = w.role_at(seat, phase)
+    if role in ("Sailor", "Fool", "Vizier"):
+        return True
+    return w.find_at("TeaLady", phase) is not None
+
+
+@dataclass
+class ChoirboyInfo(Info):
+    """Shown the Demon's player, on the night the Demon killed the King.
+
+    "If the Demon kills the King, you learn which player is the Demon."
+    Only the Demon's own kill — an execution or an Assassin does not
+    count — and the King may be drunk or poisoned, it is still the King.
+    A dead Choirboy learns nothing. A Recluse may register as the Demon.
+    That the King died to the Demon is asked of the death machinery
+    (`solver.a_choirboys_king_fell_to_the_demon`).
+    """
+
+    target: int = 0
+    source_role = "Choirboy"
+
+    def _kings(self, w, s):
+        phase = f"N{self.night}"
+        return [seat for seat in range(len(w.roles))
+                if phase in s.died_at(seat)
+                and w.role_at(seat, phase) == "King"]
+
+    def holds(self, w, s, rh, seat=None):
+        phase = f"N{self.night}"
+        if not self._kings(w, s):
+            return False
+        if self.target == w.demon_at(phase):
+            return True
+        return w.role_at(self.target, phase) == "Recluse"
+
+    def is_true(self, w, s, seat=None):
+        return bool(self._kings(w, s)) \
+            and self.target == w.demon_at(f"N{self.night}")
+
+    def leaned_on(self, w, s, seat=None):
+        phase = f"N{self.night}"
+        if self.target != w.demon_at(phase) \
+                and w.role_at(self.target, phase) == "Recluse":
+            return (self.target,)
+        return ()
+
+
+@dataclass
+class PrincessNominated(Info):
+    """Whom the player claiming Princess nominated. `night` is the day.
+
+    "On your 1st day, if you nominated & executed a player, the Demon
+    doesn't kill tonight." A nomination everybody saw, so a fact; what it
+    does is asked of the death machinery (`solver.a_princess_stops_the_
+    demon`): her first day as the Princess, the nominee executed — dead
+    of it or not — and her ability working at night.
+    """
+
+    target: int = 0
+    is_a_choice = True
+    source_role = "Princess"
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return self.player
+
+    def holds(self, w, s, rh, seat=None):
+        return True
+
+
+@dataclass
+class GolemNomination(Info):
+    """The player claiming Golem nominated, and whether the nominee died.
+
+    "You may only nominate once per game. When you do, if the nominee is
+    not the Demon, they die." A death everybody saw is a fact: a working
+    Golem, its one nomination, and a nominee who did not register as the
+    Demon. A nominee who lived says, of a real Golem, that it registered
+    as the Demon, or could not die, or the Golem was not working — and a
+    drunk Golem's nomination is spent all the same.
+    """
+
+    target: int = 0
+    died: bool = False
+    source_role = "Golem"
+
+    def hard(self):
+        return self.died
+
+    def source_seat(self, state):
+        return self.player
+
+    def _earlier(self, s):
+        for info in s.infos:
+            if info is self:
+                return False
+            if isinstance(info, GolemNomination) \
+                    and info.player == self.player \
+                    and info.night <= self.night:
+                return True
+        return False
+
+    def holds(self, w, s, rh, seat=None):
+        phase = f"D{self.night}"
+        target = w.role_at(self.target, phase)
+        if self.died:
+            return (w.role_at(self.player, phase) == "Golem"
+                    and TEAM[target] != "demon" and not self._earlier(s))
+        if self._earlier(s):
+            return True                   # spent already: nothing happens
+        return (_could_register_as_demon(target)
+                or _cannot_die_by_day(w, s, self.target, phase))
+
+    def leaned_on(self, w, s, seat=None):
+        return (self.player,) if self.died else ()
+
+
+@dataclass
+class PsychopathKill(Info):
+    """A player declared themselves the Psychopath and chose somebody to
+    die, in the open, before nominations. `night` is the day.
+
+    A death everybody saw is a fact: a working Psychopath said it. A
+    target who lived says, of a real one, that it could not die or the
+    Psychopath was not working. (A Yaggababble's daylight kill could
+    also explain a body; that Demon comes later.)
+    """
+
+    target: int = 0
+    died: bool = False
+    source_role = "Psychopath"
+
+    def hard(self):
+        return self.died
+
+    def source_seat(self, state):
+        return self.player
+
+    def holds(self, w, s, rh, seat=None):
+        phase = f"D{self.night}"
+        if self.died:
+            return (w.role_at(self.player, phase) == "Psychopath"
+                    and self.player in s.alive_set(phase))
+        return _cannot_die_by_day(w, s, self.target, phase)
+
+    def leaned_on(self, w, s, seat=None):
+        return (self.player,) if self.died else ()
+
+
+@dataclass
+class PsychopathRoshambo(Info):
+    """Roshambo was played on the gallows. `night` is the day.
+
+    Only a Psychopath with its ability is offered it, so whoever the town
+    executed that day is the Psychopath, working — for certain (table
+    ruling, 10.10.2026), whichever way the game came out.
+    """
+
+    source_role = "Psychopath"
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None                       # what everybody saw
+
+    def holds(self, w, s, rh, seat=None):
+        day = self.night
+        return (s.executed_on(day) == self.player
+                and w.role_at(self.player, f"D{day}") == "Psychopath")
+
+    def leaned_on(self, w, s, seat=None):
+        return (self.player,)
+
+
+@dataclass
+class WidowKnown(Info):
+    """"A Widow is in play", said by the good player who was told.
+
+    "1 good player knows a Widow is in play." The ability is the Widow's
+    and the words are somebody else's, as with the Nightwatchman: true
+    only on the Widow's first night, and only if it had its ability then
+    — a poisoned Widow tells nobody. The speaker's own state does not
+    matter, a Drunk is told the truth; an evil speaker is no messenger.
+    """
+
+    witnessed = True
+    source_role = "Widow"
+
+    def source_seat(self, state):
+        return None                       # whoever holds it, never a claim
+
+    def is_information(self, state):
+        return False                      # a Minion's ability, no Vortox
+
+    def holds(self, w, s, rh, seat=None):
+        from .solver import minion_still_acts
+        if seat is None:
+            return False
+        phase = f"N{self.night}"
+        if w.role_at(seat, phase) != "Widow":
+            return False
+        if self.night > 1 and w.role_at(seat, f"D{self.night - 1}") == "Widow":
+            return False                  # not its first night
+        return minion_still_acts(w, s, seat, phase)
+
+    def _impaired_after_its_turn(self, w, s, seat):
+        """Something acting later that night may have impaired it after
+        it chose — a Pukka at 28 whose poison came due on it the night
+        after, a Courtier at 19 naming the Widow. The plan knows whole
+        nights, so it is not held to have worked (10.10.2026)."""
+        phase = f"N{self.night}"
+        if w.find_at("Pukka", phase) is not None \
+                and f"N{self.night + 1}" in s.died_at(seat):
+            return True
+        return any(isinstance(info, CourtierChoice)
+                   and info.night == self.night and info.role == "Widow"
+                   for info in s.infos)
+
+    def leaned_on(self, w, s, seat=None):
+        if seat is None or self._impaired_after_its_turn(w, s, seat):
+            return ()
+        return (seat,)

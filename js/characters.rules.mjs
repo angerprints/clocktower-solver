@@ -11,8 +11,8 @@
 import {CHARACTERS} from "./catalogue.mjs";
 import {DEMON, OTHER, PICKED, Cause, causeRule, immunityRule, implication,
         implicationRule, shield} from "./deaths.mjs";
-import {ORGAN_GRINDER_BY_CHOICE, Source, makePoisonerRule, sourceRule, sourcesOn}
-  from "./impairment.mjs";
+import {ORGAN_GRINDER_BY_CHOICE, Source, makePoisonerRule, minionStillActs,
+        sourceRule, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 
@@ -398,6 +398,15 @@ survivesExecutionRule(function aVizierCannotDieByDay(world, state, day, seat) {
   return out;
 });
 
+/** "If executed, you only die if you lose roshambo." Working, it may walk
+ * away from the gallows, and that costs nothing (10.10.2026). */
+survivesExecutionRule(function aPsychopathWinsAtRoshambo(
+    world, state, day, seat) {
+  if (!inBag(state, "Psychopath")) return [];
+  if (world.roleAt(seat, `D${day}`) !== "Psychopath") return [];
+  return [seat];
+});
+
 /** Some executed good players do not die — the Storyteller decides.
  *
  * A choice rather than a rule, so an executed good player who *did* die
@@ -417,6 +426,16 @@ survivesExecutionRule(function aPacifistMaySpareTheGood(
  * Both her living neighbours good, and this seat one of them. Asked of a
  * phase, because who is living beside her changes as people die — and it
  * is asked at night and in daylight alike. */
+/** Who is standing when the town executes: the day's living, less anybody
+ * who already died earlier that day — a Witch's curse, a Golem's nominee,
+ * a Psychopath's pick (10.10.2026). The executed seat stays. */
+function atTheGallows(state, day) {
+  const phase = `D${day}`;
+  const hanged = state.executedOn(day);
+  return new Set([...state.aliveSet(phase)].filter(
+    p => p === hanged || !state.diedAt(p).includes(phase)));
+}
+
 function teaLadyKeeping(world, state, seat, phase, alive = null) {
   if (alive === null) alive = state.aliveSet(phase);
   const lady = world.findAt("TeaLady", phase);
@@ -437,7 +456,8 @@ function teaLadyKeeping(world, state, seat, phase, alive = null) {
 survivesExecutionRule(function aTeaLadyKeepsHerNeighboursFromTheGallows(
     world, state, day, seat) {
   if (!inBag(state, "TeaLady")) return [];
-  const lady = teaLadyKeeping(world, state, seat, `D${day}`);
+  const lady = teaLadyKeeping(world, state, seat, `D${day}`,
+                              atTheGallows(state, day));
   return lady === null ? [] : [lady];
 });
 
@@ -456,8 +476,10 @@ function besideASideNobodyKnows(world, state, lady, phase, alive = null) {
 /** Executed and dead beside a Tea Lady: she was not working. */
 export function teaLadyFailedAtTheGallows(world, state, day, seat) {
   if (!inBag(state, "TeaLady")) return null;
-  const lady = teaLadyKeeping(world, state, seat, `D${day}`);
-  if (lady !== null && besideASideNobodyKnows(world, state, lady, `D${day}`))
+  const standing = atTheGallows(state, day);
+  const lady = teaLadyKeeping(world, state, seat, `D${day}`, standing);
+  if (lady !== null
+      && besideASideNobodyKnows(world, state, lady, `D${day}`, standing))
     return null;
   return lady;
 }
@@ -1079,6 +1101,39 @@ immunityRule(function anAnnouncedBansheeFellToTheDemon(
   return [];
 });
 
+/** A working Choirboy was shown the Demon, so the King it died with fell
+ * to the Demon and nothing else (10.10.2026). See solver.py. */
+immunityRule(function aChoirboysKingFellToTheDemon(
+    world, state, night, seat, kind) {
+  if (kind === DEMON || !inBag(state, "Choirboy")) return [];
+  const phase = `N${night}`;
+  if (world.roleAt(seat, phase) !== "King") return [];
+  for (const info of state.infos)
+    if (info.type === "ChoirboyInfo" && info.night === night
+        && world.roleAt(info.player, phase) === "Choirboy")
+      return [shield("Choirboy", {needs: info.player})];
+  return [];
+});
+
+/** "On your 1st day, if you nominated & executed a player, the Demon
+ * doesn't kill tonight" (10.10.2026). See solver.py. */
+immunityRule(function aPrincessStopsTheDemon(world, state, night, seat, kind) {
+  if (kind !== DEMON || !inBag(state, "Princess")) return [];
+  const day = night - 1;
+  if (day < 1) return [];
+  for (const info of state.infos) {
+    if (info.type !== "PrincessNominated" || info.night !== day) continue;
+    const princess = info.player;
+    if (world.roleAt(princess, `D${day}`) !== "Princess") continue;
+    if (day > 1 && world.roleAt(princess, `D${day - 1}`) === "Princess")
+      continue;                        // not her first day
+    if (state.executedOn(day) !== info.target) continue;
+    if (!state.aliveSet(`N${night}`).has(princess)) continue;  // no ability
+    return [shield("Princess", {needs: princess})];
+  }
+  return [];
+});
+
 /** The Demon went for the Mayor, and the Storyteller sent it elsewhere —
  * including into somebody already dead.
  *
@@ -1253,6 +1308,19 @@ sourceRule(function anOrganGrinderMayDrink(world, state, night) {
   const seat = world.findAt("OrganGrinder", phase);
   if (seat === null || !state.aliveSet(phase).has(seat)) return [];
   return [new Source(ORGAN_GRINDER_BY_CHOICE, new Set([seat]),
+                     {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0})];
+});
+
+/** "On your 1st night ... choose a player: they are poisoned." Anybody,
+ * itself included, as long as it lives; free and never forced
+ * (10.10.2026). See solver.py. */
+sourceRule(function aWidowPoisonsOne(world, state, night) {
+  if (!inBag(state, "Widow")) return [];
+  const phase = `N${night}`;
+  const seat = world.findAt("Widow", phase);
+  if (seat === null || !minionStillActs(world, state, seat, phase)) return [];
+  const everyone = new Set(Array.from({length: state.nPlayers}, (_, i) => i));
+  return [new Source("Widow", everyone,
                      {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0})];
 });
 

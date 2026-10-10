@@ -133,6 +133,23 @@ def build_info(d):
         return I.VizierAnnounced(night, player, trust)
     if kind == "BlindVote":
         return I.BlindVote(night, player, trust)
+    if kind == "ChoirboyInfo":
+        return I.ChoirboyInfo(night, player, trust, target=_int(d, "target"))
+    if kind == "PrincessNominated":
+        return I.PrincessNominated(night, player, trust,
+                                   target=_int(d, "target"))
+    if kind == "GolemNomination":
+        return I.GolemNomination(night, player, trust,
+                                 target=_int(d, "target"),
+                                 died=bool(d.get("died")))
+    if kind == "PsychopathKill":
+        return I.PsychopathKill(night, player, trust,
+                                target=_int(d, "target"),
+                                died=bool(d.get("died")))
+    if kind == "PsychopathRoshambo":
+        return I.PsychopathRoshambo(night, player, trust)
+    if kind == "WidowKnown":
+        return I.WidowKnown(night, player, trust)
     if kind == "Became":
         return I.BecameInfo(night, player, trust,
                             role=d.get("role") or "",
@@ -680,6 +697,9 @@ INFO_SOURCES = {
     "BansheeAnnounced": "Banshee", "GoblinClaim": "Goblin",
     "DamselGuess": "Damsel", "FearmongerChose": "Fearmonger",
     "VizierAnnounced": "Vizier", "BlindVote": "OrganGrinder",
+    "ChoirboyInfo": "Choirboy", "PrincessNominated": "Princess",
+    "GolemNomination": "Golem", "PsychopathKill": "Psychopath",
+    "PsychopathRoshambo": "Psychopath", "WidowKnown": "Widow",
     "Washerwoman": "Washerwoman", "Librarian": "Librarian",
     "Investigator": "Investigator", "Chef": "Chef", "Empath": "Empath",
     "FortuneTeller": "FortuneTeller", "Undertaker": "Undertaker",

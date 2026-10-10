@@ -1353,11 +1353,13 @@ GoblinClaim.isAChoice = true;
 
 // The fourth four (10.10.2026). See the same rows in info.py.
 
-/** Is or was a Spy in play by the end of this day? */
+/** Is or was a Spy — or a Widow — in play by the end of this day? Either
+ * poisons the Damsel (their jinxes; the Widow's 10.10.2026). */
 function spyEver(w, day) {
   for (let k = 1; k <= day; k++)
     for (const phase of [`N${k}`, `D${k}`])
-      if (w.findAt("Spy", phase) !== null) return true;
+      if (w.findAt("Spy", phase) !== null
+          || w.findAt("Widow", phase) !== null) return true;
   return false;
 }
 
@@ -1435,6 +1437,131 @@ export const BlindVote = define("BlindVote", "OrganGrinder",
     },
   });
 
+// The fifth five (10.10.2026). See the same rows in info.py.
+
+const couldRegisterAsDemon = role =>
+  TEAM[role] === "demon" || (CHARACTERS[role].registers || []).includes("demon");
+
+/** Something that may have kept this seat alive through a daylight kill:
+ * a Sailor, a Fool, a Vizier, a Tea Lady's neighbour. See info.py. */
+function cannotDieByDay(w, s, seat, phase) {
+  const role = w.roleAt(seat, phase);
+  if (["Sailor", "Fool", "Vizier"].includes(role)) return true;
+  return w.findAt("TeaLady", phase) !== null;
+}
+
+function kingsFallen(row, w, s) {
+  const phase = `N${row.night}`;
+  return w.roles.map((_, seat) => seat).filter(seat =>
+    s.diedAt(seat).includes(phase) && w.roleAt(seat, phase) === "King");
+}
+
+/** Shown the Demon's player, on the night the Demon killed the King. */
+export const ChoirboyInfo = define("ChoirboyInfo", "Choirboy",
+  function (w, s) {
+    const phase = `N${this.night}`;
+    if (!kingsFallen(this, w, s).length) return false;
+    if (this.target === w.demonAt(phase)) return true;
+    return w.roleAt(this.target, phase) === "Recluse";
+  }, {
+    isTrue(w, s) {
+      return kingsFallen(this, w, s).length > 0
+        && this.target === w.demonAt(`N${this.night}`);
+    },
+    leanedOn(w) {
+      const phase = `N${this.night}`;
+      return this.target !== w.demonAt(phase)
+        && w.roleAt(this.target, phase) === "Recluse" ? [this.target] : [];
+    },
+  });
+
+/** Whom the player claiming Princess nominated; a fact. What it does is
+ * the death machinery's (aPrincessStopsTheDemon). */
+export const PrincessNominated = define("PrincessNominated", "Princess",
+  function () { return true; }, {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return this.player; },
+  });
+PrincessNominated.isAChoice = true;
+
+/** The Golem nominated, and whether the nominee died. */
+export const GolemNomination = define("GolemNomination", "Golem",
+  function (w, s) {
+    const phase = `D${this.night}`;
+    const target = w.roleAt(this.target, phase);
+    const mine = s.infos.indexOf(this);
+    const earlier = s.infos.some((info, idx) => idx < mine
+      && info.type === "GolemNomination" && info.player === this.player
+      && info.night <= this.night);
+    if (this.died)
+      return w.roleAt(this.player, phase) === "Golem"
+        && TEAM[target] !== "demon" && !earlier;
+    if (earlier) return true;          // spent already: nothing happens
+    return couldRegisterAsDemon(target)
+      || cannotDieByDay(w, s, this.target, phase);
+  }, {
+    hard() { return !!this.died; },
+    sourceSeat() { return this.player; },
+    leanedOn() { return this.died ? [this.player] : []; },
+  });
+
+/** A declared Psychopath chose somebody to die, in the open. */
+export const PsychopathKill = define("PsychopathKill", "Psychopath",
+  function (w, s) {
+    const phase = `D${this.night}`;
+    if (this.died)
+      return w.roleAt(this.player, phase) === "Psychopath"
+        && s.aliveSet(phase).has(this.player);
+    return cannotDieByDay(w, s, this.target, phase);
+  }, {
+    hard() { return !!this.died; },
+    sourceSeat() { return this.player; },
+    leanedOn() { return this.died ? [this.player] : []; },
+  });
+
+/** Roshambo on the gallows: the executed player is the Psychopath,
+ * working (table ruling, 10.10.2026). */
+export const PsychopathRoshambo = define("PsychopathRoshambo", "Psychopath",
+  function (w, s) {
+    return s.executedOn(this.night) === this.player
+      && w.roleAt(this.player, `D${this.night}`) === "Psychopath";
+  }, {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },
+    leanedOn() { return [this.player]; },
+  });
+
+/** "A Widow is in play", said by the good player who was told. True only
+ * on the Widow's first night, and only if it had its ability then. */
+export const WidowKnown = define("WidowKnown", "Widow",
+  function (w, s, rh, seat) {
+    if (seat === null || seat === undefined) return false;
+    const phase = `N${this.night}`;
+    if (w.roleAt(seat, phase) !== "Widow") return false;
+    if (this.night > 1 && w.roleAt(seat, `D${this.night - 1}`) === "Widow")
+      return false;                    // not its first night
+    return minionStillActs(w, s, seat, phase);
+  }, {
+    witnessed: true,
+    sourceSeat() { return null; },
+    isInformation() { return false; },
+    // Something acting later that night may have impaired it after it
+    // chose — a Pukka whose poison came due on it the night after, a
+    // Courtier naming the Widow — so it is not held to have worked.
+    leanedOn(w, s, seat) {
+      if (seat === null || seat === undefined) return [];
+      const phase = `N${this.night}`;
+      if (w.findAt("Pukka", phase) !== null
+          && s.diedAt(seat).includes(`N${this.night + 1}`)) return [];
+      if (s.infos.some((info) => info.type === "CourtierChoice"
+                       && info.night === this.night
+                       && info.role === "Widow")) return [];
+      return [seat];
+    },
+  });
+
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
   Undertaker, Ravenkeeper, GrandmotherInfo, ChambermaidInfo, GamblerGuess,
@@ -1449,6 +1576,8 @@ export const KINDS = {
   NightwatchmanChoice, NightwatchmanSeen,
   BansheeAnnounced, GoblinClaim,
   DamselGuess, FearmongerChose, VizierAnnounced, BlindVote,
+  ChoirboyInfo, PrincessNominated, GolemNomination, PsychopathKill,
+  PsychopathRoshambo, WidowKnown,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
 };

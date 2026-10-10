@@ -385,6 +385,31 @@ def _vizier(world, state, seat, night):
     return other is not None and woke(world, state, other, night)
 
 
+@condition("Choirboy")
+def _choirboy(world, state, seat, night):
+    """Woken only on a night the Demon killed the King — and which death
+    the Demon caused is not this question's to know. See `uncertain`."""
+    return False
+
+
+def _a_king_fell(world, state, night):
+    phase = f"N{night}"
+    return any(phase in state.died_at(seat)
+               and world.role_at(seat, phase) == "King"
+               for seat in range(len(world.roles)))
+
+
+def _first_night_as(world, seat, night, role):
+    """Is this the first night this seat holds the character?"""
+    return night == 1 or world.role_at(seat, f"D{night - 1}") != role
+
+
+@condition("Widow")
+def _widow(world, state, seat, night):
+    """On its first night as the Widow, to look and to choose."""
+    return _first_night_as(world, seat, night, "Widow")
+
+
 @condition("Drunk")
 @condition("Marionette")
 def _believer(world, state, seat, night):
@@ -509,6 +534,11 @@ def uncertain(world, state, seat, night):
     """
     phase = f"N{night}"
     acting = _acts_as(world, seat, phase)
+    if acting == "Choirboy":
+        # Woken if the Demon killed the King tonight. A King dead in the
+        # night may have been the Demon's or anybody else's (10.10.2026).
+        return seat in state.alive_set(phase) \
+            and _a_king_fell(world, state, night)
     if acting == "Wraith":
         # Open exactly when no other evil seat surely woke and one may
         # have — a Demon on the first night is the usual one.

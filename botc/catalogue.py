@@ -120,6 +120,9 @@ class Character(NamedTuple):
     # stands behind a Townsfolk. Unlike every other good player, whose
     # lie is a choice and costs a world, this one is the rules talking.
     hides: bool = False
+    # Characters the setup puts in play beside this one: "[+the King]".
+    # Asked of the finished deal, like `beside` (worlds.seated_legally).
+    brings: tuple = ()
 
 
 def _handled(self):
@@ -495,6 +498,30 @@ _EXPERIMENTAL = [
     # each night whether to be drunk until dusk — itself, nobody else.
     _c("OrganGrinder", "organgrinder", "Organ Grinder", "minion",
        {FIRST, EVERY}, nights="every"),
+
+    # The fifth five (10.10.2026), the first of the middling ones, read
+    # with the table before anything was built.
+    #
+    # "If the Demon kills the King, you learn which player is the Demon.
+    # [+the King]" Woken only on that night (waking.uncertain), and the
+    # King comes with it — a script with a Choirboy and no King is one
+    # built wrong (table ruling, 10.10.2026), so the deal insists.
+    _c("Choirboy", "choirboy", "Choirboy", "townsfolk", {NEVER, SOMETIMES},
+       nights="conditional", brings=("King",)),
+    # On her first day, if she nominated the player the town executed,
+    # the Demon kills nobody that night (info.PrincessNominated).
+    _c("Princess", "princess", "Princess", "townsfolk", {NEVER}),
+    # Nominates once a game, and a nominee who is not the Demon dies
+    # (info.GolemNomination).
+    _c("Golem", "golem", "Golem", "outsider", {NEVER}),
+    # Kills in daylight, in the open, and plays roshambo on the gallows
+    # (info.PsychopathKill, info.PsychopathRoshambo).
+    _c("Psychopath", "psychopath", "Psychopath", "minion", {NEVER}),
+    # Looks at the Grimoire on its first night and poisons a player for as
+    # long as it lives; one good player is told a Widow is in play
+    # (info.WidowKnown). It points at a player, so a Goon notices.
+    _c("Widow", "widow", "Widow", "minion", {FIRST, SOMETIMES},
+       nights="conditional", chooses=True),
 ]
 
 

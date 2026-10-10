@@ -507,6 +507,9 @@ export function seatedLegally(roles) {
     const team = CHARACTERS[roles[seat]].beside;
     if (team && TEAM[roles[(seat + n - 1) % n]] !== team &&
         TEAM[roles[(seat + 1) % n]] !== team) return false;
+    // "[+the King]": a Choirboy dealt means a King dealt (10.10.2026).
+    for (const other of CHARACTERS[roles[seat]].brings || [])
+      if (!roles.includes(other)) return false;
   }
   return true;
 }

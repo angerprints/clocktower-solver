@@ -1175,6 +1175,56 @@ export const DATA = {
    "nights": "every",
    "first_night": 26,
    "other_night": 17
+  },
+  "Choirboy": {
+   "id": "choirboy",
+   "name": "Choirboy",
+   "team": "townsfolk",
+   "wake": [
+    "never",
+    "sometimes"
+   ],
+   "nights": "conditional",
+   "other_night": 44,
+   "brings": [
+    "King"
+   ]
+  },
+  "Princess": {
+   "id": "princess",
+   "name": "Princess",
+   "team": "townsfolk",
+   "wake": [
+    "never"
+   ]
+  },
+  "Golem": {
+   "id": "golem",
+   "name": "Golem",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ]
+  },
+  "Psychopath": {
+   "id": "psychopath",
+   "name": "Psychopath",
+   "team": "minion",
+   "wake": [
+    "never"
+   ]
+  },
+  "Widow": {
+   "id": "widow",
+   "name": "Widow",
+   "team": "minion",
+   "wake": [
+    "first",
+    "sometimes"
+   ],
+   "chooses": true,
+   "nights": "conditional",
+   "first_night": 18
   }
  },
  "scripts": {

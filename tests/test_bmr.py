@@ -244,8 +244,9 @@ class WalkingAwayFromAnExecution(SolverTest):
     """Four reasons now, told apart by which seat had to be working."""
 
     def test_there_are_four_of_them(self):
-        # Five since the Sailor's, six since the Vizier's (10.10.2026).
-        self.assertEqual(len(S.SURVIVES_EXECUTION_RULES), 6)
+        # Five since the Sailor's, six since the Vizier's, seven since the
+        # Psychopath's (both 10.10.2026).
+        self.assertEqual(len(S.SURVIVES_EXECUTION_RULES), 7)
 
     def test_a_sailor_walks_away_from_its_own(self):
         self.assertIsNotNone(S.explanation_cost(among(*HONEST),

@@ -18,6 +18,7 @@ from itertools import product
 from .info import (CourtierChoice, GameState, FortuneTeller,
                    AcrobatChoice, GrandmotherInfo, SlayerShot,
                    VirginNomination, BecameInfo, EvilTwinPair,
+                   ChoirboyInfo, PrincessNominated,
                    phase_index)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
@@ -1343,6 +1344,17 @@ def a_vizier_cannot_die_by_day(world, state, day, seat):
 
 
 @survives_execution_rule
+def a_psychopath_wins_at_roshambo(world, state, day, seat):
+    """ "If executed, you only die if you lose roshambo." Working, it may
+    walk away from the gallows, and that costs nothing (10.10.2026)."""
+    if not _in_bag(state, "Psychopath"):
+        return []
+    if world.role_at(seat, f"D{day}") != "Psychopath":
+        return []
+    return [seat]
+
+
+@survives_execution_rule
 def a_pacifist_may_spare_the_good(world, state, day, seat):
     """Some executed good players do not die — the Storyteller decides.
 
@@ -1392,6 +1404,18 @@ def _rosters(state, phase):
     alive = state.alive_set(phase)
     back = _returned_at(state, phase)
     return [alive, alive - back] if back else [alive]
+
+
+def _at_the_gallows(state, day):
+    """Who is standing when the town executes: the day's living, less
+    anybody who already died earlier that day — a Witch's curse, a Golem's
+    nominee, a Psychopath's pick. A Tea Lady's neighbours are counted
+    then: the Golem killed the player beside her, and the next one along
+    walked away from the gallows (10.10.2026). The executed seat stays."""
+    phase = f"D{day}"
+    hanged = state.executed_on(day)
+    return frozenset(p for p in state.alive_set(phase)
+                     if p == hanged or phase not in state.died_at(p))
 
 
 def _tea_lady_keeping(world, state, seat, phase, alive=None):
@@ -1445,7 +1469,8 @@ def a_tea_lady_keeps_her_neighbours_from_the_gallows(world, state, day,
     """
     if not _in_bag(state, "TeaLady"):
         return []
-    lady = _tea_lady_keeping(world, state, seat, f"D{day}")
+    lady = _tea_lady_keeping(world, state, seat, f"D{day}",
+                             _at_the_gallows(state, day))
     return [] if lady is None else [lady]
 
 
@@ -2307,6 +2332,53 @@ def an_announced_banshee_fell_to_the_demon(world, state, night, seat, kind):
 
 
 @death_causes.immunity_rule
+def a_choirboys_king_fell_to_the_demon(world, state, night, seat, kind):
+    """A working Choirboy was shown the Demon, so the King it died with
+    fell to the Demon and to nothing else (10.10.2026). Any other way of
+    dying that night says the Choirboy was not working — the Soldier's
+    shape, needing the Choirboy rather than the King."""
+    if kind == death_causes.DEMON or not _in_bag(state, "Choirboy"):
+        return []
+    phase = f"N{night}"
+    if world.role_at(seat, phase) != "King":
+        return []
+    out = []
+    for info in state.infos:
+        if isinstance(info, ChoirboyInfo) and info.night == night \
+                and world.role_at(info.player, phase) == "Choirboy":
+            out.append(death_causes.Shield("Choirboy", needs=info.player))
+    return out[:1]
+
+
+@death_causes.immunity_rule
+def a_princess_stops_the_demon(world, state, night, seat, kind):
+    """ "On your 1st day, if you nominated & executed a player, the Demon
+    doesn't kill tonight." Her first day as the Princess, the nominee
+    executed — dead of it or not — and her ability working at night: a
+    drunk Princess by day and sober at night still stops it (10.10.2026).
+    The Demon chooses as ever; nobody dies of it."""
+    if kind != death_causes.DEMON or not _in_bag(state, "Princess"):
+        return []
+    day = night - 1
+    if day < 1:
+        return []
+    for info in state.infos:
+        if not isinstance(info, PrincessNominated) or info.night != day:
+            continue
+        princess = info.player
+        if world.role_at(princess, f"D{day}") != "Princess":
+            continue
+        if day > 1 and world.role_at(princess, f"D{day - 1}") == "Princess":
+            continue                      # not her first day
+        if state.executed_on(day) != info.target:
+            continue
+        if princess not in state.alive_set(f"N{night}"):
+            continue                      # dead, so no ability tonight
+        return [death_causes.Shield("Princess", needs=princess)]
+    return []
+
+
+@death_causes.immunity_rule
 def a_mayors_death_may_be_moved(world, state, night, seat, kind):
     """The Demon went for the Mayor, and the Storyteller sent it
     elsewhere — including into somebody already dead.
@@ -2996,9 +3068,10 @@ def _plain_failures(world, state, outcome=None):
         # And the same for a Tea Lady's neighbour: executed and dead, so
         # she was not working. The mirror of her saving one.
         if _in_bag(state, "TeaLady"):
-            lady = _tea_lady_keeping(world, state, seat, f"D{day}")
+            standing = _at_the_gallows(state, day)
+            lady = _tea_lady_keeping(world, state, seat, f"D{day}", standing)
             if lady is not None and not _beside_a_side_nobody_knows(
-                    world, state, lady, f"D{day}"):
+                    world, state, lady, f"D{day}", standing):
                 failures[day].add(lady)
 
     # A Vizier cannot die during the day — by the gallows or anything
@@ -3820,6 +3893,25 @@ def an_organ_grinder_may_drink(world, state, night):
     return [impairment.Source(impairment.ORGAN_GRINDER_BY_CHOICE, frozenset({seat}),
                               capacity=1, cost=lambda who: 1.0,
                               repeat_cost=lambda who: 1.0)]
+
+
+@impairment.source_rule
+def a_widow_poisons_one(world, state, night):
+    """ "On your 1st night, look at the Grimoire & choose a player: they
+    are poisoned." Anybody, itself included, for as long as it lives —
+    resting while it is drunk or poisoned itself (10.10.2026). Its own
+    choice, so free and never forced. One seat for the whole game is not
+    held to here: the plan may land it differently on different nights,
+    which keeps worlds rather than losing them, as with the Sweetheart."""
+    if not _in_bag(state, "Widow"):
+        return []
+    phase = f"N{night}"
+    seat = world.find_at("Widow", phase)
+    if seat is None or not minion_still_acts(world, state, seat, phase):
+        return []
+    free = lambda who: 1.0
+    return [impairment.Source("Widow", frozenset(range(state.n_players)),
+                              capacity=1, cost=free, repeat_cost=free)]
 
 
 @impairment.source_rule

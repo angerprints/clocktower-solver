@@ -316,6 +316,11 @@ def hidden_from(deal, night, heard):
     derives = set()
     if deal.poisoned.get(night) is not None:
         derives.add(deal.poisoned[night])
+    # A Widow's pick tonight, on its first night, is the walk's to place
+    # at its slot. On every later night it is standing, and handed over.
+    widow_tonight = [(w, t) for w, t, since
+                     in getattr(deal, "widow_poison", ()) if since == night]
+    derives |= {t for _w, t in widow_tonight}
     # The Pukka's fresh poison is the walk's own to place, at its slot —
     # so it is asked for with that token lifted, rather than subtracted
     # afterwards: a Gambler the Courtier had already made drunk was
@@ -372,6 +377,14 @@ def hidden_from(deal, night, heard):
     ended = set(simulate.droisoned_at(deal, night)) - derives
     later, lifted = ended - began, began - ended
     standing = (standing - later) | lifted
+    # Whoever the Pukka's token came due for carried it as the night
+    # began, whatever the board looked like with tonight's changes put
+    # aside: a Snake Charmer that swapped into the Pukka tonight leaves no
+    # living Pukka in that picture, and the token went "later" — after the
+    # Demon's turn, where a Princess's day then held (10.10.2026).
+    if came_due and came_due[0] is not None:
+        standing.add(came_due[0])
+        later.discard(came_due[0])
     if standing:
         out[("standing", night)] = standing
     if later:
@@ -419,6 +432,13 @@ def hidden_from(deal, night, heard):
         out[("witch", night)] = deal.cursed[night]
     if getattr(deal, "fear_chose", {}).get(night) is not None:
         out[("fearmonger", night)] = deal.fear_chose[night]
+    if widow_tonight:
+        out[("widow", night)] = dict(widow_tonight)
+    # A Princess whose nominee was executed yesterday, by seat: the walk
+    # asks whether she has her ability at the Demon's turn.
+    princess = getattr(deal, "princess_stop", {}).get(night)
+    if princess is not None:
+        out[("princess", night)] = princess
     # The three that kill besides the Demon, and a Lunatic's pointing.
     for key, where in (("assassin", "assassin_aimed"),
                        ("godfather", "godfather_aimed"),
@@ -975,6 +995,19 @@ def walk(deal, night, hidden):
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
 
+            elif role == "Widow":
+                # Poisons somebody on its first night, for as long as it
+                # lives (10.10.2026). Told only the pick that landed, so a
+                # Widow that was drunk already or chose the Goon first is
+                # handed nothing and does nothing.
+                target = (hidden.get(("widow", night)) or {}).get(seat)
+                if target is None or seat not in state.alive:
+                    continue
+                state.choose(seat, target, slot)
+                _goon_answers(state, seat, target, slot)
+                if state.working(seat):
+                    state.droison(target, slot, "Widow")
+
             elif role == "Witch":
                 # Curses somebody: if they nominate tomorrow, they die.
                 # Again nothing tonight, but the aim is taken now.
@@ -1121,6 +1154,13 @@ def walk(deal, night, hidden):
                 targets = [aimed] if isinstance(aimed, int) else list(aimed)
                 if seat in state.silenced:
                     state.log.append((slot, "exorcised", seat, "no kill"))
+                    continue
+                if _the_princess_holds(state, hidden, night):
+                    # It still chooses, so a Goon still answers.
+                    for target in targets:
+                        state.choose(seat, target, slot)
+                        _goon_answers(state, seat, target, slot)
+                    state.log.append((slot, "princess", seat, "no kill"))
                     continue
 
                 # Whether the ability functions is decided when the
@@ -1675,6 +1715,14 @@ def _readings_that_must_be_droisoned(view, state, night):
     return set()
 
 
+def _the_princess_holds(state, hidden, night):
+    """Yesterday's Princess had her nominee executed, and has her ability
+    now: the Demon kills nobody tonight (10.10.2026)."""
+    princess = hidden.get(("princess", night))
+    return princess is not None and state.working(princess) \
+        and state.roles.get(princess) == "Princess"
+
+
 def _pukka_takes_its_turn(state, seat, slot, hidden, night):
     """The Pukka's turn, step by step as the flowchart has it.
 
@@ -1704,6 +1752,13 @@ def _pukka_takes_its_turn(state, seat, slot, hidden, night):
             state.droison(fresh, slot, "Pukka")
     stale = hidden.get(("pukka_due", night))
     lifted = hidden.get(("pukka_token_only", night))
+    # A Princess's day: the poison from before kills nobody, and the token
+    # comes off all the same (10.10.2026).
+    if stale is not None and _the_princess_holds(state, hidden, night):
+        state.log.append((slot, "princess", stale, "Pukka"))
+        if lifted:
+            state.droisoned.discard(stale)
+        return
     if stale is None or stale not in state.alive:
         if stale is not None and lifted:
             state.droisoned.discard(stale)    # the token comes off a corpse too

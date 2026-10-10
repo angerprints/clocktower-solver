@@ -899,6 +899,55 @@ def handmade():
                        ("fearmonger-wins", 10)):
         yield played(f"x-four-bmr-played-{what}", XFB, seed, 7, 4)
 
+    # The fifth five (10.10.2026), on the scripts of
+    # tests/test_experimental_5.py: a Choirboy shown the Demon, a Princess
+    # whose nominee hanged, a Golem's nomination either way, a Psychopath's
+    # kill and its roshambo, a player told of a Widow — and games played.
+    from test_experimental_5 import FIVE as XV, FIVE_BMR as XVB
+    V7 = ["Chef", "Empath", "King", "Choirboy", "Washerwoman", "Mayor",
+          "Undertaker"]
+    yield board("x-five-7-bare", XV, V7)
+    yield board("x-five-7-choirboy-shown", XV, V7, infos=[
+        {"type": "ChoirboyInfo", "night": 2, "player": 3, "target": 6}],
+        players_override={2: ["N2"]})
+    yield board("x-five-7-choirboy-no-king-fell", XV, V7, infos=[
+        {"type": "ChoirboyInfo", "night": 2, "player": 3, "target": 6}],
+        players_override={0: ["N2"]})
+    P7 = ["Chef", "Empath", "Princess", "Undertaker", "Washerwoman",
+          "Mayor", "Monk"]
+    nominated = {"type": "PrincessNominated", "night": 1, "player": 2,
+                 "target": 0}
+    yield board("x-five-7-princess-quiet-night", XV, P7, infos=[nominated],
+                players_override={0: ["X1"]}, quiet_nights=[2])
+    yield board("x-five-7-princess-and-a-body", XV, P7, infos=[nominated],
+                players_override={0: ["X1"], 1: ["N2"]})
+    G8 = ["Chef", "Empath", "Golem", "Undertaker", "Washerwoman", "Mayor",
+          "Monk", "Recluse"]
+    for target, died in ((0, True), (0, False), (7, False)):
+        yield board(f"x-five-8-golem-{target}-{'died' if died else 'lived'}",
+                    XV, G8, infos=[{"type": "GolemNomination", "night": 1,
+                                    "player": 2, "target": target,
+                                    "died": died}],
+                    players_override={0: ["D1"]} if died else {})
+    for died in (True, False):
+        yield board(f"x-five-7-psychopath-{'killed' if died else 'missed'}",
+                    XV, P7, infos=[{"type": "PsychopathKill", "night": 1,
+                                    "player": 4, "target": 0,
+                                    "died": died}],
+                    players_override={0: ["D1"]} if died else {})
+    yield board("x-five-7-roshambo-won", XV, P7, infos=[
+        {"type": "PsychopathRoshambo", "night": 1, "player": 4}],
+        players_override={4: ["S1"]})
+    yield board("x-five-7-widow-known", XV, P7, infos=[
+        {"type": "WidowKnown", "night": 1, "player": 0}])
+    for what, seed in (("princess-stop", 0), ("widow", 1),
+                       ("psychopath-kill-and-roshambo", 6),
+                       ("choirboy", 12), ("roshambo-lost", 31)):
+        yield played(f"x-five-played-{what}", XV, seed, 7, 4)
+    for what, seed in (("choirboy", 8), ("princess-stop", 11),
+                       ("psychopath-roshambo-lost", 19)):
+        yield played(f"x-five-bmr-played-{what}", XVB, seed, 7, 4)
+
 
 def generated(how_many=60):
     """Random boards, so the corpus covers combinations nobody chose."""

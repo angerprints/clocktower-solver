@@ -399,7 +399,9 @@ def transcript(got):
 SINCE_THE_NAMED_GAMES = ("Banshee", "Zealot", "Heretic", "Goblin", "Ojo",
                          "Magician", "PoppyGrower", "Politician", "Snitch",
                          "Wraith",
-                         "Damsel", "Fearmonger", "Vizier", "OrganGrinder")
+                         "Damsel", "Fearmonger", "Vizier", "OrganGrinder",
+                         "Choirboy", "Princess", "Golem", "Psychopath",
+                         "Widow")
 
 
 def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):
@@ -447,6 +449,14 @@ def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):
         spare = [k for k in by(team) if k not in keys]
         keys += rng.sample(spare, min(want - sum(
             1 for k in keys if CHARACTERS[k].team == team), len(spare)))
+    # A Choirboy brings the King, so a script with one has the other
+    # (10.10.2026). In place of the last Townsfolk nobody insisted on, and
+    # without a die: every other script is drawn exactly as before.
+    if "Choirboy" in keys and "King" not in keys and "King" in every:
+        spare = [k for k in keys if CHARACTERS[k].team == "townsfolk"
+                 and k not in must_have and k != "Choirboy"]
+        if spare:
+            keys[keys.index(spare[-1])] = "King"
     return _s.Script(name=name, keys=tuple(keys))
 
 

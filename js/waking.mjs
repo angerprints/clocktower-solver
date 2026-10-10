@@ -270,6 +270,17 @@ condition("Vizier", (world, state, seat, night) => {
   return other !== null && woke(world, state, other, night);
 });
 
+/** Woken only on a night the Demon killed the King; see `uncertain`. */
+condition("Choirboy", () => false);
+
+const aKingFell = (world, state, night) =>
+  world.roles.some((_, seat) => state.diedAt(seat).includes(`N${night}`)
+                   && world.roleAt(seat, `N${night}`) === "King");
+
+/** On its first night as the Widow, to look and to choose. */
+condition("Widow", (world, state, seat, night) =>
+  night === 1 || world.roleAt(seat, `D${night - 1}`) !== "Widow");
+
 const believer = (world, state, seat, night) => {
   const token = world.believes[seat];
   return token ? wokeAs(world, state, seat, night, token) : false;
@@ -367,6 +378,10 @@ function actsAs(world, seat, phase) {
 export function uncertain(world, state, seat, night) {
   const phase = `N${night}`;
   const acting = actsAs(world, seat, phase);
+  if (acting === "Choirboy")
+    // Woken if the Demon killed the King tonight, and whose kill a King's
+    // death was is not known here (10.10.2026).
+    return state.aliveSet(phase).has(seat) && aKingFell(world, state, night);
   if (acting === "Wraith") {
     // Open exactly when no other evil seat surely woke and one may have —
     // a Demon on the first night is the usual one.

@@ -28,7 +28,7 @@ export const SETUP = Object.fromEntries(
 const DEFAULTS = {
   registers: [], setup: [], believes: false, believes_from: ["townsfolk"],
   modelled: true, note: "", chooses: false, alignment_open: false,
-  nights: "never", seated: true, beside: "",
+  nights: "never", seated: true, beside: "", brings: [],
 };
 
 export const CHARACTERS = Object.fromEntries(
