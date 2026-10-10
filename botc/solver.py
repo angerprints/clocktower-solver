@@ -1322,6 +1322,27 @@ def a_devils_advocate_saves_from_the_gallows(world, state, day, seat):
 
 
 @survives_execution_rule
+def a_vizier_cannot_die_by_day(world, state, day, seat):
+    """ "You cannot die during the day." Working, it walks away from the
+    gallows. Drunk by a Courtier it does too — "if the Vizier loses their
+    ability, they learn this and cannot die during the day" (their jinx)
+    — so a Courtier that named the Vizier lately is a second way, and
+    with two the plan demands neither (10.10.2026)."""
+    if not _in_bag(state, "Vizier"):
+        return []
+    phase = f"D{day}"
+    if world.role_at(seat, phase) != "Vizier":
+        return []
+    out = [seat]
+    for info in state.infos:
+        if getattr(info, "source_role", None) == "Courtier" \
+                and getattr(info, "role", None) == "Vizier" \
+                and info.night <= day < info.night + 3:
+            out.append(info.player)
+    return out
+
+
+@survives_execution_rule
 def a_pacifist_may_spare_the_good(world, state, day, seat):
     """Some executed good players do not die — the Storyteller decides.
 
@@ -2980,6 +3001,29 @@ def _plain_failures(world, state, outcome=None):
                     world, state, lady, f"D{day}"):
                 failures[day].add(lady)
 
+    # A Vizier cannot die during the day — by the gallows or anything
+    # else. One that did was not working: drunk or poisoned, it dies like
+    # anybody (table ruling, 10.10.2026). Drunk by a Courtier it would
+    # not die even so (their jinx), which the plan cannot tell apart from
+    # any other drunkenness; so that is allowed rather than ruled out.
+    if _in_bag(state, "Vizier"):
+        for seat, phase in state.death_phases():
+            if phase[:1] == "D" \
+                    and world.role_at(seat, phase) == "Vizier":
+                failures[int(phase[1:])].add(seat)
+
+    # A day with votes on the board was voted with eyes open, so no Organ
+    # Grinder was working then: dead, not in play, or drunk — by its own
+    # choice, which costs nothing, or by anything else (10.10.2026).
+    if _in_bag(state, "OrganGrinder"):
+        for day, voters in (state.votes or {}).items():
+            if not voters:
+                continue
+            phase = f"D{day}"
+            grinder = world.find_at("OrganGrinder", phase)
+            if grinder is not None and grinder in state.alive_set(phase):
+                failures[day].add(grinder)
+
     # Somebody standing again needs a reason, and the reason has to have
     # been working. Two characters do it.
     #
@@ -3759,6 +3803,23 @@ def a_minstrel_silences_the_table(world, state, night):
     everyone = frozenset(p for p in range(state.n_players) if p != seat)
     return [impairment.Source("Minstrel", everyone, capacity=len(everyone),
                               cost=1.0, repeat_cost=1.0)]
+
+
+@impairment.source_rule
+def an_organ_grinder_may_drink(world, state, night):
+    """ "Each night, choose if you are drunk until dusk." Itself and
+    nobody else, and its own choice, so it costs nothing and is never
+    forced (10.10.2026). A Mathematician does not count it: nothing else
+    did it (`info._possible_impairment_counts`)."""
+    if not _in_bag(state, "OrganGrinder"):
+        return []
+    phase = f"N{night}"
+    seat = world.find_at("OrganGrinder", phase)
+    if seat is None or seat not in state.alive_set(phase):
+        return []
+    return [impairment.Source(impairment.ORGAN_GRINDER_BY_CHOICE, frozenset({seat}),
+                              capacity=1, cost=lambda who: 1.0,
+                              repeat_cost=lambda who: 1.0)]
 
 
 @impairment.source_rule

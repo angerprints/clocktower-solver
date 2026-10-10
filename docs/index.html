@@ -623,14 +623,14 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=4041a81ae018";
+import * as solver from "./api.mjs?v=e2599246bc69";
 
 // The solve runs beside the page, in a worker, so a long board neither
 // freezes the page nor hides that it is busy: it reports how far along it
 // is and can be stopped. Where a browser cannot start a module worker —
 // an old one, or a page opened straight from disk — it runs here as it
 // always did, and the page freezes for the length of it as it always did.
-const WORKER_URL = "./worker.mjs?v=4041a81ae018";
+const WORKER_URL = "./worker.mjs?v=e2599246bc69";
 let WORKER = null, NO_WORKER = false, JOB = null;
 
 function worker(){
@@ -758,6 +758,13 @@ const SCHEMA = {
   // to be the Goblin is just somebody saying so on the block.
   BansheeAnnounced: [],
   GoblinClaim:      [],
+  // The fourth four. A guess at the Damsel names who; the other three are
+  // things the whole table is told or sees, and carry only when — the
+  // Vizier's announcement names its seat as the row's player.
+  DamselGuess:      [["target","player"]],
+  FearmongerChose:  [],
+  VizierAnnounced:  [],
+  BlindVote:        [],
   Acrobat:      [["target","player"]],
   // A daytime guess at the whole evil team. Two lists and whether it
   // won, because naming the Demon as a Minion is a failed guess.
@@ -811,6 +818,8 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   KingInfo:"King", NightwatchmanChoice:"Nightwatchman",
   NightwatchmanSeen:"Nightwatchman",
   BansheeAnnounced:"Banshee", GoblinClaim:"Goblin",
+  DamselGuess:"Damsel", FearmongerChose:"Fearmonger",
+  VizierAnnounced:"Vizier", BlindVote:"OrganGrinder",
   GrandmotherInfo:"Grandmother", ChambermaidInfo:"Chambermaid",
   GamblerGuess:"Gambler", CourtierChoice:"Courtier",
   ClockmakerInfo:"Clockmaker", DreamerInfo:"Dreamer",
@@ -824,17 +833,21 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   CerenovusMadness:"Cerenovus",
   MoonchildChoice:"Moonchild", ExorcistChoice:"Exorcist",
   InnkeeperChoice:"Innkeeper", SailorChoice:"Sailor", OgreChoice:"Ogre" };
-const DAY_EVENTS   = ["SlayerShot","VirginNomination","GoblinClaim"];
+const DAY_EVENTS   = ["SlayerShot","VirginNomination","GoblinClaim",
+  "DamselGuess","VizierAnnounced","BlindVote"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
   CerenovusMadness:"made mad", NightwatchmanSeen:"woken player",
-  BansheeAnnounced:"noted by", GoblinClaim:"claimed by" };
+  BansheeAnnounced:"noted by", GoblinClaim:"claimed by",
+  DamselGuess:"guessed by", FearmongerChose:"noted by",
+  VizierAnnounced:"Vizier", BlindVote:"noted by" };
 // Rows spoken by somebody the ability was used *on*, not by whoever
 // holds the character. They are never somebody relaying the holder's
 // information, so the speaker is not moved to the claimant and nothing
 // offers to move it.
 // A Banshee's death is announced to the table and a claim to be the
 // Goblin is made by whoever makes it: neither belongs to a claimant.
-const WITNESS_ROWS = ["NightwatchmanSeen","BansheeAnnounced","GoblinClaim"];
+const WITNESS_ROWS = ["NightwatchmanSeen","BansheeAnnounced","GoblinClaim",
+  "DamselGuess","FearmongerChose","VizierAnnounced","BlindVote"];
 // A few readings are named for the *act* rather than the character,
 // because that is what the table saw: a Slayer shot, a Gambler's guess.
 // Everything else is just the character, and is worked out rather than
@@ -850,7 +863,9 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   CerenovusMadness:"Cerenovus madness",
   NightwatchmanChoice:"Nightwatchman choice",
   NightwatchmanSeen:"Woken by the Nightwatchman",
-  BansheeAnnounced:"Banshee announced", GoblinClaim:"Goblin claim" };
+  BansheeAnnounced:"Banshee announced", GoblinClaim:"Goblin claim",
+  DamselGuess:"Damsel guess", FearmongerChose:"Fearmonger chose",
+  VizierAnnounced:"Vizier announced", BlindVote:"Blind vote" };
 // Not produced by a character, so it has no source role to be labelled
 // with — and falling back to the type name printed "Became" as though it
 // were a character somebody claimed.
@@ -1657,6 +1672,14 @@ function describeRow(r){
       return `the table was told the Banshee died — killed by the Demon`;
     case "GoblinClaim":
       return `said "I am the Goblin" when nominated`;
+    case "DamselGuess":
+      return `publicly guessed ${who(r.target)} as the Damsel`;
+    case "FearmongerChose":
+      return `the table was told the Fearmonger chose a new player`;
+    case "VizierAnnounced":
+      return `the table was told this player is the Vizier`;
+    case "BlindVote":
+      return `everybody voted with their eyes closed today`;
     case "Became":
       return r.was
         ? `claimed ${role(r.was)} until now, ${role(r.role)} from here on`

@@ -857,6 +857,48 @@ def handmade():
         yield played(f"x-wraith-bmr-played-{what}", XWB, seed, 7, 4)
     yield played("x-wraith-played-magician-and-wraith", XW, 14, 7, 4)
 
+    # The fourth four (10.10.2026), on the scripts of
+    # tests/test_experimental_4.py: a Damsel guess the game went on after,
+    # the Fearmonger's announcement, the Vizier's, a day voted blind and
+    # one with votes, and games that were played.
+    from test_experimental_4 import FOUR as XF, FOUR_BMR as XFB
+    F7 = ["Chef", "Empath", "Undertaker", "Damsel", "Soldier", "Monk",
+          "Mayor"]
+    guessed = {"type": "DamselGuess", "night": 1, "player": 5, "target": 3}
+    yield board("x-four-7-bare", XF, F7)
+    yield board("x-four-7-damsel-guessed-that-evening", XF, F7,
+                infos=[guessed])
+    yield board("x-four-7-damsel-guessed-and-on", XF, F7, infos=[guessed],
+                days_done=[1])
+    yield board("x-four-7-fearmonger-chose", XF, F7, infos=[
+        {"type": "FearmongerChose", "night": 1, "player": 0}])
+    yield board("x-four-7-vizier-announced", XF, F7, infos=[
+        {"type": "VizierAnnounced", "night": 1, "player": 4}])
+    yield board("x-four-7-vizier-announced-and-walked", XF, F7, infos=[
+        {"type": "VizierAnnounced", "night": 1, "player": 4}],
+        players_override={4: ["S1"]})
+    yield board("x-four-7-blind-vote", XF, F7, infos=[
+        {"type": "BlindVote", "night": 1, "player": 0}])
+    voting = [{"claim": c, "voted": [1] if i in (0, 1, 4) else [],
+               "nominated": [1] if i == 1 else []}
+              for i, c in enumerate(F7)]
+    yield board("x-four-7-votes-on-the-board", XF, voting)
+    B7 = ["Flowergirl", "Grandmother", "Gambler", "Gossip", "Professor",
+          "Sailor", "Courtier"]
+    for blind in (False, True):
+        rows = [{"type": "FlowergirlInfo", "night": 2, "player": 0,
+                 "voted": True}]
+        if blind:
+            rows.append({"type": "BlindVote", "night": 1, "player": 1})
+        yield board("x-four-bmr-7-flowergirl" + ("-blind" if blind else ""),
+                    XFB, B7, infos=rows)
+    for what, seed in (("damsel-guess", 0), ("vizier-walked", 3),
+                       ("blind-votes", 5), ("fearmonger-wins", 32)):
+        yield played(f"x-four-played-{what}", XF, seed, 7, 4)
+    for what, seed in (("vizier-forced", 1), ("flowergirl-blind", 7),
+                       ("fearmonger-wins", 10)):
+        yield played(f"x-four-bmr-played-{what}", XFB, seed, 7, 4)
+
 
 def generated(how_many=60):
     """Random boards, so the corpus covers combinations nobody chose."""

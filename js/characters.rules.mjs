@@ -11,7 +11,8 @@
 import {CHARACTERS} from "./catalogue.mjs";
 import {DEMON, OTHER, PICKED, Cause, causeRule, immunityRule, implication,
         implicationRule, shield} from "./deaths.mjs";
-import {Source, makePoisonerRule, sourceRule, sourcesOn} from "./impairment.mjs";
+import {ORGAN_GRINDER_BY_CHOICE, Source, makePoisonerRule, sourceRule, sourcesOn}
+  from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 
@@ -382,6 +383,20 @@ const aDevilsAdvocateSavesFromTheGallows = survivesExecutionRule(
                      aDevilsAdvocateSavesFromTheGallows).length) return [];
     return [advocate];
   });
+
+/** "You cannot die during the day." Working, it walks away from the
+ * gallows; drunk by a Courtier it does too (their jinx), so a Courtier
+ * that named it lately is a second way and the plan demands neither
+ * (10.10.2026). See solver.py. */
+survivesExecutionRule(function aVizierCannotDieByDay(world, state, day, seat) {
+  if (!inBag(state, "Vizier")) return [];
+  if (world.roleAt(seat, `D${day}`) !== "Vizier") return [];
+  const out = [seat];
+  for (const info of state.infos)
+    if (info.sourceRole === "Courtier" && info.role === "Vizier"
+        && info.night <= day && day < info.night + 3) out.push(info.player);
+  return out;
+});
 
 /** Some executed good players do not die — the Storyteller decides.
  *
@@ -1228,6 +1243,17 @@ sourceRule(function aMinstrelSilencesTheTable(world, state, night) {
     Array.from({length: state.nPlayers}, (_, i) => i).filter(p => p !== seat));
   return [new Source("Minstrel", everyone,
                      {capacity: everyone.size, cost: 1.0, repeatCost: 1.0})];
+});
+
+/** "Each night, choose if you are drunk until dusk." Itself and nobody
+ * else, its own choice, free and never forced (10.10.2026). */
+sourceRule(function anOrganGrinderMayDrink(world, state, night) {
+  if (!inBag(state, "OrganGrinder")) return [];
+  const phase = `N${night}`;
+  const seat = world.findAt("OrganGrinder", phase);
+  if (seat === null || !state.aliveSet(phase).has(seat)) return [];
+  return [new Source(ORGAN_GRINDER_BY_CHOICE, new Set([seat]),
+                     {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0})];
 });
 
 /** One of the pair it protected, and it does not choose which.

@@ -125,6 +125,14 @@ def build_info(d):
         return I.BansheeAnnounced(night, player, trust)
     if kind == "GoblinClaim":
         return I.GoblinClaim(night, player, trust)
+    if kind == "DamselGuess":
+        return I.DamselGuess(night, player, trust, target=_int(d, "target"))
+    if kind == "FearmongerChose":
+        return I.FearmongerChose(night, player, trust)
+    if kind == "VizierAnnounced":
+        return I.VizierAnnounced(night, player, trust)
+    if kind == "BlindVote":
+        return I.BlindVote(night, player, trust)
     if kind == "Became":
         return I.BecameInfo(night, player, trust,
                             role=d.get("role") or "",
@@ -427,7 +435,10 @@ def run_solve(payload):
                     # night is still shown who it is.
                     "NightwatchmanSeen",
                     # The table is told, whoever writes it down.
-                    "BansheeAnnounced")
+                    "BansheeAnnounced", "FearmongerChose",
+                    "VizierAnnounced", "BlindVote",
+                    # Said in daylight, and the dead may speak.
+                    "DamselGuess")
     for d in raw_infos:
         speaker = _int(d, "player", 0)
         night = _int(d, "night", 1)
@@ -667,6 +678,8 @@ INFO_SOURCES = {
     "NightwatchmanChoice": "Nightwatchman",
     "NightwatchmanSeen": "Nightwatchman",
     "BansheeAnnounced": "Banshee", "GoblinClaim": "Goblin",
+    "DamselGuess": "Damsel", "FearmongerChose": "Fearmonger",
+    "VizierAnnounced": "Vizier", "BlindVote": "OrganGrinder",
     "Washerwoman": "Washerwoman", "Librarian": "Librarian",
     "Investigator": "Investigator", "Chef": "Chef", "Empath": "Empath",
     "FortuneTeller": "FortuneTeller", "Undertaker": "Undertaker",

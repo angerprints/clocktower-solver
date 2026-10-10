@@ -376,6 +376,15 @@ def _wraith(world, state, seat, night):
     return _evil_eyes_open(world, state, seat, night)[0]
 
 
+@condition("Vizier")
+def _vizier(world, state, seat, night):
+    """Only beside a Fearmonger: "the Vizier wakes with the Fearmonger and
+    learns who they choose" (their jinx). Built for the Chambermaid, and
+    the rest of the jinx is not (table ruling, 10.10.2026)."""
+    other = world.find_at("Fearmonger", f"N{night}")
+    return other is not None and woke(world, state, other, night)
+
+
 @condition("Drunk")
 @condition("Marionette")
 def _believer(world, state, seat, night):

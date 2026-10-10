@@ -53,6 +53,8 @@ export const INFO_SOURCES = {
   KingInfo: "King", NightwatchmanChoice: "Nightwatchman",
   NightwatchmanSeen: "Nightwatchman",
   BansheeAnnounced: "Banshee", GoblinClaim: "Goblin",
+  DamselGuess: "Damsel", FearmongerChose: "Fearmonger",
+  VizierAnnounced: "Vizier", BlindVote: "OrganGrinder",
   Washerwoman: "Washerwoman", Librarian: "Librarian",
   Investigator: "Investigator", Chef: "Chef", Empath: "Empath",
   FortuneTeller: "FortuneTeller", Undertaker: "Undertaker",
@@ -297,7 +299,10 @@ export function readBoard(payload) {
                          // Woken late, and "choose a player" means any.
                          "NightwatchmanSeen",
                          // The table is told, whoever writes it down.
-                         "BansheeAnnounced"];
+                         "BansheeAnnounced", "FearmongerChose",
+                         "VizierAnnounced", "BlindVote",
+                         // Said in daylight, and the dead may speak.
+                         "DamselGuess"];
     const speaker = Number(row.player || 0);
     const night = Number(row.night || 1);
     if ((deaths[speaker] || []).includes(`N${night}`) &&

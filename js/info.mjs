@@ -12,7 +12,8 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./roles.mjs";
-import {killedByAVigormortis, sourcesOn} from "./impairment.mjs";
+import {ORGAN_GRINDER_BY_CHOICE, killedByAVigormortis, minionStillActs, sourcesOn}
+  from "./impairment.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {possibleCounts, reallyLiving, theDeadOutnumberOrEqual, wokenWraiths}
   from "./waking.mjs";
@@ -382,11 +383,19 @@ export const FlowergirlInfo = define("FlowergirlInfo", "Flowergirl",
   function (w, s) {
     const day = this.night - 1;
     if (day < 1) return false;         // there was no day before the first
+    if (!this.weighed(s)) return true;
     const demon = w.demonAt(`D${day}`);
     if (demon === null) return !this.voted;
     const who = (s.votes || {})[day];
     const voted = !!who && (who.has ? who.has(demon) : who.includes(demon));
     return voted === !!this.voted;
+  }, {
+    // A day voted with eyes closed left no votes on the board: nothing to
+    // check it against (10.10.2026). See info.py.
+    weighed(s) {
+      return !s.infos.some(info => info.type === "BlindVote"
+                           && info.night === this.night - 1);
+    },
   });
 
 /** Whether a Minion nominated during the day just gone.
@@ -989,6 +998,8 @@ export function possibleImpairmentCounts(world, state, night) {
   // Certain or choosing is decided on the whole reach; only then are the
   // living counted. See info.py.
   for (const source of sourcesOn(world, state, night)) {
+    // Its own choice, so not another character's doing (10.10.2026).
+    if (source.name === ORGAN_GRINDER_BY_CHOICE) continue;
     // Free *and* reaching everybody it touches — a Drunk holding
     // somebody else's token, a Minstrel silencing the table. A free
     // source that still has to *pick* is a different thing: a
@@ -1340,6 +1351,90 @@ export const GoblinClaim = define("GoblinClaim", "Goblin",
   });
 GoblinClaim.isAChoice = true;
 
+// The fourth four (10.10.2026). See the same rows in info.py.
+
+/** Is or was a Spy in play by the end of this day? */
+function spyEver(w, day) {
+  for (let k = 1; k <= day; k++)
+    for (const phase of [`N${k}`, `D${k}`])
+      if (w.findAt("Spy", phase) !== null) return true;
+  return false;
+}
+
+/** A player publicly guessed who the Damsel is. `night` is the day. The
+ * Minions' first guess, landing on a living working Damsel, ends the
+ * game; the game going on says she was not working. */
+export const DamselGuess = define("DamselGuess", "Damsel",
+  function (w, s) { return this.mustHaveFailed(w, s).length === 0; },
+  {
+    event: true,
+    sourceSeat() { return this.player; },
+    theMinionsFirst(w, s) {
+      const mine = s.infos.indexOf(this);
+      return !s.infos.some((info, idx) =>
+        info !== this && info.type === "DamselGuess"
+        && (info.night < this.night || (info.night === this.night && idx < mine))
+        && w.teamAt(info.player, `D${info.night}`) === "minion");
+    },
+    mustHaveFailed(w, s) {
+      const day = this.night, phase = `D${day}`;
+      if (w.teamAt(this.player, phase) !== "minion") return [];
+      if (w.roleAt(this.target, phase) !== "Damsel"
+          || !s.aliveSet(phase).has(this.target)) return [];
+      if (!this.theMinionsFirst(w, s)) return [];
+      if (spyEver(w, day)) return [];   // poisoned all game: nothing
+      if (!wentOnAfter(s, day)) return [];
+      return [this.target];
+    },
+  });
+DamselGuess.isAChoice = true;
+
+/** The table was told the Fearmonger chose a new player — not whom. A
+ * fact: a Fearmonger with its ability chose that night, drunk or not. */
+export const FearmongerChose = define("FearmongerChose", "Fearmonger",
+  function (w, s) {
+    const phase = `N${this.night}`;
+    const seat = w.findAt("Fearmonger", phase);
+    return seat !== null && minionStillActs(w, s, seat, phase);
+  }, {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },
+  });
+
+/** The table was told who the Vizier is, on its first day, and only if
+ * it had its ability then. `night` is the day. */
+export const VizierAnnounced = define("VizierAnnounced", "Vizier",
+  function (w, s) {
+    const day = this.night;
+    if (w.roleAt(this.player, `D${day}`) !== "Vizier") return false;
+    if (!s.aliveSet(`D${day}`).has(this.player)) return false;
+    return day === 1 || w.roleAt(this.player, `D${day - 1}`) !== "Vizier";
+  }, {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },
+    leanedOn() { return [this.player]; },
+  });
+
+/** The table voted with its eyes closed today: an Organ Grinder alive and
+ * working. `night` is the day. */
+function grinderToday(row, w, s) {
+  const phase = `D${row.night}`;
+  const seat = w.findAt("OrganGrinder", phase);
+  return seat !== null && s.aliveSet(phase).has(seat) ? seat : null;
+}
+export const BlindVote = define("BlindVote", "OrganGrinder",
+  function (w, s) { return grinderToday(this, w, s) !== null; }, {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },
+    leanedOn(w, s) {
+      const got = grinderToday(this, w, s);
+      return got === null ? [] : [got];
+    },
+  });
+
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
   Undertaker, Ravenkeeper, GrandmotherInfo, ChambermaidInfo, GamblerGuess,
@@ -1353,6 +1448,7 @@ export const KINDS = {
   StewardInfo, KnightInfo, ShugenjaInfo, KingInfo,
   NightwatchmanChoice, NightwatchmanSeen,
   BansheeAnnounced, GoblinClaim,
+  DamselGuess, FearmongerChose, VizierAnnounced, BlindVote,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
 };

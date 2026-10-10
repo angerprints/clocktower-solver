@@ -472,6 +472,29 @@ _EXPERIMENTAL = [
     # wide on purpose: an evil seat says what it likes about its nights.
     _c("Wraith", "wraith", "Wraith", "minion", {FIRST, EVERY, SOMETIMES},
        nights="conditional"),
+
+    # The fourth four (10.10.2026): the last small ones. Each brings a row
+    # or changes the vote; the readings are the table's of that day.
+    #
+    # Guessed publicly by a Minion — the Minions' first guess — and its
+    # team loses. Never wakes; the Minions are shown it on the first
+    # night, which is not its ability (info.DamselGuess).
+    _c("Damsel", "damsel", "Damsel", "outsider", {NEVER}),
+    # Chooses a player every night, and the table is told when the player
+    # is a new one (info.FearmongerChose). It points at a player, so a
+    # Goon notices.
+    _c("Fearmonger", "fearmonger", "Fearmonger", "minion", {FIRST, EVERY},
+       nights="every", chooses=True),
+    # Announced to everybody on its first day if it has its ability then
+    # (info.VizierAnnounced), and cannot die during the day. Its own
+    # nights are none — it wakes only beside a Fearmonger, by their jinx
+    # (waking._vizier).
+    _c("Vizier", "vizier", "Vizier", "minion", {NEVER, EVERY, SOMETIMES},
+       nights="conditional"),
+    # Eyes closed for every vote while it works (info.BlindVote). Chooses
+    # each night whether to be drunk until dusk — itself, nobody else.
+    _c("OrganGrinder", "organgrinder", "Organ Grinder", "minion",
+       {FIRST, EVERY}, nights="every"),
 ]
 
 
@@ -549,6 +572,11 @@ _NOT_IN_THE_FILE = {
     "steward": (44, 0),
     "knight": (44, 0),
     "shugenja": (46, 0),
+    # The Organ Grinder is newer than the file too. It reads nothing and
+    # nothing at night reads it, so where it sits changes nothing; it
+    # shares the Fearmonger's slots (10.10.2026). The Vizier needs none:
+    # it never wakes for itself.
+    "organgrinder": (26, 17),
     # The publisher's other nights run ... Vortox, Lord of Typhon,
     # Vigormortis, Ojo, Al-Hadikhia ... — after the Vigormortis at 32 and
     # before anything the file numbers 33, so it shares the Vigormortis's

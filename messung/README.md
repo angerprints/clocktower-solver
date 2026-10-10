@@ -131,6 +131,7 @@ Dämon still ist und wer es bei welchem Muster war.
 | `sim5.py`, `nw2.py` | `XSPY` oder `XVORTOX` als Skript | Die zwei Skripte, die für die experimentellen Charaktere gebaut sind (`tests/test_experimental.py`): eines mit Spion, Einsiedler und Zombuul, eines mit Vortox. |
 | `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XOJO` oder `XOJOB` als Skript | Die zwei Skripte für die zweiten fünf (`tests/test_experimental_2.py`): eines wie Trouble Brewing, eines wie Bad Moon Rising, beide mit Banshee, Eiferer, Ketzer, Goblin und Ojo. |
 | `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XWRAITH` oder `XWRAITHB` als Skript | Die zwei Skripte für die dritten fünf (`tests/test_experimental_3.py`), beide mit Magierin, Mohnzüchter, Politiker, Petze und Geist. Das zweite hat die Kammerzofe, die den Geist sieht. |
+| `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XFOUR` oder `XFOURB` als Skript | Die zwei Skripte für die vierten vier (`tests/test_experimental_4.py`), beide mit Unschuld, Angstmacher, Wesir und Drehorgelspieler. Das zweite hat Kammerzofe, Blumenmädchen und Spion. |
 
     python3 messung/tor.py 40 4 0 Steward Knight Shugenja Nightwatchman King
     python3 messung/tor.py 1000 4 0

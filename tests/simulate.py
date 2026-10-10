@@ -18,6 +18,8 @@ from botc.info import (registers_as_role,
                        StewardInfo, KnightInfo, ShugenjaInfo, KingInfo,
                        NightwatchmanChoice, NightwatchmanSeen,
                        BansheeAnnounced, GoblinClaim,
+                       DamselGuess, FearmongerChose, VizierAnnounced,
+                       BlindVote,
                        BalloonistInfo,
                        DreamerInfo,
                        ExorcistChoice, InnkeeperChoice,
@@ -154,6 +156,17 @@ class Deal:
         self.nightwatchman_chose = {}       # seat -> the night it chose
         self.nightwatchman_aimed = {}       # night -> {seat: whom}
         self.said_by_others = []            # rows waiting to be heard
+        # The fourth four (10.10.2026).
+        self.damsel_guessed = False         # the Minions' one guess, spent
+        self.fear_chose = {}                # night -> whom the Fearmonger chose
+        self.fear_target = {}               # Fearmonger seat -> its current pick
+        self.fear_nominated = {}            # day -> whom it nominated
+        self.vizier_seen = set()            # Viziers whose first day has passed
+        self.vizier_forced = {}             # day -> whom it executed at once
+        self.grinder_drunk = set()          # nights the Organ Grinder chose drink
+        self.blind_days = set()             # days voted with eyes closed
+        self.hidden_votes = {}              # {day: {seat, ...}} on those days
+        self.voted_for = {}                 # {day: {nominee: {seat, ...}}}
 
     def demon_at(self, phase):
         """The seat holding the Demon at this phase."""
@@ -614,6 +627,16 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             d.poisoned[night] = rng.choice(living)
             d.poisoned_by[night] = poisoner
 
+        # An Organ Grinder chooses whether to be drunk until dusk. Its own
+        # business: nothing else reads it, and a Mathematician does not
+        # count it (10.10.2026). Nothing is drawn on a script without one.
+        if "OrganGrinder" in script.keys:
+            grinder = next((p for p in living
+                            if d.role_at(p, f"N{night}") == "OrganGrinder"),
+                           None)
+            if grinder is not None and rng.random() < 0.3:
+                d.grinder_drunk.add(night)
+
         # A Pukka's token carries into the night: whoever it poisoned
         # stays poisoned until the Pukka has had its turn.
         _pukka_token_carries(d, night)
@@ -815,7 +838,20 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             if _alsaahir_guesses(d, night, rng, heard):
                 break
 
+            # The fourth four (10.10.2026): a Vizier is announced on its
+            # first day, a Minion may guess the Damsel, and an Organ
+            # Grinder may have everybody vote with their eyes closed.
+            _vizier_is_announced(d, night, heard)
+            if _a_minion_guesses_the_damsel(d, night, rng, heard):
+                d.ended_at, d.ended_why = f"D{night}", "damsel"
+                d.game_ends_after = night
+                break
+
             _hold_a_day(d, night, rng)
+            if night in d.blind_days:
+                grinder = next(p for p in d.alive_at(f"E{night}")
+                               if d.role_at(p, f"E{night}") == "OrganGrinder")
+                heard.append(BlindVote(night, grinder))
             # A Witch's curse can take the third from last in daylight.
             if _evil_has_won(d, f"D{night}"):
                 d.ended_at, d.ended_why = f"D{night}", "two alive"
@@ -834,6 +870,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             if hanged is not None \
                     and _a_goblin_said_so(d, night, hanged, rng, heard):
                 d.ended_at, d.ended_why = f"E{night}", "goblin"
+                d.game_ends_after = night
+                break
+            # The Fearmonger nominated its pick and the town executed them:
+            # their team loses, dead of it or not (10.10.2026).
+            if hanged is not None and _the_fearmonger_wins(d, night, hanged):
+                d.ended_at, d.ended_why = f"E{night}", "fearmonger"
                 d.game_ends_after = night
                 break
             # Or the town hangs one of the last three.
@@ -1556,6 +1598,91 @@ def _alsaahir_guesses(d, day, rng, heard):
     return False
 
 
+def _vizier_is_announced(d, day, heard):
+    """ "All players know you are the Vizier" — on its first day, and only
+    if it has its ability then: one drunk or poisoned that day is never
+    announced (table ruling, 10.10.2026). Not at all with an Investigator
+    or an Alsaahir on the script (their jinxes)."""
+    if "Vizier" not in d.script.keys:
+        return
+    phase = f"D{day}"
+    for seat in d.alive_at(phase):
+        if d.role_at(seat, phase) != "Vizier" or seat in d.vizier_seen:
+            continue
+        d.vizier_seen.add(seat)
+        if "Investigator" in d.script.keys or "Alsaahir" in d.script.keys:
+            continue
+        if d.working(seat, day, by_day=True):
+            heard.append(VizierAnnounced(day, seat))
+
+
+def _a_vizier_stands(d, seat, day):
+    """A Vizier cannot die during the day — working, or drunk by a
+    Courtier (their jinx). Drunk or poisoned otherwise, it can."""
+    if d.role_at(seat, f"D{day}") != "Vizier":
+        return False
+    if d.working(seat, day, by_day=True):
+        return True
+    return any(holder == seat and when <= day < when + 3
+               for when, holder, _courtier in d.courtier_drunks)
+
+
+def _spy_ever(d):
+    return "Spy" in d.roles or any(became == "Spy"
+                                   for _at, _who, became in d.changes)
+
+
+def _a_minion_guesses_the_damsel(d, day, rng, heard):
+    """Did a Minion's public guess just win the game?
+
+    The Minions get one guess between them; a Demon or a good player
+    guessing spends nothing and wins nothing. Right, and the Damsel alive
+    and working, and evil has won — a drunk or poisoned Minion guessing
+    right wins all the same, and a Spy in play, ever, poisons the Damsel
+    (their jinx). Now and then somebody else tries it on.
+    """
+    if "Damsel" not in d.script.keys:
+        return False
+    phase = f"D{day}"
+    living = d.alive_at(phase)
+    if rng.random() < 0.03:
+        others = [p for p in living if TEAM[d.role_at(p, phase)] != "minion"]
+        if others:
+            who = rng.choice(others)
+            heard.append(DamselGuess(day, who,
+                                     target=rng.choice(living)))
+    if d.damsel_guessed:
+        return False
+    minions = [p for p in living if TEAM[d.role_at(p, phase)] == "minion"]
+    if not minions or rng.random() >= 0.25:
+        return False
+    who = rng.choice(minions)
+    damsel = next((p for p in living if d.role_at(p, phase) == "Damsel"),
+                  None)
+    if damsel is not None and rng.random() < 0.4:
+        target = damsel
+    else:
+        target = rng.choice([p for p in living if p != who] or [who])
+    heard.append(DamselGuess(day, who, target=target))
+    d.damsel_guessed = True
+    return (target == damsel and damsel is not None
+            and d.working(damsel, day, by_day=True) and not _spy_ever(d))
+
+
+def _the_fearmonger_wins(d, day, hanged):
+    """ "If you nominate & execute them, their team loses." Its pick as it
+    stands, nominated by the Fearmonger itself, and the Fearmonger with
+    its ability. Executed is enough, as for the Goblin."""
+    target = d.fear_nominated.get(day)
+    if target is None or target != hanged:
+        return False
+    phase = f"D{day}"
+    fear = next((p for p in d.alive_at(phase)
+                 if d.role_at(p, phase) == "Fearmonger"), None)
+    return fear is not None and d.fear_target.get(fear) == target \
+        and d.working(fear, day, by_day=True)
+
+
 def _hold_a_day(d, day, rng):
     """Nominations and votes, and the execution that follows from them.
 
@@ -1594,6 +1721,28 @@ def _hold_a_day(d, day, rng):
         zealots = {p for p in living
                    if (d.token(p, phase) or d.role_at(p, phase)) == "Zealot"}
 
+    # An Organ Grinder with its ability — not drunk by its own choice nor
+    # by anything else — has everybody vote with their eyes closed, and
+    # nobody can write the votes down (10.10.2026).
+    blind = False
+    if "OrganGrinder" in d.script.keys:
+        grinder = next((p for p in living
+                        if d.role_at(p, phase) == "OrganGrinder"), None)
+        blind = (grinder is not None and day not in d.grinder_drunk
+                 and d.working(grinder, day, by_day=True))
+    # A Fearmonger may go for its pick: nominated by the Fearmonger itself,
+    # and if the town executes them, their team loses.
+    fear = fear_pick = None
+    if "Fearmonger" in d.script.keys:
+        fear = next((p for p in living
+                     if d.role_at(p, phase) == "Fearmonger"), None)
+        fear_pick = d.fear_target.get(fear) if fear is not None else None
+        if fear_pick is not None and fear_pick in living \
+                and fear_pick != fear and rng.random() < 0.3:
+            nominators = [fear] + [p for p in nominators if p != fear]
+        else:
+            fear = None
+
     tally = {}
     for who in nominators:
         if d.deaths.get(who) is not None:
@@ -1601,6 +1750,9 @@ def _hold_a_day(d, day, rng):
         nominee = rng.choice([p for p in living
                               if p != who and d.deaths.get(p) is None]
                              or [who])
+        if who == fear and d.deaths.get(fear_pick) is None:
+            nominee = fear_pick
+            d.fear_nominated[day] = fear_pick
         d.nominations.setdefault(day, set()).add(who)
         # "If they nominate tomorrow, they die" — at once, and the
         # nomination still counts. The Witch was dealt, aimed every night
@@ -1623,9 +1775,14 @@ def _hold_a_day(d, day, rng):
                             if d.deaths.get(p) is None) >= 5:
                 votes.add(voter)
         if votes:
-            d.votes.setdefault(day, set()).update(votes)
+            store = d.hidden_votes if blind else d.votes
+            store.setdefault(day, set()).update(votes)
+            d.voted_for.setdefault(day, {}).setdefault(
+                nominee, set()).update(votes)
         tally[nominee] = max(tally.get(nominee, 0), len(votes))
     d.tally[day] = tally
+    if blind and d.nominations.get(day):
+        d.blind_days.add(day)
 
 
 def _a_goblin_said_so(d, day, executed, rng, heard):
@@ -1671,6 +1828,8 @@ def _the_curse_bites(d, seat, day):
         return False
     if d.role_at(seat, phase) == "Sailor" and d.working(seat, day):
         return False
+    if _a_vizier_stands(d, seat, day):
+        return False
     if _kept_alive_by_a_tea_lady(d, seat, phase):
         return False
     return not _a_fool_shrugs_it_off(d, seat, phase)
@@ -1695,6 +1854,8 @@ def _walks_away(d, seat, day, rng):
     role = d.role_at(seat, phase)
     if role == "Sailor" and d.working(seat, day, by_day=True):
         return "Sailor"
+    if _a_vizier_stands(d, seat, day):
+        return "Vizier"
     if _kept_alive_by_a_tea_lady(d, seat, phase):
         return "TeaLady"
     advocate, chosen = d.spared.get(day) or (None, None)
@@ -1800,6 +1961,28 @@ def _execute(d, day, rng, allow_takeover=False):
     ranked = [seat for seat, count in
               sorted(tally.items(), key=lambda kv: -kv[1])
               if seat in living and count]
+    # "If good voted, you may choose to execute immediately." A Vizier
+    # with its ability sometimes does, on a nominee at least one good
+    # player voted for — never the Magician, which is immune (their
+    # jinx). The solver reads no vote counts, so this only moves who
+    # goes up (10.10.2026).
+    forced = None
+    if "Vizier" in d.script.keys:
+        vizier = next((p for p in d.alive_at(phase)
+                       if d.role_at(p, phase) == "Vizier"
+                       and d.deaths.get(p) is None), None)
+        if vizier is not None and d.working(vizier, day, by_day=True):
+            backed = sorted(
+                nominee for nominee, voters
+                in (d.voted_for.get(day) or {}).items()
+                if nominee in living
+                and d.role_at(nominee, phase) != "Magician"
+                and any(d.side_at(v, phase) == "good" for v in voters))
+            if backed and rng.random() < 0.3:
+                forced = rng.choice(backed)
+                d.vizier_forced[day] = forced
+    if forced is not None:
+        ranked = [forced]
     if ranked:
         # Most votes goes up. A tie is broken by whoever was nominated
         # first, which is what a Storyteller does.
@@ -2418,6 +2601,13 @@ def _conditionally_woke(d, seat, role, night):
         day = night - 1
         return any(TEAM[d.role_at(who, f"D{day}")] == "outsider"
                    for who in d.died_on(f"D{day}", f"E{day}"))
+    if role == "Vizier":
+        # Only beside a Fearmonger: "the Vizier wakes with the Fearmonger"
+        # (their jinx — the waking is all of it that is built, 10.10.2026).
+        phase = f"N{night}"
+        return any(d.role_at(q, phase) == "Fearmonger"
+                   and _woke_for_own_ability(d, q, night)
+                   for q in d.alive_at(phase))
     if role == "Wraith":
         # "You wake when other evil players do": whenever another evil
         # seat opens its eyes tonight for its own ability, the Wraith is
@@ -2610,9 +2800,11 @@ def _in_night_order(d, night):
 # could tell: a Gambler the Pukka poisoned *tonight* had already guessed,
 # and was being read as poisoned when it did — so it lived through a
 # wrong guess the night-walk rightly said had killed it.
+# The Fearmonger joined on 10.10.2026: it points at a player before every
+# Demon (17), so a Goon it chose answers before the kills.
 CHOOSES_EARLY = frozenset({"Innkeeper", "Sailor", "Monk", "Exorcist",
                            "SnakeCharmer", "PitHag", "Gambler", "Courtier",
-                           "DevilsAdvocate", "Lunatic"})
+                           "DevilsAdvocate", "Lunatic", "Fearmonger"})
 
 
 def early_choices(d, night, rng):
@@ -2640,6 +2832,15 @@ def early_choices(d, night, rng):
         if role == "Philosopher" and night > 1 \
                 and d.philosophies.get(seat) in CHOOSES_EARLY:
             role = d.philosophies[seat]
+        # The Fearmonger acts at 17, after the Pit-Hag at 16 — so a seat
+        # the Pit-Hag has just unmade chooses nothing, and one it has just
+        # made a Fearmonger chooses tonight (the gate, seeds 898 and 2928,
+        # 10.10.2026). Asked of the board as it stands at its turn.
+        now = d.role_at(seat, f"N{night}")
+        if "Fearmonger" in (role, now):
+            if now != "Fearmonger":
+                continue
+            role = now
         if role not in CHOOSES_EARLY:
             continue
         if seat not in d.alive_at(f"N{night}"):
@@ -3678,7 +3879,10 @@ def _for_role(d, seat, role, night, rng):
         # Whether the Demon voted during the day just gone.
         day = night - 1
         demon = d.demon_at(f"D{day}")
-        voted = demon is not None and demon in d.votes.get(day, set())
+        # Eyes closed or not, the Storyteller saw who voted.
+        voted = demon is not None and (
+            demon in d.votes.get(day, set())
+            or demon in d.hidden_votes.get(day, set()))
         return FlowergirlInfo(night, seat, voted=voted)
 
     if role == "TownCrier" and night > 1:
@@ -3858,6 +4062,25 @@ def _for_role(d, seat, role, night, rng):
         d.exorcised[night] = target
         _the_goon_answers(d, night, seat, target)
         return ExorcistChoice(night, seat, target=target)
+
+    if role == "Fearmonger":
+        # Chooses a player every night, and the table is told when it is
+        # a new one — drunk or poisoned too (table ruling, 10.10.2026).
+        # It keeps its last pick half the time.
+        others = [p for p in d.alive_at(f"N{night}") if p != seat]
+        if not others:
+            return None
+        before = d.fear_target.get(seat)
+        if before in others and rng.random() < 0.5:
+            target = before
+        else:
+            target = rng.choice(others)
+        d.fear_chose[night] = target
+        d.fear_target[seat] = target
+        _the_goon_answers(d, night, seat, target)
+        if target == before:
+            return None                   # the same one: nothing is said
+        return FearmongerChose(night, seat)
 
     if role == "Sailor":
         # Points at somebody every night; one of the two of them is drunk

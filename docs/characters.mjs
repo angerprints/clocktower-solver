@@ -1129,6 +1129,52 @@ export const DATA = {
     "sometimes"
    ],
    "nights": "conditional"
+  },
+  "Damsel": {
+   "id": "damsel",
+   "name": "Damsel",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ],
+   "first_night": 31,
+   "other_night": 46
+  },
+  "Fearmonger": {
+   "id": "fearmonger",
+   "name": "Fearmonger",
+   "team": "minion",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "chooses": true,
+   "nights": "every",
+   "first_night": 26,
+   "other_night": 17
+  },
+  "Vizier": {
+   "id": "vizier",
+   "name": "Vizier",
+   "team": "minion",
+   "wake": [
+    "every",
+    "never",
+    "sometimes"
+   ],
+   "nights": "conditional"
+  },
+  "OrganGrinder": {
+   "id": "organgrinder",
+   "name": "Organ Grinder",
+   "team": "minion",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "nights": "every",
+   "first_night": 26,
+   "other_night": 17
   }
  },
  "scripts": {

@@ -417,6 +417,8 @@ def hidden_from(deal, night, heard):
         out[("sailor_drunk", night)] = deal.sailor_drunk[night]
     if deal.cursed.get(night) is not None:
         out[("witch", night)] = deal.cursed[night]
+    if getattr(deal, "fear_chose", {}).get(night) is not None:
+        out[("fearmonger", night)] = deal.fear_chose[night]
     # The three that kill besides the Demon, and a Lunatic's pointing.
     for key, where in (("assassin", "assassin_aimed"),
                        ("godfather", "godfather_aimed"),
@@ -529,6 +531,7 @@ ALWAYS_ACTS = {
     "Poisoner": "poisoner", "Monk": "monk", "Sailor": "sailor",
     "Innkeeper": "innkeeper", "SnakeCharmer": "snakecharmer",
     "Witch": "witch", "Exorcist": "exorcist", "Acrobat": "acrobat",
+    "Fearmonger": "fearmonger",
 }
 
 
@@ -552,6 +555,8 @@ def _note_what_we_were_not_told(state, deal, roles, night, hidden):
             continue                      # droisoned, so it does nothing
         if deal.roles[seat] != role:
             continue                      # arrived mid-game
+        if state.roles.get(seat) != role:
+            continue                      # made something else tonight
         if seat in (hidden.get(("regurgitated", night)),
                     hidden.get(("professor", night))):
             continue                      # back tonight, after its turn
@@ -959,6 +964,16 @@ def walk(deal, night, hidden):
                 if not state.working(seat):
                     continue      # drunk already, or by the Goon just now
                 state.spared.add(target)
+
+            elif role == "Fearmonger":
+                # Chooses a player every night (10.10.2026). Nothing comes
+                # of it tonight, but it points at somebody, so a Goon
+                # answers — drunk or sober, the choice is made.
+                target = hidden.get(("fearmonger", night))
+                if target is None or seat not in state.alive:
+                    continue
+                state.choose(seat, target, slot)
+                _goon_answers(state, seat, target, slot)
 
             elif role == "Witch":
                 # Curses somebody: if they nominate tomorrow, they die.

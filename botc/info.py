@@ -918,7 +918,11 @@ def _possible_impairment_counts(world, state, night):
     # then are the living counted: a Vigormortis may put its poison on a
     # dead Townsfolk, and trimming the reach first made its one living
     # choice look certain.
+    from .impairment import ORGAN_GRINDER_BY_CHOICE
     for source in sources_on(world, state, night):
+        # Its own choice, so not another character's doing (10.10.2026).
+        if source.name == ORGAN_GRINDER_BY_CHOICE:
+            continue
         # Free *and* reaching everybody it touches — a Drunk holding
         # somebody else's token, a Minstrel silencing the table. Those
         # have capacity enough for their whole reach and there is nothing
@@ -972,10 +976,21 @@ class FlowergirlInfo(Info):
     voted: bool = False
     source_role = "Flowergirl"
 
+    def weighed(self, state):
+        # A day voted with eyes closed left no votes on the board, and the
+        # Storyteller still saw who voted: nothing to check it against
+        # (10.10.2026). Kept and not weighed, so a Vortox reads nothing
+        # into it either.
+        return not any(type(info).__name__ == "BlindVote"
+                       and info.night == self.night - 1
+                       for info in state.infos)
+
     def holds(self, w, s, rh, seat=None):
         day = self.night - 1
         if day < 1:
             return False              # there was no day before the first
+        if not self.weighed(s):
+            return True
         phase = f"D{day}"
         demon = w.demon_at(phase)
         if demon is None:
@@ -2638,3 +2653,184 @@ class GoblinClaim(Info):
             return ()
         return (self.player,)
 
+
+
+# --------------------------------------------------------------------------
+# The fourth four (10.10.2026): Damsel, Fearmonger, Vizier, Organ Grinder.
+# Every reading below is the table's ruling of 10.10.2026 unless it says
+# otherwise.
+# --------------------------------------------------------------------------
+
+def _spy_ever(w, day):
+    """Is or was a Spy in play by the end of this day?"""
+    for k in range(1, day + 1):
+        for phase in (f"N{k}", f"D{k}"):
+            if w.find_at("Spy", phase) is not None:
+                return True
+    return False
+
+
+@dataclass
+class DamselGuess(Info):
+    """A player publicly guessed who the Damsel is. `night` is the day.
+
+    "All Minions know a Damsel is in play. If a Minion publicly guesses
+    you (once), your team loses." Only a Minion's guess counts, and only
+    the Minions' first: a Demon or a good player guessing changes nothing
+    and spends nothing. A drunk or poisoned Minion guessing right still
+    wins — it is the Damsel's ability that ends the game, not theirs. A
+    drunk or poisoned Damsel ends nothing, and the guess is spent all the
+    same. And "if the Spy is or has been in play, the Damsel is poisoned"
+    (their jinx).
+
+    So, like a Goblin's claim, this is judged by what came after: the
+    Minions' first guess landing on a living Damsel, and the game going
+    on, means the Damsel was not working that day.
+    """
+
+    target: int = 0
+    is_a_choice = True
+    event = True
+    source_role = "Damsel"
+
+    def source_seat(self, state):
+        return self.player
+
+    def holds(self, w, s, rh, seat=None):
+        return not self.must_have_failed(w, s)
+
+    def _the_minions_first(self, w, s):
+        """Is this the first guess a Minion made?"""
+        mine = None
+        for idx, info in enumerate(s.infos):
+            if info is self:
+                mine = idx
+        for idx, info in enumerate(s.infos):
+            if not isinstance(info, DamselGuess) or info is self:
+                continue
+            earlier = (info.night, idx) < (self.night, mine)
+            if earlier and w.team_at(info.player, f"D{info.night}") \
+                    == "minion":
+                return False
+        return True
+
+    def must_have_failed(self, w, s):
+        """Whose ability cannot have been working for this to be so."""
+        day = self.night
+        phase = f"D{day}"
+        if w.team_at(self.player, phase) != "minion":
+            return ()
+        if w.role_at(self.target, phase) != "Damsel" \
+                or self.target not in s.alive_set(phase):
+            return ()
+        if not self._the_minions_first(w, s):
+            return ()
+        if _spy_ever(w, day):
+            return ()                     # poisoned all game: nothing
+        if not went_on_after(s, day):
+            return ()
+        return (self.target,)
+
+
+@dataclass
+class FearmongerChose(Info):
+    """The Storyteller told the table: the Fearmonger chose a player.
+
+    "All players know if you choose a new player" — that it chose, never
+    whom, and only when the player is a **new** one: choosing the same
+    player again is not announced. So the row carries a night and
+    nothing else, like the Banshee's announcement.
+
+    A fact: a Fearmonger with its ability chose that night. Announced
+    drunk or poisoned too, or the Storyteller would be telling the table
+    about the poison. A missing announcement says nothing, since a board
+    cannot record one.
+    """
+
+    source_role = "Fearmonger"
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None                       # nobody's claim: the world's
+
+    def holds(self, w, s, rh, seat=None):
+        from .solver import minion_still_acts
+        phase = f"N{self.night}"
+        seat = w.find_at("Fearmonger", phase)
+        return seat is not None and minion_still_acts(w, s, seat, phase)
+
+
+@dataclass
+class VizierAnnounced(Info):
+    """The Storyteller told the table who the Vizier is. `night` is the day.
+
+    "All players know you are the Vizier." Said on the Vizier's first day
+    — day one for a dealt one, the day after a Pit-Hag made one — and
+    only if it has its ability then: a Vizier drunk or poisoned on its
+    first day has none, and is not announced at all. So the seat holds
+    the Vizier that day, it is the first, and it was working.
+    """
+
+    source_role = "Vizier"
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None                       # the Storyteller's
+
+    def holds(self, w, s, rh, seat=None):
+        day = self.night
+        if w.role_at(self.player, f"D{day}") != "Vizier":
+            return False
+        if self.player not in s.alive_set(f"D{day}"):
+            return False
+        return day == 1 or w.role_at(self.player, f"D{day - 1}") != "Vizier"
+
+    def leaned_on(self, w, s, seat=None):
+        return (self.player,)
+
+
+@dataclass
+class BlindVote(Info):
+    """The table voted with its eyes closed today. `night` is the day.
+
+    "All players keep their eyes closed when voting and the vote tally is
+    secret." Everybody sees the Storyteller ask for it, so it is a fact:
+    an Organ Grinder alive that day and working — not drunk by its own
+    choice, nor by anything else. The other half lives in the solver: a
+    day with votes on the board had no working Organ Grinder.
+    """
+
+    source_role = "OrganGrinder"
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None                       # what everybody saw
+
+    def _grinder(self, w, s):
+        phase = f"D{self.night}"
+        seat = w.find_at("OrganGrinder", phase)
+        if seat is None or seat not in s.alive_set(phase):
+            return None
+        return seat
+
+    def holds(self, w, s, rh, seat=None):
+        return self._grinder(w, s) is not None
+
+    def leaned_on(self, w, s, seat=None):
+        got = self._grinder(w, s)
+        return () if got is None else (got,)

@@ -7,8 +7,10 @@ which = {"BMR": scripts.BAD_MOON_RISING, "SV": scripts.SECTS_AND_VIOLETS}
 from test_experimental import SPY, VORTOX
 from test_experimental_2 import OJO, OJO_BMR
 from test_experimental_3 import WRAITH, WRAITH_BMR
+from test_experimental_4 import FOUR, FOUR_BMR
 which.update({"XSPY": SPY, "XVORTOX": VORTOX, "XOJO": OJO, "XOJOB": OJO_BMR,
-              "XWRAITH": WRAITH, "XWRAITHB": WRAITH_BMR})
+              "XWRAITH": WRAITH, "XWRAITHB": WRAITH_BMR,
+         "XFOUR": FOUR, "XFOURB": FOUR_BMR})
 sc = which[sys.argv[1]]; nights = int(sys.argv[2])
 for seed in map(int, sys.argv[3:]):
     n = [7, 8, 9, 10, 11][seed % 5]

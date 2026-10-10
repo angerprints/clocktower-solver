@@ -77,6 +77,11 @@ class Source(NamedTuple):
 
 SOURCE_RULES = []
 
+# An Organ Grinder drunk by its own choice. Named so the Mathematician can
+# leave it out: "due to another character's ability", and this is nobody
+# else's (table ruling, 10.10.2026).
+ORGAN_GRINDER_BY_CHOICE = "Organ Grinder, by choice"
+
 
 def source_rule(fn):
     """Register something that can impair a seat.

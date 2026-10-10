@@ -263,6 +263,13 @@ function evilEyesOpen(world, state, seat, night) {
 condition("Wraith", (world, state, seat, night) =>
   evilEyesOpen(world, state, seat, night)[0]);
 
+/** Only beside a Fearmonger: "the Vizier wakes with the Fearmonger"
+ * (their jinx). Built for the Chambermaid; the rest is not (10.10.2026). */
+condition("Vizier", (world, state, seat, night) => {
+  const other = world.findAt("Fearmonger", `N${night}`);
+  return other !== null && woke(world, state, other, night);
+});
+
 const believer = (world, state, seat, night) => {
   const token = world.believes[seat];
   return token ? wokeAs(world, state, seat, night, token) : false;

@@ -81,6 +81,10 @@ export class Source {
 
 export const SOURCE_RULES = [];
 
+// An Organ Grinder drunk by its own choice, named so the Mathematician can
+// leave it out — nobody else's doing (table ruling, 10.10.2026).
+export const ORGAN_GRINDER_BY_CHOICE = "Organ Grinder, by choice";
+
 /** Register something that can impair a seat.
  *
  * Called with (world, state, night) and returns the sources it offers

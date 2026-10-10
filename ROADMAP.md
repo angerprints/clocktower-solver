@@ -929,13 +929,43 @@ Für C kann eine Zeile jetzt sagen: „entweder die Kammerzofe war gestört oder
 
 **Nebenbei gefunden und behoben:** Der Simulator weckte den Geist neben einem Bösen Zwilling in jeder Nacht. Der Böse Zwilling sieht seinen Zwilling aber nur in Nacht 1. Gefunden am Tor (Seed 1623), bevor etwas gemessen war.
 
+### Die vierten vier experimentellen Charaktere · *erledigt am 10.10.2026*
+
+Der volle Bericht steht in `claude/experimentelle-charaktere-batch-4.md`.
+
+**Dein Auftrag vom 08.10.2026:** „Diese vier alleine, sag mir aber vorher deine Interpretation.“ Ich habe die Lesarten A bis M vorgelegt. Deine Antworten vom 10.10.2026: alles wie vorgeschlagen, mit zwei Klarstellungen. Der Angstmacher wird nur angesagt, wenn er wirklich einen **neuen** Spieler wählt. Ein Wesir, der an seinem ersten Tag vergiftet ist, hat keine Fähigkeit und wird **gar nicht** angesagt. Gebaut ist genau das, umbauen musste ich nichts.
+
+| Charakter | Zeile auf der Website | Was der Solver daraus macht |
+|---|---|---|
+| Unschuld | „Damsel guess“ (Tag) | Nur der erste öffentliche Tipp eines Schergen zählt. Trifft er die lebende Unschuld und geht die Partie weiter, war sie gestört. Ein gestörter Scherge gewinnt trotzdem. Spion im Spiel, jetzt oder früher: Unschuld vergiftet (Jinx). |
+| Angstmacher | „Fearmonger chose“ (Nacht) | Tatsache: ein lebender Angstmacher hat einen neuen Spieler gewählt, auch gestört. Fehlende Ansage sagt nichts. Das Spielende spielt nur der Simulator. |
+| Wesir | „Vizier announced“ (Tag), mit Sitz | Tatsache: dieser Sitz ist an seinem ersten Tag der Wesir und arbeitet. Tagsüber kann er nicht sterben; gestört schon, außer ein Höfling hat ihn betrunken gemacht (Jinx). Wacht mit dem Angstmacher auf. |
+| Drehorgelspieler | „Blind vote“ (Tag) | Tatsache: ein lebender, arbeitender Drehorgelspieler an diesem Tag. Ein Tag mit Stimmen hatte keinen arbeitenden. Selbst betrunken kostet nichts, der Mathematiker zählt es nicht. |
+
+Daraus folgt auch: Das Blumenmädchen wird an einem blinden Tag nicht gewertet, weil keine Stimmen auf dem Brett stehen. Angstmacher und Drehorgelspieler wachen jede Nacht auf, die Kammerzofe zählt sie, und sie wecken den Geist.
+
+**Das Tor:**
+
+| Nr. | Schritt | Ergebnis |
+|---|---|---|
+| 1 | Solver in Python und JavaScript | 17 neue Bretter, beide stimmen überein. 1.488 gemischte Partien mit den vier kosten die wahre Welt in beiden gleich. |
+| 2 | Simulator | Spielt alle vier. In 3.000 gemischten Partien: 1.702 Tipps auf die Unschuld, 1.921 Ansagen des Angstmachers, 639 des Wesirs, 1.443 blinde Tage. |
+| 3 | Night-Walk | Kennt die Wahl des Angstmachers. Auf den eigenen Skripten 1 von 15.483 Nächten abweichend (offene Stelle 47). |
+| 4 | Gemischte Partien mit den vier | 11 von 3.000 bei 4 Nächten, 9 bei 6 Nächten. Keine wegen der vier. |
+| 5 | Website | Vier neue Zeilen, im Browser geprüft. |
+| 6 | Korpus und Suite | 272 Bretter, 1.342 Tests grün (31 neue). |
+
+**Messung:** Die zwei eigenen Skripte verlieren 0 von 12.000 Partien. Grundskripte unverändert (Prüfsummen gleich, Bad Moon Rising 0, Sects & Violets 62 von 6.000). Die 11 gemischten Partien: 4 Barbier-Klasse, 1 Stelle 43, 1 Stelle 41, 1 Stelle 6, und 4 in drei kleinen Klassen, die neu sind und nichts mit den vier zu tun haben (offene Stelle 48).
+
+**Nebenbei gefunden und behoben:** Im Simulator wählte ein Angstmacher, den das Grubenweib in derselben Nacht vorher verwandelt hatte (Platz 16 vor 17). Der Night-Walk meldete einen Charakter als „nicht gesagt bekommen“, obwohl der Sitz in dieser Nacht vorher zu etwas anderem gemacht worden war. Ohne die vier weicht er jetzt in 15 statt 19 von gut 8.000 gemischten Nächten ab.
+
 ### Als Nächstes
 
-**1 · Batch 4 der experimentellen Charaktere.** Batch 3 ist durch das Tor (Magierin, Mohnzüchter, Politiker, Petze, Geist). Klein sind nur noch vier: Unschuld, Angstmacher, Wesir und Drehorgelspieler. Alle vier bringen eine eigene Zeile oder ändern die Abstimmung: Die Unschuld und der Angstmacher können die Partie beenden, der Wesir ist öffentlich bekannt und kann tagsüber nicht sterben, beim Drehorgelspieler sind die Stimmen geheim.
+**1 · Batch 5 der experimentellen Charaktere.** Alle kleinen sind durch das Tor. Ab jetzt kommen die mittleren. Wie bei Batch 4 lege ich zuerst die Kandidaten mit meinen Lesarten vor und baue erst nach deinen Antworten.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 98 Charaktere. Von den 138 Spielercharakteren der App sind 97 im Katalog (dazu der Wächter, ein Fabled), 41 fehlen: 16 Bürger, 6 Außenseiter, 12 Schergen, 7 Dämonen. Nach meiner Einschätzung sind davon 4 klein, 20 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer).
+Stand des Katalogs: 102 Charaktere. Von den 138 Spielercharakteren der App sind 101 im Katalog (dazu der Wächter, ein Fabled), 37 fehlen: 16 Bürger, 5 Außenseiter, 9 Schergen, 7 Dämonen. Nach meiner Einschätzung sind davon keiner mehr klein, 20 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer).
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -966,7 +996,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 11 | Werkzeug | **Die alte lokale Python-App lehnt einen Tod in Nacht 1 ab,** die Seite nicht. Ein Bastler kann in Nacht 1 sterben. Der Night-Walk kennt den Fall auch nicht. |
 | 12 | Werkzeug | **Exakte Zählung früher Bretter auf der Website.** Der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten. |
 | 13 | Werkzeug | **NEXT.md** in eine kurze Roadmap und ein Archiv aufteilen. |
-| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). Batch 1 ist am 05.10.2026 erledigt, Batch 2 am 07.10.2026, Batch 3 am 08.10.2026. 41 offizielle Charaktere fehlen noch im Katalog. |
+| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). Batch 1 ist am 05.10.2026 erledigt, Batch 2 am 07.10.2026, Batch 3 am 08.10.2026, Batch 4 am 10.10.2026. 37 offizielle Charaktere fehlen noch im Katalog. |
 | 15 | Bad Moon Rising | *Erledigt am 03.10.2026:* Höfling nach einer Wiederbelebung. Deine Regel: Die Fähigkeit endet mit dem Tod, der Wiederbelebte ist eine neue Instanz. |
 | 16 | Bad Moon Rising | **Kammerzofe und wer in derselben Nacht stirbt.** Simulator und Solver zählen einen Sitz als geweckt, auch wenn er vor seinem Platz in der Nacht getötet wurde (Professor an Platz 43, Dämon an 27). Beide machen es gleich, deshalb sieht es kein Messlauf. |
 | 17 | Bad Moon Rising | *Erledigt am 03.10.2026:* Meuchelmörder, der seine Fähigkeit unsichtbar verbraucht. Gemessen und behoben. |
@@ -999,7 +1029,8 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 44 | Night-Walk | **Akrobatin neben getauschten oder betrunkenen Sitzen:** Simulator und Night-Walk sind sich in etwa 12 von 8.316 Nächten nicht einig, ob das Ziel der Akrobatin gestört ist. Der Simulator vergiftet einen getauschten Dämon erst ab der nächsten Nacht, der Night-Walk sofort. |
 | 45 | erledigt | **Ein Höfling nennt den Schläger.** Deine Entscheidung vom 08.10.2026: Weg 1, wie im Wiki. Das zählt als Wahl des Schlägers. Gebaut in Solver, Simulator und Night-Walk. Die Abweichung für das Einzelspieler-Spiel steht in `claude/handover-hoefling-schlaeger.md`. |
 | 46 | Night-Walk | **Ein Seemann wählt den Schläger zuerst, und der Gastwirt macht den Schläger in derselben Nacht betrunken.** Der Night-Walk bekommt den Schläger als von Anfang an betrunken gesagt und lässt ihn nicht antworten. 1 von 8.219 Nächten. |
-| 47 | Night-Walk | **Gift der Pukka aus der Vornacht, und die Pukka wird in dieser Nacht vom Schläger betrunken.** Ein Glücksspieler, den die Pukka in der Nacht davor gewählt hat, ist an seinem frühen Platz noch vergiftet und überlebt einen falschen Tipp. Der Night-Walk weiß das nicht und lässt ihn sterben. 1 von 8.617 Nächten auf dem eigenen Skript aus Batch 3 (Seed 1571), nicht wegen der fünf. |
+| 47 | Night-Walk | **Gift der Pukka aus der Vornacht, und die Pukka wird in dieser Nacht vom Schläger betrunken.** Ein Glücksspieler, den die Pukka in der Nacht davor gewählt hat, ist an seinem frühen Platz noch vergiftet und überlebt einen falschen Tipp. Der Night-Walk weiß das nicht und lässt ihn sterben. 1 von 8.617 Nächten auf dem eigenen Skript aus Batch 3 (Seed 1571), nicht wegen der fünf. Auf dem Skript aus Batch 4 dasselbe einmal in 7.827 Nächten (Seed 2824). |
+| 48 | Solver | **Drei kleine Klassen aus dem Tor von Batch 4, nicht wegen der vier.** (a) Ein Philosoph nimmt die Fähigkeit des Schlangenbeschwörers: 2 von 3.000 gemischten Partien (Seeds 535, 1393), noch nicht untersucht. (b) Ein vergifteter Höfling nennt einen Charakter, und der Mathematiker zählt dessen Trunkenheit vermutlich trotzdem mit: 1 Partie (Seed 1408). (c) Ein Bauer gibt seinen Charakter weiter, danach erschafft das Grubenweib einen Charakter, und der Solver hält die Erschaffung für unmöglich: 1 Partie (Seed 2009). (b) und (c) sind noch nicht im Einzelnen untersucht. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

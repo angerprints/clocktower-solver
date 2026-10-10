@@ -398,7 +398,8 @@ def transcript(got):
 # job.
 SINCE_THE_NAMED_GAMES = ("Banshee", "Zealot", "Heretic", "Goblin", "Ojo",
                          "Magician", "PoppyGrower", "Politician", "Snitch",
-                         "Wraith")
+                         "Wraith",
+                         "Damsel", "Fearmonger", "Vizier", "OrganGrinder")
 
 
 def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):

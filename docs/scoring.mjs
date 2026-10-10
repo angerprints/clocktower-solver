@@ -923,6 +923,24 @@ function plainFailures(world, state, outcome = {}) {
     if (lady !== null) fail(day, lady);
   }
 
+  // A Vizier cannot die during the day. One that did was not working —
+  // drunk or poisoned it dies like anybody (table ruling, 10.10.2026).
+  if (inBag(state, "Vizier"))
+    for (const [seat, phase] of state.deathPhases())
+      if (phase[0] === "D" && world.roleAt(seat, phase) === "Vizier")
+        fail(Number(phase.slice(1)), seat);
+
+  // A day with votes on the board was voted with eyes open, so no Organ
+  // Grinder was working then (10.10.2026).
+  if (inBag(state, "OrganGrinder"))
+    for (const [dayKey, voters] of Object.entries(state.votes || {})) {
+      if (!voters || !(voters.length ?? voters.size)) continue;
+      const phase = `D${dayKey}`;
+      const grinder = world.findAt("OrganGrinder", phase);
+      if (grinder !== null && state.aliveSet(phase).has(grinder))
+        fail(Number(dayKey), grinder);
+    }
+
   // Somebody standing again needs a reason, and the reason has to have
   // been working. Two characters do it.
   //
