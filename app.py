@@ -150,6 +150,22 @@ def build_info(d):
         return I.PsychopathRoshambo(night, player, trust)
     if kind == "WidowKnown":
         return I.WidowKnown(night, player, trust)
+    if kind == "PreacherChoice":
+        return I.PreacherChoice(night, player, trust,
+                                target=_int(d, "target"))
+    if kind == "HuntsmanChoice":
+        return I.HuntsmanChoice(night, player, trust,
+                                target=_int(d, "target"))
+    if kind == "PuzzlemasterGuess":
+        return I.PuzzlemasterGuess(night, player, trust,
+                                   guess=_int(d, "guess"),
+                                   shown=_int(d, "shown"))
+    if kind == "BoomdandyExploded":
+        pointed = d.get("pointed")
+        return I.BoomdandyExploded(
+            night, player, trust,
+            pointed=-1 if pointed in (None, "", "none", -1)
+            else int(pointed))
     if kind == "Became":
         return I.BecameInfo(night, player, trust,
                             role=d.get("role") or "",
@@ -441,6 +457,8 @@ def run_solve(payload):
                     "SnakeCharmerChoice", "PitHagChoice", "InnkeeperChoice",
                     "SailorChoice", "ExorcistChoice", "PhilosopherChoice",
                     "CourtierChoice", "CerenovusMadness",
+                    # The Preacher at 14, then 6: before every Demon.
+                    "PreacherChoice",
                     # Dead *because* it picked, like the Gambler: "if
                     # they are drunk or poisoned, you die". Its row is
                     # the cause of the death the board shows, and was
@@ -676,7 +694,7 @@ def script_meta(script, n_players=None):
 
 # Each ledger row comes from a character. A script without that character
 # has no such reading, so the row is not offered.
-HANDS_ON = ("Farmer", "PitHag", "SnakeCharmer")
+HANDS_ON = ("Farmer", "PitHag", "SnakeCharmer", "Huntsman")
 
 INFO_SOURCES = {
     # The experimental ones. An audit test compares this table against
@@ -700,6 +718,9 @@ INFO_SOURCES = {
     "ChoirboyInfo": "Choirboy", "PrincessNominated": "Princess",
     "GolemNomination": "Golem", "PsychopathKill": "Psychopath",
     "PsychopathRoshambo": "Psychopath", "WidowKnown": "Widow",
+    "PreacherChoice": "Preacher", "HuntsmanChoice": "Huntsman",
+    "PuzzlemasterGuess": "Puzzlemaster",
+    "BoomdandyExploded": "Boomdandy",
     "Washerwoman": "Washerwoman", "Librarian": "Librarian",
     "Investigator": "Investigator", "Chef": "Chef", "Empath": "Empath",
     "FortuneTeller": "FortuneTeller", "Undertaker": "Undertaker",

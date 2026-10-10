@@ -120,11 +120,21 @@ class Script(NamedTuple):
             return []
         wanted = dict(zip(("townsfolk", "outsider", "minion", "demon"),
                           SETUP[n_players]))
-        # A setup-changer can only ever ask for more, so take the worst case.
+        # A setup-changer can only ever ask for more, so take the worst case
+        # — once per character, the most any one of its choices asks. This
+        # added every choice on top of the last, which nothing noticed
+        # until the Xaan offered nine (10.10.2026).
+        base = dict(wanted)
         for shifts in self.setup_modifiers.values():
-            for shift in shifts:
-                for team, delta in shift.items():
-                    wanted[team] = max(wanted[team], wanted[team] + delta)
+            # One that may change nothing never makes a bag impossible:
+            # a Balloonist, a Huntsman, a Xaan.
+            if any(not shift for shift in shifts):
+                continue
+            for team in wanted:
+                most = max([0] + [shift.get(team, 0) for shift in shifts])
+                wanted[team] += most
+        wanted = {team: max(base[team], need)
+                  for team, need in wanted.items()}
         short = []
         for team, need in wanted.items():
             have = len(self.by_team(team))

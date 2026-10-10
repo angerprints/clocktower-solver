@@ -78,6 +78,9 @@ class Night:
         # Nightwatchman seat -> the player it woke, or None when it
         # pointed and nobody was woken because it had no ability.
         self.woken_by_nightwatchman = {}
+        # Minions a Preacher chose tonight (10.10.2026): no ability, which
+        # is not being drunk, so an Acrobat that picks one lives.
+        self.preached = set()
 
     def choose(self, chooser, target, slot):
         """Somebody's ability aimed at somebody.
@@ -321,6 +324,10 @@ def hidden_from(deal, night, heard):
     widow_tonight = [(w, t) for w, t, since
                      in getattr(deal, "widow_poison", ()) if since == night]
     derives |= {t for _w, t in widow_tonight}
+    # The same for a Preacher's Minion tonight: it acts at 14, then 6.
+    preached_tonight = {t for _p, t, since in getattr(deal, "preached", ())
+                        if since == night}
+    derives |= preached_tonight
     # The Pukka's fresh poison is the walk's own to place, at its slot —
     # so it is asked for with that token lifted, rather than subtracted
     # afterwards: a Gambler the Courtier had already made drunk was
@@ -434,6 +441,23 @@ def hidden_from(deal, night, heard):
         out[("fearmonger", night)] = deal.fear_chose[night]
     if widow_tonight:
         out[("widow", night)] = dict(widow_tonight)
+    # Whom each Preacher chose, and the Minions only a sermon silences —
+    # those an Acrobat may pick and live (10.10.2026).
+    sermons = {r.player: r.target for r in heard
+               if type(r).__name__ == "PreacherChoice" and r.night == night}
+    if sermons:
+        out[("preacher", night)] = sermons
+    only = simulate._preached(deal, night) \
+        - simulate._droisoned_without_preaching(deal, night)
+    if only:
+        out[("preached_only", night)] = only
+    hunted = {r.player: r.target for r in heard
+              if type(r).__name__ == "HuntsmanChoice" and r.night == night}
+    if hunted:
+        out[("huntsman", night)] = hunted
+        made = getattr(deal, "huntsman_chose", {}).get(night)
+        if made is not None:
+            out[("huntsman_made", night)] = made[2]
     # A Princess whose nominee was executed yesterday, by seat: the walk
     # asks whether she has her ability at the Demon's turn.
     princess = getattr(deal, "princess_stop", {}).get(night)
@@ -551,7 +575,7 @@ ALWAYS_ACTS = {
     "Poisoner": "poisoner", "Monk": "monk", "Sailor": "sailor",
     "Innkeeper": "innkeeper", "SnakeCharmer": "snakecharmer",
     "Witch": "witch", "Exorcist": "exorcist", "Acrobat": "acrobat",
-    "Fearmonger": "fearmonger",
+    "Fearmonger": "fearmonger", "Preacher": "preacher",
 }
 
 
@@ -892,7 +916,8 @@ def walk(deal, night, hidden):
                     continue
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
-                if target in state.droisoned:
+                only = hidden.get(("preached_only", night)) or set()
+                if target in state.droisoned and target not in only:
                     state.kill(seat, slot, "Acrobat")
 
             elif role == "Gossip":
@@ -1007,6 +1032,33 @@ def walk(deal, night, hidden):
                 _goon_answers(state, seat, target, slot)
                 if state.working(seat):
                     state.droison(target, slot, "Widow")
+
+            elif role == "Preacher":
+                # Chooses a player every night; a Minion it chooses while
+                # working has no ability from now on (10.10.2026).
+                target = (hidden.get(("preacher", night)) or {}).get(seat)
+                if target is None or seat not in state.alive:
+                    continue
+                state.choose(seat, target, slot)
+                _goon_answers(state, seat, target, slot)
+                if state.working(seat) and TEAM.get(
+                        state.roles.get(target, ""), "") == "minion":
+                    state.droison(target, slot, "Preacher")
+                    state.preached.add(target)
+
+            elif role == "Huntsman":
+                # Once a game, a living player; a Damsel it finds while
+                # working is the Townsfolk the walk is told (10.10.2026).
+                target = (hidden.get(("huntsman", night)) or {}).get(seat)
+                if target is None or seat not in state.alive:
+                    continue
+                state.choose(seat, target, slot)
+                _goon_answers(state, seat, target, slot)
+                made = hidden.get(("huntsman_made", night))
+                if state.working(seat) and made is not None \
+                        and state.roles.get(target) == "Damsel":
+                    state.roles[target] = made
+                    state.log.append((slot, "made", target, made))
 
             elif role == "Witch":
                 # Curses somebody: if they nominate tomorrow, they die.

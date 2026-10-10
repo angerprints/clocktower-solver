@@ -1006,7 +1006,9 @@ export function possibleImpairmentCounts(world, state, night) {
     // Vigormortis poisons one of the two Townsfolk beside a dead Minion
     // and the Storyteller chooses which. Counting its whole reach as
     // certainly impaired said two where the answer was one.
-    if (source.freeForEveryone() && source.capacity >= source.seats.size) {
+    // A Preacher or a Xaan rests while it is off itself; see info.py.
+    if (source.freeForEveryone() && source.capacity >= source.seats.size
+        && source.name !== "Preacher" && source.name !== "Xaan") {
       for (const seat of source.seats) if (living.has(seat)) always.add(seat);
     } else movable.push(source);
   }
@@ -1562,6 +1564,62 @@ export const WidowKnown = define("WidowKnown", "Widow",
     },
   });
 
+// The sixth five (10.10.2026). See the same rows in info.py.
+
+const began = night => (night > 1 ? `E${night - 1}` : "N0");
+
+function earlierSame(row, s) {
+  const mine = s.infos.indexOf(row);
+  return s.infos.some((info, idx) => idx < mine && info.type === row.type
+    && info.player === row.player && info.night <= row.night);
+}
+
+/** Whom the Preacher chose tonight. What it does is the plan's
+ * (aPreacherSilencesItsMinions). */
+export const PreacherChoice = define("PreacherChoice", "Preacher",
+  () => true);
+PreacherChoice.isAChoice = true;
+
+/** Whom the Huntsman chose, once a game. A Damsel it found while working
+ * is a Townsfolk from that night (aHuntsmanFindsTheDamsel). */
+export const HuntsmanChoice = define("HuntsmanChoice", "Huntsman",
+  function (w, s) {
+    if (earlierSame(this, s)) return true;   // spent already
+    if (w.roleAt(this.target, began(this.night)) !== "Damsel") return true;
+    return w.roleAt(this.target, `D${this.night}`) !== "Damsel";
+  });
+HuntsmanChoice.isAChoice = true;
+
+/** The Puzzlemaster's one guess, and whom it was then shown. Shown the
+ * Demon: the guess was the drunk player, or it was off itself. */
+export const PuzzlemasterGuess = define("PuzzlemasterGuess", "Puzzlemaster",
+  () => true, {
+    instead(w, s) {
+      if (earlierSame(this, s)) return null;
+      if (this.shown !== w.demonAt(`D${this.night}`)) return null;
+      return [[this.guess], []];
+    },
+  });
+
+/** The executed Boomdandy exploded; the Demon is never among the dead
+ * but for the pointing. */
+export const BoomdandyExploded = define("BoomdandyExploded", "Boomdandy",
+  function (w, s) {
+    const day = this.night, phase = `D${day}`;
+    if (s.executedOn(day) !== this.player
+        || w.roleAt(this.player, phase) !== "Boomdandy") return false;
+    const pointed = typeof this.pointed === "number" ? this.pointed : -1;
+    if (pointed < 0) return true;
+    const demon = w.demonAt(phase);
+    return !(demon !== null && demon !== this.player && demon !== pointed
+             && s.diedAt(demon).includes(phase));
+  }, {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },
+    leanedOn() { return [this.player]; },
+  });
+
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
   Undertaker, Ravenkeeper, GrandmotherInfo, ChambermaidInfo, GamblerGuess,
@@ -1578,6 +1636,7 @@ export const KINDS = {
   DamselGuess, FearmongerChose, VizierAnnounced, BlindVote,
   ChoirboyInfo, PrincessNominated, GolemNomination, PsychopathKill,
   PsychopathRoshambo, WidowKnown,
+  PreacherChoice, HuntsmanChoice, PuzzlemasterGuess, BoomdandyExploded,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
 };

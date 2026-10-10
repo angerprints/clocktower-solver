@@ -19,6 +19,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    AcrobatChoice, GrandmotherInfo, SlayerShot,
                    VirginNomination, BecameInfo, EvilTwinPair,
                    ChoirboyInfo, PrincessNominated,
+                   PreacherChoice, HuntsmanChoice,
                    phase_index)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
@@ -229,6 +230,7 @@ TRANSITION_RULES = []
 _ACTS_AT = {"a_snake_charmer_takes_the_star": 11,
             "a_pit_hag_makes_somebody_else": 16,
             "a_barber_lets_the_demon_swap_two": 40,
+            "a_huntsman_finds_the_damsel": 45,
             "a_farmer_hands_it_on": 48,
             # Late on the first night, after every information role: an
             # Empath or Noble on night one still sees the Ogre as good.
@@ -331,6 +333,10 @@ def _movers_in(world, state):
     barber_died = bool(barber_claimants(state) & {s for s, _p in deaths})
     roles = set(world.roles) | made
     count = int(swapped) + int(bool(made))
+    # A Huntsman that chose, and may have found the Damsel (10.10.2026).
+    if "Huntsman" in roles and any(isinstance(info, HuntsmanChoice)
+                                   for info in state.infos):
+        count += 1
     for key, needs in (("Barber", barber_died), ("Farmer", at_night),
                        ("FangGu", at_night), ("Ogre", True)):
         if needs and key in roles and _in_bag(state, key):
@@ -383,6 +389,9 @@ def _nights_it_acts(rule, state):
         return rows("SnakeCharmer", "swapped")
     if name == "a_farmer_hands_it_on":
         return {k for k, kind in deaths if kind == "N"}
+    if name == "a_huntsman_finds_the_damsel":
+        return {info.night for info in state.infos
+                if isinstance(info, HuntsmanChoice)}
     if name == "an_ogre_picks_a_side":
         return {1}
     if name == "demon_handovers":
@@ -713,6 +722,46 @@ def a_pit_hag_makes_somebody_else(world, state):
         side = "evil" if world.evil_at(info.target, before) else "good"
         changes.append(Change(phase, info.target, info.role, side))
     return [(tuple(changes), 1.0)]
+
+
+@transition_rule
+def a_huntsman_finds_the_damsel(world, state):
+    """A Damsel the Huntsman chose becomes a Townsfolk not in play.
+
+    Anchored to its row. Two kinds of story when it chose the Damsel:
+    she stayed — then the Huntsman was not working, which its row asks
+    for (info.HuntsmanChoice) — or she became a Townsfolk, the one she
+    said she became if she said so, otherwise any not in play. From the
+    night it chose, so what she learns as the new Townsfolk that night
+    counts (10.10.2026).
+    """
+    if not _in_bag(state, "Huntsman"):
+        return [((), 1.0)]
+    for info in state.infos:
+        if not isinstance(info, HuntsmanChoice):
+            continue
+        night = info.night
+        phase = f"N{night}"
+        if world.role_at(info.player, phase) != "Huntsman":
+            continue
+        if info._earlier(state):
+            continue
+        began = f"E{night - 1}" if night > 1 else "N0"
+        target = info.target
+        if world.role_at(target, began) != "Damsel":
+            continue
+        said = [b.role for b in state.infos
+                if isinstance(b, BecameInfo) and b.player == target
+                and b.night >= night and b.role in state.script.townsfolk]
+        in_play = {world.role_at(p, began) for p in range(state.n_players)}
+        options = said[:1] or [k for k in state.script.townsfolk
+                               if k not in in_play]
+        side = "evil" if world.evil_at(target, began) else "good"
+        out = [((), 1.0)]
+        for role in options[:16]:
+            out.append(((Change(phase, target, role, side),), 1.0))
+        return out
+    return [((), 1.0)]
 
 
 def _could_be_good(world, seat, phase):
@@ -1163,6 +1212,18 @@ def demon_lineages(world, state, cap=24):
 
         # No offers at all, and no Mastermind, means good won right there
         # and there is no story to tell about what came after.
+        #
+        # Which is a story when the board says the game is over and this
+        # was its last moment: the pointing after a Boomdandy took the
+        # Demon (10.10.2026). Until then a dead Demon with nobody to take
+        # over had no story at all, because the town never won here.
+        #
+        # Even beside a Scarlet Woman on offer: everybody who died that
+        # day still stands on the board, and with them she would have had
+        # her five — when the explosion had already taken them.
+        if getattr(state, "game_over", False) \
+                and phase_index(phase) >= phase_index(state.final_phase()):
+            found.append(so_far)
         for move in moves:
             if move.seat is None:
                 continue
@@ -1339,6 +1400,11 @@ def a_vizier_cannot_die_by_day(world, state, day, seat):
         if getattr(info, "source_role", None) == "Courtier" \
                 and getattr(info, "role", None) == "Vizier" \
                 and info.night <= day < info.night + 3:
+            out.append(info.player)
+        # The same jinx with the Preacher (10.10.2026): a Vizier it chose
+        # has no ability, learns it, and cannot die by day all the same.
+        if isinstance(info, PreacherChoice) and info.target == seat \
+                and info.night <= day and info.player not in out:
             out.append(info.player)
     return out
 
@@ -3581,7 +3647,7 @@ def a_philosopher_drunks_whoever_had_it(world, state, night):
         free = (lambda seat: 1.0) if went else 1.0
         out.append(impairment.Source("Philosopher", frozenset({had}),
                                      capacity=1, cost=free,
-                                     repeat_cost=free))
+                                     repeat_cost=free, actor=who))
     return out
 
 
@@ -3735,7 +3801,7 @@ def a_sailor_drunks_one_of_two(world, state, night):
     reach = (state.alive_set(phase) if picked is None
              else frozenset({seat}) | picked)
     return [impairment.Source("Sailor", reach, capacity=1,
-                              cost=price, repeat_cost=price)]
+                              cost=price, repeat_cost=price, actor=seat)]
 
 
 @impairment.source_rule
@@ -3837,7 +3903,7 @@ def a_courtier_names_a_character(world, state, night):
         free = (lambda who: 1.0) if went else 1.0
         out.append(impairment.Source("Courtier", frozenset({hit}),
                                      capacity=1, cost=free,
-                                     repeat_cost=free))
+                                     repeat_cost=free, actor=courtier))
     return out
 
 
@@ -3875,7 +3941,7 @@ def a_minstrel_silences_the_table(world, state, night):
         return []
     everyone = frozenset(p for p in range(state.n_players) if p != seat)
     return [impairment.Source("Minstrel", everyone, capacity=len(everyone),
-                              cost=1.0, repeat_cost=1.0)]
+                              cost=1.0, repeat_cost=1.0, actor=seat)]
 
 
 @impairment.source_rule
@@ -3911,7 +3977,88 @@ def a_widow_poisons_one(world, state, night):
         return []
     free = lambda who: 1.0
     return [impairment.Source("Widow", frozenset(range(state.n_players)),
-                              capacity=1, cost=free, repeat_cost=free)]
+                              capacity=1, cost=free, repeat_cost=free,
+                              actor=seat)]
+
+
+@impairment.source_rule
+def a_preacher_silences_its_minions(world, state, night):
+    """ "All chosen Minions have no ability." A Minion the Preacher chose
+    while it worked, from that night on — it acts before every Minion —
+    for as long as the Preacher lives and works (10.10.2026). Forced, not
+    on offer: a Minion it silenced cannot have acted. Resting while the
+    Preacher is drunk or poisoned is `plan_night_resting`; a Preacher
+    that was off when it chose is the other story in `_impairment_plan`.
+    """
+    if not _in_bag(state, "Preacher"):
+        return []
+    phase = f"N{night}"
+    preacher = world.find_at("Preacher", phase)
+    if preacher is None or preacher not in state.alive_set(phase):
+        return []
+    hit = set()
+    for info in state.infos:
+        if not isinstance(info, PreacherChoice) or info.player != preacher \
+                or info.night > night:
+            continue
+        if world.role_at(preacher, f"N{info.night}") != "Preacher":
+            continue
+        # An ability ends with the death of whoever has it.
+        if _died_between(state, preacher, info.night, night):
+            continue
+        target = info.target
+        if world.team_at(target, f"N{info.night}") == "minion" \
+                and world.team_at(target, phase) == "minion":
+            hit.add(target)
+    if not hit:
+        return []
+    # On the night or day it dies, silenced for part of the span and not
+    # for the rest — and a night and its day are one key here. So there it
+    # is on offer rather than forced, as for the Courtier.
+    went = any(at in state.died_at(preacher) for at in (phase, f"D{night}"))
+    cost = (lambda who: 1.0) if went else 1.0
+    return [impairment.Source("Preacher", frozenset(hit), capacity=len(hit),
+                              cost=cost, repeat_cost=cost, actor=preacher)]
+
+
+@impairment.source_rule
+def a_puzzlemaster_keeps_one_drunk(world, state, night):
+    """ "1 player is drunk, even if you die." Whoever the Storyteller
+    likes, evil too, for the whole game (10.10.2026). Free and never
+    forced; one seat all game is not held to, as with the Sweetheart."""
+    if not _in_bag(state, "Puzzlemaster"):
+        return []
+    if "Puzzlemaster" not in world.roles:
+        return []                         # dealt, or nobody is drunk of it
+    free = lambda who: 1.0
+    return [impairment.Source("Puzzlemaster",
+                              frozenset(range(state.n_players)), capacity=1,
+                              cost=free, repeat_cost=free)]
+
+
+@impairment.source_rule
+def a_xaan_poisons_the_town(world, state, night):
+    """ "On night X, all Townsfolk are poisoned until dusk. [X Outsiders]"
+    X is the Outsiders dealt, whatever happened since. Every Townsfolk,
+    forced, if the Xaan lives then and works (10.10.2026) — the
+    Mathematician among them, who is told anything at all."""
+    if not _in_bag(state, "Xaan"):
+        return []
+    phase = f"N{night}"
+    xaan = world.find_at("Xaan", phase)
+    if xaan is None or not minion_still_acts(world, state, xaan, phase):
+        return []
+    x = sum(1 for role in world.roles if TEAM[role] == "outsider")
+    if night != x:
+        return []
+    town = frozenset(p for p in range(state.n_players)
+                     if world.team_at(p, phase) == "townsfolk")
+    if not town:
+        return []
+    went = any(at in state.died_at(xaan) for at in (phase, f"D{night}"))
+    cost = (lambda who: 1.0) if went else 1.0
+    return [impairment.Source("Xaan", town, capacity=len(town), cost=cost,
+                              repeat_cost=cost, actor=xaan)]
 
 
 @impairment.source_rule
@@ -3935,7 +4082,8 @@ def an_innkeeper_drunks_one_of_the_two_it_guards(world, state, night):
     picked = _chosen(state, "Innkeeper", night, ("a", "b"))
     reach = state.alive_set(phase) if picked is None else picked
     return [impairment.Source("Innkeeper", reach,
-                              capacity=1, cost=0.5, repeat_cost=0.5)]
+                              capacity=1, cost=0.5, repeat_cost=0.5,
+                              actor=seat)]
 
 
 def _impairment_plan(world, state, failures, forbidden):
@@ -3976,6 +4124,19 @@ def _impairment_plan(world, state, failures, forbidden):
                              without=(source,))
         if got is not None:
             return got
+    # And a Preacher that was drunk or poisoned when it chose silenced
+    # nobody (10.10.2026). Set aside whole, which keeps worlds.
+    for info in state.infos:
+        if not isinstance(info, PreacherChoice):
+            continue
+        if world.role_at(info.player, f"N{info.night}") != "Preacher":
+            continue
+        again = {night: set(seats) for night, seats in failures.items()}
+        again.setdefault(info.night, set()).add(info.player)
+        got = _plan_as_given(world, state, again, forbidden,
+                             without=("Preacher",))
+        if got is not None:
+            return got
     return None
 
 
@@ -3991,7 +4152,7 @@ def _plan_as_given(world, state, failures, forbidden, without=()):
         sources = impairment.sources_on(world, state, night)
         if without:
             sources = [s for s in sources if s.name not in without]
-        got = impairment.plan_night(
+        got = impairment.plan_night_resting(
             sources, sorted(wanted), sorted(blocked), previous)
         if got is None:
             return None

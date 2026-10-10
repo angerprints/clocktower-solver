@@ -9,6 +9,7 @@ from test_experimental_2 import OJO, OJO_BMR
 from test_experimental_3 import WRAITH, WRAITH_BMR
 from test_experimental_4 import FOUR, FOUR_BMR
 from test_experimental_5 import FIVE, FIVE_BMR
+from test_experimental_6 import SIX, SIX_BMR
 which = {"TB": scripts.TROUBLE_BREWING, "BMR": scripts.BAD_MOON_RISING,
          "SV": scripts.SECTS_AND_VIOLETS, "EASTER": scripts.from_json(EASTER),
          # The two scripts made for the experimental characters.
@@ -17,7 +18,8 @@ which = {"TB": scripts.TROUBLE_BREWING, "BMR": scripts.BAD_MOON_RISING,
          "XOJO": OJO, "XOJOB": OJO_BMR,
          "XWRAITH": WRAITH, "XWRAITHB": WRAITH_BMR,
          "XFOUR": FOUR, "XFOURB": FOUR_BMR,
-         "XFIVE": FIVE, "XFIVEB": FIVE_BMR}
+         "XFIVE": FIVE, "XFIVEB": FIVE_BMR,
+         "XSIX": SIX, "XSIXB": SIX_BMR}
 sc = which[sys.argv[1]]; N = int(sys.argv[2]); nights = int(sys.argv[3])
 tot = collections.Counter(); bad = collections.Counter(); ex = []
 for seed in range(N):

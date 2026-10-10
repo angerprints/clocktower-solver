@@ -310,6 +310,14 @@ def _nightwatchman(world, state, seat, night):
     return spent is None or night <= spent
 
 
+@condition("Huntsman")
+def _huntsman(world, state, seat, night):
+    """Every night until it chooses, then never again — like the
+    Nightwatchman. Shaking its head spends nothing (10.10.2026)."""
+    spent = _chose_on(state, seat, "Huntsman")
+    return spent is None or night <= spent
+
+
 @condition("King")
 def _king(world, state, seat, night):
     """Only once the dead equal or outnumber the living.
@@ -560,6 +568,12 @@ def uncertain(world, state, seat, night):
             return False
         return not any(getattr(info, "source_role", None) == "Assassin"
                        and info.player == seat for info in state.infos)
+    if acting == "Huntsman":
+        # As the Nightwatchman: certain on the first night, and after that
+        # it may have chosen without saying so. Its own row settles it.
+        if night < 2 or seat not in state.alive_set(phase):
+            return False
+        return _chose_on(state, seat, "Huntsman") is None
     if acting == "Nightwatchman":
         # The first night is certain: its first chance. After that it
         # may have chosen and nobody wrote it down — the player it woke

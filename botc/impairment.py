@@ -49,6 +49,10 @@ class Source(NamedTuple):
     # Hitting the same seat as last night is cheaper than a fresh guess,
     # because that is what people actually do.
     repeat_cost: float = 1.0
+    # The seat whose ability this is, for a source that rests while that
+    # seat is drunk or poisoned and is otherwise unavoidable: a Preacher's
+    # Minions, a Xaan's night (10.10.2026). See `plan_night_resting`.
+    actor: object = None
 
     def price(self, seat, again=False):
         rate = self.repeat_cost if again else self.cost
@@ -166,7 +170,8 @@ def make_poisoner_rule(hit_cost, repeat_cost):
             return []
         reach = state.alive_set(f"N{night}")
         return [Source("Poisoner", reach, capacity=1,
-                       cost=hit_cost(), repeat_cost=repeat_cost())]
+                       cost=hit_cost(), repeat_cost=repeat_cost(),
+                       actor=seat)]
 
     return poisoner
 
@@ -290,3 +295,49 @@ def plan_night(sources, required, forbidden, previous):
     if best is None:
         return None
     return best, best_hits
+
+
+def plan_night_resting(sources, required, forbidden, previous):
+    """`plan_night`, and if nothing fits, the same night with one resting
+    source set aside and its actor impaired instead.
+
+    "Every impairment is dormant while its source is drunk or poisoned"
+    (table ruling, 02.10.2026). For an unavoidable source that is the
+    only way out of it: a Minion the Preacher silenced that worked
+    anyway, a Townsfolk that read true on the Xaan's night. Tried one
+    source at a time, in the order they came.
+    """
+    working = silenced_out(sources)
+    got = plan_night(working, required, forbidden, previous)
+    if got is not None:
+        return got
+    for source in working:
+        if source.name not in SILENCERS or source.actor is None \
+                or not source.unavoidable() or source.actor in forbidden:
+            continue
+        rest = silenced_out([s for s in sources if s is not source])
+        wanted = sorted(set(required) | {source.actor})
+        got = plan_night(rest, wanted, forbidden, previous)
+        if got is not None:
+            return got
+    return None
+
+
+# The two that take an ability away outright, and so stop every other
+# source whose actor they reach: a Preacher's Minions, a Xaan's Townsfolk
+# (10.10.2026). Only these: what an older source does to another's actor
+# was never asked of the plan, and is left as it was.
+SILENCERS = ("Preacher", "Xaan")
+
+
+def silenced_out(sources):
+    """Sources whose own actor a silencer reached tonight do nothing."""
+    gone = set()
+    for source in sources:
+        if source.name in SILENCERS and source.unavoidable():
+            gone |= set(source.seats)
+    if not gone:
+        return list(sources)
+    return [s for s in sources
+            if s.actor is None or s.actor not in gone
+            or s.name in SILENCERS]

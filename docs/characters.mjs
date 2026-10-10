@@ -1224,7 +1224,106 @@ export const DATA = {
    ],
    "chooses": true,
    "nights": "conditional",
+   "impairs": true,
    "first_night": 18
+  },
+  "Preacher": {
+   "id": "preacher",
+   "name": "Preacher",
+   "team": "townsfolk",
+   "wake": [
+    "every"
+   ],
+   "chooses": true,
+   "nights": "every",
+   "impairs": true,
+   "first_night": 14,
+   "other_night": 6
+  },
+  "Huntsman": {
+   "id": "huntsman",
+   "name": "Huntsman",
+   "team": "townsfolk",
+   "wake": [
+    "every",
+    "first",
+    "sometimes"
+   ],
+   "setup": [
+    {
+     "townsfolk": -1,
+     "outsider": 1
+    },
+    {}
+   ],
+   "chooses": true,
+   "nights": "conditional",
+   "first_night": 30,
+   "other_night": 45,
+   "brings": [
+    "Damsel"
+   ]
+  },
+  "Puzzlemaster": {
+   "id": "puzzlemaster",
+   "name": "Puzzlemaster",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ],
+   "impairs": true
+  },
+  "Xaan": {
+   "id": "xaan",
+   "name": "Xaan",
+   "team": "minion",
+   "wake": [
+    "never"
+   ],
+   "setup": [
+    {},
+    {
+     "townsfolk": -1,
+     "outsider": 1
+    },
+    {
+     "townsfolk": 1,
+     "outsider": -1
+    },
+    {
+     "townsfolk": -2,
+     "outsider": 2
+    },
+    {
+     "townsfolk": 2,
+     "outsider": -2
+    },
+    {
+     "townsfolk": -3,
+     "outsider": 3
+    },
+    {
+     "townsfolk": 3,
+     "outsider": -3
+    },
+    {
+     "townsfolk": -4,
+     "outsider": 4
+    },
+    {
+     "townsfolk": 4,
+     "outsider": -4
+    }
+   ],
+   "impairs": true
+  },
+  "Boomdandy": {
+   "id": "boomdandy",
+   "name": "Boomdandy",
+   "team": "minion",
+   "wake": [
+    "never"
+   ]
   }
  },
  "scripts": {

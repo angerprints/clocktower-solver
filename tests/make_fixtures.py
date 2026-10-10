@@ -948,6 +948,60 @@ def handmade():
                        ("psychopath-roshambo-lost", 19)):
         yield played(f"x-five-bmr-played-{what}", XVB, seed, 7, 4)
 
+    # The sixth five (10.10.2026), on the scripts of
+    # tests/test_experimental_6.py: a Preacher's sermon, a Huntsman finding
+    # the Damsel, a Puzzlemaster's guess, a Xaan's night, a Boomdandy
+    # going off — and games that were played.
+    from test_experimental_6 import SIX as XS, SIX_BMR as XSB
+    S7 = ["Chef", "Empath", "Preacher", "Undertaker", "Washerwoman",
+          "Mayor", "Monk"]
+    yield board("x-six-7-bare", XS, S7)
+    yield board("x-six-7-preacher-chose", XS, S7, infos=[
+        {"type": "PreacherChoice", "night": 1, "player": 2, "target": 5}])
+    yield board("x-six-7-preacher-and-a-wrong-empath", XS, S7, infos=[
+        {"type": "PreacherChoice", "night": 1, "player": 2, "target": 5},
+        {"type": "Empath", "night": 2, "player": 1, "count": 2}])
+    H7 = ["Chef", "Empath", "Huntsman", "Undertaker", "Damsel", "Mayor",
+          "Monk"]
+    yield board("x-six-7-huntsman-damsel", XS, H7)
+    yield board("x-six-7-huntsman-chose-her", XS, H7, infos=[
+        {"type": "HuntsmanChoice", "night": 2, "player": 2, "target": 4},
+        {"type": "Became", "night": 2, "player": 4, "role": "Ravenkeeper",
+         "was": "Damsel"}])
+    P7 = ["Chef", "Empath", "Puzzlemaster", "Undertaker", "Washerwoman",
+          "Mayor", "Monk", "Soldier"]
+    for shown in (5, 6):
+        yield board(f"x-six-8-puzzlemaster-shown-{shown}", XS, P7, infos=[
+            {"type": "PuzzlemasterGuess", "night": 1, "player": 2,
+             "guess": 0, "shown": shown}])
+    X7 = ["Chef", "Empath", "Saint", "Undertaker", "Washerwoman", "Mayor",
+          "Monk"]
+    yield board("x-six-7-xaan-night-one", XS, X7, infos=[
+        {"type": "Empath", "night": 1, "player": 1, "count": 2}])
+    B7 = ["Chef", "Empath", "Mayor", "Undertaker", "Washerwoman", "Monk",
+          "Soldier"]
+    yield board("x-six-7-boomdandy", XS, B7, infos=[
+        {"type": "BoomdandyExploded", "night": 1, "player": 5,
+         "pointed": 0}],
+        players_override={5: ["X1"], 1: ["D1"], 2: ["D1"], 0: ["D1"]},
+        game_over=True)
+    # A Preacher killed in the night chose before the Demon swung, so its
+    # row stands; an Empath killed the same night heard nothing, and the
+    # board is refused.
+    yield board("x-six-7-preacher-killed-that-night", XS, S7, infos=[
+        {"type": "PreacherChoice", "night": 2, "player": 2, "target": 5}],
+        players_override={2: ["N2"]})
+    yield board("x-six-7-empath-killed-that-night", XS, S7, infos=[
+        {"type": "Empath", "night": 2, "player": 1, "count": 0}],
+        players_override={1: ["N2"]})
+    for what, seed in (("preached", 1), ("xaan-night", 2),
+                       ("damsel-found", 8), ("boomdandy", 15),
+                       ("puzzle-demon", 42)):
+        yield played(f"x-six-played-{what}", XS, seed, 7, 4)
+    for what, seed in (("preached", 5), ("boomdandy", 20),
+                       ("damsel-found", 8)):
+        yield played(f"x-six-bmr-played-{what}", XSB, seed, 7, 4)
+
 
 def generated(how_many=60):
     """Random boards, so the corpus covers combinations nobody chose."""

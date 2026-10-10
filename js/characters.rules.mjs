@@ -246,7 +246,8 @@ sourceRule(function aPhilosopherDrunksWhoeverHadIt(world, state, night) {
     if (had === null || had === seat) continue;
     const free = went ? () => 1.0 : 1.0;
     out.push(new Source("Philosopher", new Set([had]),
-                        {capacity: 1, cost: free, repeatCost: free}));
+                        {capacity: 1, cost: free, repeatCost: free,
+                         actor: seat}));
   }
   return out;
 });
@@ -392,9 +393,14 @@ survivesExecutionRule(function aVizierCannotDieByDay(world, state, day, seat) {
   if (!inBag(state, "Vizier")) return [];
   if (world.roleAt(seat, `D${day}`) !== "Vizier") return [];
   const out = [seat];
-  for (const info of state.infos)
+  for (const info of state.infos) {
     if (info.sourceRole === "Courtier" && info.role === "Vizier"
         && info.night <= day && day < info.night + 3) out.push(info.player);
+    // The same jinx with the Preacher (10.10.2026).
+    if (info.type === "PreacherChoice" && info.target === seat
+        && info.night <= day && !out.includes(info.player))
+      out.push(info.player);
+  }
   return out;
 });
 
@@ -1203,7 +1209,8 @@ sourceRule(function aSailorDrunksOneOfTwo(world, state, night) {
   const reach = picked === null ? state.aliveSet(phase)
                                 : new Set([seat, ...picked]);
   return [new Source("Sailor", reach,
-                     {capacity: 1, cost: price, repeatCost: price})];
+                     {capacity: 1, cost: price, repeatCost: price,
+                      actor: seat})];
 });
 
 /** The first person to point at the Goon that night goes drunk.
@@ -1272,7 +1279,8 @@ sourceRule(function aCourtierNamesACharacter(world, state, night) {
       || info.role === "Goon";
     const free = went ? () => 1.0 : 1.0;
     out.push(new Source("Courtier", new Set([hit]),
-                        {capacity: 1, cost: free, repeatCost: free}));
+                        {capacity: 1, cost: free, repeatCost: free,
+                         actor: courtier}));
   }
   return out;
 });
@@ -1297,7 +1305,8 @@ sourceRule(function aMinstrelSilencesTheTable(world, state, night) {
   const everyone = new Set(
     Array.from({length: state.nPlayers}, (_, i) => i).filter(p => p !== seat));
   return [new Source("Minstrel", everyone,
-                     {capacity: everyone.size, cost: 1.0, repeatCost: 1.0})];
+                     {capacity: everyone.size, cost: 1.0, repeatCost: 1.0,
+                      actor: seat})];
 });
 
 /** "Each night, choose if you are drunk until dusk." Itself and nobody
@@ -1321,7 +1330,64 @@ sourceRule(function aWidowPoisonsOne(world, state, night) {
   if (seat === null || !minionStillActs(world, state, seat, phase)) return [];
   const everyone = new Set(Array.from({length: state.nPlayers}, (_, i) => i));
   return [new Source("Widow", everyone,
+                     {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0,
+                      actor: seat})];
+});
+
+/** A Minion the Preacher chose while working has no ability while the
+ * Preacher lives and works (10.10.2026). Forced. See solver.py. */
+sourceRule(function aPreacherSilencesItsMinions(world, state, night) {
+  if (!inBag(state, "Preacher")) return [];
+  const phase = `N${night}`;
+  const preacher = world.findAt("Preacher", phase);
+  if (preacher === null || !state.aliveSet(phase).has(preacher)) return [];
+  const hit = new Set();
+  for (const info of state.infos) {
+    if (info.type !== "PreacherChoice" || info.player !== preacher
+        || info.night > night) continue;
+    if (world.roleAt(preacher, `N${info.night}`) !== "Preacher") continue;
+    if (diedBetween(state, preacher, info.night, night)) continue;
+    if (world.teamAt(info.target, `N${info.night}`) === "minion"
+        && world.teamAt(info.target, phase) === "minion") hit.add(info.target);
+  }
+  if (!hit.size) return [];
+  // On the night or day it dies: on offer rather than forced. See
+  // solver.py.
+  const died = state.diedAt(preacher);
+  const cost = died.includes(phase) || died.includes(`D${night}`)
+    ? () => 1.0 : 1.0;
+  return [new Source("Preacher", hit, {capacity: hit.size, cost,
+                                       repeatCost: cost, actor: preacher})];
+});
+
+/** "1 player is drunk, even if you die." Free, never forced. */
+sourceRule(function aPuzzlemasterKeepsOneDrunk(world, state, night) {
+  if (!inBag(state, "Puzzlemaster")) return [];
+  if (!world.roles.includes("Puzzlemaster")) return [];
+  const everyone = new Set(Array.from({length: state.nPlayers}, (_, i) => i));
+  return [new Source("Puzzlemaster", everyone,
                      {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0})];
+});
+
+/** "On night X, all Townsfolk are poisoned until dusk. [X Outsiders]"
+ * X is the Outsiders dealt. Forced, if the Xaan lives and works. */
+sourceRule(function aXaanPoisonsTheTown(world, state, night) {
+  if (!inBag(state, "Xaan")) return [];
+  const phase = `N${night}`;
+  const xaan = world.findAt("Xaan", phase);
+  if (xaan === null || !minionStillActs(world, state, xaan, phase)) return [];
+  const x = world.roles.filter(role => CHARACTERS[role].team === "outsider")
+    .length;
+  if (night !== x) return [];
+  const town = new Set();
+  for (let p = 0; p < state.nPlayers; p++)
+    if (world.teamAt(p, phase) === "townsfolk") town.add(p);
+  if (!town.size) return [];
+  const died = state.diedAt(xaan);
+  const cost = died.includes(phase) || died.includes(`D${night}`)
+    ? () => 1.0 : 1.0;
+  return [new Source("Xaan", town, {capacity: town.size, cost,
+                                    repeatCost: cost, actor: xaan})];
 });
 
 /** One of the pair it protected, and it does not choose which.
@@ -1338,5 +1404,6 @@ sourceRule(function anInnkeeperDrunksOneOfTheTwoItGuards(world, state, night) {
   const picked = chosen(state, "Innkeeper", night, ["a", "b"]);
   const reach = picked === null ? state.aliveSet(`N${night}`) : picked;
   return [new Source("Innkeeper", reach,
-                     {capacity: 1, cost: 0.5, repeatCost: 0.5})];
+                     {capacity: 1, cost: 0.5, repeatCost: 0.5,
+                      actor: seat})];
 });

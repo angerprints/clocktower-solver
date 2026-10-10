@@ -133,6 +133,7 @@ Dämon still ist und wer es bei welchem Muster war.
 | `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XWRAITH` oder `XWRAITHB` als Skript | Die zwei Skripte für die dritten fünf (`tests/test_experimental_3.py`), beide mit Magierin, Mohnzüchter, Politiker, Petze und Geist. Das zweite hat die Kammerzofe, die den Geist sieht. |
 | `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XFOUR` oder `XFOURB` als Skript | Die zwei Skripte für die vierten vier (`tests/test_experimental_4.py`), beide mit Unschuld, Angstmacher, Wesir und Drehorgelspieler. Das zweite hat Kammerzofe, Blumenmädchen und Spion. |
 | `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XFIVE` oder `XFIVEB` als Skript | Die zwei Skripte für die fünften fünf (`tests/test_experimental_5.py`), beide mit König, Chorknabe, Prinzessin, Golem, Psychopath und Witwe. Das erste hat Unschuld und Einsiedler, das zweite Kammerzofe, Teefrau und Pukka. |
+| `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XSIX` oder `XSIXB` als Skript | Die zwei Skripte für die sechsten fünf (`tests/test_experimental_6.py`), beide mit Prediger, Jäger, Puzzlemeister, Unschuld, Xaan und Bombenleger. Das erste hat Mathematiker, Akrobatin, Wesir und Vortox, das zweite Kammerzofe, Minnesänger und Pukka. |
 
     python3 messung/tor.py 40 4 0 Steward Knight Shugenja Nightwatchman King
     python3 messung/tor.py 1000 4 0

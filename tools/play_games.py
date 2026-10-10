@@ -401,7 +401,9 @@ SINCE_THE_NAMED_GAMES = ("Banshee", "Zealot", "Heretic", "Goblin", "Ojo",
                          "Wraith",
                          "Damsel", "Fearmonger", "Vizier", "OrganGrinder",
                          "Choirboy", "Princess", "Golem", "Psychopath",
-                         "Widow")
+                         "Widow",
+                         "Preacher", "Huntsman", "Puzzlemaster", "Xaan",
+                         "Boomdandy")
 
 
 def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):
@@ -439,10 +441,14 @@ def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):
     # script to put it beside anything, so this is how it gets made to
     # meet the rest.
     keys = [k for k in must_have if k in every]
-    keys += rng.sample([k for k in sources if CHARACTERS[k].team == "minion"]
+    # Never one already insisted on: a script lists a character once, and
+    # a Xaan asked for and drawn again was dealt twice (10.10.2026).
+    keys += rng.sample([k for k in sources if CHARACTERS[k].team == "minion"
+                        and k not in keys]
                        or by("minion"), 1)
     keys += rng.sample([k for k in movers
-                        if CHARACTERS[k].team == "townsfolk"] or by("townsfolk"),
+                        if CHARACTERS[k].team == "townsfolk"
+                        and k not in keys] or by("townsfolk"),
                        min(2, len(movers)))
     for team, want in (("townsfolk", 13), ("outsider", 4),
                        ("minion", 4), ("demon", 4)):
@@ -457,6 +463,13 @@ def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):
                  and k not in must_have and k != "Choirboy"]
         if spare:
             keys[keys.index(spare[-1])] = "King"
+    # The Huntsman brings the Damsel the same way, in place of the last
+    # Outsider nobody insisted on (10.10.2026).
+    if "Huntsman" in keys and "Damsel" not in keys and "Damsel" in every:
+        spare = [k for k in keys if CHARACTERS[k].team == "outsider"
+                 and k not in must_have]
+        if spare:
+            keys[keys.index(spare[-1])] = "Damsel"
     return _s.Script(name=name, keys=tuple(keys))
 
 

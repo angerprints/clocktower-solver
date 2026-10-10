@@ -50,7 +50,8 @@ export const minionStillActs = (world, state, seat, phase) =>
   killedByAVigormortis(world, state, seat, phase);
 
 export class Source {
-  constructor(name, seats, {capacity = 1, cost = 1.0, repeatCost = 1.0} = {}) {
+  constructor(name, seats,
+              {capacity = 1, cost = 1.0, repeatCost = 1.0, actor = null} = {}) {
     this.name = name;
     this.seats = seats instanceof Set ? seats : new Set(seats);
     this.capacity = capacity;
@@ -58,6 +59,8 @@ export class Source {
     // Hitting the same seat as last night is cheaper than a fresh guess,
     // because that is what people actually do.
     this.repeatCost = repeatCost;
+    // The seat whose ability this is; see impairment.py.
+    this.actor = actor;
   }
 
   price(seat, again = false) {
@@ -153,7 +156,7 @@ export function makePoisonerRule(hitCost, repeatCost) {
     if (seat === null || !aliveThrough(world, state, seat, night)) return [];
     return [new Source("Poisoner", state.aliveSet(`N${night}`),
                        {capacity: 1, cost: hitCost(),
-                        repeatCost: repeatCost()})];
+                        repeatCost: repeatCost(), actor: seat})];
   };
 }
 
@@ -231,4 +234,39 @@ export function planNight(sources, required, forbidden, previous) {
     if (ok && (best === null || cost > best)) { best = cost; bestHits = hits; }
   }
   return best === null ? null : {cost: best, hits: bestHits};
+}
+
+// The two that take an ability away outright (10.10.2026). See
+// impairment.py.
+export const SILENCERS = ["Preacher", "Xaan"];
+
+/** Sources whose own actor a silencer reached tonight do nothing. */
+export function silencedOut(sources) {
+  const gone = new Set();
+  for (const source of sources)
+    if (SILENCERS.includes(source.name) && source.unavoidable())
+      for (const seat of source.seats) gone.add(seat);
+  if (!gone.size) return [...sources];
+  return sources.filter(s => s.actor === null || s.actor === undefined
+    || !gone.has(s.actor) || SILENCERS.includes(s.name));
+}
+
+/** `planNight`, and if nothing fits, the same night with one resting
+ * silencer set aside and its actor impaired instead. See impairment.py. */
+export function planNightResting(sources, required, forbidden, previous) {
+  const working = silencedOut(sources);
+  let got = planNight(working, required, forbidden, previous);
+  if (got !== null) return got;
+  const forbid = forbidden instanceof Set ? forbidden : new Set(forbidden);
+  for (const source of working) {
+    if (!SILENCERS.includes(source.name) || source.actor === null
+        || source.actor === undefined || !source.unavoidable()
+        || forbid.has(source.actor)) continue;
+    const rest = silencedOut(sources.filter(s => s !== source));
+    const wanted = [...new Set([...required, source.actor])]
+      .sort((a, b) => a - b);
+    got = planNight(rest, wanted, forbidden, previous);
+    if (got !== null) return got;
+  }
+  return null;
 }

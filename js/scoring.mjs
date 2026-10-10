@@ -12,7 +12,7 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
-import {minionStillActs, planNight, sourcesOn} from "./impairment.mjs";
+import {minionStillActs, planNightResting, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {ABSENT, ARBITRARY, INVERTED, TEAM, abilityState, isEvil}
@@ -96,6 +96,7 @@ const ACTS_AT = {
   aSnakeCharmerTakesTheStar: 11,
   aPitHagMakesSomebodyElse: 16,
   aBarberLetsTheDemonSwapTwo: 40,
+  aHuntsmanFindsTheDamsel: 45,
   aFarmerHandsItOn: 48,
   anOgrePicksASide: 60,                  // late on night one
   demonHandovers: 99,                    // a death, so after everything
@@ -148,6 +149,9 @@ function moversIn(world, state) {
   const barberDied = deaths.some(([s]) => claimed.has(Number(s)));
   const roles = new Set([...world.roles, ...made]);
   let count = (swapped ? 1 : 0) + (made.size ? 1 : 0);
+  // A Huntsman that chose, and may have found the Damsel (10.10.2026).
+  if (roles.has("Huntsman")
+      && state.infos.some(i => i.type === "HuntsmanChoice")) count++;
   for (const [key, needs] of [["Barber", barberDied], ["Farmer", atNight],
                               ["FangGu", atNight], ["Ogre", true]])
     if (needs && roles.has(key) && inBag(state, key)) count++;
@@ -219,6 +223,9 @@ function nightsItActs(rule, state) {
     case "aFarmerHandsItOn":
       return new Set(deaths.filter(([, kind]) => kind === "N").map(([k]) => k));
     case "anOgrePicksASide": return new Set([1]);
+    case "aHuntsmanFindsTheDamsel":
+      return new Set(state.infos.filter(i => i.type === "HuntsmanChoice")
+        .map(i => i.night));
     case "demonHandovers": return new Set(deaths.map(([k]) => k));
     default: return null;
   }
@@ -520,7 +527,12 @@ export function demonLineages(world, state, cap = 24) {
     if (mastermindDay(view, state, phase, holder))
       found.push([...soFar, mastermindMarker(phase, holder)]);
 
-    // No offers at all, and no Mastermind, means good won right there.
+    // No offers at all, and no Mastermind, means good won right there —
+    // a story when the board says the game is over and this was its last
+    // moment (10.10.2026). See solver.py.
+    if (state.gameOver
+        && phaseIndex(phase) >= phaseIndex(state.finalPhase()))
+      found.push(soFar);
     for (const move of moves) {
       if (move.seat === null) continue;
       const grown = [...soFar, move];
@@ -565,6 +577,37 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
  * that character at the moment its row is attributed, and the row read
  * as invented.
  */
+/** A Damsel the Huntsman chose becomes a Townsfolk not in play: the one
+ * she said she became, or any. Or she stayed, and then the Huntsman was
+ * not working, which its row asks for (10.10.2026). See solver.py. */
+transitionRule(function aHuntsmanFindsTheDamsel(world, state) {
+  if (!inBag(state, "Huntsman")) return [[[], 1.0]];
+  for (const info of state.infos) {
+    if (info.type !== "HuntsmanChoice") continue;
+    const night = info.night, phase = `N${night}`;
+    if (world.roleAt(info.player, phase) !== "Huntsman") continue;
+    const mine = state.infos.indexOf(info);
+    if (state.infos.some((o, idx) => idx < mine && o.type === "HuntsmanChoice"
+        && o.player === info.player && o.night <= night)) continue;
+    const began = night > 1 ? `E${night - 1}` : "N0";
+    const target = info.target;
+    if (world.roleAt(target, began) !== "Damsel") continue;
+    const said = state.infos.filter(b => b.type === "Became"
+      && b.player === target && b.night >= night
+      && state.script.townsfolk.includes(b.role)).map(b => b.role);
+    const inPlay = new Set();
+    for (let p = 0; p < state.nPlayers; p++) inPlay.add(world.roleAt(p, began));
+    const options = said.length ? said.slice(0, 1)
+      : state.script.townsfolk.filter(k => !inPlay.has(k));
+    const side = world.evilAt(target, began) ? "evil" : "good";
+    const out = [[[], 1.0]];
+    for (const role of options.slice(0, 16))
+      out.push([[change(phase, target, role, side)], 1.0]);
+    return out;
+  }
+  return [[[], 1.0]];
+});
+
 /** Could this seat have shown as good, if the Storyteller liked?
  *
  * Registration, not truth. A Spy is evil and registers as good, so the
@@ -1399,6 +1442,18 @@ function impairmentPlan(world, state, failures, forbidden) {
     const other = planAsGiven(world, state, again, forbidden, [source]);
     if (other !== null) return other;
   }
+  // And a Preacher that was off when it chose silenced nobody. See
+  // solver.py.
+  for (const info of state.infos) {
+    if (info.type !== "PreacherChoice") continue;
+    if (world.roleAt(info.player, `N${info.night}`) !== "Preacher") continue;
+    const again = {};
+    for (const [night, seats] of Object.entries(failures))
+      again[night] = new Set(seats);
+    (again[info.night] = again[info.night] || new Set()).add(info.player);
+    const other = planAsGiven(world, state, again, forbidden, ["Preacher"]);
+    if (other !== null) return other;
+  }
   return null;
 }
 
@@ -1413,7 +1468,7 @@ function planAsGiven(world, state, failures, forbidden, without = null) {
     for (const s of wanted) if (blocked.has(s)) return null;
     let sources = sourcesOn(world, state, night);
     if (without) sources = sources.filter(src => !without.includes(src.name));
-    const got = planNight(sources,
+    const got = planNightResting(sources,
                           [...wanted].sort((a, b) => a - b),
                           [...blocked].sort((a, b) => a - b), previous);
     if (got === null) return null;

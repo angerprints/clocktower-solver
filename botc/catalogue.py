@@ -522,6 +522,35 @@ _EXPERIMENTAL = [
     # (info.WidowKnown). It points at a player, so a Goon notices.
     _c("Widow", "widow", "Widow", "minion", {FIRST, SOMETIMES},
        nights="conditional", chooses=True),
+
+    # The sixth five (10.10.2026), read with the table before anything
+    # was built.
+    #
+    # Points at a player every night; a Minion it points at has no
+    # ability while the Preacher lives and works (info.PreacherChoice,
+    # solver.a_preacher_silences_its_minions). A Goon notices.
+    _c("Preacher", "preacher", "Preacher", "townsfolk", {EVERY},
+       nights="every", chooses=True),
+    # Once a game it points at a living player, and a Damsel it finds
+    # becomes a Townsfolk not in play (info.HuntsmanChoice). Woken every
+    # night until then (waking._huntsman). "[+the Damsel]": in place of a
+    # Townsfolk, unless the Damsel is in the bag anyway.
+    _c("Huntsman", "huntsman", "Huntsman", "townsfolk",
+       {FIRST, EVERY, SOMETIMES}, nights="conditional", chooses=True,
+       setup=({"townsfolk": -1, "outsider": 1}, {}), brings=("Damsel",)),
+    # One player is drunk all game, even after it dies; it may guess once
+    # who, and learns the Demon or somebody who is not
+    # (info.PuzzlemasterGuess, solver.a_puzzlemaster_keeps_one_drunk).
+    _c("Puzzlemaster", "puzzlemaster", "Puzzlemaster", "outsider", {NEVER}),
+    # "[X Outsiders]": any number at all, whatever else would move it. On
+    # night X every Townsfolk is poisoned until dusk, if the Xaan lives
+    # and works then (solver.a_xaan_poisons_the_town).
+    _c("Xaan", "xaan", "Xaan", "minion", {NEVER},
+       setup=tuple({"townsfolk": -k, "outsider": k} if k else {}
+                   for k in (0, 1, -1, 2, -2, 3, -3, 4, -4))),
+    # Executed, it explodes: all but three die, the Demon among the three,
+    # and one more by pointing (info.BoomdandyExploded).
+    _c("Boomdandy", "boomdandy", "Boomdandy", "minion", {NEVER}),
 ]
 
 
@@ -546,6 +575,8 @@ IMPAIRS = frozenset({
     "Philosopher", "NoDashii", "Vigormortis", "Sweetheart", "SnakeCharmer",
     # It can create any of the above.
     "PitHag",
+    # Experimental: poisoned, drunk or without an ability, by these.
+    "Widow", "Preacher", "Puzzlemaster", "Xaan",
 })
 
 CHARACTERS = {c.key: c for c in _TB + _SV + _UNMODELLED + _FABLED

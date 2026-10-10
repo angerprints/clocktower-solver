@@ -14,10 +14,12 @@ from test_experimental_2 import OJO, OJO_BMR
 from test_experimental_3 import WRAITH, WRAITH_BMR
 from test_experimental_4 import FOUR, FOUR_BMR
 from test_experimental_5 import FIVE, FIVE_BMR
+from test_experimental_6 import SIX, SIX_BMR
 which.update({"XSPY": SPY, "XVORTOX": VORTOX, "XOJO": OJO, "XOJOB": OJO_BMR,
               "XWRAITH": WRAITH, "XWRAITHB": WRAITH_BMR,
          "XFOUR": FOUR, "XFOURB": FOUR_BMR,
-         "XFIVE": FIVE, "XFIVEB": FIVE_BMR})
+         "XFIVE": FIVE, "XFIVEB": FIVE_BMR,
+         "XSIX": SIX, "XSIXB": SIX_BMR})
 sc = which[sys.argv[1]]; nights = int(sys.argv[2])
 for seed in map(int, sys.argv[3:]):
     n = [7, 8, 9, 10, 11][seed % 5]

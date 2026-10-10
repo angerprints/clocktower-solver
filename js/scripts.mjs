@@ -81,11 +81,15 @@ export function tooSmallFor(script, nPlayers) {
   const teams = ["townsfolk", "outsider", "minion", "demon"];
   const wanted = Object.fromEntries(
     teams.map((t, i) => [t, SETUP[nPlayers][i]]));
-  // A setup-changer can only ever ask for more, so take the worst case.
-  for (const shifts of Object.values(script.setupModifiers))
-    for (const shift of shifts)
-      for (const [team, delta] of Object.entries(shift))
-        wanted[team] = Math.max(wanted[team], wanted[team] + delta);
+  // A setup-changer can only ever ask for more, so take the worst case —
+  // once per character, the most any one of its choices asks. See
+  // scripts.py.
+  for (const shifts of Object.values(script.setupModifiers)) {
+    // One that may change nothing never makes a bag impossible.
+    if (shifts.some(s => !Object.keys(s).length)) continue;
+    for (const team of teams)
+      wanted[team] += Math.max(0, ...shifts.map(s => s[team] || 0));
+  }
   const short = [];
   for (const team of teams) {
     const have = script.byTeam(team).length;

@@ -36,7 +36,7 @@ import {OffScript} from "./worlds.mjs";
 // Characters that put a token in front of somebody who was dealt
 // another one. A Philosopher is not here: it gains an ability and keeps
 // its character.
-const HANDS_ON = ["Farmer", "PitHag", "SnakeCharmer"];
+const HANDS_ON = ["Farmer", "PitHag", "SnakeCharmer", "Huntsman"];
 
 export const INFO_SOURCES = {
   // The experimental ones. These reached the Python table and not this
@@ -58,6 +58,8 @@ export const INFO_SOURCES = {
   ChoirboyInfo: "Choirboy", PrincessNominated: "Princess",
   GolemNomination: "Golem", PsychopathKill: "Psychopath",
   PsychopathRoshambo: "Psychopath", WidowKnown: "Widow",
+  PreacherChoice: "Preacher", HuntsmanChoice: "Huntsman",
+  PuzzlemasterGuess: "Puzzlemaster", BoomdandyExploded: "Boomdandy",
   Washerwoman: "Washerwoman", Librarian: "Librarian",
   Investigator: "Investigator", Chef: "Chef", Empath: "Empath",
   FortuneTeller: "FortuneTeller", Undertaker: "Undertaker",
@@ -296,7 +298,7 @@ export function readBoard(payload) {
                          "SnakeCharmerChoice", "PitHagChoice",
                          "InnkeeperChoice", "SailorChoice", "ExorcistChoice",
                          "PhilosopherChoice", "CourtierChoice",
-                         "CerenovusMadness",
+                         "CerenovusMadness", "PreacherChoice",
                          // Dead *because* it picked, like the Gambler.
                          "Acrobat",
                          // Woken late, and "choose a player" means any.
@@ -312,7 +314,7 @@ export function readBoard(payload) {
         !actedAnyway.includes(row.type))
       return {error: `Seat ${speaker + 1} was killed on night ${night}, so ` +
                      `they never woke to learn this. Only the Ravenkeeper ` +
-                     `learns anything as it goes.`};
+                     `gets information on the night they die.`};
     try {
       const made = makeInfo(row);
       // Whether the table later agreed this reading was right. Evidence

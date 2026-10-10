@@ -22,6 +22,8 @@ from botc.info import (registers_as_role,
                        BlindVote,
                        ChoirboyInfo, PrincessNominated, GolemNomination,
                        PsychopathKill, PsychopathRoshambo, WidowKnown,
+                       PreacherChoice, HuntsmanChoice, PuzzlemasterGuess,
+                       BoomdandyExploded, BecameInfo,
                        BalloonistInfo,
                        DreamerInfo,
                        ExorcistChoice, InnkeeperChoice,
@@ -177,6 +179,13 @@ class Deal:
         self.roshambo = {}                  # day -> the Psychopath executed
         self.widow_poison = []              # [(Widow, target, night)]
         self.day_heard = []                 # rows the day produced
+        # The sixth five (10.10.2026).
+        self.preached = []                  # [(Preacher, Minion, night)]
+        self.huntsman_spent = set()         # Huntsmen that have chosen
+        self.puzzle_drunk = None            # the Puzzlemaster's drunk seat
+        self.puzzle_spent = set()           # Puzzlemasters that guessed
+        self.huntsman_chose = {}            # night -> (Huntsman, target, made)
+        self.huntsman_night = {}            # Huntsman seat -> the night it chose
 
     def demon_at(self, phase):
         """The seat holding the Demon at this phase."""
@@ -521,6 +530,15 @@ def deal(n, rng, script=None):
         picked_demons = list(rng.sample(spare_demons, de)) \
             if len(spare_demons) >= de else list(rng.sample(demons, de))
 
+    # "[X Outsiders]": a Xaan sets the number, whatever else would move
+    # it — here 1 to 3, as the wiki suggests (10.10.2026).
+    if "Xaan" in picked_minions:
+        room = [x for x in (1, 2, 3)
+                if x <= len(outsiders) and 0 <= n - mi - de - x
+                <= len(townsfolk)]
+        if room:
+            out = rng.choice(room)
+            tf = n - mi - de - out
     picked_outsiders = rng.sample(outsiders, out)
     spare = list(townsfolk)
     rng.shuffle(spare)
@@ -549,6 +567,19 @@ def deal(n, rng, script=None):
                 # that just left the bag instead: the King is in play now.
                 spare[i] = "King"
                 believes_for["Drunk"] = gone
+    # "[+the Damsel]": a Huntsman brings her in place of a Townsfolk,
+    # unless she is in the bag anyway (10.10.2026).
+    if "Huntsman" in chosen and "Damsel" not in chosen \
+            and "Damsel" in outsiders:
+        out_go = [r for r in spare[:tf]
+                  if r not in ("Huntsman", "Choirboy", "King")]
+        if out_go:
+            gone = rng.choice(out_go)
+            chosen.remove(gone)
+            chosen.insert(0, "Damsel")
+            spare.remove(gone)
+            spare.insert(tf - 1, gone)
+            tf -= 1
     chosen += picked_minions
     chosen += picked_demons
 
@@ -630,10 +661,22 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d = Deal(roles, believes, red_herring, {}, {}, None)
     d.script = script
     heard = []
+    # "1 player is drunk, even if you die": mostly a Townsfolk, now and
+    # then an Outsider, never evil here (10.10.2026).
+    if "Puzzlemaster" in roles:
+        town = [p for p in range(n) if TEAM[roles[p]] == "townsfolk"]
+        outs = [p for p in range(n) if TEAM[roles[p]] == "outsider"
+                and roles[p] != "Puzzlemaster"]
+        pool = town if (town and (not outs or rng.random() < 0.8)) else outs
+        if pool:
+            d.puzzle_drunk = rng.choice(pool)
 
     for night in range(1, nights + 1):
         d.nights_played = night
         living = d.alive_at(f"N{night}")
+        # The Preacher acts before every Minion (14, then 6), so a Minion
+        # it chooses has no ability from tonight (10.10.2026).
+        heard += _preacher_preaches(d, night, rng)
         # A Poisoner that catches the star stops being one. The seat was
         # worked out at deal time and never checked again, so a Poisoner
         # promoted to Imp went on poisoning as well as killing — and the
@@ -836,6 +879,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # night 2.
             heard += _barber_swap(d, night, rng)
 
+            # The Huntsman at 45, after the Barber: a Damsel it finds is a
+            # Townsfolk not in play before anybody reads (10.10.2026).
+            heard += _huntsman_hunts(d, night, rng)
+
         _nobody_returns_only_to_die(d, night)
 
         heard += [row for row in honest_info(d, night, rng)
@@ -886,6 +933,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # A Psychopath may kill somebody in the open, before the
             # nominations (10.10.2026).
             _psychopath_strikes(d, night, rng, heard)
+            _puzzlemaster_guesses(d, night, rng, heard)
             _hold_a_day(d, night, rng)
             heard += d.day_heard
             d.day_heard = []
@@ -904,6 +952,16 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # Roshambo on the gallows: only ever a working Psychopath.
             if night in d.roshambo:
                 heard.append(PsychopathRoshambo(night, d.roshambo[night]))
+            # A working Boomdandy executed — dead of it or not — explodes,
+            # and the game ends with the pointing (10.10.2026).
+            boom = executed if executed is not None else (
+                d.executions.get(night) if night in d.walked_because
+                else None)
+            if boom is not None and _boomdandy_explodes(d, night, boom, rng,
+                                                        heard):
+                d.ended_at, d.ended_why = f"E{night}", "boomdandy"
+                d.game_ends_after = night
+                break
             # A Goblin that said so and went to the gallows: its team has
             # won, and the game stops there — dead of it or not. An
             # ability that triggers on execution does not need the
@@ -1439,7 +1497,12 @@ def _acrobat_may_fall(d, night, heard, rng):
             continue
         if not d.working(seat, night):
             continue                      # droisoned: it does not function
-        if row.target not in droisoned:
+        # Preached is no ability, not drunk: it does not fell an Acrobat
+        # (10.10.2026) — unless something else droisoned that Minion too.
+        if row.target not in droisoned or (
+                row.target in _preached(d, night)
+                and row.target not in _droisoned_without_preaching(d,
+                                                                   night)):
             continue                      # the pick was fine
         if _kept_alive_by_a_tea_lady(d, seat, phase):
             continue                      # prevented, not failed
@@ -1673,6 +1736,9 @@ def _a_vizier_stands(d, seat, day):
         return False
     if d.working(seat, day, by_day=True):
         return True
+    # Preached, it learns so and still cannot die by day (their jinx).
+    if seat in _preached(d, day, f"D{day}", by_day=True):
+        return True
     return any(holder == seat and when <= day < when + 3
                for when, holder, _courtier in d.courtier_drunks)
 
@@ -1805,6 +1871,166 @@ def _the_fearmonger_wins(d, day, hanged):
                  if d.role_at(p, phase) == "Fearmonger"), None)
     return fear is not None and d.fear_target.get(fear) == target \
         and d.working(fear, day, by_day=True)
+
+
+def _acting_as(d, seat, role, phase):
+    """Holding this character, or the Drunk's token of it."""
+    return d.role_at(seat, phase) == role or d.token(seat, phase) == role
+
+
+def _preacher_preaches(d, night, rng):
+    """ "Each night, choose a player: a Minion, if chosen, learns this. All
+    chosen Minions have no ability." Anybody, the dead too, now and then
+    one it chose before. Drunk or poisoned — or drunk by the Goon it
+    chose — it silences nobody (10.10.2026)."""
+    if "Preacher" not in d.script.keys:
+        return []
+    phase = f"N{night}"
+    out = []
+    for seat in d.alive_at(phase):
+        if not _acting_as(d, seat, "Preacher", phase):
+            continue
+        others = [p for p in range(d.n) if p != seat]
+        if not others:
+            continue
+        target = rng.choice(others)
+        out.append(PreacherChoice(night, seat, target=target))
+        if d.role_at(seat, phase) != "Preacher":
+            continue                      # the Drunk's token: nothing
+        if _the_goon_answers(d, night, seat, target) \
+                or not d.working(seat, night):
+            continue
+        if TEAM[d.role_at(target, phase)] == "minion":
+            d.preached.append((seat, target, night))
+    return out
+
+
+def _preached(d, night, phase=None, by_day=False):
+    """The Minions a living, working Preacher has silenced tonight."""
+    phase = phase or f"N{night}"
+    living = d.alive_at(f"D{night}" if by_day else phase)
+    return {target for preacher, target, since in d.preached
+            if since <= night and preacher in living
+            and d.role_at(preacher, phase) == "Preacher"
+            and TEAM[d.role_at(target, phase)] == "minion"}
+
+
+def _huntsman_hunts(d, night, rng):
+    """Once a game it points at a living player; a Damsel it finds while
+    working becomes a Townsfolk not in play, and says so most of the
+    time. Anybody else, or a Huntsman off: nothing, and spent."""
+    if "Huntsman" not in d.script.keys:
+        return []
+    phase = f"N{night}"
+    out = []
+    for seat in d.alive_at(phase):
+        if d.deaths.get(seat) is not None or seat in d.huntsman_spent \
+                or not _acting_as(d, seat, "Huntsman", phase):
+            continue
+        if rng.random() >= 0.35:
+            continue                      # shakes its head tonight
+        living = [p for p in d.alive_at(phase)
+                  if p != seat and d.deaths.get(p) is None]
+        if not living:
+            continue
+        damsel = next((p for p in living
+                       if d.role_at(p, phase) == "Damsel"), None)
+        target = damsel if damsel is not None and rng.random() < 0.4 \
+            else rng.choice(living)
+        d.huntsman_spent.add(seat)
+        d.huntsman_night[seat] = night
+        out.append(HuntsmanChoice(night, seat, target=target))
+        if d.role_at(seat, phase) != "Huntsman":
+            continue
+        if _the_goon_answers(d, night, seat, target) \
+                or not d.working(seat, night) \
+                or d.role_at(target, phase) != "Damsel":
+            continue
+        in_play = {d.role_at(p, phase) for p in range(d.n)}
+        in_play |= {b for b in d.believes if b}
+        spare = [k for k in d.script.townsfolk if k not in in_play]
+        if not spare:
+            continue
+        made = rng.choice(spare)
+        d.changes.append((phase, target, made))
+        d.huntsman_chose[night] = (seat, target, made)
+        if rng.random() < 0.8:
+            out.append(BecameInfo(night, target, role=made, was="Damsel"))
+    return out
+
+
+def _puzzlemaster_guesses(d, day, rng, heard):
+    """Once a game, a guess at the drunk player, and the Storyteller names
+    somebody: the Demon if it guessed right and works, else anybody
+    else. Drunk or poisoned, it is told anything (10.10.2026)."""
+    if "Puzzlemaster" not in d.script.keys:
+        return
+    phase = f"D{day}"
+    living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    for seat in living:
+        if seat in d.puzzle_spent \
+                or not _acting_as(d, seat, "Puzzlemaster", phase):
+            continue
+        if rng.random() >= 0.25:
+            continue
+        others = [p for p in range(d.n) if p != seat]
+        if d.puzzle_drunk is not None and d.puzzle_drunk != seat \
+                and rng.random() < 0.4:
+            guess = d.puzzle_drunk
+        else:
+            guess = rng.choice(others)
+        d.puzzle_spent.add(seat)
+        demon = d.demon_at(phase)
+        real = d.role_at(seat, phase) == "Puzzlemaster" \
+            and d.working(seat, day, by_day=True)
+        if real and guess == d.puzzle_drunk and demon is not None:
+            shown = demon
+        elif real:
+            pool = [p for p in others if p != demon]
+            shown = rng.choice(pool) if pool else guess
+        else:
+            shown = rng.choice(others)
+        heard.append(PuzzlemasterGuess(day, seat, guess=guess, shown=shown))
+
+
+def _boomdandy_explodes(d, day, hanged, rng, heard):
+    """Executed, a working Boomdandy explodes: everybody but three dies,
+    never the Demon, and then one more by pointing. Those that cannot die
+    by day stay standing, so four may be left (10.10.2026)."""
+    if "Boomdandy" not in d.script.keys:
+        return False
+    phase = f"D{day}"
+    if d.role_at(hanged, phase) != "Boomdandy" \
+            or not d.working(hanged, day, by_day=True):
+        return False
+    demon = d.demon_at(f"E{day}")
+    standing = lambda: [p for p in range(d.n)
+                        if d.deaths.get(p) is None or p == d.zombuul_up]
+    order = [p for p in standing() if p != demon]
+    rng.shuffle(order)
+    for p in order:
+        if len(standing()) <= 3:
+            break
+        if _can_die_by_day(d, p, day):
+            d.deaths[p] = phase
+    # Not a Zombuul still on its first life: it would only seem to die,
+    # and the game would not be over (10.10.2026).
+    left = [p for p in standing()
+            if not (p == demon and d.role_at(p, phase) == "Zombuul"
+                    and d.zombuul_up is None)]
+    pointed = rng.choice(left) if left else None
+    if pointed is not None and _can_die_by_day(d, pointed, day):
+        # A Zombuul under its shroud dies for real now, and its first
+        # death stays on the record beside the second.
+        if pointed == d.zombuul_up and d.deaths.get(pointed) is not None:
+            d.earlier_deaths.append((pointed, d.deaths[pointed]))
+        d.deaths[pointed] = phase
+    else:
+        pointed = None
+    heard.append(BoomdandyExploded(day, hanged,
+                                   pointed=-1 if pointed is None
+                                   else pointed))
+    return True
 
 
 def _hold_a_day(d, day, rng):
@@ -2826,6 +3052,10 @@ def _conditionally_woke(d, seat, role, night):
         # included — "at night" with no asterisk, so from the first.
         spent = d.nightwatchman_chose.get(seat)
         return spent is None or spent >= night
+    if role == "Huntsman":
+        # Every night until it chooses, that night included (10.10.2026).
+        spent = d.huntsman_night.get(seat)
+        return spent is None or spent >= night
     if role == "Choirboy":
         # Woken on the night the Demon killed the King, if alive to wake.
         return d.deaths.get(seat) is None and _a_king_fell(d, night)
@@ -3363,6 +3593,30 @@ def droisoned_at(d, night, by_day=False):
         if not died:
             out.add(holder)
 
+    # The Preacher's silenced Minions and the Xaan's night, both asked
+    # against what came before them and not each other — the solver's
+    # one pass (10.10.2026). And the Puzzlemaster's drunk, all game.
+    silenced = set()
+    for preacher, target, since in getattr(d, "preached", ()):
+        if since > night or d.role_at(preacher, phase) != "Preacher":
+            continue
+        if preacher not in (d.alive_at(f"D{night}") if by_day else living):
+            continue
+        if preacher not in out \
+                and TEAM[d.role_at(target, phase)] == "minion":
+            silenced.add(target)
+    xaan = next((p for p in range(d.n)
+                 if d.role_at(p, phase) == "Xaan"), None)
+    if xaan is not None and xaan not in out \
+            and _has_its_ability(d, xaan, phase) \
+            and night == sum(1 for r in d.roles
+                             if TEAM[r] == "outsider"):
+        silenced |= {p for p in range(d.n)
+                     if TEAM[d.role_at(p, phase)] == "townsfolk"}
+    out |= silenced
+    if getattr(d, "puzzle_drunk", None) is not None:
+        out.add(d.puzzle_drunk)
+
     # A Widow's poison, for as long as it lives — resting while it is
     # drunk or poisoned itself (10.10.2026). After everybody else, so its
     # own state is known; before the Pukka, whose poison it can stop.
@@ -3389,6 +3643,16 @@ def droisoned_at(d, night, by_day=False):
             if marked is not None:
                 out.add(marked)
     return out
+
+
+def _droisoned_without_preaching(d, night):
+    """`droisoned_at` with every sermon set aside, for the Acrobat."""
+    kept = d.preached
+    d.preached = []
+    try:
+        return droisoned_at(d, night)
+    finally:
+        d.preached = kept
 
 
 def _vortox_working(d, night):

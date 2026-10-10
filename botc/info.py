@@ -935,7 +935,11 @@ def _possible_impairment_counts(world, state, night):
         # and worse, a capacity of one against a reach of two came out as
         # a range of (0, 0), because it went into `always` and `always`
         # was then compared against nothing.
-        if source.free_for_everyone() and source.capacity >= len(source.seats):
+        # A Preacher or a Xaan rests while it is drunk or poisoned itself,
+        # and that is settled by the plan, not here: either way, as with
+        # a source that picks (10.10.2026).
+        if source.free_for_everyone() and source.capacity >= len(source.seats) \
+                and source.name not in ("Preacher", "Xaan"):
             always |= set(source.seats) & living
         else:
             movable.append(source)
@@ -3086,3 +3090,148 @@ class WidowKnown(Info):
         if seat is None or self._impaired_after_its_turn(w, s, seat):
             return ()
         return (seat,)
+
+
+# --------------------------------------------------------------------------
+# The sixth five (10.10.2026): Preacher, Huntsman, Puzzlemaster, Xaan,
+# Boomdandy. Every reading below is the table's ruling of that day.
+# --------------------------------------------------------------------------
+
+@dataclass
+class PreacherChoice(Info):
+    """Whom the Preacher chose tonight, said by the Preacher.
+
+    "Each night, choose a player: a Minion, if chosen, learns this. All
+    chosen Minions have no ability." What it does is asked of the plan
+    (`solver.a_preacher_silences_its_minions`): a Minion it chose while
+    working has no ability for as long as the Preacher lives and works.
+    The row only says whom; a Preacher may choose the dead.
+    """
+
+    is_a_choice = True
+
+    target: int = 0
+    source_role = "Preacher"
+
+    def holds(self, w, s, rh, seat=None):
+        return True
+
+
+def _began(night):
+    """The phase just before this night began."""
+    return f"E{night - 1}" if night > 1 else "N0"
+
+
+@dataclass
+class HuntsmanChoice(Info):
+    """Whom the Huntsman chose, once a game, said by the Huntsman.
+
+    "Once per game, at night, choose a living player: the Damsel, if
+    chosen, becomes a not-in-play Townsfolk." A Damsel it finds while it
+    works is a Townsfolk from that night (`solver.a_huntsman_finds_the_
+    damsel`), drunk or poisoned as she may be. Anybody else, or a Huntsman
+    that was not working: nothing happens, and the choice is spent.
+    """
+
+    is_a_choice = True
+
+    target: int = 0
+    source_role = "Huntsman"
+
+    def _earlier(self, s):
+        for info in s.infos:
+            if info is self:
+                return False
+            if isinstance(info, HuntsmanChoice) \
+                    and info.player == self.player \
+                    and info.night <= self.night:
+                return True
+        return False
+
+    def holds(self, w, s, rh, seat=None):
+        if self._earlier(s):
+            return True                   # spent already: nothing happens
+        if w.role_at(self.target, _began(self.night)) != "Damsel":
+            return True
+        return w.role_at(self.target, f"D{self.night}") != "Damsel"
+
+
+@dataclass
+class PuzzlemasterGuess(Info):
+    """The Puzzlemaster's one guess at the drunk player, and whom the
+    Storyteller then named. `night` is the day it guessed.
+
+    "1 player is drunk, even if you die. If you guess (once) who it is,
+    learn the Demon player, but guess wrong & get false info." Shown the
+    Demon, it guessed right — the guessed player is the one it keeps
+    drunk — or it was not working itself. Shown anybody else, nothing
+    follows: that is what a wrong guess gets. Not a Townsfolk, so a
+    Vortox changes nothing.
+    """
+
+    guess: int = 0
+    shown: int = 0
+    source_role = "Puzzlemaster"
+
+    def _earlier(self, s):
+        for info in s.infos:
+            if info is self:
+                return False
+            if isinstance(info, PuzzlemasterGuess) \
+                    and info.player == self.player \
+                    and info.night <= self.night:
+                return True
+        return False
+
+    def holds(self, w, s, rh, seat=None):
+        return True                       # legal one way or the other
+
+    def instead(self, w, s, seat=None):
+        """Shown the Demon: the guess was the drunk player, or the
+        Puzzlemaster itself was off (the solver tries both, `_explain`)."""
+        if self._earlier(s):
+            return None
+        if self.shown != w.demon_at(f"D{self.night}"):
+            return None
+        return frozenset({self.guess}), frozenset()
+
+
+@dataclass
+class BoomdandyExploded(Info):
+    """The executed player exploded. `night` is the day; `pointed` is who
+    died of the pointing afterwards, or -1 when it is not written down.
+
+    "If you are executed, all but 3 players die. After a 10 to 1
+    countdown, the player with the most players pointing at them, dies."
+    Only a working Boomdandy explodes, and executed is enough, as for the
+    Goblin (table ruling, 10.10.2026). The Demon is always among the
+    three left standing: of the day's dead only the pointing may take it.
+    """
+
+    pointed: int = -1
+    source_role = "Boomdandy"
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None                       # what everybody saw
+
+    def holds(self, w, s, rh, seat=None):
+        day = self.night
+        phase = f"D{day}"
+        if s.executed_on(day) != self.player \
+                or w.role_at(self.player, phase) != "Boomdandy":
+            return False
+        if self.pointed < 0:
+            return True
+        demon = w.demon_at(phase)
+        return not (demon is not None and demon not in (self.player,
+                                                        self.pointed)
+                    and phase in s.died_at(demon))
+
+    def leaned_on(self, w, s, seat=None):
+        return (self.player,)
