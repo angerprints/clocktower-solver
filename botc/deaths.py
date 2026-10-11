@@ -399,6 +399,14 @@ def _account_for(world, state, night, causes, directly, followed,
                     working = working | {cause.actor}
                 grown.append((cost, impaired, working, used, before))
                 continue
+            if any(seats is None and not demands
+                   for seats, demands in cause.excuses):
+                # Nothing was due and nothing is asked for it: a
+                # Yaggababble that said nothing (11.10.2026). Every other
+                # way of staying quiet asks more for the same night, so
+                # none of them can do better.
+                grown.append((cost, impaired, working, used, before))
+                continue
             if cause.actor is not None and cause.actor not in working:
                 # Stopped at its source: the killer was droisoned.
                 grown.append((cost * cause.actor_cost,

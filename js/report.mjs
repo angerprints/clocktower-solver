@@ -13,6 +13,7 @@ import {bestStory, storyShares, explanationCost, forcedRoles, nightDeaths,
         worldConsistent} from "./scoring.mjs";
 import {PRIORS} from "./priors.mjs";
 import {inBag, madPixie} from "./characters.rules.mjs";
+import {actsAsCultLeader, cultSides} from "./info.mjs";
 import {Rng} from "./rng.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {Timeline, eachWorld, sampleWorlds} from "./worlds.mjs";
@@ -109,6 +110,10 @@ export function priorWeight(world, state) {
   let w = confirmedBoost(world, state);
   let madness = madnessNights(world, state);
   const pixies = inBag(state, "Pixie");
+  // Beside a Bounty Hunter one Townsfolk is evil and bluffs like any evil
+  // player: one Townsfolk's false claim there is that one's (11.10.2026).
+  let evilTownsfolk = inBag(state, "BountyHunter")
+    && world.roles.includes("BountyHunter");
   const reads = state.reads || {};
   const suspects = state.suspects || {};
 
@@ -128,6 +133,7 @@ export function priorWeight(world, state) {
         !(pixies && madPixie(world, state, p))) {
       if (!evil) {
         if (TEAM[world.roles[p]] === "outsider") w *= PRIORS.OUTSIDER_HIDING_PENALTY;
+        else if (evilTownsfolk) evilTownsfolk = false;
         else if (madness > 0) { w *= PRIORS.CERENOVUS_MADNESS_PENALTY; madness--; }
         else w *= PRIORS.TOWNSFOLK_LIE_PENALTY;
       } else {
@@ -271,7 +277,12 @@ function tallySeats(perSeat, world, view, state, wt, now) {
     const seat = perSeat[p];
     const role = view.roleAt(p, now);
     seat.roles[role] = (seat.roles[role] || 0) + wt;
-    if (view.evilAt(p, now)) seat.evil += wt;
+    if (inBag(state, "CultLeader") && actsAsCultLeader(view, state, p, now)) {
+      // On whichever side its neighbours allow, and evenly where they
+      // allow both (11.10.2026).
+      const sides = cultSides(view, state, p, now);
+      if (sides.has(true)) seat.evil += wt / sides.size;
+    } else if (view.evilAt(p, now)) seat.evil += wt;
     if (p === demon) seat.demon += wt;
     if (believesAnother(role)) seat.drunk += wt;
     if (isLying(world, state, p)) seat.lying += wt;

@@ -16,6 +16,7 @@ import {ORGAN_GRINDER_BY_CHOICE, Source, makePoisonerRule, minionStillActs,
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {evilRegistrations, registersAsRole} from "./roles.mjs";
+import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 
 // --------------------------------------------------------------------
 // Constants. Every one is a judgement rather than a fact, which is what
@@ -572,6 +573,9 @@ export const killsItsOwnWay = (...names) =>
   names.forEach(n => KILLS_ITS_OWN_WAY.add(n));
 
 killsItsOwnWay("Zombuul", "Pukka", "Shabaloth", "Po");
+// The eighth five (11.10.2026): one that never kills, and one that kills
+// as often as it said its phrase.
+killsItsOwnWay("Leviathan", "Yaggababble");
 
 /** The one cause Trouble Brewing has.
  *
@@ -923,6 +927,91 @@ causeRule(function aGamblerMayLose(world, state, night) {
   return causes;
 });
 
+const aSweetheartDied = (world, state, night) => {
+  const phase = `N${night}`;
+  for (let p = 0; p < state.nPlayers; p++)
+    if (state.diedAt(p).includes(phase)
+        && world.roleAt(p, phase) === "Sweetheart") return true;
+  return false;
+};
+
+// A night nothing was due: no phrase said, or the Storyteller let it
+// pass. A cause that fires and may always have had nothing to fire for.
+const NOTHING_DUE = [[null, []]];
+
+/** "For each time you said it publicly today, a player might die." Any
+ * number of bodies from the second night, or none: the first costs
+ * nothing, each one more YAGGABABBLE_AGAIN_PENALTY. The Demon's own
+ * kills, never itself. See solver.py (11.10.2026). */
+causeRule(function aYaggababbleKillsForEachTime(world, state, night) {
+  if (!inBag(state, "Yaggababble") || night < 2) return [];
+  const phase = `N${night}`;
+  let demon = world.demonAt(phase);
+  // Whoever held it when its deaths were counted: one that died tonight
+  // as the Yaggababble handed the star on after that.
+  const began = world.demonAt(`D${night - 1}`);
+  if (began !== null && began !== undefined && began !== demon
+      && state.diedAt(began).includes(phase)
+      && world.roleAt(began, phase) === "Yaggababble") demon = began;
+  else if (demon === null || demon === undefined
+           || world.roleAt(demon, phase) !== "Yaggababble") return [];
+  if (!state.aliveSet(phase).has(demon)) return [];
+  const reach = new Set(
+    [...state.aliveSet(phase)].filter(p => p !== demon));
+  if (!reach.size) return [];
+  // Not on a night a Sweetheart dies: see theDemonKills.
+  const actor = aSweetheartDied(world, state, night) ? null : demon;
+  return [
+    new Cause("Demon", DEMON, reach,
+              {capacity: 1, mustFire: true, actor, excuses: NOTHING_DUE}),
+    new Cause("Yaggababble, again", DEMON, reach,
+              {capacity: Math.max(1, reach.size - 1),
+               cost: PRIORS.YAGGABABBLE_AGAIN_PENALTY, mustFire: true,
+               actor, excuses: NOTHING_DUE})];
+});
+
+/** Is there a Leviathan anywhere in this telling — dealt, or made
+ * since? Asked first: nearly every story on a script with one has none. */
+export const aLeviathanIsToldOf = world =>
+  world.roles.includes("Leviathan")
+  || (world.changes || []).some(c => c.role === "Leviathan");
+
+/** The living seat holding the Leviathan at this moment, if any. */
+export function leviathanAt(world, state, phase) {
+  if (!aLeviathanIsToldOf(world)) return null;
+  for (const seat of [...state.aliveSet(phase)].sort((a, b) => a - b))
+    if (world.roleAt(seat, phase) === "Leviathan") return seat;
+  return null;
+}
+
+const holdsAbility = (world, state, seat, role, phase) => {
+  if (world.roleAt(seat, phase) === role) return true;
+  const taken = (state.philosophies() || {})[seat];
+  return !!(taken && taken[0] === role
+            && world.roleAt(seat, phase) === "Philosopher"
+            && phaseIndex(phase) >= phaseIndex(taken[1]));
+};
+
+/** A Leviathan kills nobody — but for its jinx with the Banshee: "a
+ * chosen Banshee dies & gains their ability". A choice, so a night
+ * without it owes nothing (11.10.2026). */
+causeRule(function aLeviathanFellsABanshee(world, state, night) {
+  if (!inBag(state, "Leviathan") || !inBag(state, "Banshee") || night < 2)
+    return [];
+  const phase = `N${night}`;
+  const lev = leviathanAt(world, state, phase);
+  if (lev === null || world.demonAt(phase) !== lev) return [];
+  const reach = new Set(
+    [...state.aliveSet(phase)].filter(p => p !== lev
+      && !world.evilAt(p, phase)
+      && holdsAbility(world, state, p, "Banshee", phase)));
+  if (!reach.size) return [];
+  const actor = aSweetheartDied(world, state, night) ? null : lev;
+  return [new Cause("Demon", DEMON, reach,
+                    {capacity: 1, mustFire: true, actor,
+                     excuses: NOTHING_DUE})];
+});
+
 /** "If good, they die & the Demon doesn't kill tonight." Not the Demon's
  * kill; never the faux paw; when it kills the Demon kills nobody
  * (`quietsDemon`). A choice, so it costs nothing (11.10.2026). */
@@ -1214,7 +1303,11 @@ immunityRule(function aPrincessStopsTheDemon(world, state, night, seat, kind) {
       continue;                        // not her first day
     if (state.executedOn(day) !== info.target) continue;
     if (!state.aliveSet(`N${night}`).has(princess)) continue;  // no ability
-    return [shield("Princess", {needs: princess})];
+    // Made something else tonight, she may have been so before the
+    // Demon's turn or after it; then a kill says nothing about her
+    // (11.10.2026). See solver.py.
+    const unmade = world.roleAt(princess, `N${night}`) !== "Princess";
+    return [shield("Princess", {needs: princess, chosen: unmade})];
   }
   return [];
 });
@@ -1318,6 +1411,14 @@ sourceRule(function aGoonDrunksWhoeverChoseIt(world, state, night) {
   if (goon === null) return [];
   const pickers = new Set([...state.aliveSet(phase)].filter(
     seat => seat !== goon && CHARACTERS[world.roleAt(seat, phase)].chooses));
+  // A Leviathan chooses a good player each night but the first where its
+  // jinxes have it choose at all, and the Goon may be the one
+  // (11.10.2026). See solver.py.
+  if (night >= 2 && inBag(state, "Leviathan")
+      && LEVIATHAN_CHOOSES_FOR.some(key => inBag(state, key)))
+    for (const seat of state.aliveSet(phase))
+      if (seat !== goon && world.roleAt(seat, phase) === "Leviathan")
+        pickers.add(seat);
   // And a Courtier that named the Goon tonight: "The Courtier chooses the
   // Goon. The Goon turns good, and the Courtier becomes drunk" (the wiki;
   // table ruling, 08.10.2026).

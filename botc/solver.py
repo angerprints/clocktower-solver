@@ -21,7 +21,10 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    ChoirboyInfo, PrincessNominated,
                    PreacherChoice, HuntsmanChoice,
                    PixieLearned, VillageIdiotInfo, LycanthropeChose,
-                   phase_index)
+                   LeviathanAnnounced, ExecutionNomination, InnkeeperChoice,
+                   ExorcistChoice, GolemNomination,
+                   acts_as_cult_leader, cult_sides, knows_it_turned_evil,
+                   went_on_after, phase_index)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
                     INVERTED, registers_as_role, evil_registrations,
@@ -29,7 +32,8 @@ from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
 from . import deaths as death_causes
 from . import impairment
 from .catalogue import CHARACTERS
-from .worlds import (Change, Timeline, World, enumerate_worlds,
+from .waking import LEVIATHAN_CHOOSES_FOR
+from .worlds import (Change, Timeline, TurnedEvil, World, enumerate_worlds,
                      iter_worlds, sample_worlds)
 
 # Two different limits, and keeping them apart matters.
@@ -125,6 +129,16 @@ DEMON_POISONED_PENALTY = 0.05
 # both are possible, the refusal costs something). Priced like a hiding
 # Outsider: a thing that happens, not the thing that usually does.
 PIXIE_DENIED_PENALTY = 0.35
+
+# A Yaggababble kills once for each time it said its phrase, so any
+# number of bodies in a night is its doing. The first costs nothing; each
+# one more is another time it had to have said it and the Storyteller to
+# have acted on it, and without a price it would explain every board
+# there is (table ruling, 11.10.2026).
+YAGGABABBLE_AGAIN_PENALTY = 0.5
+# "It is rare for the Yaggababble to kill during the day." A player who
+# drops dead nominating may be its doing rather than a Witch's.
+YAGGABABBLE_BY_DAY_PENALTY = 0.25
 
 # Information with no genuine source anywhere in a world had to be invented
 # out of nothing. That happens - people bluff detailed readings - but it is
@@ -234,7 +248,8 @@ TRANSITION_RULES = []
 # Sorting the chain afterwards was the other way to fix this and it needs
 # a field `Change` does not have: the *actor's* slot, not the granted
 # character's. Ordering the rules needs nothing new at all.
-_ACTS_AT = {"a_snake_charmer_takes_the_star": 11,
+_ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
+            "a_snake_charmer_takes_the_star": 11,
             "a_pit_hag_makes_somebody_else": 16,
             "a_barber_lets_the_demon_swap_two": 40,
             "a_huntsman_finds_the_damsel": 45,
@@ -302,6 +317,10 @@ def possible_timelines(world, state, cap=128):
     # including the three quarters with no Barber, no Fang Gu and nothing
     # recorded for a Snake Charmer or a Pit-Hag — and once the Mutant
     # multiplied the worlds that was most of the time a solve took.
+    # One story for each Townsfolk a Bounty Hunter may have brought in
+    # evil, beside everything else: room for all of them (11.10.2026).
+    if _in_bag(state, "BountyHunter") and "BountyHunter" in world.roles:
+        cap *= max(1, sum(1 for r in world.roles if TEAM[r] == "townsfolk"))
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -401,6 +420,8 @@ def _nights_it_acts(rule, state):
                 if isinstance(info, HuntsmanChoice)}
     if name == "an_ogre_picks_a_side":
         return {1}
+    if name == "a_bounty_hunter_brings_an_evil_townsfolk":
+        return {1} | rows("Philosopher", "role")
     if name == "demon_handovers":
         return {k for k, _kind in deaths}
     return None
@@ -708,7 +729,14 @@ def _barber_share(world, changes, state):
                     else 1.0 - BARBER_DEMON_MINION_SHARE)
         else:
             part = 1.0
-        factor *= (BARBER_SWAP_SHARE * part / (n_ours if ours else n_other)
+        # At least one of its kind: its own swap. Counted again over a
+        # view that has the *later* rules' work in it, the pairs may come
+        # out as another kind — the Demon executed and the Scarlet Woman
+        # already in its place, offered as "Demon and Minion" before the
+        # handover was told and as two of anybody after. Then there were
+        # none to share with, and this divided by nought (11.10.2026).
+        among = max(1, n_ours if ours else n_other)
+        factor *= (BARBER_SWAP_SHARE * part / among
                    / (1.0 if ours else BARBER_SWAP_PENALTY))
     return factor
 
@@ -844,6 +872,28 @@ def a_farmer_hands_it_on(world, state):
                        and phase in state.died_at(p)]
             if not holders:
                 grown.append((changes, cost))
+                # Its jinx with the Leviathan: "each night*, the Leviathan
+                # chooses an alive good player: a chosen Farmer uses their
+                # ability but does not die" (11.10.2026). Anchored to a
+                # seat saying it became the Farmer that night, with a
+                # Farmer and a Leviathan alive to have done it.
+                if night >= 2 and _in_bag(state, "Leviathan") \
+                        and _leviathan_at(view, state, phase) is not None:
+                    living = [p for p in state.alive_set(phase)
+                              if view.role_at(p, phase) == "Farmer"
+                              and not view.evil_at(p, phase)]
+                    for info in state.infos:
+                        if not isinstance(info, BecameInfo) \
+                                or info.role != "Farmer" \
+                                or info.night != night or not living:
+                            continue
+                        heir = info.player
+                        if heir in living or heir not in state.alive_set(
+                                phase) or not _could_be_good(view, heir,
+                                                             phase):
+                            continue
+                        grown.append((changes + (Change(
+                            f"D{night}", heir, "Farmer", None),), cost))
                 continue
             seat = holders[0]
             after = f"D{night}"
@@ -923,6 +973,195 @@ def an_ogre_picks_a_side(world, state):
     if good == 0:
         return [(turn, 1.0)]
     return [((), 1.0), (turn, min(1.0, evil / good))]
+
+
+@transition_rule
+def a_bounty_hunter_brings_an_evil_townsfolk(world, state):
+    """ "[1 Townsfolk is evil]": with a Bounty Hunter dealt, one Townsfolk
+    is evil from the setup, and it may be the Bounty Hunter itself (table
+    ruling, 11.10.2026, way 2 of C).
+
+    One story for each Townsfolk it could be, at no cost: there always is
+    one. That seat keeps its character and its ability, knows what it is,
+    and may lie from the start (`worlds.TurnedEvil`).
+
+    Not for a token a Drunk or a Marionette holds, nor a Bounty Hunter a
+    Pit-Hag makes later: "if the Bounty Hunter is in play at setup". A
+    Philosopher that takes the ability *might* turn one (their jinx), so
+    there both stories are told.
+
+    A Townsfolk claiming something else is found only where the search
+    offers it at all — a seat marked as not trusted. One such claim
+    beside a Bounty Hunter costs what a bluff costs (`prior_weight`); it
+    is not taken here to *be* the evil one, since a good player's stray
+    claim would then name the wrong seat.
+    """
+    if not _in_bag(state, "BountyHunter"):
+        return [((), 1.0)]
+    town = [p for p, role in enumerate(world.roles)
+            if TEAM[role] == "townsfolk"]
+    if "BountyHunter" in world.roles:
+        return [((TurnedEvil("N0", p, None, "evil"),), 1.0) for p in town]
+    stories = [((), 1.0)]
+    for info in state.infos:
+        if getattr(info, "source_role", None) != "Philosopher" \
+                or getattr(info, "role", None) != "BountyHunter" \
+                or world.roles[info.player] != "Philosopher":
+            continue
+        phase = f"N{info.night}"
+        stories += [((TurnedEvil(phase, p, None, "evil"),), 1.0)
+                    for p in town if not world.evil_at(p, phase)]
+        break
+    return stories
+
+
+class MezephelesTurn(TurnedEvil):
+    """The good player a Mezepheles turned, on the night it turned."""
+    __slots__ = ()
+
+
+_SEAT_FIELDS = ("a", "b", "c", "target", "guess", "shown", "second",
+                "nominator", "pointed")
+_SEAT_SETS = ("joined", "demons", "minions")
+
+
+def _seats_the_board_looks_at(world, state):
+    """Seats whose side something on the board asks about from the second
+    night on: named in a row or the source of one, beside an Empath,
+    among an Oracle's dead, dead themselves or executed, or beside a Cult
+    Leader.
+
+    A Mezepheles may turn anybody, and most of those stories change
+    nothing the board can see. Only these do, and they are the only ones
+    told (the faux paw's way of keeping the count down, 11.10.2026).
+    """
+    from .info import _beside_alive, _living_neighbours
+    n = state.n_players
+    cached = getattr(state, "_looked_at_cache", None)
+    if cached is None:
+        seats, unclaimed = set(), set()
+        for info, src in zip(state.infos, _source_seats(state)):
+            if info.night < 2:
+                continue
+            seats.add(info.player)
+            role = getattr(info, "source_role", None)
+            if src is not None:
+                seats.add(src)
+            elif role:
+                unclaimed.add(role)
+            # The fields that name seats, by name: the same list in
+            # scoring.mjs, so both sides tell the same stories whatever
+            # else a row happens to carry.
+            for name in _SEAT_FIELDS:
+                value = getattr(info, name, None)
+                if isinstance(value, int) and not isinstance(value, bool):
+                    seats.add(value)
+            for name in _SEAT_SETS:
+                seats.update(x for x in (getattr(info, name, None) or ())
+                             if isinstance(x, int)
+                             and not isinstance(x, bool))
+            for guess in getattr(info, "guesses", None) or ():
+                # A Juggler's, as (seat, character) or as the page sends
+                # them, {player, role}.
+                who = (guess.get("player") if isinstance(guess, dict)
+                       else guess[0])
+                if isinstance(who, int) and not isinstance(who, bool):
+                    seats.add(who)
+            kind = type(info).__name__
+            if kind == "Empath" and src is not None:
+                seats.update(_living_neighbours(state, info.night, src))
+            elif kind in ("Empath", "Chef", "SavantInfo"):
+                # Wherever the Empath turns out; every pair at the table
+                # for a Chef; whatever a Savant's statements were about.
+                seats.update(range(n))
+            elif kind == "OracleInfo":
+                phase = f"N{info.night}"
+                seats.update(p for p in range(n)
+                             if p not in state.alive_set(phase)
+                             or phase in state.died_at(p))
+        seats.update(seat for seat, _phase in state.death_phases())
+        seats.update((state.executions or {}).values())
+        cached = state._looked_at_cache = (
+            frozenset(p for p in seats if 0 <= p < n), frozenset(unclaimed))
+    seats, unclaimed = cached
+    out = set(seats)
+    for role in unclaimed:
+        holder = world.find(role)
+        if holder is not None:
+            out.add(holder)
+    if _in_bag(state, "CultLeader") and "CultLeader" in world.roles:
+        leader = world.find("CultLeader")
+        last = int(state.final_phase()[1:])
+        for day in range(1, last + 1):
+            out.update(_beside_alive(state, leader, f"D{day}"))
+        out.add(leader)
+    return out
+
+
+def _acted_before_the_demon_only(world, state, night):
+    """Could something later that night have reached a Mezepheles that
+    had already done its turning at 18?
+
+    A Pukka poisons at 26, and a Sweetheart dying in the night leaves
+    somebody drunk from then on. The plan knows whole nights, so beside
+    either it is not asked to have worked the night through — as for the
+    Harpy and the Widow.
+    """
+    phase = f"N{night}"
+    demon = world.demon_at(phase)
+    if demon is not None and world.role_at(demon, phase) == "Pukka":
+        return True
+    return any(phase in state.died_at(p)
+               and world.role_at(p, phase) == "Sweetheart"
+               for p in range(state.n_players))
+
+
+def a_mezepheles_may_have_turned(world, state):
+    """ "The 1st good player to say this word becomes evil that night."
+
+    Nothing on the board records it: not the word, not who said it. So
+    it is a story — one good player on one night from the second, the
+    Mezepheles holding its character when that night began and still
+    standing (a Vigormortis's own kill keeps it too). That it was
+    working is asked where the readings are judged (`_plain_failures`).
+    Free, and once only (table ruling, 11.10.2026).
+
+    The seat keeps its character and its ability. It was good and honest
+    until that night, and from then on it reads evil and says what suits
+    it (`worlds.TurnedEvil`).
+
+    **Told only where something needs it**, not as a transition rule
+    (`best_story`). As a rule it stood beside every other story at once:
+    a Barber's fifty pairs times a Bounty Hunter's seven Townsfolk times
+    thirty turns ran past any limit on how many stories are kept, and
+    the one that happened was cut off (found at the gate, 11.10.2026).
+    A turn costs nothing, so a story that already explains everything
+    cannot be bettered by one; it is offered to the stories that do not.
+
+    Returns the turns that could be laid over this view, as changes.
+    """
+    stories = []
+    if not _in_bag(state, "Mezepheles"):
+        return stories
+    last = int(state.final_phase()[1:])
+    seats = None
+    for night in range(2, last + 1):
+        phase = f"N{night}"
+        began = _before(night, phase)
+        mez = world.find_at("Mezepheles", began)
+        if mez is None or not minion_still_acts(world, state, mez, phase):
+            continue
+        if seats is None:
+            seats = sorted(_seats_the_board_looks_at(world, state))
+        for seat in seats:
+            if seat == mez or world.evil_at(seat, phase):
+                continue
+            role = world.role_at(seat, phase)
+            if CHARACTERS[role].alignment_open \
+                    and not acts_as_cult_leader(world, state, seat, phase):
+                continue                  # a Goon's side nobody follows
+            stories.append((MezephelesTurn(phase, seat, None, "evil"),))
+    return stories
 
 
 @transition_rule
@@ -1263,6 +1502,9 @@ def kills_its_own_way(*names):
 
 
 kills_its_own_way("Zombuul", "Pukka", "Shabaloth", "Po")
+# The eighth five (11.10.2026): one that never kills, and one that kills
+# as often as it said its phrase.
+kills_its_own_way("Leviathan", "Yaggababble")
 
 
 @death_causes.cause_rule
@@ -2174,6 +2416,118 @@ def a_gambler_may_lose(world, state, night):
     return causes
 
 
+def _a_sweetheart_died(world, state, night):
+    phase = f"N{night}"
+    return any(phase in state.died_at(p)
+               and world.role_at(p, phase) == "Sweetheart"
+               for p in range(state.n_players))
+
+
+# A night nothing was due: no phrase said, or the Storyteller let it
+# pass. A cause that fires and may always have had nothing to fire for.
+_NOTHING_DUE = ((None, ()),)
+
+
+@death_causes.cause_rule
+def a_yaggababble_kills_for_each_time(world, state, night):
+    """ "For each time you said it publicly today, a player might die."
+
+    How often it said its phrase only the Storyteller knows, so from the
+    second night it may be behind any number of bodies, or none. The
+    first costs nothing, every further one `YAGGABABBLE_AGAIN_PENALTY`,
+    and a quiet night nothing — it "might". Two causes for that reason:
+    the same Demon, the first kill and the ones after it.
+
+    The Demon's own kills (table ruling, 11.10.2026): a Soldier is safe
+    and a Monk guards, a Sage and a Grandmother answer to it, and the
+    Exorcist naming it stops it (their jinx, and every Demon's rule).
+    What counts is the moment of the kill, so drunk or poisoned that
+    night it kills nobody — whatever it was when it spoke. Never itself.
+    """
+    if not _in_bag(state, "Yaggababble") or night < 2:
+        return []
+    phase = f"N{night}"
+    demon = world.demon_at(phase)
+    # Whoever held it when its deaths were counted. One that died tonight
+    # handed the star on *after* that — to a Scarlet Woman — and the
+    # night is one moment here, so the heir would read as having killed
+    # the Demon it inherited from. As for the Exorcist: only a Demon that
+    # died *as* one — a Snake Charmer swaps at 11, and the new Yaggababble
+    # may well take the old one, a charmer by then.
+    began = world.demon_at(f"D{night - 1}")
+    if began is not None and began != demon \
+            and phase in state.died_at(began) \
+            and world.role_at(began, phase) == "Yaggababble":
+        demon = began
+    elif demon is None or world.role_at(demon, phase) != "Yaggababble":
+        return []
+    if demon not in state.alive_set(phase):
+        return []
+    reach = frozenset(p for p in state.alive_set(phase) if p != demon)
+    if not reach:
+        return []
+    # Not on a night a Sweetheart dies: see `the_demon_kills`.
+    actor = None if _a_sweetheart_died(world, state, night) else demon
+    return [
+        death_causes.Cause(
+            name="Demon", kind=death_causes.DEMON, seats=reach, capacity=1,
+            must_fire=True, actor=actor, excuses=_NOTHING_DUE),
+        death_causes.Cause(
+            name="Yaggababble, again", kind=death_causes.DEMON, seats=reach,
+            capacity=max(1, len(reach) - 1),
+            cost=YAGGABABBLE_AGAIN_PENALTY, must_fire=True, actor=actor,
+            excuses=_NOTHING_DUE)]
+
+
+def _a_leviathan_is_told_of(world):
+    """Is there a Leviathan anywhere in this telling — dealt, or made
+    since? Asked before anything is looked for: its rules are asked of
+    every story of every world on a script that has one, and nearly all
+    of those have none."""
+    return "Leviathan" in world.roles or any(
+        change.role == "Leviathan"
+        for change in getattr(world, "changes", ()))
+
+
+def _leviathan_at(world, state, phase):
+    """The living seat holding the Leviathan at this moment, if any."""
+    if not _a_leviathan_is_told_of(world):
+        return None
+    for seat in sorted(state.alive_set(phase)):
+        if world.role_at(seat, phase) == "Leviathan":
+            return seat
+    return None
+
+
+@death_causes.cause_rule
+def a_leviathan_fells_a_banshee(world, state, night):
+    """A Leviathan kills nobody — but for one jinx: "each night*, the
+    Leviathan chooses an alive good player (different to previous
+    nights): a chosen Banshee dies & gains their ability."
+
+    So with a Banshee about, a body in the night may be hers and the
+    Demon's doing after all, which is what her announcement needs. A
+    choice, so a night without it owes nothing.
+    """
+    if not _in_bag(state, "Leviathan") or not _in_bag(state, "Banshee") \
+            or night < 2:
+        return []
+    phase = f"N{night}"
+    lev = _leviathan_at(world, state, phase)
+    if lev is None or world.demon_at(phase) != lev:
+        return []
+    reach = frozenset(
+        p for p in state.alive_set(phase)
+        if p != lev and not world.evil_at(p, phase)
+        and _has_ability(world, state, p, "Banshee", phase))
+    if not reach:
+        return []
+    actor = None if _a_sweetheart_died(world, state, night) else lev
+    return [death_causes.Cause(
+        name="Demon", kind=death_causes.DEMON, seats=reach, capacity=1,
+        must_fire=True, actor=actor, excuses=_NOTHING_DUE)]
+
+
 @death_causes.cause_rule
 def a_lycanthrope_may_kill(world, state, night):
     """ "Each night*, choose an alive player. If good, they die & the
@@ -2540,7 +2894,15 @@ def a_princess_stops_the_demon(world, state, night, seat, kind):
             continue
         if princess not in state.alive_set(f"N{night}"):
             continue                      # dead, so no ability tonight
-        return [death_causes.Shield("Princess", needs=princess)]
+        # Made something else tonight, she may have been so before the
+        # Demon's turn — a Pit-Hag at 16 — or after it, a Barber at 40.
+        # The night is one moment here, so then it explains a quiet
+        # night and a kill says nothing about her (found at the gate of
+        # the eighth five, 11.10.2026: a Princess the Pit-Hag made a Goon
+        # and the Demon then killed).
+        unmade = world.role_at(princess, f"N{night}") != "Princess"
+        return [death_causes.Shield("Princess", needs=princess,
+                                    chosen=unmade)]
     return []
 
 
@@ -3173,15 +3535,24 @@ def _plain_failures(world, state, outcome=None):
     # demands them rather than merely wanting them.
     for day, seat in sorted((state.witch_deaths or {}).items()):
         witch = world.find_at("Witch", f"N{day}")
-        if witch is None or not minion_still_acts(world, state, witch,
-                                                  f"N{day}"):
-            return None, None, 1.0, None
         # "If just 3 players live, you lose this ability" — and the curse
         # goes with it, so nobody drops dead nominating at a table of
         # three.
-        if len(state.alive_set(f"D{day}")) <= 3:
+        if witch is not None and minion_still_acts(world, state, witch,
+                                                   f"N{day}") \
+                and len(state.alive_set(f"D{day}")) > 3:
+            working.setdefault(day, set()).add(witch)
+            continue
+        # Or a Yaggababble's kill by day, which is rare and costs: "for
+        # each time you said it publicly today, a player might die", and
+        # the Storyteller may take them there and then (table ruling,
+        # 11.10.2026, way 1 of X). Never itself.
+        yagga = (_yaggababble_at(world, state, f"D{day}")
+                 if _in_bag(state, "Yaggababble") else None)
+        if yagga is None or yagga == seat:
             return None, None, 1.0, None
-        working.setdefault(day, set()).add(witch)
+        invented *= YAGGABABBLE_BY_DAY_PENALTY
+        working.setdefault(day, set()).add(yagga)
     for day, seat in sorted((state.madness_executions or {}).items()):
         maddener = world.find_at("Cerenovus", f"N{day}")
         if maddener is None or not minion_still_acts(world, state, maddener,
@@ -3370,6 +3741,22 @@ def _plain_failures(world, state, outcome=None):
     if _a_zealot_kept_its_hand_down(world, state):
         return None, None, 1.0, None      # a Zealot that did not vote
 
+    if _in_bag(state, "Leviathan"):
+        _leviathan_demands(world, state, failures, either)
+
+    # A player a Mezepheles turned: it was working that night — unless
+    # something later that night may have reached it, which the plan
+    # could not tell from its not having worked at all.
+    for change in getattr(world, "changes", ()):
+        if not isinstance(change, MezephelesTurn):
+            continue
+        night = int(change.phase[1:])
+        mez = world.find_at("Mezepheles", _before(night, change.phase))
+        if mez is None:
+            return None, None, 1.0, None
+        if not _acted_before_the_demon_only(world, state, night):
+            working.setdefault(night, set()).add(mez)
+
     spent = _spent_nominations(state)
     for idx, (info, src) in enumerate(zip(state.infos, _source_seats(state))):
         if idx in spent:
@@ -3477,6 +3864,20 @@ def _plain_failures(world, state, outcome=None):
         if seat != info.player and world.evil_at(info.player, phase):
             invented *= invention_cost(info)   # an evil messenger is none
             outcome[idx] = INVENTED
+            continue
+
+        # A seat that was turned evil and knows it — the Bounty Hunter's
+        # evil Townsfolk, a Mezepheles's catch — still has its ability
+        # and is told the truth, and says what suits it. What holds is
+        # taken as said; what does not was made up, at the price of any
+        # made-up reading (11.10.2026).
+        if knows_it_turned_evil(world, seat, phase):
+            if isinstance(info, FortuneTeller) or held is INVERTED \
+                    or info.holds(world, state, None, seat):
+                outcome[idx] = HELD
+            else:
+                invented *= invention_cost(info)
+                outcome[idx] = INVENTED
             continue
 
         # A Vortox falsifies information, not choices. Nobody told a
@@ -3633,6 +4034,165 @@ def _plain_failures(world, state, outcome=None):
                     outcome[idx] = EXCUSED
 
     return failures, ft_infos, invented, working
+
+
+def _yaggababble_at(world, state, phase):
+    """The living Demon at this moment, if it is a Yaggababble."""
+    demon = world.demon_at(phase)
+    if demon is None or world.role_at(demon, phase) != "Yaggababble" \
+            or demon not in state.alive_set(phase):
+        return None
+    return demon
+
+
+def _days_reached(state):
+    """How many days the board has got to."""
+    return (phase_index(state.final_phase()) + 1) // 2
+
+
+def _all_executed(state, day):
+    """Every seat executed that day, by any route the rules call one: the
+    town's vote, a Virgin's nominator, a Cerenovus's madness."""
+    out = []
+    seat = state.executed_on(day)
+    if seat is not None:
+        out.append(seat)
+    mad = (getattr(state, "madness_executions", None) or {}).get(day)
+    if mad is not None and mad not in out:
+        out.append(mad)
+    for info in state.infos:
+        if isinstance(info, VirginNomination) and info.triggered \
+                and info.night == day and info.nominator not in out:
+            out.append(info.nominator)
+    return out
+
+
+def _surely_good(world, state, seat, phase):
+    """Good, with nothing open about it: a Goon may be on either side and
+    a Cult Leader on whichever its neighbours allow."""
+    role = world.role_at(seat, phase)
+    if acts_as_cult_leader(world, state, seat, phase):
+        return cult_sides(world, state, seat, phase) == {False}
+    if CHARACTERS[role].alignment_open:
+        return False
+    return not world.evil_at(seat, phase)
+
+
+def _who_nominated_the_executed(state, day):
+    """The seat that nominated whoever the town executed that day, when
+    the board can say: its own row, a Princess's or a Golem's naming the
+    executed player, or a day with a single nominator."""
+    hanged = state.executed_on(day)
+    if hanged is None:
+        return None
+    for info in state.infos:
+        if info.night != day:
+            continue
+        if isinstance(info, ExecutionNomination):
+            return info.player
+        if isinstance(info, (PrincessNominated, GolemNomination)) \
+                and info.target == hanged:
+            return info.player
+    who = (state.nominations or {}).get(day) or ()
+    if len(who) == 1:
+        return next(iter(who))
+    return None
+
+
+def _leviathan_demands(world, state, failures, either):
+    """What a game going on says about a Leviathan in this world.
+
+    "If more than 1 good player is executed, evil wins. All players know
+    you are in play. After day 5, evil wins." Every reading is the
+    table's of 11.10.2026.
+
+      * **Not announced**, it was drunk or poisoned on its first day (way
+        2 of O, as for the Vizier). Announced is `LeviathanAnnounced`.
+      * **A second good player executed**, and the game went on: it was
+        not working that day. Executed is enough, dead of it or not, and
+        a Virgin's nominator and a Cerenovus's madness count. Only while
+        a Leviathan lives, and only players surely good.
+      * **Past the end of day five**, the same.
+      * **Its jinxes with the Soldier, the Innkeeper and the Exorcist**:
+        "if the Leviathan nominates and executes" the Soldier, a player
+        the Innkeeper guards or the one the Exorcist chose, good wins.
+        So where the board says who nominated the executed player and
+        the game went on, that nominator was no working Leviathan — or
+        whoever stood behind the executed player was not working. The
+        Monk's is the same jinx and is not here: nobody writes down whom
+        a Monk guarded.
+      * **With the Grandmother**: "if the Leviathan is in play and the
+        Grandchild dies by execution, evil wins." The game went on, so
+        one of the two was not working.
+
+    The Banshee's, the Farmer's, the Ravenkeeper's, the Sage's and the
+    King's jinxes live where those characters do.
+    """
+    if not _a_leviathan_is_told_of(world):
+        return
+    reached = _days_reached(state)
+    first = None
+    for day in range(1, reached + 1):
+        seat = _leviathan_at(world, state, f"D{day}")
+        if seat is not None:
+            first = (day, seat)
+            break
+    if first is None:
+        return
+    if not any(isinstance(info, LeviathanAnnounced) for info in state.infos):
+        failures[first[0]].add(first[1])
+
+    good_gone = 0
+    for day in range(first[0], reached + 1):
+        phase = f"D{day}"
+        lev = _leviathan_at(world, state, phase)
+        if lev is None:
+            continue
+        on = went_on_after(state, day)
+        for seat in _all_executed(state, day):
+            if not _surely_good(world, state, seat, phase):
+                continue
+            good_gone += 1
+            if good_gone >= 2 and on:
+                failures[day].add(lev)
+        if day >= 5 and on:
+            failures[day].add(lev)
+        if not on:
+            continue
+
+        hanged = state.executed_on(day)
+        if hanged is not None and _who_nominated_the_executed(
+                state, day) == lev:
+            behind = []
+            if world.role_at(hanged, phase) == "Soldier":
+                behind.append(hanged)
+            night = f"N{day}"
+            for info in state.infos:
+                if info.night != day:
+                    continue
+                if isinstance(info, InnkeeperChoice) \
+                        and hanged in (info.a, info.b) \
+                        and _has_ability(world, state, info.player,
+                                         "Innkeeper", night):
+                    behind.append(info.player)
+                elif isinstance(info, ExorcistChoice) \
+                        and info.target == hanged \
+                        and _has_ability(world, state, info.player,
+                                         "Exorcist", night):
+                    behind.append(info.player)
+            for who in behind:
+                either.append((day, frozenset({lev}), frozenset({who}),
+                               frozenset()))
+
+        dead = state.execution_death(day)
+        if dead is not None and _in_bag(state, "Grandmother"):
+            for info in state.infos:
+                if isinstance(info, GrandmotherInfo) and info.target == dead \
+                        and info.night <= day \
+                        and info.player in state.alive_set(phase) \
+                        and world.role_at(info.player, phase) == "Grandmother":
+                    either.append((day, frozenset({lev}),
+                                   frozenset({info.player}), frozenset()))
 
 
 def _a_mastermind_keeps_the_lleech(world, state, host, at):
@@ -4032,6 +4592,15 @@ def a_goon_drunks_whoever_chose_it(world, state, night):
     pickers = frozenset(
         seat for seat in state.alive_set(phase)
         if seat != goon and CHARACTERS[world.role_at(seat, phase)].chooses)
+    # A Leviathan chooses a good player each night but the first where
+    # its jinxes have it choose at all (`waking.LEVIATHAN_CHOOSES_FOR`),
+    # and the Goon may be the one: found at the gate, a Leviathan drunk
+    # for a day on which the game should have ended (11.10.2026).
+    if night >= 2 and _in_bag(state, "Leviathan") \
+            and any(_in_bag(state, key) for key in LEVIATHAN_CHOOSES_FOR):
+        pickers |= frozenset(
+            seat for seat in state.alive_set(phase)
+            if seat != goon and world.role_at(seat, phase) == "Leviathan")
     # And a Courtier that named the Goon tonight. It names a character,
     # not a player — but the wiki's own Goon page has exactly this: "The
     # Courtier chooses the Goon. The Goon turns good, and the Courtier
@@ -4675,7 +5244,8 @@ def best_story(world, state, outcome=None, viable=None):
     stories = possible_timelines(world, state)
     if not stories:
         return None, ()
-    if stories == [((), 1.0)]:
+    turning = _in_bag(state, "Mezepheles")
+    if stories == [((), 1.0)] and not turning:
         cost = _explain(world, state, outcome)
         if viable is not None and cost is not None:
             viable.append((cost, ()))
@@ -4684,15 +5254,27 @@ def best_story(world, state, outcome=None, viable=None):
     best, best_changes, best_marks = None, (), None
     for changes, weight in stories:
         view = Timeline(world, changes) if changes else world
-        marks = {} if outcome is not None else None
-        cost = _explain(view, state, marks)
-        if cost is None:
-            continue
-        cost *= weight
-        if viable is not None:
-            viable.append((cost, changes))
-        if best is None or cost > best:
-            best, best_changes, best_marks = cost, changes, marks
+        told = [(changes, view)]
+        at = 0
+        while at < len(told):
+            changes, view = told[at]
+            at += 1
+            marks = {} if outcome is not None else None
+            cost = _explain(view, state, marks)
+            # A story that leaves something to pay for, or does not fit
+            # at all, is told again with each player a Mezepheles could
+            # have turned (`a_mezepheles_may_have_turned`).
+            if turning and at == 1 and (cost is None or cost < 1.0):
+                told += [(changes + turn, Timeline(world, changes + turn))
+                         for turn in a_mezepheles_may_have_turned(view,
+                                                                  state)]
+            if cost is None:
+                continue
+            cost *= weight
+            if viable is not None:
+                viable.append((cost, changes))
+            if best is None or cost > best:
+                best, best_changes, best_marks = cost, changes, marks
     if outcome is not None and best_marks:
         outcome.update(best_marks)
     return best, best_changes
@@ -5275,6 +5857,11 @@ def prior_weight(world, state):
     # A Pixie claiming what it was shown is mad, as its ability asks: no
     # lie to pay for (11.10.2026).
     pixies = _in_bag(state, "Pixie")
+    # Beside a Bounty Hunter one Townsfolk is evil and bluffs like any
+    # evil player: one Townsfolk's false claim there is that one's, and
+    # costs what a bluff costs (11.10.2026).
+    evil_townsfolk = (_in_bag(state, "BountyHunter")
+                      and "BountyHunter" in world.roles)
 
     for p in range(state.n_players):
         evil = is_evil(world.roles[p])
@@ -5286,6 +5873,8 @@ def prior_weight(world, state):
             if not evil:
                 if TEAM[world.roles[p]] == "outsider":
                     w *= OUTSIDER_HIDING_PENALTY
+                elif evil_townsfolk:
+                    evil_townsfolk = False
                 elif madness > 0:
                     w *= CERENOVUS_MADNESS_PENALTY
                     madness -= 1
@@ -5737,7 +6326,14 @@ def _tally(acc, world, view, state, weight, n, phase):
     for p in range(n):
         role = view.role_at(p, phase)
         acc["roles"][p][role] += weight
-        if view.evil_at(p, phase):
+        if acts_as_cult_leader(view, state, p, phase) \
+                and _in_bag(state, "CultLeader"):
+            # On whichever side its neighbours allow, and evenly where
+            # they allow both (11.10.2026).
+            sides = cult_sides(view, state, p, phase)
+            if True in sides:
+                acc["evil"][p] += weight / len(sides)
+        elif view.evil_at(p, phase):
             acc["evil"][p] += weight
         if p == demon:
             acc["demon"][p] += weight

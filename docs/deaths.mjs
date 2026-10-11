@@ -354,6 +354,13 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
         }
         continue;
       }
+      if (cause.excuses.some(([seats, demands]) =>
+            seats === null && !demands.length)) {
+        // Nothing was due and nothing is asked for it: a Yaggababble
+        // that said nothing (11.10.2026). See deaths.py.
+        grown.push(acc);
+        continue;
+      }
       if (cause.actor !== null && !acc.working.has(cause.actor)) {
         // Stopped at its source: the killer was droisoned.
         grown.push({...acc, cost: acc.cost * cause.actorCost,

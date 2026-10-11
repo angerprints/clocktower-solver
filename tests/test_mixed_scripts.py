@@ -553,5 +553,84 @@ class TheBoardsInTheCorpus(SolverTest):
                 self.assertGreater(case["expect"]["valid"], 0)
 
 
+class ABarberSwapWithADemonAlreadyGone(SolverTest):
+    """The Demon is executed, the Scarlet Woman takes over, and then a
+    Barber dies. The swap rule runs before the handover is told, so it
+    offers "the Demon with its Minion" for the dead Demon and the woman
+    who already holds its character. Sharing the world out among its
+    stories then counted the Demon-and-Minion pairs again, found none,
+    and divided by nought: the whole solve fell over in Python and gave
+    numbers that are not numbers in JavaScript (found comparing the two
+    on a mixed game, 11.10.2026).
+    """
+
+    SCRIPT = scripts.from_ids(
+        "Trouble Brewing with a Barber",
+        [c.lower() for c in scripts.TROUBLE_BREWING.keys] + ["barber"])
+    CLAIMS = ["Chef", "Empath", "Monk", "Soldier", "Undertaker", "Mayor",
+              "Slayer", "Barber"]
+
+    def payload(self):
+        events = {5: ["X1"], 1: ["N2"], 7: ["X2"], 0: ["N3"]}
+        return {
+            "n_players": 8,
+            "players": [{"name": "", "claim": claim,
+                         "events": events.get(seat, []), "certainty": "",
+                         "read": 0, "wake": ""}
+                        for seat, claim in enumerate(self.CLAIMS)],
+            "infos": [],
+            "script": {"name": self.SCRIPT.name,
+                       "characters": [c.lower() for c in self.SCRIPT.keys]}}
+
+    def test_the_story_is_among_those_told(self):
+        roles = ["Chef", "Empath", "Monk", "Soldier", "Undertaker", "Imp",
+                 "ScarletWoman", "Barber"]
+        state = GameState(n_players=8, script=self.SCRIPT,
+                          claims=dict(enumerate(self.CLAIMS)),
+                          deaths={5: ("E1",), 1: ("N2",), 7: ("E2",),
+                                  0: ("N3",)})
+        world = World(tuple(roles), (None,) * 8)
+        viable = []
+        S.best_story(world, state, viable=viable)
+        swapped = [changes for _cost, changes in viable
+                   if any(isinstance(c, S.DemonMinionSwap) for c in changes)]
+        self.assertTrue(swapped)
+        shares = S._story_shares(world, viable, state)
+        self.assertAlmostEqual(sum(share for _view, share in shares), 1.0)
+
+    def test_the_board_is_solved(self):
+        import app
+        got = app.run_solve(self.payload())
+        self.assertNotIn("error", got)
+        self.assertGreater(got["valid"], 0)
+        for row in got["rows"]:
+            self.assertTrue(0.0 <= row["demon_pct"] <= 100.0)
+
+    def test_and_the_same_in_javascript(self):
+        import shutil
+        import subprocess
+        import app
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node is not installed")
+        mine = app.run_solve(self.payload())
+        got = subprocess.run(
+            [node, "--input-type=module", "-e",
+             'const m = await import("./js/api.mjs");'
+             "const got = m.solveBoard(JSON.parse(process.argv[1]));"
+             "process.stdout.write(JSON.stringify("
+             "{valid: got.valid, rows: got.rows.map("
+             "r => [r.evil_pct, r.demon_pct])}));",
+             json.dumps(self.payload())],
+            cwd=HERE.parent, capture_output=True, text=True, timeout=120)
+        self.assertEqual(got.returncode, 0, got.stderr)
+        theirs = json.loads(got.stdout)
+        self.assertEqual(theirs["valid"], mine["valid"])
+        for row, (evil, demon) in zip(mine["rows"], theirs["rows"]):
+            self.assertIsNotNone(demon)
+            self.assertAlmostEqual(evil, row["evil_pct"], places=3)
+            self.assertAlmostEqual(demon, row["demon_pct"], places=3)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -418,6 +418,63 @@ def _widow(world, state, seat, night):
     return _first_night_as(world, seat, night, "Widow")
 
 
+# The eighth five (11.10.2026).
+
+def _bounty_hunter_rows(state, seat):
+    return [info for info in state.infos
+            if getattr(info, "source_role", None) == "BountyHunter"
+            and info.player == seat]
+
+
+@condition("BountyHunter")
+def _bounty_hunter(world, state, seat, night):
+    """Its first night as the Bounty Hunter, and any night it says it
+    was shown somebody new. A night it may have been and did not say is
+    open; see `uncertain`."""
+    if night == 1 or (world.role_at(seat, f"N{night}") == "BountyHunter"
+                      and world.role_at(seat, f"D{night - 1}")
+                      != "BountyHunter"):
+        return True
+    return any(info.night == night
+               for info in _bounty_hunter_rows(state, seat))
+
+
+@condition("CultLeader")
+def _cult_leader(world, state, seat, night):
+    """Woken only when its side changes, to be told which it is now —
+    and whether it did is open wherever it could have; see `uncertain`."""
+    return False
+
+
+def _cult_leader_may_have_turned(world, state, seat, night):
+    from .info import cult_sides
+    before = cult_sides(world, state, seat, f"N{night}")
+    after = cult_sides(world, state, seat, f"D{night}")
+    return not (before == after and len(after) == 1)
+
+
+# The four the Leviathan's jinxes have it choose among every night but
+# the first; without any of them on the script it never wakes at all.
+LEVIATHAN_CHOOSES_FOR = ("Banshee", "Farmer", "Ravenkeeper", "Sage")
+
+
+def _leviathan_chooses(state):
+    return any(key in state.script.keys for key in LEVIATHAN_CHOOSES_FOR)
+
+
+def _a_leviathan_lives(world, state, night):
+    phase = f"N{night}"
+    return any(world.role_at(p, phase) == "Leviathan"
+               for p in state.alive_set(phase))
+
+
+@condition("Leviathan")
+def _leviathan(world, state, seat, night):
+    """ "Each night*, the Leviathan chooses an alive good player" — only
+    by its jinxes, so only with one of those characters on the script."""
+    return night >= 2 and _leviathan_chooses(state)
+
+
 @condition("Drunk")
 @condition("Marionette")
 def _believer(world, state, seat, night):
@@ -463,7 +520,10 @@ def woke_as(world, state, seat, night, role):
         # Being told who your Minions are is not your ability. A Baron
         # says "first night" honestly — its `wake` set is what a *player*
         # could truthfully claim — and has no night ability at all.
-        if _is_demon(role):
+        #
+        # A Yaggababble is shown its phrase, which *is* its ability, and
+        # its `nights` says so: "first" (table ruling, 11.10.2026).
+        if _is_demon(role) and when != FIRST:
             return False
         return FIRST in CHARACTERS[role].wake
     if when == FIRST:
@@ -554,9 +614,30 @@ def uncertain(world, state, seat, night):
             return False
         certain, maybe = _evil_eyes_open(world, state, seat, night)
         return maybe and not certain
+    if acting == "CultLeader":
+        return seat in state.alive_set(phase) \
+            and _cult_leader_may_have_turned(world, state, seat, night)
     if night == 1:
-        return _is_demon(acting) and CHARACTERS[acting].nights != EVERY
+        return _is_demon(acting) \
+            and CHARACTERS[acting].nights not in (EVERY, FIRST)
     if _came_back_tonight(world, state, seat, night) == OPEN:
+        return True
+    if acting == "BountyHunter":
+        # Woken on the night the player it knows dies. Which player that
+        # is it need not have said, so any night with somebody dead that
+        # day or that night, and no row of its own, may be one.
+        if seat not in state.alive_set(phase) \
+                or _bounty_hunter(world, state, seat, night):
+            return False
+        return any(at in (phase, f"D{night - 1}")
+                   for _who, at in state.death_phases())
+    if acting in ("Ravenkeeper", "Sage") and night >= 2 \
+            and "Leviathan" in state.script.keys \
+            and seat in state.alive_set(phase) \
+            and phase not in state.died_at(seat) \
+            and _a_leviathan_lives(world, state, night):
+        # Chosen by the Leviathan it uses its ability and does not die
+        # (their jinxes), and nobody writes down whom it chose.
         return True
     if acting == "Assassin":
         # The same as the Professor below, and for the same reason: it is
@@ -598,6 +679,11 @@ def uncertain(world, state, seat, night):
     if "Exorcist" not in state.script.keys:
         return False
     if world.demon_at(phase) != seat:
+        return False
+    # A Demon that does not wake at night has nothing for an Exorcist to
+    # stop: a Yaggababble, a Leviathan with nobody to choose among.
+    if acting == "Yaggababble" \
+            or (acting == "Leviathan" and not _leviathan_chooses(state)):
         return False
     exorcist = world.find_at("Exorcist", phase)
     return exorcist is not None and exorcist in state.alive_set(phase)

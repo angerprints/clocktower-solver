@@ -62,6 +62,10 @@ export const INFO_SOURCES = {
   PuzzlemasterGuess: "Puzzlemaster", BoomdandyExploded: "Boomdandy",
   PixieLearned: "Pixie", VillageIdiotInfo: "VillageIdiot",
   LycanthropeChose: "Lycanthrope", HarpyMadness: "Harpy",
+  // The eighth five. Who nominated the executed player only matters
+  // beside a Leviathan (its jinxes), so that is when it is offered.
+  BountyHunterInfo: "BountyHunter", CultCalled: "CultLeader",
+  LeviathanAnnounced: "Leviathan", ExecutionNomination: "Leviathan",
   Washerwoman: "Washerwoman", Librarian: "Librarian",
   Investigator: "Investigator", Chef: "Chef", Empath: "Empath",
   FortuneTeller: "FortuneTeller", Undertaker: "Undertaker",
@@ -309,7 +313,7 @@ export function readBoard(payload) {
                          "NightwatchmanSeen",
                          // The table is told, whoever writes it down.
                          "BansheeAnnounced", "FearmongerChose",
-                         "VizierAnnounced", "BlindVote",
+                         "VizierAnnounced", "BlindVote", "LeviathanAnnounced",
                          // Said in daylight, and the dead may speak.
                          "DamselGuess"];
     const speaker = Number(row.player || 0);

@@ -29,6 +29,7 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
+import {cultSides} from "./info.mjs";
 
 export const NEVER = "never";
 export const FIRST = "first";
@@ -222,10 +223,16 @@ export function reallyLiving(world, state, night) {
   return living;
 }
 
-/** The King's condition, at the King's turn. */
+/** The King's condition, at the King's turn — and its jinx with the
+ * Leviathan: with one in play and somebody dead, every night
+ * (11.10.2026). */
 export function theDeadOutnumberOrEqual(world, state, night) {
-  const living = reallyLiving(world, state, night).size;
-  return state.nPlayers - living >= living;
+  const living = reallyLiving(world, state, night);
+  const dead = state.nPlayers - living.size;
+  if (dead >= living.size) return true;
+  if (dead < 1 || !state.script.keys.includes("Leviathan")) return false;
+  const phase = `N${night}`;
+  return [...living].some(p => world.roleAt(p, phase) === "Leviathan");
 }
 
 /** Only once the dead equal or outnumber the living. On the first night
@@ -287,6 +294,45 @@ const aKingFell = (world, state, night) =>
 condition("Widow", (world, state, seat, night) =>
   night === 1 || world.roleAt(seat, `D${night - 1}`) !== "Widow");
 
+// The eighth five (11.10.2026). See waking.py.
+
+/** Its first night as the Bounty Hunter, and any night it says it was
+ * shown somebody new. A night it may have been and did not say is open;
+ * see `uncertain`. */
+const bountyHunter = (world, state, seat, night) => {
+  if (night === 1 || (world.roleAt(seat, `N${night}`) === "BountyHunter"
+                      && world.roleAt(seat, `D${night - 1}`) !== "BountyHunter"))
+    return true;
+  return state.infos.some(info => info.sourceRole === "BountyHunter"
+                          && info.player === seat && info.night === night);
+};
+condition("BountyHunter", bountyHunter);
+
+/** Woken only when its side changes; whether it did is open wherever it
+ * could have. See `uncertain`. */
+condition("CultLeader", () => false);
+
+function cultLeaderMayHaveTurned(world, state, seat, night) {
+  const before = cultSides(world, state, seat, `N${night}`);
+  const after = cultSides(world, state, seat, `D${night}`);
+  if (after.size !== 1 || before.size !== 1) return true;
+  return [...before][0] !== [...after][0];
+}
+
+// The four the Leviathan's jinxes have it choose among every night but
+// the first; without any of them on the script it never wakes at all.
+export const LEVIATHAN_CHOOSES_FOR = ["Banshee", "Farmer", "Ravenkeeper", "Sage"];
+
+const leviathanChooses = state =>
+  LEVIATHAN_CHOOSES_FOR.some(key => state.script.keys.includes(key));
+
+const aLeviathanLives = (world, state, night) =>
+  state.aliveAt(`N${night}`).some(
+    p => world.roleAt(p, `N${night}`) === "Leviathan");
+
+condition("Leviathan", (world, state, seat, night) =>
+  night >= 2 && leviathanChooses(state));
+
 const believer = (world, state, seat, night) => {
   const token = world.believes[seat];
   return token ? wokeAs(world, state, seat, night, token) : false;
@@ -318,7 +364,10 @@ export function wokeAs(world, state, seat, night, role) {
     if (when === EVERY) return true;
     // Being told who your Minions are is not your ability. A Baron says
     // "first night" honestly and has no night ability at all.
-    if (isDemon(role)) return false;
+    //
+    // A Yaggababble is shown its phrase, which *is* its ability, and its
+    // `nights` says so: "first" (table ruling, 11.10.2026).
+    if (isDemon(role) && when !== FIRST) return false;
     return (CHARACTERS[role].wake || []).includes(FIRST);
   }
   if (when === FIRST) return false;
@@ -395,9 +444,31 @@ export function uncertain(world, state, seat, night) {
     const [certain, maybe] = evilEyesOpen(world, state, seat, night);
     return maybe && !certain;
   }
+  if (acting === "CultLeader")
+    return state.aliveSet(phase).has(seat)
+      && cultLeaderMayHaveTurned(world, state, seat, night);
   if (night === 1)
-    return isDemon(acting) && CHARACTERS[acting].nights !== EVERY;
+    return isDemon(acting) && CHARACTERS[acting].nights !== EVERY
+      && CHARACTERS[acting].nights !== FIRST;
   if (cameBackTonight(world, state, seat, night) === OPEN) return true;
+  if (acting === "BountyHunter") {
+    // Woken on the night the player it knows dies. Which player that is
+    // it need not have said, so any night with somebody dead that day or
+    // that night, and no row of its own, may be one.
+    if (!state.aliveSet(phase).has(seat)
+        || bountyHunter(world, state, seat, night)) return false;
+    for (const [, at] of state.deathPhases())
+      if (at === phase || at === `D${night - 1}`) return true;
+    return false;
+  }
+  if ((acting === "Ravenkeeper" || acting === "Sage") && night >= 2
+      && state.script.keys.includes("Leviathan")
+      && state.aliveSet(phase).has(seat)
+      && !state.diedAt(seat).includes(phase)
+      && aLeviathanLives(world, state, night))
+    // Chosen by the Leviathan it uses its ability and does not die
+    // (their jinxes), and nobody writes down whom it chose.
+    return true;
   if (acting === "Assassin") {
     // The same as the Professor below: woken until it strikes, and
     // nobody writes down when that was. Night two is certain — its first
@@ -430,6 +501,10 @@ export function uncertain(world, state, seat, night) {
   }
   if (!state.script.keys.includes("Exorcist")) return false;
   if (world.demonAt(phase) !== seat) return false;
+  // A Demon that does not wake at night has nothing for an Exorcist to
+  // stop: a Yaggababble, a Leviathan with nobody to choose among.
+  if (acting === "Yaggababble"
+      || (acting === "Leviathan" && !leviathanChooses(state))) return false;
   const exorcist = world.findAt("Exorcist", phase);
   return exorcist !== null && state.aliveSet(phase).has(exorcist);
 }

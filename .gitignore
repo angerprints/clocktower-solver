@@ -4,3 +4,4 @@ games/
 tests/harness/.*_body.mjs
 venv/
 .venv/
+.projdoc/

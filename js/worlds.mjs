@@ -88,6 +88,14 @@ export class World {
 export const change = (phase, seat, role = null, side = null) =>
   ({phase, seat, role, side});
 
+/** A seat turned evil that knows it and keeps its character: the Bounty
+ * Hunter's evil Townsfolk ("bountyhunter"), whoever a Mezepheles turned
+ * ("mezepheles"). Told apart from an Ogre's turn because such a seat may
+ * lie about what it learns from then on (info.mjs knowsItTurnedEvil).
+ * `TurnedEvil` and `MezephelesTurn` in Python (11.10.2026). */
+export const turnedEvil = (phase, seat, by) =>
+  ({phase, seat, role: null, side: "evil", turned: by});
+
 /** A world plus the times a character changed hands.
  *
  * The world underneath is still one starting assignment. What changes

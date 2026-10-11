@@ -1389,6 +1389,65 @@ export const DATA = {
    "impairs": true,
    "first_night": 16,
    "other_night": 34
+  },
+  "BountyHunter": {
+   "id": "bountyhunter",
+   "name": "Bounty Hunter",
+   "team": "townsfolk",
+   "wake": [
+    "first",
+    "sometimes"
+   ],
+   "nights": "conditional",
+   "first_night": 46,
+   "other_night": 64
+  },
+  "CultLeader": {
+   "id": "cultleader",
+   "name": "Cult Leader",
+   "team": "townsfolk",
+   "wake": [
+    "never",
+    "sometimes"
+   ],
+   "alignment_open": true,
+   "nights": "conditional",
+   "first_night": 48,
+   "other_night": 66
+  },
+  "Mezepheles": {
+   "id": "mezepheles",
+   "name": "Mezepheles",
+   "team": "minion",
+   "wake": [
+    "first"
+   ],
+   "nights": "first",
+   "first_night": 27,
+   "other_night": 18
+  },
+  "Leviathan": {
+   "id": "leviathan",
+   "name": "Leviathan",
+   "team": "demon",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "nights": "conditional",
+   "first_night": 54,
+   "other_night": 73
+  },
+  "Yaggababble": {
+   "id": "yaggababble",
+   "name": "Yaggababble",
+   "team": "demon",
+   "wake": [
+    "first"
+   ],
+   "nights": "first",
+   "first_night": 27,
+   "other_night": 32
   }
  },
  "scripts": {

@@ -501,6 +501,15 @@ def hidden_from(deal, night, heard):
         lost = getattr(deal, "lleech_lost", None)
         if lost is not None and _at(lost) <= _at(phase):
             out[("lleech_lost", night)] = True
+    # The eighth five (11.10.2026): who said the Mezepheles's word
+    # yesterday, and whom a Leviathan pointed at by its jinxes. A
+    # Yaggababble's kills are the Demon's aims above.
+    marked = getattr(deal, "mez_marked", None)
+    if marked is not None and marked[1] == night - 1:
+        out[("mezepheles", night)] = marked[0]
+    pick = getattr(deal, "lev_aimed", {}).get(night)
+    if pick is not None:
+        out[("leviathan", night)] = pick
     # A Princess whose nominee was executed yesterday, by seat: the walk
     # asks whether she has her ability at the Demon's turn.
     princess = getattr(deal, "princess_stop", {}).get(night)
@@ -1144,6 +1153,21 @@ def walk(deal, night, hidden):
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
 
+            elif role == "Mezepheles":
+                # Whoever said its word yesterday turns evil at its turn,
+                # 18 — if it held the character when the night began and
+                # has its ability now (11.10.2026). Nobody is chosen, so
+                # there is nothing for a Goon to answer.
+                turned = hidden.get(("mezepheles", night))
+                # (`was` is the Pit-Hag's by now, further down this loop.)
+                dusk = f"E{night - 1}" if night > 1 else phase
+                if turned is None or not state.working(seat) \
+                        or deal.role_at(seat, dusk) != "Mezepheles":
+                    continue
+                if state.sides.get(turned) == "good":
+                    state.sides[turned] = "evil"
+                    state.log.append((slot, "turned", turned, "Mezepheles"))
+
             elif role == "Witch":
                 # Curses somebody: if they nominate tomorrow, they die.
                 # Again nothing tonight, but the aim is taken now.
@@ -1171,6 +1195,12 @@ def walk(deal, night, hidden):
                     was = state.roles.get(target)
                     state.roles[target] = became   # the side does not move
                     state.log.append((slot, "made", target, became))
+                    # A Goon made just now has not been chosen by anybody:
+                    # the Pit-Hag pointed at what the seat was before, and
+                    # the next to choose it is the first (found at the
+                    # gate of the eighth five, 11.10.2026).
+                    if became == "Goon":
+                        state.chosen_by.pop(target, None)
                     # A Drunk made into something is sober from here, not
                     # from the Sweetheart's slot: a Drunk made a
                     # Lycanthrope at 16 kills at 22 (11.10.2026).
@@ -1287,6 +1317,26 @@ def walk(deal, night, hidden):
                     state.alive.add(back)
                     state.log.append((slot, "raised", back, "Shabaloth"))
                 aimed = hidden.get(("demon", night))
+                # A Yaggababble chooses nobody: the Storyteller takes a
+                # player for each time it said its phrase, so no Goon
+                # answers. A Leviathan kills nobody at all, and points at
+                # a good player only by its jinxes — and then a Banshee
+                # it pointed at dies (11.10.2026).
+                points = role != "Yaggababble"
+                if role == "Leviathan":
+                    pick = hidden.get(("leviathan", night))
+                    if pick is None or not state.working(seat) \
+                            or seat in state.silenced:
+                        continue
+                    state.choose(seat, pick, slot)
+                    _goon_answers(state, seat, pick, slot)
+                    held = state.roles.get(pick)
+                    if seat in state.droisoned or not (
+                            held == "Banshee"
+                            or (held == "Philosopher"
+                                and state.gained.get(pick) == "Banshee")):
+                        continue
+                    aimed, points = [pick], False
                 # A Zombuul that survived its first death is down on the
                 # board and still the Demon: being off the living list
                 # does not stop it, only being droisoned does.
@@ -1301,6 +1351,8 @@ def walk(deal, night, hidden):
                 if _the_princess_holds(state, hidden, night):
                     # It still chooses, so a Goon still answers.
                     for target in targets:
+                        if not points:
+                            break
                         state.choose(seat, target, slot)
                         _goon_answers(state, seat, target, slot)
                     state.log.append((slot, "princess", seat, "no kill"))
@@ -1312,8 +1364,9 @@ def walk(deal, night, hidden):
                 # that very choice fails (rulebook of the game, confirmed
                 # 03.10.2026). This said the opposite until then.
                 for target in targets:
-                    state.choose(seat, target, slot)
-                    _goon_answers(state, seat, target, slot)
+                    if points:
+                        state.choose(seat, target, slot)
+                        _goon_answers(state, seat, target, slot)
                     # Drunk the moment it chooses the Goon first: that
                     # kill fails, and every later one tonight with it.
                     if seat in state.droisoned:

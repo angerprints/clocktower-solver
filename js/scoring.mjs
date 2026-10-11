@@ -17,9 +17,11 @@ import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
-import {Timeline, change} from "./worlds.mjs";
-import {fauxPaw, inBag, lleechHost, pixieGain, survivalsOf,
+import {Timeline, change, turnedEvil} from "./worlds.mjs";
+import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, pixieGain, survivalsOf,
         teaLadyFailedAtTheGallows} from "./characters.rules.mjs";
+import {actsAsCultLeader, besideAlive, cultSides, knowsItTurnedEvil,
+        livingNeighbours, wentOnAfter} from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
 // outcomes rather than true-or-false, because two of them are neither.
@@ -93,6 +95,7 @@ export const TRANSITION_RULES = [];
 // They ran Barber, Pit-Hag, Farmer, Snake Charmer — slots 40, 16, 48 and
 // 11, almost exactly backwards.
 const ACTS_AT = {
+  aBountyHunterBringsAnEvilTownsfolk: 0, // the setup
   aSnakeCharmerTakesTheStar: 11,
   aPitHagMakesSomebodyElse: 16,
   aBarberLetsTheDemonSwapTwo: 40,
@@ -121,6 +124,11 @@ export const heirRule = fn => (HEIR_RULES.push(fn), fn);
 // 128, not 48: a Barber's death offers every pair of seats. A night at a
 // time when more than one rule can move anybody. See solver.py.
 export function possibleTimelines(world, state, cap = 128) {
+  // One story for each Townsfolk a Bounty Hunter may have brought in
+  // evil, beside everything else: room for all of them (11.10.2026).
+  if (inBag(state, "BountyHunter") && world.roles.includes("BountyHunter"))
+    cap *= Math.max(1, world.roles.filter(
+      r => TEAM[r] === "townsfolk").length);
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -223,6 +231,8 @@ function nightsItActs(rule, state) {
     case "aFarmerHandsItOn":
       return new Set(deaths.filter(([, kind]) => kind === "N").map(([k]) => k));
     case "anOgrePicksASide": return new Set([1]);
+    case "aBountyHunterBringsAnEvilTownsfolk":
+      return new Set([1, ...rows("Philosopher", "role")]);
     case "aHuntsmanFindsTheDamsel":
       return new Set(state.infos.filter(i => i.type === "HuntsmanChoice")
         .map(i => i.night));
@@ -645,7 +655,28 @@ transitionRule(function aFarmerHandsItOn(world, state) {
       for (let p = 0; p < state.nPlayers; p++)
         if (view.roleAt(p, phase) === "Farmer" &&
             state.diedAt(p).includes(phase)) holders.push(p);
-      if (!holders.length) { grown.push([changes, cost]); continue; }
+      if (!holders.length) {
+        grown.push([changes, cost]);
+        // Its jinx with the Leviathan: a chosen Farmer uses its ability
+        // and does not die (11.10.2026). Anchored to a seat saying it
+        // became the Farmer that night. See solver.py.
+        if (night >= 2 && inBag(state, "Leviathan")
+            && leviathanAt(view, state, phase) !== null) {
+          const alive = state.aliveSet(phase);
+          const living = [...alive].filter(p =>
+            view.roleAt(p, phase) === "Farmer" && !view.evilAt(p, phase));
+          for (const info of state.infos) {
+            if (info.type !== "Became" || info.role !== "Farmer"
+                || info.night !== night || !living.length) continue;
+            const heir = info.player;
+            if (living.includes(heir) || !alive.has(heir)
+                || !couldBeGood(view, heir, phase)) continue;
+            grown.push([[...changes, change(`D${night}`, heir, "Farmer", null)],
+                        cost]);
+          }
+        }
+        continue;
+      }
       const seat = holders[0];
       const heirs = [...state.aliveSet(phase)]
         .filter(p => p !== seat && couldBeGood(view, p, phase));
@@ -694,6 +725,143 @@ transitionRule(function anOgrePicksASide(world, state) {
   if (good === 0) return [[turn, 1.0]];
   return [[[], 1.0], [turn, Math.min(1.0, evil / good)]];
 });
+
+/** "[1 Townsfolk is evil]": with a Bounty Hunter dealt, one Townsfolk is
+ * evil from the setup, and it may be the Bounty Hunter itself (table
+ * ruling, 11.10.2026). One story for each Townsfolk it could be, at no
+ * cost. A Philosopher that takes the ability might turn one (their
+ * jinx), so there both stories are told. See solver.py. */
+transitionRule(function aBountyHunterBringsAnEvilTownsfolk(world, state) {
+  if (!inBag(state, "BountyHunter")) return [[[], 1.0]];
+  const town = [];
+  world.roles.forEach((role, p) => {
+    if (TEAM[role] === "townsfolk") town.push(p);
+  });
+  if (world.roles.includes("BountyHunter"))
+    return town.map(p => [[turnedEvil("N0", p, "bountyhunter")], 1.0]);
+  const stories = [[[], 1.0]];
+  for (const info of state.infos) {
+    if (info.sourceRole !== "Philosopher" || info.role !== "BountyHunter"
+        || world.roles[info.player] !== "Philosopher") continue;
+    const phase = `N${info.night}`;
+    for (const p of town)
+      if (!world.evilAt(p, phase))
+        stories.push([[turnedEvil(phase, p, "bountyhunter")], 1.0]);
+    break;
+  }
+  return stories;
+});
+
+// The fields of a row that name seats, by name: the same list in
+// solver.py, so both sides tell the same stories.
+const SEAT_FIELDS = ["a", "b", "c", "target", "guess", "shown", "second",
+                     "nominator", "pointed"];
+const SEAT_SETS = ["joined", "demons", "minions"];
+const asSeat = value => {
+  if (value === null || value === undefined || value === ""
+      || typeof value === "boolean") return null;
+  const got = Number(value);
+  return Number.isInteger(got) ? got : null;
+};
+
+/** Seats whose side something on the board asks about from the second
+ * night on. A Mezepheles may turn anybody, and only these stories change
+ * anything the board can see. See solver.py. */
+function seatsTheBoardLooksAt(world, state) {
+  const n = state.nPlayers;
+  if (!state._lookedAtCache) {
+    const seats = new Set(), unclaimed = new Set();
+    const add = value => {
+      const got = asSeat(value);
+      if (got !== null) seats.add(got);
+    };
+    const sources = sourceSeats(state);
+    state.infos.forEach((info, idx) => {
+      if (info.night < 2) return;
+      seats.add(info.player);
+      const role = info.sourceRole;
+      const src = sources[idx];
+      if (src !== null && src !== undefined) seats.add(src);
+      else if (role) unclaimed.add(role);
+      for (const name of SEAT_FIELDS) add(info[name]);
+      for (const name of SEAT_SETS)
+        for (const value of info[name] || []) add(value);
+      for (const guess of info.guesses || [])
+        add(Array.isArray(guess) ? guess[0] : guess.player);
+      const kind = info.type;
+      if (kind === "Empath" && src !== null && src !== undefined)
+        for (const p of livingNeighbours(state, info.night, src)) seats.add(p);
+      else if (kind === "Empath" || kind === "Chef" || kind === "SavantInfo")
+        for (let p = 0; p < n; p++) seats.add(p);
+      else if (kind === "OracleInfo") {
+        const phase = `N${info.night}`;
+        for (let p = 0; p < n; p++)
+          if (!state.aliveSet(phase).has(p)
+              || state.diedAt(p).includes(phase)) seats.add(p);
+      }
+    });
+    for (const [seat] of state.deathPhases()) seats.add(seat);
+    for (const seat of Object.values(state.executions || {})) seats.add(seat);
+    state._lookedAtCache = [
+      new Set([...seats].filter(p => p >= 0 && p < n)), unclaimed];
+  }
+  const [seats, unclaimed] = state._lookedAtCache;
+  const out = new Set(seats);
+  for (const role of unclaimed) {
+    const holder = world.find(role);
+    if (holder !== null && holder !== undefined) out.add(holder);
+  }
+  if (inBag(state, "CultLeader") && world.roles.includes("CultLeader")) {
+    const leader = world.find("CultLeader");
+    const last = parseInt(state.finalPhase().slice(1), 10);
+    for (let day = 1; day <= last; day++)
+      for (const p of besideAlive(state, leader, `D${day}`)) out.add(p);
+    out.add(leader);
+  }
+  return out;
+}
+
+/** Could something later that night have reached a Mezepheles that had
+ * already done its turning? A Pukka's poison, a Sweetheart dying in the
+ * night. See solver.py. */
+function actedBeforeTheDemonOnly(world, state, night) {
+  const phase = `N${night}`;
+  const demon = world.demonAt(phase);
+  if (demon !== null && demon !== undefined
+      && world.roleAt(demon, phase) === "Pukka") return true;
+  for (let p = 0; p < state.nPlayers; p++)
+    if (state.diedAt(p).includes(phase)
+        && world.roleAt(p, phase) === "Sweetheart") return true;
+  return false;
+}
+
+/** "The 1st good player to say this word becomes evil that night." One
+ * good player on one night from the second, the Mezepheles holding its
+ * character when that night began and still standing. Free, and told
+ * only where a story needs it (`bestStory`). Returns the turns that
+ * could be laid over this view, each a list of changes. See solver.py. */
+export function aMezephelesMayHaveTurned(world, state) {
+  const stories = [];
+  if (!inBag(state, "Mezepheles")) return stories;
+  const last = parseInt(state.finalPhase().slice(1), 10);
+  let seats = null;
+  for (let night = 2; night <= last; night++) {
+    const phase = `N${night}`;
+    const mez = world.findAt("Mezepheles", `E${night - 1}`);
+    if (mez === null || mez === undefined
+        || !minionStillActs(world, state, mez, phase)) continue;
+    if (seats === null)
+      seats = [...seatsTheBoardLooksAt(world, state)].sort((a, b) => a - b);
+    for (const seat of seats) {
+      if (seat === mez || world.evilAt(seat, phase)) continue;
+      const role = world.roleAt(seat, phase);
+      if (CHARACTERS[role].alignment_open
+          && !actsAsCultLeader(world, state, seat, phase)) continue;
+      stories.push([turnedEvil(phase, seat, "mezepheles")]);
+    }
+  }
+  return stories;
+}
 
 /** Does this seat have that ability — held, or taken by a Philosopher? */
 function hasAbility(world, state, seat, role, phase) {
@@ -917,14 +1085,23 @@ function plainFailures(world, state, outcome = {}) {
 
   // Two deaths that name a character nobody chose to reveal, and the one
   // who did it has to have been working.
-  for (const [day, ] of Object.entries(state.witchDeaths || {})) {
+  for (const [day, seat] of Object.entries(state.witchDeaths || {})
+       .sort((a, b) => Number(a[0]) - Number(b[0]))) {
     const witch = world.findAt("Witch", `N${day}`);
-    if (witch === null || !minionStillActs(world, state, witch, `N${day}`))
-      return null;
     // "If just 3 players live, you lose this ability" — and the curse
     // goes with it.
-    if (state.aliveSet(`D${day}`).size <= 3) return null;
-    (working[day] = working[day] || new Set()).add(witch);
+    if (witch !== null && minionStillActs(world, state, witch, `N${day}`)
+        && state.aliveSet(`D${day}`).size > 3) {
+      (working[day] = working[day] || new Set()).add(witch);
+      continue;
+    }
+    // Or a Yaggababble's kill by day, which is rare and costs (table
+    // ruling, 11.10.2026). Never itself.
+    const yagga = inBag(state, "Yaggababble")
+      ? yaggababbleAt(world, state, `D${day}`) : null;
+    if (yagga === null || yagga === Number(seat)) return null;
+    invented *= PRIORS.YAGGABABBLE_BY_DAY_PENALTY;
+    (working[day] = working[day] || new Set()).add(yagga);
   }
   for (const [day, ] of Object.entries(state.madnessExecutions || {})) {
     const who = world.findAt("Cerenovus", `N${day}`);
@@ -1073,6 +1250,19 @@ function plainFailures(world, state, outcome = {}) {
 
   if (aZealotKeptItsHandDown(world, state)) return null;  // did not vote
 
+  if (inBag(state, "Leviathan")) leviathanDemands(world, state, fail, either);
+
+  // A player a Mezepheles turned: it was working that night — unless
+  // something later that night may have reached it.
+  for (const c of world.changes || []) {
+    if (c.turned !== "mezepheles") continue;
+    const night = parseInt(c.phase.slice(1), 10);
+    const mez = world.findAt("Mezepheles", `E${night - 1}`);
+    if (mez === null || mez === undefined) return null;
+    if (!actedBeforeTheDemonOnly(world, state, night))
+      (working[night] = working[night] || new Set()).add(mez);
+  }
+
   const spent = spentNominations(state);
   const seats = sourceSeats(state);
   state.infos.forEach((info, idx) => {
@@ -1174,6 +1364,18 @@ function plainFailures(world, state, outcome = {}) {
     if (seat !== info.player && world.evilAt(info.player, phase)) {
       invented *= inventionCost(info);    // an evil messenger is none
       outcome[idx] = INVENTED;
+      return;
+    }
+    // A seat that was turned evil and knows it still has its ability and
+    // is told the truth, and says what suits it: what holds is taken as
+    // said, what does not was made up (11.10.2026). See solver.py.
+    if (knowsItTurnedEvil(world, seat, phase)) {
+      if (info.type === "FortuneTeller" || held === INVERTED
+          || info.holds(world, state, null, seat)) outcome[idx] = HELD;
+      else {
+        invented *= inventionCost(info);
+        outcome[idx] = INVENTED;
+      }
       return;
     }
     // A Vortox falsifies information, not choices.
@@ -1292,6 +1494,114 @@ function plainFailures(world, state, outcome = {}) {
   if (impossible) return null;            // a hard fact did not hold
 
   return {failures, ftInfos, invented, mustWork: working, vortoxOr, either};
+}
+
+/** The living Demon at this moment, if it is a Yaggababble. */
+function yaggababbleAt(world, state, phase) {
+  const demon = world.demonAt(phase);
+  if (demon === null || demon === undefined
+      || world.roleAt(demon, phase) !== "Yaggababble"
+      || !state.aliveSet(phase).has(demon)) return null;
+  return demon;
+}
+
+/** Every seat executed that day, by any route the rules call one. */
+function allExecuted(state, day) {
+  const out = [];
+  const seat = state.executedOn(day);
+  if (seat !== null) out.push(seat);
+  const mad = (state.madnessExecutions || {})[day];
+  if (mad !== null && mad !== undefined && !out.includes(mad)) out.push(mad);
+  for (const info of state.infos)
+    if (info.type === "VirginNomination" && info.triggered
+        && info.night === day && !out.includes(info.nominator))
+      out.push(info.nominator);
+  return out;
+}
+
+/** Good, with nothing open about it. */
+function surelyGood(world, state, seat, phase) {
+  if (actsAsCultLeader(world, state, seat, phase)) {
+    const sides = cultSides(world, state, seat, phase);
+    return sides.size === 1 && sides.has(false);
+  }
+  if (CHARACTERS[world.roleAt(seat, phase)].alignment_open) return false;
+  return !world.evilAt(seat, phase);
+}
+
+/** The seat that nominated whoever the town executed that day, when the
+ * board can say. */
+function whoNominatedTheExecuted(state, day) {
+  const hanged = state.executedOn(day);
+  if (hanged === null) return null;
+  for (const info of state.infos) {
+    if (info.night !== day) continue;
+    if (info.type === "ExecutionNomination") return info.player;
+    if ((info.type === "PrincessNominated" || info.type === "GolemNomination")
+        && info.target === hanged) return info.player;
+  }
+  const who = [...new Set((state.nominations || {})[day] || [])];
+  return who.length === 1 ? Number(who[0]) : null;
+}
+
+/** What a game going on says about a Leviathan in this world: not
+ * announced, a second good player executed, past day five, and its
+ * jinxes with the Soldier, the Innkeeper, the Exorcist and the
+ * Grandmother. See `_leviathan_demands` in solver.py (11.10.2026). */
+function leviathanDemands(world, state, fail, either) {
+  if (!aLeviathanIsToldOf(world)) return;
+  const reached = Math.floor((phaseIndex(state.finalPhase()) + 1) / 2);
+  let first = null;
+  for (let day = 1; day <= reached; day++) {
+    const seat = leviathanAt(world, state, `D${day}`);
+    if (seat !== null) { first = [day, seat]; break; }
+  }
+  if (first === null) return;
+  if (!state.infos.some(info => info.type === "LeviathanAnnounced"))
+    fail(first[0], first[1]);
+
+  let goodGone = 0;
+  for (let day = first[0]; day <= reached; day++) {
+    const phase = `D${day}`;
+    const lev = leviathanAt(world, state, phase);
+    if (lev === null) continue;
+    const on = wentOnAfter(state, day);
+    for (const seat of allExecuted(state, day)) {
+      if (!surelyGood(world, state, seat, phase)) continue;
+      goodGone += 1;
+      if (goodGone >= 2 && on) fail(day, lev);
+    }
+    if (day >= 5 && on) fail(day, lev);
+    if (!on) continue;
+
+    const hanged = state.executedOn(day);
+    if (hanged !== null && whoNominatedTheExecuted(state, day) === lev) {
+      const behind = [];
+      if (world.roleAt(hanged, phase) === "Soldier") behind.push(hanged);
+      const night = `N${day}`;
+      for (const info of state.infos) {
+        if (info.night !== day) continue;
+        if (info.type === "InnkeeperChoice"
+            && (info.a === hanged || info.b === hanged)
+            && hasAbility(world, state, info.player, "Innkeeper", night))
+          behind.push(info.player);
+        else if (info.type === "ExorcistChoice" && info.target === hanged
+                 && hasAbility(world, state, info.player, "Exorcist", night))
+          behind.push(info.player);
+      }
+      for (const who of behind)
+        either.push({night: day, source: [lev], impaired: [who], working: []});
+    }
+
+    const dead = state.executionDeath(day);
+    if (dead !== null && inBag(state, "Grandmother"))
+      for (const info of state.infos)
+        if (info.type === "GrandmotherInfo" && info.target === dead
+            && info.night <= day && state.aliveSet(phase).has(info.player)
+            && world.roleAt(info.player, phase) === "Grandmother")
+          either.push({night: day, source: [lev], impaired: [info.player],
+                       working: []});
+  }
 }
 
 // --------------------------------------------------------------------
@@ -1820,22 +2130,34 @@ export function bestStory(world, state, outcome = null) {
   state._epoch = (state._epoch || 0) + 1;
   const stories = possibleTimelines(world, state);
   if (!stories.length) return {cost: null, changes: [], viable: []};
-  if (stories.length === 1 && !stories[0][0].length) {
+  const turning = inBag(state, "Mezepheles");
+  if (stories.length === 1 && !stories[0][0].length && !turning) {
     const cost = explainOne(world, state, outcome);
     return {cost, changes: [], viable: cost === null ? [] : [[cost, []]]};
   }
 
   let best = null, bestChanges = [], bestMarks = null;
   const viable = [];
-  for (const [changes, weight] of stories) {
-    const view = changes.length ? new Timeline(world, changes) : world;
-    const marks = outcome ? {} : null;
-    const cost = explainOne(view, state, marks);
-    if (cost === null) continue;
-    const got = cost * weight;
-    viable.push([got, changes]);
-    if (best === null || got > best) {
-      best = got; bestChanges = changes; bestMarks = marks;
+  for (const [first, weight] of stories) {
+    const told = [[first, first.length ? new Timeline(world, first) : world]];
+    for (let at = 0; at < told.length;) {
+      const [changes, view] = told[at++];
+      const marks = outcome ? {} : null;
+      const cost = explainOne(view, state, marks);
+      // A story that leaves something to pay for, or does not fit at
+      // all, is told again with each player a Mezepheles could have
+      // turned (`aMezephelesMayHaveTurned`).
+      if (turning && at === 1 && (cost === null || cost < 1.0))
+        for (const turn of aMezephelesMayHaveTurned(view, state)) {
+          const grown = [...changes, ...turn];
+          told.push([grown, new Timeline(world, grown)]);
+        }
+      if (cost === null) continue;
+      const got = cost * weight;
+      viable.push([got, changes]);
+      if (best === null || got > best) {
+        best = got; bestChanges = changes; bestMarks = marks;
+      }
     }
   }
   if (outcome && bestMarks) Object.assign(outcome, bestMarks);
@@ -1883,7 +2205,11 @@ function barberShare(world, changes, state) {
       ? (ours ? PRIORS.BARBER_DEMON_MINION_SHARE
               : 1.0 - PRIORS.BARBER_DEMON_MINION_SHARE)
       : 1.0;
-    factor *= PRIORS.BARBER_SWAP_SHARE * part / (ours ? nOurs : nOther) /
+    // At least one of its kind, its own: counted over a view with the
+    // later rules' work in it the pairs may come out as another kind, and
+    // this divided by nought (11.10.2026). See solver.py.
+    const among = Math.max(1, ours ? nOurs : nOther);
+    factor *= PRIORS.BARBER_SWAP_SHARE * part / among /
               (ours ? 1.0 : BARBER_SWAP_PENALTY);
   }
   return factor;

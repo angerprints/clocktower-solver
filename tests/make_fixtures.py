@@ -1058,6 +1058,106 @@ def handmade():
                        ("lleech-walked", 15), ("lleech-end", 19)):
         yield played(f"x-seven-bmr-played-{what}", XVB7, seed, 7, 4)
 
+    yield from the_eighth_five()
+
+
+def the_eighth_five():
+    """The eighth five (11.10.2026), on the scripts of
+    tests/test_experimental_8.py: the Bounty Hunter's evil Townsfolk, a
+    Cult Leader between its neighbours, a player a Mezepheles turned, the
+    Leviathan's announcement and its jinxes, a Yaggababble's bodies."""
+    from test_experimental_8 import EIGHT as X8, EIGHT_BMR as X8B
+    B7 = ["Chef", "Empath", "Monk", "Soldier", "Undertaker", "BountyHunter",
+          "CultLeader"]
+    yield board("x-eight-7-bare", X8, B7)
+    yield board("x-eight-7-bounty-hunter-shown", X8, B7, infos=[
+        {"type": "BountyHunterInfo", "night": 1, "player": 5, "target": 2}])
+    yield board("x-eight-7-bounty-hunter-shown-another", X8, B7, infos=[
+        {"type": "BountyHunterInfo", "night": 1, "player": 5, "target": 2},
+        {"type": "BountyHunterInfo", "night": 2, "player": 5, "target": 3}],
+        players_override={2: ["X1"]}, quiet_nights=[2])
+    yield board("x-eight-7-bounty-hunter-too-early", X8, B7, infos=[
+        {"type": "BountyHunterInfo", "night": 1, "player": 5, "target": 2},
+        {"type": "BountyHunterInfo", "night": 2, "player": 5, "target": 3}],
+        quiet_nights=[2], days_done=[1])
+    yield board("x-eight-7-bounty-hunter-and-the-chef", X8, B7, infos=[
+        {"type": "BountyHunterInfo", "night": 1, "player": 5, "target": 1},
+        {"type": "Chef", "night": 1, "player": 0, "count": 1}])
+    yield board("x-eight-7-cult-leader-and-the-empath", X8, B7, infos=[
+        {"type": "Empath", "night": 2, "player": 1, "count": 1}],
+        players_override={0: ["N2"]}, days_done=[1])
+    yield board("x-eight-7-cult-called", X8, B7, infos=[
+        {"type": "CultCalled", "night": 2, "player": 6,
+         "joined": [0, 1, 2, 3]}],
+        quiet_nights=[2], days_done=[1, 2])
+    yield board("x-eight-7-cult-called-by-all", X8, B7, infos=[
+        {"type": "CultCalled", "night": 2, "player": 6,
+         "joined": [0, 1, 2, 3, 4, 5]}],
+        quiet_nights=[2], days_done=[1, 2])
+    M7 = ["Chef", "Empath", "Monk", "Soldier", "King", "Slayer",
+          "Undertaker"]
+    yield board("x-eight-7-mezepheles-turned-a-neighbour", X8, M7, infos=[
+        {"type": "Empath", "night": 1, "player": 1, "count": 0},
+        {"type": "Empath", "night": 2, "player": 1, "count": 0},
+        {"type": "Empath", "night": 3, "player": 1, "count": 1}],
+        quiet_nights=[2, 3], days_done=[1, 2])
+    yield board("x-eight-7-leviathan-announced", X8, M7, infos=[
+        {"type": "LeviathanAnnounced", "night": 1, "player": 0}],
+        quiet_nights=[2, 3], days_done=[1, 2])
+    yield board("x-eight-7-leviathan-two-executed", X8, M7, infos=[
+        {"type": "LeviathanAnnounced", "night": 1, "player": 0}],
+        players_override={0: ["X1"], 1: ["X2"]}, quiet_nights=[2, 3])
+    yield board("x-eight-7-leviathan-not-announced", X8, M7,
+                quiet_nights=[2, 3], days_done=[1, 2])
+    yield board("x-eight-7-leviathan-hangs-the-soldier", X8, M7, infos=[
+        {"type": "LeviathanAnnounced", "night": 1, "player": 0},
+        {"type": "ExecutionNomination", "night": 1, "player": 5}],
+        players_override={3: ["X1"]}, quiet_nights=[2])
+    yield board("x-eight-7-yaggababble-two-bodies", X8, M7,
+                players_override={0: ["N2"], 2: ["N2"]}, days_done=[1])
+    yield board("x-eight-7-yaggababble-three-bodies", X8, M7,
+                players_override={0: ["N2"], 2: ["N2"], 4: ["N2"]},
+                days_done=[1])
+    yield board("x-eight-7-yaggababble-by-day", X8, M7,
+                players_override={0: ["W1"]})
+    G7 = ["Grandmother", "Exorcist", "Chambermaid", "Innkeeper", "Gossip",
+          "Oracle", "TeaLady"]
+    yield board("x-eight-bmr-7-leviathan-grandchild", X8B, G7, infos=[
+        {"type": "GrandmotherInfo", "night": 1, "player": 0, "target": 4,
+         "role": "Gossip"},
+        {"type": "LeviathanAnnounced", "night": 1, "player": 0}],
+        players_override={4: ["X1"]}, quiet_nights=[2])
+    yield board("x-eight-bmr-7-yaggababble-and-the-exorcist", X8B, G7,
+                infos=[{"type": "ExorcistChoice", "night": 2, "player": 1,
+                        "target": 5}],
+                players_override={0: ["N2"]}, days_done=[1])
+    yield board("x-eight-bmr-7-chambermaid-and-the-cult-leader", X8B,
+                ["Grandmother", "Exorcist", "Chambermaid", "Innkeeper",
+                 "Gossip", "CultLeader", "TeaLady"],
+                infos=[{"type": "ChambermaidInfo", "night": 2, "player": 2,
+                        "a": 5, "b": 6, "count": 1}],
+                quiet_nights=[2], days_done=[1])
+    # Played, each chosen for one thing that happens in it (seeds found
+    # at seven players, as `messung/find5.py` finds them).
+    for what, seed in (("bounty-hunter-itself-evil", 19),
+                       ("bounty-hunter-shown-twice", 26),
+                       ("cult-called", 16), ("cult-turned", 6),
+                       ("leviathan-banshee", 21), ("leviathan-ends", 205),
+                       ("leviathan-farmer", 20),
+                       ("leviathan-unannounced", 57),
+                       ("mezepheles-turned", 38),
+                       ("yaggababble-by-day", 110),
+                       ("yaggababble-two", 30)):
+        yield played(f"x-eight-played-{what}", X8, seed, 7, 4)
+    for what, seed in (("evil-townsfolk", 12),
+                       ("bounty-hunter-itself-evil", 49),
+                       ("cult-called", 9), ("leviathan-ends", 72),
+                       ("leviathan-nominator", 3),
+                       ("leviathan-unannounced", 82),
+                       ("mezepheles-turned", 5),
+                       ("yaggababble-by-day", 43)):
+        yield played(f"x-eight-bmr-played-{what}", X8B, seed, 7, 4)
+
 
 def generated(how_many=60):
     """Random boards, so the corpus covers combinations nobody chose."""

@@ -646,6 +646,114 @@ def _can_show_as_something_else(role):
     return any(team != "outsider" for team in CHARACTERS[role].registers)
 
 
+def _cult_on_script(s):
+    got = getattr(s, "_cult_on_script", None)
+    if got is None:
+        got = s._cult_on_script = "CultLeader" in s.script.keys
+    return got
+
+
+def acts_as_cult_leader(w, s, seat, phase):
+    """Holding the Cult Leader, or a Philosopher that took it."""
+    role = w.role_at(seat, phase)
+    if role == "CultLeader":
+        return True
+    if role != "Philosopher":
+        return False
+    took = s.philosophies().get(seat)
+    return bool(took and took[0] == "CultLeader"
+                and phase_index(phase) >= phase_index(took[1]))
+
+
+def _may_be_impaired(w, s, seat, night):
+    """Could anything have made this seat drunk or poisoned that night?
+
+    Asked while the sources are being worked out, it says yes: that keeps
+    worlds, and the sources may themselves be asking about a side."""
+    if getattr(s, "_cult_busy", False):
+        return True
+    s._cult_busy = True
+    try:
+        from .impairment import sources_on
+        return any(seat in source.seats for source in sources_on(w, s, night))
+    finally:
+        s._cult_busy = False
+
+
+def _beside_alive(s, seat, phase):
+    """The nearest seat each way that the board has as alive."""
+    alive = s.alive_set(phase)
+    n = s.n_players
+    out = []
+    for step in (1, -1):
+        for gap in range(1, n):
+            other = (seat + step * gap) % n
+            if other in alive:
+                if other not in out:
+                    out.append(other)
+                break
+    return out
+
+
+def cult_sides(w, s, seat, phase):
+    """Every side a Cult Leader may be on at this moment, as "is it evil".
+
+    "Each night, you become the alignment of an alive neighbour." At the
+    end of every night, the first included; its turn is late (48, then
+    66), so a reading that night still sees the side it had.
+
+      * By how the neighbour **registers**, not by what it is: beside a
+        Townsfolk and the Recluse it may turn evil, beside a Spy good
+        (table ruling, 11.10.2026). Whichever neighbour and whichever
+        reading is the Storyteller's, so every one is open.
+      * Neighbours as the board has them. A Zombuul that died once
+        registers as dead and is no neighbour (the same ruling).
+      * Drunk or poisoned it keeps the side it had. Whether it was is the
+        plan's to settle, so the old side stays open wherever something
+        could have reached it that night.
+      * Dead, it has no ability and stays as it was.
+      * Somebody evil made the Cult Leader stays evil (its jinx with the
+        Pit-Hag): not for one dealt it and turned later, which changes
+        like any other.
+    """
+    done = (phase_index(phase) + 1) // 2      # nights that have ended
+    sides = None
+    base = None
+    fixed = False
+    for k in range(1, done + 1):
+        night = f"N{k}"
+        if not acts_as_cult_leader(w, s, seat, night):
+            sides, base, fixed = None, None, False
+            continue
+        now = w.evil_at(seat, night)
+        if sides is None:
+            sides = {now}
+            fixed = now and w.roles[seat] != w.role_at(seat, night)
+        elif now != base:
+            sides = {now}                 # turned by something else since
+        base = now
+        if fixed or seat not in s.alive_set(f"D{k}"):
+            continue
+        around = [p for p in _beside_alive(s, seat, f"D{k}") if p != seat]
+        if not around:
+            continue
+        allowed = set()
+        for other in around:
+            if acts_as_cult_leader(w, s, other, night):
+                allowed |= {True, False}
+            else:
+                allowed |= set(evil_options(w, s, other, night))
+        if _may_be_impaired(w, s, seat, k):
+            allowed |= sides
+        sides = allowed
+    if not acts_as_cult_leader(w, s, seat, phase):
+        return {w.evil_at(seat, phase)}
+    now = w.evil_at(seat, phase)
+    if sides is None or now != base:
+        return {now}
+    return sides
+
+
 def evil_options(w, s, seat, phase):
     """How this seat may register, evil or good, for a reading.
 
@@ -658,6 +766,9 @@ def evil_options(w, s, seat, phase):
     mark that it was asked (`state._faux_hit`), so the caller can try the
     other way too (`solver._plain_failures`).
     """
+    if s is not None and _cult_on_script(s) \
+            and acts_as_cult_leader(w, s, seat, phase):
+        return tuple(sorted(cult_sides(w, s, seat, phase), reverse=True))
     got = evil_registrations(w.role_at(seat, phase),
                              w.alignment_at(seat, phase))
     hidden = getattr(s, "_hidden", None) if s is not None else None
@@ -2075,9 +2186,19 @@ def really_living(w, s, night):
 
 
 def the_dead_outnumber_or_equal(w, s, night):
-    """The King's condition, at the King's turn."""
+    """The King's condition, at the King's turn.
+
+    And its jinx with the Leviathan: "if the Leviathan is in play and at
+    least 1 player is dead, the King learns an alive character each
+    night" (11.10.2026)."""
     living = really_living(w, s, night)
-    return s.n_players - len(living) >= len(living)
+    dead = s.n_players - len(living)
+    if dead >= len(living):
+        return True
+    if dead < 1 or "Leviathan" not in s.script.keys:
+        return False
+    phase = f"N{night}"
+    return any(w.role_at(p, phase) == "Leviathan" for p in living)
 
 
 @dataclass
@@ -3420,3 +3541,201 @@ class HarpyMadness(Info):
             return True
         from .solver import killed_by_a_vigormortis
         return killed_by_a_vigormortis(w, s, seat, f"N{self.night}")
+
+
+# --------------------------------------------------------------------------
+# The eighth five experimental characters (11.10.2026)
+# --------------------------------------------------------------------------
+
+def knows_it_turned_evil(w, seat, phase):
+    """Has this seat been turned evil, knowingly, by this moment?
+
+    The Bounty Hunter's evil Townsfolk and whoever a Mezepheles turned
+    (`worlds.TurnedEvil`). They keep their character and their ability,
+    are told the truth, and say what suits them — unlike an Ogre, which
+    is never told which side it landed on.
+    """
+    from .worlds import TurnedEvil
+    here = phase_index(phase)
+    return any(isinstance(change, TurnedEvil) and change.seat == seat
+               and phase_index(change.phase) <= here
+               for change in getattr(w, "changes", ()))
+
+
+@dataclass
+class BountyHunterInfo(Info):
+    """An evil player, as the Bounty Hunter was shown them.
+
+    "You start knowing 1 evil player. If the player you know dies, you
+    learn another evil player tonight." By registration, like the
+    Steward's: a Recluse or the Lycanthrope's faux paw may be shown, and
+    a Spy is evil whatever it registers as (11.10.2026).
+
+    A later row needs the one before it to have died by then — by day or
+    in the night — and never names a player it named before. A row that
+    is missing after a death says nothing: the table may not have heard.
+    """
+
+    target: int = 0
+    source_role = "BountyHunter"
+
+    def _earlier(self, s):
+        return [info for info in s.infos
+                if isinstance(info, BountyHunterInfo)
+                and info.player == self.player and info.night < self.night]
+
+    def _follows(self, s):
+        earlier = self._earlier(s)
+        if not earlier:
+            return True
+        if any(info.target == self.target for info in earlier):
+            return False                  # never the same player twice
+        last = max(earlier, key=lambda info: info.night)
+        here = phase_index(f"N{self.night}")
+        return any(phase_index(at) <= here for at in s.died_at(last.target))
+
+    def holds(self, w, s, rh, seat=None):
+        who = self.player if seat is None else seat
+        if self.target == who or not self._follows(s):
+            return False
+        phase = f"N{self.night}"
+        return True in evil_options(w, s, self.target, phase)
+
+    def is_true(self, w, s, seat=None):
+        """Whether that seat really is evil — see `Chef.is_true`."""
+        return w.evil_at(self.target, f"N{self.night}")
+
+    def leaned_on(self, w, s, seat=None):
+        # Only a seat misregistering by its own ability, as for the
+        # Village Idiot: a Recluse shown as evil.
+        phase = f"N{self.night}"
+        if w.evil_at(self.target, phase):
+            return ()
+        role = w.role_at(self.target, phase)
+        if CHARACTERS[role].alignment_open:
+            return ()
+        if True in evil_registrations(role, w.alignment_at(self.target,
+                                                            phase)):
+            return (self.target,)
+        return ()
+
+
+@dataclass
+class CultCalled(Info):
+    """A player called their cult in the open, and who joined.
+    `night` is the day.
+
+    "If all good players choose to join your cult, your team wins." The
+    Storyteller holds the vote as for an exile, so the dead vote too.
+    Anybody may call one: only a real Cult Leader's says anything, and it
+    says so by the game going on — then somebody who kept their hand
+    down is good, or the Cult Leader was not working (table ruling,
+    11.10.2026, way 1).
+
+    An event, like a claim to be the Goblin: judged by what the day did.
+    """
+
+    is_a_choice = True
+    event = True
+    joined: frozenset = frozenset()
+    source_role = "CultLeader"
+
+    def source_seat(self, state):
+        return self.player
+
+    def holds(self, w, s, rh, seat=None):
+        return not self.must_have_failed(w, s)
+
+    def must_have_failed(self, w, s):
+        day = self.night
+        phase = f"D{day}"
+        if not acts_as_cult_leader(w, s, self.player, phase) \
+                or self.player not in s.alive_set(phase):
+            return ()
+        if not went_on_after(s, day):
+            return ()
+        for seat in range(s.n_players):
+            if seat == self.player or seat in self.joined:
+                continue
+            role = w.role_at(seat, phase)
+            if CHARACTERS[role].alignment_open:
+                return ()                 # may be good, and stayed out
+            if not w.evil_at(seat, phase):
+                return ()                 # a good player who stayed out
+        return (self.player,)
+
+
+@dataclass
+class LeviathanAnnounced(Info):
+    """The Storyteller told the table a Leviathan is in play. `night` is
+    the day.
+
+    "All players know you are in play." Said on the Leviathan's first day
+    — day one for a dealt one, the day after a Pit-Hag made one — and
+    only if it has its ability then, as for the Vizier (table ruling,
+    11.10.2026, way 2). So one is alive that day, it is its first, and
+    it was working. Which seat is the world's to say.
+
+    The other half lives in the solver: with no announcement on the
+    board, a Leviathan was drunk or poisoned on its first day
+    (`solver._leviathan_demands`).
+    """
+
+    source_role = "Leviathan"
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None                       # the Storyteller's
+
+    def _who(self, w, s):
+        day = self.night
+        phase = f"D{day}"
+        for seat in s.alive_set(phase):
+            if w.role_at(seat, phase) != "Leviathan":
+                continue
+            if day == 1 or not any(
+                    w.role_at(p, f"D{day - 1}") == "Leviathan"
+                    for p in range(s.n_players)):
+                return seat
+        return None
+
+    def holds(self, w, s, rh, seat=None):
+        return self._who(w, s) is not None
+
+    def leaned_on(self, w, s, seat=None):
+        got = self._who(w, s)
+        return () if got is None else (got,)
+
+
+@dataclass
+class ExecutionNomination(Info):
+    """Who nominated the player the town executed today. `night` is the
+    day.
+
+    The board keeps who nominated and not whom, which was enough until
+    the Leviathan: "if the Leviathan nominates and executes the Soldier,
+    good wins", and the same for whoever the Innkeeper guards or the
+    Exorcist chose (their jinxes). So with this row, and the game going
+    on, the nominator was no working Leviathan
+    (`solver._leviathan_demands`). On its own it says nothing.
+    """
+
+    is_a_choice = True
+    source_role = None
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None
+
+    def holds(self, w, s, rh, seat=None):
+        return True

@@ -405,7 +405,9 @@ SINCE_THE_NAMED_GAMES = ("Banshee", "Zealot", "Heretic", "Goblin", "Ojo",
                          "Preacher", "Huntsman", "Puzzlemaster", "Xaan",
                          "Boomdandy",
                          "Pixie", "VillageIdiot", "Lycanthrope", "Harpy",
-                         "Lleech")
+                         "Lleech",
+                         "BountyHunter", "CultLeader", "Mezepheles",
+                         "Leviathan", "Yaggababble")
 
 
 def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):

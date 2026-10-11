@@ -25,6 +25,91 @@ const DEMONS = new Set(Object.entries(TEAM)
 const registersTownsfolk = role =>
   TEAM[role] === "townsfolk" || role === "Spy";
 
+// The Cult Leader (11.10.2026). See the same functions in info.py.
+
+function cultOnScript(s) {
+  if (s._cultOnScript === undefined)
+    s._cultOnScript = s.script.keys.includes("CultLeader");
+  return s._cultOnScript;
+}
+
+/** Holding the Cult Leader, or a Philosopher that took it. */
+export function actsAsCultLeader(w, s, seat, phase) {
+  const role = w.roleAt(seat, phase);
+  if (role === "CultLeader") return true;
+  if (role !== "Philosopher") return false;
+  const took = s.philosophies()[seat];
+  return !!(took && took[0] === "CultLeader"
+            && phaseIndex(phase) >= phaseIndex(took[1]));
+}
+
+/** Could anything have made this seat drunk or poisoned that night?
+ * Asked while the sources are being worked out, it says yes. */
+function mayBeImpaired(w, s, seat, night) {
+  if (s._cultBusy) return true;
+  s._cultBusy = true;
+  try {
+    return sourcesOn(w, s, night).some(source => source.seats.has(seat));
+  } finally {
+    s._cultBusy = false;
+  }
+}
+
+/** The nearest seat each way that the board has as alive. */
+export function besideAlive(s, seat, phase) {
+  const alive = s.aliveSet(phase);
+  const n = s.nPlayers;
+  const out = [];
+  for (const step of [1, -1])
+    for (let gap = 1; gap < n; gap++) {
+      const other = (((seat + step * gap) % n) + n) % n;
+      if (alive.has(other)) {
+        if (!out.includes(other)) out.push(other);
+        break;
+      }
+    }
+  return out;
+}
+
+/** Every side a Cult Leader may be on at this moment, as "is it evil":
+ * a Set of booleans. By how a living neighbour registers, at the end of
+ * every night; drunk or poisoned, dead or made by somebody evil it keeps
+ * the side it had. See `cult_sides` in info.py. */
+export function cultSides(w, s, seat, phase) {
+  const done = Math.floor((phaseIndex(phase) + 1) / 2);
+  let sides = null, base = null, fixed = false;
+  for (let k = 1; k <= done; k++) {
+    const night = `N${k}`;
+    if (!actsAsCultLeader(w, s, seat, night)) {
+      sides = null; base = null; fixed = false;
+      continue;
+    }
+    const now = !!w.evilAt(seat, night);
+    if (sides === null) {
+      sides = new Set([now]);
+      fixed = now && w.roles[seat] !== w.roleAt(seat, night);
+    } else if (now !== base) sides = new Set([now]);
+    base = now;
+    if (fixed || !s.aliveSet(`D${k}`).has(seat)) continue;
+    const around = besideAlive(s, seat, `D${k}`).filter(p => p !== seat);
+    if (!around.length) continue;
+    const allowed = new Set();
+    for (const other of around) {
+      if (actsAsCultLeader(w, s, other, night)) {
+        allowed.add(true); allowed.add(false);
+      } else
+        for (const side of evilOptions(w, s, other, night)) allowed.add(side);
+    }
+    if (mayBeImpaired(w, s, seat, k))
+      for (const side of sides) allowed.add(side);
+    sides = allowed;
+  }
+  const now = !!w.evilAt(seat, phase);
+  if (!actsAsCultLeader(w, s, seat, phase)) return new Set([now]);
+  if (sides === null || now !== base) return new Set([now]);
+  return sides;
+}
+
 /** Every value "how many of these are evil" could take.
  *
  * Asked of a moment, because on scripts where somebody can change side
@@ -35,6 +120,10 @@ const registersTownsfolk = role =>
  * surely, while the Lycanthrope lives and works (11.10.2026). See
  * `evil_options` in info.py. */
 export function evilOptions(w, s, seat, phase) {
+  if (s && cultOnScript(s) && actsAsCultLeader(w, s, seat, phase)) {
+    const sides = cultSides(w, s, seat, phase);
+    return [true, false].filter(side => sides.has(side));
+  }
   const got = evilRegistrations(w.roleAt(seat, phase),
                                 w.alignmentAt(seat, phase));
   const hidden = s ? s._hidden : null;
@@ -1726,6 +1815,106 @@ export const HarpyMadness = define("HarpyMadness", "Harpy",
   });
 HarpyMadness.isAChoice = true;
 
+// The eighth five (11.10.2026). Each the mirror of its class in info.py.
+
+/** Has this seat been turned evil, knowingly, by this moment? The Bounty
+ * Hunter's evil Townsfolk and whoever a Mezepheles turned. */
+export function knowsItTurnedEvil(w, seat, phase) {
+  const here = phaseIndex(phase);
+  return (w.changes || []).some(c => c.turned && c.seat === seat
+                                     && phaseIndex(c.phase) <= here);
+}
+
+/** An evil player, as the Bounty Hunter was shown them: by registration.
+ * A later row needs the one before it to have died by then and never
+ * names a player it named before. */
+export const BountyHunterInfo = define("BountyHunterInfo", "BountyHunter",
+  function (w, s, rh, seat) {
+    const who = (seat === null || seat === undefined) ? this.player : seat;
+    if (this.target === who || !this.follows(s)) return false;
+    return evilOptions(w, s, this.target, `N${this.night}`).includes(true);
+  }, {
+    follows(s) {
+      const earlier = s.infos.filter(info => info.type === "BountyHunterInfo"
+        && info.player === this.player && info.night < this.night);
+      if (!earlier.length) return true;
+      if (earlier.some(info => info.target === this.target)) return false;
+      let last = earlier[0];
+      for (const info of earlier) if (info.night > last.night) last = info;
+      const here = phaseIndex(`N${this.night}`);
+      return s.diedAt(last.target).some(at => phaseIndex(at) <= here);
+    },
+    isTrue(w) { return !!w.evilAt(this.target, `N${this.night}`); },
+    leanedOn(w) {
+      const phase = `N${this.night}`;
+      if (w.evilAt(this.target, phase)) return [];
+      const role = w.roleAt(this.target, phase);
+      if (CHARACTERS[role].alignment_open) return [];
+      return evilRegistrations(role, w.alignmentAt(this.target, phase))
+        .includes(true) ? [this.target] : [];
+    },
+  });
+
+/** A player called their cult in the open, and who joined. `night` is
+ * the day. Judged by the game going on: then somebody who stayed out is
+ * good, or the Cult Leader was not working. */
+export const CultCalled = define("CultCalled", "CultLeader",
+  function (w, s) { return this.mustHaveFailed(w, s).length === 0; },
+  {
+    event: true,
+    sourceSeat() { return this.player; },
+    mustHaveFailed(w, s) {
+      const day = this.night, phase = `D${day}`;
+      if (!actsAsCultLeader(w, s, this.player, phase)
+          || !s.aliveSet(phase).has(this.player)) return [];
+      if (!wentOnAfter(s, day)) return [];
+      const joined = new Set([...(this.joined || [])].map(Number));
+      for (let seat = 0; seat < s.nPlayers; seat++) {
+        if (seat === this.player || joined.has(seat)) continue;
+        if (CHARACTERS[w.roleAt(seat, phase)].alignment_open) return [];
+        if (!w.evilAt(seat, phase)) return [];
+      }
+      return [this.player];
+    },
+  });
+CultCalled.isAChoice = true;
+
+function leviathanAnnouncedOf(row, w, s) {
+  const day = row.night, phase = `D${day}`;
+  for (const seat of s.aliveAt(phase)) {
+    if (w.roleAt(seat, phase) !== "Leviathan") continue;
+    if (day === 1) return seat;
+    let before = false;
+    for (let p = 0; p < s.nPlayers; p++)
+      if (w.roleAt(p, `D${day - 1}`) === "Leviathan") { before = true; break; }
+    if (!before) return seat;
+  }
+  return null;
+}
+
+/** The Storyteller told the table a Leviathan is in play, on its first
+ * day and only if it had its ability then. `night` is the day. */
+export const LeviathanAnnounced = define("LeviathanAnnounced", "Leviathan",
+  function (w, s) { return leviathanAnnouncedOf(this, w, s) !== null; }, {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },
+    leanedOn(w, s) {
+      const got = leviathanAnnouncedOf(this, w, s);
+      return got === null ? [] : [got];
+    },
+  });
+
+/** Who nominated the player the town executed today; a fact, and on its
+ * own it says nothing (scoring.mjs leviathanDemands). */
+export const ExecutionNomination = define("ExecutionNomination", null,
+  function () { return true; }, {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },
+  });
+ExecutionNomination.isAChoice = true;
+
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
   Undertaker, Ravenkeeper, GrandmotherInfo, ChambermaidInfo, GamblerGuess,
@@ -1746,6 +1935,7 @@ export const KINDS = {
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
   PixieLearned, VillageIdiotInfo, LycanthropeChose, HarpyMadness,
+  BountyHunterInfo, CultCalled, LeviathanAnnounced, ExecutionNomination,
 };
 
 /** Build a reading from the shape the page posts. */

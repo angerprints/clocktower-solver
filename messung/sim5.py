@@ -14,6 +14,7 @@ from test_experimental_4 import FOUR, FOUR_BMR
 from test_experimental_5 import FIVE, FIVE_BMR
 from test_experimental_6 import SIX, SIX_BMR
 from test_experimental_7 import SEVEN, SEVEN_BMR
+from test_experimental_8 import EIGHT, EIGHT_BMR
 which = {"TB": scripts.TROUBLE_BREWING, "BMR": scripts.BAD_MOON_RISING,
          "SV": scripts.SECTS_AND_VIOLETS, "EASTER": scripts.from_json(EASTER),
          # The two scripts made for the experimental characters.
@@ -24,7 +25,8 @@ which = {"TB": scripts.TROUBLE_BREWING, "BMR": scripts.BAD_MOON_RISING,
          "XFOUR": FOUR, "XFOURB": FOUR_BMR,
          "XFIVE": FIVE, "XFIVEB": FIVE_BMR,
          "XSIX": SIX, "XSIXB": SIX_BMR,
-         "XSEVEN": SEVEN, "XSEVENB": SEVEN_BMR}
+         "XSEVEN": SEVEN, "XSEVENB": SEVEN_BMR,
+         "XEIGHT": EIGHT, "XEIGHTB": EIGHT_BMR}
 name, N, nights = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 start = int(sys.argv[4]) if len(sys.argv) > 4 else 0
 sc = which[name]

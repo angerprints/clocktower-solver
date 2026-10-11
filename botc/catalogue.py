@@ -585,6 +585,38 @@ _EXPERIMENTAL = [
     # (solver.a_lleech_poisons_its_host, solver._lleech_demands).
     _c("Lleech", "lleech", "Lleech", "demon", {FIRST, EVERY},
        nights="every", chooses=True),
+
+    # The eighth five (11.10.2026), read with the table before anything
+    # was built.
+    #
+    # Shown an evil player on its first night, and another on the night
+    # the one it knows dies (info.BountyHunterInfo). "[1 Townsfolk is
+    # evil]": which is a story of its own
+    # (solver.a_bounty_hunter_brings_an_evil_townsfolk), and may be the
+    # Bounty Hunter itself.
+    _c("BountyHunter", "bountyhunter", "Bounty Hunter", "townsfolk",
+       {FIRST, SOMETIMES}, nights="conditional"),
+    # Takes the side of a living neighbour at the end of every night, by
+    # how that neighbour registers (table ruling, 11.10.2026). So its side
+    # is open like a Goon's wherever nobody works it out, and
+    # `info.evil_options` works it out from its neighbours.
+    _c("CultLeader", "cultleader", "Cult Leader", "townsfolk",
+       {NEVER, SOMETIMES}, nights="conditional", alignment_open=True),
+    # Shown a word on its first night. The first good player to say it
+    # turns evil that night (solver.a_mezepheles_may_have_turned).
+    _c("Mezepheles", "mezepheles", "Mezepheles", "minion", {FIRST},
+       nights="first"),
+    # Kills nobody. Evil wins on the second good player executed and at
+    # the end of day five, and everybody is told it is in play
+    # (info.LeviathanAnnounced, solver._leviathan_demands). Wakes only for
+    # its jinxes, to choose a good player each night but the first.
+    _c("Leviathan", "leviathan", "Leviathan", "demon", {FIRST, EVERY},
+       nights="conditional"),
+    # Shown a phrase on its first night, which is its ability and counts.
+    # For each time it said it in the day, a player might die — at night
+    # nearly always (solver.a_yaggababble_kills_for_each_time).
+    _c("Yaggababble", "yaggababble", "Yaggababble", "demon", {FIRST},
+       nights="first"),
 ]
 
 
@@ -683,6 +715,13 @@ _NOT_IN_THE_FILE = {
     # the King on the others (63, the King's).
     "harpy": (27, 18),
     "villageidiot": (46, 63),
+    # The eighth five (11.10.2026). The Yaggababble is newer than the
+    # file. It is shown its phrase on the first night and wakes on no
+    # other; nothing reads its place, so it shares the Mezepheles's first
+    # night (27, the other character shown a word) and the Vigormortis's
+    # other nights (32), where its deaths are counted. Not checked against
+    # the publisher's current order.
+    "yaggababble": (27, 32),
 }
 
 

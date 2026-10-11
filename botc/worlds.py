@@ -123,6 +123,15 @@ class Change(NamedTuple):
     side: str = None
 
 
+class TurnedEvil(Change):
+    """A seat turned evil that knows it and keeps its character: the
+    Bounty Hunter's evil Townsfolk, whoever a Mezepheles turned
+    (11.10.2026). Told apart from an Ogre's turn because such a seat may
+    lie about what it learns from then on (`info.knows_it_turned_evil`).
+    """
+    __slots__ = ()
+
+
 @dataclass(frozen=True)
 class Timeline:
     """A world plus the times a character changed hands.

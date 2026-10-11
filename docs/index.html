@@ -294,6 +294,8 @@ table.review th,table.review td{padding:3px 10px;text-align:left;border-bottom:1
 }
 .check{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px}
 .check input{width:16px;height:16px;accent-color:var(--crimson)}
+.seat-ticks{display:flex;flex-wrap:wrap;gap:4px 12px;flex-basis:100%}
+.seat-ticks .check{font-size:13px;gap:5px}
 .seat-no{
   font-family:var(--display);font-size:11px;letter-spacing:.08em;
   color:#C9A961;margin-right:1px;
@@ -623,14 +625,14 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=c9801c8e8f89";
+import * as solver from "./api.mjs?v=0040d9e55c5f";
 
 // The solve runs beside the page, in a worker, so a long board neither
 // freezes the page nor hides that it is busy: it reports how far along it
 // is and can be stopped. Where a browser cannot start a module worker —
 // an old one, or a page opened straight from disk — it runs here as it
 // always did, and the page freezes for the length of it as it always did.
-const WORKER_URL = "./worker.mjs?v=c9801c8e8f89";
+const WORKER_URL = "./worker.mjs?v=0040d9e55c5f";
 let WORKER = null, NO_WORKER = false, JOB = null;
 
 function worker(){
@@ -790,6 +792,14 @@ const SCHEMA = {
   VillageIdiotInfo:   [["target","player"],["evil","bool:Evil|Good"]],
   LycanthropeChose:   [["target","player"]],
   HarpyMadness:       [["second","player"]],
+  // The eighth five. The Bounty Hunter says whom it was shown; a cult is
+  // called by its row's player, with everybody who joined; the table is
+  // told a Leviathan is in play; and who nominated the executed player
+  // is that row's player (it matters beside a Leviathan).
+  BountyHunterInfo:    [["target","player"]],
+  CultCalled:          [["joined","players"]],
+  LeviathanAnnounced:  [],
+  ExecutionNomination: [],
   Acrobat:      [["target","player"]],
   // A daytime guess at the whole evil team. Two lists and whether it
   // won, because naming the Demon as a Minion is a failed guess.
@@ -852,6 +862,8 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   PuzzlemasterGuess:"Puzzlemaster", BoomdandyExploded:"Boomdandy",
   PixieLearned:"Pixie", VillageIdiotInfo:"VillageIdiot",
   LycanthropeChose:"Lycanthrope", HarpyMadness:"Harpy",
+  BountyHunterInfo:"BountyHunter", CultCalled:"CultLeader",
+  LeviathanAnnounced:"Leviathan", ExecutionNomination:"Leviathan",
   GrandmotherInfo:"Grandmother", ChambermaidInfo:"Chambermaid",
   GamblerGuess:"Gambler", CourtierChoice:"Courtier",
   ClockmakerInfo:"Clockmaker", DreamerInfo:"Dreamer",
@@ -868,7 +880,8 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
 const DAY_EVENTS   = ["SlayerShot","VirginNomination","GoblinClaim",
   "DamselGuess","VizierAnnounced","BlindVote",
   "PrincessNominated","GolemNomination","PsychopathKill","PsychopathRoshambo",
-  "PuzzlemasterGuess","BoomdandyExploded"];
+  "PuzzlemasterGuess","BoomdandyExploded",
+  "CultCalled","LeviathanAnnounced","ExecutionNomination"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
   CerenovusMadness:"made mad", HarpyMadness:"made mad",
   NightwatchmanSeen:"woken player",
@@ -877,7 +890,9 @@ const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
   VizierAnnounced:"Vizier", BlindVote:"noted by",
   PrincessNominated:"princess", GolemNomination:"golem",
   PsychopathKill:"psychopath", PsychopathRoshambo:"executed",
-  WidowKnown:"told player", BoomdandyExploded:"executed" };
+  WidowKnown:"told player", BoomdandyExploded:"executed",
+  CultCalled:"called by", LeviathanAnnounced:"noted by",
+  ExecutionNomination:"nominator" };
 // Rows spoken by somebody the ability was used *on*, not by whoever
 // holds the character. They are never somebody relaying the holder's
 // information, so the speaker is not moved to the claimant and nothing
@@ -886,7 +901,8 @@ const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
 // Goblin is made by whoever makes it: neither belongs to a claimant.
 const WITNESS_ROWS = ["NightwatchmanSeen","BansheeAnnounced","GoblinClaim",
   "DamselGuess","FearmongerChose","VizierAnnounced","BlindVote",
-  "PsychopathRoshambo","WidowKnown","BoomdandyExploded"];
+  "PsychopathRoshambo","WidowKnown","BoomdandyExploded",
+  "CultCalled","LeviathanAnnounced","ExecutionNomination"];
 // A few readings are named for the *act* rather than the character,
 // because that is what the table saw: a Slayer shot, a Gambler's guess.
 // Everything else is just the character, and is worked out rather than
@@ -911,7 +927,10 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   PreacherChoice:"Preacher chose", HuntsmanChoice:"Huntsman chose",
   PuzzlemasterGuess:"Puzzlemaster guess", BoomdandyExploded:"Boomdandy exploded",
   PixieLearned:"Pixie shown", VillageIdiotInfo:"Village Idiot",
-  LycanthropeChose:"Lycanthrope chose", HarpyMadness:"Harpy madness" };
+  LycanthropeChose:"Lycanthrope chose", HarpyMadness:"Harpy madness",
+  BountyHunterInfo:"Bounty Hunter", CultCalled:"Cult called",
+  LeviathanAnnounced:"Leviathan announced",
+  ExecutionNomination:"Nominated the executed" };
 // Not produced by a character, so it has no source role to be labelled
 // with — and falling back to the type name printed "Became" as though it
 // were a character somebody claimed.
@@ -1760,6 +1779,16 @@ function describeRow(r){
       return `chose ${who(r.target)}`;
     case "HarpyMadness":
       return `was made mad that ${who(r.second)} is evil`;
+    case "BountyHunterInfo":
+      return `was shown ${who(r.target)} as an evil player`;
+    case "CultCalled":
+      return (r.joined || []).length
+        ? `called the cult; joined: ${(r.joined || []).map(who).join(", ")}`
+        : `called the cult, and nobody joined`;
+    case "LeviathanAnnounced":
+      return `the table was told a Leviathan is in play`;
+    case "ExecutionNomination":
+      return `nominated the player who was executed today`;
     case "Became":
       return r.was
         ? `claimed ${role(r.was)} until now, ${role(r.role)} from here on`
@@ -2260,6 +2289,7 @@ function addInfo(night){
            : t.startsWith("bool:") ? false
            : t.startsWith("text:") ? ""
            : t === "guesses" ? []
+           : t === "players" ? []
            : t === "statement" ? null
            : 0;
   });
@@ -2533,6 +2563,7 @@ function infoCard(rec, idx){
     else if(t.startsWith("bool:")) body.appendChild(boolSel(rec,k,t.split(":")[1]));
     else if(t.startsWith("text:")) body.appendChild(freeText(rec,k,t.slice(5)));
     else if(t==="guesses") body.appendChild(guessList(rec,k));
+    else if(t==="players") body.appendChild(playersList(rec,k));
     else if(t==="statement") body.appendChild(statementEditor(rec,k));
   });
   // Did the table later agree this reading was right?
@@ -2778,6 +2809,33 @@ function guessList(rec,key){
     }
   };
   redraw();
+  return box;
+}
+
+/** Any number of seats, ticked one by one: who joined a cult, whom an
+ * Alsaahir named. The row's own player is left out where it is the one
+ * asking — a Cult Leader does not join its own cult.
+ *
+ * This kind of field was in the schema since the Alsaahir and was never
+ * drawn, so its lists could not be entered at all (found 11.10.2026).
+ */
+function playersList(rec,key){
+  const box=document.createElement("span"); box.className="seat-ticks";
+  if(!Array.isArray(rec[key])) rec[key]=[];
+  for(let i=0;i<S.n;i++){
+    if(rec.type==="CultCalled" && i===rec.player) continue;
+    const l=document.createElement("label"); l.className="check inline";
+    const b=document.createElement("input"); b.type="checkbox";
+    b.checked=rec[key].includes(i);
+    b.onchange=()=>{
+      const now=new Set(rec[key]);
+      if(b.checked) now.add(i); else now.delete(i);
+      rec[key]=[...now].sort((x,y)=>x-y);
+      touch(); save();
+    };
+    l.appendChild(b); l.appendChild(document.createTextNode(seatName(i)));
+    box.appendChild(l);
+  }
   return box;
 }
 

@@ -178,6 +178,17 @@ def build_info(d):
     if kind == "HarpyMadness":
         return I.HarpyMadness(night, player, trust,
                               second=_int(d, "second"))
+    if kind == "BountyHunterInfo":
+        return I.BountyHunterInfo(night, player, trust,
+                                  target=_int(d, "target"))
+    if kind == "CultCalled":
+        return I.CultCalled(night, player, trust,
+                            joined=frozenset(
+                                int(x) for x in d.get("joined") or ()))
+    if kind == "LeviathanAnnounced":
+        return I.LeviathanAnnounced(night, player, trust)
+    if kind == "ExecutionNomination":
+        return I.ExecutionNomination(night, player, trust)
     if kind == "Became":
         return I.BecameInfo(night, player, trust,
                             role=d.get("role") or "",
@@ -486,7 +497,7 @@ def run_solve(payload):
                     "NightwatchmanSeen",
                     # The table is told, whoever writes it down.
                     "BansheeAnnounced", "FearmongerChose",
-                    "VizierAnnounced", "BlindVote",
+                    "VizierAnnounced", "BlindVote", "LeviathanAnnounced",
                     # Said in daylight, and the dead may speak.
                     "DamselGuess")
     for d in raw_infos:
@@ -738,6 +749,10 @@ INFO_SOURCES = {
     "BoomdandyExploded": "Boomdandy",
     "PixieLearned": "Pixie", "VillageIdiotInfo": "VillageIdiot",
     "LycanthropeChose": "Lycanthrope", "HarpyMadness": "Harpy",
+    # The eighth five. Who nominated the executed player only matters
+    # beside a Leviathan (its jinxes), so that is when it is offered.
+    "BountyHunterInfo": "BountyHunter", "CultCalled": "CultLeader",
+    "LeviathanAnnounced": "Leviathan", "ExecutionNomination": "Leviathan",
     "Washerwoman": "Washerwoman", "Librarian": "Librarian",
     "Investigator": "Investigator", "Chef": "Chef", "Empath": "Empath",
     "FortuneTeller": "FortuneTeller", "Undertaker": "Undertaker",

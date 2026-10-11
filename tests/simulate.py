@@ -26,6 +26,8 @@ from botc.info import (registers_as_role,
                        BoomdandyExploded, BecameInfo,
                        PixieLearned, VillageIdiotInfo, LycanthropeChose,
                        HarpyMadness,
+                       BountyHunterInfo, CultCalled, LeviathanAnnounced,
+                       ExecutionNomination,
                        BalloonistInfo,
                        DreamerInfo,
                        ExorcistChoice, InnkeeperChoice,
@@ -200,6 +202,25 @@ class Deal:
         self.lleech_lost = None             # when the Mastermind's jinx hit
         self.pixie_learned = {}             # Pixie seat -> Townsfolk shown
         self.pixie_mad = {}                 # Pixie seat -> claims it
+        # The eighth five (11.10.2026).
+        self.bh_evil = None                 # the Townsfolk dealt evil
+        self.bh_known = {}                  # Bounty Hunter -> who it knows
+        self.bh_seen = {}                   # Bounty Hunter -> all it was shown
+        self.bh_woke = set()                # {(seat, night)} it was shown one
+        self.cult_seen = set()              # Cult Leaders past their first turn
+        self.cult_fixed = set()             # made the Cult Leader while evil
+        self.cult_woke = set()              # {(seat, night)} its side changed
+        self.mez_marked = None              # (who said the word, the day)
+        self.mez_turned = None              # (who turned evil, the night)
+        self.lev_first = None               # the Leviathan's first day
+        self.lev_announced = None           # the day the table was told
+        self.lev_good_executed = 0          # good players executed beside it
+        self.lev_picked = set()             # good players it chose (jinxes)
+        self.lev_chose = {}                 # night -> (Leviathan, its pick)
+        self.lev_aimed = {}                 # night -> whom it pointed at
+        self.nominated_by = {}              # {day: {nominee: nominator}}
+        self.yag_said = {}                  # day -> times the phrase was said
+        self.yag_by_day = {}                # day -> whom it took nominating
 
     def demon_at(self, phase):
         """The seat holding the Demon at this phase."""
@@ -697,6 +718,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         pool = town if (town and (not outs or rng.random() < 0.8)) else outs
         if pool:
             d.puzzle_drunk = rng.choice(pool)
+    _the_eighth_five_set_up(d, rng)
     _the_seventh_five_set_up(d, rng)
 
     for night in range(1, nights + 1):
@@ -768,6 +790,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # (27 the first night), before every Demon (11.10.2026).
         _lleech_picks_a_host(d, night, rng)
         _harpy_chooses(d, night, rng, heard)
+        # The Mezepheles at 18 too: whoever said its word turns evil.
+        _mezepheles_turns(d, night, rng)
 
         # A Pukka poisons on the *first* night and kills from the
         # second, so it is the one Demon that acts before anybody else
@@ -929,6 +953,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
 
         _nobody_returns_only_to_die(d, night)
 
+        # The Cult Leader takes a living neighbour's side at 48, then 66:
+        # after every kill, before the Chambermaid counts who woke. Its
+        # new side is dated from the day, so tonight's readings see the
+        # old one, as they do at the table (11.10.2026).
+        _cult_leader_turns(d, night, rng)
+
         heard += [row for row in honest_info(d, night, rng)
                   if d.role_at(row.player, f"N{night}") not in CHOOSES_EARLY]
         # What an ability put in somebody else's mouth: the player a
@@ -969,6 +999,14 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # first day, a Minion may guess the Damsel, and an Organ
             # Grinder may have everybody vote with their eyes closed.
             _vizier_is_announced(d, night, heard)
+            # The eighth five (11.10.2026): a Leviathan is announced on
+            # its first day, a Yaggababble says its phrase or does not,
+            # somebody may say the Mezepheles's word, and a Cult Leader
+            # may call its cult.
+            _leviathan_is_announced(d, night, heard)
+            _yaggababble_speaks(d, night, rng)
+            _mezepheles_hears(d, night, rng)
+            _cult_is_called(d, night, rng, heard)
             if _a_minion_guesses_the_damsel(d, night, rng, heard):
                 d.ended_at, d.ended_why = f"D{night}", "damsel"
                 d.game_ends_after = night
@@ -1024,6 +1062,14 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             hanged = executed if executed is not None else (
                 d.executions.get(night) if night in d.walked_because
                 else None)
+            # A Leviathan: the second good player executed, its
+            # grandchild on the gallows, or the end of day five, and evil
+            # has won (11.10.2026).
+            if "Leviathan" in script.keys and _leviathan_takes_the_day(
+                    d, night, hanged, rng, heard):
+                d.ended_at, d.ended_why = f"E{night}", "leviathan"
+                d.game_ends_after = night
+                break
             # The Princess's nominee went up: the Demon kills nobody
             # tonight, if she has her ability then.
             picked = d.princess_nominated.get(night)
@@ -1649,7 +1695,8 @@ def _farmer_hands_it_on(d, night, rng):
             continue                      # droisoned: it does not function
         def good_enough(p):
             role = d.role_at(p, phase)
-            if not is_evil(role):
+            # Good now, which a Townsfolk turned evil is not (11.10.2026).
+            if not is_evil(role) and d.side_at(p, phase) == "good":
                 return True
             return bool({"townsfolk", "outsider"}
                         & CHARACTERS[role].registers)
@@ -1660,6 +1707,22 @@ def _farmer_hands_it_on(d, night, rng):
         # From the day after, like every change that follows an ability
         # working: the Farmer was still the Farmer when it did.
         d.changes.append((f"D{night}", rng.choice(heirs), "Farmer"))
+    # Its jinx with the Leviathan: "a chosen Farmer uses their ability
+    # but does not die" (11.10.2026). The new one says so.
+    lev, chosen = getattr(d, "lev_chose", {}).get(night, (None, None))
+    if chosen is not None and d.role_at(chosen, phase) == "Farmer" \
+            and d.deaths.get(chosen) is None and d.working(chosen, night) \
+            and d.working(lev, night):
+        heirs = [p for p in d.alive_at(phase)
+                 if p != chosen and d.deaths.get(p) is None
+                 and d.role_at(p, phase) != "Farmer"
+                 and d.side_at(p, phase) == "good"]
+        if heirs:
+            heir = rng.choice(heirs)
+            was = d.apparent(heir)
+            d.changes.append((f"D{night}", heir, "Farmer"))
+            d.said_by_others.append(BecameInfo(night, heir, role="Farmer",
+                                               was=was))
 
 
 def _barber_swap(d, night, rng):
@@ -2104,7 +2167,10 @@ def _the_seventh_five_set_up(d, rng):
     if len(idiots) >= 2:
         d.vi_drunk = rng.choice(idiots)
     if "Lycanthrope" in d.roles:
-        good = [p for p in range(n) if not is_evil(d.roles[p])]
+        # "1 good player": not the Townsfolk a Bounty Hunter brought in
+        # evil (11.10.2026). The list is as it was without one.
+        good = [p for p in range(n) if not is_evil(d.roles[p])
+                and p != getattr(d, "bh_evil", None)]
         if good:
             d.faux_paw = rng.choice(good)
     for seat in range(n):
@@ -2355,6 +2421,302 @@ def _pixie_gain(d, seat):
     return learned, k + 1
 
 
+# --------------------------------------------------------------------------
+# The eighth five (11.10.2026): Bounty Hunter, Cult Leader, Mezepheles,
+# Leviathan, Yaggababble. Written from the wiki and the table's rulings of
+# that day, not from the solver. Nothing here draws a number on a script
+# without the character it is for.
+# --------------------------------------------------------------------------
+
+LEVIATHAN_CHOOSES_FOR = ("Banshee", "Farmer", "Ravenkeeper", "Sage")
+
+
+def _the_eighth_five_set_up(d, rng):
+    """ "[1 Townsfolk is evil]": with a Bounty Hunter dealt — the
+    character, not a Drunk's token of it — one Townsfolk is evil from the
+    start. Any of them, now and then the Bounty Hunter itself (table
+    ruling, 11.10.2026, way 2 of C)."""
+    if "BountyHunter" not in d.roles:
+        return
+    hunter = d.roles.index("BountyHunter")
+    town = [p for p in range(d.n) if TEAM[d.roles[p]] == "townsfolk"]
+    others = [p for p in town if p != hunter]
+    pick = hunter if (not others or rng.random() < 0.1) else rng.choice(others)
+    d.bh_evil = pick
+    d.side_changes.append(("N1", pick, d.roles[pick], "evil"))
+
+
+def _turned_evil_and_knows(d, seat, night):
+    """A seat that keeps a good character and is evil and knows it: the
+    Bounty Hunter's Townsfolk, or whoever the Mezepheles turned, from the
+    night it did."""
+    if seat == getattr(d, "bh_evil", None):
+        return True
+    turned = getattr(d, "mez_turned", None)
+    return turned is not None and turned[0] == seat and night >= turned[1]
+
+
+# Readings such a seat may lie about. Plain information only: a row the
+# game goes on to use — a Grandmother's grandchild, a choice — is left as
+# it was.
+A_LIAR_MAY_CHANGE = frozenset({
+    "Chef", "Empath", "Undertaker", "Washerwoman", "Librarian",
+    "Investigator", "OracleInfo", "SeamstressInfo", "FlowergirlInfo",
+    "TownCrierInfo", "ClockmakerInfo", "NobleInfo", "StewardInfo",
+    "KnightInfo", "ShugenjaInfo", "VillageIdiotInfo", "BountyHunterInfo"})
+
+
+def _a_liars_version(d, made, night, rng):
+    """The same reading, made false, for a seat that chose to lie. What
+    it was really shown stays what the game knows."""
+    known = dict(d.bh_known)
+    seen = {seat: set(got) for seat, got in d.bh_seen.items()}
+    try:
+        return _make_false(d, made, night, rng) or made
+    finally:
+        d.bh_known, d.bh_seen = known, seen
+
+
+def _may_register_either_way(d, seat, night):
+    """A Recluse or a Spy with its ability: the Storyteller's to say."""
+    from botc.catalogue import CHARACTERS
+    role = d.role_at(seat, f"N{night}")
+    return bool(CHARACTERS[role].registers) and d.working(seat, night)
+
+
+def _bounty_hunter_is_shown(d, seat, night, rng):
+    """ "You start knowing 1 evil player. If the player you know dies,
+    you learn another evil player tonight." Somebody who registers evil:
+    an evil player — a Minion before the Demon — the faux paw, or now and
+    then the Recluse. Never the same player twice."""
+    phase = f"N{night}"
+    known = d.bh_known.get(seat)
+    if seat in d.bh_seen and (known is None or d.deaths.get(known) is None):
+        return None                       # the one it knows is still alive
+    seen = d.bh_seen.setdefault(seat, set())
+    others = [p for p in range(d.n) if p != seat and p not in seen]
+    evil = [p for p in others if _reads_evil(d, p, phase)]
+    maybe = [p for p in others if p not in evil
+             and d.side_at(p, phase) == "good"
+             and _may_register_either_way(d, p, night)
+             and True in evil_registrations(d.role_at(p, phase))]
+    demon = d.demon_at(phase)
+    pool = [p for p in evil if p != demon] or evil
+    if maybe and (not pool or rng.random() < 0.2):
+        pool = maybe
+    if not pool:
+        d.bh_known[seat] = None
+        return None
+    target = rng.choice(pool)
+    d.bh_known[seat] = target
+    seen.add(target)
+    d.bh_woke.add((seat, night))
+    return BountyHunterInfo(night, seat, target=target)
+
+
+def _acts_as_cult_leader(d, seat, phase):
+    role = d.role_at(seat, phase)
+    return role == "CultLeader" or (
+        role == "Philosopher" and d.philosophies.get(seat) == "CultLeader")
+
+
+def _cult_leader_turns(d, night, rng):
+    """ "Each night, you become the alignment of an alive neighbour."
+
+    At the end of the night, the first included. Which neighbour is the
+    Storyteller's, and so is how a Recluse or a Spy among them registers
+    (table ruling, 11.10.2026): the faux paw reads evil. A Zombuul under
+    its shroud is on the board as dead and is no neighbour. Drunk or
+    poisoned, or dead, it stays as it is — and one that was evil when a
+    Pit-Hag made it stays evil (their jinx).
+    """
+    if "CultLeader" not in d.script.keys:
+        return
+    phase = f"N{night}"
+    for seat in range(d.n):
+        if d.deaths.get(seat) is not None \
+                or not _acts_as_cult_leader(d, seat, phase):
+            continue
+        if seat not in d.cult_seen:
+            d.cult_seen.add(seat)
+            if d.roles[seat] != d.role_at(seat, phase) \
+                    and d.side_at(seat, phase) == "evil":
+                d.cult_fixed.add(seat)
+        if seat in d.cult_fixed or not d.working(seat, night):
+            continue
+        around = [p for p in _living_beside(d, seat, phase) if p != seat]
+        if not around:
+            continue
+        other = rng.choice(around)
+        if _reads_evil(d, other, phase):
+            side = "evil"
+        else:
+            side = "good"
+        if not _acts_as_cult_leader(d, other, phase) \
+                and _may_register_either_way(d, other, night) \
+                and len(set(evil_registrations(d.role_at(other, phase)))) > 1:
+            side = rng.choice(["evil", "good"])
+        if side != d.side_at(seat, f"D{night}"):
+            d.side_changes.append((f"D{night}", seat,
+                                   d.role_at(seat, phase), side))
+            d.cult_woke.add((seat, night))
+
+
+def _cult_is_called(d, day, rng, heard):
+    """A Cult Leader now and then calls its cult, and people join or do
+    not — the dead too, as for an exile. The game is to go on, so with
+    its ability working one good player always stays out; without it
+    everybody may join and nothing happens."""
+    if "CultLeader" not in d.script.keys:
+        return
+    phase = f"D{day}"
+    for seat in d.alive_at(phase):
+        if d.deaths.get(seat) is not None \
+                or not _acts_as_cult_leader(d, seat, phase):
+            continue
+        if rng.random() >= 0.25:
+            continue
+        others = [p for p in range(d.n) if p != seat]
+        joined = {p for p in others if rng.random() < 0.5}
+        good = [p for p in others if d.side_at(p, phase) == "good"]
+        if d.working(seat, day, by_day=True) \
+                and all(p in joined for p in good):
+            if not good:
+                continue                  # nobody good to stay out
+            joined.discard(rng.choice(good))
+        heard.append(CultCalled(day, seat, joined=frozenset(joined)))
+
+
+def _mezepheles_hears(d, day, rng):
+    """Somebody good says the word, on about one day in three — the
+    first to do so, and only once a game."""
+    if "Mezepheles" not in d.script.keys or d.mez_marked is not None:
+        return
+    phase = f"D{day}"
+    if not any(d.role_at(p, phase) == "Mezepheles" for p in range(d.n)):
+        return
+    if rng.random() >= 0.3:
+        return
+    good = [p for p in d.alive_at(phase) if d.deaths.get(p) is None
+            and d.side_at(p, phase) == "good"]
+    if good:
+        d.mez_marked = (rng.choice(good), day)
+
+
+def _mezepheles_turns(d, night, rng):
+    """ "The 1st good player to say this word becomes evil that night."
+
+    At its turn, 18, if it is still about and has its ability: executed
+    since, or drunk or poisoned tonight, nobody turns and the ability is
+    spent all the same. A Mezepheles a Vigormortis killed keeps it.
+    """
+    marked = d.mez_marked
+    if marked is None or d.mez_turned is not None or marked[1] != night - 1:
+        return
+    phase = f"N{night}"
+    seat = marked[0]
+    mez = next((p for p in range(d.n)
+                if d.role_at(p, phase) == "Mezepheles"
+                and d.role_at(p, f"E{night - 1}") == "Mezepheles"), None)
+    if mez is None or not _has_its_ability(d, mez, phase) \
+            or not d.working(mez, night):
+        return
+    if d.side_at(seat, phase) != "good":
+        return
+    d.side_changes.append((phase, seat, d.role_at(seat, phase), "evil"))
+    d.mez_turned = (seat, night)
+
+
+def _living_leviathan(d, phase):
+    """The seat holding the Leviathan now, standing and the Demon."""
+    seat = d.demon_at(phase)
+    if seat is None or d.role_at(seat, phase) != "Leviathan" \
+            or d.deaths.get(seat) is not None:
+        return None
+    return seat
+
+
+def _leviathan_is_announced(d, day, heard):
+    """ "All players know you are in play" — on its first day, and only
+    with its ability then, as for the Vizier (table ruling, 11.10.2026,
+    way 2 of O)."""
+    if "Leviathan" not in d.script.keys or d.lev_first is not None:
+        return
+    lev = _living_leviathan(d, f"D{day}")
+    if lev is None:
+        return
+    d.lev_first = day
+    if d.working(lev, day, by_day=True):
+        d.lev_announced = day
+        heard.append(LeviathanAnnounced(day, lev))
+
+
+def _stands_behind(d, seat, day):
+    """Is this a player the Leviathan must not put on the gallows: a
+    sober Soldier, the pair a working Innkeeper chose last night, the
+    one a working Exorcist named (their jinxes — good would win)."""
+    phase = f"D{day}"
+    if d.role_at(seat, phase) == "Soldier" \
+            and d.working(seat, day, by_day=True):
+        return True
+    for role, picked in (("Innkeeper", d.innkeeper_guarded.get(day) or ()),
+                         ("Exorcist", (d.exorcised.get(day),))):
+        if seat not in picked:
+            continue
+        who = next((p for p in d.alive_at(phase)
+                    if d.role_at(p, phase) == role
+                    and d.deaths.get(p) is None), None)
+        if who is not None and d.working(who, day, by_day=True):
+            return True
+    return False
+
+
+def _leviathan_takes_the_day(d, day, hanged, rng, heard):
+    """Has evil just won by the Leviathan? "If more than 1 good player is
+    executed, evil wins... After day 5, evil wins." Executed is enough,
+    dead of it or not. And its jinx with the Grandmother: her grandchild
+    dead on the gallows."""
+    lev = _living_leviathan(d, f"E{day}")
+    if lev is None:
+        return False
+    working = d.working(lev, day, by_day=True)
+    if hanged is not None:
+        by = d.nominated_by.get(day, {}).get(hanged)
+        if by is not None and rng.random() < 0.6:
+            heard.append(ExecutionNomination(day, by))
+        if d.side_at(hanged, f"D{day}") == "good":
+            d.lev_good_executed += 1
+            if d.lev_good_executed >= 2 and working:
+                return True
+        if working and d.deaths.get(hanged) == f"E{day}":
+            for info in heard:
+                if type(info).__name__ != "GrandmotherInfo" \
+                        or info.target != hanged:
+                    continue
+                gran = info.player
+                if info is _grandchild_row(heard, gran, day + 1) \
+                        and d.deaths.get(gran) is None \
+                        and d.role_at(gran, f"D{day}") == "Grandmother" \
+                        and d.working(gran, day, by_day=True):
+                    return True
+    return day >= 5 and working
+
+
+def _yaggababble_speaks(d, day, rng):
+    """How often it said its phrase today: not at all one day in five,
+    once most days, now and then two or three times."""
+    if "Yaggababble" not in d.script.keys:
+        return
+    phase = f"D{day}"
+    demon = d.demon_at(phase)
+    if demon is None or d.role_at(demon, phase) != "Yaggababble" \
+            or d.deaths.get(demon) is not None:
+        return
+    roll = rng.random()
+    d.yag_said[day] = (0 if roll < 0.2 else 1 if roll < 0.75
+                       else 2 if roll < 0.92 else 3)
+
+
 def _hold_a_day(d, day, rng):
     """Nominations and votes, and the execution that follows from them.
 
@@ -2436,6 +2798,22 @@ def _hold_a_day(d, day, rng):
         else:
             golem = None
 
+    # A Leviathan does not put up a player good would win by: the
+    # Soldier, one the Innkeeper guards, the one the Exorcist chose
+    # (their jinxes, 11.10.2026).
+    leviathan = (_living_leviathan(d, phase)
+                 if "Leviathan" in d.script.keys else None)
+    # "It is rare for the Yaggababble to kill during the day": now and
+    # then, having said its phrase, somebody drops as they nominate —
+    # which the table sees exactly as it sees a Witch's curse.
+    drops = None
+    if "Yaggababble" in d.script.keys and d.yag_said.get(day) \
+            and rng.random() < 0.06:
+        yagga = d.demon_at(phase)
+        if yagga is not None and d.working(yagga, day, by_day=True):
+            pool = [p for p in nominators if p not in (yagga, cursed)]
+            drops = rng.choice(pool) if pool else None
+
     tally = {}
     for who in nominators:
         if d.deaths.get(who) is not None:
@@ -2446,7 +2824,20 @@ def _hold_a_day(d, day, rng):
         if who == fear and d.deaths.get(fear_pick) is None:
             nominee = fear_pick
             d.fear_nominated[day] = fear_pick
+        if who == leviathan and _stands_behind(d, nominee, day):
+            free = [p for p in living if p != who and d.deaths.get(p) is None
+                    and not _stands_behind(d, p, day)]
+            if not free:
+                continue
+            nominee = rng.choice(free)
         d.nominations.setdefault(day, set()).add(who)
+        d.nominated_by.setdefault(day, {}).setdefault(nominee, who)
+        if who == drops and day not in d.witch_deaths \
+                and _can_die_by_day(d, who, day):
+            d.deaths[who] = f"D{day}"
+            d.witch_deaths[day] = who
+            d.yag_by_day[day] = who
+            d.yag_said[day] -= 1
         if who == princess and nominee != who:
             d.princess_nominated[day] = (princess, nominee)
             d.day_heard.append(PrincessNominated(day, princess,
@@ -2604,6 +2995,16 @@ def _execute(d, day, rng, allow_takeover=False):
     """
     phase = f"E{day}"
     demon = d.demon_at(phase)
+    # A town told of a Leviathan executes with great care (the table,
+    # 11.10.2026): at all only every other day, and once somebody good
+    # has gone, only when it is sure — which here it almost never is.
+    # "Sure" is what the Storyteller knows, less a mistake now and then.
+    if getattr(d, "lev_announced", None) is not None \
+            and _living_leviathan(d, phase) is not None:
+        if rng.random() < 0.5:
+            return None
+        if d.lev_good_executed >= 1 and rng.random() >= 0.1:
+            return None
     # The Saint it is *now*. A Pit-Hag can make one mid-game, and reading
     # the deal let the town execute it — which ends the game, and the
     # record then ran on for two more days.
@@ -3174,6 +3575,57 @@ def _demon_kills(d, night, rng):
             return []
         return [got] if got is not None else []
 
+    if kind == "Leviathan":
+        # It kills nobody. Only by its jinxes does it choose at all: a
+        # living good player each night, never the same one twice, and a
+        # Banshee it chooses dies (11.10.2026). The Farmer, the
+        # Ravenkeeper and the Sage it chooses use their ability and live,
+        # which is theirs to act on.
+        if not any(k in d.script.keys for k in LEVIATHAN_CHOOSES_FOR) \
+                or _exorcised(d, night):
+            return []
+        good = [p for p in others if d.side_at(p, phase) == "good"
+                and p not in d.lev_picked]
+        if not good:
+            return []
+        target = rng.choice(good)
+        d.lev_picked.add(target)
+        d.lev_aimed[night] = target       # for the replay, Goon or not
+        if _the_goon_answers(d, night, demon, target) \
+                or not d.working(demon, night):
+            return []
+        d.lev_chose[night] = (demon, target)
+        held = d.role_at(target, phase)
+        if not (held == "Banshee" or (held == "Philosopher"
+                                      and d.philosophies.get(target)
+                                      == "Banshee")):
+            return []
+        tried.append(target)
+        if _protected(d, night, target):
+            return []
+        return [target]
+
+    if kind == "Yaggababble":
+        # One player might die for each time it said its phrase today,
+        # and the Storyteller chooses who — letting one pass now and then.
+        # Its own kills, so everything that stops a Demon stops these;
+        # but it chooses nobody, so a Goon has nothing to answer.
+        out = []
+        for _ in range(d.yag_said.get(night - 1, 0)):
+            if rng.random() >= 0.85:
+                continue
+            pool = [p for p in others if p not in out and p not in tried]
+            if not pool:
+                break
+            target = rng.choice(pool)
+            if target == guarded:
+                continue
+            tried.append(target)
+            if _protected(d, night, target, gone=out):
+                continue
+            out.append(target)
+        return out
+
     if kind == "Lleech":
         # Never its own host, which would take it too; and nothing at all
         # once a Mastermind has left it without its ability.
@@ -3299,8 +3751,11 @@ def _woke_for_own_ability(d, p, night, shown=False):
     if when == "conditional":
         return bool(_conditionally_woke(d, p, what, night))
     if night == 1:
+        # A Demon told its Minions is not acting; a Yaggababble shown its
+        # phrase is, and its `nights` says so (11.10.2026).
         return when == "every" or ("first" in patterns
-                                   and char.team != "demon")
+                                   and (char.team != "demon"
+                                        or when == "first"))
     return when in ("every", "other")
 
 
@@ -3321,6 +3776,16 @@ def _conditionally_woke(d, seat, role, night):
     from botc.roles import TEAM
     if role == "Undertaker":
         return bool(d.died_on(f"E{night - 1}"))
+    if role in ("Ravenkeeper", "Sage") and seat == getattr(
+            d, "lev_chose", {}).get(night, (None, None))[1]:
+        return True                       # chosen by the Leviathan: a jinx
+    if role == "BountyHunter":
+        return (seat, night) in d.bh_woke
+    if role == "CultLeader":
+        return (seat, night) in d.cult_woke
+    if role == "Leviathan":
+        return night >= 2 and any(k in d.script.keys
+                                  for k in LEVIATHAN_CHOOSES_FOR)
     if role == "Ravenkeeper":
         return d.deaths.get(seat) == f"N{night}"
     if role == "Zombuul":
@@ -3433,7 +3898,15 @@ def _really_standing(d):
 def _the_dead_have_it(d):
     """The King's condition: as many dead as living, or more."""
     standing = len(_really_standing(d))
-    return d.n - standing >= standing
+    if d.n - standing >= standing:
+        return True
+    # "If the Leviathan is in play and at least 1 player is dead, the
+    # King learns an alive character each night" (their jinx).
+    if d.n - standing < 1 or "Leviathan" not in d.script.keys:
+        return False
+    phase = f"N{d.nights_played}"
+    return any(d.deaths.get(p) is None and d.role_at(p, phase) == "Leviathan"
+               for p in range(d.n))
 
 
 def _droisoned_info(d, seat, night, rng):
@@ -3722,6 +4195,13 @@ def honest_info(d, night, rng):
             made = _make_false(d, made, night, rng)
             if made is None:
                 continue
+        # Turned evil and knowing it, it is told the truth and says what
+        # suits it: about half its plain readings come out false
+        # (11.10.2026).
+        elif _turned_evil_and_knows(d, seat, night) \
+                and type(made).__name__ in A_LIAR_MAY_CHANGE \
+                and rng.random() < 0.5:
+            made = _a_liars_version(d, made, night, rng)
         out.append(made)
     return out
 
@@ -4041,6 +4521,21 @@ def _make_false(d, info, night, rng):
         # is already a false thing to be told (11.10.2026).
         info.evil = d.side_at(info.target, f"N{night}") != "evil"
         return info
+    if kind == "BountyHunterInfo":
+        # Somebody who does not read evil at all — and that is who it
+        # knows now: "when that shown player dies, the Bounty Hunter
+        # learns a new player".
+        phase = f"N{night}"
+        good = [p for p in range(d.n) if p != info.player
+                and not _reads_evil(d, p, phase)
+                and True not in evil_registrations(d.role_at(p, phase))]
+        if not good:
+            return None
+        d.bh_seen.setdefault(info.player, set()).discard(info.target)
+        info.target = rng.choice(good)
+        d.bh_known[info.player] = info.target
+        d.bh_seen[info.player].add(info.target)
+        return info
     if kind == "PixieLearned":
         held = {d.role_at(p, f"N{night}") for p in range(d.n)}
         town = list(d.script.townsfolk) if d.script else list(TOWNSFOLK)
@@ -4317,6 +4812,9 @@ def _for_role(d, seat, role, night, rng):
             learned = rng.choice(town)
         return PixieLearned(1, seat, role=learned)
 
+    if role == "BountyHunter":
+        return _bounty_hunter_is_shown(d, seat, night, rng)
+
     if role == "VillageIdiot":
         # Any player, and their side — the faux paw read evil.
         others = [p for p in range(d.n) if p != seat]
@@ -4340,7 +4838,13 @@ def _for_role(d, seat, role, night, rng):
         def shown_evil(p):
             if _reads_evil(d, p, phase) and d.side_at(p, phase) == "good":
                 return True               # the faux paw (11.10.2026)
-            opts = sorted(evil_registrations(d.role_at(p, phase)))
+            # By the side it is on now, which is not always its
+            # character's: a Bounty Hunter's evil Townsfolk reads evil,
+            # and a Cult Leader as whichever it is tonight (11.10.2026).
+            if _acts_as_cult_leader(d, p, phase):
+                return d.side_at(p, phase) == "evil"
+            opts = sorted(evil_registrations(d.role_at(p, phase),
+                                             d.side_at(p, phase)))
             return rng.choice(opts) if len(opts) > 1 else opts[0]
         evil = [p for p in range(d.n) if shown_evil(p)]
         good = [p for p in range(d.n) if p not in evil]
@@ -4368,7 +4872,8 @@ def _for_role(d, seat, role, night, rng):
         # poisoned Spy is a Spy and reads as one.
         spies = [p for p in range(d.n) if p != seat
                  and d.side_at(p, phase) == "evil"
-                 and False in evil_registrations(d.role_at(p, phase))
+                 and False in evil_registrations(d.role_at(p, phase), "evil")
+                 and not _acts_as_cult_leader(d, p, phase)
                  and d.working(p, night)]
         if spies and rng.random() < 0.25:
             return StewardInfo(1, seat, target=rng.choice(spies))
@@ -4825,9 +5330,11 @@ def _for_role(d, seat, role, night, rng):
         same = _reads_evil(d, a, "N1") == _reads_evil(d, b, "N1")
         return SeamstressInfo(night, seat, a=a, b=b, same=same)
 
-    if role == "Sage" and d.deaths.get(seat) == f"N{night}" \
-            and not (night in getattr(d, "lyc_quiet", ())
-                     and seat not in d.demon_killed.get(night, ())):
+    if role == "Sage" and (
+            seat == getattr(d, "lev_chose", {}).get(night, (None, None))[1]
+            or (d.deaths.get(seat) == f"N{night}"
+                and not (night in getattr(d, "lyc_quiet", ())
+                         and seat not in d.demon_killed.get(night, ())))):
         # Killed by the Demon, it learns two players and one is the
         # killer — the *specific* Demon, so no misregistration here.
         demon = d.demon_at(f"N{night}")
@@ -5107,7 +5614,10 @@ def _for_role(d, seat, role, night, rng):
             return Undertaker(night, seat, target=executed[0],
                               role=d.role_at(executed[0], when))
 
-    if role == "Ravenkeeper" and d.deaths.get(seat) == f"N{night}":
+    if role == "Ravenkeeper" and (
+            d.deaths.get(seat) == f"N{night}"
+            or seat == getattr(d, "lev_chose", {}).get(night,
+                                                        (None, None))[1]):
         others = [p for p in range(d.n) if p != seat]
         pick = rng.choice(others)
         return Ravenkeeper(night, seat, target=pick,

@@ -78,6 +78,11 @@ export const PRIORS = {
   // A Pixie mad about the Townsfolk whose holder died, refused its ability
   // by the Storyteller (11.10.2026): it happens, and is not the usual.
   PIXIE_DENIED_PENALTY: 0.35,
+  // A Yaggababble kills once for each time it said its phrase: the first
+  // body costs nothing, each one more does (table ruling, 11.10.2026).
+  YAGGABABBLE_AGAIN_PENALTY: 0.5,
+  // "It is rare for the Yaggababble to kill during the day."
+  YAGGABABBLE_BY_DAY_PENALTY: 0.25,
 };
 
 // The ranges I would defend as equally plausible. Running the solve
