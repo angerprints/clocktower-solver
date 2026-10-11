@@ -30,11 +30,26 @@ const registersTownsfolk = role =>
  * Asked of a moment, because on scripts where somebody can change side
  * the answer is not the same all game.
  */
-export function possibleEvilCounts(world, players, phase) {
+/** How this seat may register, evil or good, for a reading — and the
+ * Lycanthrope's faux paw on top: "one good player registers as evil",
+ * surely, while the Lycanthrope lives and works (11.10.2026). See
+ * `evil_options` in info.py. */
+export function evilOptions(w, s, seat, phase) {
+  const got = evilRegistrations(w.roleAt(seat, phase),
+                                w.alignmentAt(seat, phase));
+  const hidden = s ? s._hidden : null;
+  if (!hidden || hidden[0] === null || hidden[0] !== seat) return got;
+  const lyc = w.findAt("Lycanthrope", phase);
+  if (lyc === null || !s.aliveSet(phase).has(lyc)) return got;
+  s._fauxHit = true;
+  if (s._fauxMode === "off") return got;
+  return [true];
+}
+
+export function possibleEvilCounts(world, players, phase, s = null) {
   let sums = new Set([0]);
   for (const p of players) {
-    const options = evilRegistrations(world.roleAt(p, phase),
-                                      world.alignmentAt(p, phase));
+    const options = evilOptions(world, s, p, phase);
     const grown = new Set();
     for (const so_far of sums)
       for (const evil of options) grown.add(so_far + (evil ? 1 : 0));
@@ -238,12 +253,11 @@ export const Investigator = define("Investigator", "Investigator",
   }, {leanedOn: pairLeanedOn, isTrue: pairIsTrue});
 
 export const Chef = define("Chef", "Chef",
-  function (w) {
+  function (w, s) {
     const n = w.roles.length;
     const options = [];
     for (let p = 0; p < n; p++)
-      options.push(evilRegistrations(w.roleAt(p, "N1"),
-                                     w.alignmentAt(p, "N1")));
+      options.push(evilOptions(w, s, p, "N1"));
     // Every way the table could read, and how many neighbouring pairs
     // of evil each one gives.
     let combos = [[]];
@@ -282,7 +296,7 @@ export const Empath = define("Empath", "Empath",
     // Killed before they could wake: there is no reading to check.
     if (s.diedAt(who).includes(`N${this.night}`)) return true;
     const nb = livingNeighbours(s, this.night, who);
-    return possibleEvilCounts(w, nb, `N${this.night}`).has(this.count);
+    return possibleEvilCounts(w, nb, `N${this.night}`, s).has(this.count);
   }, {
     /** Whether that many of its neighbours really are evil. What is so,
      * not what could have been said (table ruling, 07.10.2026). */
@@ -448,7 +462,7 @@ export const OracleInfo = define("OracleInfo", "Oracle",
     const alive = s.aliveSet(phase);
     const dead = w.roles.map((_r, p) => p)
       .filter(p => !alive.has(p) || s.diedAt(p).includes(phase));
-    return possibleEvilCounts(w, dead, phase).has(this.count);
+    return possibleEvilCounts(w, dead, phase, s).has(this.count);
   }, {
     /** Whether that many of the dead really are evil. */
     isTrue(w, s) {
@@ -466,13 +480,11 @@ export const OracleInfo = define("OracleInfo", "Oracle",
  * registration, so a Recluse may read either way.
  */
 export const SeamstressInfo = define("SeamstressInfo", "Seamstress",
-  function (w) {
+  function (w, s) {
     const phase = `N${this.night}`;
     // By the seat's side as it stands, like the Empath and the Chef.
-    for (const first of evilRegistrations(w.roleAt(this.a, phase),
-                                          w.alignmentAt(this.a, phase)))
-      for (const second of evilRegistrations(w.roleAt(this.b, phase),
-                                             w.alignmentAt(this.b, phase)))
+    for (const first of evilOptions(w, s, this.a, phase))
+      for (const second of evilOptions(w, s, this.b, phase))
         if ((first === second) === !!this.same) return true;
     return false;
   }, {
@@ -795,10 +807,10 @@ export const SageInfo = define("SageInfo", "Sage",
 // side did not, and the hosted page runs the JavaScript.
 /** Three players, exactly one evil **by registration**. */
 export const Noble = define("Noble", "Noble",
-  function (w) {
+  function (w, s) {
     const phase = `N${this.night}`;
     const opts = [this.a, this.b, this.c].map(
-      p => evilRegistrations(w.roleAt(p, phase), w.alignmentAt(p, phase)));
+      p => evilOptions(w, s, p, phase));
     for (const x of opts[0]) for (const y of opts[1]) for (const z of opts[2])
       if (Number(x) + Number(y) + Number(z) === 1) return true;
     return false;
@@ -847,11 +859,9 @@ export const Alsaahir = define("Alsaahir", "Alsaahir",
 
 /** One player, who is good — by registration, so a Spy may be the one. */
 export const StewardInfo = define("StewardInfo", "Steward",
-  function (w) {
+  function (w, s) {
     const phase = `N${this.night}`;
-    return evilRegistrations(w.roleAt(this.target, phase),
-                             w.alignmentAt(this.target, phase))
-      .includes(false);
+    return evilOptions(w, s, this.target, phase).includes(false);
   }, {
     isTrue(w) { return !w.evilAt(this.target, `N${this.night}`); },
     leanedOn(w, s, seat) {
@@ -887,18 +897,17 @@ export const ShugenjaInfo = define("ShugenjaInfo", "Shugenja",
   function (w, s, rh, seat) {
     const who = (seat === null || seat === undefined) ? this.player : seat;
     const said = this.clockwise ? 1 : -1;
-    const can = this.nearest(w, who, false)[said];
-    const must = this.nearest(w, who, true)[-said];
+    const can = this.nearest(w, who, false, s)[said];
+    const must = this.nearest(w, who, true, s)[-said];
     if (can === null) return must === null;
     return must === null || can <= must;
   }, {
     /** The nearest seat each way that can — or must — read evil. */
-    nearest(w, who, must) {
+    nearest(w, who, must, s = null) {
       const phase = `N${this.night}`;
       const best = {"1": null, "-1": null};
       for (const [steps, way, other] of roundTheCircle(w.roles.length, who)) {
-        const reads = evilRegistrations(w.roleAt(other, phase),
-                                        w.alignmentAt(other, phase));
+        const reads = evilOptions(w, s, other, phase);
         const only = reads.length === 1 && reads[0] === true;
         if (must ? !only : !reads.includes(true)) continue;
         for (const side of (way === 0 ? [1, -1] : [way]))
@@ -1000,6 +1009,8 @@ export function possibleImpairmentCounts(world, state, night) {
   for (const source of sourcesOn(world, state, night)) {
     // Its own choice, so not another character's doing (10.10.2026).
     if (source.name === ORGAN_GRINDER_BY_CHOICE) continue;
+    // A Pixie refused its ability: nobody's ability went wrong.
+    if (source.name === "Pixie, not granted") continue;
     // Free *and* reaching everybody it touches — a Drunk holding
     // somebody else's token, a Minstrel silencing the table. A free
     // source that still has to *pick* is a different thing: a
@@ -1205,14 +1216,23 @@ export const VirginNomination = define("VirginNomination", "Virgin",
 
 /** `night` is the day on which the shot was fired. */
 export const SlayerShot = define("SlayerShot", "Slayer",
-  function (w) {
+  function (w, s) {
     const phase = `D${this.night}`;
     const t = w.roleAt(this.target, phase);
-    if (this.died)
+    const hidden = s ? s._hidden : null;
+    const host = hidden ? hidden[1] : null;
+    if (this.died) {
+      // Their jinx: the Slayer's shot at the Lleech's host kills the host
+      // (11.10.2026).
+      const hitHost = host !== null && host >= 0 && this.target === host
+        && w.findAt("Lleech", phase) !== null;
       return w.roleAt(this.player, phase) === "Slayer" &&
-             (DEMONS.has(t) || t === "Recluse");
+             (DEMONS.has(t) || t === "Recluse" || hitHost);
+    }
     // A shot that did nothing is only evidence if a real Slayer fired it,
-    // and that is the usual claim gate's business.
+    // and that is the usual claim gate's business. A Lleech whose host
+    // lives cannot die of it.
+    if (t === "Lleech") return true;
     return !DEMONS.has(t);
   },
   {
@@ -1620,6 +1640,92 @@ export const BoomdandyExploded = define("BoomdandyExploded", "Boomdandy",
     leanedOn() { return [this.player]; },
   });
 
+// The seventh five (11.10.2026). Each the mirror of its class in info.py.
+
+/** The Townsfolk the Pixie was shown, said by the Pixie itself: in play,
+ * or a Spy registering as it. */
+export const PixieLearned = define("PixieLearned", "Pixie",
+  function (w, s, rh, seat) {
+    if (TEAM[this.role] !== "townsfolk") return false;
+    const who = (seat === null || seat === undefined) ? this.player : seat;
+    const phase = `N${this.night}`;
+    for (let p = 0; p < w.roles.length; p++)
+      if (p !== who && registersAsRole(w.roleAt(p, phase), this.role))
+        return true;
+    return false;
+  }, {
+    sourceSeat() { return this.player; },
+    isTrue(w, s, seat) {
+      const who = (seat === null || seat === undefined) ? this.player : seat;
+      const phase = `N${this.night}`;
+      for (let p = 0; p < w.roles.length; p++)
+        if (p !== who && w.roleAt(p, phase) === this.role) return true;
+      return false;
+    },
+  });
+
+/** One player's side, as a Village Idiot learned it — by registration. */
+export const VillageIdiotInfo = define("VillageIdiotInfo", "VillageIdiot",
+  function (w, s) {
+    return evilOptions(w, s, this.target, `N${this.night}`)
+      .includes(!!this.evil);
+  }, {
+    isTrue(w) {
+      return w.evilAt(this.target, `N${this.night}`) === !!this.evil;
+    },
+    leanedOn(w) {
+      const phase = `N${this.night}`;
+      if (w.evilAt(this.target, phase) !== !!this.evil &&
+          evilRegistrations(w.roleAt(this.target, phase),
+                            w.alignmentAt(this.target, phase))
+            .includes(!!this.evil))
+        return [this.target];
+      return [];
+    },
+  });
+
+/** Whom the Lycanthrope chose. Alive in the morning: it read evil, was
+ * the faux paw, was kept alive — or the Lycanthrope was off. */
+export const LycanthropeChose = define("LycanthropeChose", "Lycanthrope",
+  function (w, s, rh, seat) {
+    if (this.open(w, s, seat)) return true;
+    return this.shields(w, s).length > 0;
+  }, {
+    shields(w, s) { return shieldsOn(w, s, this.night, this.target, OTHER); },
+    open(w, s, seat) {
+      const phase = `N${this.night}`;
+      if (this.night < 2 || s.diedAt(this.target).includes(phase))
+        return true;
+      if (seat === null || seat === undefined || !s.aliveSet(phase).has(seat)
+          || !s.aliveSet(phase).has(this.target)) return true;
+      const hidden = s._hidden;
+      if (hidden && hidden[0] === this.target) return true;
+      return evilRegistrations(w.roleAt(this.target, phase),
+                               w.alignmentAt(this.target, phase))
+        .includes(true);
+    },
+    instead(w, s, seat) {
+      if (this.open(w, s, seat)) return null;
+      const shields = this.shields(w, s);
+      if (!shields.length || shields.some(x => x.needs === null
+                                             || x.needs === undefined))
+        return null;
+      return [[], [shields[0].needs]];
+    },
+  });
+LycanthropeChose.isAChoice = true;
+
+/** "The Harpy made me mad that X is evil", said by the one it chose: a
+ * Harpy in play and alive that night. Not asked to have worked the whole
+ * night, as for the Widow. See info.py. */
+export const HarpyMadness = define("HarpyMadness", "Harpy",
+  function (w, s, rh, seat) {
+    if (seat === null || seat === undefined ||
+        s.aliveSet(`N${this.night}`).has(seat)) return true;
+    return killedByAVigormortis(w, s, seat, `N${this.night}`);
+  });
+HarpyMadness.isAChoice = true;
+
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
   Undertaker, Ravenkeeper, GrandmotherInfo, ChambermaidInfo, GamblerGuess,
@@ -1639,6 +1745,7 @@ export const KINDS = {
   PreacherChoice, HuntsmanChoice, PuzzlemasterGuess, BoomdandyExploded,
   MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
+  PixieLearned, VillageIdiotInfo, LycanthropeChose, HarpyMadness,
 };
 
 /** Build a reading from the shape the page posts. */

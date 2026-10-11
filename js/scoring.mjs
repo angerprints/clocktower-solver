@@ -15,11 +15,11 @@ import {explainNight} from "./deaths.mjs";
 import {minionStillActs, planNightResting, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {ABSENT, ARBITRARY, INVERTED, TEAM, abilityState, isEvil}
+import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
 import {Timeline, change} from "./worlds.mjs";
-import {inBag, survivalsOf, teaLadyFailedAtTheGallows}
-  from "./characters.rules.mjs";
+import {fauxPaw, inBag, lleechHost, pixieGain, survivalsOf,
+        teaLadyFailedAtTheGallows} from "./characters.rules.mjs";
 
 // What became of a recorded reading in one particular world. Four
 // outcomes rather than true-or-false, because two of them are neither.
@@ -413,9 +413,11 @@ heirRule(function anOutsiderBecomesTheFangGu(view, state, phase, character) {
   return out;
 });
 
-/** The Demon killed in daylight, with her standing by. */
+/** The Demon died, with her standing by: in daylight, or at night when it
+ * was not the Imp's own starpass, which hands her the star first. A
+ * Lleech going with its host was the first to show it (11.10.2026). */
 heirRule(function theScarletWomanStepsUp(view, state, phase, character) {
-  if (phase[0].toUpperCase() === "N") return [];
+  if (phase[0].toUpperCase() === "N" && STARPASSES.has(character)) return [];
   if (!scarletWomanTakesOver(view, state, phase)) return [];
   return [change(phase, view.findAt("ScarletWoman", phase), character)];
 });
@@ -866,6 +868,15 @@ function sourceSeats(state) {
  * count, because how much a made-up reading costs depends on how far you
  * said you believed it.
  */
+/** Their jinx: "If the Mastermind is alive and the Lleech's host dies by
+ * execution, the Lleech lives but loses their ability" (11.10.2026). */
+function aMastermindKeepsTheLleech(world, state, host, at) {
+  if (at[0] !== "D" || !inBag(state, "Mastermind")) return false;
+  if (state.executionDeath(Number(at.slice(1))) !== host) return false;
+  const mastermind = world.findAt("Mastermind", at);
+  return mastermind !== null && state.aliveSet(at).has(mastermind);
+}
+
 function plainFailures(world, state, outcome = {}) {
   const failures = {};
   const working = {};
@@ -972,6 +983,32 @@ function plainFailures(world, state, outcome = {}) {
     for (const [seat, phase] of state.deathPhases())
       if (phase[0] === "D" && world.roleAt(seat, phase) === "Vizier")
         fail(Number(phase.slice(1)), seat);
+
+  // A Lleech dies when its host does and not before (11.10.2026). The
+  // host is this telling's hidden choice. See solver.py.
+  if (inBag(state, "Lleech")) {
+    const lleech = world.find("Lleech");
+    const host = lleechHost(state);
+    if (lleech !== null && host !== null && host !== undefined) {
+      const byPhase = (a, b) => phaseIndex(a) - phaseIndex(b);
+      const mine = [...state.diedAt(lleech)].sort(byPhase);
+      const gone = mine.length ? mine[0] : null;
+      const theirs = host >= 0 ? [...state.diedAt(host)].sort(byPhase) : [];
+      const at = theirs.length ? theirs[0] : null;
+      if (at !== null && world.roleAt(lleech, at) === "Lleech"
+          && state.aliveSet(at).has(lleech)
+          && (gone === null || phaseIndex(gone) >= phaseIndex(at))) {
+        const key = Number(at.slice(1));
+        if (gone === at)
+          (working[key] = working[key] || new Set()).add(lleech);
+        else if (!aMastermindKeepsTheLleech(world, state, host, at))
+          fail(key, lleech);
+      }
+      if (gone !== null && world.roleAt(lleech, gone) === "Lleech"
+          && (at === null || phaseIndex(gone) < phaseIndex(at)))
+        fail(Number(gone.slice(1)), lleech);
+    }
+  }
 
   // A day with votes on the board was voted with eyes open, so no Organ
   // Grinder was working then (10.10.2026).
@@ -1113,6 +1150,17 @@ function plainFailures(world, state, outcome = {}) {
                            : abilityState(world, seat, role, phase,
                                           gained, vortoxed);
     }
+    // A Pixie mad about this character: made up until its holder dies,
+    // at no cost, and its own from the night after (11.10.2026).
+    if (held === ABSENT && seat !== null
+        && world.roleAt(seat, phase) === "Pixie" && inBag(state, "Pixie")) {
+      const got = pixieGain(world, state, seat);
+      if (got !== null && got[0] === role) {
+        if (got[1] !== null && info.night >= got[1])
+          held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
+        else held = ARBITRARY;
+      }
+    }
     // A row told to somebody other than the holder. A Drunk holding the
     // token has no ability, so nobody else is woken for it. See solver.py.
     const witnessed = !!info.witnessed;
@@ -1178,22 +1226,52 @@ function plainFailures(world, state, outcome = {}) {
       return;
     }
 
+    // The Lycanthrope's faux paw registers evil while it works, and
+    // whether it worked is the plan's: a row that asked about it is tried
+    // both ways (11.10.2026). See solver.py.
+    let ok = null, fauxNeed = null;
+    if (info.type !== "FortuneTeller" && fauxPaw(state) !== null) {
+      state._fauxMode = "on"; state._fauxHit = false;
+      ok = info.holds(world, state, null, seat);
+      if (state._fauxHit) {
+        state._fauxMode = "off";
+        const okOff = info.holds(world, state, null, seat);
+        state._fauxMode = "on";
+        const lyc = world.findAt("Lycanthrope", phase);
+        if (ok && !okOff) fauxNeed = ["working", lyc];
+        else if (okOff && !ok) fauxNeed = ["impaired", lyc];
+      }
+      state._fauxHit = false;
+    }
+    if (ok === null && info.type !== "FortuneTeller")
+      ok = info.holds(world, state, null, seat);
+
+    if (fauxNeed !== null && fauxNeed[0] === "impaired" && !witnessed) {
+      either.push({night: info.night, source: [seat],
+                   impaired: [fauxNeed[1]], working: []});
+      outcome[idx] = EXCUSED;
+      return;
+    }
+
     if (info.type === "FortuneTeller") {
       // Whether it held depends on where the red herring was, which is
       // settled later. Left open until then.
       ftInfos.push([info, seat, idx, null]);
-    } else if (witnessed && !info.holds(world, state, null, seat)) {
+    } else if (witnessed && !ok) {
       // Nothing excuses it: a droisoned source tells the other player
       // nothing at all, so the words did not come from the game.
       invented *= inventionCost(info);
       outcome[idx] = INVENTED;
-    } else if (!info.holds(world, state, null, seat)) {
+    } else if (!ok) {
       // Poison has to land on whoever the information came from —
       // poisoning the messenger changes nothing.
       fail(info.night, seat);
       outcome[idx] = EXCUSED;
     } else {
       outcome[idx] = HELD;
+      if (fauxNeed !== null)
+        (working[info.night] || (working[info.night] = new Set()))
+          .add(fauxNeed[1]);
       // **A droisoned character cannot misregister.** Registration is a
       // plain ability and a plain ability simply does not function, so a
       // row that held only by somebody misregistering forbids that seat
@@ -1245,7 +1323,9 @@ function explainedNight(world, state, night, died) {
   const here = phaseIndex(`N${night}`);
   const upto = (world.changes || []).filter(c => momentOf(c) <= here);
   const memo = memoFor(base, "_nightsMemo", state);
-  const key = `${night}#${upto.map(changeKey).join(";")}`;
+  // And this telling's hidden choices (`hiddenChoices`).
+  const hidden = state._hidden ? `|${state._hidden[0]}|${state._hidden[1]}` : "";
+  const key = `${night}#${upto.map(changeKey).join(";")}${hidden}`;
   let got = memo.got.get(key);
   if (got === undefined) {
     got = theOnesThatCanWin(explainNight(world, state, night, died()));
@@ -1520,8 +1600,75 @@ function theGameWentOn(world, state) {
   return true;
 }
 
-/** The cost of one telling of this world, with the lineage settled. */
+/** The good players worth trying as the faux paw: any seat a reading
+ * looks at or the Lycanthrope could have hit, and one nobody looks at for
+ * the rest. Good when the game began. See solver.py. */
+function fauxPawCandidates(world, state) {
+  const n = state.nPlayers;
+  const good = [];
+  for (let p = 0; p < n; p++) if (!world.evilAt(p, "N0")) good.push(p);
+  if (!good.length) return [null];
+  const looked = new Set();
+  for (const info of state.infos) {
+    if (["Chef", "Empath", "OracleInfo", "ShugenjaInfo"].includes(info.type))
+      return good;
+    if (["SeamstressInfo", "Noble", "StewardInfo", "VillageIdiotInfo",
+         "LycanthropeChose"].includes(info.type))
+      for (const field of ["a", "b", "c", "target"])
+        if (Number.isInteger(info[field])) looked.add(info[field]);
+  }
+  for (const [seat, phase] of state.deathPhases())
+    if (phase[0] === "N") looked.add(seat);
+  const out = good.filter(p => looked.has(p));
+  const rest = good.filter(p => !looked.has(p));
+  return out.concat(rest.slice(0, 1));
+}
+
+/** Every [faux paw, Lleech host] worth trying, or null for neither. The
+ * host is anybody who died, or -1 for somebody who never did. */
+function hiddenChoices(world, state) {
+  let faux = [null], host = [null];
+  if (inBag(state, "Lycanthrope") && world.roles.includes("Lycanthrope"))
+    faux = fauxPawCandidates(world, state);
+  if (inBag(state, "Lleech")) {
+    const lleech = world.find("Lleech");
+    if (lleech !== null) {
+      const dead = new Set();
+      for (const [seat] of state.deathPhases()) if (seat !== lleech) dead.add(seat);
+      host = [...dead].sort((a, b) => a - b).concat([-1]);
+    }
+  }
+  if (faux.length === 1 && faux[0] === null &&
+      host.length === 1 && host[0] === null) return null;
+  const out = [];
+  for (const f of faux) for (const h of host) out.push([f, h]);
+  return out;
+}
+
+/** The cost of one telling of this world, tried for each hidden choice it
+ * leaves open — the faux paw, the Lleech's host — the best kept. */
 function explainOne(world, state, outcome = null) {
+  const choices = hiddenChoices(world, state);
+  if (choices === null) {
+    state._hidden = null;
+    return explainOnce(world, state, outcome);
+  }
+  let best = null, bestMarks = null;
+  for (const choice of choices) {
+    state._hidden = choice;
+    const marks = outcome ? {} : null;
+    const cost = explainOnce(world, state, marks);
+    if (cost !== null && (best === null || cost > best)) {
+      best = cost; bestMarks = marks;
+    }
+  }
+  state._hidden = null;
+  if (outcome && bestMarks) Object.assign(outcome, bestMarks);
+  return best;
+}
+
+/** The cost of one telling of this world, with the lineage settled. */
+function explainOnce(world, state, outcome = null) {
   if (!theGameWentOn(world, state)) return null;
   const sorted = plainFailures(world, state, outcome || {});
   if (sorted === null) return null;

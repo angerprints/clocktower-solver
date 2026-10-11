@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 05.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 11.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -1021,13 +1021,44 @@ Daraus folgt auch: „Jede Störung ruht, solange ihre Quelle gestört ist“ st
 
 **Nebenbei gefunden und behoben:** Ein verlangter Charakter konnte auf einem gemischten Skript doppelt stehen; am Tor waren es zwei Xaan in einer Partie. Ein Jäger wachte im Simulator für die Kammerzofe nie auf. Ein Zombuul, den das Zeigen nach einer Explosion zum zweiten Mal traf, verlor im Simulator seinen ersten Tod. Die Website stürzte bei jedem Hinweis ab, dass ein Skript zu klein sei, und dieser Hinweis rechnete jede Wahl eines Charakters wie dem Xaan zusammen, statt die größte zu nehmen.
 
+### Die siebten fünf experimentellen Charaktere · *erledigt am 11.10.2026*
+
+Der volle Bericht steht in `claude/experimentelle-charaktere-batch-7.md`.
+
+**Dein Auftrag vom 11.10.2026:** „Weiter“. Ich habe Feenkind, Dorftrottel, Werwolf, Harpyie und Lleech mit den Lesarten A bis V vorgelegt. Deine Antwort: alles wie vorgeschlagen, mit einer Korrektur zu J. Die falsche Pfote darf auch der Werwolf selbst sein. Genau so ist es gebaut.
+
+| Charakter | Zeile auf der Website | Was der Solver daraus macht |
+|---|---|---|
+| Feenkind | „Pixie shown“ (Nacht 1) | Der gezeigte Bürger ist im Spiel oder ein Spion registriert als er, unter einem Vortox falsch. Ihn zu behaupten ist kostenloser Wahn. Stirbt sein Halter, während das Feenkind lebt, arbeitet und im Wahn ist, hat es die Fähigkeit ab der nächsten Nacht. Verweigert der Erzähler sie, kostet das 0,35. |
+| Dorftrottel | „Village Idiot“ (Nacht) | Ein bis drei, zusätzliche ersetzen Bürger. Ab zwei ist einer das ganze Spiel betrunken, kostenlos. Gesinnung nach Registrieren. Der Mathematiker zählt den Betrunkenen. |
+| Werwolf | „Lycanthrope chose“ (Nacht) | Ein guter Gewählter stirbt, und der Dämon tötet niemanden, auch das alte Gift der Pukka nicht. Kein Dämon-Kill: Mönch und Soldat schützen nicht. Ein guter Spieler, auch der Werwolf, registriert sicher als böse (falsche Pfote), solange der Werwolf lebt und arbeitet. |
+| Harpyie | „Harpy madness“ (Tag) | Sagt der Wahnsinnige es, lebt eine Harpyie. Regel 24 des Cerenovus. Tagestode ohne Ursache, nie der Dämon. |
+| Lleech | keine | Der Wirt ist vergiftet, solange der Lleech lebt, und das ruht, solange der Lleech gestört ist. Der Lleech stirbt nur mit dem Wirt, gestört erst, wenn er wieder arbeitet. Jinx mit Dämonenjäger und Strippenzieher gebaut. |
+
+Daraus folgt auch: Wer die falsche Pfote ist und wer Wirt des Lleech, erzählt der Solver für jede mögliche Wahl einmal und behält die beste. Der Dorftrottel ist der erste Charakter, der mehrfach ausgeteilt wird.
+
+**Das Tor:**
+
+| Nr. | Schritt | Ergebnis |
+|---|---|---|
+| 1 | Solver in Python und JavaScript | 20 neue Bretter, beide stimmen überein. 1.488 gemischte Partien mit den fünf kosten die wahre Welt in beiden gleich. |
+| 2 | Simulator | Spielt alle fünf. In 3.000 gemischten Partien: 5.386 Auskünfte der Dorftrottel, 1.217 des Feenkinds, 1.407 Wahlen des Werwolfs, 965 Wahn der Harpyie, 725 Lleeches. |
+| 3 | Night-Walk | Kennt Werwolf, falsche Pfote, Harpyie und jeden Wirt. Auf den eigenen Skripten 3 von 15.526 Nächten abweichend, alle Stelle 47. |
+| 4 | Gemischte Partien mit den fünf | 9 von 3.000 bei 4 Nächten, 8 bei 6 Nächten. Keine wegen der fünf. |
+| 5 | Website | Vier neue Zeilen, im Browser geprüft. |
+| 6 | Korpus und Suite | 331 Bretter, 1.449 Tests grün (40 neue), 2 übersprungen. |
+
+**Messung:** Die zwei eigenen Skripte verlieren 0 von 12.000 Partien. Grundskripte: Prüfsummen gleich, Bad Moon Rising 0 von 6.000, Sects & Violets 37 von 6.000 wie auf dem Stand vor dem Batch. Gemischte Partien ohne Pflicht: 5 von 3.000, davon 2 Barbier-Klasse, 1 Stelle 41, 1 Stelle 42 und 1 Stelle 48 e. Mit den fünf: 6 Barbier-Klasse, 2 Stelle 6 und 1 Stelle 48 a bei 4 Nächten. Bei 6 Nächten 5 Barbier-Klasse, 2 Stelle 6 und 1 Stelle 48 a.
+
+**Nebenbei gefunden und behoben:** Die Scharlachrote Frau übernahm nur am Tag; starb ein anderer Dämon als der Imp in der Nacht, gab es keine Erbin. Ein Philosoph mit dem Höfling machte nie jemanden betrunken, und Philosoph wie Höfling trafen von mehreren Haltern nur den ersten. Der Schuss des Dämonenjägers kannte in Python nur die Dämonen aus Trouble Brewing. Im Night-Walk endete die Trunkenheit durch Seemann oder Gastwirt nicht, wenn der Giftmischer sie danach vergiftete, und ein Trunkenbold, den das Grubenweib verwandelt, wurde erst am Platz der Süßen nüchtern. Im Simulator tötete die Lästerschwester auch durch den Schutz des Gastwirts und des Seemanns.
+
 ### Als Nächstes
 
-**1 · Batch 7 der experimentellen Charaktere.** Zehn mittlere sind durch das Tor. Wie bisher lege ich zuerst fünf Kandidaten mit meinen Lesarten vor und baue erst nach deinen Antworten.
+**1 · Batch 8 der experimentellen Charaktere.** Fünfzehn mittlere sind durch das Tor. Vorgeschlagen sind Kopfgeldjäger, Kultführer, Mezepheles, Leviathan und Yaggababble. Wie bisher lege ich zuerst die Lesarten vor und baue erst nach deinen Antworten.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 112 Charaktere. Von den 138 Spielercharakteren der App sind 111 im Katalog (dazu der Wächter, ein Fabled), 27 fehlen: 12 Bürger, 3 Außenseiter, 5 Schergen, 7 Dämonen. Nach meiner Einschätzung sind davon keiner mehr klein, 10 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer).
+Stand des Katalogs: 117 Charaktere. Von den 138 Spielercharakteren der App sind 116 im Katalog (dazu der Wächter, ein Fabled), 22 fehlen: 9 Bürger, 3 Außenseiter, 4 Schergen, 6 Dämonen. Nach meiner Einschätzung sind davon 5 mittel und 12 groß; 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer).
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1058,7 +1089,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 11 | Werkzeug | **Die alte lokale Python-App lehnt einen Tod in Nacht 1 ab,** die Seite nicht. Ein Bastler kann in Nacht 1 sterben. Der Night-Walk kennt den Fall auch nicht. |
 | 12 | Werkzeug | **Exakte Zählung früher Bretter auf der Website.** Der Barbier-Multiplikator und der Aufbau der Zeitleisten sind die Hauptkosten. |
 | 13 | Werkzeug | **NEXT.md** in eine kurze Roadmap und ein Archiv aufteilen. |
-| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). Batch 1 ist am 05.10.2026 erledigt, Batch 2 am 07.10.2026, Batch 3 am 08.10.2026, Batch 4 am 10.10.2026. 37 offizielle Charaktere fehlen noch im Katalog. |
+| 14 | Als Nächstes | **Experimentelle Charaktere,** einzeln und in Batches von fünf (deine Entscheidung vom 05.10.2026). Batch 1 ist am 05.10.2026 erledigt, Batch 2 am 07.10.2026, Batch 3 am 08.10.2026, Batch 4 bis 6 am 10.10.2026, Batch 7 am 11.10.2026. 22 offizielle Charaktere fehlen noch im Katalog. |
 | 15 | Bad Moon Rising | *Erledigt am 03.10.2026:* Höfling nach einer Wiederbelebung. Deine Regel: Die Fähigkeit endet mit dem Tod, der Wiederbelebte ist eine neue Instanz. |
 | 16 | Bad Moon Rising | **Kammerzofe und wer in derselben Nacht stirbt.** Simulator und Solver zählen einen Sitz als geweckt, auch wenn er vor seinem Platz in der Nacht getötet wurde (Professor an Platz 43, Dämon an 27). Beide machen es gleich, deshalb sieht es kein Messlauf. |
 | 17 | Bad Moon Rising | *Erledigt am 03.10.2026:* Meuchelmörder, der seine Fähigkeit unsichtbar verbraucht. Gemessen und behoben. |
@@ -1084,16 +1115,16 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 37 | Gemischte Skripte | *Erledigt am 07.10.2026:* Der Solver verlor in 3,2 % der gemischten Partien die wahre Welt (96 von 3.000), jetzt in 0,4 % (11 von 3.000). Der Rest steht in den Stellen 4, 6, 36, 41 und 42. |
 | 38 | Solver | *Erledigt am 07.10.2026:* Vortox und Registrieren. Deine Entscheidung: Die Wirklichkeit zählt, auch bei der Adligen. Gebaut für Koch, Empath, Orakel, Schneiderin, Wahrsagerin, Jongleur, Großmutter und Adlige. |
 | 39 | Werkzeug | **Die Nachtreihenfolge im Repo ist veraltet** (130 von 181 Charakteren). Für Gutsverwalter, Ritter und Shugenja sind die Plätze von Hand eingetragen. |
-| 40 | Simulator | **Der Schläger antwortet nicht auf verdeckte Wahlen.** Giftmischer, Mönch, Hexe und Grubenweib wählen im Simulator, ohne dass der Schläger reagiert. Der Night-Walk macht es richtig, deshalb weichen 9 von 8.316 Nächten ab. Kommt nur auf gemischten Skripten vor. Sauber wäre, diese Wahlen in die Reihenfolge der Nacht einzuordnen. Das teilt alle Partien mit einem Giftmischer neu aus. |
+| 40 | Simulator | **Der Schläger antwortet nicht auf verdeckte Wahlen.** Giftmischer, Mönch, Hexe, Grubenweib und Schlangenbeschwörer wählen im Simulator, ohne dass der Schläger reagiert. Der Night-Walk macht es richtig, deshalb weichen 9 von 8.316 Nächten ab. Kommt nur auf gemischten Skripten vor. Sauber wäre, diese Wahlen in die Reihenfolge der Nacht einzuordnen. Das teilt alle Partien mit einem Giftmischer neu aus. |
 | 41 | Regelfrage | **Ein Gastwirt schützt den Fang Gu, der in derselben Nacht in einen Außenseiter springt.** Im Simulator stirbt der alte Fang Gu trotzdem, der Solver hält ihn für geschützt. 2 von 3.000 gemischten Partien. Zu entscheiden ist, was am Tisch passiert. |
 | 42 | Solver | **Eine Auskunft, die nur durch Registrieren stimmt, verlangt, dass der registrierende Sitz nicht gestört war.** Die andere Erklärung, dass die Quelle selbst gestört war, prüft der Solver dann nicht mehr. Gefunden an einem Totengräber, dem ein Spion als Soldat gezeigt wurde, in einer Nacht, in der ein Minnesänger alle betrunken gemacht hatte. 1 von 3.000 gemischten Partien. |
 | 43 | Simulator | **Ein Philosoph nimmt einen Charakter, der echte Halter nennt seine Rolle nicht.** Dann rechnet der Solver die Auskunft des echten Halters dem Philosophen zu. 1 von 3.000 Partien in Sects & Violets (Seed 1698). Am 08.10.2026 dasselbe mit einem Trunkenbold, der glaubt, Träumer zu sein, und etwas anderes angibt: Seine Auskunft als Träumer wird dem Philosophen zugerechnet, der den Träumer genommen hat (Tor, Seed 2461). |
 | 44 | Night-Walk | **Akrobatin neben getauschten oder betrunkenen Sitzen:** Simulator und Night-Walk sind sich in etwa 12 von 8.316 Nächten nicht einig, ob das Ziel der Akrobatin gestört ist. Der Simulator vergiftet einen getauschten Dämon erst ab der nächsten Nacht, der Night-Walk sofort. |
 | 45 | erledigt | **Ein Höfling nennt den Schläger.** Deine Entscheidung vom 08.10.2026: Weg 1, wie im Wiki. Das zählt als Wahl des Schlägers. Gebaut in Solver, Simulator und Night-Walk. Die Abweichung für das Einzelspieler-Spiel steht in `claude/handover-hoefling-schlaeger.md`. |
 | 46 | Night-Walk | **Ein Seemann wählt den Schläger zuerst, und der Gastwirt macht den Schläger in derselben Nacht betrunken.** Der Night-Walk bekommt den Schläger als von Anfang an betrunken gesagt und lässt ihn nicht antworten. 1 von 8.219 Nächten. |
-| 47 | Night-Walk | **Gift der Pukka aus der Vornacht, und die Pukka wird in dieser Nacht vom Schläger betrunken.** Ein Glücksspieler, den die Pukka in der Nacht davor gewählt hat, ist an seinem frühen Platz noch vergiftet und überlebt einen falschen Tipp. Der Night-Walk weiß das nicht und lässt ihn sterben. 1 von 8.617 Nächten auf dem eigenen Skript aus Batch 3 (Seed 1571), nicht wegen der fünf. Auf dem Skript aus Batch 4 dasselbe einmal in 7.827 Nächten (Seed 2824). |
+| 47 | Night-Walk | **Gift der Pukka aus der Vornacht, und die Pukka wird in dieser Nacht vom Schläger betrunken.** Ein Glücksspieler, den die Pukka in der Nacht davor gewählt hat, ist an seinem frühen Platz noch vergiftet und überlebt einen falschen Tipp. Der Night-Walk weiß das nicht und lässt ihn sterben. 1 von 8.617 Nächten auf dem eigenen Skript aus Batch 3 (Seed 1571), nicht wegen der fünf. Auf dem Skript aus Batch 4 dasselbe einmal in 7.827 Nächten (Seed 2824). Auf dem zweiten Skript aus Batch 7 dreimal in 7.975 Nächten, dort trifft das Gift aus der Vornacht einen Gastwirt, einen Seemann und einen Werwolf (Seeds 971, 1702, 1857). |
 | 48 | Solver | **Drei kleine Klassen aus dem Tor von Batch 4, nicht wegen der vier.** (a) Ein Philosoph nimmt die Fähigkeit des Schlangenbeschwörers: 2 von 3.000 gemischten Partien (Seeds 535, 1393), noch nicht untersucht. (b) Ein vergifteter Höfling nennt einen Charakter, und der Mathematiker zählt dessen Trunkenheit vermutlich trotzdem mit: 1 Partie (Seed 1408). (c) Ein Bauer gibt seinen Charakter weiter, danach erschafft das Grubenweib einen Charakter, und der Solver hält die Erschaffung für unmöglich: 1 Partie (Seed 2009). (b) und (c) sind noch nicht im Einzelnen untersucht. Drei weitere aus dem Tor von Batch 5, nicht wegen der fünf: (d) ein Philosoph mit der Fähigkeit des Professors, der selbst hingerichtet und zurückgeholt wurde (Seed 2099, mit den fünf); (e) ein Mondkind, dessen Ziel in derselben Nacht durch einen Tausch mit dem Shabaloth zum Dämon wurde (Seed 2027); (f) ein Bauer gibt an einen Sitz weiter, der in derselben Nacht getauscht wurde (Seed 2264). Je 1 von 3.000 gemischten Partien, noch nicht untersucht. Am Tor von Batch 6 kam (e) dreimal vor, mit einem Schlangenbeschwörer, der mit dem Dämon tauscht, während das Mondkind auf ihn zeigt (Seeds 1312, 1638 und bei 6 Nächten 1769). |
-| 49 | Night-Walk | **Ein Tausch mitten in der Nacht verschiebt Gift, und der Night-Walk merkt es erst am Platz der Süßen.** Ein Philosoph mit der Fähigkeit des Schlangenbeschwörers tauscht an Platz 11 mit dem No Dashii, dessen Gift wandert mit. Der Night-Walk ändert die Störungen aus solchen Gründen erst an Platz 41, die Prinzessin galt beim Dämon an Platz 30 also noch als vergiftet. 1 von 8.246 Nächten im Tor von Batch 5 (Seed 879). |
+| 49 | Night-Walk | **Ein Tausch mitten in der Nacht verschiebt Gift, und der Night-Walk merkt es erst am Platz der Süßen.** Ein Philosoph mit der Fähigkeit des Schlangenbeschwörers tauscht an Platz 11 mit dem No Dashii, dessen Gift wandert mit. Der Night-Walk ändert die Störungen aus solchen Gründen erst an Platz 41, die Prinzessin galt beim Dämon an Platz 30 also noch als vergiftet. 1 von 8.246 Nächten im Tor von Batch 5 (Seed 879). Am Tor von Batch 7 dieselbe Klasse dreimal: ein Schlangenbeschwörer verschiebt das Gift des No Dashii (Seed 1801), eine Süße stirbt durch den Shabaloth und ihre Trunkenheit trifft die Großmutter, die im selben Moment trauert (Seed 2031), und ein Mondkind tötet die Süße, deren Trunkenheit es selbst trifft (Seed 1112, 6 Nächte). Zwei Fälle davon sind seither eng behoben: ein Tausch mit dem Lleech und ein Trunkenbold, den das Grubenweib verwandelt. |
 | 50 | Simulator | **Der Mönch wählt vor dem Gastwirt.** Im Simulator schützt der Mönch vor allen frühen Wahlen, am Tisch handelt der Gastwirt (Platz 9) vor ihm (Platz 12). Macht der Gastwirt die Witwe betrunken, ruht ihr Gift auf dem Mönch schon, der Simulator lässt den Mönch aber vergiftet wählen. 3 von 8.246 Nächten im Tor von Batch 5 (Seed 2053). Das zu ändern teilt alle Partien mit einem Mönch neu aus, wie Stelle 19. Am Tor von Batch 6 dasselbe mit einer Witwe, die das Grubenweib in derselben Nacht erschafft (Platz 16 und 18): Ihr Gift auf dem Mönch zählt im Simulator schon an Platz 12. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.

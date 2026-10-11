@@ -1002,6 +1002,62 @@ def handmade():
                        ("damsel-found", 8)):
         yield played(f"x-six-bmr-played-{what}", XSB, seed, 7, 4)
 
+    # The seventh five (11.10.2026), on the scripts of
+    # tests/test_experimental_7.py: a mad Pixie that gained its Empath, three
+    # Village Idiots, a Lycanthrope's kill and its faux paw, a Harpy's mad
+    # player, a Lleech walking away and going with its host.
+    from test_experimental_7 import SEVEN as XV, SEVEN_BMR as XVB7
+    P7 = ["Chef", "Empath", "Monk", "Soldier", "Undertaker", "Empath",
+          "Mayor"]
+    yield board("x-seven-7-bare", XV, P7)
+    yield board("x-seven-7-pixie-gained", XV, P7, infos=[
+        {"type": "PixieLearned", "night": 1, "player": 5, "role": "Empath"},
+        {"type": "Empath", "night": 3, "player": 5, "count": 1}],
+        players_override={1: ["N2"]})
+    yield board("x-seven-7-pixie-refused", XV, P7, infos=[
+        {"type": "PixieLearned", "night": 1, "player": 5, "role": "Empath"},
+        {"type": "Empath", "night": 3, "player": 5, "count": 2}],
+        players_override={1: ["N2"]})
+    V7 = ["VillageIdiot", "VillageIdiot", "VillageIdiot", "Empath", "Monk",
+          "Chef", "Soldier"]
+    yield board("x-seven-7-three-idiots", XV, V7, infos=[
+        {"type": "VillageIdiotInfo", "night": 1, "player": 0, "target": 4,
+         "evil": False},
+        {"type": "VillageIdiotInfo", "night": 1, "player": 1, "target": 4,
+         "evil": True},
+        {"type": "VillageIdiotInfo", "night": 1, "player": 2, "target": 4,
+         "evil": False}])
+    L7 = ["Chef", "Empath", "Monk", "Soldier", "Lycanthrope", "Washerwoman",
+          "Mayor"]
+    yield board("x-seven-7-lycanthrope-kill", XV, L7, infos=[
+        {"type": "LycanthropeChose", "night": 2, "player": 4, "target": 2}],
+        players_override={2: ["N2"]})
+    yield board("x-seven-7-lycanthrope-missed", XV, L7, infos=[
+        {"type": "LycanthropeChose", "night": 2, "player": 4, "target": 1}],
+        players_override={3: ["N2"]})
+    yield board("x-seven-7-faux-paw", XV, L7, infos=[
+        {"type": "Empath", "night": 1, "player": 1, "count": 1},
+        {"type": "Chef", "night": 1, "player": 0, "count": 0}])
+    yield board("x-seven-7-harpy", XV, L7, infos=[
+        {"type": "HarpyMadness", "night": 1, "player": 2, "second": 3}])
+    E8 = ["Chef", "Empath", "Monk", "Soldier", "Undertaker", "Washerwoman",
+          "Mayor", "Slayer"]
+    yield board("x-seven-8-lleech-walks-away", XV, E8,
+                players_override={2: ["S1"], 3: ["N2"]})
+    yield board("x-seven-8-host-hanged", XV, E8,
+                players_override={2: ["X1"], 5: ["D1"], 3: ["N2"]})
+    yield board("x-seven-8-slayer-hits-the-host", XV, E8, infos=[
+        {"type": "SlayerShot", "night": 1, "player": 7, "target": 0,
+         "died": True}],
+        players_override={0: ["D1"], 4: ["D1"], 1: ["N2"]})
+    for what, seed in (("harpy-kill", 0), ("lycanthrope-kill", 2),
+                       ("lleech-walked", 4), ("lleech-scarlet-woman", 5),
+                       ("pixie-gained", 10)):
+        yield played(f"x-seven-played-{what}", XV, seed, 7, 4)
+    for what, seed in (("idiot-drunk", 0), ("lycanthrope-kill", 3),
+                       ("lleech-walked", 15), ("lleech-end", 19)):
+        yield played(f"x-seven-bmr-played-{what}", XVB7, seed, 7, 4)
+
 
 def generated(how_many=60):
     """Random boards, so the corpus covers combinations nobody chose."""

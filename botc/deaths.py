@@ -88,6 +88,10 @@ class Cause(NamedTuple):
     # `seats` has to have been unable to die. `seats` is None when
     # nothing was due at all.
     excuses: tuple = ()
+    # Does a kill by this one mean the Demon kills nobody tonight? The
+    # Lycanthrope's: "If good, they die & the Demon doesn't kill tonight"
+    # (11.10.2026). Only when it did kill, and then it was working.
+    quiets_demon: bool = False
 
 
 CAUSE_RULES = []
@@ -353,6 +357,24 @@ def _account_for(world, state, night, causes, directly, followed,
             else:
                 settled.append((c, imp, wk, used, before))
 
+    # A kill that stops the Demon: no Demon kill beside it, and whoever
+    # made it was working (the Lycanthrope, 11.10.2026).
+    quieting = [c for c in causes if c.quiets_demon]
+    if quieting:
+        kept = []
+        for c, imp, wk, used, extra in settled:
+            fired = [q for q in quieting if used[q.name] > 0]
+            if fired:
+                if any(used[x.name] > 0 for x in causes
+                       if x.kind == DEMON):
+                    continue
+                actors = {q.actor for q in fired if q.actor is not None}
+                if actors & set(imp):
+                    continue
+                wk = set(wk) | actors
+            kept.append((c, imp, wk, used, extra))
+        settled = kept
+
     # Anything that fires whether or not it is wanted, and killed nobody,
     # was stopped — and something had to do the stopping.
     if blame:
@@ -363,6 +385,11 @@ def _account_for(world, state, night, causes, directly, followed,
             continue
         grown = []
         for cost, impaired, working, used, before in settled:
+            if used[cause.name] == 0 and cause.kind == DEMON \
+                    and any(used[q.name] > 0 for q in quieting):
+                # The Lycanthrope killed: the Demon kills nobody.
+                grown.append((cost, impaired, working, used, before))
+                continue
             if used[cause.name] > 0:
                 # It did the killing, so there is nothing to explain —
                 # except that whoever did it was working.

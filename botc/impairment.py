@@ -115,12 +115,15 @@ def sources_on(world, state, night):
             object.__setattr__(world, "_sources_memo", memo)
         except AttributeError:
             pass
-    got = memo[2].get(night)
+    # The hidden choices of this telling move a Lleech's poison
+    # (solver._hidden_choices), so they are part of the key.
+    key = (night, getattr(state, "_hidden", None))
+    got = memo[2].get(key)
     if got is None:
         got = []
         for rule in SOURCE_RULES:
             got.extend(rule(world, state, night))
-        memo[2][night] = got
+        memo[2][key] = got
     return list(got)
 
 
@@ -297,6 +300,12 @@ def plan_night(sources, required, forbidden, previous):
     return best, best_hits
 
 
+# Sources that rest while their actor is drunk or poisoned and are
+# otherwise unavoidable: the two silencers, and a Lleech's poison on its
+# host (11.10.2026).
+RESTING = ("Preacher", "Xaan", "Lleech")
+
+
 def plan_night_resting(sources, required, forbidden, previous):
     """`plan_night`, and if nothing fits, the same night with one resting
     source set aside and its actor impaired instead.
@@ -312,7 +321,7 @@ def plan_night_resting(sources, required, forbidden, previous):
     if got is not None:
         return got
     for source in working:
-        if source.name not in SILENCERS or source.actor is None \
+        if source.name not in RESTING or source.actor is None \
                 or not source.unavoidable() or source.actor in forbidden:
             continue
         rest = silenced_out([s for s in sources if s is not source])

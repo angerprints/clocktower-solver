@@ -60,6 +60,8 @@ export const INFO_SOURCES = {
   PsychopathRoshambo: "Psychopath", WidowKnown: "Widow",
   PreacherChoice: "Preacher", HuntsmanChoice: "Huntsman",
   PuzzlemasterGuess: "Puzzlemaster", BoomdandyExploded: "Boomdandy",
+  PixieLearned: "Pixie", VillageIdiotInfo: "VillageIdiot",
+  LycanthropeChose: "Lycanthrope", HarpyMadness: "Harpy",
   Washerwoman: "Washerwoman", Librarian: "Librarian",
   Investigator: "Investigator", Chef: "Chef", Empath: "Empath",
   FortuneTeller: "FortuneTeller", Undertaker: "Undertaker",
@@ -299,6 +301,8 @@ export function readBoard(payload) {
                          "InnkeeperChoice", "SailorChoice", "ExorcistChoice",
                          "PhilosopherChoice", "CourtierChoice",
                          "CerenovusMadness", "PreacherChoice",
+                         // Before every Demon (11.10.2026).
+                         "LycanthropeChose", "HarpyMadness",
                          // Dead *because* it picked, like the Gambler.
                          "Acrobat",
                          // Woken late, and "choose a player" means any.

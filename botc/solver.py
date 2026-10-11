@@ -20,10 +20,11 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    VirginNomination, BecameInfo, EvilTwinPair,
                    ChoirboyInfo, PrincessNominated,
                    PreacherChoice, HuntsmanChoice,
+                   PixieLearned, VillageIdiotInfo, LycanthropeChose,
                    phase_index)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
-                    INVERTED,
+                    INVERTED, registers_as_role, evil_registrations,
                     is_evil, must_hide, show, wake_fits)
 from . import deaths as death_causes
 from . import impairment
@@ -118,6 +119,12 @@ SUNK_KILL_PENALTY = 0.45
 # engine found it this explanation did not exist at all, and a quiet
 # night was proof of a protector.
 DEMON_POISONED_PENALTY = 0.05
+
+# A Pixie mad about the Townsfolk whose holder died, and the Storyteller
+# judged it not mad enough to gain the ability (table ruling, 11.10.2026:
+# both are possible, the refusal costs something). Priced like a hiding
+# Outsider: a thing that happens, not the thing that usually does.
+PIXIE_DENIED_PENALTY = 0.35
 
 # Information with no genuine source anywhere in a world had to be invented
 # out of nothing. That happens - people bluff detailed readings - but it is
@@ -532,8 +539,16 @@ def an_outsider_becomes_the_fang_gu(view, state, phase, character):
 
 @heir_rule
 def the_scarlet_woman_steps_up(view, state, phase, character):
-    """The Demon killed in daylight, with her standing by."""
-    if phase[0].upper() == "N":
+    """The Demon died, with her standing by.
+
+    In daylight, or at night when it was not the Imp's own starpass —
+    that rule already hands her the star first. "If there are 5 or more
+    players alive & the Demon dies" is any death: a Lleech that went with
+    its host in the night was the first Demon to die there of anything
+    but its own kill (11.10.2026), and an Assassin's or a Gossip's kill
+    on the Demon had the same gap.
+    """
+    if phase[0].upper() == "N" and character in STARPASSES:
         return []
     if not scarlet_woman_takes_over(view, state, phase):
         return []
@@ -1410,6 +1425,21 @@ def a_vizier_cannot_die_by_day(world, state, day, seat):
 
 
 @survives_execution_rule
+def a_lleech_outlives_the_gallows(world, state, day, seat):
+    """A working Lleech whose host lives walks away from its execution
+    (11.10.2026). Any Lleech: one made later has a host nobody tracks."""
+    if not _in_bag(state, "Lleech"):
+        return []
+    phase = f"D{day}"
+    if world.role_at(seat, phase) != "Lleech":
+        return []
+    if seat == world.find("Lleech") \
+            and _host_gone_by(state, _lleech_host(state), phase):
+        return []
+    return [seat]
+
+
+@survives_execution_rule
 def a_psychopath_wins_at_roshambo(world, state, day, seat):
     """ "If executed, you only die if you lose roshambo." Working, it may
     walk away from the gallows, and that costs nothing (10.10.2026)."""
@@ -1472,16 +1502,22 @@ def _rosters(state, phase):
     return [alive, alive - back] if back else [alive]
 
 
-def _at_the_gallows(state, day):
+def _at_the_gallows(state, day, world=None):
     """Who is standing when the town executes: the day's living, less
     anybody who already died earlier that day — a Witch's curse, a Golem's
     nominee, a Psychopath's pick. A Tea Lady's neighbours are counted
     then: the Golem killed the player beside her, and the next one along
-    walked away from the gallows (10.10.2026). The executed seat stays."""
+    walked away from the gallows (10.10.2026). The executed seat stays.
+
+    With `world`, a Lleech stays too: it dies *after* the gallows, of its
+    host hanging there (11.10.2026). Asked only where a death beside her
+    is held against the Tea Lady, where keeping it can only excuse her."""
     phase = f"D{day}"
     hanged = state.executed_on(day)
     return frozenset(p for p in state.alive_set(phase)
-                     if p == hanged or phase not in state.died_at(p))
+                     if p == hanged or phase not in state.died_at(p)
+                     or (world is not None
+                         and world.role_at(p, phase) == "Lleech"))
 
 
 def _tea_lady_keeping(world, state, seat, phase, alive=None):
@@ -2138,6 +2174,70 @@ def a_gambler_may_lose(world, state, night):
     return causes
 
 
+@death_causes.cause_rule
+def a_lycanthrope_may_kill(world, state, night):
+    """ "Each night*, choose an alive player. If good, they die & the
+    Demon doesn't kill tonight." Not the Demon's kill: a Monk or a Soldier
+    is no help, an Innkeeper or a Tea Lady is (11.10.2026). Whoever it
+    killed registered good, so never the faux paw; and when it kills, the
+    Demon kills nobody (`deaths.Cause.quiets_demon`). A choice, so it may
+    come to nothing and that costs nothing.
+    """
+    if not _in_bag(state, "Lycanthrope") or night < 2:
+        return []
+    phase = f"N{night}"
+    seat = world.find_at("Lycanthrope", phase)
+    if seat is None or seat not in state.alive_set(phase):
+        return []
+    faux = _faux_paw(state)
+    reach = frozenset(
+        p for p in state.alive_set(phase)
+        if p != faux and False in evil_registrations(
+            world.role_at(p, phase), world.alignment_at(p, phase)))
+    if not reach:
+        return []
+    return [death_causes.Cause(
+        name="Lycanthrope", kind=death_causes.OTHER, seats=reach,
+        capacity=1, actor=seat, quiets_demon=True)]
+
+
+def _host_gone_by(state, host, phase):
+    """Had the Lleech's host died by this moment?"""
+    return host is not None and host >= 0 and any(
+        phase_index(at) <= phase_index(phase) for at in state.died_at(host))
+
+
+@death_causes.cause_rule
+def a_lleech_follows_its_host(world, state, night):
+    """ "You die if & only if they are dead." Its host died tonight or
+    earlier, so the Lleech dies — tonight with the host, or the night it
+    is working again (table ruling, 11.10.2026). Nothing stops it."""
+    if not _in_bag(state, "Lleech"):
+        return []
+    dealt = world.find("Lleech")
+    if dealt is None:
+        return []
+    phase = f"N{night}"
+    here = phase_index(phase)
+    reach = set()
+    for seat in state.alive_set(phase):
+        if world.role_at(seat, phase) != "Lleech":
+            continue
+        if seat == dealt:
+            if _host_gone_by(state, _lleech_host(state), phase):
+                reach.add(seat)
+        # A Lleech made later — a Scarlet Woman's — chose a host nobody
+        # follows: anybody already dead may have been it (11.10.2026).
+        elif any(phase_index(at) <= here
+                 for p, at in state.death_phases() if p != seat):
+            reach.add(seat)
+    if not reach:
+        return []
+    return [death_causes.Cause(
+        name="Lleech's host", kind=death_causes.OTHER,
+        seats=frozenset(reach), capacity=len(reach), unstoppable=True)]
+
+
 @death_causes.implication_rule
 def a_grandmother_grieves(world, state, night, victim, kind):
     """Her grandchild taken by the Demon takes her with it.
@@ -2496,6 +2596,25 @@ def the_dead_cannot_die_again(world, state, night, seat, kind):
                                 cost=SUNK_KILL_PENALTY)]
 
 
+@death_causes.immunity_rule
+def the_lleech_lives_while_its_host_does(world, state, night, seat, kind):
+    """ "You die if & only if they are dead": while its host lives, a
+    working Lleech cannot die (11.10.2026). Aiming its own kill at
+    itself is a quiet night like a sunk kill, and priced as one."""
+    if not _in_bag(state, "Lleech"):
+        return []
+    lleech = world.find("Lleech")
+    if lleech is None or seat != lleech:
+        return []
+    phase = f"N{night}"
+    if world.role_at(lleech, phase) != "Lleech":
+        return []
+    if _host_gone_by(state, _lleech_host(state), phase):
+        return []
+    cost = SUNK_KILL_PENALTY if kind == death_causes.DEMON else 1.0
+    return [death_causes.Shield("Lleech", needs=lleech, cost=cost)]
+
+
 def _night_deaths(state):
     """{night: [seats that died that night]}"""
     out = defaultdict(list)
@@ -2675,7 +2794,9 @@ def _explained_night(world, state, night):
     upto = tuple(c for c in getattr(world, "changes", ())
                  if phase_index(c.phase) <= here)
     memo = _memo_for(base, "_nights_memo", state)
-    key = (night, upto)
+    # And the hidden choices of this telling: whom a Lycanthrope cannot
+    # kill, and whose death takes a Lleech with it (`_hidden_choices`).
+    key = (night, upto, getattr(state, "_hidden", None))
     got = memo.get(key)
     if got is None:
         died = set(_night_deaths(state).get(night, ()))
@@ -3134,7 +3255,7 @@ def _plain_failures(world, state, outcome=None):
         # And the same for a Tea Lady's neighbour: executed and dead, so
         # she was not working. The mirror of her saving one.
         if _in_bag(state, "TeaLady"):
-            standing = _at_the_gallows(state, day)
+            standing = _at_the_gallows(state, day, world)
             lady = _tea_lady_keeping(world, state, seat, f"D{day}", standing)
             if lady is not None and not _beside_a_side_nobody_knows(
                     world, state, lady, f"D{day}", standing):
@@ -3150,6 +3271,33 @@ def _plain_failures(world, state, outcome=None):
             if phase[:1] == "D" \
                     and world.role_at(seat, phase) == "Vizier":
                 failures[int(phase[1:])].add(seat)
+
+    # A Lleech dies when its host does and not before (11.10.2026). The
+    # host is this telling's hidden choice. Dying with it, the Lleech was
+    # working; outliving it, or dying first, it was not — it dies as
+    # anybody would only while drunk or poisoned, and a host gone while
+    # it was off takes it the moment it works again.
+    if _in_bag(state, "Lleech"):
+        lleech = world.find("Lleech")
+        host = _lleech_host(state)
+        if lleech is not None and host is not None:
+            mine = sorted(state.died_at(lleech), key=phase_index)
+            gone = mine[0] if mine else None
+            theirs = (sorted(state.died_at(host), key=phase_index)
+                      if host >= 0 else [])
+            at = theirs[0] if theirs else None
+            if at is not None and world.role_at(lleech, at) == "Lleech" \
+                    and lleech in state.alive_set(at) \
+                    and (gone is None
+                         or phase_index(gone) >= phase_index(at)):
+                if gone == at:
+                    working.setdefault(int(at[1:]), set()).add(lleech)
+                elif not _a_mastermind_keeps_the_lleech(world, state,
+                                                        host, at):
+                    failures[int(at[1:])].add(lleech)
+            if gone is not None and world.role_at(lleech, gone) == "Lleech" \
+                    and (at is None or phase_index(gone) < phase_index(at)):
+                failures[int(gone[1:])].add(lleech)
 
     # A day with votes on the board was voted with eyes open, so no Organ
     # Grinder was working then: dead, not in play, or drunk — by its own
@@ -3300,6 +3448,18 @@ def _plain_failures(world, state, outcome=None):
             held = (ABSENT if seat is None
                     else ability_state(world, seat, role, phase, gained,
                                        vortoxed))
+        # A Pixie mad about this character: made up until its holder
+        # dies, at no cost, and its own from the night after (11.10.2026).
+        if held is ABSENT and seat is not None \
+                and world.role_at(seat, phase) == "Pixie" \
+                and _in_bag(state, "Pixie"):
+            got = _pixie_gain(world, state, seat)
+            if got is not None and got[0] == role:
+                if got[1] is not None and info.night >= got[1]:
+                    held = (INVERTED if vortoxed
+                            and TEAM[role] == "townsfolk" else GENUINE)
+                else:
+                    held = ARBITRARY
         # A row told to somebody *other* than the holder — the player a
         # Nightwatchman chose saying they were woken. A Drunk holding the
         # token has no ability, so the Storyteller wakes nobody for it:
@@ -3398,23 +3558,55 @@ def _plain_failures(world, state, outcome=None):
                 outcome[idx] = HELD
             continue
 
+        # The Lycanthrope's faux paw registers evil while it works, and
+        # whether it worked is the plan's (11.10.2026). A row that asked
+        # about the faux paw is tried both ways: holding only with it
+        # evil asks the Lycanthrope to be working; holding only with it
+        # as it is asks the Lycanthrope off — or the row's own source.
+        ok = faux_need = None
+        if not isinstance(info, FortuneTeller) \
+                and _faux_paw(state) is not None:
+            state._faux_mode, state._faux_hit = "on", False
+            ok = info.holds(world, state, None, seat)
+            if state._faux_hit:
+                state._faux_mode = "off"
+                ok_off = info.holds(world, state, None, seat)
+                state._faux_mode = "on"
+                lyc = world.find_at("Lycanthrope", phase)
+                if ok and not ok_off:
+                    faux_need = ("working", lyc)
+                elif ok_off and not ok:
+                    faux_need = ("impaired", lyc)
+            state._faux_hit = False
+        if ok is None and not isinstance(info, FortuneTeller):
+            ok = info.holds(world, state, None, seat)
+
+        if faux_need is not None and faux_need[0] == "impaired" \
+                and not witnessed:
+            either.append((info.night, frozenset({seat}),
+                           frozenset({faux_need[1]}), frozenset()))
+            outcome[idx] = EXCUSED
+            continue
+
         if isinstance(info, FortuneTeller):
             # Whether it held depends on where the red herring was, which
             # is settled later. Left open until then.
             ft_infos.append((info, seat, idx, None))
-        elif witnessed and not info.holds(world, state, None, seat):
+        elif witnessed and not ok:
             # Nothing excuses it. A droisoned source does not tell the
             # other player something false — it tells them nothing, they
             # are never woken. So the words did not come from the game.
             invented *= invention_cost(info)
             outcome[idx] = INVENTED
-        elif not info.holds(world, state, None, seat):
+        elif not ok:
             # Poison has to land on whoever the information came from -
             # poisoning the messenger changes nothing.
             failures[info.night].add(seat)
             outcome[idx] = EXCUSED
         else:
             outcome[idx] = HELD
+            if faux_need is not None:
+                working.setdefault(info.night, set()).add(faux_need[1])
             # **A droisoned character cannot misregister.** A Storyteller
             # chooses freely what a droisoned *information* role yields,
             # because the information is arbitrary — but registration is
@@ -3441,6 +3633,17 @@ def _plain_failures(world, state, outcome=None):
                     outcome[idx] = EXCUSED
 
     return failures, ft_infos, invented, working
+
+
+def _a_mastermind_keeps_the_lleech(world, state, host, at):
+    """Their jinx: "If the Mastermind is alive and the Lleech's host dies
+    by execution, the Lleech lives but loses their ability" (11.10.2026)."""
+    if at[:1] != "D" or not _in_bag(state, "Mastermind"):
+        return False
+    if state.execution_death(int(at[1:])) != host:
+        return False
+    mastermind = world.find_at("Mastermind", at)
+    return mastermind is not None and mastermind in state.alive_set(at)
 
 
 def _chosen(state, role, night, fields=("target",), by=None):
@@ -3641,12 +3844,16 @@ def a_philosopher_drunks_whoever_had_it(world, state, night):
             continue
         went = (not still) or any(at in state.died_at(who)
                                   for at in (phase, f"D{night}"))
-        had = world.find_at(taken, began if not still else phase)
-        if had is None or had == who:
+        # Every seat holding it: three Village Idiots are all drunk
+        # (11.10.2026).
+        at = began if not still else phase
+        had = frozenset(p for p in range(state.n_players)
+                        if p != who and world.role_at(p, at) == taken)
+        if not had:
             continue                      # nobody else was holding it
         free = (lambda seat: 1.0) if went else 1.0
-        out.append(impairment.Source("Philosopher", frozenset({had}),
-                                     capacity=1, cost=free,
+        out.append(impairment.Source("Philosopher", had,
+                                     capacity=len(had), cost=free,
                                      repeat_cost=free, actor=who))
     return out
 
@@ -3870,8 +4077,11 @@ def a_courtier_names_a_character(world, state, night):
         if not info.night <= night <= info.night + 2:
             continue
         phase = f"N{night}"
-        courtier = world.find_at("Courtier", phase)
-        if courtier is None or courtier != info.player:
+        # The Courtier — or a Philosopher that took its ability, which
+        # this never asked, so one that named somebody drunk nobody
+        # (found in mixed games, 11.10.2026).
+        courtier = info.player
+        if not _has_ability(world, state, courtier, "Courtier", phase):
             continue                      # not really the Courtier here
         # Only while the Courtier lives. A drunkenness rests when the one
         # causing it dies (table ruling, 02.10.2026) — and this ran the
@@ -3886,8 +4096,10 @@ def a_courtier_names_a_character(world, state, night):
         # — which is a new row, and its own three days.
         if _died_between(state, courtier, info.night, night):
             continue
-        hit = world.find_at(info.role, phase)
-        if hit is None:
+        # Everybody holding it: three Village Idiots are all drunk.
+        hit = frozenset(p for p in range(state.n_players)
+                        if world.role_at(p, phase) == info.role)
+        if not hit:
             continue                      # named somebody nobody is
         # In the span the Courtier dies, the named one is drunk for part
         # of it and sober for the rest — and a night and its day are one
@@ -3901,8 +4113,8 @@ def a_courtier_names_a_character(world, state, night):
         # Goon. Whether it was first nobody writes down, so on offer.
         went = went or info.role == "Goon"
         free = (lambda who: 1.0) if went else 1.0
-        out.append(impairment.Source("Courtier", frozenset({hit}),
-                                     capacity=1, cost=free,
+        out.append(impairment.Source("Courtier", hit,
+                                     capacity=len(hit), cost=free,
                                      repeat_cost=free, actor=courtier))
     return out
 
@@ -4059,6 +4271,134 @@ def a_xaan_poisons_the_town(world, state, night):
     cost = (lambda who: 1.0) if went else 1.0
     return [impairment.Source("Xaan", town, capacity=len(town), cost=cost,
                               repeat_cost=cost, actor=xaan)]
+
+
+@impairment.source_rule
+def a_village_idiot_is_drunk(world, state, night):
+    """ "[+0 to +2 Village Idiots. 1 of the extras is drunk]" With two or
+    three dealt, one of them is drunk all game, and which is the
+    Storyteller's (11.10.2026). Free; one seat all game is not held to,
+    as with the Puzzlemaster's."""
+    if not _in_bag(state, "VillageIdiot"):
+        return []
+    idiots = frozenset(p for p, role in enumerate(world.roles)
+                       if role == "VillageIdiot")
+    if len(idiots) < 2:
+        return []
+    return [impairment.Source("Village Idiot", idiots, capacity=1,
+                              cost=1.0, repeat_cost=1.0)]
+
+
+@impairment.source_rule
+def a_lleech_poisons_its_host(world, state, night):
+    """ "You start by choosing a player: they are poisoned." For as long
+    as the Lleech lives, resting while it is drunk or poisoned itself
+    (table ruling, 11.10.2026; `impairment.RESTING`). The host is the
+    hidden choice of this telling (`_hidden_choices`): a seat, forced —
+    or -1, somebody who never died, who may then be anybody alive."""
+    if not _in_bag(state, "Lleech"):
+        return []
+    phase = f"N{night}"
+    # The living one: a dealt Lleech that died still holds the character
+    # beside the Scarlet Woman who took it on.
+    holder = next((p for p in range(state.n_players)
+                   if p in state.alive_set(phase)
+                   and world.role_at(p, phase) == "Lleech"), None)
+    if holder is None:
+        return []
+    dealt = world.find("Lleech")
+    host = _lleech_host(state)
+    if holder == dealt and host is not None and host >= 0:
+        if host not in state.alive_set(phase):
+            return []
+        return [impairment.Source("Lleech", frozenset({host}), capacity=1,
+                                  cost=1.0, repeat_cost=1.0, actor=holder)]
+    # Somebody who never died — or the host of a Lleech made later, a
+    # Scarlet Woman's or a Pit-Hag's, which "must choose an alive player"
+    # that night and is not followed further.
+    reach = frozenset(p for p in state.alive_set(phase) if p != holder)
+    free = lambda who: 1.0
+    return [impairment.Source("Lleech", reach, capacity=1, cost=free,
+                              repeat_cost=free, actor=holder)]
+
+
+# A Pixie that did not get the ability it was mad about. Named so the
+# Mathematician can leave it out: nobody's ability went wrong.
+PIXIE_NOT_GRANTED = "Pixie, not granted"
+
+
+def _pixie_gain(world, state, seat):
+    """(the Townsfolk, the first night it works as one) for a dealt Pixie
+    mad about it, or None. The night is None while its holder lives.
+
+    "If you were mad that you were this character, you gain their ability
+    when they die." Madness is the claim (table ruling, 11.10.2026); the
+    character is the one its own row names, or else the one it claims.
+    From the night after the holder died, if the Pixie was alive then.
+    """
+    if world.roles[seat] != "Pixie":
+        return None
+    claim = state.claims.get(seat)
+    learned = None
+    for info in state.infos:
+        if isinstance(info, PixieLearned) and info.player == seat:
+            learned = info.role
+            break
+    learned = learned or claim
+    if not learned or claim != learned or learned == "Pixie" \
+            or TEAM.get(learned) != "townsfolk":
+        return None
+    holder = next((p for p in range(state.n_players)
+                   if p != seat and world.role_at(p, "N1") == learned),
+                  None)
+    if holder is None:
+        return (learned, None)
+    gone = sorted(state.died_at(holder), key=phase_index)
+    if not gone:
+        return (learned, None)
+    first = gone[0]
+    if seat not in state.alive_set(first):
+        return (learned, None)
+    return (learned, int(first[1:]) + 1)
+
+
+def _mad_pixie(world, state, seat):
+    """Is this seat a Pixie claiming the Townsfolk it was shown?
+
+    Its madness, which costs a world nothing (11.10.2026). Without its
+    own row the claim has to be a Townsfolk somebody else holds — or one
+    a Spy could have been shown as.
+    """
+    if world.roles[seat] != "Pixie":
+        return False
+    claim = state.claims.get(seat)
+    if not claim or TEAM.get(claim) != "townsfolk":
+        return False
+    for info in state.infos:
+        if isinstance(info, PixieLearned) and info.player == seat:
+            return info.role == claim
+    return any(p != seat and registers_as_role(world.roles[p], claim)
+               for p in range(state.n_players))
+
+
+@impairment.source_rule
+def a_pixie_may_be_denied(world, state, night):
+    """A Pixie the Storyteller judged not mad enough has no ability, and
+    may say what it likes. On offer from the night it would have started,
+    and it costs (`PIXIE_DENIED_PENALTY`)."""
+    if not _in_bag(state, "Pixie"):
+        return []
+    out = []
+    for seat, role in enumerate(world.roles):
+        if role != "Pixie":
+            continue
+        got = _pixie_gain(world, state, seat)
+        if got is None or got[1] is None or night < got[1]:
+            continue
+        out.append(impairment.Source(PIXIE_NOT_GRANTED, frozenset({seat}),
+                                     capacity=1, cost=PIXIE_DENIED_PENALTY,
+                                     repeat_cost=1.0))
+    return out
 
 
 @impairment.source_rule
@@ -4489,6 +4829,100 @@ def _the_game_went_on(world, state):
 
 
 def _explain(world, state, outcome=None):
+    """The cost of one telling of this world, with the lineage settled —
+    tried for each hidden choice the world leaves open, the best kept.
+
+    Two characters make a choice the board never shows and that every
+    reading has to agree on: which good player is the Lycanthrope's faux
+    paw, and which player is the Lleech's host (11.10.2026). Each is tried
+    as a fixed seat, and the telling that fits best wins, as for the
+    Fortune Teller's red herring.
+    """
+    choices = _hidden_choices(world, state)
+    if choices is None:
+        state._hidden = None
+        return _explain_once(world, state, outcome)
+    best, best_marks = None, None
+    for choice in choices:
+        state._hidden = choice
+        marks = {} if outcome is not None else None
+        cost = _explain_once(world, state, marks)
+        if cost is not None and (best is None or cost > best):
+            best, best_marks = cost, marks
+    state._hidden = None
+    if outcome is not None and best_marks:
+        outcome.update(best_marks)
+    return best
+
+
+def _faux_paw_candidates(world, state):
+    """The good players worth trying as the faux paw.
+
+    Only a seat some reading looks at, or the Lycanthrope could have hit,
+    can make a difference; one seat nobody looks at stands for all the
+    rest. Good when the game began: "one good player".
+    """
+    n = state.n_players
+    good = [p for p in range(n) if not world.evil_at(p, "N0")]
+    if not good:
+        return [None]
+    looked = set()
+    everybody = False
+    for info in state.infos:
+        kind = type(info).__name__
+        if kind in ("Chef", "Empath", "OracleInfo", "ShugenjaInfo"):
+            everybody = True
+            break
+        for field in ("a", "b", "c", "target"):
+            if kind in ("SeamstressInfo", "NobleInfo", "StewardInfo",
+                        "VillageIdiotInfo", "LycanthropeChose"):
+                got = getattr(info, field, None)
+                if isinstance(got, int):
+                    looked.add(got)
+    if everybody:
+        return good
+    for seat, phase in state.death_phases():
+        if phase[:1] == "N":
+            looked.add(seat)
+    out = [p for p in good if p in looked]
+    rest = [p for p in good if p not in looked]
+    return out + rest[:1]
+
+
+def _hidden_choices(world, state):
+    """Every (faux paw, Lleech host) worth trying, or None for neither.
+
+    The host: anybody who died, since only a death can show it — or -1,
+    "somebody who never died", which then may be poisoned anywhere.
+    """
+    faux = [None]
+    host = [None]
+    if _in_bag(state, "Lycanthrope") and "Lycanthrope" in world.roles:
+        faux = _faux_paw_candidates(world, state)
+    if _in_bag(state, "Lleech"):
+        lleech = world.find("Lleech")
+        if lleech is not None:
+            dead = sorted({seat for seat, _p in state.death_phases()
+                           if seat != lleech})
+            host = dead + [-1]
+    if faux == [None] and host == [None]:
+        return None
+    return [(f, h) for f in faux for h in host]
+
+
+def _faux_paw(state):
+    hidden = getattr(state, "_hidden", None)
+    return hidden[0] if hidden else None
+
+
+def _lleech_host(state):
+    """The host in this telling: a seat, -1 for one who never died, or
+    None when there is no Lleech to ask about."""
+    hidden = getattr(state, "_hidden", None)
+    return hidden[1] if hidden else None
+
+
+def _explain_once(world, state, outcome=None):
     """The cost of one telling of this world, with the lineage settled."""
     if not _the_game_went_on(world, state):
         return None
@@ -4838,11 +5272,15 @@ def prior_weight(world, state):
 
     inherited = _could_have_inherited(world, state)
     madness = _madness_nights(world, state)
+    # A Pixie claiming what it was shown is mad, as its ability asks: no
+    # lie to pay for (11.10.2026).
+    pixies = _in_bag(state, "Pixie")
 
     for p in range(state.n_players):
         evil = is_evil(world.roles[p])
         if is_lying(world, state, p) and p not in inherited \
-                and not must_hide(world.roles[p]):
+                and not must_hide(world.roles[p]) \
+                and not (pixies and _mad_pixie(world, state, p)):
             # A Mutant's cover story is not a choice (catalogue `hides`),
             # so it costs the world nothing.
             if not evil:

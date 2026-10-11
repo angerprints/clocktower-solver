@@ -24,6 +24,8 @@ from botc.info import (registers_as_role,
                        PsychopathKill, PsychopathRoshambo, WidowKnown,
                        PreacherChoice, HuntsmanChoice, PuzzlemasterGuess,
                        BoomdandyExploded, BecameInfo,
+                       PixieLearned, VillageIdiotInfo, LycanthropeChose,
+                       HarpyMadness,
                        BalloonistInfo,
                        DreamerInfo,
                        ExorcistChoice, InnkeeperChoice,
@@ -186,6 +188,18 @@ class Deal:
         self.puzzle_spent = set()           # Puzzlemasters that guessed
         self.huntsman_chose = {}            # night -> (Huntsman, target, made)
         self.huntsman_night = {}            # Huntsman seat -> the night it chose
+        # The seventh five (11.10.2026).
+        self.vi_drunk = None                # the drunk Village Idiot
+        self.faux_paw = None                # the good seat that reads evil
+        self.lyc_quiet = set()              # nights the Lycanthrope killed
+        self.lyc_aimed = {}                 # night -> (Lycanthrope, target)
+        self.harpy_mad = {}                 # night -> (Harpy, mad, second)
+        self.harpy_chose = {}               # night -> (Harpy, mad), all aims
+        self.harpy_struck = {}              # day -> [who the Harpy took]
+        self.lleech_hosts = {}              # Lleech seat -> its host
+        self.lleech_lost = None             # when the Mastermind's jinx hit
+        self.pixie_learned = {}             # Pixie seat -> Townsfolk shown
+        self.pixie_mad = {}                 # Pixie seat -> claims it
 
     def demon_at(self, phase):
         """The seat holding the Demon at this phase."""
@@ -580,6 +594,19 @@ def deal(n, rng, script=None):
             spare.remove(gone)
             spare.insert(tf - 1, gone)
             tf -= 1
+    # "[+0 to +2 Village Idiots]", in place of other Townsfolk — none half
+    # the time, one a third, two the rest (11.10.2026).
+    if "VillageIdiot" in chosen:
+        roll = rng.random()
+        extra = 0 if roll < 0.5 else (1 if roll < 0.8 else 2)
+        keep = ("VillageIdiot", "Huntsman", "Choirboy", "King")
+        for _ in range(extra):
+            out_go = [r for r in chosen if TEAM[r] == "townsfolk"
+                      and r not in keep]
+            if not out_go:
+                break
+            gone = rng.choice(out_go)
+            chosen[chosen.index(gone)] = "VillageIdiot"
     chosen += picked_minions
     chosen += picked_demons
 
@@ -670,6 +697,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         pool = town if (town and (not outs or rng.random() < 0.8)) else outs
         if pool:
             d.puzzle_drunk = rng.choice(pool)
+    _the_seventh_five_set_up(d, rng)
 
     for night in range(1, nights + 1):
         d.nights_played = night
@@ -736,6 +764,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # guard was still `None`, so it always said no and the Innkeeper
         # protected nobody. The rule was right and the moment was wrong.
         heard += early_choices(d, night, rng)
+        # A Lleech made since chooses its host tonight; the Harpy at 18
+        # (27 the first night), before every Demon (11.10.2026).
+        _lleech_picks_a_host(d, night, rng)
+        _harpy_chooses(d, night, rng, heard)
 
         # A Pukka poisons on the *first* night and kills from the
         # second, so it is the one Demon that acts before anybody else
@@ -745,12 +777,17 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         if night == 1 and d.roles[d.demon_at("N1") or 0] == "Pukka":
             _demon_kills(d, night, rng)
 
+        # The Lycanthrope at 22, before every Demon: a good player it
+        # takes means the Demon kills nobody tonight (11.10.2026).
+        heard += _lycanthrope_hunts(d, night, rng)
+
         if night > 1:
             demon = d.demon_at(f"N{night}")
             heir = _heir(d, f"N{night}", rng)
             # A Princess that had her nominee executed yesterday: the
             # Demon kills nobody tonight, itself included (10.10.2026).
             if heir is not None and rng.random() < starpass_chance \
+                    and d.role_at(demon, f"N{night}") == "Imp" \
                     and not _the_princess_stops(d, night):
                 # The Imp kills itself and the star passes on. This always
                 # leaves a body, so it can never make a night quiet.
@@ -883,6 +920,13 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # Townsfolk not in play before anybody reads (10.10.2026).
             heard += _huntsman_hunts(d, night, rng)
 
+        # A Lleech whose host died tonight dies with it — or tonight, if
+        # it is working again after its host went while it was not.
+        if _lleech_follows(d, f"N{night}", night, rng):
+            d.ended_at, d.ended_why = f"N{night}", "lleech"
+            d.game_ends_after = night
+            break
+
         _nobody_returns_only_to_die(d, night)
 
         heard += [row for row in honest_info(d, night, rng)
@@ -933,6 +977,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # A Psychopath may kill somebody in the open, before the
             # nominations (10.10.2026).
             _psychopath_strikes(d, night, rng, heard)
+            _harpy_strikes(d, night, rng, heard)
+            if _lleech_follows(d, f"D{night}", night, rng, by_day=True):
+                d.ended_at, d.ended_why = f"D{night}", "lleech"
+                d.game_ends_after = night
+                break
             _puzzlemaster_guesses(d, night, rng, heard)
             _hold_a_day(d, night, rng)
             heard += d.day_heard
@@ -949,6 +998,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             executed = _execute(d, night, rng, allow_takeover)
             if executed is not None:
                 d.deaths[executed] = f"E{night}"
+            # The Lleech's host on the gallows takes the Lleech with it.
+            if _lleech_follows(d, f"D{night}", night, rng, by_day=True,
+                               hanged=executed):
+                d.ended_at, d.ended_why = f"E{night}", "lleech"
+                d.game_ends_after = night
+                break
             # Roshambo on the gallows: only ever a working Psychopath.
             if night in d.roshambo:
                 heard.append(PsychopathRoshambo(night, d.roshambo[night]))
@@ -1242,6 +1297,7 @@ def _gossip_comes_true(d, night, rng):
             if d.deaths.get(p) is None and p != demon
             and d.back_at(p, phase) is None
             and not _kept_alive_by_a_tea_lady(d, p, phase)
+            and not _an_innkeeper_or_sailor_keeps(d, night, p)
             and not (d.role_at(p, phase) == "Fool" and p not in d.fool_spent
                      and d.working(p, night))]
         if not able_to_die:
@@ -1773,6 +1829,8 @@ def _can_die_by_day(d, seat, day):
         return False
     if _a_vizier_stands(d, seat, day):
         return False
+    if _a_lleech_holds(d, seat, phase, day, by_day=True):
+        return False
     if _kept_alive_by_a_tea_lady(d, seat, phase):
         return False
     return not _a_fool_shrugs_it_off(d, seat, phase)
@@ -2033,6 +2091,270 @@ def _boomdandy_explodes(d, day, hanged, rng, heard):
     return True
 
 
+# --------------------------------------------------------------------------
+# The seventh five (11.10.2026)
+# --------------------------------------------------------------------------
+
+def _the_seventh_five_set_up(d, rng):
+    """What the Storyteller settles before the first night: which Village
+    Idiot is drunk, who is the faux paw, which Townsfolk the Pixie is
+    shown, and whether it plays mad about it (mostly)."""
+    n = d.n
+    idiots = [p for p in range(n) if d.roles[p] == "VillageIdiot"]
+    if len(idiots) >= 2:
+        d.vi_drunk = rng.choice(idiots)
+    if "Lycanthrope" in d.roles:
+        good = [p for p in range(n) if not is_evil(d.roles[p])]
+        if good:
+            d.faux_paw = rng.choice(good)
+    for seat in range(n):
+        if d.roles[seat] != "Pixie":
+            continue
+        town = [d.roles[p] for p in range(n)
+                if p != seat and TEAM[d.roles[p]] == "townsfolk"]
+        if not town:
+            continue
+        d.pixie_learned[seat] = rng.choice(town)
+        d.pixie_mad[seat] = rng.random() < 0.8
+
+
+def _reads_evil(d, seat, phase):
+    """The side a reading is told: the truth, and the faux paw evil while
+    the Lycanthrope lives and works (11.10.2026)."""
+    if d.side_at(seat, phase) == "evil":
+        return True
+    if seat != getattr(d, "faux_paw", None):
+        return False
+    night = int(phase[1:])
+    lyc = next((p for p in d.alive_at(f"N{night}")
+                if d.role_at(p, f"N{night}") == "Lycanthrope"), None)
+    return lyc is not None and d.working(lyc, night)
+
+
+def _an_innkeeper_or_sailor_keeps(d, night, target):
+    """The Innkeeper's pair and a sober Sailor, asked without spending
+    anything. The Gossip's death went straight through both, where the
+    night-walk kept them alive (11.10.2026, found with three Village
+    Idiots and an Innkeeper)."""
+    phase = f"N{night}"
+    pair = d.innkeeper_guarded.get(night)
+    if pair and target in pair and night not in d.innkeeper_void:
+        keeper = next((p for p in range(d.n)
+                       if d.role_at(p, phase) == "Innkeeper"
+                       and p in d.alive_at(phase)), None)
+        if keeper is not None and d.working(keeper, night):
+            return True
+    return d.role_at(target, phase) == "Sailor" and d.working(target, night)
+
+
+def _kept_alive_at_night(d, night, target):
+    """What stops a night death that is not the Demon's: an Innkeeper's
+    pair, a sober Sailor, a Tea Lady, and a Fool's free death, last."""
+    phase = f"N{night}"
+    pair = d.innkeeper_guarded.get(night)
+    if pair and target in pair and night not in d.innkeeper_void:
+        keeper = next((p for p in range(d.n)
+                       if d.role_at(p, phase) == "Innkeeper"
+                       and p in d.alive_at(phase)), None)
+        if keeper is not None and d.working(keeper, night):
+            return True
+    if d.role_at(target, phase) == "Sailor" and d.working(target, night):
+        return True
+    if _kept_alive_by_a_tea_lady(d, target, phase):
+        return True
+    return _a_fool_shrugs_it_off(d, target, phase)
+
+
+def _lycanthrope_hunts(d, night, rng):
+    """ "Each night*, choose an alive player. If good, they die & the
+    Demon doesn't kill tonight." Never the faux paw, which reads evil to
+    it; what keeps a seat alive at night keeps it alive from this, a Monk
+    or a Soldier excepted (11.10.2026)."""
+    if night < 2 or "Lycanthrope" not in d.script.keys:
+        return []
+    phase = f"N{night}"
+    out = []
+    for seat in d.alive_at(phase):
+        if d.deaths.get(seat) is not None \
+                or not _acting_as(d, seat, "Lycanthrope", phase):
+            continue
+        living = [p for p in d.alive_at(phase)
+                  if p != seat and d.deaths.get(p) is None]
+        if not living:
+            continue
+        target = rng.choice(living)
+        d.lyc_aimed[night] = (seat, target)
+        if rng.random() < 0.7:
+            out.append(LycanthropeChose(night, seat, target=target))
+        if d.role_at(seat, phase) != "Lycanthrope":
+            continue                      # the Drunk's token: nothing
+        if _the_goon_answers(d, night, seat, target) \
+                or not d.working(seat, night):
+            continue
+        if target == d.faux_paw or d.side_at(target, phase) != "good":
+            continue
+        if _kept_alive_at_night(d, night, target):
+            continue
+        d.deaths[target] = phase
+        d.lyc_quiet.add(night)
+    return out
+
+
+def _harpy_chooses(d, night, rng, heard):
+    """Two players each night: the first, a good one here, is mad
+    tomorrow that the second is evil. Drunk or poisoned, it tells nobody
+    anything (11.10.2026)."""
+    if "Harpy" not in d.script.keys:
+        return
+    phase = f"N{night}"
+    for seat in range(d.n):
+        if not _stands_to_act(d, seat, "Harpy", night):
+            continue
+        good = [p for p in d.alive_at(phase) if p != seat
+                and d.deaths.get(p) is None and d.side_at(p, phase) == "good"]
+        if not good:
+            continue
+        mad = rng.choice(good)
+        second = rng.choice([p for p in range(d.n) if p != mad])
+        d.harpy_chose[night] = (seat, mad)
+        if _the_goon_answers(d, night, seat, mad) \
+                or not d.working(seat, night):
+            continue
+        d.harpy_mad[night] = (seat, mad, second)
+
+
+def _harpy_strikes(d, day, rng, heard):
+    """The mad player sometimes breaks madness and says what the Harpy
+    did; then the Storyteller may kill one of the two, or both — never the
+    Demon, as with the Boomdandy (11.10.2026)."""
+    got = d.harpy_mad.get(day)
+    if got is None:
+        return
+    _harpy, mad, second = got
+    if rng.random() >= 0.4:
+        return                            # plays along: nothing to hear
+    heard.append(HarpyMadness(day, mad, second=second))
+    if rng.random() >= 0.6:
+        return
+    phase = f"D{day}"
+    demon = d.demon_at(phase)
+    pool = [p for p in (mad, second) if p != demon
+            and p in d.alive_at(phase) and d.deaths.get(p) is None]
+    if not pool:
+        return
+    pick = rng.choice([pool[:1], pool[-1:], pool])
+    took = []
+    for p in pick:
+        if p not in took and _can_die_by_day(d, p, day):
+            d.deaths[p] = phase
+            took.append(p)
+    d.harpy_struck[day] = took
+
+
+def _lleech_picks_a_host(d, night, rng):
+    """On its first night a Lleech chooses its host: a good player, a
+    Townsfolk most of the time. One made later chooses on its first
+    night too (11.10.2026)."""
+    if "Lleech" not in d.script.keys:
+        return
+    phase = f"N{night}"
+    for seat in d.alive_at(phase):
+        if d.role_at(seat, phase) != "Lleech" or seat in d.lleech_hosts \
+                or d.deaths.get(seat) is not None:
+            continue
+        good = [p for p in d.alive_at(phase) if p != seat
+                and d.deaths.get(p) is None and d.side_at(p, phase) == "good"]
+        if not good:
+            continue
+        town = [p for p in good if TEAM[d.role_at(p, phase)] == "townsfolk"]
+        pool = town if town and rng.random() < 0.8 else good
+        host = rng.choice(pool)
+        _the_goon_answers(d, night, seat, host)
+        d.lleech_hosts[seat] = host
+
+
+def _lleech_lost(d, phase):
+    """Had a Mastermind's jinx taken the Lleech's ability by now? Dated,
+    so the nights before it are as they were."""
+    lost = getattr(d, "lleech_lost", None)
+    return lost is not None and phase_index(lost) <= phase_index(phase)
+
+
+def _host_gone(d, host, phase):
+    return any(phase_index(at) <= phase_index(phase)
+               for at in d.deaths_of(host))
+
+
+def _a_lleech_holds(d, seat, phase, night, by_day=False):
+    """A working Lleech whose host lives cannot die."""
+    if d.role_at(seat, phase) != "Lleech" or _lleech_lost(d, phase):
+        return False
+    host = d.lleech_hosts.get(seat)
+    if host is not None and _host_gone(d, host, phase):
+        return False
+    return d.working(seat, night, by_day=by_day)
+
+
+def _lleech_follows(d, phase, night, rng, by_day=False, hanged=None):
+    """ "You die if & only if they are dead." A working Lleech whose host
+    has died dies now, and the Scarlet Woman takes it on if she can.
+    True when that ends the game. A Mastermind alive when the host is
+    executed keeps it alive without its ability (their jinx)."""
+    if "Lleech" not in d.script.keys or _lleech_lost(d, phase):
+        return False
+    for lleech, host in sorted(d.lleech_hosts.items()):
+        if d.role_at(lleech, phase) != "Lleech" \
+                or d.deaths.get(lleech) is not None:
+            continue
+        if not _host_gone(d, host, phase):
+            continue
+        if hanged is not None and hanged == host:
+            mastermind = next((p for p in d.alive_at(phase)
+                               if d.role_at(p, phase) == "Mastermind"
+                               and d.deaths.get(p) is None), None)
+            if mastermind is not None:
+                d.lleech_lost = phase
+                return False
+        if not d.working(lleech, night, by_day=by_day):
+            continue                      # off now: it goes when it is not
+        at = f"D{night}" if by_day else f"N{night}"
+        was_demon = d.demon_at(at) == lleech
+        d.deaths[lleech] = at
+        if not was_demon:
+            continue
+        sw = next((p for p in d.alive_at(at)
+                   if d.role_at(p, at) == "ScarletWoman"
+                   and d.deaths.get(p) is None), None)
+        if sw is not None and len(d.alive_at(at)) >= 5:
+            d.handovers.append((at, sw))
+            d.changes.append((at, sw, "Lleech"))
+            continue
+        return True
+    return False
+
+
+def _pixie_gain(d, seat):
+    """(the Townsfolk, the first night it works as one) for a mad Pixie
+    whose Townsfolk died while it lived and worked, or None."""
+    if d.roles[seat] != "Pixie" or not d.pixie_mad.get(seat):
+        return None
+    learned = d.pixie_learned.get(seat)
+    holder = next((p for p in range(d.n)
+                   if p != seat and d.roles[p] == learned), None)
+    if holder is None:
+        return None
+    gone = d.deaths_of(holder)
+    if not gone:
+        return None
+    first = min(gone, key=phase_index)
+    if seat not in d.alive_at(first):
+        return None
+    k = int(first[1:])
+    if not d.working(seat, k, by_day=first[0] in "DE"):
+        return None
+    return learned, k + 1
+
+
 def _hold_a_day(d, day, rng):
     """Nominations and votes, and the execution that follows from them.
 
@@ -2239,6 +2561,8 @@ def _walks_away(d, seat, day, rng):
         return "Sailor"
     if _a_vizier_stands(d, seat, day):
         return "Vizier"
+    if _a_lleech_holds(d, seat, phase, day, by_day=True):
+        return "Lleech"
     if _kept_alive_by_a_tea_lady(d, seat, phase):
         return "TeaLady"
     advocate, chosen = d.spared.get(day) or (None, None)
@@ -2343,7 +2667,12 @@ def _execute(d, day, rng, allow_takeover=False):
                and d.deaths.get(advocate) is None
                and d.role_at(advocate, phase) == "DevilsAdvocate"
                and d.working(advocate, day))
-    if not (takeover or zombuul_first or extra_day or covered):
+    # A Lleech whose host lives walks away from it (11.10.2026).
+    lleech_stands = (demon is not None
+                     and _a_lleech_holds(d, demon, f"D{day}", day,
+                                         by_day=True))
+    if not (takeover or zombuul_first or extra_day or covered
+            or lleech_stands):
         living = [p for p in living if p != demon]
     if not living:
         return None
@@ -2551,6 +2880,10 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
     # a Pukka's coming due included (10.10.2026). Asked first, so nothing
     # else — a Fool's free death above all — is spent on it.
     if _the_princess_stops(d, night):
+        return True
+    # The Lycanthrope killed tonight: the Demon kills nobody, the
+    # Pukka's poison included (11.10.2026).
+    if night in getattr(d, "lyc_quiet", ()):
         return True
     # Working, which is every way of going wrong, not only the Poisoner.
     if d.role_at(target, phase) == "Soldier" and d.working(target, night):
@@ -2839,6 +3172,15 @@ def _demon_kills(d, night, rng):
             d.changes.append((phase, got, "FangGu"))
             d.side_changes.append((phase, got, "FangGu", "evil"))
             return []
+        return [got] if got is not None else []
+
+    if kind == "Lleech":
+        # Never its own host, which would take it too; and nothing at all
+        # once a Mastermind has left it without its ability.
+        if _lleech_lost(d, phase):
+            return []
+        host = d.lleech_hosts.get(demon)
+        got = take([p for p in others if p != host])
         return [got] if got is not None else []
 
     got = take(others)
@@ -3355,6 +3697,12 @@ def honest_info(d, night, rng):
             # An early chooser it took has already acted, in the early pass.
             if took and not (took in CHOOSES_EARLY and night > 1):
                 made = _for_role(d, seat, took, night, rng)
+        # A mad Pixie whose Townsfolk died has that ability, from the
+        # night after (11.10.2026).
+        if made is None and role == "Pixie" and night > 1:
+            got = _pixie_gain(d, seat)
+            if got and night >= got[1] and got[0] not in CHOOSES_EARLY:
+                made = _for_role(d, seat, got[0], night, rng)
         if made is None:
             continue
         # A Vortox makes every *Townsfolk* ability yield something false.
@@ -3616,6 +3964,9 @@ def droisoned_at(d, night, by_day=False):
     out |= silenced
     if getattr(d, "puzzle_drunk", None) is not None:
         out.add(d.puzzle_drunk)
+    # The drunk Village Idiot, all game (11.10.2026).
+    if getattr(d, "vi_drunk", None) is not None:
+        out.add(d.vi_drunk)
 
     # A Widow's poison, for as long as it lives — resting while it is
     # drunk or poisoned itself (10.10.2026). After everybody else, so its
@@ -3627,6 +3978,18 @@ def droisoned_at(d, night, by_day=False):
             continue
         if widow not in out:
             out.add(target)
+
+    # A Lleech's host, for as long as the Lleech lives and has its
+    # ability — resting while it is drunk or poisoned (11.10.2026).
+    if not _lleech_lost(d, phase):
+        for lleech, host in getattr(d, "lleech_hosts", {}).items():
+            if d.role_at(lleech, phase) != "Lleech":
+                continue
+            if lleech not in (d.alive_at(f"D{night}") if by_day
+                              else living):
+                continue
+            if lleech not in out and host in living:
+                out.add(host)
 
     # The Pukka, last. Whoever it poisoned on its turn tonight, and
     # whoever was still carrying its token from before: poisoned from the
@@ -3672,6 +4035,20 @@ def _make_false(d, info, night, rng):
     to give, which should not happen but is better than inventing one.
     """
     kind = type(info).__name__
+
+    if kind == "VillageIdiotInfo":
+        # The other side from the one it is really on: a faux paw's evil
+        # is already a false thing to be told (11.10.2026).
+        info.evil = d.side_at(info.target, f"N{night}") != "evil"
+        return info
+    if kind == "PixieLearned":
+        held = {d.role_at(p, f"N{night}") for p in range(d.n)}
+        town = list(d.script.townsfolk) if d.script else list(TOWNSFOLK)
+        spare = [k for k in town if k not in held]
+        if not spare:
+            return None
+        info.role = rng.choice(spare)
+        return info
 
     if hasattr(info, "count") and info.count is not None:
         wrong = [n for n in range(0, d.n) if n != info.count]
@@ -3925,10 +4302,29 @@ def _for_role(d, seat, role, night, rng):
                               lambda p: TEAM[d.role_at(p, here)] == "outsider",
                               team="outsider")
         if role == "Chef":
+            # By what each seat reads as: the faux paw evil (11.10.2026).
             pairs = sum(1 for i in range(d.n)
-                        if d.side_at(i, here) == "evil"
-                        and d.side_at((i + 1) % d.n, here) == "evil")
+                        if _reads_evil(d, i, here)
+                        and _reads_evil(d, (i + 1) % d.n, here))
             return Chef(1, seat, count=pairs)
+
+    if role == "Pixie" and night == 1:
+        # One Townsfolk in play; a Drunk holding its token is shown one
+        # off the script.
+        learned = d.pixie_learned.get(seat)
+        if learned is None:
+            town = list(d.script.townsfolk) if d.script else list(TOWNSFOLK)
+            learned = rng.choice(town)
+        return PixieLearned(1, seat, role=learned)
+
+    if role == "VillageIdiot":
+        # Any player, and their side — the faux paw read evil.
+        others = [p for p in range(d.n) if p != seat]
+        if not others:
+            return None
+        target = rng.choice(others)
+        return VillageIdiotInfo(night, seat, target=target,
+                                evil=_reads_evil(d, target, f"N{night}"))
 
     if role == "Noble" and night == 1:
         # Three players, exactly one evil **by registration** — two who
@@ -3942,6 +4338,8 @@ def _for_role(d, seat, role, night, rng):
         # ones that may go either way — a Recluse the Storyteller chose
         # to mark, a Spy it chose to hide.
         def shown_evil(p):
+            if _reads_evil(d, p, phase) and d.side_at(p, phase) == "good":
+                return True               # the faux paw (11.10.2026)
             opts = sorted(evil_registrations(d.role_at(p, phase)))
             return rng.choice(opts) if len(opts) > 1 else opts[0]
         evil = [p for p in range(d.n) if shown_evil(p)]
@@ -3965,7 +4363,7 @@ def _for_role(d, seat, role, night, rng):
         # Storyteller chose to show as good, which is the wiki's example.
         phase = "N1"
         good = [p for p in range(d.n) if p != seat
-                and d.side_at(p, phase) == "good"]
+                and not _reads_evil(d, p, phase)]
         # A droisoned character cannot misregister (table rule): a
         # poisoned Spy is a Spy and reads as one.
         spies = [p for p in range(d.n) if p != seat
@@ -4099,7 +4497,7 @@ def _for_role(d, seat, role, night, rng):
         # dealt: an Ogre that picked an evil player is evil from day one.
         return Empath(night, seat,
                       count=sum(1 for p in nb
-                                if d.side_at(p, f"N{night}") == "evil"))
+                                if _reads_evil(d, p, f"N{night}")))
 
     if role == "FortuneTeller":
         others = [p for p in d.alive_at(f"N{night}")
@@ -4415,7 +4813,7 @@ def _for_role(d, seat, role, night, rng):
                 if p not in d.alive_at(phase) or d.deaths.get(p) == phase]
         return OracleInfo(night, seat,
                           count=sum(1 for p in dead
-                                    if d.side_at(p, phase) == "evil"))
+                                    if _reads_evil(d, p, phase)))
 
     if role == "Seamstress" and night == 1:
         # Once a game, and the simulator uses it on the first night so
@@ -4424,10 +4822,12 @@ def _for_role(d, seat, role, night, rng):
         if len(others) < 2:
             return None
         a, b = sorted(rng.sample(others, 2))
-        same = d.side_at(a, "N1") == d.side_at(b, "N1")
+        same = _reads_evil(d, a, "N1") == _reads_evil(d, b, "N1")
         return SeamstressInfo(night, seat, a=a, b=b, same=same)
 
-    if role == "Sage" and d.deaths.get(seat) == f"N{night}":
+    if role == "Sage" and d.deaths.get(seat) == f"N{night}" \
+            and not (night in getattr(d, "lyc_quiet", ())
+                     and seat not in d.demon_killed.get(night, ())):
         # Killed by the Demon, it learns two players and one is the
         # killer — the *specific* Demon, so no misregistration here.
         demon = d.demon_at(f"N{night}")
@@ -4693,7 +5093,11 @@ def _for_role(d, seat, role, night, rng):
             _the_goon_answers(d, night, seat, holder)
         if holder is not None and d.working(seat, night):
             d.courtier_drunk = (night, holder, seat)
-            d.courtier_drunks.append((night, holder, seat))
+            # Every seat holding it: three Village Idiots are all drunk
+            # (11.10.2026).
+            for p in range(d.n):
+                if d.role_at(p, f"N{night}") == named:
+                    d.courtier_drunks.append((night, p, seat))
         return CourtierChoice(night, seat, role=named)
 
     if role == "Undertaker" and night > 1:
@@ -4723,7 +5127,7 @@ def _nearest_evil_each_way(d, seat, night):
     out = {1: None, -1: None}
     for gap in range(1, d.n):
         other = (seat + gap) % d.n
-        if d.side_at(other, phase) != "evil":
+        if not _reads_evil(d, other, phase):
             continue
         for way, steps in ((1, gap), (-1, d.n - gap)):
             if steps <= d.n - steps and (out[way] is None or steps < out[way]):
@@ -4990,6 +5394,8 @@ def table_view(d, infos, rng, bluff_pool=None):
     for seat in range(d.n):
         if is_evil(d.roles[seat]):
             claims[seat] = spare.pop() if spare else "Mayor"
+        elif d.roles[seat] == "Pixie" and d.pixie_mad.get(seat):
+            claims[seat] = d.pixie_learned[seat]   # mad about it
         else:
             claims[seat] = d.apparent(seat)
 

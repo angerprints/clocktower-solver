@@ -167,6 +167,14 @@ def claims_for(deal, rng, script=None):
                 notes[seat] = f"the {role}, hiding behind the {hidden}"
                 continue
 
+        # A Pixie mad about the Townsfolk it was shown claims to be it:
+        # its ability asks it to (11.10.2026).
+        if role == "Pixie" and getattr(deal, "pixie_mad", {}).get(seat):
+            claims[seat] = deal.pixie_learned[seat]
+            notes[seat] = (f"the Pixie, mad about being the "
+                           f"{claims[seat]}")
+            continue
+
         if rng.random() < GOOD_LIE_CHANCE:
             if TEAM[role] == "outsider" and rng.random() < HIDING_SHARE:
                 hidden = _hiding_claim(deal, seat, rng, script)

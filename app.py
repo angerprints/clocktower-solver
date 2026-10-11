@@ -166,6 +166,18 @@ def build_info(d):
             night, player, trust,
             pointed=-1 if pointed in (None, "", "none", -1)
             else int(pointed))
+    if kind == "PixieLearned":
+        return I.PixieLearned(night, player, trust, role=d.get("role") or "")
+    if kind == "VillageIdiotInfo":
+        return I.VillageIdiotInfo(night, player, trust,
+                                  target=_int(d, "target"),
+                                  evil=bool(d.get("evil")))
+    if kind == "LycanthropeChose":
+        return I.LycanthropeChose(night, player, trust,
+                                  target=_int(d, "target"))
+    if kind == "HarpyMadness":
+        return I.HarpyMadness(night, player, trust,
+                              second=_int(d, "second"))
     if kind == "Became":
         return I.BecameInfo(night, player, trust,
                             role=d.get("role") or "",
@@ -459,6 +471,9 @@ def run_solve(payload):
                     "CourtierChoice", "CerenovusMadness",
                     # The Preacher at 14, then 6: before every Demon.
                     "PreacherChoice",
+                    # The Lycanthrope at 22 and the Harpy at 18, before
+                    # every Demon; the Harpy's mad player is told then.
+                    "LycanthropeChose", "HarpyMadness",
                     # Dead *because* it picked, like the Gambler: "if
                     # they are drunk or poisoned, you die". Its row is
                     # the cause of the death the board shows, and was
@@ -721,6 +736,8 @@ INFO_SOURCES = {
     "PreacherChoice": "Preacher", "HuntsmanChoice": "Huntsman",
     "PuzzlemasterGuess": "Puzzlemaster",
     "BoomdandyExploded": "Boomdandy",
+    "PixieLearned": "Pixie", "VillageIdiotInfo": "VillageIdiot",
+    "LycanthropeChose": "Lycanthrope", "HarpyMadness": "Harpy",
     "Washerwoman": "Washerwoman", "Librarian": "Librarian",
     "Investigator": "Investigator", "Chef": "Chef", "Empath": "Empath",
     "FortuneTeller": "FortuneTeller", "Undertaker": "Undertaker",

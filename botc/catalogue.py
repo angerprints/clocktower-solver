@@ -123,6 +123,10 @@ class Character(NamedTuple):
     # Characters the setup puts in play beside this one: "[+the King]".
     # Asked of the finished deal, like `beside` (worlds.seated_legally).
     brings: tuple = ()
+    # How many seats may hold this character at once. One for everybody
+    # but the Village Idiot: "[+0 to +2 Village Idiots]", in place of
+    # other Townsfolk (11.10.2026).
+    copies: int = 1
 
 
 def _handled(self):
@@ -551,6 +555,36 @@ _EXPERIMENTAL = [
     # Executed, it explodes: all but three die, the Demon among the three,
     # and one more by pointing (info.BoomdandyExploded).
     _c("Boomdandy", "boomdandy", "Boomdandy", "minion", {NEVER}),
+
+    # The seventh five (11.10.2026), read with the table before anything
+    # was built.
+    #
+    # Shown one Townsfolk in play on the first night (info.PixieLearned).
+    # Mad about being it — claiming it, as the solver sees madness — it
+    # gains that ability when its holder dies (solver._pixie_gain). Wakes
+    # as that character from then on, which the Chambermaid is not told.
+    _c("Pixie", "pixie", "Pixie", "townsfolk", {FIRST, EVERY, SOMETIMES},
+       nights="first"),
+    # Learns a player's side every night (info.VillageIdiotInfo). One to
+    # three of them, the extras in place of other Townsfolk; with two or
+    # more, one is drunk all game (solver.a_village_idiot_is_drunk).
+    _c("VillageIdiot", "villageidiot", "Village Idiot", "townsfolk",
+       {EVERY}, nights="every", chooses=True, copies=3),
+    # Each night but the first it picks a living player; a good one dies
+    # and the Demon kills nobody (solver.a_lycanthrope_may_kill). One good
+    # player — the Lycanthrope itself too — registers evil while it lives
+    # and works ("faux paw", solver._hidden_choices).
+    _c("Lycanthrope", "lycanthrope", "Lycanthrope", "townsfolk",
+       {OTHER, EVERY}, nights="other", chooses=True),
+    # Picks two players each night; the first is mad tomorrow that the
+    # second is evil, or one or both might die (info.HarpyMadness).
+    _c("Harpy", "harpy", "Harpy", "minion", {FIRST, EVERY},
+       nights="every", chooses=True),
+    # Kills like any Demon, and on its first night picks a host who is
+    # poisoned while it lives. It dies when the host does and not before
+    # (solver.a_lleech_poisons_its_host, solver._lleech_demands).
+    _c("Lleech", "lleech", "Lleech", "demon", {FIRST, EVERY},
+       nights="every", chooses=True),
 ]
 
 
@@ -577,6 +611,7 @@ IMPAIRS = frozenset({
     "PitHag",
     # Experimental: poisoned, drunk or without an ability, by these.
     "Widow", "Preacher", "Puzzlemaster", "Xaan",
+    "VillageIdiot", "Lleech",
 })
 
 CHARACTERS = {c.key: c for c in _TB + _SV + _UNMODELLED + _FABLED
@@ -640,6 +675,14 @@ _NOT_IN_THE_FILE = {
     # before anything the file numbers 33, so it shares the Vigormortis's
     # slot. Only one of them is the Demon on any night.
     "ojo": (0, 32),
+    # The seventh five (11.10.2026). The publisher's first night runs
+    # ... Fearmonger, Harpy, Mezepheles ... and its other nights the same,
+    # so the Harpy shares the Mezepheles's slots (27, 18). The Village
+    # Idiot reads after the Shugenja and before the Bounty Hunter on the
+    # first night (46, beside both), and after the Balloonist and before
+    # the King on the others (63, the King's).
+    "harpy": (27, 18),
+    "villageidiot": (46, 63),
 }
 
 

@@ -245,8 +245,9 @@ class WalkingAwayFromAnExecution(SolverTest):
 
     def test_there_are_four_of_them(self):
         # Five since the Sailor's, six since the Vizier's, seven since the
-        # Psychopath's (both 10.10.2026).
-        self.assertEqual(len(S.SURVIVES_EXECUTION_RULES), 7)
+        # Psychopath's (both 10.10.2026), eight since the Lleech's
+        # (11.10.2026).
+        self.assertEqual(len(S.SURVIVES_EXECUTION_RULES), 8)
 
     def test_a_sailor_walks_away_from_its_own(self):
         self.assertIsNotNone(S.explanation_cost(among(*HONEST),

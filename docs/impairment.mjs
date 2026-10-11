@@ -108,11 +108,15 @@ export function sourcesOn(world, state, night) {
             {value: memo, writable: true, enumerable: false,
              configurable: true}); } catch (e) { /* frozen: no memo */ }
   }
-  let got = memo.nights.get(night);
+  // The hidden choices of this telling move a Lleech's poison, so they
+  // are part of the key (scoring.mjs hiddenChoices).
+  const hidden = state._hidden;
+  const key = hidden ? `${night}|${hidden[0]}|${hidden[1]}` : `${night}`;
+  let got = memo.nights.get(key);
   if (!got) {
     got = [];
     for (const rule of SOURCE_RULES) got.push(...rule(world, state, night));
-    memo.nights.set(night, got);
+    memo.nights.set(key, got);
   }
   return got.slice();
 }
@@ -239,6 +243,9 @@ export function planNight(sources, required, forbidden, previous) {
 // The two that take an ability away outright (10.10.2026). See
 // impairment.py.
 export const SILENCERS = ["Preacher", "Xaan"];
+// Sources that rest while their actor is drunk or poisoned: the two
+// silencers, and a Lleech's poison on its host (11.10.2026).
+export const RESTING = ["Preacher", "Xaan", "Lleech"];
 
 /** Sources whose own actor a silencer reached tonight do nothing. */
 export function silencedOut(sources) {
@@ -259,7 +266,7 @@ export function planNightResting(sources, required, forbidden, previous) {
   if (got !== null) return got;
   const forbid = forbidden instanceof Set ? forbidden : new Set(forbidden);
   for (const source of working) {
-    if (!SILENCERS.includes(source.name) || source.actor === null
+    if (!RESTING.includes(source.name) || source.actor === null
         || source.actor === undefined || !source.unavoidable()
         || forbid.has(source.actor)) continue;
     const rest = silencedOut(sources.filter(s => s !== source));

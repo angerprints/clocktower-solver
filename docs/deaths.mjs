@@ -32,6 +32,7 @@ export class Cause {
     capacity = 1, cost = 1.0, mustFire = false, unstoppable = false,
     victimImpairedAt = null, alsoImpaired = [], actor = null,
     actorCost = 1.0, actorKillsWorking = true, excuses = [],
+    quietsDemon = false,
   } = {}) {
     this.name = name;
     this.kind = kind;
@@ -68,6 +69,9 @@ export class Cause {
     // already explained: [seats or null, [[span, seat], ...]]. A Pukka
     // that was drunk last night poisoned nobody. See deaths.py.
     this.excuses = excuses;
+    // A kill by this one means the Demon kills nobody tonight: the
+    // Lycanthrope's (11.10.2026). See deaths.py.
+    this.quietsDemon = quietsDemon;
   }
 }
 
@@ -304,6 +308,26 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
     }
   }
 
+  // A kill that stops the Demon: no Demon kill beside it, and whoever
+  // made it was working (the Lycanthrope, 11.10.2026).
+  const quieting = causes.filter(c => c.quietsDemon);
+  if (quieting.length) {
+    const kept = [];
+    for (const acc of settled) {
+      const fired = quieting.filter(q => acc.used[q.name] > 0);
+      if (fired.length) {
+        if (causes.some(x => x.kind === DEMON && acc.used[x.name] > 0))
+          continue;
+        const actors = fired.map(q => q.actor).filter(a => a !== null);
+        if (actors.some(a => acc.impaired.has(a))) continue;
+        kept.push({...acc, working: new Set([...acc.working, ...actors])});
+      } else {
+        kept.push(acc);
+      }
+    }
+    settled = kept;
+  }
+
   if (blame)
     return settled.map(({cost, impaired, working, who}) =>
       ({cost, impaired, working, who}));
@@ -314,6 +338,11 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
     if (!cause.mustFire) continue;
     const grown = [];
     for (const acc of settled) {
+      if (!(acc.used[cause.name] > 0) && cause.kind === DEMON
+          && quieting.some(q => acc.used[q.name] > 0)) {
+        grown.push(acc);                  // the Lycanthrope killed
+        continue;
+      }
       if (acc.used[cause.name] > 0) {
         // It did the killing, so there is nothing to explain — except
         // that whoever did it was working.

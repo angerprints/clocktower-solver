@@ -75,6 +75,9 @@ export const PRIORS = {
   // A Storyteller treats the Sailor's drunkenness as the price the town
   // pays for having somebody unkillable, not as a weapon.
   SAILOR_ON_EVIL_PENALTY: 0.15,
+  // A Pixie mad about the Townsfolk whose holder died, refused its ability
+  // by the Storyteller (11.10.2026): it happens, and is not the usual.
+  PIXIE_DENIED_PENALTY: 0.35,
 };
 
 // The ranges I would defend as equally plausible. Running the solve

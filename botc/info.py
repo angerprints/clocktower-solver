@@ -646,7 +646,33 @@ def _can_show_as_something_else(role):
     return any(team != "outsider" for team in CHARACTERS[role].registers)
 
 
-def _possible_evil_counts(world, players, phase):
+def evil_options(w, s, seat, phase):
+    """How this seat may register, evil or good, for a reading.
+
+    `evil_registrations`, and one thing more: the Lycanthrope's faux paw.
+    "One good player registers as evil" — surely, not perhaps — while the
+    Lycanthrope lives and works (table ruling, 11.10.2026). Which player
+    is a hidden choice the solver tries one by one (`state._hidden`), and
+    whether the Lycanthrope worked is the plan's: so this answers for a
+    working one unless asked otherwise (`state._faux_mode`), and leaves a
+    mark that it was asked (`state._faux_hit`), so the caller can try the
+    other way too (`solver._plain_failures`).
+    """
+    got = evil_registrations(w.role_at(seat, phase),
+                             w.alignment_at(seat, phase))
+    hidden = getattr(s, "_hidden", None) if s is not None else None
+    if not hidden or hidden[0] is None or hidden[0] != seat:
+        return got
+    lyc = w.find_at("Lycanthrope", phase)
+    if lyc is None or lyc not in s.alive_set(phase):
+        return got
+    s._faux_hit = True
+    if getattr(s, "_faux_mode", "on") == "off":
+        return got
+    return (True,)
+
+
+def _possible_evil_counts(world, players, phase, s=None):
     """All values "number of evil among these players" could take.
 
     Asked of a moment, because on scripts where a player can change
@@ -666,9 +692,7 @@ def _possible_evil_counts(world, players, phase):
     a droisoned Recluse in the middle of it, which is wrong and is
     written down rather than half-fixed.
     """
-    options = [evil_registrations(world.role_at(p, phase),
-                                  world.alignment_at(p, phase))
-               for p in players]
+    options = [evil_options(world, s, p, phase) for p in players]
     return {sum(combo) for combo in product(*options)}
 
 
@@ -680,9 +704,7 @@ class Chef(Info):
     def holds(self, w, s, rh, seat=None):
         n = len(w.roles)
         phase = f"N{self.night}"
-        options = [evil_registrations(w.role_at(p, phase),
-                                      w.alignment_at(p, phase))
-                   for p in range(n)]
+        options = [evil_options(w, s, p, phase) for p in range(n)]
         possible = set()
         for combo in product(*options):
             pairs = sum(1 for i in range(n)
@@ -732,7 +754,8 @@ class Empath(Info):
         if f"N{self.night}" in s.died_at(who):
             return True
         nb = _living_neighbours(s, self.night, who)
-        return self.count in _possible_evil_counts(w, nb, f"N{self.night}")
+        return self.count in _possible_evil_counts(w, nb, f"N{self.night}",
+                                                   s)
 
     def is_true(self, w, s, seat=None):
         """Whether that many of its neighbours really are evil — see
@@ -923,6 +946,9 @@ def _possible_impairment_counts(world, state, night):
         # Its own choice, so not another character's doing (10.10.2026).
         if source.name == ORGAN_GRINDER_BY_CHOICE:
             continue
+        # A Pixie refused its ability: nobody's ability went wrong.
+        if source.name == "Pixie, not granted":
+            continue
         # Free *and* reaching everybody it touches — a Drunk holding
         # somebody else's token, a Minstrel silencing the table. Those
         # have capacity enough for their whole reach and there is nothing
@@ -1068,7 +1094,7 @@ class OracleInfo(Info):
         phase = f"N{self.night}"
         dead = [p for p in range(len(w.roles))
                 if p not in s.alive_set(phase) or phase in s.died_at(p)]
-        return self.count in _possible_evil_counts(w, dead, phase)
+        return self.count in _possible_evil_counts(w, dead, phase, s)
 
     def is_true(self, w, s, seat=None):
         """Whether that many of the dead really are evil — see
@@ -1100,10 +1126,8 @@ class SeamstressInfo(Info):
         # By the seat's side as it stands, like the Empath and the Chef:
         # a Pit-Hag's good Poisoner or an Ogre that turned is not the
         # side its character was printed on.
-        for first in evil_registrations(w.role_at(self.a, phase),
-                                        w.alignment_at(self.a, phase)):
-            for second in evil_registrations(w.role_at(self.b, phase),
-                                             w.alignment_at(self.b, phase)):
+        for first in evil_options(w, s, self.a, phase):
+            for second in evil_options(w, s, self.b, phase):
                 if (first == second) == self.same:
                     return True
         return False
@@ -1664,8 +1688,7 @@ class NobleInfo(Info):
 
     def holds(self, w, s, rh, seat=None):
         phase = f"N{self.night}"
-        options = [evil_registrations(w.role_at(p, phase),
-                                      w.alignment_at(p, phase))
+        options = [evil_options(w, s, p, phase)
                    for p in (self.a, self.b, self.c)]
         return any(x + y + z == 1
                    for x in options[0]
@@ -1905,8 +1928,7 @@ class StewardInfo(Info):
 
     def holds(self, w, s, rh, seat=None):
         phase = f"N{self.night}"
-        return False in evil_registrations(
-            w.role_at(self.target, phase), w.alignment_at(self.target, phase))
+        return False in evil_options(w, s, self.target, phase)
 
     def is_true(self, w, s, seat=None):
         """Whether that seat really is good, which is what a Vortox must
@@ -1984,13 +2006,12 @@ class ShugenjaInfo(Info):
     clockwise: bool = True
     source_role = "Shugenja"
 
-    def _nearest(self, w, who, must):
+    def _nearest(self, w, who, must, s=None):
         """The nearest seat each way that can — or must — read evil."""
         phase = f"N{self.night}"
         best = {1: None, -1: None}
         for steps, way, other in _round_the_circle(len(w.roles), who):
-            reads = evil_registrations(w.role_at(other, phase),
-                                       w.alignment_at(other, phase))
+            reads = evil_options(w, s, other, phase)
             if (reads != (True,)) if must else (True not in reads):
                 continue
             for side in ((1, -1) if way == 0 else (way,)):
@@ -2001,8 +2022,8 @@ class ShugenjaInfo(Info):
     def holds(self, w, s, rh, seat=None):
         who = self.player if seat is None else seat
         said = 1 if self.clockwise else -1
-        can = self._nearest(w, who, must=False)[said]
-        must = self._nearest(w, who, must=True)[-said]
+        can = self._nearest(w, who, must=False, s=s)[said]
+        must = self._nearest(w, who, must=True, s=s)[-said]
         if can is None:
             # Nobody that way could read evil. Only with nobody the
             # other way either is there nothing to contradict.
@@ -2528,12 +2549,26 @@ class SlayerShot(Info):
     def holds(self, w, s, rh, seat=None):
         phase = f"D{self.night}"
         t = w.role_at(self.target, phase)
+        # Any Demon, not only the Imp: this read `DEMONS`, which is
+        # Trouble Brewing's list, while the JavaScript asks the team
+        # (found 11.10.2026 with the Lleech).
+        demon = TEAM.get(t) == "demon"
+        hidden = getattr(s, "_hidden", None)
+        host = hidden[1] if hidden else None
         if self.died:
+            # Their jinx: "If the Slayer slays the Lleech host, the host
+            # dies" (11.10.2026).
+            hit_host = (host is not None and host >= 0
+                        and self.target == host
+                        and w.find_at("Lleech", phase) is not None)
             return (w.role_at(self.player, phase) == "Slayer"
-                    and (t in DEMONS or t == "Recluse"))
+                    and (demon or t == "Recluse" or hit_host))
         # A shot that did nothing is only evidence if a real Slayer fired
-        # it, and that is handled by the usual claim gate.
-        return t not in DEMONS
+        # it, and that is handled by the usual claim gate. A Lleech whose
+        # host lives cannot die of it (11.10.2026).
+        if t == "Lleech":
+            return True
+        return not demon
 
 
 # --------------------------------------------------------------------------
@@ -3235,3 +3270,153 @@ class BoomdandyExploded(Info):
 
     def leaned_on(self, w, s, seat=None):
         return (self.player,)
+
+
+# --------------------------------------------------------------------------
+# The seventh five experimental characters (11.10.2026)
+# --------------------------------------------------------------------------
+
+@dataclass
+class PixieLearned(Info):
+    """The Townsfolk the Pixie was shown on its first night, said by the
+    Pixie itself.
+
+    "You start knowing 1 in-play Townsfolk." In play, or a Spy registering
+    as it (11.10.2026, as for the Washerwoman). Said by the Pixie about
+    itself, whatever it claimed before: a mad Pixie claims the Townsfolk,
+    so the claim cannot be what finds its source.
+    """
+
+    role: str = ""
+    source_role = "Pixie"
+
+    def source_seat(self, state):
+        return self.player
+
+    def holds(self, w, s, rh, seat=None):
+        if TEAM.get(self.role) != "townsfolk":
+            return False
+        who = self.player if seat is None else seat
+        phase = f"N{self.night}"
+        return any(p != who and registers_as_role(w.role_at(p, phase),
+                                                  self.role)
+                   for p in range(len(w.roles)))
+
+    def is_true(self, w, s, seat=None):
+        """Whether somebody really holds it — see `Chef.is_true`."""
+        who = self.player if seat is None else seat
+        phase = f"N{self.night}"
+        return any(p != who and w.role_at(p, phase) == self.role
+                   for p in range(len(w.roles)))
+
+
+@dataclass
+class VillageIdiotInfo(Info):
+    """One player's side, as a Village Idiot learned it.
+
+    "Each night, choose a player: you learn their alignment." By
+    registration, like the Steward: a Spy may read good, a Recluse evil,
+    and the Lycanthrope's faux paw reads evil. Any player, the dead and
+    itself included.
+    """
+
+    target: int = 0
+    evil: bool = False
+    source_role = "VillageIdiot"
+
+    def holds(self, w, s, rh, seat=None):
+        return self.evil in evil_options(w, s, self.target,
+                                         f"N{self.night}")
+
+    def is_true(self, w, s, seat=None):
+        return w.evil_at(self.target, f"N{self.night}") == self.evil
+
+    def leaned_on(self, w, s, seat=None):
+        # Only a seat misregistering by its own ability: the faux paw is
+        # the Lycanthrope's doing, and asks the Lycanthrope to be working
+        # instead (`solver._plain_failures`).
+        phase = f"N{self.night}"
+        if w.evil_at(self.target, phase) != self.evil \
+                and self.evil in evil_registrations(
+                    w.role_at(self.target, phase),
+                    w.alignment_at(self.target, phase)):
+            return (self.target,)
+        return ()
+
+
+@dataclass
+class LycanthropeChose(Info):
+    """Whom the Lycanthrope chose tonight, said by the Lycanthrope.
+
+    "Each night*, choose an alive player. If good, they die & the Demon
+    doesn't kill tonight." Whether it killed is the death machinery's
+    (`solver.a_lycanthrope_may_kill`). What this adds: a target alive in
+    the morning registered evil, was the faux paw, was kept alive — or the
+    Lycanthrope was not working, which is its source being off.
+    """
+
+    is_a_choice = True
+
+    target: int = 0
+    source_role = "Lycanthrope"
+
+    def _shields(self, w, s):
+        from .deaths import OTHER, shields_on
+        return shields_on(w, s, self.night, self.target, OTHER)
+
+    def _open(self, w, s, seat):
+        """Nothing to explain: a first night, a target that died, a
+        Lycanthrope not there to choose, or a target that may read evil."""
+        phase = f"N{self.night}"
+        if self.night < 2 or phase in s.died_at(self.target):
+            return True
+        if seat is None or seat not in s.alive_set(phase) \
+                or self.target not in s.alive_set(phase):
+            return True
+        hidden = getattr(s, "_hidden", None)
+        if hidden and hidden[0] == self.target:
+            return True                   # the faux paw
+        return True in evil_registrations(w.role_at(self.target, phase),
+                                          w.alignment_at(self.target, phase))
+
+    def holds(self, w, s, rh, seat=None):
+        if self._open(w, s, seat):
+            return True
+        return bool(self._shields(w, s))
+
+    def instead(self, w, s, seat=None):
+        """Kept alive by somebody working, or the Lycanthrope was off."""
+        if self._open(w, s, seat):
+            return None
+        shields = self._shields(w, s)
+        if not shields or any(x.needs is None for x in shields):
+            return None
+        return frozenset(), frozenset({shields[0].needs})
+
+
+@dataclass
+class HarpyMadness(Info):
+    """"The Harpy made me mad that X is evil", said by the one it chose.
+
+    Like the Cerenovus's: it says a Harpy is in play and alive that
+    night. The words can be made up like any other, and it says nothing
+    about the second player's side.
+
+    A Harpy drunk or poisoned when it chose tells nobody anything (table
+    ruling 24, 05.10.2026, applied to the Harpy on 11.10.2026) — but one
+    poisoned later that night, by a Pukka at 28 after its 18, told them
+    all the same, and the plan knows whole nights. So the row does not
+    ask it to have worked the night through, as for the Widow (found
+    with the simulator, 11.10.2026).
+    """
+
+    is_a_choice = True
+
+    second: int = 0
+    source_role = "Harpy"
+
+    def holds(self, w, s, rh, seat=None):
+        if seat is None or seat in s.alive_set(f"N{self.night}"):
+            return True
+        from .solver import killed_by_a_vigormortis
+        return killed_by_a_vigormortis(w, s, seat, f"N{self.night}")

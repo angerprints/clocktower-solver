@@ -15,6 +15,7 @@ import {ORGAN_GRINDER_BY_CHOICE, Source, makePoisonerRule, minionStillActs,
         sourceRule, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
+import {evilRegistrations, registersAsRole} from "./roles.mjs";
 
 // --------------------------------------------------------------------
 // Constants. Every one is a judgement rather than a fact, which is what
@@ -242,11 +243,15 @@ sourceRule(function aPhilosopherDrunksWhoeverHadIt(world, state, night) {
     if (!still && world.roleAt(seat, began) !== "Philosopher") continue;
     const died = state.diedAt(seat);
     const went = !still || died.includes(phase) || died.includes(`D${night}`);
-    const had = world.findAt(taken, still ? phase : began);
-    if (had === null || had === seat) continue;
+    // Every seat holding it: three Village Idiots are all drunk.
+    const at = still ? phase : began;
+    const had = new Set();
+    for (let p = 0; p < state.nPlayers; p++)
+      if (p !== seat && world.roleAt(p, at) === taken) had.add(p);
+    if (!had.size) continue;
     const free = went ? () => 1.0 : 1.0;
-    out.push(new Source("Philosopher", new Set([had]),
-                        {capacity: 1, cost: free, repeatCost: free,
+    out.push(new Source("Philosopher", had,
+                        {capacity: had.size, cost: free, repeatCost: free,
                          actor: seat}));
   }
   return out;
@@ -404,6 +409,33 @@ survivesExecutionRule(function aVizierCannotDieByDay(world, state, day, seat) {
   return out;
 });
 
+// --------------------------------------------------------------------
+// The hidden choices of a telling (11.10.2026): which good player is the
+// Lycanthrope's faux paw, and who is the Lleech's host. Set on the state
+// by the scoring (`hiddenChoices`) and read by the rules. See solver.py.
+// --------------------------------------------------------------------
+
+export const fauxPaw = state => (state._hidden ? state._hidden[0] : null);
+export const lleechHost = state => (state._hidden ? state._hidden[1] : null);
+
+/** Had the Lleech's host died by this moment? */
+export function hostGoneBy(state, host, phase) {
+  if (host === null || host === undefined || host < 0) return false;
+  const here = phaseIndex(phase);
+  return state.diedAt(host).some(at => phaseIndex(at) <= here);
+}
+
+/** A working Lleech whose host lives walks away from its execution. */
+survivesExecutionRule(function aLleechOutlivesTheGallows(
+    world, state, day, seat) {
+  if (!inBag(state, "Lleech")) return [];
+  const phase = `D${day}`;
+  if (world.roleAt(seat, phase) !== "Lleech") return [];
+  if (seat === world.find("Lleech")
+      && hostGoneBy(state, lleechHost(state), phase)) return [];
+  return [seat];
+});
+
 /** "If executed, you only die if you lose roshambo." Working, it may walk
  * away from the gallows, and that costs nothing (10.10.2026). */
 survivesExecutionRule(function aPsychopathWinsAtRoshambo(
@@ -435,11 +467,14 @@ survivesExecutionRule(function aPacifistMaySpareTheGood(
 /** Who is standing when the town executes: the day's living, less anybody
  * who already died earlier that day — a Witch's curse, a Golem's nominee,
  * a Psychopath's pick (10.10.2026). The executed seat stays. */
-function atTheGallows(state, day) {
+function atTheGallows(state, day, world = null) {
   const phase = `D${day}`;
   const hanged = state.executedOn(day);
+  // With `world`, a Lleech stays: it dies after the gallows, of its host
+  // hanging there (11.10.2026). See solver.py.
   return new Set([...state.aliveSet(phase)].filter(
-    p => p === hanged || !state.diedAt(p).includes(phase)));
+    p => p === hanged || !state.diedAt(p).includes(phase)
+         || (world !== null && world.roleAt(p, phase) === "Lleech")));
 }
 
 function teaLadyKeeping(world, state, seat, phase, alive = null) {
@@ -482,7 +517,7 @@ function besideASideNobodyKnows(world, state, lady, phase, alive = null) {
 /** Executed and dead beside a Tea Lady: she was not working. */
 export function teaLadyFailedAtTheGallows(world, state, day, seat) {
   if (!inBag(state, "TeaLady")) return null;
-  const standing = atTheGallows(state, day);
+  const standing = atTheGallows(state, day, world);
   const lady = teaLadyKeeping(world, state, seat, `D${day}`, standing);
   if (lady !== null
       && besideASideNobodyKnows(world, state, lady, `D${day}`, standing))
@@ -888,6 +923,50 @@ causeRule(function aGamblerMayLose(world, state, night) {
   return causes;
 });
 
+/** "If good, they die & the Demon doesn't kill tonight." Not the Demon's
+ * kill; never the faux paw; when it kills the Demon kills nobody
+ * (`quietsDemon`). A choice, so it costs nothing (11.10.2026). */
+causeRule(function aLycanthropeMayKill(world, state, night) {
+  if (!inBag(state, "Lycanthrope") || night < 2) return [];
+  const phase = `N${night}`;
+  const seat = world.findAt("Lycanthrope", phase);
+  if (seat === null || !state.aliveSet(phase).has(seat)) return [];
+  const faux = fauxPaw(state);
+  const reach = new Set();
+  for (const p of [...state.aliveSet(phase)].sort((a, b) => a - b))
+    if (p !== faux && evilRegistrations(world.roleAt(p, phase),
+                                        world.alignmentAt(p, phase))
+          .includes(false)) reach.add(p);
+  if (!reach.size) return [];
+  return [new Cause("Lycanthrope", OTHER, reach,
+                    {capacity: 1, actor: seat, quietsDemon: true})];
+});
+
+/** "You die if & only if they are dead": its host gone by tonight, the
+ * Lleech dies — with it, or the night it works again. Nothing stops it. */
+causeRule(function aLleechFollowsItsHost(world, state, night) {
+  if (!inBag(state, "Lleech")) return [];
+  const dealt = world.find("Lleech");
+  if (dealt === null) return [];
+  const phase = `N${night}`;
+  const here = phaseIndex(phase);
+  const reach = new Set();
+  for (const seat of [...state.aliveSet(phase)].sort((a, b) => a - b)) {
+    if (world.roleAt(seat, phase) !== "Lleech") continue;
+    if (seat === dealt) {
+      if (hostGoneBy(state, lleechHost(state), phase)) reach.add(seat);
+    } else {
+      // A Lleech made later chose a host nobody follows: anybody already
+      // dead may have been it.
+      for (const [p, at] of state.deathPhases())
+        if (p !== seat && phaseIndex(at) <= here) { reach.add(seat); break; }
+    }
+  }
+  if (!reach.size) return [];
+  return [new Cause("Lleech's host", OTHER, reach,
+                    {capacity: reach.size, unstoppable: true})];
+});
+
 // --------------------------------------------------------------------
 // What follows from a death
 // --------------------------------------------------------------------
@@ -1181,6 +1260,20 @@ immunityRule(function theDeadCannotDieAgain(world, state, night, seat) {
   return [shield("already dead", {needs: null, cost: PRIORS.SUNK_KILL_PENALTY})];
 });
 
+/** While its host lives a working Lleech cannot die; aiming its own kill
+ * at itself is priced like a sunk kill (11.10.2026). */
+immunityRule(function theLleechLivesWhileItsHostDoes(
+    world, state, night, seat, kind) {
+  if (!inBag(state, "Lleech")) return [];
+  const lleech = world.find("Lleech");
+  if (lleech === null || seat !== lleech) return [];
+  const phase = `N${night}`;
+  if (world.roleAt(lleech, phase) !== "Lleech") return [];
+  if (hostGoneBy(state, lleechHost(state), phase)) return [];
+  const cost = kind === DEMON ? PRIORS.SUNK_KILL_PENALTY : 1.0;
+  return [shield("Lleech", {needs: lleech, cost})];
+});
+
 // --------------------------------------------------------------------
 // What stops abilities working
 // --------------------------------------------------------------------
@@ -1257,8 +1350,13 @@ sourceRule(function aCourtierNamesACharacter(world, state, night) {
     // Three days and nights: the span it was used in and the two after.
     if (!(info.night <= night && night <= info.night + 2)) continue;
     const phase = `N${night}`;
-    const courtier = world.findAt("Courtier", phase);
-    if (courtier === null || courtier !== info.player) continue;
+    // The Courtier — or a Philosopher that took its ability (11.10.2026).
+    const courtier = info.player;
+    const took = (state.philosophies() || {})[courtier];
+    if (world.roleAt(courtier, phase) !== "Courtier" &&
+        !(took && took[0] === "Courtier"
+          && world.roleAt(courtier, phase) === "Philosopher"
+          && phaseIndex(phase) >= phaseIndex(took[1]))) continue;
     // Only while the Courtier lives: a drunkenness rests when the one
     // causing it dies (table ruling, 02.10.2026).
     if (!state.aliveSet(phase).has(courtier)) continue;
@@ -1266,8 +1364,11 @@ sourceRule(function aCourtierNamesACharacter(world, state, night) {
     // it, and a character that comes back is a new instance (table
     // ruling, 03.10.2026). What the old Courtier named is sober for good.
     if (diedBetween(state, courtier, info.night, night)) continue;
-    const hit = world.findAt(info.role, phase);
-    if (hit === null) continue;          // named somebody nobody is
+    // Everybody holding it: three Village Idiots are all drunk.
+    const hit = new Set();
+    for (let p = 0; p < state.nPlayers; p++)
+      if (world.roleAt(p, phase) === info.role) hit.add(p);
+    if (!hit.size) continue;             // named somebody nobody is
     // In the span the Courtier dies, the named one is drunk for part of
     // it and sober for the rest. So there it is on offer rather than
     // forced: free to explain something that went wrong, and no bar to
@@ -1278,8 +1379,8 @@ sourceRule(function aCourtierNamesACharacter(world, state, night) {
     const went = died.includes(phase) || died.includes(`D${night}`)
       || info.role === "Goon";
     const free = went ? () => 1.0 : 1.0;
-    out.push(new Source("Courtier", new Set([hit]),
-                        {capacity: 1, cost: free, repeatCost: free,
+    out.push(new Source("Courtier", hit,
+                        {capacity: hit.size, cost: free, repeatCost: free,
                          actor: courtier}));
   }
   return out;
@@ -1388,6 +1489,102 @@ sourceRule(function aXaanPoisonsTheTown(world, state, night) {
     ? () => 1.0 : 1.0;
   return [new Source("Xaan", town, {capacity: town.size, cost,
                                     repeatCost: cost, actor: xaan})];
+});
+
+/** "[+0 to +2 Village Idiots. 1 of the extras is drunk]" With two or
+ * three dealt, one is drunk all game. Free; not held to one seat. */
+sourceRule(function aVillageIdiotIsDrunk(world, state, night) {
+  if (!inBag(state, "VillageIdiot")) return [];
+  const idiots = new Set();
+  world.roles.forEach((role, p) => { if (role === "VillageIdiot") idiots.add(p); });
+  if (idiots.size < 2) return [];
+  return [new Source("Village Idiot", idiots,
+                     {capacity: 1, cost: 1.0, repeatCost: 1.0})];
+});
+
+/** "You start by choosing a player: they are poisoned." The host of this
+ * telling, forced and resting while the Lleech is off — or anybody alive
+ * for a host who never died, or a Lleech made later. See solver.py. */
+sourceRule(function aLleechPoisonsItsHost(world, state, night) {
+  if (!inBag(state, "Lleech")) return [];
+  const phase = `N${night}`;
+  let holder = null;
+  for (let p = 0; p < state.nPlayers && holder === null; p++)
+    if (state.aliveSet(phase).has(p) && world.roleAt(p, phase) === "Lleech")
+      holder = p;
+  if (holder === null) return [];
+  const dealt = world.find("Lleech");
+  const host = lleechHost(state);
+  if (holder === dealt && host !== null && host !== undefined && host >= 0) {
+    if (!state.aliveSet(phase).has(host)) return [];
+    return [new Source("Lleech", new Set([host]),
+                       {capacity: 1, cost: 1.0, repeatCost: 1.0,
+                        actor: holder})];
+  }
+  const reach = new Set([...state.aliveSet(phase)].filter(p => p !== holder));
+  return [new Source("Lleech", reach,
+                     {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0,
+                      actor: holder})];
+});
+
+// A Pixie that did not get the ability it was mad about. Named so the
+// Mathematician can leave it out.
+export const PIXIE_NOT_GRANTED = "Pixie, not granted";
+
+/** [the Townsfolk, the first night it works as one] for a dealt Pixie mad
+ * about it, or null; the night is null while its holder lives. Madness is
+ * the claim (11.10.2026). See solver.py. */
+export function pixieGain(world, state, seat) {
+  if (world.roles[seat] !== "Pixie") return null;
+  const claim = state.claims[seat];
+  let learned = null;
+  for (const info of state.infos)
+    if (info.type === "PixieLearned" && info.player === seat) {
+      learned = info.role;
+      break;
+    }
+  learned = learned || claim;
+  if (!learned || claim !== learned || learned === "Pixie"
+      || CHARACTERS[learned]?.team !== "townsfolk") return null;
+  let holder = null;
+  for (let p = 0; p < state.nPlayers && holder === null; p++)
+    if (p !== seat && world.roleAt(p, "N1") === learned) holder = p;
+  if (holder === null) return [learned, null];
+  const gone = [...state.diedAt(holder)]
+    .sort((a, b) => phaseIndex(a) - phaseIndex(b));
+  if (!gone.length) return [learned, null];
+  if (!state.aliveSet(gone[0]).has(seat)) return [learned, null];
+  return [learned, parseInt(gone[0].slice(1), 10) + 1];
+}
+
+/** Is this seat a Pixie claiming the Townsfolk it was shown? Its madness,
+ * which costs a world nothing. */
+export function madPixie(world, state, seat) {
+  if (world.roles[seat] !== "Pixie") return false;
+  const claim = state.claims[seat];
+  if (!claim || CHARACTERS[claim]?.team !== "townsfolk") return false;
+  for (const info of state.infos)
+    if (info.type === "PixieLearned" && info.player === seat)
+      return info.role === claim;
+  for (let p = 0; p < state.nPlayers; p++)
+    if (p !== seat && registersAsRole(world.roles[p], claim)) return true;
+  return false;
+}
+
+/** A Pixie the Storyteller judged not mad enough: on offer from the night
+ * it would have started, and it costs. */
+sourceRule(function aPixieMayBeDenied(world, state, night) {
+  if (!inBag(state, "Pixie")) return [];
+  const out = [];
+  world.roles.forEach((role, seat) => {
+    if (role !== "Pixie") return;
+    const got = pixieGain(world, state, seat);
+    if (got === null || got[1] === null || night < got[1]) return;
+    out.push(new Source(PIXIE_NOT_GRANTED, new Set([seat]),
+                        {capacity: 1, cost: PRIORS.PIXIE_DENIED_PENALTY,
+                         repeatCost: 1.0}));
+  });
+  return out;
 });
 
 /** One of the pair it protected, and it does not choose which.

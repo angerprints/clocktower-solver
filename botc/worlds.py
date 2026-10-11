@@ -42,7 +42,11 @@ class World:
         """
         index = self.__dict__.get("_index")
         if index is None:
-            index = {r: i for i, r in enumerate(self.roles)}
+            # The first seat, when more than one holds it (a second
+            # Village Idiot) — as the JavaScript does.
+            index = {}
+            for i, r in enumerate(self.roles):
+                index.setdefault(r, i)
             object.__setattr__(self, "_index", index)
         return index.get(role)
 
@@ -404,6 +408,10 @@ def _candidates_from_claim(claim, allow_good_lies, certainty="",
             # A Mutant is behind a Townsfolk claim whether or not good
             # lies are allowed: it has no other claim it can safely make.
             out.extend((r, None) for r in outsiders if must_hide(r))
+        # And a Pixie, mad about being the Townsfolk it was shown: that is
+        # its ability asking it to lie (11.10.2026).
+        if "Pixie" in script.keys and claim != "Pixie":
+            out.append(("Pixie", None))
         return out
 
     if claim in outsiders:
@@ -530,11 +538,36 @@ def _branches(n_players, claims, certainties, allow_good_lies, forced, wakes,
     return out
 
 
-def _viable(cands_i, used, count, target):
+# Characters more than one seat may hold: the Village Idiot, up to three
+# (11.10.2026). Everything else is one token in the bag.
+COPIES = {key: c.copies for key, c in CHARACTERS.items() if c.copies > 1}
+
+
+def _free(role, used, taken):
+    """Is a token of this character still in the bag?"""
+    if role not in used:
+        return True
+    return role in COPIES and taken.get(role, 0) < COPIES[role]
+
+
+def _take(role, used, taken):
+    used.add(role)
+    taken[role] = taken.get(role, 0) + 1
+
+
+def _give_back(role, used, taken):
+    taken[role] -= 1
+    if not taken[role]:
+        del taken[role]
+        used.discard(role)
+
+
+def _viable(cands_i, used, count, target, taken=None):
     """Which options are still open for this seat right now."""
+    taken = taken if taken is not None else {}
     return [(role, belief) for role, belief in cands_i
-            if role not in used
-            and (belief is None or belief not in used)
+            if _free(role, used, taken)
+            and (belief is None or _free(belief, used, taken))
             and count[TEAM[role]] < target[TEAM[role]]]
 
 
@@ -578,7 +611,11 @@ def _fits_ahead(count, target, look, order, k, used):
             continue
         if seats[k][t] < want:
             return False                  # not enough seats left
-        if len(roles[k][t] - used) < want:
+        # A character more than one seat may hold is more than one
+        # token. Counted at its most, which keeps this a relaxation.
+        left = roles[k][t] - used
+        spare = sum(COPIES[r] - 1 for r in roles[k][t] if r in COPIES)
+        if len(left) + spare < want:
             return False                  # not enough tokens left
     for j in order[k:]:
         if not (teams[j] & wanted):
@@ -595,9 +632,11 @@ def _prune(options, count, target, look, order, k, used):
         team = TEAM[role]
         if team not in verdict:
             count[team] += 1
+            had = role in used            # a second Village Idiot
             used.add(role)
             verdict[team] = _fits_ahead(count, target, look, order, k, used)
-            used.discard(role)
+            if not had:
+                used.discard(role)
             count[team] -= 1
     return [o for o in options if verdict[TEAM[o[0]]]]
 
@@ -645,6 +684,7 @@ def iter_worlds(n_players, claims, certainties=None, allow_good_lies=False,
         roles = [None] * n
         believes = [None] * n
         used = set()
+        taken = {}
         count = {"townsfolk": 0, "outsider": 0, "minion": 0, "demon": 0}
 
         def rec(k):
@@ -656,10 +696,11 @@ def iter_worlds(n_players, claims, certainties=None, allow_good_lies=False,
                 yield World(tuple(roles), tuple(believes))
                 return
             i = order[k]
-            for role, belief in _viable(cands[i], used, count, target):
-                used.add(role)
+            for role, belief in _viable(cands[i], used, count, target,
+                                        taken):
+                _take(role, used, taken)
                 if belief is not None:
-                    used.add(belief)
+                    _take(belief, used, taken)
                 count[TEAM[role]] += 1
                 roles[i], believes[i] = role, belief
 
@@ -667,9 +708,9 @@ def iter_worlds(n_players, claims, certainties=None, allow_good_lies=False,
 
                 roles[i], believes[i] = None, None
                 count[TEAM[role]] -= 1
-                used.discard(role)
+                _give_back(role, used, taken)
                 if belief is not None:
-                    used.discard(belief)
+                    _give_back(belief, used, taken)
 
         yield from rec(0)
 
@@ -694,11 +735,12 @@ def dive(setup, n_players, rng):
     roles = [None] * n_players
     believes = [None] * n_players
     used = set()
+    taken = {}
     count = {"townsfolk": 0, "outsider": 0, "minion": 0, "demon": 0}
     stands_for = 1.0
 
     for k, i in enumerate(order):
-        options = _prune(_viable(cands[i], used, count, target),
+        options = _prune(_viable(cands[i], used, count, target, taken),
                          count, target, look, order, k + 1, used)
 
         # A bag is only that bag if its characters actually land in it.
@@ -731,9 +773,9 @@ def dive(setup, n_players, rng):
         role, belief = options[chosen]
         stands_for *= pool / shares[chosen]
 
-        used.add(role)
+        _take(role, used, taken)
         if belief is not None:
-            used.add(belief)
+            _take(belief, used, taken)
         count[TEAM[role]] += 1
         roles[i], believes[i] = role, belief
 

@@ -12,6 +12,7 @@ import {TEAM, believesAnother, isEvil, mustHide, show, wakeFits} from "./roles.m
 import {bestStory, storyShares, explanationCost, forcedRoles, nightDeaths,
         worldConsistent} from "./scoring.mjs";
 import {PRIORS} from "./priors.mjs";
+import {inBag, madPixie} from "./characters.rules.mjs";
 import {Rng} from "./rng.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {Timeline, eachWorld, sampleWorlds} from "./worlds.mjs";
@@ -107,6 +108,7 @@ function madnessNights(world, state) {
 export function priorWeight(world, state) {
   let w = confirmedBoost(world, state);
   let madness = madnessNights(world, state);
+  const pixies = inBag(state, "Pixie");
   const reads = state.reads || {};
   const suspects = state.suspects || {};
 
@@ -120,8 +122,10 @@ export function priorWeight(world, state) {
 
   for (let p = 0; p < state.nPlayers; p++) {
     const evil = isEvil(world.roles[p]);
-    // A Mutant's cover story is not a choice, so it costs nothing.
-    if (isLying(world, state, p) && !mustHide(world.roles[p])) {
+    // A Mutant's cover story is not a choice, so it costs nothing; nor
+    // does a Pixie claiming what it was shown, which is its madness.
+    if (isLying(world, state, p) && !mustHide(world.roles[p]) &&
+        !(pixies && madPixie(world, state, p))) {
       if (!evil) {
         if (TEAM[world.roles[p]] === "outsider") w *= PRIORS.OUTSIDER_HIDING_PENALTY;
         else if (madness > 0) { w *= PRIORS.CERENOVUS_MADNESS_PENALTY; madness--; }

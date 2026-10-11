@@ -277,6 +277,10 @@ function candidatesFromClaim(claim, allowGoodLies, certainty, script) {
       // allowed: it has no other claim it can safely make.
       for (const r of script.outsiders) if (mustHide(r)) out.push([r, null]);
     }
+    // And a Pixie, mad about being the Townsfolk it was shown: its
+    // ability asking it to lie (11.10.2026).
+    if (inTownsfolk && script.keys.includes("Pixie") && claim !== "Pixie")
+      out.push(["Pixie", null]);
     return out;
   }
 
@@ -394,11 +398,31 @@ export function bags(nPlayers, script = DEFAULT, fabled = []) {
   return kept;
 }
 
+// Characters more than one seat may hold: the Village Idiot, up to three
+// (11.10.2026). Everything else is one token in the bag.
+const COPIES = Object.fromEntries(
+  Object.values(CHARACTERS).filter(c => (c.copies || 1) > 1)
+    .map(c => [c.key, c.copies]));
+
+/** Is a token of this character still in the bag? */
+const free = (role, used, taken) =>
+  !used.has(role) || (role in COPIES && (taken[role] || 0) < COPIES[role]);
+
+function take(role, used, taken) {
+  used.add(role);
+  taken[role] = (taken[role] || 0) + 1;
+}
+
+function giveBack(role, used, taken) {
+  taken[role] -= 1;
+  if (!taken[role]) { delete taken[role]; used.delete(role); }
+}
+
 /** Which options are still open for this seat right now. */
-function viable(options, used, count, target) {
+function viable(options, used, count, target, taken = {}) {
   return options.filter(([role, belief]) =>
-    !used.has(role) &&
-    (belief === null || !used.has(belief)) &&
+    free(role, used, taken) &&
+    (belief === null || free(belief, used, taken)) &&
     count[TEAM[role]] < target[TEAM[role]]);
 }
 
@@ -441,9 +465,14 @@ function fitsAhead(count, target, look, order, k, used) {
     const want = target[t] - count[t];
     if (want <= 0) continue;
     if (look.seats[k][t] < want) return false;      // not enough seats left
-    let free = 0;
-    for (const role of look.roles[k][t]) if (!used.has(role)) free += 1;
-    if (free < want) return false;                  // not enough tokens left
+    // A character more than one seat may hold is more than one token,
+    // counted at its most — still a relaxation.
+    let left = 0;
+    for (const role of look.roles[k][t]) {
+      if (!used.has(role)) left += 1;
+      if (role in COPIES) left += COPIES[role] - 1;
+    }
+    if (left < want) return false;                  // not enough tokens left
   }
   for (let j = k; j < order.length; j++) {
     let useful = false;
@@ -461,9 +490,10 @@ function prune(options, count, target, look, order, k, used) {
     const team = TEAM[role];
     if (team in verdict) continue;
     count[team] += 1;
+    const had = used.has(role);           // a second Village Idiot
     used.add(role);
     verdict[team] = fitsAhead(count, target, look, order, k, used);
-    used.delete(role);
+    if (!had) used.delete(role);
     count[team] -= 1;
   }
   return options.filter(([role]) => verdict[TEAM[role]]);
@@ -535,6 +565,7 @@ export function eachWorld(nPlayers, claims, opts = {}, emit) {
     const roles = new Array(nPlayers).fill(null);
     const believes = new Array(nPlayers).fill(null);
     const used = new Set();
+    const taken = {};
     const count = {townsfolk: 0, outsider: 0, minion: 0, demon: 0};
 
     const rec = k => {
@@ -549,12 +580,12 @@ export function eachWorld(nPlayers, claims, opts = {}, emit) {
       const i = order[k];
       for (const [role, belief] of cands[i]) {
         const team = TEAM[role];
-        if (used.has(role)) continue;
-        if (belief !== null && used.has(belief)) continue;
+        if (!free(role, used, taken)) continue;
+        if (belief !== null && !free(belief, used, taken)) continue;
         if (count[team] >= target[team]) continue;
 
-        used.add(role);
-        if (belief !== null) used.add(belief);
+        take(role, used, taken);
+        if (belief !== null) take(belief, used, taken);
         count[team] += 1;
         roles[i] = role; believes[i] = belief;
 
@@ -562,8 +593,8 @@ export function eachWorld(nPlayers, claims, opts = {}, emit) {
 
         roles[i] = null; believes[i] = null;
         count[team] -= 1;
-        used.delete(role);
-        if (belief !== null) used.delete(belief);
+        giveBack(role, used, taken);
+        if (belief !== null) giveBack(belief, used, taken);
         if (stop) return;
       }
     };
@@ -627,12 +658,13 @@ export function dive(setup, nPlayers, rng) {
   const roles = new Array(nPlayers).fill(null);
   const believes = new Array(nPlayers).fill(null);
   const used = new Set();
+  const taken = {};
   const count = {townsfolk: 0, outsider: 0, minion: 0, demon: 0};
   let standsFor = 1.0;
 
   for (let k = 0; k < order.length; k++) {
     const i = order[k];
-    let options = prune(viable(cands[i], used, count, target),
+    let options = prune(viable(cands[i], used, count, target, taken),
                         count, target, look, order, k + 1, used);
 
     // A bag is only that bag if its characters actually land in it. When
@@ -666,8 +698,8 @@ export function dive(setup, nPlayers, rng) {
     const [role, belief] = options[chosen];
     standsFor *= pool / shares[chosen];
 
-    used.add(role);
-    if (belief !== null) used.add(belief);
+    take(role, used, taken);
+    if (belief !== null) take(belief, used, taken);
     count[TEAM[role]] += 1;
     roles[i] = role;
     believes[i] = belief;

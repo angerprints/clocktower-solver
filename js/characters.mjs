@@ -1324,6 +1324,71 @@ export const DATA = {
    "wake": [
     "never"
    ]
+  },
+  "Pixie": {
+   "id": "pixie",
+   "name": "Pixie",
+   "team": "townsfolk",
+   "wake": [
+    "every",
+    "first",
+    "sometimes"
+   ],
+   "nights": "first",
+   "first_night": 29
+  },
+  "VillageIdiot": {
+   "id": "villageidiot",
+   "name": "Village Idiot",
+   "team": "townsfolk",
+   "wake": [
+    "every"
+   ],
+   "chooses": true,
+   "nights": "every",
+   "impairs": true,
+   "first_night": 46,
+   "other_night": 63,
+   "copies": 3
+  },
+  "Lycanthrope": {
+   "id": "lycanthrope",
+   "name": "Lycanthrope",
+   "team": "townsfolk",
+   "wake": [
+    "every",
+    "other"
+   ],
+   "chooses": true,
+   "nights": "other",
+   "other_night": 22
+  },
+  "Harpy": {
+   "id": "harpy",
+   "name": "Harpy",
+   "team": "minion",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "chooses": true,
+   "nights": "every",
+   "first_night": 27,
+   "other_night": 18
+  },
+  "Lleech": {
+   "id": "lleech",
+   "name": "Lleech",
+   "team": "demon",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "chooses": true,
+   "nights": "every",
+   "impairs": true,
+   "first_night": 16,
+   "other_night": 34
   }
  },
  "scripts": {

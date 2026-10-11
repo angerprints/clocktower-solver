@@ -81,6 +81,11 @@ class Night:
         # Minions a Preacher chose tonight (10.10.2026): no ability, which
         # is not being drunk, so an Acrobat that picks one lives.
         self.preached = set()
+        # The Lycanthrope killed tonight, so the Demon kills nobody
+        # (11.10.2026), and the faux paw it cannot kill.
+        self.lycanthrope_killed = False
+        self.faux_paw = None
+        self.made_drunk = {}                # Sailor/Innkeeper -> its drunk
 
     def choose(self, chooser, target, slot):
         """Somebody's ability aimed at somebody.
@@ -92,6 +97,20 @@ class Night:
         self.log.append((slot, "chose", chooser, target))
 
     def droison(self, seat, slot, why):
+        # A Sailor or an Innkeeper droisoned after making somebody drunk
+        # tonight: that drunkenness ends with it. The simulator has it so,
+        # and a Lleech the Sailor had drunked, whose Sailor the Poisoner
+        # then took, died with its host there and lived here (11.10.2026).
+        for source, target in list(self.made_drunk.items()):
+            if source == seat:
+                del self.made_drunk[source]
+                self.droisoned.discard(target)
+                self.log.append((slot, "sober", target, why))
+        if why in ("Sailor", "Innkeeper") and seat not in self.droisoned:
+            source = next((p for p, r in self.roles.items()
+                           if r == why and p in self.alive), None)
+            if source is not None:
+                self.made_drunk[source] = seat
         self.droisoned.add(seat)
         self.log.append((slot, "droisoned", seat, why))
 
@@ -458,6 +477,30 @@ def hidden_from(deal, night, heard):
         made = getattr(deal, "huntsman_chose", {}).get(night)
         if made is not None:
             out[("huntsman_made", night)] = made[2]
+    # The seventh five (11.10.2026): whom the Lycanthrope chose and who is
+    # its faux paw; whom the Harpy made mad, for a Goon; each Lleech's
+    # host, and whether that host was already dead as the night began.
+    aimed = getattr(deal, "lyc_aimed", {}).get(night)
+    if aimed is not None:
+        out[("lycanthrope", night)] = {aimed[0]: aimed[1]}
+    if getattr(deal, "faux_paw", None) is not None:
+        out["faux_paw"] = deal.faux_paw
+    mad = getattr(deal, "harpy_chose", {}).get(night)
+    if mad is not None:
+        out[("harpy", night)] = {mad[0]: mad[1]}
+    hosts = getattr(deal, "lleech_hosts", {})
+    if hosts:
+        out[("lleech", night)] = {
+            # Raised tonight counts as dead as the night began: a host a
+            # Professor stands up at 43 does not save a Lleech that went
+            # with it at dusk (11.10.2026).
+            seat: (host, host not in deal.alive_at(phase)
+                   or deal.back_at(host, phase) is not None)
+            for seat, host in hosts.items()}
+        from botc.info import phase_index as _at
+        lost = getattr(deal, "lleech_lost", None)
+        if lost is not None and _at(lost) <= _at(phase):
+            out[("lleech_lost", night)] = True
     # A Princess whose nominee was executed yesterday, by seat: the walk
     # asks whether she has her ability at the Demon's turn.
     princess = getattr(deal, "princess_stop", {}).get(night)
@@ -678,6 +721,7 @@ def walk(deal, night, hidden):
     state.gained.update(hidden.get("gained") or {})
 
     state.night = night
+    state.faux_paw = hidden.get("faux_paw")
     state.executed_yesterday = hidden.get(("executed", night))
     state.asked = dict(hidden.get(("asked", night)) or {})
     state.woke_count = dict(hidden.get(("woke", night)) or {})
@@ -825,6 +869,20 @@ def walk(deal, night, hidden):
                 state.sides[seat], state.sides[target] = "evil", "good"
                 state.droison(target, slot, "SnakeCharmer swap")
                 state.log.append((slot, "swapped", seat, target))
+                # A Lleech moves with its poison: the old host is sober
+                # and the new one, chosen as the charmer becomes it, is
+                # poisoned from here on, not from the Sweetheart's slot
+                # (11.10.2026).
+                if became == "Lleech":
+                    hosts = hidden.get(("lleech", night)) or {}
+                    old = hosts.get(target, (None,))[0]
+                    new = hosts.get(seat, (None,))[0]
+                    if old in stops_being_droisoned:
+                        state.droisoned.discard(old)
+                        stops_being_droisoned.discard(old)
+                    if new in becomes_droisoned:
+                        state.droison(new, slot, "Lleech")
+                        becomes_droisoned.discard(new)
 
             elif role == "Monk":
                 # Guards somebody from the Demon. Acts at 12, before every
@@ -1060,6 +1118,32 @@ def walk(deal, night, hidden):
                     state.roles[target] = made
                     state.log.append((slot, "made", target, made))
 
+            elif role == "Lycanthrope":
+                # Each night but the first, a living player: a good one
+                # that is not the faux paw dies, and the Demon kills
+                # nobody tonight (11.10.2026).
+                target = (hidden.get(("lycanthrope", night)) or {}).get(seat)
+                if target is None or seat not in state.alive:
+                    continue
+                state.choose(seat, target, slot)
+                _goon_answers(state, seat, target, slot)
+                if not state.working(seat) or target not in state.alive \
+                        or target == state.faux_paw \
+                        or state.sides.get(target) != "good":
+                    continue
+                state.kill(target, slot, "Lycanthrope")
+                if target in state.died:
+                    state.lycanthrope_killed = True
+
+            elif role == "Harpy":
+                # Two players; only the first is chosen by its ability in
+                # a way a Goon could answer, and nothing dies tonight.
+                target = (hidden.get(("harpy", night)) or {}).get(seat)
+                if target is None or seat not in state.alive:
+                    continue
+                state.choose(seat, target, slot)
+                _goon_answers(state, seat, target, slot)
+
             elif role == "Witch":
                 # Curses somebody: if they nominate tomorrow, they die.
                 # Again nothing tonight, but the aim is taken now.
@@ -1084,8 +1168,15 @@ def walk(deal, night, hidden):
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
                 if state.working(seat):
+                    was = state.roles.get(target)
                     state.roles[target] = became   # the side does not move
                     state.log.append((slot, "made", target, became))
+                    # A Drunk made into something is sober from here, not
+                    # from the Sweetheart's slot: a Drunk made a
+                    # Lycanthrope at 16 kills at 22 (11.10.2026).
+                    if was == "Drunk" and target in stops_being_droisoned:
+                        state.droisoned.discard(target)
+                        stops_being_droisoned.discard(target)
 
             elif role == "Assassin":
                 # One kill, once a game, and it ignores protection. Acts at
@@ -1248,6 +1339,17 @@ def walk(deal, night, hidden):
                         continue
                     state.kill(target, slot, role)
                     _grandmother_grieves(state, target, slot, hidden, night)
+
+    # A Lleech whose host died tonight dies with it; one whose host went
+    # while it was not working dies tonight if it is now (11.10.2026).
+    if not hidden.get(("lleech_lost", night)):
+        for lleech, (host, before) in sorted(
+                (hidden.get(("lleech", night)) or {}).items()):
+            if lleech not in state.alive \
+                    or state.roles.get(lleech) != "Lleech":
+                continue
+            if (before or host in state.died) and state.working(lleech):
+                state.kill(lleech, 99, "Lleech's host", unstoppable=True)
 
     # Everything above changed the board. What follows only *reads* it —
     # and reads it as it stands at that seat's slot, which is the whole
@@ -1770,6 +1872,8 @@ def _readings_that_must_be_droisoned(view, state, night):
 def _the_princess_holds(state, hidden, night):
     """Yesterday's Princess had her nominee executed, and has her ability
     now: the Demon kills nobody tonight (10.10.2026)."""
+    if state.lycanthrope_killed:
+        return True                       # the Lycanthrope's, 11.10.2026
     princess = hidden.get(("princess", night))
     return princess is not None and state.working(princess) \
         and state.roles.get(princess) == "Princess"
