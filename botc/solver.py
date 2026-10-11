@@ -24,7 +24,9 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    LeviathanAnnounced, ExecutionNomination, InnkeeperChoice,
                    ExorcistChoice, GolemNomination,
                    acts_as_cult_leader, cult_sides, knows_it_turned_evil,
-                   went_on_after, phase_index)
+                   went_on_after, phase_index,
+                   begin_reads, end_reads, listen_for_sides, replay_reads,
+                   _LISTENING)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
                     INVERTED, registers_as_role, evil_registrations,
@@ -375,10 +377,39 @@ def _all_nights_at_once(world, state, cap):
     stories = [((), 1.0)]
     for rule in TRANSITION_RULES:
         grown = []
+        # What the rule offered a story that differs from this one only
+        # in who turned evil, if it never asked which side they were on:
+        # a Bounty Hunter's seven stories are then asked once, not seven
+        # times (`_explain_or_recall` has the reasoning).
+        asked_before = {}
         for changes, weight in stories:
-            view = Timeline(world, changes) if changes else world
-            for extra, cost in rule(view, state):
-                grown.append((changes + tuple(extra), weight * cost))
+            if not _LISTENING[0]:         # nobody turns evil that way here
+                view = Timeline(world, changes) if changes else world
+                for extra, cost in rule(view, state):
+                    grown.append((changes + tuple(extra), weight * cost))
+                    if len(grown) >= cap:
+                        break
+                if len(grown) >= cap:
+                    break
+                continue
+            flips, _turns, rest = _who_turned(changes)
+            offers = None
+            before = asked_before.setdefault(rest, [])
+            for theirs, reads, kept in before:
+                if _differ_only_unasked(flips, theirs, reads):
+                    offers = kept
+                    break
+            if offers is None:
+                view = Timeline(world, changes) if changes else world
+                begin_reads()
+                try:
+                    offers = [(tuple(extra), cost)
+                              for extra, cost in rule(view, state)]
+                finally:
+                    reads = end_reads()
+                before.append((flips, reads, offers))
+            for extra, cost in offers:
+                grown.append((changes + extra, weight * cost))
                 if len(grown) >= cap:
                     break
             if len(grown) >= cap:
@@ -1782,7 +1813,9 @@ def _tea_lady_keeping(world, state, seat, phase, alive=None):
     # Fool and a Tea Lady, in a game that ran six nights).
     if seat not in around:
         return None
-    if any(world.evil_at(p, phase) for p in around):
+    # In seat order, as in JavaScript: which of two neighbours is asked
+    # first decides whose side was asked about at all (`note_side_read`).
+    if any(world.evil_at(p, phase) for p in sorted(around)):
         return None                       # one of them is evil, so nothing
     return lady
 
@@ -2518,8 +2551,8 @@ def a_leviathan_fells_a_banshee(world, state, night):
         return []
     reach = frozenset(
         p for p in state.alive_set(phase)
-        if p != lev and not world.evil_at(p, phase)
-        and _has_ability(world, state, p, "Banshee", phase))
+        if p != lev and _has_ability(world, state, p, "Banshee", phase)
+        and not world.evil_at(p, phase))
     if not reach:
         return []
     actor = None if _a_sweetheart_died(world, state, night) else lev
@@ -2979,6 +3012,10 @@ def the_lleech_lives_while_its_host_does(world, state, night, seat, kind):
 
 def _night_deaths(state):
     """{night: [seats that died that night]}"""
+    # Held for the length of one `best_story`, like `final_phase`.
+    held = getattr(state, "_night_deaths_held", None)
+    if held is not None:
+        return held
     out = defaultdict(list)
     for seat, phase in state.death_phases():
         if phase and phase[0].upper() == "N":
@@ -3158,12 +3195,32 @@ def _explained_night(world, state, night):
     memo = _memo_for(base, "_nights_memo", state)
     # And the hidden choices of this telling: whom a Lycanthrope cannot
     # kill, and whose death takes a Lleech with it (`_hidden_choices`).
-    key = (night, upto, getattr(state, "_hidden", None))
-    got = memo.get(key)
-    if got is None:
-        died = set(_night_deaths(state).get(night, ()))
-        got = memo[key] = _the_ones_that_can_win(
+    if not _LISTENING[0]:                 # nobody turns evil that way here
+        key = (night, upto, getattr(state, "_hidden", None))
+        got = memo.get(key)
+        if got is None:
+            died = set(_night_deaths(state).get(night, ()))
+            got = memo[key] = _the_ones_that_can_win(
+                death_causes.explain_night(world, state, night, died))
+        return got
+    # Kept per everything but who turned evil, and with whose side was
+    # asked about on the way: a story that differs only in a seat nobody
+    # asked about is handed the same answer (`_explain_or_recall`).
+    flips, _turns, rest = _who_turned(upto)
+    key = ("turned", night, rest, getattr(state, "_hidden", None))
+    kept = memo.setdefault(key, [])
+    for theirs, reads, got in kept:
+        if _differ_only_unasked(flips, theirs, reads):
+            replay_reads(reads)
+            return got
+    died = set(_night_deaths(state).get(night, ()))
+    begin_reads()
+    try:
+        got = _the_ones_that_can_win(
             death_causes.explain_night(world, state, night, died))
+    finally:
+        reads = end_reads()
+    kept.append((flips, reads, got))
     return got
 
 
@@ -5241,6 +5298,20 @@ def best_story(world, state, outcome=None, viable=None):
     # world; kept past that, a constant or a rule changed between two
     # solves of the same world would be answered from before the change.
     state._epoch = next(_EPOCHS)
+    # Whose side is asked about is only written down where a story can
+    # differ in who turned evil (`_explain_or_recall`).
+    listen_for_sides(_in_bag(state, "BountyHunter")
+                     or _in_bag(state, "Mezepheles"))
+    state._final_phase_held = state._night_deaths_held = None
+    state._final_phase_held = state.final_phase()
+    state._night_deaths_held = _night_deaths(state)
+    try:
+        return _best_story(world, state, outcome, viable)
+    finally:
+        state._final_phase_held = state._night_deaths_held = None
+
+
+def _best_story(world, state, outcome, viable):
     stories = possible_timelines(world, state)
     if not stories:
         return None, ()
@@ -5252,22 +5323,33 @@ def best_story(world, state, outcome=None, viable=None):
         return cost, ()
 
     best, best_changes, best_marks = None, (), None
+    # Stories that differ only in who turned evil, kept with what was
+    # asked while each was explained (`_explain_or_recall`).
+    told_before = {}
     for changes, weight in stories:
-        view = Timeline(world, changes) if changes else world
-        told = [(changes, view)]
+        told = [changes]
         at = 0
         while at < len(told):
-            changes, view = told[at]
+            changes = told[at]
             at += 1
-            marks = {} if outcome is not None else None
-            cost = _explain(view, state, marks)
+            cost, marks, asked = _explain_or_recall(
+                world, changes, state, outcome is not None, told_before)
             # A story that leaves something to pay for, or does not fit
             # at all, is told again with each player a Mezepheles could
             # have turned (`a_mezepheles_may_have_turned`).
             if turning and at == 1 and (cost is None or cost < 1.0):
-                told += [(changes + turn, Timeline(world, changes + turn))
-                         for turn in a_mezepheles_may_have_turned(view,
-                                                                  state)]
+                view = Timeline(world, changes) if changes else world
+                for turn in a_mezepheles_may_have_turned(view, state):
+                    # Not if the story could not be explained and never
+                    # asked about that player's side from that night on:
+                    # the second shortcut of `_explain_or_recall`, taken
+                    # here before the story is even put together.
+                    if cost is None and not CHECK_RECALLS and not (
+                            asked.get(turn[0].seat, 0)
+                            >> (phase_index(turn[0].phase) + 2)):
+                        STORIES["skipped"] += 1
+                        continue
+                    told.append(changes + turn)
             if cost is None:
                 continue
             cost *= weight
@@ -5278,6 +5360,118 @@ def best_story(world, state, outcome=None, viable=None):
     if outcome is not None and best_marks:
         outcome.update(best_marks)
     return best, best_changes
+
+
+# Counted for the measurement scripts: stories explained, stories whose
+# cost was recalled from one that differs only in who turned evil, and
+# turns skipped because the story without them already could not be.
+STORIES = {"explained": 0, "recalled": 0, "skipped": 0}
+# Set by the tests: explain the recalled ones anyway and compare.
+CHECK_RECALLS = False
+
+
+_NOBODY_ASKED = {}
+
+
+def _who_turned(changes):
+    """A story taken apart: {seat: from which moment it is evil}, the
+    nights a Mezepheles turned somebody, and every other change."""
+    if not changes:
+        return {}, (), ()
+    flips, turns, rest = {}, [], []
+    for change in changes:
+        if isinstance(change, TurnedEvil):
+            at = phase_index(change.phase)
+            flips[change.seat] = min(at, flips.get(change.seat, at))
+            if isinstance(change, MezephelesTurn):
+                turns.append(change.phase)
+        else:
+            rest.append(change)
+    return flips, tuple(turns), tuple(rest)
+
+
+def _differ_only_unasked(flips, others, reads):
+    """Do two stories differ only where nobody looked?
+
+    Each seat is evil from some moment on in one story and from another
+    (or never) in the other. Between those two moments the stories
+    disagree about its side; if the explanation of one never asked about
+    that seat in between, it went exactly as the other's would.
+    """
+    for seat in flips.keys() | others.keys():
+        mine, theirs = flips.get(seat), others.get(seat)
+        if mine == theirs:
+            continue
+        if mine is None or theirs is None:
+            first, last = (theirs if mine is None else mine), None
+        else:
+            first, last = min(mine, theirs), max(mine, theirs)
+        asked = reads.get(seat, 0) >> (first + 2)
+        if last is not None:
+            asked &= (1 << (last - first)) - 1
+        if asked:
+            return False
+    return True
+
+
+def _explain_or_recall(world, changes, state, with_marks, told_before):
+    """`_explain`, unless a story told before settles this one.
+
+    With a Bounty Hunter dealt every world is told once for each
+    Townsfolk that may be the evil one, and beside a Mezepheles once more
+    for each player and night it could have turned somebody. Most of
+    those differ in a seat nothing on the board asks about, and explaining
+    them one by one was nearly all the time such a board took (measured
+    11.10.2026, open item 52). Two shortcuts, and neither changes an
+    answer:
+
+      * **Recalled.** A story with the same changes otherwise and the
+        same night of turning, differing only in seats whose side was
+        never asked about while the first was explained, costs the same.
+      * **Skipped.** A story that could not be explained cannot be once a
+        Mezepheles turns somebody whose side was never asked about from
+        that night on: the turn changes nothing that was looked at, and
+        asks one thing more — that the Mezepheles was working.
+    """
+    if not _LISTENING[0]:                 # nobody turns evil that way here
+        marks = {} if with_marks else None
+        view = Timeline(world, changes) if changes else world
+        return _explain(view, state, marks), marks, _NOBODY_ASKED
+    flips, turns, rest = _who_turned(changes)
+    before = told_before.setdefault(rest, [])
+    found = None
+    for theirs, their_turns, reads, cost, marks in before:
+        if their_turns == turns:
+            if _differ_only_unasked(flips, theirs, reads):
+                found = ("recalled", cost, marks)
+                break
+        elif cost is None and not their_turns and len(turns) == 1 \
+                and _differ_only_unasked(flips, theirs, reads):
+            found = ("skipped", None, None)
+            break
+    if found is not None and not CHECK_RECALLS:
+        STORIES[found[0]] += 1
+        return found[1], (dict(found[2]) if with_marks and found[2] else
+                          ({} if with_marks else None)), reads
+    marks = {} if with_marks else None
+    view = Timeline(world, changes) if changes else world
+    begin_reads()
+    try:
+        cost = _explain(view, state, marks)
+    finally:
+        reads = end_reads()
+    STORIES["explained"] += 1
+    if found is not None:                 # CHECK_RECALLS
+        same = (cost is None) == (found[1] is None) and (
+            cost is None or abs(cost - found[1]) < 1e-12)
+        if found[0] == "recalled":
+            same = same and (not with_marks or marks == (found[2] or {}))
+        if not same:
+            raise AssertionError(
+                f"{found[0]} {found[1]} but explained {cost}: "
+                f"{view.roles} {changes}")
+    before.append((flips, turns, reads, cost, marks))
+    return cost, marks, reads
 
 
 def _report_phase(state):
@@ -5508,6 +5702,18 @@ def _explain_once(world, state, outcome=None):
     """The cost of one telling of this world, with the lineage settled."""
     if not _the_game_went_on(world, state):
         return None
+    # A night nothing at all explains settles it before any reading is
+    # judged. The answer is the same either way — `_night_accounts` below
+    # would come back empty — but asked first, a story that fails on its
+    # deaths has asked about nobody's side on the way, and the stories
+    # that differ from it only in who turned evil need not be told
+    # (`_explain_or_recall`). Nine in ten stories of a busy board with a
+    # Bounty Hunter end here (measured 11.10.2026).
+    if _LISTENING[0]:
+        for night in sorted(set(_night_deaths(state)) | set(
+                getattr(state, "quiet_nights", None) or ())):
+            if not _explained_night(world, state, night):
+                return None
     failures, ft_infos, invented_factor, must_work = _plain_failures(
         world, state, outcome)
     if failures is None:

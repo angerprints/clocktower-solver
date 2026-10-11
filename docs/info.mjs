@@ -14,7 +14,7 @@ import {CHARACTERS} from "./catalogue.mjs";
 import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./roles.mjs";
 import {ORGAN_GRINDER_BY_CHOICE, killedByAVigormortis, minionStillActs, sourcesOn}
   from "./impairment.mjs";
-import {phaseIndex} from "./phases.mjs";
+import {LISTENING, noteSideRead, phaseIndex} from "./phases.mjs";
 import {possibleCounts, reallyLiving, theDeadOutnumberOrEqual, wokenWraiths}
   from "./waking.mjs";
 import {OTHER, shieldsOn} from "./deaths.mjs";
@@ -1821,6 +1821,7 @@ HarpyMadness.isAChoice = true;
  * Hunter's evil Townsfolk and whoever a Mezepheles turned. */
 export function knowsItTurnedEvil(w, seat, phase) {
   const here = phaseIndex(phase);
+  if (LISTENING) noteSideRead(seat, phase);
   return (w.changes || []).some(c => c.turned && c.seat === seat
                                      && phaseIndex(c.phase) <= here);
 }

@@ -19,7 +19,8 @@
  * a Storyteller treats it as a price the town pays rather than a weapon
  * to point at evil.
  */
-import {phaseIndex} from "./phases.mjs";
+import {LISTENING, beginReads, endReads, phaseIndex, replayReads}
+  from "./phases.mjs";
 
 /** Is this a dead Minion a living Vigormortis killed?
  *
@@ -112,13 +113,24 @@ export function sourcesOn(world, state, night) {
   // are part of the key (scoring.mjs hiddenChoices).
   const hidden = state._hidden;
   const key = hidden ? `${night}|${hidden[0]}|${hidden[1]}` : `${night}`;
-  let got = memo.nights.get(key);
-  if (!got) {
-    got = [];
+  let kept = memo.nights.get(key);
+  if (!kept && !LISTENING) {
+    const got = [];
     for (const rule of SOURCE_RULES) got.push(...rule(world, state, night));
-    memo.nights.set(key, got);
-  }
-  return got.slice();
+    memo.nights.set(key, kept = [got, null]);
+  } else if (!kept) {
+    // With whose side the rules asked about, for the next story that is
+    // handed this answer (phases.mjs `noteSideRead`).
+    const got = [];
+    beginReads();
+    try {
+      for (const rule of SOURCE_RULES) got.push(...rule(world, state, night));
+    } finally {
+      kept = [got, endReads()];
+    }
+    memo.nights.set(key, kept);
+  } else if (kept[1]) replayReads(kept[1]);
+  return kept[0].slice();
 }
 
 export const aliveThrough = (world, state, seat, night) =>

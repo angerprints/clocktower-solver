@@ -14,7 +14,8 @@ import {CHARACTERS} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
 import {minionStillActs, planNightResting, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
-import {phaseIndex} from "./phases.mjs";
+import {LISTENING, beginReads, differOnlyUnasked, endReads, listenForSides,
+        phaseIndex, replayReads} from "./phases.mjs";
 import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
 import {Timeline, change, turnedEvil} from "./worlds.mjs";
@@ -171,10 +172,35 @@ function allNightsAtOnce(world, state, cap) {
   let stories = [[[], 1.0]];
   for (const rule of TRANSITION_RULES) {
     const grown = [];
+    // What the rule offered a story that differs from this one only in
+    // who turned evil, if it never asked which side they were on: a
+    // Bounty Hunter's seven stories are then asked once, not seven times
+    // (`explainOrRecall` has the reasoning).
+    const askedBefore = new Map();
     outer:
     for (const [changes, weight] of stories) {
-      const view = changes.length ? new Timeline(world, changes) : world;
-      for (const [extra, cost] of rule(view, state)) {
+      if (!LISTENING) {                   // nobody turns evil that way here
+        const view = changes.length ? new Timeline(world, changes) : world;
+        for (const [extra, cost] of rule(view, state)) {
+          grown.push([[...changes, ...extra], weight * cost]);
+          if (grown.length >= cap) break outer;
+        }
+        continue;
+      }
+      const {flips, restKey} = whoTurned(changes);
+      let before = askedBefore.get(restKey);
+      if (!before) askedBefore.set(restKey, before = []);
+      let offers = null;
+      for (const [theirs, reads, kept] of before)
+        if (differOnlyUnasked(flips, theirs, reads)) { offers = kept; break; }
+      if (offers === null) {
+        const view = changes.length ? new Timeline(world, changes) : world;
+        beginReads();
+        let reads;
+        try { offers = [...rule(view, state)]; } finally { reads = endReads(); }
+        before.push([flips, reads, offers]);
+      }
+      for (const [extra, cost] of offers) {
         grown.push([[...changes, ...extra], weight * cost]);
         if (grown.length >= cap) break outer;
       }
@@ -186,6 +212,25 @@ function allNightsAtOnce(world, state, cap) {
 }
 
 const nightOf = c => parseInt(c.phase.slice(1), 10);
+
+/** A story taken apart: which seat is evil from which moment (a Map),
+ * the nights a Mezepheles turned somebody (as a key), and a key for
+ * every other change. See `_who_turned` in solver.py. */
+const NOBODY_TURNED = {flips: new Map(), turns: "", restKey: ""};
+function whoTurned(changes) {
+  if (!changes.length) return NOBODY_TURNED;
+  const flips = new Map();
+  let turns = "", restKey = "";
+  for (const c of changes) {
+    if (c.turned) {
+      const at = momentOf(c);
+      const had = flips.get(c.seat);
+      flips.set(c.seat, had === undefined ? at : Math.min(at, had));
+      if (c.turned === "mezepheles") turns += c.phase + ";";
+    } else restKey += changeKey(c) + (c.barber ? "b" + c.barber : "") + ";";
+  }
+  return {flips, turns, restKey};
+}
 // Worked out once per change: the night passes ask for the same keys and
 // moments of the same few changes hundreds of times per world.
 const KEYS = new WeakMap(), MOMENTS = new WeakMap();
@@ -940,6 +985,8 @@ transitionRule(function demonHandovers(world, state) {
 
 /** {night: [seats that died that night]} */
 export function nightDeaths(state) {
+  // Held for the length of one `bestStory`, like `finalPhase`.
+  if (state._nightDeathsHeld) return state._nightDeathsHeld;
   const out = {};
   for (const [seat, phase] of state.deathPhases())
     if (phase && phase[0].toUpperCase() === "N") {
@@ -1266,6 +1313,10 @@ function plainFailures(world, state, outcome = {}) {
   const spent = spentNominations(state);
   const seats = sourceSeats(state);
   state.infos.forEach((info, idx) => {
+    // Once a hard fact did not hold nothing further is judged, as in
+    // Python, which returns on the spot: the rows after it would only
+    // ask about sides nobody needs any more (`explainOrRecall`).
+    if (impossible) return;
     if (spent.has(idx)) { outcome[idx] = SPENT; return; }
     if (info.hard()) {
       if (!info.holds(world, state, null)) { impossible = true; }
@@ -1635,12 +1686,35 @@ function explainedNight(world, state, night, died) {
   const memo = memoFor(base, "_nightsMemo", state);
   // And this telling's hidden choices (`hiddenChoices`).
   const hidden = state._hidden ? `|${state._hidden[0]}|${state._hidden[1]}` : "";
-  const key = `${night}#${upto.map(changeKey).join(";")}${hidden}`;
-  let got = memo.got.get(key);
-  if (got === undefined) {
-    got = theOnesThatCanWin(explainNight(world, state, night, died()));
-    memo.got.set(key, got);
+  if (!LISTENING) {                       // nobody turns evil that way here
+    const key = `${night}#${upto.map(changeKey).join(";")}${hidden}`;
+    let got = memo.got.get(key);
+    if (got === undefined) {
+      got = theOnesThatCanWin(explainNight(world, state, night, died()));
+      memo.got.set(key, got);
+    }
+    return got;
   }
+  // Kept per everything but who turned evil, and with whose side was
+  // asked about on the way: a story that differs only in a seat nobody
+  // asked about is handed the same answer (`explainOrRecall`).
+  const {flips, restKey} = whoTurned(upto);
+  const key = `${night}?${restKey}${hidden}`;
+  let kept = memo.got.get(key);
+  if (kept === undefined) memo.got.set(key, kept = []);
+  for (const [theirs, reads, got] of kept)
+    if (differOnlyUnasked(flips, theirs, reads)) {
+      replayReads(reads);
+      return got;
+    }
+  beginReads();
+  let got, reads;
+  try {
+    got = theOnesThatCanWin(explainNight(world, state, night, died()));
+  } finally {
+    reads = endReads();
+  }
+  kept.push([flips, reads, got]);
   return got;
 }
 
@@ -1980,6 +2054,18 @@ function explainOne(world, state, outcome = null) {
 /** The cost of one telling of this world, with the lineage settled. */
 function explainOnce(world, state, outcome = null) {
   if (!theGameWentOn(world, state)) return null;
+  // A night nothing at all explains settles it before any reading is
+  // judged: the same answer, but a story that fails on its deaths has
+  // then asked about nobody's side on the way. See solver.py.
+  if (LISTENING) {
+    const deaths = nightDeaths(state);
+    const nights = new Set([...Object.keys(deaths).map(Number),
+                            ...state.quietNights]);
+    for (const night of [...nights].sort((a, b) => a - b))
+      if (!explainedNight(world, state, night,
+                          () => new Set(deaths[night] || [])).length)
+        return null;
+  }
   const sorted = plainFailures(world, state, outcome || {});
   if (sorted === null) return null;
   const {failures, ftInfos, invented, mustWork, vortoxOr, either} = sorted;
@@ -2128,6 +2214,57 @@ export function bestStory(world, state, outcome = null) {
   // work between one world's stories, and kept past that a constant or a
   // rule changed between two solves would be answered from before it.
   state._epoch = (state._epoch || 0) + 1;
+  // Whose side is asked about is only written down where a story can
+  // differ in who turned evil (`explainOrRecall`).
+  listenForSides(inBag(state, "BountyHunter") || inBag(state, "Mezepheles"));
+  state._finalPhaseHeld = state._nightDeathsHeld = null;
+  state._finalPhaseHeld = state.finalPhase();
+  state._nightDeathsHeld = nightDeaths(state);
+  try {
+    return bestStoryNow(world, state, outcome);
+  } finally {
+    state._finalPhaseHeld = state._nightDeathsHeld = null;
+  }
+}
+
+// Counted for the measurements: stories explained, recalled from one
+// that differs only in who turned evil, and turns skipped.
+export const STORIES = {explained: 0, recalled: 0, skipped: 0};
+
+/** `explainOne`, unless a story told before settles this one: recalled
+ * where the two differ only in seats whose side was never asked about,
+ * skipped where a story that could not be explained gains a turn nobody
+ * asked about. Neither changes an answer. See `_explain_or_recall` in
+ * solver.py for the reasoning (11.10.2026, open item 52).
+ * Returns [cost, marks, what was asked]. */
+function explainOrRecall(world, changes, state, withMarks, toldBefore) {
+  const {flips, turns, restKey} = whoTurned(changes);
+  let before = toldBefore.get(restKey);
+  if (!before) toldBefore.set(restKey, before = []);
+  for (const [theirs, theirTurns, reads, cost, marks] of before) {
+    if (theirTurns === turns) {
+      if (differOnlyUnasked(flips, theirs, reads)) {
+        STORIES.recalled += 1;
+        return [cost, withMarks ? {...(marks || {})} : null, reads];
+      }
+    } else if (cost === null && theirTurns === "" && turns !== ""
+               && turns.indexOf(";") === turns.length - 1
+               && differOnlyUnasked(flips, theirs, reads)) {
+      STORIES.skipped += 1;
+      return [null, withMarks ? {} : null, reads];
+    }
+  }
+  const marks = withMarks ? {} : null;
+  const view = changes.length ? new Timeline(world, changes) : world;
+  beginReads();
+  let cost, reads;
+  try { cost = explainOne(view, state, marks); } finally { reads = endReads(); }
+  STORIES.explained += 1;
+  before.push([flips, turns, reads, cost, marks]);
+  return [cost, marks, reads];
+}
+
+function bestStoryNow(world, state, outcome) {
   const stories = possibleTimelines(world, state);
   if (!stories.length) return {cost: null, changes: [], viable: []};
   const turning = inBag(state, "Mezepheles");
@@ -2138,20 +2275,46 @@ export function bestStory(world, state, outcome = null) {
 
   let best = null, bestChanges = [], bestMarks = null;
   const viable = [];
+  const toldBefore = new Map();
   for (const [first, weight] of stories) {
-    const told = [[first, first.length ? new Timeline(world, first) : world]];
-    for (let at = 0; at < told.length;) {
-      const [changes, view] = told[at++];
+    if (!LISTENING) {                     // nobody turns evil that way here
+      const view = first.length ? new Timeline(world, first) : world;
       const marks = outcome ? {} : null;
       const cost = explainOne(view, state, marks);
+      if (cost === null) continue;
+      const got = cost * weight;
+      viable.push([got, first]);
+      if (best === null || got > best) {
+        best = got; bestChanges = first; bestMarks = marks;
+      }
+      continue;
+    }
+    const told = [first];
+    for (let at = 0; at < told.length;) {
+      const changes = told[at++];
+      const [cost, marks, asked] = explainOrRecall(
+        world, changes, state, !!outcome, toldBefore);
       // A story that leaves something to pay for, or does not fit at
       // all, is told again with each player a Mezepheles could have
       // turned (`aMezephelesMayHaveTurned`).
-      if (turning && at === 1 && (cost === null || cost < 1.0))
+      if (turning && at === 1 && (cost === null || cost < 1.0)) {
+        const view = changes.length ? new Timeline(world, changes) : world;
         for (const turn of aMezephelesMayHaveTurned(view, state)) {
-          const grown = [...changes, ...turn];
-          told.push([grown, new Timeline(world, grown)]);
+          // Not if the story could not be explained and never asked
+          // about that player's side from that night on: the second
+          // shortcut of `explainOrRecall`, taken before the story is
+          // even put together.
+          if (cost === null) {
+            const bits = asked.get(turn[0].seat) || 0;
+            const from = momentOf(turn[0]) + 2;
+            if (!bits || (bits !== -1 && from <= 30 && !(bits >>> from))) {
+              STORIES.skipped += 1;
+              continue;
+            }
+          }
+          told.push([...changes, ...turn]);
         }
+      }
       if (cost === null) continue;
       const got = cost * weight;
       viable.push([got, changes]);

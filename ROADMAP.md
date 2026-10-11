@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 11.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 12.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -1072,7 +1072,7 @@ Daraus folgt auch: Wer weiß, dass er böse geworden ist (der böse Bürger, der
 
 | Nr. | Schritt | Ergebnis |
 |---|---|---|
-| 1 | Solver in Python und JavaScript | 38 neue Bretter im Korpus, beide stimmen überein. Dazu über 220 gespielte Bretter außerhalb des Korpus verglichen, keine Abweichung wegen der fünf. |
+| 1 | Solver in Python und JavaScript | 38 neue Bretter im Korpus, beide stimmen überein. Dazu 160 gespielte Bretter auf den eigenen Skripten außerhalb des Korpus verglichen, keine Abweichung wegen der fünf. *Berichtigt am 12.10.2026:* Die 63 gemischten Bretter, die ich hier zuerst mitgezählt hatte, enthielten keinen der fünf. Nachgeholt mit 96 gemischten Brettern, die alle fünf auf dem Skript haben: 95 gleich, eines geschätzt und deshalb nicht vergleichbar. |
 | 2 | Simulator | Spielt alle fünf. In 3.000 gemischten Partien ausgeteilt: 1.222 Kopfgeldjäger, 1.266 Kultführer, 1.058 Mezepheles, 733 Leviathane, 708 Yaggababbles. |
 | 3 | Night-Walk | Kennt den Wechsel des Mezepheles, die Toten der Yaggababble und die Wahl des Leviathans. Auf den eigenen Skripten 1 von 17.077 Nächten abweichend, nicht wegen der fünf (Stelle 51). |
 | 4 | Gemischte Partien mit den fünf | 3 von 3.000 verlieren die wahre Welt, bei 4 und bei 6 Nächten. Keine wegen der fünf. |
@@ -1085,9 +1085,31 @@ Daraus folgt auch: Wer weiß, dass er böse geworden ist (der böse Bürger, der
 
 **Bekannte Grenzen:** Der Jinx Leviathan–Mönch ist nicht gebaut, weil niemand aufschreibt, wen der Mönch schützt. Einen falschen Claim des bösen Bürgers findet der Solver nur an einem Sitz, der als nicht vertrauenswürdig markiert ist. Große Bretter auf Skripten mit Kopfgeldjäger und Mezepheles rechnen lange (Stelle 52). Lesart R hatte ich mit „Nacht 5“ vorgelegt; gebaut ist die Karte: Die Partie endet nach Tag 5, also darf es keine Nacht 6 geben.
 
+### Geschwindigkeit mit Kopfgeldjäger und Mezepheles · *erledigt am 12.10.2026*
+
+Der volle Bericht steht in `claude/geschwindigkeit-kopfgeldjaeger-mezepheles.md`.
+
+**Deine Entscheidung vom 11.10.2026:** Weg 3, zuerst die Geschwindigkeit (offene Stelle 52).
+
+**Gemessen:** Auf einem Brett mit 9 Spielern und 6 Nächten erklärte der Solver 645.000 Erzählungen für 55.000 Welten. Fast alle unterschieden sich nur darin, welcher Bürger böse ist oder wen der Mezepheles gedreht hat, und 87 % scheiterten an einer Nacht, die nichts erklärt.
+
+**Geändert, ohne dass sich eine Antwort ändert:** Der Solver schreibt mit, nach wessen Fraktion er beim Erklären einer Erzählung gefragt hat. Unterscheidet sich eine zweite Erzählung nur in Sitzen, nach denen nie gefragt wurde, kostet sie dasselbe und wird nicht noch einmal erklärt. Ein Wechsel des Mezepheles wird gar nicht erst erzählt, wenn die Erzählung ohne ihn nicht aufgeht und nach dem Gedrehten ab dieser Nacht nie gefragt wurde. Nächte ohne Erklärung werden zuerst geprüft. Auf Skripten ohne die beiden läuft alles wie vorher.
+
+| JavaScript, dieselben Bretter | vorher | jetzt | langsamstes Brett vorher | jetzt |
+|---|---|---|---|---|
+| 58 gespielte, eigenes Skript, 7 Spieler, 4 Nächte | 29 s | 19 s | 2,4 s | 2,7 s |
+| 30 gespielte, eigenes Skript, 9 Spieler, 6 Nächte | 317 s | 100 s | 109 s | 30 s |
+| 80 gemischte mit den fünf, 7 Spieler, 4 Nächte | 114 s | 89 s | 26 s | 22 s |
+| 16 gemischte mit den fünf, 9 Spieler, 6 Nächte | 650 s | 353 s | 232 s | 99 s |
+| 126 Bretter der Grundskripte | 83 s | 84 s | 5,8 s | 5,5 s |
+
+**Geprüft:** 336 gespielte Bretter geben in Python und JavaScript dieselben Antworten wie vor der Änderung. Im Prüfmodus hat der Solver jede abgekürzte Erzählung trotzdem erklärt und verglichen: keine Abweichung auf 229 Brettern mit den fünf. Das Tor misst dasselbe wie vorher, 1.545 Tests grün (18 neue).
+
+**Bleibt offen:** Große gemischte Bretter, auf denen Werwolf, Kopfgeldjäger und Mezepheles zusammenkommen, brauchen im Browser weiter ein bis zwei Minuten (Stelle 52).
+
 ### Als Nächstes
 
-**1 · Entscheiden, womit es weitergeht.** Alle mittleren experimentellen Charaktere sind durch das Tor. Drei Wege: (1) Batch 9 mit den drei, die sich nur aufzeichnen lassen (Hohepriesterin, General, Fischer), meine Empfehlung; (2) der erste große Charakter einzeln, mit Lesarten vorab; (3) zuerst die Geschwindigkeit auf Skripten mit Kopfgeldjäger und Mezepheles (offene Stelle 52).
+**1 · Entscheiden, womit es weitergeht.** Alle mittleren experimentellen Charaktere sind durch das Tor, die Geschwindigkeit auf ihren Skripten ist verbessert. Zwei Wege: (1) Batch 9 mit den drei, die sich nur aufzeichnen lassen (Hohepriesterin, General, Fischer), meine Empfehlung; (2) der erste große Charakter einzeln, mit Lesarten vorab.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1160,7 +1182,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 49 | Night-Walk | **Ein Tausch mitten in der Nacht verschiebt Gift, und der Night-Walk merkt es erst am Platz des Liebchens.** Ein Philosoph mit der Fähigkeit des Schlangenbeschwörers tauscht an Platz 11 mit dem No Dashii, dessen Gift wandert mit. Der Night-Walk ändert die Störungen aus solchen Gründen erst an Platz 41, die Prinzessin galt beim Dämon an Platz 30 also noch als vergiftet. 1 von 8.246 Nächten im Tor von Batch 5 (Seed 879). Am Tor von Batch 7 dieselbe Klasse dreimal: ein Schlangenbeschwörer verschiebt das Gift des No Dashii (Seed 1801), ein Liebchen stirbt durch den Shabaloth und seine Trunkenheit trifft die Großmutter, die im selben Moment trauert (Seed 2031), und ein Mondkind tötet das Liebchen, dessen Trunkenheit es selbst trifft (Seed 1112, 6 Nächte). Zwei Fälle davon sind seither eng behoben: ein Tausch mit dem Lleech und ein Trunkenbold, den das Grubenweib verwandelt. |
 | 50 | Simulator | **Der Mönch wählt vor dem Gastwirt.** Im Simulator schützt der Mönch vor allen frühen Wahlen, am Tisch handelt der Gastwirt (Platz 9) vor ihm (Platz 12). Macht der Gastwirt die Witwe betrunken, ruht ihr Gift auf dem Mönch schon, der Simulator lässt den Mönch aber vergiftet wählen. 3 von 8.246 Nächten im Tor von Batch 5 (Seed 2053). Das zu ändern teilt alle Partien mit einem Mönch neu aus, wie Stelle 19. Am Tor von Batch 6 dasselbe mit einer Witwe, die das Grubenweib in derselben Nacht erschafft (Platz 16 und 18): Ihr Gift auf dem Mönch zählt im Simulator schon an Platz 12. Am Tor von Batch 8: Der Simulator lässt den Giftmischer vor dem Segler handeln, der ihn gerade betrunken gemacht hat (Seed 2263), und schreibt die Wahl des Mönchs nicht auf, wenn der Dämon in dieser Nacht nicht handelt (Seed 1424, die Toten stimmen). |
 | 51 | Simulator | **Der Bastler stirbt nach dem Mondkind.** Am Tisch handelt der Bastler an Platz 49, das Mondkind an Platz 50. Im Simulator ist es umgekehrt: Tötet das Mondkind den Gastwirt, der den Bastler schützt, stirbt der Bastler danach doch. 1 von 8.511 Nächten auf dem zweiten Skript aus Batch 8 (Seed 1361). Der Solver hält die Partie. |
-| 52 | Solver | **Skripte mit Kopfgeldjäger und Mezepheles rechnen lange.** Mit einem Kopfgeldjäger im Spiel erzählt der Solver jede Welt einmal je Bürger, mit einem Mezepheles dazu jeden Wechsel, den das Brett sehen könnte. Bei 7 Spielern und 4 Nächten sind es Sekunden. Das langsamste von 30 Brettern mit 9 Spielern und 6 Nächten brauchte in JavaScript 55 Sekunden, in Python 7 Minuten. Ansatz: Bürger, auf die nichts auf dem Brett schaut, zu einer Erzählung zusammenfassen. |
+| 52 | Solver | **Skripte mit Kopfgeldjäger und Mezepheles rechnen lange.** *Verbessert am 12.10.2026:* Erzählungen, die sich nur in ungefragten Sitzen unterscheiden, werden nicht mehr einzeln erklärt. Auf den eigenen Skripten ist JavaScript bei 9 Spielern und 6 Nächten dreimal so schnell (langsamstes Brett 109 → 30 Sekunden), auf gemischten knapp doppelt so schnell. Offen bleibt: Große gemischte Bretter, auf denen Werwolf (Falsche Pfote), Kopfgeldjäger und Mezepheles zusammenkommen, brauchen im Browser ein bis zwei Minuten (langsamstes 99 Sekunden), weil dort fast jede Erzählung nach fast jedem Sitz fragt. |
 | 53 | Solver | **Die Barbier-Regel sieht eine Übergabe am Tag nicht.** Wo alle Regeln in einem Zug laufen, bietet sie „Dämon mit Scherge“ für einen schon hingerichteten Dämon und die Scharlachrote Frau an, die ihn beerbt hat. Der Absturz daraus ist am 11.10.2026 behoben, die Erzählung selbst bleibt und bekommt einen Anteil. Kein Grundskript hat Barbier und Scharlachrote Frau. |
 | 54 | Solver | **Der böse Bürger des Kopfgeldjägers mit falschem Claim** wird nur an einem Sitz gefunden, der als nicht vertrauenswürdig markiert ist. Sonst nimmt die Suche an, dass er seinen echten Charakter nennt. Der Jinx Leviathan–Mönch ist nicht gebaut, weil die Wahl des Mönchs nirgends steht. |
 

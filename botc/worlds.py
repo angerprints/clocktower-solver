@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 from .catalogue import CHARACTERS
-from .info import phase_index
+from .info import _READS, note_side_read, phase_index
 from .roles import (EVIL, TEAM, SETUP, alignment, believed_tokens,
                     believes_another, is_evil, knows_what_it_is,
                     must_hide, thinks_it_is_evil, wake_fits)
@@ -87,6 +87,8 @@ class World:
         plain world has nothing to move, so this is simply where the
         character started.
         """
+        if _READS:
+            note_side_read(seat, phase)
         return alignment(self.roles[seat])
 
     def evil_at(self, seat, phase):
@@ -217,6 +219,8 @@ class Timeline:
         return role
 
     def alignment_at(self, seat, phase):
+        if _READS:
+            note_side_read(seat, phase)
         side = alignment(self.world.roles[seat])
         mine = self._sides_by_seat.get(seat)
         if mine:

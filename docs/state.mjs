@@ -175,6 +175,9 @@ export class GameState {
    * has to pick a moment. It picks now.
    */
   finalPhase() {
+    // Held for the length of one `bestStory`, which asks it for every
+    // story of the world and changes nothing meanwhile.
+    if (this._finalPhaseHeld) return this._finalPhaseHeld;
     let latest = "N1";
     const consider = phase => {
       if (phaseIndex(phase) > phaseIndex(latest)) latest = phase;

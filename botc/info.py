@@ -51,6 +51,65 @@ def phase_index(phase):
     return got
 
 
+# --------------------------------------------------------------------------
+# Whose side was asked about
+# --------------------------------------------------------------------------
+# Two stories of one world often differ only in *which* seat turned evil:
+# the Bounty Hunter's evil Townsfolk, the player a Mezepheles turned. If
+# explaining one of them never asked which side either seat was on, the
+# other is explained by the very same steps and costs the same — so it
+# need not be explained again (`solver.best_story`, 11.10.2026).
+#
+# For that the questions are written down while a story is explained: for
+# each seat, the moments its side was asked about, as bits. Everything
+# that reads a side goes through `alignment_at` on a world or a timeline,
+# or through `knows_it_turned_evil`; both note it here.
+#
+# A stack, because the memos inside an explanation (a night's deaths, a
+# night's sources) keep their answer for the next story that shares it:
+# they keep what was asked along with it, and say so again when the
+# answer is reused.
+
+_READS = []
+# Only on a script where somebody can turn evil that way: everywhere else
+# there is nothing to recall, and nothing is written down.
+_LISTENING = [False]
+_NOTHING = {}
+
+
+def listen_for_sides(on):
+    _LISTENING[0] = bool(on)
+    del _READS[:]
+
+
+def note_side_read(seat, phase):
+    if _READS:
+        got = _READS[-1]
+        got[seat] = got.get(seat, 0) | (1 << (phase_index(phase) + 2))
+
+
+def begin_reads():
+    if _LISTENING[0]:
+        _READS.append({})
+
+
+def end_reads():
+    """What was asked since `begin_reads`, handed on to whoever is
+    listening further out."""
+    if not _LISTENING[0]:
+        return _NOTHING
+    got = _READS.pop()
+    replay_reads(got)
+    return got
+
+
+def replay_reads(reads):
+    if _READS and reads:
+        into = _READS[-1]
+        for seat, bits in reads.items():
+            into[seat] = into.get(seat, 0) | bits
+
+
 @dataclass
 class GameState:
     n_players: int
@@ -229,6 +288,11 @@ class GameState:
         What "evil" means for a seat depends on when you ask, so the
         report has to pick a moment. It picks now.
         """
+        # Held for the length of one `solver.best_story`, which asks it
+        # for every story of the world and changes nothing meanwhile.
+        held = self.__dict__.get("_final_phase_held")
+        if held is not None:
+            return held
         latest = "N1"
         for _seat, phase in self.death_phases():
             if phase_index(phase) > phase_index(latest):
@@ -3557,6 +3621,7 @@ def knows_it_turned_evil(w, seat, phase):
     """
     from .worlds import TurnedEvil
     here = phase_index(phase)
+    note_side_read(seat, phase)
     return any(isinstance(change, TurnedEvil) and change.seat == seat
                and phase_index(change.phase) <= here
                for change in getattr(w, "changes", ()))

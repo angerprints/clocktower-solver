@@ -10,7 +10,7 @@
 // and the caller only ever scores each one and drops it.
 
 import {CHARACTERS, SETUP} from "./catalogue.mjs";
-import {phaseIndex} from "./phases.mjs";
+import {LISTENING, noteSideRead, phaseIndex} from "./phases.mjs";
 import {EVIL, TEAM, alignment, believedTokens, believesAnother, isEvil,
         knowsWhatItIs, mustHide, thinksItIsEvil, wakeFits} from "./roles.mjs";
 import {DEFAULT} from "./scripts.mjs";
@@ -68,7 +68,10 @@ export class World {
   }
 
   teamAt(seat, phase) { return TEAM[this.roleAt(seat, phase)]; }
-  alignmentAt(seat, _phase) { return alignment(this.roles[seat]); }
+  alignmentAt(seat, phase) {
+    if (LISTENING) noteSideRead(seat, phase);
+    return alignment(this.roles[seat]);
+  }
   evilAt(seat, phase) { return this.alignmentAt(seat, phase) === EVIL; }
 
   evilPlayers() {
@@ -157,6 +160,7 @@ export class Timeline {
   }
 
   alignmentAt(seat, phase) {
+    if (LISTENING) noteSideRead(seat, phase);
     let side = alignment(this.world.roles[seat]);
     const mine = this._indexed().sides.get(seat);
     if (mine) {

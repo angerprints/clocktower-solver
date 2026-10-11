@@ -486,7 +486,10 @@ function teaLadyKeeping(world, state, seat, phase, alive = null) {
   // One other player left alive is her neighbour on both sides, and "both
   // your alive neighbours are good" is true of them (03.10.2026).
   if (!around.has(seat)) return null;
-  for (const p of around) if (world.evilAt(p, phase)) return null;
+  // In seat order, as in Python: which of two neighbours is asked first
+  // decides whose side was asked about at all (`noteSideRead`).
+  for (const p of [...around].sort((a, b) => a - b))
+    if (world.evilAt(p, phase)) return null;
   return lady;
 }
 
@@ -1003,8 +1006,8 @@ causeRule(function aLeviathanFellsABanshee(world, state, night) {
   if (lev === null || world.demonAt(phase) !== lev) return [];
   const reach = new Set(
     [...state.aliveSet(phase)].filter(p => p !== lev
-      && !world.evilAt(p, phase)
-      && holdsAbility(world, state, p, "Banshee", phase)));
+      && holdsAbility(world, state, p, "Banshee", phase)
+      && !world.evilAt(p, phase)));
   if (!reach.size) return [];
   const actor = aSweetheartDied(world, state, night) ? null : lev;
   return [new Cause("Demon", DEMON, reach,

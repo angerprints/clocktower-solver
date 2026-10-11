@@ -23,7 +23,8 @@ what that costs. Same as the poison schedule always was, generalised.
 from itertools import permutations
 from typing import NamedTuple
 
-from .info import phase_index
+from .info import (begin_reads, end_reads, phase_index,
+                   replay_reads)
 
 
 class Source(NamedTuple):
@@ -118,12 +119,22 @@ def sources_on(world, state, night):
     # The hidden choices of this telling move a Lleech's poison
     # (solver._hidden_choices), so they are part of the key.
     key = (night, getattr(state, "_hidden", None))
-    got = memo[2].get(key)
-    if got is None:
+    kept = memo[2].get(key)
+    if kept is None:
+        # With whose side the rules asked about, for the next story that
+        # is handed this answer (`info.note_side_read`).
         got = []
-        for rule in SOURCE_RULES:
-            got.extend(rule(world, state, night))
-        memo[2][key] = got
+        begin_reads()
+        try:
+            for rule in SOURCE_RULES:
+                got.extend(rule(world, state, night))
+        finally:
+            reads = end_reads()
+        memo[2][key] = (got, reads)
+    else:
+        got, reads = kept
+        if reads:
+            replay_reads(reads)
     return list(got)
 
 
