@@ -322,6 +322,28 @@ class TheCultLeader(SolverTest):
         self.assertEqual(sides(EIGHT, roles, 1, "D3", changes=made,
                                days_done={1, 2, 3}), {True})
 
+    def test_it_may_be_the_werewolfs_faux_paw(self):
+        # Open item 55 (12.10.2026): its side comes from its neighbours,
+        # and a good Cult Leader can still be the good player that reads
+        # evil while a Lycanthrope lives. That was never asked.
+        script = scripts.from_ids("Faux paw", [
+            "villageidiot", "cultleader", "lycanthrope", "chef", "empath",
+            "monk", "soldier", "saint", "recluse", "scarletwoman", "spy",
+            "imp"])
+        roles = ["VillageIdiot", "CultLeader", "Lycanthrope", "Chef",
+                 "Empath", "ScarletWoman", "Imp"]
+        evil = cost(script, roles, [I.VillageIdiotInfo(1, 0, target=1,
+                                                       evil=True)])
+        self.assertIsNotNone(evil)
+        # As much as any other good player shown as the faux paw.
+        self.assertEqual(evil, cost(script, roles, [
+            I.VillageIdiotInfo(1, 0, target=3, evil=True)]))
+        # And without a Lycanthrope it is good beside two good players.
+        plain = ["VillageIdiot", "CultLeader", "Monk", "Chef", "Empath",
+                 "ScarletWoman", "Imp"]
+        self.assertIsNone(cost(script, plain, [
+            I.VillageIdiotInfo(1, 0, target=1, evil=True)]))
+
     def test_it_shows_half_evil_where_both_sides_are_open(self):
         roles = ["Imp", "CultLeader", "Chef", "Soldier", "Monk",
                  "ScarletWoman", "Empath"]

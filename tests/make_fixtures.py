@@ -1095,6 +1095,17 @@ def the_eighth_five():
         {"type": "CultCalled", "night": 2, "player": 6,
          "joined": [0, 1, 2, 3, 4, 5]}],
         quiet_nights=[2], days_done=[1, 2])
+    # Open item 55 (12.10.2026): a Cult Leader that is the Lycanthrope's
+    # faux paw, shown as evil to a Village Idiot.
+    faux = scripts.from_ids("Faux paw", [
+        "villageidiot", "cultleader", "lycanthrope", "chef", "empath",
+        "monk", "soldier", "saint", "recluse", "scarletwoman", "spy", "imp"])
+    for target in (1, 3):
+        yield board(f"x-eight-7-cult-leader-faux-paw-{target}", faux,
+                    ["VillageIdiot", "CultLeader", "Lycanthrope", "Chef",
+                     "Empath", "Saint", "Monk"],
+                    infos=[{"type": "VillageIdiotInfo", "night": 1,
+                            "player": 0, "target": target, "evil": True}])
     M7 = ["Chef", "Empath", "Monk", "Soldier", "King", "Slayer",
           "Undertaker"]
     yield board("x-eight-7-mezepheles-turned-a-neighbour", X8, M7, infos=[

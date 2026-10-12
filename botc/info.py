@@ -832,9 +832,13 @@ def evil_options(w, s, seat, phase):
     """
     if s is not None and _cult_on_script(s) \
             and acts_as_cult_leader(w, s, seat, phase):
-        return tuple(sorted(cult_sides(w, s, seat, phase), reverse=True))
-    got = evil_registrations(w.role_at(seat, phase),
-                             w.alignment_at(seat, phase))
+        # Its side is worked out from its neighbours — and it may still be
+        # the faux paw, which reads evil whatever side that left it on
+        # (open item 55, 12.10.2026: this returned before asking).
+        got = tuple(sorted(cult_sides(w, s, seat, phase), reverse=True))
+    else:
+        got = evil_registrations(w.role_at(seat, phase),
+                                 w.alignment_at(seat, phase))
     hidden = getattr(s, "_hidden", None) if s is not None else None
     if not hidden or hidden[0] is None or hidden[0] != seat:
         return got

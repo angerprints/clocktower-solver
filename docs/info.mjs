@@ -120,12 +120,15 @@ export function cultSides(w, s, seat, phase) {
  * surely, while the Lycanthrope lives and works (11.10.2026). See
  * `evil_options` in info.py. */
 export function evilOptions(w, s, seat, phase) {
+  let got;
   if (s && cultOnScript(s) && actsAsCultLeader(w, s, seat, phase)) {
+    // From its neighbours — and it may still be the faux paw, which reads
+    // evil whatever side that left it on (open item 55, 12.10.2026).
     const sides = cultSides(w, s, seat, phase);
-    return [true, false].filter(side => sides.has(side));
+    got = [true, false].filter(side => sides.has(side));
+  } else {
+    got = evilRegistrations(w.roleAt(seat, phase), w.alignmentAt(seat, phase));
   }
-  const got = evilRegistrations(w.roleAt(seat, phase),
-                                w.alignmentAt(seat, phase));
   const hidden = s ? s._hidden : null;
   if (!hidden || hidden[0] === null || hidden[0] !== seat) return got;
   const lyc = w.findAt("Lycanthrope", phase);

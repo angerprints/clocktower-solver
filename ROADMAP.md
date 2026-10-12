@@ -1123,9 +1123,19 @@ Der volle Bericht steht in `claude/experimentelle-charaktere-batch-9.md`.
 
 **Gegen falsche Namen:** `tools/check_wording.py` prüft jeden Bericht vor dem Hochladen auf Namen, die nicht die der App sind (Trunkenbold statt „Säufer“, Kammerzofe statt „Zimmermädchen“, Grubenweib statt „Pit-Hag“ und weitere). Die Roadmap ist damit in 12 Zeilen berichtigt.
 
+### Kultführer als Falsche Pfote (Stelle 55) · *erledigt am 12.10.2026*
+
+Der volle Bericht steht in `claude/kultfuehrer-falsche-pfote.md`.
+
+**Der Fehler:** Die Fraktion des Kultführers rechnet der Solver aus seinen Nachbarn. Dabei kehrte er zurück, bevor er fragte, ob der Kultführer die Falsche Pfote des Werwolfs ist. Ein guter Kultführer, der als Falsche Pfote böse registriert, war deshalb unmöglich, sobald ihn eine Fähigkeit als böse sah.
+
+**Behoben in Python und JavaScript:** Erst die Fraktion aus den Nachbarn, dann wie bei jedem anderen guten Spieler die Falsche Pfote. Ein Kultführer als Falsche Pfote kostet jetzt genau so viel wie jeder andere gute Spieler als Falsche Pfote.
+
+**Gemessen:** Die eine Partie vom Tor von Batch 9 (Seed 1238) behält ihre wahre Welt. Sonst ändert sich nichts: Prüfsummen gleich, eigene Skripte der Batches 7 bis 9 wie vorher, gemischte Partien mit Kultführer 12 von 3.000 und mit Werwolf 10 von 3.000, vor und nach der Änderung dieselben. Zwei neue Bretter im Korpus (388), kein altes geändert. 1.572 Tests grün.
+
 ### Als Nächstes
 
-**1 · Entscheiden, womit es weitergeht.** Alle mittleren und alle nur aufzeichenbaren experimentellen Charaktere sind durch das Tor. Drei Wege: (1) die zwei neuen Funde zuerst, Stelle 55 (Kultführer als Falsche Pfote, ein kleiner Fehler im Solver) und Stelle 56 (Philosoph im Night-Walk), meine Empfehlung; (2) der erste große Charakter einzeln, mit Lesarten vorab; (3) die Nachtreihenfolge, die du ans Ende gestellt hast, vorziehen.
+**1 · Entscheiden, womit es weitergeht.** Alle mittleren und alle nur aufzeichenbaren experimentellen Charaktere sind durch das Tor, Stelle 55 ist behoben. Drei Wege: (1) Stelle 56 (Philosoph im Night-Walk, nur das Prüfwerkzeug) und Stelle 57 (Werwolf, Xaan und Adlige, noch nicht untersucht); (2) der erste große Charakter einzeln, mit Lesarten vorab, meine Empfehlung; (3) die Nachtreihenfolge, die du ans Ende gestellt hast, vorziehen.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1200,8 +1210,9 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 51 | Simulator | **Der Bastler stirbt nach dem Mondkind.** Am Tisch handelt der Bastler an Platz 49, das Mondkind an Platz 50. Im Simulator ist es umgekehrt: Tötet das Mondkind den Gastwirt, der den Bastler schützt, stirbt der Bastler danach doch. 1 von 8.511 Nächten auf dem zweiten Skript aus Batch 8 (Seed 1361). Der Solver hält die Partie. |
 | 52 | Solver | **Skripte mit Kopfgeldjäger und Mezepheles rechnen lange.** *Verbessert am 12.10.2026:* Erzählungen, die sich nur in ungefragten Sitzen unterscheiden, werden nicht mehr einzeln erklärt. Auf den eigenen Skripten ist JavaScript bei 9 Spielern und 6 Nächten dreimal so schnell (langsamstes Brett 109 → 30 Sekunden), auf gemischten knapp doppelt so schnell. Offen bleibt: Große gemischte Bretter, auf denen Werwolf (Falsche Pfote), Kopfgeldjäger und Mezepheles zusammenkommen, brauchen im Browser ein bis zwei Minuten (langsamstes 99 Sekunden), weil dort fast jede Erzählung nach fast jedem Sitz fragt. |
 | 53 | Solver | **Die Barbier-Regel sieht eine Übergabe am Tag nicht.** Wo alle Regeln in einem Zug laufen, bietet sie „Dämon mit Scherge“ für einen schon hingerichteten Dämon und die Scharlachrote Frau an, die ihn beerbt hat. Der Absturz daraus ist am 11.10.2026 behoben, die Erzählung selbst bleibt und bekommt einen Anteil. Kein Grundskript hat Barbier und Scharlachrote Frau. |
-| 55 | Solver | **Kultführer als Falsche Pfote des Werwolfs.** Ist der Kultführer der gute Spieler, der durch den Werwolf böse registriert, sieht der Solver das nicht: Seine Fraktion wird aus den Nachbarn berechnet, die Falsche Pfote wird dabei übergangen. Zeigt ein Dorftrottel ihn als böse, ist die wahre Welt unmöglich. Fehler aus Batch 8, in Python und JavaScript. 1 von 3.000 gemischten Partien am Tor von Batch 9 (Seed 1238). Klein zu beheben. |
+| 55 | erledigt | **Kultführer als Falsche Pfote des Werwolfs.** *Behoben am 12.10.2026* in Python und JavaScript: Erst die Fraktion aus den Nachbarn, dann die Falsche Pfote wie bei jedem guten Spieler. War 1 von 3.000 gemischten Partien am Tor von Batch 9 (Seed 1238). |
 | 56 | Night-Walk | **Ein Philosoph mit einer Fähigkeit aus Bad Moon Rising handelt im Night-Walk nicht.** Der Night-Walk lässt einen Philosophen nur als Schlangenbeschwörer, Nachtwächter und Glücksspieler handeln, nicht als Segler, Gastwirt, Schwätzer oder Bastler. Dann stimmen die Toten der Nacht nicht, etwa wenn der Philosoph als Segler den Schläger zuerst wählt. 9 von 8.233 Nächten auf dem zweiten Skript aus Batch 9. Betrifft nur das Prüfwerkzeug. |
+| 57 | Solver | **Werwolf, Xaan und Adlige.** In einer gemischten Partie sieht die Adlige die Falsche Pfote als die eine Böse unter dreien, und der Werwolf wählt die Falsche Pfote später noch einmal. Mit der Falschen Pfote an diesem Sitz findet der Solver keine Erklärung, ohne die Zeile der Adligen schon. Ein Xaan ist im Spiel. 1 von 3.000 gemischten Partien mit Werwolf (Seed 1177), vor und nach Stelle 55 gleich. Noch nicht untersucht. |
 | 54 | Solver | **Der böse Bürger des Kopfgeldjägers mit falschem Claim** wird nur an einem Sitz gefunden, der als nicht vertrauenswürdig markiert ist. Sonst nimmt die Suche an, dass er seinen echten Charakter nennt. Der Jinx Leviathan–Mönch ist nicht gebaut, weil die Wahl des Mönchs nirgends steht. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.

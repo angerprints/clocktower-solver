@@ -53841,6 +53841,282 @@
    }
   },
   {
+   "name": "x-eight-7-cult-leader-faux-paw-1",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "VillageIdiot",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "CultLeader",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Lycanthrope",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Monk",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "VillageIdiotInfo",
+      "night": 1,
+      "player": 0,
+      "target": 1,
+      "evil": true
+     }
+    ],
+    "script": {
+     "name": "Faux paw",
+     "characters": [
+      "villageidiot",
+      "cultleader",
+      "lycanthrope",
+      "chef",
+      "empath",
+      "monk",
+      "soldier",
+      "saint",
+      "recluse",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 20,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 9.0909,
+      "demon_pct": 4.5455,
+      "drunk_pct": 0.0,
+      "lying_pct": 9.0909
+     },
+     {
+      "evil_pct": 27.2727,
+      "demon_pct": 11.3636,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.7273
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 22.7273,
+      "demon_pct": 11.3636,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.7273
+     },
+     {
+      "evil_pct": 22.7273,
+      "demon_pct": 11.3636,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.7273
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 50.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 22.7273,
+      "demon_pct": 11.3636,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.7273
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-eight-7-cult-leader-faux-paw-3",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "VillageIdiot",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "CultLeader",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Lycanthrope",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Monk",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "VillageIdiotInfo",
+      "night": 1,
+      "player": 0,
+      "target": 3,
+      "evil": true
+     }
+    ],
+    "script": {
+     "name": "Faux paw",
+     "characters": [
+      "villageidiot",
+      "cultleader",
+      "lycanthrope",
+      "chef",
+      "empath",
+      "monk",
+      "soldier",
+      "saint",
+      "recluse",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    }
+   },
+   "expect": {
+    "valid": 20,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 9.0909,
+      "demon_pct": 4.5455,
+      "drunk_pct": 0.0,
+      "lying_pct": 9.0909
+     },
+     {
+      "evil_pct": 27.2727,
+      "demon_pct": 11.3636,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.7273
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 22.7273,
+      "demon_pct": 11.3636,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.7273
+     },
+     {
+      "evil_pct": 22.7273,
+      "demon_pct": 11.3636,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.7273
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 50.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 22.7273,
+      "demon_pct": 11.3636,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.7273
+     }
+    ]
+   }
+  },
+  {
    "name": "x-eight-7-mezepheles-turned-a-neighbour",
    "payload": {
     "n_players": 7,
