@@ -1916,6 +1916,23 @@ export const ExecutionNomination = define("ExecutionNomination", null,
   });
 ExecutionNomination.isAChoice = true;
 
+// ------------------------------------------------------------------
+// The ninth three (12.10.2026): what the Storyteller *believes*. Kept
+// like the Artist's question and not weighed (way 1). See botc/info.py.
+// ------------------------------------------------------------------
+
+/** The player the High Priestess was pointed at. */
+export const HighPriestessInfo = define("HighPriestessInfo", "HighPriestess",
+                                        () => true, {weighed: () => false});
+
+/** Which side the Storyteller believes is winning: good, evil, neither. */
+export const GeneralInfo = define("GeneralInfo", "General", () => true,
+                                  {weighed: () => false});
+
+/** The Fisherman's advice. `night` is the day. */
+export const FishermanAdvice = define("FishermanAdvice", "Fisherman",
+                                      () => true, {weighed: () => false});
+
 export const KINDS = {
   Washerwoman, Librarian, Investigator, Chef, Empath, FortuneTeller,
   Undertaker, Ravenkeeper, GrandmotherInfo, ChambermaidInfo, GamblerGuess,
@@ -1937,7 +1954,10 @@ export const KINDS = {
   OgreChoice, CerenovusMadness,
   PixieLearned, VillageIdiotInfo, LycanthropeChose, HarpyMadness,
   BountyHunterInfo, CultCalled, LeviathanAnnounced, ExecutionNomination,
+  HighPriestessInfo, GeneralInfo, FishermanAdvice,
 };
+
+const GENERAL_SAYS = ["good", "evil", "neither"];
 
 /** Build a reading from the shape the page posts. */
 export function makeInfo(row) {
@@ -1947,5 +1967,12 @@ export function makeInfo(row) {
   // A King that says it learned nothing is sent with the tick off, and
   // whatever character the page still shows beside it does not count.
   if (type === "KingInfo" && fields.learned === false) fields.role = "";
+  if (type === "GeneralInfo") {
+    fields.says = fields.says || "neither";
+    if (!GENERAL_SAYS.includes(fields.says))
+      throw new Error(`A General is told good, evil or neither, not ` +
+                      `'${fields.says}'.`);
+  }
+  if (type === "FishermanAdvice") fields.advice = String(fields.advice || "");
   return new Kind(fields);
 }

@@ -800,6 +800,12 @@ const SCHEMA = {
   CultCalled:          [["joined","players"]],
   LeviathanAnnounced:  [],
   ExecutionNomination: [],
+  // The ninth three, kept and not weighed: whom the High Priestess was
+  // pointed at, which side the General was told is winning, and the
+  // advice the Fisherman was given (a day row, once per game).
+  HighPriestessInfo:   [["target","player"]],
+  GeneralInfo:         [["says","choice:good=Good is winning|evil=Evil is winning|neither=Neither"]],
+  FishermanAdvice:     [["advice","text:The advice"]],
   Acrobat:      [["target","player"]],
   // A daytime guess at the whole evil team. Two lists and whether it
   // won, because naming the Demon as a Minion is a failed guess.
@@ -864,6 +870,8 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   LycanthropeChose:"Lycanthrope", HarpyMadness:"Harpy",
   BountyHunterInfo:"BountyHunter", CultCalled:"CultLeader",
   LeviathanAnnounced:"Leviathan", ExecutionNomination:"Leviathan",
+  HighPriestessInfo:"HighPriestess", GeneralInfo:"General",
+  FishermanAdvice:"Fisherman",
   GrandmotherInfo:"Grandmother", ChambermaidInfo:"Chambermaid",
   GamblerGuess:"Gambler", CourtierChoice:"Courtier",
   ClockmakerInfo:"Clockmaker", DreamerInfo:"Dreamer",
@@ -881,7 +889,8 @@ const DAY_EVENTS   = ["SlayerShot","VirginNomination","GoblinClaim",
   "DamselGuess","VizierAnnounced","BlindVote",
   "PrincessNominated","GolemNomination","PsychopathKill","PsychopathRoshambo",
   "PuzzlemasterGuess","BoomdandyExploded",
-  "CultCalled","LeviathanAnnounced","ExecutionNomination"];
+  "CultCalled","LeviathanAnnounced","ExecutionNomination",
+  "SavantInfo","ArtistInfo","Alsaahir","FishermanAdvice"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
   CerenovusMadness:"made mad", HarpyMadness:"made mad",
   NightwatchmanSeen:"woken player",
@@ -930,7 +939,9 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   LycanthropeChose:"Lycanthrope chose", HarpyMadness:"Harpy madness",
   BountyHunterInfo:"Bounty Hunter", CultCalled:"Cult called",
   LeviathanAnnounced:"Leviathan announced",
-  ExecutionNomination:"Nominated the executed" };
+  ExecutionNomination:"Nominated the executed",
+  HighPriestessInfo:"High Priestess shown", GeneralInfo:"General told",
+  FishermanAdvice:"Fisherman advice" };
 // Not produced by a character, so it has no source role to be labelled
 // with — and falling back to the type name printed "Became" as though it
 // were a character somebody claimed.
@@ -1789,6 +1800,14 @@ function describeRow(r){
       return `the table was told a Leviathan is in play`;
     case "ExecutionNomination":
       return `nominated the player who was executed today`;
+    case "HighPriestessInfo":
+      return `was pointed at ${who(r.target)} — kept, not weighed`;
+    case "GeneralInfo":
+      return `was told ${r.says === "good" ? "good is winning"
+        : r.says === "evil" ? "evil is winning" : "neither side is winning"
+        } — kept, not weighed`;
+    case "FishermanAdvice":
+      return `was advised "${r.advice || "?"}" — kept, not weighed`;
     case "Became":
       return r.was
         ? `claimed ${role(r.was)} until now, ${role(r.role)} from here on`
@@ -2288,6 +2307,7 @@ function addInfo(night){
     rec[k] = t.startsWith("role:") ? allRoles(t.split(":")[1])[0]
            : t.startsWith("bool:") ? false
            : t.startsWith("text:") ? ""
+           : t.startsWith("choice:") ? choices(t)[choices(t).length-1][0]
            : t === "guesses" ? []
            : t === "players" ? []
            : t === "statement" ? null
@@ -2562,6 +2582,7 @@ function infoCard(rec, idx){
     else if(t.startsWith("role:")) body.appendChild(roleSel(rec,k,t.split(":")[1]));
     else if(t.startsWith("bool:")) body.appendChild(boolSel(rec,k,t.split(":")[1]));
     else if(t.startsWith("text:")) body.appendChild(freeText(rec,k,t.slice(5)));
+    else if(t.startsWith("choice:")) body.appendChild(choiceSel(rec,k,t));
     else if(t==="guesses") body.appendChild(guessList(rec,k));
     else if(t==="players") body.appendChild(playersList(rec,k));
     else if(t==="statement") body.appendChild(statementEditor(rec,k));
@@ -2622,6 +2643,20 @@ function infoCard(rec, idx){
       note.appendChild(fix);
     } else {
       note.innerHTML=`<span class="relay">from an unclaimed ${esc(label(src))}</span>`;
+    }
+  }
+  // Once per game: a second visit is kept, and said to be one (way 1,
+  // 12.10.2026). Nothing is weighed either way.
+  if(rec.type==="FishermanAdvice"){
+    const before=S.infos.find((o,j)=>j!==idx && o.type==="FishermanAdvice"
+      && o.player===rec.player && ((o.night||1)<(rec.night||1)
+                                   || ((o.night||1)===(rec.night||1) && j<idx)));
+    if(before){
+      const span=document.createElement("span"); span.className="warn";
+      span.textContent=`this Fisherman already asked on day ${before.night||1} — `+
+                       `once per game, kept but not weighed`;
+      if(note.innerHTML) note.appendChild(document.createTextNode(" "));
+      note.appendChild(span);
     }
   }
   if(note.innerHTML) card.appendChild(note);
@@ -2697,6 +2732,15 @@ function boolSel(rec,key,labels){
   const s=document.createElement("select");
   s.appendChild(opt("1",yes)); s.appendChild(opt("0",no));
   s.value=rec[key]?"1":"0"; return bind(s,rec,key,v=>v==="1");
+}
+/** One of a few named answers: "choice:value=Label|value=Label". */
+function choices(t){
+  return t.slice(7).split("|").map(part=>part.split("="));
+}
+function choiceSel(rec,key,t){
+  const s=document.createElement("select");
+  choices(t).forEach(([value,label])=>s.appendChild(opt(value,label)));
+  s.value=rec[key]; return bind(s,rec,key,v=>v);
 }
 /** A line of writing, kept but not solved.
  *

@@ -66,6 +66,9 @@ export const INFO_SOURCES = {
   // beside a Leviathan (its jinxes), so that is when it is offered.
   BountyHunterInfo: "BountyHunter", CultCalled: "CultLeader",
   LeviathanAnnounced: "Leviathan", ExecutionNomination: "Leviathan",
+  // The ninth three: kept, not weighed.
+  HighPriestessInfo: "HighPriestess", GeneralInfo: "General",
+  FishermanAdvice: "Fisherman",
   Washerwoman: "Washerwoman", Librarian: "Librarian",
   Investigator: "Investigator", Chef: "Chef", Empath: "Empath",
   FortuneTeller: "FortuneTeller", Undertaker: "Undertaker",

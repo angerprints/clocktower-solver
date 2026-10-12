@@ -48,9 +48,12 @@ def is_new(row):
 def touches_new(row, deal):
     """A row the new characters show up in without producing it: a
     Chambermaid that asked about a Wraith (08.10.2026)."""
-    if type(row).__name__ != "ChambermaidInfo" or "Wraith" not in NEW:
+    if type(row).__name__ != "ChambermaidInfo":
         return False
-    return any(deal.role_at(p, f"N{row.night}") == "Wraith"
+    # The Wraith (08.10.2026), and the High Priestess and the General,
+    # woken every night (12.10.2026).
+    counted = {"Wraith", "HighPriestess", "General"} & set(NEW)
+    return any(deal.role_at(p, f"N{row.night}") in counted
                for p in (row.a, row.b))
 
 

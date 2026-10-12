@@ -189,6 +189,18 @@ def build_info(d):
         return I.LeviathanAnnounced(night, player, trust)
     if kind == "ExecutionNomination":
         return I.ExecutionNomination(night, player, trust)
+    if kind == "HighPriestessInfo":
+        return I.HighPriestessInfo(night, player, trust,
+                                   target=_int(d, "target"))
+    if kind == "GeneralInfo":
+        says = str(d.get("says") or "neither")
+        if says not in ("good", "evil", "neither"):
+            raise ValueError(f"A General is told good, evil or neither, "
+                             f"not {says!r}.")
+        return I.GeneralInfo(night, player, trust, says=says)
+    if kind == "FishermanAdvice":
+        return I.FishermanAdvice(night, player, trust,
+                                 advice=str(d.get("advice") or ""))
     if kind == "Became":
         return I.BecameInfo(night, player, trust,
                             role=d.get("role") or "",
@@ -532,7 +544,12 @@ def run_solve(payload):
     # adding another beside it would mean touching every one.
     infos = []
     for d in raw_infos:
-        row = build_info(d)
+        # A row the page could not have meant — a General told "maybe" —
+        # is said back, as the JavaScript side does, not thrown.
+        try:
+            row = build_info(d)
+        except ValueError as err:
+            return {"error": str(err)}
         row.confirmed = bool(d.get("confirmed"))
         infos.append(row)
 
@@ -753,6 +770,9 @@ INFO_SOURCES = {
     # beside a Leviathan (its jinxes), so that is when it is offered.
     "BountyHunterInfo": "BountyHunter", "CultCalled": "CultLeader",
     "LeviathanAnnounced": "Leviathan", "ExecutionNomination": "Leviathan",
+    # The ninth three: kept, not weighed.
+    "HighPriestessInfo": "HighPriestess", "GeneralInfo": "General",
+    "FishermanAdvice": "Fisherman",
     "Washerwoman": "Washerwoman", "Librarian": "Librarian",
     "Investigator": "Investigator", "Chef": "Chef", "Empath": "Empath",
     "FortuneTeller": "FortuneTeller", "Undertaker": "Undertaker",

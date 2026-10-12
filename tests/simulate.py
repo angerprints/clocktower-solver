@@ -28,6 +28,7 @@ from botc.info import (registers_as_role,
                        HarpyMadness,
                        BountyHunterInfo, CultCalled, LeviathanAnnounced,
                        ExecutionNomination,
+                       HighPriestessInfo, GeneralInfo, FishermanAdvice,
                        BalloonistInfo,
                        DreamerInfo,
                        ExorcistChoice, InnkeeperChoice,
@@ -984,6 +985,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         if night < nights:
             # A Savant visits the Storyteller in daylight.
             _savant_visits(d, night, heard, rng)
+            # So may a Fisherman, once a game (12.10.2026).
+            _fisherman_visits(d, night, heard, rng)
 
             # The day happens first: nominations, then votes, then the
             # execution that follows from them.
@@ -5106,6 +5109,17 @@ def _for_role(d, seat, role, night, rng):
     # A Savant is a day ability: see `_savant_visits`, run once the
     # night is over.
 
+    # The ninth three (12.10.2026): what the Storyteller believes, kept
+    # and not weighed, so any answer will do — at random (way 1). Every
+    # night, the first included.
+    if role == "HighPriestess":
+        # Any player, alive or dead, good or evil; here never itself.
+        return HighPriestessInfo(night, seat, target=rng.choice(
+            [p for p in range(d.n) if p != seat]))
+    if role == "General":
+        return GeneralInfo(night, seat,
+                           says=rng.choice(("good", "evil", "neither")))
+
     if role == "Artist" and night == 1:
         # One yes-or-no question, once a game. Also kept and not weighed.
         who = rng.choice([p for p in range(d.n) if p != seat])
@@ -5757,6 +5771,33 @@ def _savant_visits(d, night, heard, rng):
                                 first=said[0][1], second=said[1][1],
                                 first_says=said[0][0],
                                 second_says=said[1][0]))
+
+
+FISHERMAN_SAYS = ("Trust the quiet ones.", "Execute today.",
+                  "Do not execute today.", "Count the Outsiders.",
+                  "Your Empath is right.", "Look to your left.")
+
+
+def _fisherman_visits(d, day, heard, rng):
+    """A Fisherman asks the Storyteller for advice, once a game.
+
+    Kept and not weighed (12.10.2026), so the advice is any line at all;
+    a drunk or poisoned one may be told something unhelpful, and here
+    every line is as good as any other. A seat holding the Fisherman's
+    token — a Drunk who thinks it is one — visits too. Dead, it asks
+    nothing.
+    """
+    phase = f"D{day}"
+    asked = d.__dict__.setdefault("fisherman_asked", set())
+    for seat in range(d.n):
+        held = d.token(seat, phase) or d.role_at(seat, phase)
+        if held != "Fisherman" or seat in asked:
+            continue
+        if seat not in d.alive_at(phase) or rng.random() < 0.6:
+            continue
+        asked.add(seat)
+        heard.append(FishermanAdvice(day, seat,
+                                     advice=rng.choice(FISHERMAN_SAYS)))
 
 
 def _savant_statement(d, seat, phase, truth, rng):

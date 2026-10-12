@@ -1640,7 +1640,9 @@ def _reads(state, seat, role):
         return sum(1 for who, what in guesses
                    if state.roles.get(who) == what)
 
-    # NOTE: the Savant and the Artist are deliberately absent.
+    # NOTE: the Savant and the Artist are deliberately absent, and so
+    # are the High Priestess, the General and the Fisherman (12.10.2026):
+    # what the Storyteller believes, kept and not weighed.
     #
     # A Savant is told two statements, one true; an Artist asks a
     # question and is told yes or no. Both are free text the Storyteller

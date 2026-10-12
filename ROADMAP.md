@@ -46,7 +46,7 @@ Wichtiger ist, was **auf deinen Skripten** fehlt:
 
 | Skript | fehlt |
 |---|---|
-| Easter Trouble (AnqeR & Shellynax) | Ogre, Marionette, Artist (nur aufgezeichnet) |
+| Easter Trouble (AnqeR & Shellynax) | Oger, Marionette, Artist (nur aufgezeichnet) |
 | Bad Moon Rising | Mastermind |
 | Sects & Violets | Artist (nur aufgezeichnet) |
 
@@ -101,7 +101,7 @@ Ergebnis nach den Korrekturen:
 1. **Ein vergifteter Dämon tötet niemanden.** Eine ruhige Nacht konnte der Solver nur mit einem Schild vor dem Opfer erklären. Ein Giftmischer, der den eigenen Imp trifft, machte das Brett unmöglich. Jetzt trägt der Kill des Dämons seinen Täter. Gewichtet mit 0,05, weil das an deinem Tisch selten vorkommt. Damit bleibt ein behaupteter Mönch nach einer ruhigen Nacht zu 99,5 % echt statt vorher zu 100 %.
 2. **Hat der Dämon getötet, muss er funktioniert haben.** Die Gegenrichtung von 1.
 3. **Die Wahrsagerin bekommt auch für einen toten Dämon ein Nicken.** Der Solver fragte, wer in dieser Nacht als Dämon handelt. Nach einer Übernahme durch die Scharlachrote Frau war ein wahres „Ja" auf den hingerichteten Imp für ihn unmöglich.
-4. **Eine Sweetheart macht *einen* Spieler betrunken, nicht alle.** Die Planung der Störungen behandelte jede kostenlose Quelle so, als träfe sie jeden, den sie erreichen kann. Das stimmt für den Trunkenbold und den Minnesänger. Sweetheart, Vigormortis und Goon wählen aber genau einen. Nach dem Tod einer Sweetheart galt deshalb die ganze Stadt als betrunken, und „der Dämon hat funktioniert" (Punkt 2) war unmöglich. Aufgefallen ist das an vier S&V-Partien des eigenen Simulators, nicht an der Engine. Punkt 2 hat den alten Fehler nur sichtbar gemacht. Das Brett, das im ersten Commit von 268 auf 76 Welten fiel, hat wieder 268. Die 76 waren dieser Fehler, keine Erkenntnis.
+4. **Ein Liebchen macht *einen* Spieler betrunken, nicht alle.** Die Planung der Störungen behandelte jede kostenlose Quelle so, als träfe sie jeden, den sie erreichen kann. Das stimmt für den Trunkenbold und den Minnesänger. Liebchen, Vigormortis und Schläger wählen aber genau einen. Nach dem Tod eines Liebchens galt deshalb die ganze Stadt als betrunken, und „der Dämon hat funktioniert" (Punkt 2) war unmöglich. Aufgefallen ist das an vier S&V-Partien des eigenen Simulators, nicht an der Engine. Punkt 2 hat den alten Fehler nur sichtbar gemacht. Das Brett, das im ersten Commit von 268 auf 76 Welten fiel, hat wieder 268. Die 76 waren dieser Fehler, keine Erkenntnis.
 
 Dazu ein Fehler, den ich beim Beheben selbst eingebaut und wieder entfernt habe: Die neue Erklärung für ruhige Nächte ohne Giftquelle verdrängte in der auf 24 Kombinationen begrenzten Suche die echte Geschichte.
 
@@ -111,17 +111,17 @@ Dazu ein Fehler, den ich beim Beheben selbst eingebaut und wieder entfernt habe:
 
 ### Phase 2 — Deine Skripte vollständig · *erledigt am 29.09.2026*
 
-1. **Ogre** und **Marionette** · *erledigt am 28.09.2026.* Easter Trouble ist bis auf den Artist vollständig.
+1. **Oger** und **Marionette** · *erledigt am 28.09.2026.* Easter Trouble ist bis auf den Artist vollständig.
 2. **Mastermind** · *erledigt am 29.09.2026.* Bad Moon Rising ist vollständig.
 3. **Sects & Violets:** die 22 von 1000 Simulator-Partien, die der Solver verwarf, und **Mutant**, **Cerenovus**, **Savant** · *erledigt am 29.09.2026.* Alle drei Grundskripte sind komplett, nur der Artist bleibt „aufgezeichnet".
 4. Artist bleibt „aufgezeichnet": Seine Frage ist frei formuliert und lässt sich nicht als Regel prüfen.
 
-**Sects & Violets aufgeräumt.** Die 22 Fehlfälle waren kein einzelner Fehler, sondern ein Muster: Mehrere Charaktere verändern in derselben Partie, wer was ist (Schlangenbeschwörer, Pit-Hag, Barbier, Fang Gu, Farmer, Ogre), und der Solver hat alle Nächte auf einmal betrachtet. Ein Barbier-Tausch in Nacht 3 sah dann nicht, dass der Schlangenbeschwörer in Nacht 2 schon getauscht hatte. Neu: Sind zwei oder mehr dieser Charaktere im Spiel, baut der Solver die Geschichte **Nacht für Nacht** auf. Jede Regel sieht dabei, was die anderen vor ihr getan haben, aber nicht ihre eigenen früheren Änderungen. Aussortiert wird erst ganz am Ende. Mit nur einem solchen Charakter läuft der alte, schnellere Weg.
+**Sects & Violets aufgeräumt.** Die 22 Fehlfälle waren kein einzelner Fehler, sondern ein Muster: Mehrere Charaktere verändern in derselben Partie, wer was ist (Schlangenbeschwörer, Grubenweib, Barbier, Fang Gu, Farmer, Oger), und der Solver hat alle Nächte auf einmal betrachtet. Ein Barbier-Tausch in Nacht 3 sah dann nicht, dass der Schlangenbeschwörer in Nacht 2 schon getauscht hatte. Neu: Sind zwei oder mehr dieser Charaktere im Spiel, baut der Solver die Geschichte **Nacht für Nacht** auf. Jede Regel sieht dabei, was die anderen vor ihr getan haben, aber nicht ihre eigenen früheren Änderungen. Aussortiert wird erst ganz am Ende. Mit nur einem solchen Charakter läuft der alte, schnellere Weg.
 
 Dabei gefunden und in Python und JavaScript behoben:
 
-- *Solver:* Der Mathematiker zählt nur **lebende** gestörte Spieler. Zwei Schlangenbeschwörer-Tausche hintereinander sehen einander. Ein Barbier, den die Pit-Hag erschaffen hat, zählt als Barbier. Ein getauschter Dämon behält beim Barbier-Tausch seine böse Seite. Die Vigormortis vergiftet nur für Schergen, die sie **selbst getötet** hat. In der Nacht, in der eine Sweetheart stirbt, muss der Dämon nicht getötet haben. Ein wahres Ergebnis unter dem Vortox ist erklärt, wenn der Vortox aus ist **oder** die Quelle gestört war (vorher nur das Erste). Die Geschichten einer Welt waren nicht nach Zeit sortiert, eine spätere Änderung konnte eine frühere überschreiben.
-- *Simulator:* Tötet der Fang Gu einen Außenseiter, springt er (vorher fehlte das ganz). Der Barbier tauscht nur Lebende, auch bei einem Tod in der Nacht. Der Philosoph handelt ab Nacht 2 an der Stelle seines neuen Charakters. Die Pit-Hag macht keinen Dämon zu etwas anderem. Tote bekommen keine gestörten Informationen mehr.
+- *Solver:* Der Mathematiker zählt nur **lebende** gestörte Spieler. Zwei Schlangenbeschwörer-Tausche hintereinander sehen einander. Ein Barbier, den das Grubenweib erschaffen hat, zählt als Barbier. Ein getauschter Dämon behält beim Barbier-Tausch seine böse Seite. Die Vigormortis vergiftet nur für Schergen, die sie **selbst getötet** hat. In der Nacht, in der ein Liebchen stirbt, muss der Dämon nicht getötet haben. Ein wahres Ergebnis unter dem Vortox ist erklärt, wenn der Vortox aus ist **oder** die Quelle gestört war (vorher nur das Erste). Die Geschichten einer Welt waren nicht nach Zeit sortiert, eine spätere Änderung konnte eine frühere überschreiben.
+- *Simulator:* Tötet der Fang Gu einen Außenseiter, springt er (vorher fehlte das ganz). Der Barbier tauscht nur Lebende, auch bei einem Tod in der Nacht. Der Philosoph handelt ab Nacht 2 an der Stelle seines neuen Charakters. Das Grubenweib macht keinen Dämon zu etwas anderem. Tote bekommen keine gestörten Informationen mehr.
 
 Geprüft: 2000 S&V-Partien mit 7 bis 11 Spielern und 4 Nächten, keine verwirft die Wahrheit, der Fang Gu springt dabei über 10-mal. TB, BMR und Easter: je 0 von 2000, auch mit 5 Nächten. Engine: 300 Grimoire-Partien und 70 Tisch-Partien mit Bot-Hirn, 0 verworfen. Sieben gespielte Partien liegen jetzt als feste Bretter im Korpus, Python und JavaScript stimmen auf allen 783 Welten überein. **Offen:** Mit 5 Nächten verwirft der Solver genau eine von 2000 S&V-Partien (Seed 181), noch nicht untersucht.
 
@@ -158,7 +158,7 @@ Gemessen an 129 simulierten S&V-Partien mit genanntem totem Barbier (7 bis 9 Spi
 
 **Ausprobiert und verworfen:** Ein zweiter Auslöser sollte Barbier-Tausche auch dann öffnen, wenn jemand einen Rollenwechsel meldet, den nichts erklärt. Dazu gehörte, dass der Solver einen Sitz mit „wurde X, vorher Y" aus Y heraus durchrechnet. Gemessen: Von 14 Partien, die ein versteckter Barbier kostet, rettete das keine einzige. In keiner hatte jemand gemeldet. In den 8 Partien mit Meldung fiel der echte Dämon im Schnitt von 54 auf 34 %. Grund: Ein Tausch betrifft zwei Sitze, meist meldet nur einer. Der Code liegt auf dem Zweig `barber-trigger-experiment`.
 
-**Dabei gefunden, noch offen:** Die Zeile „wurde X" wird nur aufgeschrieben, für die Suche zählt der aktuelle Claim. Ein guter Spieler, dessen Rolle sich geändert hat und der die neue nennt (nach Pit-Hag oder Barbier), wird nie mit seiner wahren Anfangsrolle durchgerechnet. Eine Lösung müsste beide Sitze eines Tauschs zusammen denken.
+**Dabei gefunden, noch offen:** Die Zeile „wurde X" wird nur aufgeschrieben, für die Suche zählt der aktuelle Claim. Ein guter Spieler, dessen Rolle sich geändert hat und der die neue nennt (nach Grubenweib oder Barbier), wird nie mit seiner wahren Anfangsrolle durchgerechnet. Eine Lösung müsste beide Sitze eines Tauschs zusammen denken.
 
 **Mastermind.** Die Grundidee war schon da: Nach der Hinrichtung des Dämons darf das Spiel einen Tag weiterlaufen. Gefehlt haben drei Bedingungen aus dem Wiki. Nur eine **Hinrichtung** zählt, auch der Nominierende einer Jungfrau und eine Hinrichtung wegen Besessenheit, aber kein Schuss des Dämonenjägers. Der Mastermind muss **funktionieren**. Und eine Scharlachrote Frau, die übernehmen könnte, **hat Vorrang**. Die Mastermind-Geschichte ist jetzt markiert und wird zu Forderungen an den Störungsplan: Mastermind nicht gestört, Scharlachrote Frau gestört. Vorher standen beide Geschichten kostenlos nebeneinander.
 
@@ -172,16 +172,16 @@ Gemessen an 129 simulierten S&V-Partien mit genanntem totem Barbier (7 bis 9 Spi
 
 Der Simulator darf jetzt den Dämon hinrichten: Ein Zombuul überlebt das beim ersten Mal, ein funktionierender Mastermind verlängert um einen Tag, danach endet das Spiel. In 1000 Partien: 60 Zusatztage, 75 überlebende Zombuuls, und bei jedem Zusatztag ist die Mastermind-Geschichte die beste Erklärung. Ein dauerhafter Test spielt 200 solche Partien.
 
-**Ogre.** Er wählt in der ersten Nacht einen Spieler und bekommt dessen wahre Gesinnung, auch betrunken oder vergiftet, ohne es zu erfahren. Spion und Einsiedler zählen für ihn als böse (Jinx). Er handelt spät in der Nacht, also sehen Empath, Adliger und Großmutter ihn in Nacht 1 noch als gut. Ab Tag 1 zählt die neue Seite. Neue Protokollzeile „Ogre wählte X": Dann steht seine Seite fest, sofern der Sprecher wirklich der Ogre ist. Ohne diese Zeile wiegt „böse geworden" so viel wie das Verhältnis böser zu guten Sitzen.
+**Oger.** Er wählt in der ersten Nacht einen Spieler und bekommt dessen wahre Gesinnung, auch betrunken oder vergiftet, ohne es zu erfahren. Spion und Einsiedler zählen für ihn als böse (Jinx). Er handelt spät in der Nacht, also sehen Empath, Adlige und Großmutter ihn in Nacht 1 noch als gut. Ab Tag 1 zählt die neue Seite. Neue Protokollzeile „Oger wählte X": Dann steht seine Seite fest, sofern der Sprecher wirklich der Oger ist. Ohne diese Zeile wiegt „böse geworden" so viel wie das Verhältnis böser zu guten Sitzen.
 
 **Marionette.** Die Technik für „glaubt, jemand anderes zu sein" war schon allgemein, der Hinweis im Katalog war veraltet. Gefehlt hat nur die Aufbauregel „sitzt neben dem Dämon". Sie steht jetzt als Feld `beside` im Katalog und wird in der Suche und in der Stichprobe geprüft.
 
-**Nebenbei zwei Verbesserungen, die mehr als den Ogre betreffen:**
+**Nebenbei zwei Verbesserungen, die mehr als den Oger betreffen:**
 
-- *Jede passende Geschichte zählt anteilig.* Bisher bekam die beste Geschichte einer Welt das ganze Gewicht. Ein Ogre, der böse geworden sein könnte, stand dadurch als gut da, sobald „gut geblieben" nichts kostete. Jetzt wird das Gewicht einer Welt nach dem Gewicht ihrer Geschichten aufgeteilt. Das Gewicht der Welt selbst bleibt gleich. Im Korpus ändern sich 11 von 142 Brettern: alle Ogre-Sitze (das leere Easter-Brett 40 → 55 % böse), der Barbier-Tausch, und ein Brett, auf dem Mastermind und Scharlachrote Frau gleich gut passten. Dort gewann vorher zufällig die erste Geschichte.
-- *Adliger und Näherin lesen die aktuelle Seite*, wie Empath und Koch schon vorher. Ein guter Giftmischer vom Pit-Hag las sich für sie noch als böse.
+- *Jede passende Geschichte zählt anteilig.* Bisher bekam die beste Geschichte einer Welt das ganze Gewicht. Ein Oger, der böse geworden sein könnte, stand dadurch als gut da, sobald „gut geblieben" nichts kostete. Jetzt wird das Gewicht einer Welt nach dem Gewicht ihrer Geschichten aufgeteilt. Das Gewicht der Welt selbst bleibt gleich. Im Korpus ändern sich 11 von 142 Brettern: alle Oger-Sitze (das leere Easter-Brett 40 → 55 % böse), der Barbier-Tausch, und ein Brett, auf dem Mastermind und Scharlachrote Frau gleich gut passten. Dort gewann vorher zufällig die erste Geschichte.
+- *Adlige und Schneiderin lesen die aktuelle Seite*, wie Empath und Koch schon vorher. Ein guter Giftmischer vom Grubenweib las sich für sie noch als böse.
 
-Geprüft mit dem eigenen Simulator, der beide Charaktere nach seiner eigenen Lesart der Regeln spielt: 500 Easter-Partien, keine verwirft die Wahrheit. In 34 der 66 Partien mit bösem Ogre ist „Ogre böse" die beste Geschichte, die neue Regel wird also wirklich gebraucht. Die Engine deines Spiels kennt nur Trouble Brewing und kann hier nicht mitprüfen.
+Geprüft mit dem eigenen Simulator, der beide Charaktere nach seiner eigenen Lesart der Regeln spielt: 500 Easter-Partien, keine verwirft die Wahrheit. In 34 der 66 Partien mit bösem Oger ist „Oger böse" die beste Geschichte, die neue Regel wird also wirklich gebraucht. Die Engine deines Spiels kennt nur Trouble Brewing und kann hier nicht mitprüfen.
 
 ### Phase 3 — Gemeinsames Regelwissen für das Spiel
 
@@ -1107,17 +1107,33 @@ Der volle Bericht steht in `claude/geschwindigkeit-kopfgeldjaeger-mezepheles.md`
 
 **Bleibt offen:** Große gemischte Bretter, auf denen Werwolf, Kopfgeldjäger und Mezepheles zusammenkommen, brauchen im Browser weiter ein bis zwei Minuten (Stelle 52).
 
+### Die neunten drei experimentellen Charaktere · *erledigt am 12.10.2026*
+
+Der volle Bericht steht in `claude/experimentelle-charaktere-batch-9.md`.
+
+**Deine Antwort vom 12.10.2026:** A bis F jeweils Weg 1. Zu C: Die ganze Nachtreihenfolge gehen wir ganz am Ende gemeinsam durch (Punkt 1b).
+
+| Charakter | Zeile auf der Website | Was der Solver daraus macht |
+|---|---|---|
+| Hohepriesterin | „High Priestess shown“ (Nacht) | Aufgezeichnet, nicht gewogen. Wacht jede Nacht auf, auch in der ersten; die Kammerzofe zählt sie. Nachtplatz von Hand: der des Generals (50 / 69). |
+| General | „General told“ (Nacht): Gut, Böse oder keine | Aufgezeichnet, nicht gewogen. Wacht jede Nacht auf, auch in der ersten. |
+| Fischer | „Fisherman advice“ (Tag) | Aufgezeichnet, nicht gewogen. Wacht nie auf. Ein zweiter Rat wird aufgezeichnet, die Seite weist darauf hin. |
+
+**Das Tor:** Eigene Skripte 1 von 12.000 Partien verworfen (Stelle 43, nicht wegen der drei). Grundskripte unverändert: Prüfsummen gleich, Bad Moon Rising 0 von 6.000, Sects & Violets dieselben 43 von 6.000 wie vorher, Skripte von Batch 8 0 von 6.000. Gemischte Partien mit den drei: 9 von 3.000 (4 Nächte), 12 von 3.000 (6 Nächte), keine wegen der drei (12 Charakterwechsel in derselben Nacht, 1 neue Stelle 55, 1 Stelle 49). Ohne Pflicht 5 von 3.000 wie vorher. Website im Browser geprüft, Seite und Python zählen dieselben Welten. Korpus 386 Bretter (17 neue), 1.571 Tests grün (26 neue), 2 übersprungen.
+
+**Gegen falsche Namen:** `tools/check_wording.py` prüft jeden Bericht vor dem Hochladen auf Namen, die nicht die der App sind (Trunkenbold statt „Säufer“, Kammerzofe statt „Zimmermädchen“, Grubenweib statt „Pit-Hag“ und weitere). Die Roadmap ist damit in 12 Zeilen berichtigt.
+
 ### Als Nächstes
 
-**1 · Entscheiden, womit es weitergeht.** Alle mittleren experimentellen Charaktere sind durch das Tor, die Geschwindigkeit auf ihren Skripten ist verbessert. Zwei Wege: (1) Batch 9 mit den drei, die sich nur aufzeichnen lassen (Hohepriesterin, General, Fischer), meine Empfehlung; (2) der erste große Charakter einzeln, mit Lesarten vorab.
+**1 · Entscheiden, womit es weitergeht.** Alle mittleren und alle nur aufzeichenbaren experimentellen Charaktere sind durch das Tor. Drei Wege: (1) die zwei neuen Funde zuerst, Stelle 55 (Kultführer als Falsche Pfote, ein kleiner Fehler im Solver) und Stelle 56 (Philosoph im Night-Walk), meine Empfehlung; (2) der erste große Charakter einzeln, mit Lesarten vorab; (3) die Nachtreihenfolge, die du ans Ende gestellt hast, vorziehen.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 122 Einträge. Von den 138 Spielercharakteren der App sind 121 im Katalog (dazu der Wächter, ein Fabled), 17 fehlen: 7 Bürger, 3 Außenseiter, 3 Schergen, 4 Dämonen. Nach meiner Einschätzung sind davon 12 groß (Alchemist, Kannibale, Ingenieur, Hutmacher, Eremit, Pestdoktor, Laborratte, Beschwörer, Al-Hadikhia, Kazali, Lil' Monsta, Lord of Typhon); 3 lassen sich nur aufzeichnen (Hohepriesterin, General, Fischer) und 2 gar nicht modellieren (Vergessliche, Zauberer). Mittlere gibt es keine mehr.
+Stand des Katalogs: 125 Einträge. Von den 138 Spielercharakteren der App sind 124 im Katalog (dazu der Wächter, ein Fabled), 14 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen, 4 Dämonen. Nach meiner Einschätzung sind davon 12 groß (Alchemist, Kannibale, Ingenieur, Hutmacher, Eremit, Pestdoktor, Laborratte, Beschwörer, Al-Hadikhia, Kazali, Lil' Monsta, Lord of Typhon) und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr.
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
-**1b · Die Nachtreihenfolge erneuern** (zurückgestellt, deine Entscheidung E). Die Datei im Repo kennt 130 Charaktere, die aktuelle des Herausgebers 181. Für Batch 1 sind drei Plätze von Hand eingetragen. Sinnvoll vor einem Batch mit Charakteren, die in die Nacht eingreifen.
+**1b · Die Nachtreihenfolge erneuern, ganz am Ende und gemeinsam** (deine Entscheidung vom 12.10.2026; vorher zurückgestellt, Entscheidung E). Die Datei im Repo kennt 130 Charaktere, die aktuelle des Herausgebers 181. Von Hand eingetragen sind bisher die Plätze von Oger, Gutsverwalter, Ritter, Shugenja, Drehorgelspieler, Harpyie, Dorftrottel, Yaggababble und Hohepriesterin; die Hohepriesterin teilt sich vorläufig den Platz des Generals.
 
 **2 · Zwei kleine Stellen in Sects & Violets,** die nebenher gehen:
 - Wer früh in der Nacht handelt und in derselben Nacht vom Grubenweib verwandelt wird (offene Stelle 36).
@@ -1184,6 +1200,8 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 51 | Simulator | **Der Bastler stirbt nach dem Mondkind.** Am Tisch handelt der Bastler an Platz 49, das Mondkind an Platz 50. Im Simulator ist es umgekehrt: Tötet das Mondkind den Gastwirt, der den Bastler schützt, stirbt der Bastler danach doch. 1 von 8.511 Nächten auf dem zweiten Skript aus Batch 8 (Seed 1361). Der Solver hält die Partie. |
 | 52 | Solver | **Skripte mit Kopfgeldjäger und Mezepheles rechnen lange.** *Verbessert am 12.10.2026:* Erzählungen, die sich nur in ungefragten Sitzen unterscheiden, werden nicht mehr einzeln erklärt. Auf den eigenen Skripten ist JavaScript bei 9 Spielern und 6 Nächten dreimal so schnell (langsamstes Brett 109 → 30 Sekunden), auf gemischten knapp doppelt so schnell. Offen bleibt: Große gemischte Bretter, auf denen Werwolf (Falsche Pfote), Kopfgeldjäger und Mezepheles zusammenkommen, brauchen im Browser ein bis zwei Minuten (langsamstes 99 Sekunden), weil dort fast jede Erzählung nach fast jedem Sitz fragt. |
 | 53 | Solver | **Die Barbier-Regel sieht eine Übergabe am Tag nicht.** Wo alle Regeln in einem Zug laufen, bietet sie „Dämon mit Scherge“ für einen schon hingerichteten Dämon und die Scharlachrote Frau an, die ihn beerbt hat. Der Absturz daraus ist am 11.10.2026 behoben, die Erzählung selbst bleibt und bekommt einen Anteil. Kein Grundskript hat Barbier und Scharlachrote Frau. |
+| 55 | Solver | **Kultführer als Falsche Pfote des Werwolfs.** Ist der Kultführer der gute Spieler, der durch den Werwolf böse registriert, sieht der Solver das nicht: Seine Fraktion wird aus den Nachbarn berechnet, die Falsche Pfote wird dabei übergangen. Zeigt ein Dorftrottel ihn als böse, ist die wahre Welt unmöglich. Fehler aus Batch 8, in Python und JavaScript. 1 von 3.000 gemischten Partien am Tor von Batch 9 (Seed 1238). Klein zu beheben. |
+| 56 | Night-Walk | **Ein Philosoph mit einer Fähigkeit aus Bad Moon Rising handelt im Night-Walk nicht.** Der Night-Walk lässt einen Philosophen nur als Schlangenbeschwörer, Nachtwächter und Glücksspieler handeln, nicht als Segler, Gastwirt, Schwätzer oder Bastler. Dann stimmen die Toten der Nacht nicht, etwa wenn der Philosoph als Segler den Schläger zuerst wählt. 9 von 8.233 Nächten auf dem zweiten Skript aus Batch 9. Betrifft nur das Prüfwerkzeug. |
 | 54 | Solver | **Der böse Bürger des Kopfgeldjägers mit falschem Claim** wird nur an einem Sitz gefunden, der als nicht vertrauenswürdig markiert ist. Sonst nimmt die Suche an, dass er seinen echten Charakter nennt. Der Jinx Leviathan–Mönch ist nicht gebaut, weil die Wahl des Mönchs nirgends steht. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.

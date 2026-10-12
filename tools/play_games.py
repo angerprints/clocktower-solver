@@ -444,7 +444,13 @@ def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):
     # Characters the caller insists on. A new character has no home
     # script to put it beside anything, so this is how it gets made to
     # meet the rest.
-    keys = [k for k in must_have if k in every]
+    #
+    # A character kept but not weighed (the Artist, the ninth three of
+    # 12.10.2026) is never drawn, but may be insisted on: its rows still
+    # have to pass through, and its waking still counts for a Kammerzofe.
+    keys = [k for k in must_have
+            if k in every or (k in CHARACTERS and CHARACTERS[k].handled
+                              == "partly" and not as_named)]
     # Never one already insisted on: a script lists a character once, and
     # a Xaan asked for and drawn again was dealt twice (10.10.2026).
     keys += rng.sample([k for k in sources if CHARACTERS[k].team == "minion"

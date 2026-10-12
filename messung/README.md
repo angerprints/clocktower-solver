@@ -136,6 +136,7 @@ Dämon still ist und wer es bei welchem Muster war.
 | `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XSIX` oder `XSIXB` als Skript | Die zwei Skripte für die sechsten fünf (`tests/test_experimental_6.py`), beide mit Prediger, Jäger, Puzzlemeister, Unschuld, Xaan und Bombenleger. Das erste hat Mathematiker, Akrobatin, Wesir und Vortox, das zweite Kammerzofe, Minnesänger und Pukka. |
 | `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XSEVEN` oder `XSEVENB` als Skript | Die zwei Skripte für die siebten fünf (`tests/test_experimental_7.py`), beide mit Feenkind, Dorftrottel, Werwolf, Harpyie und Lleech. Das erste hat Mathematiker, Dämonenjäger, Scharlachrote Frau und Imp, das zweite die Beschützer aus Bad Moon Rising, Strippenzieher und Pukka. |
 | `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XEIGHT` oder `XEIGHTB` als Skript | Die zwei Skripte für die achten fünf (`tests/test_experimental_8.py`), beide mit Kopfgeldjäger, Kultführer, Mezepheles, Leviathan und Yaggababble. Das erste hat Banshee, Weise, Farmer, Rabenhüter, Soldat, König, Einsiedler, Spion und Scharlachrote Frau, das zweite Großmutter, Exorzist, Gastwirt, Kammerzofe, Schläger und Pukka. |
+| `sim5.py`, `nw2.py`, `sim4c.py`, `nw3.py` | `XNINE` oder `XNINEB` als Skript | Die zwei Skripte für die neunten drei (`tests/test_experimental_9.py`), beide mit Hohepriesterin, General und Fischer. Das erste hat Mathematiker und Vortox, das zweite Kammerzofe, Philosoph und Pukka. |
 
     python3 messung/tor.py 40 4 0 Steward Knight Shugenja Nightwatchman King
     python3 messung/tor.py 1000 4 0

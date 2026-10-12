@@ -22,7 +22,7 @@ import {TEAM} from "./roles.mjs";
 // Rows that happen in daylight. They carry the number of the day, and a
 // day comes after the night of the same number.
 const DAY_ROWS = new Set(["SlayerShot", "VirginNomination", "SavantInfo",
-                          "Alsaahir", "ArtistInfo"]);
+                          "Alsaahir", "ArtistInfo", "FishermanAdvice"]);
 const DAY_EVENTS = new Set(["X", "S", "D", "W", "M"]);
 
 /** The last night this board reaches. */

@@ -1059,6 +1059,7 @@ def handmade():
         yield played(f"x-seven-bmr-played-{what}", XVB7, seed, 7, 4)
 
     yield from the_eighth_five()
+    yield from the_ninth_three()
 
 
 def the_eighth_five():
@@ -1157,6 +1158,56 @@ def the_eighth_five():
                        ("mezepheles-turned", 5),
                        ("yaggababble-by-day", 43)):
         yield played(f"x-eight-bmr-played-{what}", X8B, seed, 7, 4)
+
+
+def the_ninth_three():
+    """The ninth three (12.10.2026), on the scripts of
+    tests/test_experimental_9.py: the High Priestess, the General and the
+    Fisherman, kept and not weighed — beside a Vortox, a Mathematiker and
+    a Kammerzofe that counts the two who wake every night."""
+    from test_experimental_9 import NINE as X9, NINE_BMR as X9B
+    N8 = ["Chef", "HighPriestess", "General", "Fisherman", "Empath",
+          "Mathematician", "Saint", "Undertaker"]
+    rows = [{"type": "HighPriestessInfo", "night": 1, "player": 1,
+             "target": 4},
+            {"type": "HighPriestessInfo", "night": 2, "player": 1,
+             "target": 0},
+            {"type": "GeneralInfo", "night": 1, "player": 2, "says": "evil"},
+            {"type": "GeneralInfo", "night": 2, "player": 2,
+             "says": "neither"},
+            {"type": "FishermanAdvice", "night": 1, "player": 3,
+             "advice": "Execute today."}]
+    yield board("x-nine-8-bare", X9, N8)
+    yield board("x-nine-8-kept-not-weighed", X9, N8, infos=rows,
+                days_done=[1], quiet_nights=[2])
+    yield board("x-nine-8-kept-beside-the-empath", X9, N8, infos=rows + [
+        {"type": "Empath", "night": 1, "player": 4, "count": 1},
+        {"type": "MathematicianInfo", "night": 1, "player": 5,
+         "count": 1}])
+    yield board("x-nine-8-fisherman-asked-twice", X9, N8, infos=[
+        {"type": "FishermanAdvice", "night": 1, "player": 3, "advice": "a"},
+        {"type": "FishermanAdvice", "night": 2, "player": 3, "advice": "b"}],
+        days_done=[1, 2], quiet_nights=[2])
+    yield board("x-nine-8-fisherman-killed-the-night-after", X9, N8, infos=[
+        {"type": "FishermanAdvice", "night": 2, "player": 3, "advice": "a"}],
+        players_override={3: ["N3"]}, days_done=[1, 2], quiet_nights=[2])
+    B7 = ["Chambermaid", "HighPriestess", "General", "Fisherman", "Gossip",
+          "Exorcist", "Tinker"]
+    for count in (2, 1, 0):
+        yield board(f"x-nine-bmr-7-chambermaid-counts-{count}", X9B, B7,
+                    infos=[{"type": "ChambermaidInfo", "night": 1,
+                            "player": 0, "a": 1, "b": 2, "count": count}])
+    yield board("x-nine-bmr-7-chambermaid-and-the-fisherman", X9B, B7,
+                infos=[{"type": "ChambermaidInfo", "night": 1, "player": 0,
+                        "a": 3, "b": 4, "count": 0}])
+    # Played (seeds at seven players): all three told something, beside
+    # a Vortox, a Mathematiker, a Kammerzofe and a Philosoph.
+    for what, seed in (("all-three", 2), ("all-three-vortox", 12),
+                       ("mathematician-vortox", 16), ("drunk", 8)):
+        yield played(f"x-nine-played-{what}", X9, seed, 7, 4)
+    for what, seed in (("all-three", 12), ("chambermaid", 10),
+                       ("philosopher", 16), ("philosopher-all-three", 36)):
+        yield played(f"x-nine-bmr-played-{what}", X9B, seed, 7, 4)
 
 
 def generated(how_many=60):

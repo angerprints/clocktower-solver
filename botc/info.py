@@ -3804,3 +3804,63 @@ class ExecutionNomination(Info):
 
     def holds(self, w, s, rh, seat=None):
         return True
+
+
+# --------------------------------------------------------------------------
+# The ninth three experimental characters (12.10.2026)
+# --------------------------------------------------------------------------
+#
+# All three are told what the Storyteller *believes*: whom to talk to,
+# who is winning, what might help. There is no rule for any of it, so,
+# like the Artist's question, each is kept and shown but not weighed
+# (table ruling, way 1). A row still says somebody claims the character,
+# and the claim is judged by its waking pattern like any other.
+
+
+@dataclass
+class HighPriestessInfo(Info):
+    """The player the High Priestess was pointed at. Any player, alive or
+    dead, good or evil: whoever the Storyteller thinks it should talk to
+    most."""
+
+    target: int = 0
+    source_role = "HighPriestess"
+
+    def weighed(self, state):
+        return False
+
+    def holds(self, w, s, rh, seat=None):
+        return True                    # kept, not weighed
+
+
+@dataclass
+class GeneralInfo(Info):
+    """Which side the Storyteller believes is winning: "good", "evil" or
+    "neither"."""
+
+    says: str = "neither"
+    source_role = "General"
+
+    def weighed(self, state):
+        return False
+
+    def holds(self, w, s, rh, seat=None):
+        return True                    # kept, not weighed
+
+
+@dataclass
+class FishermanAdvice(Info):
+    """The advice the Fisherman was given. `night` is the day.
+
+    Once per game. A second visit is kept too, and the page says the
+    Fisherman has already asked; nothing is weighed (way 1, 12.10.2026).
+    """
+
+    advice: str = ""
+    source_role = "Fisherman"
+
+    def weighed(self, state):
+        return False
+
+    def holds(self, w, s, rh, seat=None):
+        return True                    # kept, not weighed

@@ -617,6 +617,30 @@ _EXPERIMENTAL = [
     # nearly always (solver.a_yaggababble_kills_for_each_time).
     _c("Yaggababble", "yaggababble", "Yaggababble", "demon", {FIRST},
        nights="first"),
+
+    # The ninth three (12.10.2026): what the Storyteller *believes*, so
+    # there is nothing to check. Kept like the Artist's question and not
+    # weighed (table ruling, way 1 for all three).
+    #
+    # Shown a player every night, the first included (info.
+    # HighPriestessInfo). Woken every night, and the Kammerzofe counts it.
+    _c("HighPriestess", "highpriestess", "High Priestess", "townsfolk",
+       {EVERY}, nights="every", handled=PARTLY,
+       note="the player it is pointed at is kept but not weighed — whoever "
+            "the Storyteller thinks it should talk to, by no rule at all"),
+    # Shown good, evil or neither every night, the first included
+    # (info.GeneralInfo).
+    _c("General", "general", "General", "townsfolk", {EVERY},
+       nights="every", handled=PARTLY,
+       note="which side it is told is winning is kept but not weighed — "
+            "the Storyteller's opinion, not a fact about the board"),
+    # Once per game, in the day, asks the Storyteller for advice
+    # (info.FishermanAdvice). Never woken at night.
+    _c("Fisherman", "fisherman", "Fisherman", "townsfolk", {NEVER},
+       handled=PARTLY,
+       note="its advice is kept but not weighed — strategy rather than a "
+            "fact, and a drunk or poisoned one may be told something "
+            "unhelpful"),
 ]
 
 
@@ -722,6 +746,13 @@ _NOT_IN_THE_FILE = {
     # other nights (32), where its deaths are counted. Not checked against
     # the publisher's current order.
     "yaggababble": (27, 32),
+    # The ninth three (12.10.2026). The High Priestess is newer than the
+    # file. It reads nothing anybody checks, so for now it shares the
+    # General's place (50, 69): before the Kammerzofe and the
+    # Mathematiker, which count it. Not checked against the publisher's
+    # current order — the whole order is to be gone through once at the
+    # end (Patrick, 12.10.2026).
+    "highpriestess": (50, 69),
 }
 
 

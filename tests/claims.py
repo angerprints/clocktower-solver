@@ -270,7 +270,8 @@ def _was_true(deal, row):
     from botc.info import GameState
     from botc.worlds import World
     kind = type(row).__name__
-    if kind in ("SavantInfo", "ArtistInfo"):
+    if kind in ("SavantInfo", "ArtistInfo", "HighPriestessInfo",
+                "GeneralInfo", "FishermanAdvice"):
         return False              # never checkable; the content is free text
     state = GameState(n_players=deal.n, script=getattr(deal, "script", None),
                       claims={}, **deal.record())

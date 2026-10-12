@@ -1448,6 +1448,45 @@ export const DATA = {
    "nights": "first",
    "first_night": 27,
    "other_night": 32
+  },
+  "HighPriestess": {
+   "id": "highpriestess",
+   "name": "High Priestess",
+   "team": "townsfolk",
+   "wake": [
+    "every"
+   ],
+   "modelled": false,
+   "note": "the player it is pointed at is kept but not weighed — whoever the Storyteller thinks it should talk to, by no rule at all",
+   "nights": "every",
+   "handled": "partly",
+   "first_night": 50,
+   "other_night": 69
+  },
+  "General": {
+   "id": "general",
+   "name": "General",
+   "team": "townsfolk",
+   "wake": [
+    "every"
+   ],
+   "modelled": false,
+   "note": "which side it is told is winning is kept but not weighed — the Storyteller's opinion, not a fact about the board",
+   "nights": "every",
+   "handled": "partly",
+   "first_night": 50,
+   "other_night": 69
+  },
+  "Fisherman": {
+   "id": "fisherman",
+   "name": "Fisherman",
+   "team": "townsfolk",
+   "wake": [
+    "never"
+   ],
+   "modelled": false,
+   "note": "its advice is kept but not weighed — strategy rather than a fact, and a drunk or poisoned one may be told something unhelpful",
+   "handled": "partly"
   }
  },
  "scripts": {
