@@ -54117,6 +54117,320 @@
    }
   },
   {
+   "name": "x-seven-7-faux-paw-xaan-night-2",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Noble",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Lycanthrope",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Monk",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Soldier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "Noble",
+      "night": 1,
+      "player": 0,
+      "a": 2,
+      "b": 3,
+      "c": 4
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 2,
+      "player": 1,
+      "target": 2
+     }
+    ],
+    "script": {
+     "name": "Faux paw and Xaan",
+     "characters": [
+      "noble",
+      "lycanthrope",
+      "chef",
+      "empath",
+      "monk",
+      "soldier",
+      "saint",
+      "recluse",
+      "xaan",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 42,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 23.3155,
+      "demon_pct": 11.7647,
+      "drunk_pct": 0.0,
+      "lying_pct": 23.3155
+     },
+     {
+      "evil_pct": 23.3155,
+      "demon_pct": 11.7647,
+      "drunk_pct": 0.0,
+      "lying_pct": 23.3155
+     },
+     {
+      "evil_pct": 41.1765,
+      "demon_pct": 20.8556,
+      "drunk_pct": 0.0,
+      "lying_pct": 41.1765
+     },
+     {
+      "evil_pct": 38.5027,
+      "demon_pct": 13.9037,
+      "drunk_pct": 0.0,
+      "lying_pct": 38.5027
+     },
+     {
+      "evil_pct": 2.0321,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.0321
+     },
+     {
+      "evil_pct": 35.8289,
+      "demon_pct": 20.8556,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.8289
+     },
+     {
+      "evil_pct": 35.8289,
+      "demon_pct": 20.8556,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.8289
+     }
+    ],
+    "blame": {
+     "2": {
+      "4": {
+       "Demon": 0.6257,
+       "Lycanthrope": 0.3743
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-seven-7-faux-paw-xaan-night-3",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Noble",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Lycanthrope",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Monk",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Soldier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "Noble",
+      "night": 1,
+      "player": 0,
+      "a": 3,
+      "b": 4,
+      "c": 5
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 2,
+      "player": 1,
+      "target": 2
+     }
+    ],
+    "script": {
+     "name": "Faux paw and Xaan",
+     "characters": [
+      "noble",
+      "lycanthrope",
+      "chef",
+      "empath",
+      "monk",
+      "soldier",
+      "saint",
+      "recluse",
+      "xaan",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 50,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 17.5806,
+      "demon_pct": 8.871,
+      "drunk_pct": 0.0,
+      "lying_pct": 17.5806
+     },
+     {
+      "evil_pct": 17.5806,
+      "demon_pct": 8.871,
+      "drunk_pct": 0.0,
+      "lying_pct": 17.5806
+     },
+     {
+      "evil_pct": 39.1129,
+      "demon_pct": 19.7581,
+      "drunk_pct": 0.0,
+      "lying_pct": 39.1129
+     },
+     {
+      "evil_pct": 53.629,
+      "demon_pct": 27.0161,
+      "drunk_pct": 0.0,
+      "lying_pct": 53.629
+     },
+     {
+      "evil_pct": 1.9355,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.9355
+     },
+     {
+      "evil_pct": 31.0484,
+      "demon_pct": 15.7258,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.0484
+     },
+     {
+      "evil_pct": 39.1129,
+      "demon_pct": 19.7581,
+      "drunk_pct": 0.0,
+      "lying_pct": 39.1129
+     }
+    ],
+    "blame": {
+     "2": {
+      "4": {
+       "Demon": 0.5958,
+       "Lycanthrope": 0.4042
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "x-eight-7-mezepheles-turned-a-neighbour",
    "payload": {
     "n_players": 7,

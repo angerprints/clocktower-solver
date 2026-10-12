@@ -3558,6 +3558,9 @@ def _plain_failures(world, state, outcome=None):
     # alternatives, so `_explain` tries both. So far only a Chambermaid
     # whose count turns on a Wraith (table ruling, 08.10.2026).
     state._either = either = []
+    # Rows that held only with the faux paw reading evil: (night, the
+    # Lycanthrope) -> their sources. See below.
+    faux_working = {}
     working = {}
     ft_infos = []
     invented = 1.0
@@ -4063,8 +4066,18 @@ def _plain_failures(world, state, outcome=None):
             outcome[idx] = EXCUSED
         else:
             outcome[idx] = HELD
-            if faux_need is not None:
+            if faux_need is not None and witnessed:
                 working.setdefault(info.night, set()).add(faux_need[1])
+            elif faux_need is not None:
+                # Held only with the faux paw reading evil, so the
+                # Lycanthrope worked — or it did not, the reading was
+                # false, and its source was droisoned. One choice a night
+                # covers every such row: with the Lycanthrope off, all of
+                # their sources are (open item 57, 12.10.2026: a Xaan
+                # poisoned the Lycanthrope and the Noble alike, and only
+                # the first was asked).
+                faux_working.setdefault((info.night, faux_need[1]),
+                                        set()).add(seat)
             # **A droisoned character cannot misregister.** A Storyteller
             # chooses freely what a droisoned *information* role yields,
             # because the information is arbitrary — but registration is
@@ -4090,6 +4103,9 @@ def _plain_failures(world, state, outcome=None):
                 if needs[0]:
                     outcome[idx] = EXCUSED
 
+    for (night, lyc), sources in sorted(faux_working.items()):
+        either.append((night, frozenset(sources), frozenset(),
+                       frozenset({lyc})))
     return failures, ft_infos, invented, working
 
 

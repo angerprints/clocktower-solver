@@ -263,6 +263,42 @@ HARP = ["Chef", "Empath", "Monk", "Soldier", "Undertaker", "Harpy",
         "Imp"]                                              # 5, 6
 
 
+class TheFauxPawUnderAXaan(SolverTest):
+    """Open item 57 (12.10.2026). A Noble holds only with the faux paw
+    reading evil — but on the Xaan's night the Lycanthrope is poisoned
+    like every Townsfolk, so the faux paw reads good, and the Noble was
+    told something false because it was poisoned too. Only the first way
+    out was asked."""
+
+    SCRIPT = scripts.from_ids("Faux paw and Xaan", [
+        "noble", "lycanthrope", "chef", "empath", "monk", "soldier",
+        "saint", "recluse", "xaan", "spy", "imp"])
+    #          0          1            2       3        4         5
+    ROLES = ["Noble", "Lycanthrope", "Chef", "Saint", "Empath", "Xaan",
+             "Imp"]                                           # 6
+
+    def test_the_noble_may_have_been_poisoned_instead(self):
+        # The Lycanthrope chose the Chef on night two and the Chef lived,
+        # so the Chef is the faux paw; on night one, the Xaan's night
+        # (one Outsider), the Noble saw it as the one evil player.
+        rows = [I.NobleInfo(1, 0, a=2, b=3, c=4),
+                I.LycanthropeChose(2, 1, target=2)]
+        self.assertIsNotNone(cost(self.SCRIPT, self.ROLES, rows,
+                                  deaths={4: ("N2",)}, days_done={1}))
+
+    def test_without_the_xaan_it_simply_worked(self):
+        roles = ["Noble", "Lycanthrope", "Chef", "Saint", "Empath", "Spy",
+                 "Imp"]
+        rows = [I.NobleInfo(1, 0, a=2, b=3, c=4),
+                I.LycanthropeChose(2, 1, target=2)]
+        working = cost(self.SCRIPT, roles, rows, deaths={4: ("N2",)},
+                       days_done={1})
+        self.assertIsNotNone(working)
+        # And it is no dearer than the board without the Noble's row.
+        self.assertEqual(working, cost(self.SCRIPT, roles, rows[1:],
+                                       deaths={4: ("N2",)}, days_done={1}))
+
+
 class TheHarpy(SolverTest):
 
     def test_a_mad_player_saying_so_needs_a_harpy(self):

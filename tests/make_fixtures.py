@@ -1106,6 +1106,20 @@ def the_eighth_five():
                      "Empath", "Saint", "Monk"],
                     infos=[{"type": "VillageIdiotInfo", "night": 1,
                             "player": 0, "target": target, "evil": True}])
+    # Open item 57 (12.10.2026): a Noble that saw the faux paw on the
+    # Xaan's night, when the Lycanthrope was poisoned too.
+    xaan = scripts.from_ids("Faux paw and Xaan", [
+        "noble", "lycanthrope", "chef", "empath", "monk", "soldier", "saint",
+        "recluse", "xaan", "spy", "imp"])
+    for seen in ((2, 3, 4), (3, 4, 5)):
+        yield board(f"x-seven-7-faux-paw-xaan-night-{seen[0]}", xaan,
+                    ["Noble", "Lycanthrope", "Chef", "Saint", "Empath",
+                     "Monk", "Soldier"],
+                    infos=[{"type": "Noble", "night": 1, "player": 0,
+                            "a": seen[0], "b": seen[1], "c": seen[2]},
+                           {"type": "LycanthropeChose", "night": 2,
+                            "player": 1, "target": 2}],
+                    players_override={4: ["N2"]}, days_done=[1])
     M7 = ["Chef", "Empath", "Monk", "Soldier", "King", "Slayer",
           "Undertaker"]
     yield board("x-eight-7-mezepheles-turned-a-neighbour", X8, M7, infos=[

@@ -1113,6 +1113,9 @@ function plainFailures(world, state, outcome = {}) {
   // will do; `explainOne` tries both. So far only a Chambermaid whose count
   // turns on a Wraith (table ruling, 08.10.2026).
   const either = [];
+  // Rows that held only with the faux paw reading evil, by night and
+  // Lycanthrope: their sources. See below.
+  const fauxWorking = {};
 
   // Executing the Saint ends the game on the spot — while it is
   // *working*. A poisoned or drunk Saint is executed and the game carries
@@ -1522,9 +1525,17 @@ function plainFailures(world, state, outcome = {}) {
       outcome[idx] = EXCUSED;
     } else {
       outcome[idx] = HELD;
-      if (fauxNeed !== null)
+      if (fauxNeed !== null && witnessed)
         (working[info.night] || (working[info.night] = new Set()))
           .add(fauxNeed[1]);
+      else if (fauxNeed !== null) {
+        // The Lycanthrope worked — or it did not, the reading was false
+        // and its source droisoned. One choice a night covers every such
+        // row (open item 57, 12.10.2026). See solver.py.
+        const key = `${info.night}|${fauxNeed[1]}`;
+        (fauxWorking[key] || (fauxWorking[key] = {night: info.night,
+          lyc: fauxNeed[1], sources: new Set()})).sources.add(seat);
+      }
       // **A droisoned character cannot misregister.** Registration is a
       // plain ability and a plain ability simply does not function, so a
       // row that held only by somebody misregistering forbids that seat
@@ -1544,6 +1555,11 @@ function plainFailures(world, state, outcome = {}) {
   });
   if (impossible) return null;            // a hard fact did not hold
 
+  // In the order Python sorts its (night, Lycanthrope) keys.
+  for (const group of Object.values(fauxWorking).sort(
+         (a, b) => a.night - b.night || a.lyc - b.lyc))
+    either.push({night: group.night, source: [...group.sources].sort((a, b) => a - b),
+                 impaired: [], working: [group.lyc]});
   return {failures, ftInfos, invented, mustWork: working, vortoxOr, either};
 }
 
