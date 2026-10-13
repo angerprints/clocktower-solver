@@ -275,7 +275,11 @@ sourceRule(function aPhilosopherDrunksWhoeverHadIt(world, state, night) {
     const still = world.roleAt(seat, phase) === "Philosopher";
     if (!still && world.roleAt(seat, began) !== "Philosopher") continue;
     const died = state.diedAt(seat);
-    const went = !still || died.includes(phase) || died.includes(`D${night}`);
+    // Coming back tonight is the same span the other way round: a real
+    // Professor raising its dead Philosopher was sober when it chose.
+    const back = ((state.resurrections || {})[seat] || []).includes(phase);
+    const went = !still || died.includes(phase) || died.includes(`D${night}`)
+      || back;
     // Every seat holding it: three Village Idiots are all drunk.
     const at = still ? phase : began;
     const had = new Set();
@@ -1754,8 +1758,17 @@ export const PIXIE_NOT_GRANTED = "Pixie, not granted";
 /** [the Townsfolk, the first night it works as one] for a dealt Pixie mad
  * about it, or null; the night is null while its holder lives. Madness is
  * the claim (11.10.2026). See solver.py. */
+/** Dealt the Pixie, or a Philosopher that took it (ruling C, 13.10.2026).
+ * See solver.py. */
+export function isPixie(world, state, seat) {
+  if (world.roles[seat] === "Pixie") return true;
+  const taken = (state.philosophies() || {})[seat];
+  return !!(taken && taken[0] === "Pixie"
+            && world.roles[seat] === "Philosopher");
+}
+
 export function pixieGain(world, state, seat) {
-  if (world.roles[seat] !== "Pixie") return null;
+  if (!isPixie(world, state, seat)) return null;
   const claim = state.claims[seat];
   let learned = null;
   for (const info of state.infos)
@@ -1780,7 +1793,7 @@ export function pixieGain(world, state, seat) {
 /** Is this seat a Pixie claiming the Townsfolk it was shown? Its madness,
  * which costs a world nothing. */
 export function madPixie(world, state, seat) {
-  if (world.roles[seat] !== "Pixie") return false;
+  if (!isPixie(world, state, seat)) return false;
   const claim = state.claims[seat];
   if (!claim || CHARACTERS[claim]?.team !== "townsfolk") return false;
   for (const info of state.infos)
@@ -1794,10 +1807,10 @@ export function madPixie(world, state, seat) {
 /** A Pixie the Storyteller judged not mad enough: on offer from the night
  * it would have started, and it costs. */
 sourceRule(function aPixieMayBeDenied(world, state, night) {
-  if (!inBag(state, "Pixie")) return [];
+  if (!onBoard(state, "Pixie")) return [];
   const out = [];
   world.roles.forEach((role, seat) => {
-    if (role !== "Pixie") return;
+    if (!isPixie(world, state, seat)) return;
     const got = pixieGain(world, state, seat);
     if (got === null || got[1] === null || night < got[1]) return;
     out.push(new Source(PIXIE_NOT_GRANTED, new Set([seat]),

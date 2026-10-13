@@ -22,7 +22,7 @@
 // cache-first, so with a fixed version string a changed page is never
 // fetched, never installed and never activated — the old copy is served
 // for ever and the update looks like it failed to upload.
-const VERSION = "clocktower-b2d0a42e71d2";
+const VERSION = "clocktower-a86825563e79";
 
 // Listed rather than discovered. A service worker that caches whatever it
 // happens to see ends up with half an application and no way to tell.

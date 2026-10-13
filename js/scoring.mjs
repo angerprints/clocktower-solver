@@ -20,11 +20,13 @@ import {LISTENING, beginReads, differOnlyUnasked, endReads, listenForSides,
 import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
 import {Timeline, change, turnedEvil} from "./worlds.mjs";
-import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, pixieGain, survivalsOf,
-        teaLadyFailedAtTheGallows} from "./characters.rules.mjs";
+import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
+        pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
+  from "./characters.rules.mjs";
 import {actsAsCultLeader, besideAlive, cultSides, fallsAs, fauxPawLycanthrope,
         knowsItTurnedEvil, sideOpen,
-        livingNeighbours, takenByAPhilosopher, wentOnAfter} from "./info.mjs";
+        livingNeighbours, takenByAPhilosopher, tookIt, wentOnAfter}
+  from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
 // outcomes rather than true-or-false, because two of them are neither.
@@ -159,7 +161,9 @@ function moversIn(world, state) {
   const claimed = barberClaimants(state);
   const barberDied = deaths.some(([s]) => claimed.has(Number(s)));
   const roles = new Set([...world.roles, ...made]);
-  if (takenByAPhilosopher(state, "Barber")) roles.add("Barber");
+  // And whatever a Philosopher took (13.10.2026). See solver.py.
+  for (const [taken] of Object.values(state.philosophies() || {}))
+    roles.add(taken);
   let count = (swapped ? 1 : 0) + (made.size ? 1 : 0);
   // A Huntsman that chose, and may have found the Damsel (10.10.2026).
   if (roles.has("Huntsman")
@@ -167,7 +171,8 @@ function moversIn(world, state) {
   for (const [key, needs] of [["Barber", barberDied], ["Farmer", atNight],
                               ["FangGu", atNight], ["Ogre", true]])
     if (needs && roles.has(key)
-        && (key === "Barber" ? barberOnBoard(state) : inBag(state, key))) count++;
+        && (key === "Barber" ? barberOnBoard(state) : onBoard(state, key)))
+      count++;
   return count;
 }
 
@@ -650,11 +655,11 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
  * she said she became, or any. Or she stayed, and then the Huntsman was
  * not working, which its row asks for (10.10.2026). See solver.py. */
 transitionRule(function aHuntsmanFindsTheDamsel(world, state) {
-  if (!inBag(state, "Huntsman")) return [[[], 1.0]];
+  if (!onBoard(state, "Huntsman")) return [[[], 1.0]];
   for (const info of state.infos) {
     if (info.type !== "HuntsmanChoice") continue;
     const night = info.night, phase = `N${night}`;
-    if (world.roleAt(info.player, phase) !== "Huntsman") continue;
+    if (!hasAbility(world, state, info.player, "Huntsman", phase)) continue;
     const mine = state.infos.indexOf(info);
     if (state.infos.some((o, idx) => idx < mine && o.type === "HuntsmanChoice"
         && o.player === info.player && o.night <= night)) continue;
@@ -700,7 +705,7 @@ function couldBeGood(world, seat, phase) {
  * seat goes on being a Farmer in the base world after it dies.
  */
 transitionRule(function aFarmerHandsItOn(world, state) {
-  if (!inBag(state, "Farmer")) return [[[], 1.0]];
+  if (!onBoard(state, "Farmer")) return [[[], 1.0]];
   let stories = [[[], 1.0]];
   const latest = phaseIndex(state.finalPhase());
   for (let night = 1; phaseIndex(`N${night}`) <= latest; night++) {
@@ -710,7 +715,9 @@ transitionRule(function aFarmerHandsItOn(world, state) {
       const view = changes.length ? new Timeline(world, changes) : world;
       const holders = [];
       for (let p = 0; p < state.nPlayers; p++)
-        if (view.roleAt(p, phase) === "Farmer" &&
+        // And a Philosopher that took it (13.10.2026).
+        if ((view.roleAt(p, phase) === "Farmer"
+             || tookIt(view, state, p, "Farmer", phase)) &&
             state.diedAt(p).includes(phase)) holders.push(p);
       if (!holders.length) {
         grown.push([changes, cost]);
@@ -761,9 +768,26 @@ function evilToTheOgre(view, seat, phase) {
  * evil is weighed evil seats against good ones. See solver.py.
  */
 transitionRule(function anOgrePicksASide(world, state) {
-  if (!inBag(state, "Ogre")) return [[[], 1.0]];
-  const ogre = world.findAt("Ogre", "N1");
-  if (ogre === null || ogre === undefined) return [[[], 1.0]];
+  if (!onBoard(state, "Ogre")) return [[[], 1.0]];
+  // The holder, and a Philosopher that took it (ruling G, 13.10.2026).
+  const ogres = [world.findAt("Ogre", "N1")];
+  for (const who of Object.keys(state.philosophies() || {}).map(Number)
+         .sort((a, b) => a - b))
+    if (tookIt(world, state, who, "Ogre", "N1")) ogres.push(who);
+  let stories = [[[], 1.0]];
+  for (const ogre of ogres) {
+    if (ogre === null || ogre === undefined) continue;
+    const mine = anOgresSide(world, state, ogre);
+    const grown = [];
+    for (const [changes, cost] of stories)
+      for (const [more, price] of mine)
+        grown.push([[...changes, ...more], cost * price]);
+    stories = grown;
+  }
+  return stories;
+});
+
+function anOgresSide(world, state, ogre) {
   const turn = [change("D1", ogre, null, "evil")];
 
   const picked = state.infos.filter(
@@ -781,7 +805,7 @@ transitionRule(function anOgrePicksASide(world, state) {
   }
   if (good === 0) return [[turn, 1.0]];
   return [[[], 1.0], [turn, Math.min(1.0, evil / good)]];
-});
+}
 
 /** "[1 Townsfolk is evil]": with a Bounty Hunter dealt, one Townsfolk is
  * evil from the setup, and it may be the Bounty Hunter itself (table
@@ -1269,27 +1293,42 @@ function plainFailures(world, state, outcome = {}) {
   // whatever they are and as often as the Storyteller likes. That was
   // missing altogether: with no Professor in the world the board was
   // thrown out, and a second resurrection always was (02.10.2026).
-  let byProfessor = 0;
-  for (const [seatKey, phases] of Object.entries(state.resurrections || {})) {
-    const seat = Number(seatKey);
+  // Once per game for each Professor, and again for one raised since, in
+  // the order they happened (13.10.2026). See solver.py.
+  const used = new Map();
+  const raises = [];
+  for (const [seatKey, phases] of Object.entries(state.resurrections || {}))
     for (const phase of phases) {
       const night = parseInt(phase.slice(1), 10);
-      if (!Number.isFinite(night)) continue;
+      if (Number.isFinite(night)) raises.push([night, Number(seatKey), phase]);
+    }
+  raises.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  for (const [night, seat, phase] of raises) {
+    {
       const shabaloth = inBag(state, "Shabaloth")
         ? world.findAt("Shabaloth", phase) : null;
       if (shabaloth !== null && night >= 3 &&
           state.aliveSet(phase).has(shabaloth)) continue;
-      const prof = world.findAt("Professor", phase);
-      if (prof === null || !inBag(state, "Professor")) return null;
+      // The holder, or a Philosopher that took it, ahead (13.10.2026).
+      let prof = world.findAt("Professor", phase);
+      const back = returnedAtPhase(state, phase);
+      for (const who of Object.keys(state.philosophies() || {}).map(Number)
+             .sort((a, b) => b - a))
+        if (state.aliveSet(phase).has(who) && who !== seat && !back.has(who)
+            && tookIt(world, state, who, "Professor", phase)) prof = who;
+      if (prof === null || !onBoard(state, "Professor")) return null;
       if (!state.aliveSet(phase).has(prof) || night < 2) return null;
       const raised = world.roleAt(seat, phase);
       if (TEAM[raised] !== "townsfolk" &&
           !CHARACTERS[raised].registers.includes("townsfolk")) return null;
       (working[night] = working[night] || new Set()).add(prof);
-      byProfessor += 1;
+      if (used.has(prof) && !((state.resurrections || {})[prof] || []).some(
+            at => used.get(prof) < parseInt(String(at).slice(1), 10)
+                  && parseInt(String(at).slice(1), 10) <= night))
+        return null;                       // once per game
+      used.set(prof, night);
     }
   }
-  if (byProfessor > 1) return null;       // once per game
 
   // An execution that killed nobody needs a reason, and the reason has to
   // have been working.
@@ -1412,7 +1451,9 @@ function plainFailures(world, state, outcome = {}) {
     // A Pixie mad about this character: made up until its holder dies,
     // at no cost, and its own from the night after (11.10.2026).
     if (held === ABSENT && seat !== null
-        && world.roleAt(seat, phase) === "Pixie" && inBag(state, "Pixie")) {
+        && (world.roleAt(seat, phase) === "Pixie"
+            || tookIt(world, state, seat, "Pixie", phase))
+        && onBoard(state, "Pixie")) {
       const got = pixieGain(world, state, seat);
       if (got !== null && got[0] === role) {
         if (got[1] !== null && info.night >= got[1])
@@ -2003,6 +2044,14 @@ function planAsGiven(world, state, failures, forbidden, without = null,
     previous = {...previous, ...got.hits};
   }
   return total;
+}
+
+/** Who came back to life at this moment. */
+function returnedAtPhase(state, phase) {
+  const out = new Set();
+  for (const [seat, phases] of Object.entries(state.resurrections || {}))
+    if (phases.includes(phase)) out.add(Number(seat));
+  return out;
 }
 
 /** Every moment the game was going on with two or fewer on the board as

@@ -27,6 +27,7 @@ Acrobat.
 Group 3, the ones that disturb: Minstrel, Preacher, Goon, Puzzlemaster.
 """
 
+import collections
 import json
 import pathlib
 import random
@@ -232,6 +233,9 @@ class BothLanguagesAgree(SolverTest):
     def test_on_the_boards_of_group_three(self):
         self.agree(_payloads_3())
 
+    def test_on_the_boards_of_group_four(self):
+        self.agree(_payloads_4())
+
     def agree(self, cases):
         import app
         script = ("import {solveBoard} from './js/api.mjs';"
@@ -425,6 +429,131 @@ def _payloads_3():
     return out
 
 
+GROUP_4 = ("Farmer", "Professor", "Huntsman", "Pixie", "CultLeader", "Ogre")
+
+CHANGE_IDS = ["philosopher", "farmer", "professor", "huntsman", "pixie",
+              "cultleader", "ogre", "damsel", "chef", "empath",
+              "washerwoman", "investigator", "monk", "drunk", "saint",
+              "recluse", "poisoner", "scarletwoman", "spy", "imp"]
+CHANGERS = scripts.from_ids("Philosopher changers", CHANGE_IDS)
+#      0       1         2              3                4
+CL = ["Chef", "Empath", "Philosopher", "ScarletWoman", "Washerwoman",
+      "Investigator", "Imp"]                                  # 5, 6
+
+
+def cboard(roles, rows=(), **kw):
+    kw.setdefault("days_done", {1, 2})
+    st = GameState(n_players=len(roles), script=CHANGERS,
+                   claims=dict(enumerate(roles)), infos=list(rows), **kw)
+    return World(tuple(roles), (None,) * len(roles)), st
+
+
+def ccost(roles, rows=(), **kw):
+    return S.explanation_cost(*cboard(roles, rows, **kw))
+
+
+class GroupFourInTheSolver(SolverTest):
+    """What the Philosopher took changes a character or a side. With a
+    Chef taken, nothing changes."""
+
+    def test_its_professor_raises_the_dead(self):
+        back = {"deaths": {0: ("N2",)}, "resurrections": {0: ("N3",)},
+                "days_done": {1, 2, 3}}
+        self.assertIsNotNone(ccost(R, [took("Professor")], **back))
+        self.assertIsNone(ccost(R, [took("Chef")], **back))
+
+    def test_the_real_professor_raises_its_philosopher(self):
+        # Sober while it chose, drunk again once the Philosopher stood up
+        # (gate seed 2478).
+        roles = list(R)
+        roles[2] = "Professor"
+        back = {"deaths": {3: ("N2",)}, "resurrections": {3: ("N3",)},
+                "days_done": {1, 2, 3}}
+        self.assertIsNotNone(ccost(roles, [took("Professor")], **back))
+
+    def test_whoever_its_professor_raised_slept_through_earlier_turns(self):
+        # An Exorcist raised on night two was dead at its own turn, which
+        # comes before the Professor's (XNINEB seed 881).
+        from botc import waking
+        roles = list(R)
+        roles[0] = "Exorcist"
+        back = {"deaths": {0: ("E1",)}, "resurrections": {0: ("N2",)}}
+        world, st = cboard(roles, [took("Professor")], **back)
+        self.assertEqual(waking._came_back_tonight(world, st, 0, 2),
+                         waking.ASLEEP)
+        world, st = cboard(roles, [took("Chef")], **back)
+        self.assertIsNone(waking._came_back_tonight(world, st, 0, 2))
+
+    def test_its_farmer_hands_the_character_on(self):
+        from botc.worlds import Change
+        world, st = cboard(R, [took("Farmer")], deaths={3: ("N2",)})
+        stories = [c for c, _w in S.a_farmer_hands_it_on(world, st)]
+        self.assertIn((Change("D2", 0, "Farmer", None),), stories)
+        world, st = cboard(R, [took("Chef")], deaths={3: ("N2",)})
+        self.assertEqual(S.a_farmer_hands_it_on(world, st), [((), 1.0)])
+
+    def test_its_huntsman_finds_the_damsel(self):
+        roles = list(R) + ["Damsel"]            # eight: one Outsider
+        rows = [I.HuntsmanChoice(2, 3, target=7)]
+        world, st = cboard(roles, [took("Huntsman")] + rows)
+        found = S.a_huntsman_finds_the_damsel(world, st)
+        self.assertTrue(any(c and c[0].seat == 7 for c, _w in found))
+        self.assertIsNotNone(S.explanation_cost(world, st))
+        world, st = cboard(roles, [took("Chef")] + rows)
+        self.assertEqual(S.a_huntsman_finds_the_damsel(world, st),
+                         [((), 1.0)])
+
+    def test_its_pixie_learns_one_in_play(self):
+        self.assertIsNotNone(ccost(R, [took("Pixie"), I.PixieLearned(
+            1, 3, role="Empath")], days_done={1}))
+        self.assertIsNone(ccost(R, [took("Pixie"), I.PixieLearned(
+            1, 3, role="Monk")], days_done={1}))
+
+    def test_its_ogre_takes_the_side_it_chose(self):
+        # Ruling G: it chooses the night it took it. The Empath beside it
+        # counts it.
+        rows = [I.OgreChoice(1, 2, target=3), I.Empath(2, 1, count=1)]
+        self.assertIsNotNone(ccost(CL, [took("Ogre", 2)] + rows))
+        self.assertIsNone(ccost(CL, [took("Chef", 2)] + rows))
+
+    def test_its_cult_leader_takes_a_neighbours_side(self):
+        rows = [I.Empath(2, 1, count=1)]
+        self.assertIsNotNone(ccost(CL, [took("CultLeader", 2)] + rows))
+        self.assertIsNone(ccost(CL, [took("Chef", 2)] + rows))
+
+
+def _payloads_4():
+    def pay(rows, events, roles, days=(1, 2)):
+        players = [{"claim": c, "events": events.get(i, [])}
+                   for i, c in enumerate(roles)]
+        return {"n_players": len(roles), "players": players, "infos": rows,
+                "script": {"name": CHANGERS.name, "characters": CHANGE_IDS},
+                "days_done": list(days)}
+
+    def take(role, seat=3):
+        return {"type": "PhilosopherChoice", "night": 1, "player": seat,
+                "role": role}
+    prof = list(R)
+    prof[2] = "Professor"
+    damsel = list(R) + ["Damsel"]        # eight players: one Outsider
+    out = []
+    for role in GROUP_4 + ("Chef",):
+        out.append(pay([take(role)], {0: ["N2", "R3"]}, R, days=(1, 2, 3)))
+        out.append(pay([take(role)], {3: ["N2", "R3"]}, prof,
+                       days=(1, 2, 3)))
+        out.append(pay([take(role)], {3: ["N2"]}, R))
+        out.append(pay([take(role), {"type": "HuntsmanChoice", "night": 2,
+                                     "player": 3, "target": 7}], {}, damsel))
+        out.append(pay([take(role), {"type": "PixieLearned", "night": 1,
+                                     "player": 3, "role": "Monk"}], {}, R,
+                       days=(1,)))
+        out.append(pay([take(role, 2), {"type": "OgreChoice", "night": 1,
+                                        "player": 2, "target": 3},
+                        {"type": "Empath", "night": 2, "player": 1,
+                         "count": 1}], {}, CL))
+    return out
+
+
 class TheSimulatorPlaysThem(SolverTest):
     """L, and the gate in small: games that must hold a Philosopher and
     every character of group 1."""
@@ -510,6 +639,18 @@ class TheSimulatorPlaysThem(SolverTest):
         self.assertGreater(sermons, 0)
         self.assertGreater(guesses, 0)
         self.assertGreater(turned, 0)
+
+    def test_the_true_world_is_kept_with_group_four(self):
+        self.kept(GROUP_4)
+
+    def test_a_philosopher_changes_with_what_it_took(self):
+        rows = collections.Counter()
+        for _seed, _script, _rng, deal, heard in self.games(group=GROUP_4):
+            for row in heard:
+                if row.player in deal.philosophies:
+                    rows[type(row).__name__] += 1
+        for name in ("OgreChoice", "PixieLearned", "HuntsmanChoice"):
+            self.assertGreater(rows[name], 0, rows)
 
     def kept(self, group):
         import claims as C

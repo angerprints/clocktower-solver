@@ -64064,14 +64064,14 @@
     "game_over": true
    },
    "expect": {
-    "valid": 0,
+    "valid": 100,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 0.0,
+      "evil_pct": 31.9286,
       "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "drunk_pct": 2.4573,
+      "lying_pct": 34.3858
      },
      {
       "evil_pct": 0.0,
@@ -64080,10 +64080,22 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 0.0,
+      "evil_pct": 15.2349,
       "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "drunk_pct": 24.2353,
+      "lying_pct": 39.4702
+     },
+     {
+      "evil_pct": 7.0624,
+      "demon_pct": 0.0,
+      "drunk_pct": 10.6625,
+      "lying_pct": 17.725
+     },
+     {
+      "evil_pct": 50.018,
+      "demon_pct": 27.1309,
+      "drunk_pct": 1.1165,
+      "lying_pct": 51.1345
      },
      {
       "evil_pct": 0.0,
@@ -64092,40 +64104,35 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     },
-     {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     },
-     {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "evil_pct": 95.7561,
+      "demon_pct": 72.8691,
+      "drunk_pct": 1.1165,
+      "lying_pct": 96.8726
      }
     ],
-    "diagnosis": {
-     "culprits": [
-      {
-       "kind": "information",
-       "label": "PhilosopherChoice on night 1, seat 6"
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 0.9727,
+       "Assassin": 0.0222,
+       "Godfather": 0.0052
       },
-      {
-       "kind": "death",
-       "label": "seat 3 dying"
-      },
-      {
-       "kind": "death",
-       "label": "seat 4 dying"
+      "5": {
+       "Demon": 0.9727,
+       "Assassin": 0.0222,
+       "Godfather": 0.0052
       }
-     ],
-     "complete": true
+     },
+     "2": {
+      "2": {
+       "Demon": 0.9544,
+       "Assassin": 0.0456
+      },
+      "3": {
+       "Demon": 0.9544,
+       "Assassin": 0.0456
+      }
+     }
     }
    }
   },
@@ -76873,6 +76880,8554 @@
       "5": {
        "Yaggababble, again": 0.6,
        "Demon": 0.4
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-farmer-raised",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Farmer"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-farmer-raised-itself",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Farmer"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-farmer-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Farmer"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-farmer-hunts",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Farmer"
+     },
+     {
+      "type": "HuntsmanChoice",
+      "night": 2,
+      "player": 3,
+      "target": 7
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-farmer-learns",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Farmer"
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 3,
+      "role": "Monk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-farmer-picks-a-side",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Farmer"
+     },
+     {
+      "type": "OgreChoice",
+      "night": 1,
+      "player": 2,
+      "target": 3
+     },
+     {
+      "type": "Empath",
+      "night": 2,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-professor-raised",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Professor"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-professor-raised-itself",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Professor"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-professor-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Professor"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-professor-hunts",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Professor"
+     },
+     {
+      "type": "HuntsmanChoice",
+      "night": 2,
+      "player": 3,
+      "target": 7
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-professor-learns",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Professor"
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 3,
+      "role": "Monk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-professor-picks-a-side",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Professor"
+     },
+     {
+      "type": "OgreChoice",
+      "night": 1,
+      "player": 2,
+      "target": 3
+     },
+     {
+      "type": "Empath",
+      "night": 2,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-huntsman-raised",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Huntsman"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-huntsman-raised-itself",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Huntsman"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-huntsman-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Huntsman"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-huntsman-hunts",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Huntsman"
+     },
+     {
+      "type": "HuntsmanChoice",
+      "night": 2,
+      "player": 3,
+      "target": 7
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8382
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8382
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8382
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.7353
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8382
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 8.2721,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-huntsman-learns",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Huntsman"
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 3,
+      "role": "Monk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-huntsman-picks-a-side",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Huntsman"
+     },
+     {
+      "type": "OgreChoice",
+      "night": 1,
+      "player": 2,
+      "target": 3
+     },
+     {
+      "type": "Empath",
+      "night": 2,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-pixie-raised",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Pixie"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-pixie-raised-itself",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Pixie"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-pixie-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Pixie"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-pixie-hunts",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Pixie"
+     },
+     {
+      "type": "HuntsmanChoice",
+      "night": 2,
+      "player": 3,
+      "target": 7
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-pixie-learns",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Pixie"
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 3,
+      "role": "Monk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "PhilosopherChoice on night 1, seat 4"
+      },
+      {
+       "kind": "information",
+       "label": "PixieLearned on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-pixie-picks-a-side",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Pixie"
+     },
+     {
+      "type": "OgreChoice",
+      "night": 1,
+      "player": 2,
+      "target": 3
+     },
+     {
+      "type": "Empath",
+      "night": 2,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-cultleader-raised",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "CultLeader"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-cultleader-raised-itself",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "CultLeader"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-cultleader-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "CultLeader"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-cultleader-hunts",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "CultLeader"
+     },
+     {
+      "type": "HuntsmanChoice",
+      "night": 2,
+      "player": 3,
+      "target": 7
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-cultleader-learns",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "CultLeader"
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 3,
+      "role": "Monk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-cultleader-picks-a-side",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "CultLeader"
+     },
+     {
+      "type": "OgreChoice",
+      "night": 1,
+      "player": 2,
+      "target": 3
+     },
+     {
+      "type": "Empath",
+      "night": 2,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 50.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-ogre-raised",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Ogre"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-ogre-raised-itself",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Ogre"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 32.716,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-ogre-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Ogre"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 32.7273,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-ogre-hunts",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Ogre"
+     },
+     {
+      "type": "HuntsmanChoice",
+      "night": 2,
+      "player": 3,
+      "target": 7
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 28.0519,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-ogre-learns",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Ogre"
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 3,
+      "role": "Monk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 33.3333,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-ogre-picks-a-side",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Ogre"
+     },
+     {
+      "type": "OgreChoice",
+      "night": 1,
+      "player": 2,
+      "target": 3
+     },
+     {
+      "type": "Empath",
+      "night": 2,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-chef-raised",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-chef-raised-itself",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-chef-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-chef-hunts",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "HuntsmanChoice",
+      "night": 2,
+      "player": 3,
+      "target": 7
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 6,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8182
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-chef-learns",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 3,
+      "role": "Monk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 5,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8519
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-7-philosopher-chef-picks-a-side",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Chef"
+     },
+     {
+      "type": "OgreChoice",
+      "night": 1,
+      "player": 2,
+      "target": 3
+     },
+     {
+      "type": "Empath",
+      "night": 2,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher changers",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "damsel",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-played-105",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "CultLeader",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "VillageIdiot",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Farmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Undertaker",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [
+       "D1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Ogre"
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 1,
+      "player": 1,
+      "target": 5,
+      "evil": true
+     },
+     {
+      "type": "OgreChoice",
+      "night": 1,
+      "player": 3,
+      "target": 4
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "xaan",
+      "snakecharmer",
+      "tealady",
+      "villageidiot",
+      "undertaker",
+      "washerwoman",
+      "flowergirl",
+      "gossip",
+      "puzzlemaster",
+      "moonchild",
+      "damsel",
+      "devilsadvocate",
+      "pithag",
+      "godfather",
+      "zombuul",
+      "lleech",
+      "vigormortis",
+      "fanggu"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 1760,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 50.3439,
+      "demon_pct": 15.2363,
+      "drunk_pct": 0.0,
+      "lying_pct": 29.8944
+     },
+     {
+      "evil_pct": 26.3339,
+      "demon_pct": 13.167,
+      "drunk_pct": 0.0,
+      "lying_pct": 28.866
+     },
+     {
+      "evil_pct": 28.5945,
+      "demon_pct": 15.2363,
+      "drunk_pct": 0.0,
+      "lying_pct": 29.8944
+     },
+     {
+      "evil_pct": 29.1854,
+      "demon_pct": 2.7347,
+      "drunk_pct": 0.0,
+      "lying_pct": 5.8548
+     },
+     {
+      "evil_pct": 24.5347,
+      "demon_pct": 9.2985,
+      "drunk_pct": 0.0,
+      "lying_pct": 25.9105
+     },
+     {
+      "evil_pct": 58.1822,
+      "demon_pct": 29.0911,
+      "drunk_pct": 0.0,
+      "lying_pct": 58.9283
+     },
+     {
+      "evil_pct": 28.5945,
+      "demon_pct": 15.2363,
+      "drunk_pct": 0.0,
+      "lying_pct": 29.8944
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-changers-played-76",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "sometimes",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Farmer",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Acrobat",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Farmer",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Pixie"
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 2,
+      "role": "CultLeader"
+     },
+     {
+      "type": "HuntsmanChoice",
+      "night": 1,
+      "player": 1,
+      "target": 4
+     },
+     {
+      "type": "CultCalled",
+      "night": 1,
+      "player": 3,
+      "joined": [
+       2,
+       5,
+       6
+      ]
+     },
+     {
+      "type": "Acrobat",
+      "night": 2,
+      "player": 5,
+      "target": 1
+     },
+     {
+      "type": "JugglerInfo",
+      "night": 2,
+      "player": 6,
+      "guesses": [
+       {
+        "player": 4,
+        "role": "SnakeCharmer"
+       }
+      ],
+      "count": 0
+     },
+     {
+      "type": "DamselGuess",
+      "night": 2,
+      "player": 1,
+      "target": 0
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "marionette",
+      "snakecharmer",
+      "juggler",
+      "acrobat",
+      "flowergirl",
+      "chef",
+      "noble",
+      "mayor",
+      "tinker",
+      "puzzlemaster",
+      "damsel",
+      "vizier",
+      "mastermind",
+      "scarletwoman",
+      "fanggu",
+      "po",
+      "shabaloth",
+      "yaggababble"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 176,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 76.1977,
+      "demon_pct": 54.3112,
+      "drunk_pct": 5.4412,
+      "lying_pct": 70.7759
+     },
+     {
+      "evil_pct": 99.2907,
+      "demon_pct": 44.7415,
+      "drunk_pct": 33.7546,
+      "lying_pct": 66.2454
+     },
+     {
+      "evil_pct": 22.2696,
+      "demon_pct": 0.0,
+      "drunk_pct": 9.7213,
+      "lying_pct": 12.5561
+     },
+     {
+      "evil_pct": 2.8097,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.89,
+      "demon_pct": 0.4635,
+      "drunk_pct": 0.0,
+      "lying_pct": 50.0259
+     },
+     {
+      "evil_pct": 0.4418,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0041,
+      "lying_pct": 0.4572
+     },
+     {
+      "evil_pct": 0.9102,
+      "demon_pct": 0.4838,
+      "drunk_pct": 0.0,
+      "lying_pct": 50.0462
+     }
+    ],
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 0.9276,
+       "Yaggababble, again": 0.0724
+      },
+      "4": {
+       "Demon": 0.9276,
+       "Yaggababble, again": 0.0724
+      },
+      "6": {
+       "Demon": 0.9276,
+       "Yaggababble, again": 0.0724
+      }
+     },
+     "2": {
+      "5": {
+       "Demon": 0.4914,
+       "Acrobat": 0.4868,
+       "Yaggababble, again": 0.0217
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-played-345",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Alsaahir",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Banshee",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Noble",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 4,
+      "role": "Huntsman"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 5,
+      "target": 6,
+      "swapped": false
+     },
+     {
+      "type": "Noble",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 5,
+      "c": 4
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 5,
+      "target": 4,
+      "swapped": false
+     },
+     {
+      "type": "HuntsmanChoice",
+      "night": 2,
+      "player": 4,
+      "target": 2
+     },
+     {
+      "type": "Became",
+      "night": 2,
+      "player": 2,
+      "role": "Banshee",
+      "was": "Damsel"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 5,
+      "target": 2,
+      "swapped": false
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "marionette",
+      "snakecharmer",
+      "alsaahir",
+      "noble",
+      "undertaker",
+      "acrobat",
+      "seamstress",
+      "banshee",
+      "mutant",
+      "tinker",
+      "damsel",
+      "harpy",
+      "witch",
+      "spy",
+      "lleech",
+      "fanggu",
+      "pukka",
+      "zombuul"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 1835,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 3.2975,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.1228,
+      "lying_pct": 23.7178
+     },
+     {
+      "evil_pct": 54.2123,
+      "demon_pct": 45.3981,
+      "drunk_pct": 0.0077,
+      "lying_pct": 65.5055
+     },
+     {
+      "evil_pct": 22.2602,
+      "demon_pct": 7.4019,
+      "drunk_pct": 1.0925,
+      "lying_pct": 39.7397
+     },
+     {
+      "evil_pct": 57.8604,
+      "demon_pct": 47.2,
+      "drunk_pct": 0.4208,
+      "lying_pct": 79.1522
+     },
+     {
+      "evil_pct": 6.3762,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.4066,
+      "lying_pct": 11.9218
+     },
+     {
+      "evil_pct": 0.6093,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.8186
+     },
+     {
+      "evil_pct": 57.2345,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.42,
+      "lying_pct": 99.58
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "5": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-played-826",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Acrobat",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Farmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 6,
+      "role": "Farmer"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "swapped": false
+     },
+     {
+      "type": "HuntsmanChoice",
+      "night": 1,
+      "player": 5,
+      "target": 0
+     },
+     {
+      "type": "Became",
+      "night": 1,
+      "player": 0,
+      "role": "Acrobat",
+      "was": "Damsel"
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 2,
+      "role": "Huntsman"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 4,
+      "target": 0
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 3,
+      "target": 1,
+      "swapped": true
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 1,
+      "target": 5,
+      "swapped": false
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "xaan",
+      "snakecharmer",
+      "innkeeper",
+      "savant",
+      "virgin",
+      "acrobat",
+      "steward",
+      "washerwoman",
+      "puzzlemaster",
+      "mutant",
+      "damsel",
+      "eviltwin",
+      "cerenovus",
+      "mastermind",
+      "pukka",
+      "yaggababble",
+      "lleech",
+      "vortox"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 567,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 19.4961,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.6657
+     },
+     {
+      "evil_pct": 45.8814,
+      "demon_pct": 28.9237,
+      "drunk_pct": 0.0,
+      "lying_pct": 54.6358
+     },
+     {
+      "evil_pct": 6.2901,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 45.8814,
+      "demon_pct": 28.9237,
+      "drunk_pct": 0.0,
+      "lying_pct": 54.6358
+     },
+     {
+      "evil_pct": 0.9748,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 15.5121
+     },
+     {
+      "evil_pct": 80.6041,
+      "demon_pct": 42.1526,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.8721,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 6.8181
+     }
+    ],
+    "blame": {
+     "2": {
+      "4": {
+       "Demon": 0.9292,
+       "Yaggababble, again": 0.0708
+      }
+     },
+     "3": {
+      "6": {
+       "Demon": 0.9292,
+       "Yaggababble, again": 0.0708
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-played-99",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Soldier",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Balloonist",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X1",
+       "R2",
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Soldier",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Professor"
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 0,
+      "role": "Huntsman"
+     },
+     {
+      "type": "VizierAnnounced",
+      "night": 1,
+      "player": 4
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "widow",
+      "snakecharmer",
+      "acrobat",
+      "fool",
+      "balloonist",
+      "soldier",
+      "mayor",
+      "ravenkeeper",
+      "recluse",
+      "goon",
+      "damsel",
+      "vizier",
+      "harpy",
+      "mezepheles",
+      "vortox",
+      "zombuul",
+      "ojo",
+      "nodashii"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 3,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 5.4374
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.7092,
+      "demon_pct": 0.7092,
+      "drunk_pct": 0.0,
+      "lying_pct": 95.2719
+     },
+     {
+      "evil_pct": 99.2908,
+      "demon_pct": 99.2908,
+      "drunk_pct": 0.0,
+      "lying_pct": 99.2908
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "4": {
+       "Demon": 1.0
+      }
+     },
+     "4": {
+      "5": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-changers-played-143",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "X1",
+       "R3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Soldier",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Librarian",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Professor"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 1,
+      "target": 2,
+      "swapped": false
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 6,
+      "a": null,
+      "b": null,
+      "role": ""
+     },
+     {
+      "type": "WidowKnown",
+      "night": 1,
+      "player": 5
+     },
+     {
+      "type": "DamselGuess",
+      "night": 2,
+      "player": 2,
+      "target": 0
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 4,
+      "player": 1,
+      "target": 6,
+      "swapped": false
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "farmer",
+      "professor",
+      "huntsman",
+      "pixie",
+      "cultleader",
+      "ogre",
+      "pithag",
+      "snakecharmer",
+      "librarian",
+      "soldier",
+      "virgin",
+      "mayor",
+      "fortuneteller",
+      "poppygrower",
+      "heretic",
+      "snitch",
+      "damsel",
+      "widow",
+      "godfather",
+      "scarletwoman",
+      "ojo",
+      "po",
+      "vigormortis",
+      "zombuul"
+     ]
+    },
+    "quiet_nights": [
+     2,
+     3,
+     4
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 1133,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 24.3341,
+      "demon_pct": 16.4946,
+      "drunk_pct": 0.0,
+      "lying_pct": 25.1487
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.5387
+     },
+     {
+      "evil_pct": 49.5458,
+      "demon_pct": 28.3574,
+      "drunk_pct": 0.0,
+      "lying_pct": 50.472
+     },
+     {
+      "evil_pct": 30.6033,
+      "demon_pct": 10.6582,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.4179
+     },
+     {
+      "evil_pct": 44.8926,
+      "demon_pct": 30.5102,
+      "drunk_pct": 0.0,
+      "lying_pct": 45.564
+     },
+     {
+      "evil_pct": 34.4852,
+      "demon_pct": 8.0343,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.6278
+     },
+     {
+      "evil_pct": 16.139,
+      "demon_pct": 5.9453,
+      "drunk_pct": 0.0,
+      "lying_pct": 17.6803
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-nine-bmr-played-philosopher-professor",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [
+       "X1",
+       "R2",
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Lunatic",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 7,
+      "role": "Professor"
+     },
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 4,
+      "role": "Professor"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 1,
+      "player": 2,
+      "a": 0,
+      "b": 7,
+      "count": 1
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 2,
+      "player": 6,
+      "target": 5,
+      "role": "Po"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 2,
+      "a": 0,
+      "b": 3,
+      "count": 1
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 3,
+      "player": 6,
+      "target": 4,
+      "role": "Courtier"
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 3,
+      "player": 0,
+      "target": 5
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 3,
+      "player": 2,
+      "a": 6,
+      "b": 7,
+      "count": 1
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 4,
+      "player": 6,
+      "target": 7,
+      "role": "Philosopher"
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 4,
+      "player": 2,
+      "a": 4,
+      "b": 5,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Ninth three, like Bad Moon Rising",
+     "characters": [
+      "grandmother",
+      "sailor",
+      "chambermaid",
+      "exorcist",
+      "innkeeper",
+      "gambler",
+      "gossip",
+      "courtier",
+      "professor",
+      "philosopher",
+      "highpriestess",
+      "general",
+      "fisherman",
+      "goon",
+      "lunatic",
+      "tinker",
+      "moonchild",
+      "godfather",
+      "devilsadvocate",
+      "assassin",
+      "mastermind",
+      "zombuul",
+      "pukka",
+      "shabaloth",
+      "po"
+     ]
+    },
+    "quiet_nights": [
+     3
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 1929,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 16.0351,
+      "demon_pct": 0.0108,
+      "drunk_pct": 16.9244,
+      "lying_pct": 32.9595
+     },
+     {
+      "evil_pct": 2.8238,
+      "demon_pct": 1.2644,
+      "drunk_pct": 0.5198,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 71.6745,
+      "demon_pct": 0.0472,
+      "drunk_pct": 28.3255,
+      "lying_pct": 71.6745
+     },
+     {
+      "evil_pct": 1.2139,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.3342,
+      "lying_pct": 1.5481
+     },
+     {
+      "evil_pct": 93.3817,
+      "demon_pct": 91.0112,
+      "drunk_pct": 0.2149,
+      "lying_pct": 93.5966
+     },
+     {
+      "evil_pct": 13.9238,
+      "demon_pct": 6.8284,
+      "drunk_pct": 0.2232,
+      "lying_pct": 14.147
+     },
+     {
+      "evil_pct": 0.9473,
+      "demon_pct": 0.838,
+      "drunk_pct": 0.0056,
+      "lying_pct": 0.9529
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.9251,
+       "Assassin": 0.0749
+      }
+     },
+     "4": {
+      "4": {
+       "Demon": 0.9994,
+       "Assassin": 0.0006
       }
      }
     }

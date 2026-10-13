@@ -1157,16 +1157,20 @@ def _ogre_picks(d, heard, rng):
     """
     from botc.catalogue import CHARACTERS
     from botc.info import OgreChoice
-    ogre = d.seat_of("Ogre")
-    if ogre is None:
-        return
-    target = rng.choice([p for p in range(d.n) if p != ogre])
-    role = d.role_at(target, "N1")
-    if d.side_at(target, "N1") == "evil" \
-            or {"minion", "demon"} & CHARACTERS[role].registers:
-        d.side_changes.append(("D1", ogre, "Ogre", "evil"))
-    if rng.random() < 0.5:
-        heard.append(OgreChoice(1, ogre, target=target))
+    # The holder, then a Philosopher that took it: it chooses on the night
+    # it took it, the first (ruling G, 13.10.2026).
+    ogres = [d.seat_of("Ogre")] + [
+        p for p in sorted(d.philosophies) if _took(d, p, "Ogre", "N1")]
+    for ogre in ogres:
+        if ogre is None:
+            continue
+        target = rng.choice([p for p in range(d.n) if p != ogre])
+        role = d.role_at(target, "N1")
+        if d.side_at(target, "N1") == "evil" \
+                or {"minion", "demon"} & CHARACTERS[role].registers:
+            d.side_changes.append(("D1", ogre, "Ogre", "evil"))
+        if rng.random() < 0.5:
+            heard.append(OgreChoice(1, ogre, target=target))
 
 
 def _moonchild_takes_one(d, night, heard, rng):
@@ -1438,7 +1442,9 @@ def _professor_raises(d, night, rng):
         return
     phase = f"N{night}"
     for seat in range(d.n):
-        if d.role_at(seat, phase) != "Professor" or seat in d.professor_chose:
+        # Or a Philosopher that took it (13.10.2026).
+        if not _acts_as(d, seat, "Professor", phase) \
+                or seat in d.professor_chose:
             continue
         if seat not in d.alive_at(phase) or d.deaths.get(seat) == phase:
             continue                      # dead before its turn came
@@ -1703,8 +1709,9 @@ def _farmer_hands_it_on(d, night, rng):
     """
     from botc.catalogue import CHARACTERS
     phase = f"N{night}"
+    # The holder, or a Philosopher that took it (13.10.2026).
     holders = [p for p in range(d.n)
-               if d.role_at(p, phase) == "Farmer"
+               if _acts_as(d, p, "Farmer", phase)
                and d.deaths.get(p) == phase]
     for seat in holders:
         if not d.working(seat, night):
@@ -2168,7 +2175,8 @@ def _huntsman_hunts(d, night, rng):
     out = []
     for seat in d.alive_at(phase):
         if d.deaths.get(seat) is not None or seat in d.huntsman_spent \
-                or not _acting_as(d, seat, "Huntsman", phase):
+                or not (_acting_as(d, seat, "Huntsman", phase)
+                        or _took(d, seat, "Huntsman", phase)):
             continue
         if rng.random() >= 0.35:
             continue                      # shakes its head tonight
@@ -2183,7 +2191,7 @@ def _huntsman_hunts(d, night, rng):
         d.huntsman_spent.add(seat)
         d.huntsman_night[seat] = night
         out.append(HuntsmanChoice(night, seat, target=target))
-        if d.role_at(seat, phase) != "Huntsman":
+        if not _acts_as(d, seat, "Huntsman", phase):
             continue
         if _the_goon_answers(d, night, seat, target) \
                 or not d.working(seat, night) \
@@ -4188,6 +4196,18 @@ def early_choices(d, night, rng):
                     out.append(made)
                 # The Preacher preached before this pass; one this
                 # Philosopher has just drunk did it drunk (13.10.2026).
+                # What a Pixie is shown, from the night of taking.
+                if d.philosophies.get(seat) == "Pixie":
+                    shown = _for_role(d, seat, "Pixie", night, rng)
+                    # False under a Vortox, and mostly false droisoned, as
+                    # any Townsfolk's reading.
+                    if shown is not None and (
+                            _vortox_working(d, night)
+                            or (not d.working(seat, night)
+                                and rng.random() < 0.75)):
+                        shown = _make_false(d, shown, night, rng)
+                    if shown is not None:
+                        out.append(shown)
                 if d.philosophies.get(seat) == "Preacher":
                     d.preached = [(p, t, since) for p, t, since in d.preached
                                   if not (since == 1 and p != seat)]
@@ -5448,6 +5468,14 @@ def _for_role(d, seat, role, night, rng):
         d.philosophies[seat] = took
         # The Lycanthrope's "1 good player registers as evil" comes with
         # it, where nobody dealt one already chose (13.10.2026).
+        # The Pixie starts knowing an in-play Townsfolk from the night of
+        # taking (ruling C); it plays the Philosopher, not mad about it.
+        if took == "Pixie":
+            town = [d.roles[p] for p in range(d.n)
+                    if TEAM[d.roles[p]] == "townsfolk" and p != seat]
+            if town:
+                d.pixie_learned[seat] = rng.choice(town)
+                d.pixie_mad[seat] = False
         # The Puzzlemaster's "1 player is drunk" the same: one of its own.
         if took == "Puzzlemaster":
             town = [p for p in range(d.n) if TEAM[d.roles[p]] == "townsfolk"

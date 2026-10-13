@@ -1066,6 +1066,7 @@ def handmade():
     yield from the_philosopher_takes_group_1()
     yield from the_philosopher_takes_group_2()
     yield from the_philosopher_takes_group_3()
+    yield from the_philosopher_takes_group_4()
 
 
 def the_eighth_five():
@@ -1427,6 +1428,69 @@ def the_philosopher_takes_group_3():
             rng, must_have=("Philosopher",) + GROUP_3)
         yield played(f"x-disturbers-played-{seed}", script, seed, 7, 4,
                      rng=rng)
+
+
+def the_philosopher_takes_group_4():
+    """Open item 56, step 2, group 4 (13.10.2026): a Philosopher changes
+    a character or a side with what it took. The boards of
+    tests/test_philosopher_takes_2.py, five games, and the Bad Moon Rising
+    game of the ninth three where a Philosopher-Professor raised an
+    Exorcist after its turn."""
+    sys.path.insert(0, str(HERE))
+    from test_philosopher_takes_2 import GROUP_4, CHANGERS, CL, R
+    from test_experimental_9 import NINE_BMR
+
+    def took(role, seat=3):
+        return {"type": "PhilosopherChoice", "night": 1, "player": seat,
+                "role": role}
+    prof = list(R)
+    prof[2] = "Professor"
+    damsel = list(R) + ["Damsel"]        # eight players: one Outsider
+    for role in GROUP_4 + ("Chef",):
+        low = role.lower()
+        yield board(f"x-changers-7-philosopher-{low}-raised",
+                    CHANGERS, R, infos=[took(role)],
+                    players_override={0: ["N2", "R3"]}, days_done=[1, 2, 3])
+        yield board(f"x-changers-7-philosopher-{low}-raised-itself",
+                    CHANGERS, prof, infos=[took(role)],
+                    players_override={3: ["N2", "R3"]}, days_done=[1, 2, 3])
+        yield board(f"x-changers-7-philosopher-{low}-killed",
+                    CHANGERS, R, infos=[took(role)],
+                    players_override={3: ["N2"]}, days_done=[1, 2])
+        yield board(f"x-changers-7-philosopher-{low}-hunts",
+                    CHANGERS, damsel,
+                    infos=[took(role), {"type": "HuntsmanChoice", "night": 2,
+                                        "player": 3, "target": 7}],
+                    days_done=[1, 2])
+        yield board(f"x-changers-7-philosopher-{low}-learns",
+                    CHANGERS, R,
+                    infos=[took(role), {"type": "PixieLearned", "night": 1,
+                                        "player": 3, "role": "Monk"}],
+                    days_done=[1])
+        yield board(f"x-changers-7-philosopher-{low}-picks-a-side",
+                    CHANGERS, CL,
+                    infos=[took(role, 2), {"type": "OgreChoice", "night": 1,
+                                           "player": 2, "target": 3},
+                           {"type": "Empath", "night": 2, "player": 1,
+                            "count": 1}], days_done=[1, 2])
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    for seed in PLAYED_GROUP_4:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(
+            rng, must_have=("Philosopher",) + GROUP_4)
+        yield played(f"x-changers-played-{seed}", script, seed, 7, 4,
+                     rng=rng)
+    yield played("x-nine-bmr-played-philosopher-professor", NINE_BMR, 881,
+                 8, 4)
+
+
+# Games where a Philosopher took one of group 4 and used it: the Ogre
+# (105), the Pixie (76), the Huntsman on the Damsel (345), the Farmer dying
+# at night (826), raised by the real Professor it had drunk (99), raising
+# somebody itself (143). Not 693: there the heir only says "Farmer", and
+# the page, which takes a good player's claim as dealt, finds no world.
+PLAYED_GROUP_4 = (105, 76, 345, 826, 99, 143)
 
 
 # Gate games where a Philosopher took one of group 3 and used it: the

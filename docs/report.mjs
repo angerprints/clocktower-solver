@@ -12,7 +12,7 @@ import {TEAM, believesAnother, isEvil, mustHide, show, wakeFits} from "./roles.m
 import {bestStory, storyShares, explanationCost, forcedRoles, nightDeaths,
         worldConsistent} from "./scoring.mjs";
 import {PRIORS} from "./priors.mjs";
-import {inBag, madPixie} from "./characters.rules.mjs";
+import {inBag, madPixie, onBoard} from "./characters.rules.mjs";
 import {actsAsCultLeader, cultSides} from "./info.mjs";
 import {Rng} from "./rng.mjs";
 import {phaseIndex} from "./phases.mjs";
@@ -109,7 +109,7 @@ function madnessNights(world, state) {
 export function priorWeight(world, state) {
   let w = confirmedBoost(world, state);
   let madness = madnessNights(world, state);
-  const pixies = inBag(state, "Pixie");
+  const pixies = onBoard(state, "Pixie");
   // Beside a Bounty Hunter one Townsfolk is evil and bluffs like any evil
   // player: one Townsfolk's false claim there is that one's (11.10.2026).
   let evilTownsfolk = inBag(state, "BountyHunter")

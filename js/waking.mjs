@@ -403,8 +403,12 @@ function cameBackTonight(world, state, seat, night) {
   if (!back.includes(phase)) return null;
   const acting = actsAs(world, seat, phase);
   const slot = CHARACTERS[acting].other_night || 0;
+  // A Philosopher that took the Professor raises at the Professor's turn
+  // too (XNINEB seed 881, 13.10.2026).
+  const philosophers = Object.keys(state.philosophies() || {}).map(Number);
   const raisers = ["Shabaloth", "Professor"]
-    .filter(who => world.findAt(who, phase) !== null)
+    .filter(who => world.findAt(who, phase) !== null
+            || philosophers.some(p => tookIt(world, state, p, who, phase)))
     .map(who => CHARACTERS[who].other_night || 0);
   if (!raisers.length || slot > Math.max(...raisers)) return null;
   return slot <= Math.min(...raisers) ? ASLEEP : OPEN;

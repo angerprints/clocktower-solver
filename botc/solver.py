@@ -361,8 +361,9 @@ def _movers_in(world, state):
     # A Barber counts only once a seat that claimed it has died.
     barber_died = bool(barber_claimants(state) & {s for s, _p in deaths})
     roles = set(world.roles) | made
-    if taken_by_a_philosopher(state, "Barber"):
-        roles.add("Barber")
+    # And whatever a Philosopher took: a Barber, a Farmer, an Ogre, a
+    # Huntsman (13.10.2026).
+    roles |= {taken for taken, _since in (state.philosophies() or {}).values()}
     count = int(swapped) + int(bool(made))
     # A Huntsman that chose, and may have found the Damsel (10.10.2026).
     if "Huntsman" in roles and any(isinstance(info, HuntsmanChoice)
@@ -370,8 +371,8 @@ def _movers_in(world, state):
         count += 1
     for key, needs in (("Barber", barber_died), ("Farmer", at_night),
                        ("FangGu", at_night), ("Ogre", True)):
-        on = _barber_on_board(state) if key == "Barber" else _in_bag(state,
-                                                                     key)
+        on = _barber_on_board(state) if key == "Barber" else _on_board(state,
+                                                                       key)
         if needs and key in roles and on:
             count += 1
     return count
@@ -826,14 +827,14 @@ def a_huntsman_finds_the_damsel(world, state):
     night it chose, so what she learns as the new Townsfolk that night
     counts (10.10.2026).
     """
-    if not _in_bag(state, "Huntsman"):
+    if not _on_board(state, "Huntsman"):
         return [((), 1.0)]
     for info in state.infos:
         if not isinstance(info, HuntsmanChoice):
             continue
         night = info.night
         phase = f"N{night}"
-        if world.role_at(info.player, phase) != "Huntsman":
+        if not _has_ability(world, state, info.player, "Huntsman", phase):
             continue
         if info._earlier(state):
             continue
@@ -891,7 +892,7 @@ def a_farmer_hands_it_on(world, state):
     It chains: the new Farmer is a new instance, so if it too dies at
     night the character is handed on again.
     """
-    if not _in_bag(state, "Farmer"):
+    if not _on_board(state, "Farmer"):
         return [((), 1.0)]
 
     stories = [((), 1.0)]
@@ -915,8 +916,10 @@ def a_farmer_hands_it_on(world, state):
             # was *dealt* — and it goes on being a Farmer in the base
             # world after it dies, so the chain never looked past it. The
             # heir made on night two was invisible on night three.
+            # And a Philosopher that took it (13.10.2026).
             holders = [p for p in range(state.n_players)
-                       if view.role_at(p, phase) == "Farmer"
+                       if (view.role_at(p, phase) == "Farmer"
+                           or took_it(view, state, p, "Farmer", phase))
                        and phase in state.died_at(p)]
             if not holders:
                 grown.append((changes, cost))
@@ -998,11 +1001,25 @@ def an_ogre_picks_a_side(world, state):
     When the Ogre said whom it chose, and it really is the Ogre in this
     world, there is one story and no weighing.
     """
-    if not _in_bag(state, "Ogre"):
+    if not _on_board(state, "Ogre"):
         return [((), 1.0)]
-    ogre = world.find_at("Ogre", "N1")
-    if ogre is None:
-        return [((), 1.0)]
+    # The holder, and a Philosopher that took it: it chooses on the night
+    # it took it, which is the first (ruling G, 13.10.2026). "Even if
+    # drunk or poisoned", so the holder it drunk chooses too.
+    ogres = [world.find_at("Ogre", "N1")] + [
+        who for who in sorted(state.philosophies() or {})
+        if took_it(world, state, who, "Ogre", "N1")]
+    stories = [((), 1.0)]
+    for ogre in ogres:
+        if ogre is None:
+            continue
+        mine = _an_ogres_side(world, state, ogre)
+        stories = [(changes + more, cost * price)
+                   for changes, cost in stories for more, price in mine]
+    return stories
+
+
+def _an_ogres_side(world, state, ogre):
     turn = (Change("D1", ogre, None, "evil"),)
 
     picked = [info for info in state.infos
@@ -3898,31 +3915,42 @@ def _plain_failures(world, state, outcome=None):
     # missing altogether: with no Professor in the world the board was
     # thrown out, and a second resurrection always was (02.10.2026).
     # Which dead player it chose is not recorded, so any of them will do.
-    by_professor = 0
-    for seat, phases in (state.resurrections or {}).items():
-        for phase in phases:
-            night = int(phase[1:]) if phase[1:].isdigit() else None
-            if night is None:
-                continue
-            shabaloth = (world.find_at("Shabaloth", phase)
-                         if _in_bag(state, "Shabaloth") else None)
-            if shabaloth is not None and night >= 3 \
-                    and shabaloth in state.alive_set(phase):
-                continue                  # it could have; nothing demanded
-            prof = world.find_at("Professor", phase)
-            if prof is None or not _in_bag(state, "Professor"):
-                return None, None, 1.0, None
-            if prof not in state.alive_set(phase) or night < 2:
-                return None, None, 1.0, None
-            raised = world.role_at(seat, phase)
-            if TEAM[raised] != "townsfolk" \
-                    and "townsfolk" not in CHARACTERS[raised].registers:
-                return None, None, 1.0, None
-            working.setdefault(night, set()).add(prof)
-            by_professor += 1
-    # Once per game, so two of the Professor's is not a game.
-    if by_professor > 1:
-        return None, None, 1.0, None
+    # Once per game for each Professor — the holder, a Philosopher that
+    # took it — and again for one raised since (a new instance, ruling of
+    # 03.10.2026). In the order they happened (13.10.2026).
+    used = {}
+    raises = sorted((int(phase[1:]), seat, phase)
+                    for seat, phases in (state.resurrections or {}).items()
+                    for phase in phases if phase[1:].isdigit())
+    for night, seat, phase in raises:
+        shabaloth = (world.find_at("Shabaloth", phase)
+                     if _in_bag(state, "Shabaloth") else None)
+        if shabaloth is not None and night >= 3 \
+                and shabaloth in state.alive_set(phase):
+            continue                  # it could have; nothing demanded
+        # The holder, or a Philosopher that took it — the one that
+        # drunk the holder ahead of it (13.10.2026).
+        back = _returned_at(state, phase)
+        prof = next((who for who in sorted(state.philosophies() or {})
+                     if who in state.alive_set(phase) and who != seat
+                     and who not in back
+                     and took_it(world, state, who, "Professor", phase)),
+                    world.find_at("Professor", phase))
+        if prof is None or not _on_board(state, "Professor"):
+            return None, None, 1.0, None
+        if prof not in state.alive_set(phase) or night < 2:
+            return None, None, 1.0, None
+        raised = world.role_at(seat, phase)
+        if TEAM[raised] != "townsfolk" \
+                and "townsfolk" not in CHARACTERS[raised].registers:
+            return None, None, 1.0, None
+        working.setdefault(night, set()).add(prof)
+        if prof in used and not any(
+                used[prof] < int(at[1:]) <= night
+                for at in (state.resurrections or {}).get(prof, ())
+                if at[1:].isdigit()):
+            return None, None, 1.0, None  # once per game
+        used[prof] = night
 
     # An execution that killed nobody needs a reason, and the reason has
     # to have been working.
@@ -4053,8 +4081,9 @@ def _plain_failures(world, state, outcome=None):
         # A Pixie mad about this character: made up until its holder
         # dies, at no cost, and its own from the night after (11.10.2026).
         if held is ABSENT and seat is not None \
-                and world.role_at(seat, phase) == "Pixie" \
-                and _in_bag(state, "Pixie"):
+                and (world.role_at(seat, phase) == "Pixie"
+                     or took_it(world, state, seat, "Pixie", phase)) \
+                and _on_board(state, "Pixie"):
             got = _pixie_gain(world, state, seat)
             if got is not None and got[0] == role:
                 if got[1] is not None and info.night >= got[1]:
@@ -4631,8 +4660,12 @@ def a_philosopher_drunks_whoever_had_it(world, state, night):
         still = world.role_at(who, phase) == "Philosopher"
         if not still and world.role_at(who, began) != "Philosopher":
             continue
+        # Coming back tonight is the same span the other way round: a
+        # real Professor raising its dead Philosopher was sober when it
+        # chose, and drunk from the moment the Philosopher stood up.
         went = (not still) or any(at in state.died_at(who)
-                                  for at in (phase, f"D{night}"))
+                                  for at in (phase, f"D{night}")) \
+            or who in _returned_at(state, phase)
         # Every seat holding it: three Village Idiots are all drunk
         # (11.10.2026).
         at = began if not still else phase
@@ -5159,6 +5192,16 @@ def a_lleech_poisons_its_host(world, state, night):
 PIXIE_NOT_GRANTED = "Pixie, not granted"
 
 
+def _is_pixie(world, state, seat):
+    """Dealt the Pixie, or a Philosopher that took it on night one: it
+    starts knowing from the night of taking (ruling C, 13.10.2026)."""
+    if world.roles[seat] == "Pixie":
+        return True
+    taken = (state.philosophies() or {}).get(seat)
+    return bool(taken and taken[0] == "Pixie"
+                and world.roles[seat] == "Philosopher")
+
+
 def _pixie_gain(world, state, seat):
     """(the Townsfolk, the first night it works as one) for a dealt Pixie
     mad about it, or None. The night is None while its holder lives.
@@ -5168,7 +5211,7 @@ def _pixie_gain(world, state, seat):
     character is the one its own row names, or else the one it claims.
     From the night after the holder died, if the Pixie was alive then.
     """
-    if world.roles[seat] != "Pixie":
+    if not _is_pixie(world, state, seat):
         return None
     claim = state.claims.get(seat)
     learned = None
@@ -5201,7 +5244,7 @@ def _mad_pixie(world, state, seat):
     own row the claim has to be a Townsfolk somebody else holds — or one
     a Spy could have been shown as.
     """
-    if world.roles[seat] != "Pixie":
+    if not _is_pixie(world, state, seat):
         return False
     claim = state.claims.get(seat)
     if not claim or TEAM.get(claim) != "townsfolk":
@@ -5218,11 +5261,11 @@ def a_pixie_may_be_denied(world, state, night):
     """A Pixie the Storyteller judged not mad enough has no ability, and
     may say what it likes. On offer from the night it would have started,
     and it costs (`PIXIE_DENIED_PENALTY`)."""
-    if not _in_bag(state, "Pixie"):
+    if not _on_board(state, "Pixie"):
         return []
     out = []
-    for seat, role in enumerate(world.roles):
-        if role != "Pixie":
+    for seat in range(len(world.roles)):
+        if not _is_pixie(world, state, seat):
             continue
         got = _pixie_gain(world, state, seat)
         if got is None or got[1] is None or night < got[1]:
@@ -6285,7 +6328,7 @@ def prior_weight(world, state):
     madness = _madness_nights(world, state)
     # A Pixie claiming what it was shown is mad, as its ability asks: no
     # lie to pay for (11.10.2026).
-    pixies = _in_bag(state, "Pixie")
+    pixies = _on_board(state, "Pixie")
     # Beside a Bounty Hunter one Townsfolk is evil and bluffs like any
     # evil player: one Townsfolk's false claim there is that one's, and
     # costs what a bluff costs (11.10.2026).

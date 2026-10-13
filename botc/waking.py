@@ -566,9 +566,14 @@ def _came_back_tonight(world, state, seat, night):
         return None
     acting = _acts_as(world, seat, phase)
     slot = getattr(CHARACTERS[acting], "other_night", 0) or 0
+    # A Philosopher that took the Professor raises at the Professor's
+    # turn too (XNINEB seed 881, 13.10.2026).
+    from .info import took_it
     raisers = [getattr(CHARACTERS[who], "other_night", 0) or 0
                for who in ("Shabaloth", "Professor")
-               if world.find_at(who, phase) is not None]
+               if world.find_at(who, phase) is not None
+               or any(took_it(world, state, p, who, phase)
+                      for p in (state.philosophies() or {}))]
     if not raisers or slot > max(raisers):
         return None
     return ASLEEP if slot <= min(raisers) else OPEN

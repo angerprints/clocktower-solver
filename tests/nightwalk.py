@@ -709,7 +709,9 @@ TAKEN_ACTS = ("Sailor", "Innkeeper", "Monk", "Exorcist",
               # Group 2: the ones that kill (13.10.2026).
               "Tinker", "Acrobat", "Gossip", "Moonchild", "Lycanthrope",
               # Group 3: the ones that disturb (13.10.2026).
-              "Preacher")
+              "Preacher",
+              # Group 4: character and side (13.10.2026).
+              "Huntsman", "Professor")
 
 
 def _by_seat(hidden, key, night, seat):
