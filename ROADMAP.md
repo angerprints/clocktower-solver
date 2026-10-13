@@ -1141,9 +1141,24 @@ Der volle Bericht steht in `claude/stellen-56-und-57.md`.
 
 **Stelle 56 ist größer als gedacht:** Nicht nur der Night-Walk, sondern auch Solver und Simulator geben einem Philosophen die genommene Fähigkeit meist nicht, wenn sie handelt statt zu lesen. Gebaut ist das nur für Schlangenbeschwörer, Glücksspieler, Nachtwächter, Banshee, Höfling und den Anspruch auf das Aufwachen. Gastwirt, Segler, Mönch, Teedame, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Pazifist und weitere schauen nur auf den, der das Plättchen hält. Simulator und Solver machen denselben Fehler, deshalb fiel er bei den Messungen nicht auf. In 3.000 gemischten Partien nimmt ein Philosoph 1.290-mal einen Charakter, 555-mal einen, der handelt. Das braucht deine Entscheidung (siehe Bericht).
 
+### Philosoph mit genommener Fähigkeit, Schritt 1 · *erledigt am 13.10.2026*
+
+Der volle Bericht steht in `claude/philosoph-schritt-1.md`.
+
+**Deine Entscheidung vom 12.10.2026:** Stelle 56, Weg 1: Ein Philosoph hat jede genommene Fähigkeit, in zwei Schritten. **Deine Antworten vom 13.10.2026** zu Schritt 1 (Liebchen, Barbier, Tollpatsch, Mutant): A bis H jeweils Weg 1.
+
+| Charakter | Was jetzt gilt |
+|---|---|
+| Liebchen | Ein Philosoph, der es genommen hat, macht beim Sterben ab dann einen Spieler betrunken. Das echte Liebchen, das er betrunken gemacht hat, löst beim Sterben nichts aus; stirbt es nach ihm, wieder. |
+| Barbier | Ein eingetragener Philosoph-Barbier zählt wie ein Barbier-Anspruch, sein Tod erlaubt dem Dämon den Tausch. Der echte Barbier, betrunken durch ihn, löst nichts aus. |
+| Tollpatsch | War im Solver schon gebaut. Der Simulator lässt ihn jetzt zeigen. |
+| Mutant | Keine Änderung im Solver. Ein betrunkener echter Mutant versteckt sich weiter. |
+
+**Das Tor:** Sects & Violets 17 von 3.000 Partien verworfen (vorher 19, keine neue) bei 4 Nächten, dieselben 24 bei 6 Nächten, Night-Walk 0 abweichend. Der Simulator spielt 123 von 3.000 Partien anders, die Prüfsumme von Sects & Violets ist deshalb neu (`1b9cc9c20f8cfedd`). Gemischte Partien mit Philosoph und den vier: dieselben verworfenen wie vorher. Korpus 400 Bretter (10 neue, kein altes geändert), 1.586 Tests grün.
+
 ### Als Nächstes
 
-**1 · Entscheiden, womit es weitergeht.** Stelle 56: Soll ein Philosoph jede genommene Fähigkeit wirklich haben (Solver, Simulator, Night-Walk), und wenn ja, in welchem Umfang? Drei Wege stehen im Bericht `claude/stellen-56-und-57.md`. Danach der erste große Charakter einzeln, mit Lesarten vorab, oder die Nachtreihenfolge, die du ans Ende gestellt hast.
+**1 · Philosoph, Schritt 2.** Die übrigen Charaktere, die handeln (Gastwirt, Segler, Mönch, Teedame, Soldat, Narr, Bürgermeister, Pazifist, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Schläger, Farmer, Jungfrau, Dämonenjäger, Heilige und weitere), mit Lesarten vorab. Danach der erste große Charakter einzeln, oder die Nachtreihenfolge, die du ans Ende gestellt hast.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1219,7 +1234,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 52 | Solver | **Skripte mit Kopfgeldjäger und Mezepheles rechnen lange.** *Verbessert am 12.10.2026:* Erzählungen, die sich nur in ungefragten Sitzen unterscheiden, werden nicht mehr einzeln erklärt. Auf den eigenen Skripten ist JavaScript bei 9 Spielern und 6 Nächten dreimal so schnell (langsamstes Brett 109 → 30 Sekunden), auf gemischten knapp doppelt so schnell. Offen bleibt: Große gemischte Bretter, auf denen Werwolf (Falsche Pfote), Kopfgeldjäger und Mezepheles zusammenkommen, brauchen im Browser ein bis zwei Minuten (langsamstes 99 Sekunden), weil dort fast jede Erzählung nach fast jedem Sitz fragt. |
 | 53 | Solver | **Die Barbier-Regel sieht eine Übergabe am Tag nicht.** Wo alle Regeln in einem Zug laufen, bietet sie „Dämon mit Scherge“ für einen schon hingerichteten Dämon und die Scharlachrote Frau an, die ihn beerbt hat. Der Absturz daraus ist am 11.10.2026 behoben, die Erzählung selbst bleibt und bekommt einen Anteil. Kein Grundskript hat Barbier und Scharlachrote Frau. |
 | 55 | erledigt | **Kultführer als Falsche Pfote des Werwolfs.** *Behoben am 12.10.2026* in Python und JavaScript: Erst die Fraktion aus den Nachbarn, dann die Falsche Pfote wie bei jedem guten Spieler. War 1 von 3.000 gemischten Partien am Tor von Batch 9 (Seed 1238). |
-| 56 | Solver, Simulator, Night-Walk | **Ein Philosoph hat eine genommene Fähigkeit, die handelt, meist nicht.** Gebaut nur für Schlangenbeschwörer, Glücksspieler, Nachtwächter, Banshee und Höfling. Gastwirt, Segler, Mönch, Teedame, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Pazifist und weitere schauen nur auf den Halter des Plättchens, in allen drei Werkzeugen gleich. Aufgefallen im Night-Walk: 9 von 8.233 Nächten auf dem zweiten Skript aus Batch 9. Am Tisch würde ein Solver eine Nacht falsch erklären, in der ein Philosoph als Gastwirt jemanden gerettet hat. Untersucht am 12.10.2026, Entscheidung offen. |
+| 56 | Solver, Simulator, Night-Walk | **Ein Philosoph hat eine genommene Fähigkeit, die handelt, meist nicht.** Gebaut nur für Schlangenbeschwörer, Glücksspieler, Nachtwächter, Banshee und Höfling. Gastwirt, Segler, Mönch, Teedame, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Pazifist und weitere schauen nur auf den Halter des Plättchens, in allen drei Werkzeugen gleich. Aufgefallen im Night-Walk: 9 von 8.233 Nächten auf dem zweiten Skript aus Batch 9. Am Tisch würde ein Solver eine Nacht falsch erklären, in der ein Philosoph als Gastwirt jemanden gerettet hat. Untersucht am 12.10.2026. Deine Entscheidung: Weg 1, in zwei Schritten. *Schritt 1 erledigt am 13.10.2026* (Liebchen, Barbier, Tollpatsch, Mutant), Schritt 2 offen. |
 | 57 | erledigt | **Werwolf, Xaan und Adlige.** *Behoben am 12.10.2026:* Eine Auskunft, die nur mit der Falschen Pfote stimmt, darf auch falsch gewesen sein, weil ihre Quelle gestört war; je Nacht werden beide Wege versucht. War 1 von 3.000 gemischten Partien mit Werwolf (Seed 1177). |
 | 54 | Solver | **Der böse Bürger des Kopfgeldjägers mit falschem Claim** wird nur an einem Sitz gefunden, der als nicht vertrauenswürdig markiert ist. Sonst nimmt die Suche an, dass er seinen echten Charakter nennt. Der Jinx Leviathan–Mönch ist nicht gebaut, weil die Wahl des Mönchs nirgends steht. |
 

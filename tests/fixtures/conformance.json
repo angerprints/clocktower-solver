@@ -64359,6 +64359,1975 @@
    }
   },
   {
+   "name": "sv-7-philosopher-sweetheart-dies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Artist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Sweetheart"
+     },
+     {
+      "type": "OracleInfo",
+      "night": 3,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1048,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.8726,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.0597
+     },
+     {
+      "evil_pct": 19.0954,
+      "demon_pct": 9.5685,
+      "drunk_pct": 0.0,
+      "lying_pct": 25.0608
+     },
+     {
+      "evil_pct": 36.0776,
+      "demon_pct": 18.0863,
+      "drunk_pct": 0.0,
+      "lying_pct": 47.4209
+     },
+     {
+      "evil_pct": 36.0776,
+      "demon_pct": 18.0863,
+      "drunk_pct": 0.0,
+      "lying_pct": 47.4209
+     },
+     {
+      "evil_pct": 36.0776,
+      "demon_pct": 18.0863,
+      "drunk_pct": 0.0,
+      "lying_pct": 47.4209
+     },
+     {
+      "evil_pct": 36.0776,
+      "demon_pct": 18.0863,
+      "drunk_pct": 0.0,
+      "lying_pct": 47.4209
+     },
+     {
+      "evil_pct": 36.0776,
+      "demon_pct": 18.0863,
+      "drunk_pct": 0.0,
+      "lying_pct": 47.4209
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "sv-7-philosopher-dreamer-dies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Artist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Dreamer"
+     },
+     {
+      "type": "OracleInfo",
+      "night": 3,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 668,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 2.9566,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 6.9791
+     },
+     {
+      "evil_pct": 64.7023,
+      "demon_pct": 32.4216,
+      "drunk_pct": 0.0,
+      "lying_pct": 84.9155
+     },
+     {
+      "evil_pct": 34.2518,
+      "demon_pct": 21.0579,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.5181
+     },
+     {
+      "evil_pct": 26.7096,
+      "demon_pct": 13.5157,
+      "drunk_pct": 0.0,
+      "lying_pct": 34.9759
+     },
+     {
+      "evil_pct": 24.1955,
+      "demon_pct": 11.0016,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.4618
+     },
+     {
+      "evil_pct": 24.1955,
+      "demon_pct": 11.0016,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.4618
+     },
+     {
+      "evil_pct": 24.1955,
+      "demon_pct": 11.0016,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.4618
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "sv-7-sweetheart-drunk-by-the-philosopher",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Sweetheart",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Artist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Sweetheart"
+     },
+     {
+      "type": "OracleInfo",
+      "night": 3,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 360,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 42.1517,
+      "demon_pct": 21.7813,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.1217
+     },
+     {
+      "evil_pct": 42.1517,
+      "demon_pct": 21.7813,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.1217
+     },
+     {
+      "evil_pct": 25.9259,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 25.9259
+     },
+     {
+      "evil_pct": 25.022,
+      "demon_pct": 14.1093,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.1164
+     },
+     {
+      "evil_pct": 25.022,
+      "demon_pct": 14.1093,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.1164
+     },
+     {
+      "evil_pct": 25.022,
+      "demon_pct": 14.1093,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.1164
+     },
+     {
+      "evil_pct": 25.022,
+      "demon_pct": 14.1093,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.1164
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "sv-7-philosopher-barber-executed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Artist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Barber"
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1128,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 7.8762,
+      "demon_pct": 3.692,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.5021
+     },
+     {
+      "evil_pct": 32.0206,
+      "demon_pct": 16.0513,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.3347
+     },
+     {
+      "evil_pct": 32.0206,
+      "demon_pct": 16.0513,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.3347
+     },
+     {
+      "evil_pct": 32.0206,
+      "demon_pct": 16.0513,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.3347
+     },
+     {
+      "evil_pct": 32.0206,
+      "demon_pct": 16.0513,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.3347
+     },
+     {
+      "evil_pct": 32.0206,
+      "demon_pct": 16.0513,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.3347
+     },
+     {
+      "evil_pct": 32.0206,
+      "demon_pct": 16.0513,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.3347
+     }
+    ]
+   }
+  },
+  {
+   "name": "sv-7-philosopher-dreamer-executed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Artist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Dreamer"
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1008,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 8.046,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.7931
+     },
+     {
+      "evil_pct": 31.9923,
+      "demon_pct": 16.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.5287
+     },
+     {
+      "evil_pct": 31.9923,
+      "demon_pct": 16.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.5287
+     },
+     {
+      "evil_pct": 31.9923,
+      "demon_pct": 16.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.5287
+     },
+     {
+      "evil_pct": 31.9923,
+      "demon_pct": 16.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.5287
+     },
+     {
+      "evil_pct": 31.9923,
+      "demon_pct": 16.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.5287
+     },
+     {
+      "evil_pct": 31.9923,
+      "demon_pct": 16.6667,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.5287
+     }
+    ]
+   }
+  },
+  {
+   "name": "sv-7-barber-drunk-by-the-philosopher",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Barber",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Artist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Barber"
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 288,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 11.5646,
+      "demon_pct": 7.8444,
+      "drunk_pct": 0.0,
+      "lying_pct": 14.966
+     },
+     {
+      "evil_pct": 25.8503,
+      "demon_pct": 18.4056,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.3333
+     },
+     {
+      "evil_pct": 59.1837,
+      "demon_pct": 0.1276,
+      "drunk_pct": 0.0,
+      "lying_pct": 59.1837
+     },
+     {
+      "evil_pct": 25.8503,
+      "demon_pct": 18.4056,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.3333
+     },
+     {
+      "evil_pct": 25.8503,
+      "demon_pct": 18.4056,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.3333
+     },
+     {
+      "evil_pct": 25.8503,
+      "demon_pct": 18.4056,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.3333
+     },
+     {
+      "evil_pct": 25.8503,
+      "demon_pct": 18.4056,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.3333
+     }
+    ]
+   }
+  },
+  {
+   "name": "sv-7-philosopher-klutz-points",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Artist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Klutz"
+     },
+     {
+      "type": "KlutzChoice",
+      "night": 2,
+      "player": 0,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 896,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.4522,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 4.2206
+     },
+     {
+      "evil_pct": 39.8317,
+      "demon_pct": 20.3304,
+      "drunk_pct": 0.0,
+      "lying_pct": 49.284
+     },
+     {
+      "evil_pct": 39.0466,
+      "demon_pct": 19.5453,
+      "drunk_pct": 0.0,
+      "lying_pct": 48.4989
+     },
+     {
+      "evil_pct": 2.933,
+      "demon_pct": 0.7034,
+      "drunk_pct": 0.0,
+      "lying_pct": 18.666
+     },
+     {
+      "evil_pct": 39.0466,
+      "demon_pct": 19.5453,
+      "drunk_pct": 0.0,
+      "lying_pct": 48.4989
+     },
+     {
+      "evil_pct": 39.0466,
+      "demon_pct": 19.5453,
+      "drunk_pct": 0.0,
+      "lying_pct": 48.4989
+     },
+     {
+      "evil_pct": 39.8317,
+      "demon_pct": 20.3304,
+      "drunk_pct": 0.0,
+      "lying_pct": 49.284
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "sv-played-philosopher-sweetheart",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sweetheart",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Artist",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Flowergirl",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 4,
+      "role": "Sweetheart"
+     },
+     {
+      "type": "DreamerInfo",
+      "night": 1,
+      "player": 6,
+      "target": 5,
+      "good_role": "TownCrier",
+      "evil_role": "NoDashii"
+     },
+     {
+      "type": "ArtistInfo",
+      "night": 1,
+      "player": 2,
+      "question": "is seat 6 evil?",
+      "answer": false
+     },
+     {
+      "type": "FlowergirlInfo",
+      "night": 2,
+      "player": 3,
+      "voted": true
+     },
+     {
+      "type": "TownCrierInfo",
+      "night": 2,
+      "player": 5,
+      "nominated": true
+     },
+     {
+      "type": "FlowergirlInfo",
+      "night": 3,
+      "player": 3,
+      "voted": true
+     },
+     {
+      "type": "TownCrierInfo",
+      "night": 3,
+      "player": 5,
+      "nominated": true
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 312,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 63.3819,
+      "demon_pct": 45.8519,
+      "drunk_pct": 0.0,
+      "lying_pct": 65.8336
+     },
+     {
+      "evil_pct": 31.2116,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.2116
+     },
+     {
+      "evil_pct": 11.7346,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 12.7744
+     },
+     {
+      "evil_pct": 13.0602,
+      "demon_pct": 8.664,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.4491
+     },
+     {
+      "evil_pct": 0.421,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.0382
+     },
+     {
+      "evil_pct": 63.1959,
+      "demon_pct": 45.4841,
+      "drunk_pct": 0.0,
+      "lying_pct": 64.7388
+     },
+     {
+      "evil_pct": 25.1093,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 8.56
+     }
+    ],
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "4": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "sv-played-philosopher-barber",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "swapped": true
+     },
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 1,
+      "role": "Barber"
+     },
+     {
+      "type": "ClockmakerInfo",
+      "night": 1,
+      "player": 4,
+      "count": 2
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 6,
+      "target": 4,
+      "swapped": false
+     },
+     {
+      "type": "OracleInfo",
+      "night": 2,
+      "player": 2,
+      "count": 1
+     },
+     {
+      "type": "JugglerInfo",
+      "night": 2,
+      "player": 0,
+      "guesses": [
+       {
+        "player": 6,
+        "role": "Sage"
+       },
+       {
+        "player": 1,
+        "role": "Philosopher"
+       },
+       {
+        "player": 4,
+        "role": "Mathematician"
+       },
+       {
+        "player": 2,
+        "role": "Oracle"
+       },
+       {
+        "player": 3,
+        "role": "Sage"
+       }
+      ],
+      "count": 2
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 6,
+      "target": 0,
+      "swapped": false
+     },
+     {
+      "type": "Became",
+      "night": 3,
+      "player": 2,
+      "role": "SnakeCharmer",
+      "was": "Oracle"
+     },
+     {
+      "type": "OracleInfo",
+      "night": 3,
+      "player": 6,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 48,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 6.6757,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 41.4169
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 63.079,
+      "demon_pct": 32.9253,
+      "drunk_pct": 0.0,
+      "lying_pct": 47.6385
+     },
+     {
+      "evil_pct": 89.2543,
+      "demon_pct": 62.6494,
+      "drunk_pct": 0.0,
+      "lying_pct": 57.0845
+     },
+     {
+      "evil_pct": 0.6812,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.6812
+     },
+     {
+      "evil_pct": 34.0599,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 34.0599
+     },
+     {
+      "evil_pct": 7.6451,
+      "demon_pct": 4.4253,
+      "drunk_pct": 0.0,
+      "lying_pct": 57.1299
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "4": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "sv-played-philosopher-klutz",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "TownCrier",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 5,
+      "target": 1,
+      "swapped": false
+     },
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 6,
+      "role": "Klutz"
+     },
+     {
+      "type": "EvilTwinPair",
+      "night": 1,
+      "player": 3,
+      "a": 3,
+      "b": 0
+     },
+     {
+      "type": "DreamerInfo",
+      "night": 1,
+      "player": 2,
+      "target": 5,
+      "good_role": "TownCrier",
+      "evil_role": "EvilTwin"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 5,
+      "target": 6,
+      "swapped": false
+     },
+     {
+      "type": "OracleInfo",
+      "night": 2,
+      "player": 0,
+      "count": 5
+     },
+     {
+      "type": "KlutzChoice",
+      "night": 2,
+      "player": 6,
+      "target": 0
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 5,
+      "target": 3,
+      "swapped": false
+     },
+     {
+      "type": "OracleInfo",
+      "night": 3,
+      "player": 0,
+      "count": 6
+     }
+    ],
+    "script": {
+     "name": "Sects & Violets",
+     "characters": [
+      "clockmaker",
+      "dreamer",
+      "snakecharmer",
+      "mathematician",
+      "flowergirl",
+      "towncrier",
+      "oracle",
+      "savant",
+      "seamstress",
+      "philosopher",
+      "artist",
+      "juggler",
+      "sage",
+      "mutant",
+      "sweetheart",
+      "barber",
+      "klutz",
+      "eviltwin",
+      "witch",
+      "cerenovus",
+      "pithag",
+      "fanggu",
+      "vigormortis",
+      "nodashii",
+      "vortox"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 261,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 2.3166,
+      "demon_pct": 2.3166,
+      "drunk_pct": 0.0,
+      "lying_pct": 3.6643
+     },
+     {
+      "evil_pct": 10.445,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.445
+     },
+     {
+      "evil_pct": 22.4966,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.508
+     },
+     {
+      "evil_pct": 83.4636,
+      "demon_pct": 45.0627,
+      "drunk_pct": 0.0,
+      "lying_pct": 83.4636
+     },
+     {
+      "evil_pct": 80.5486,
+      "demon_pct": 52.6207,
+      "drunk_pct": 0.0,
+      "lying_pct": 80.5486
+     },
+     {
+      "evil_pct": 0.2838,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.2838
+     },
+     {
+      "evil_pct": 0.4542,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.7116
+     }
+    ],
+    "blame": {
+     "3": {
+      "5": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "random-00",
    "payload": {
     "n_players": 9,

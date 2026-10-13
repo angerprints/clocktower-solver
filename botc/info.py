@@ -729,6 +729,45 @@ def acts_as_cult_leader(w, s, seat, phase):
                 and phase_index(phase) >= phase_index(took[1]))
 
 
+def took_it(w, s, seat, role, phase):
+    """Is this seat a Philosopher that took that character by then?
+
+    "A Philosopher is that character, ability-wise" (table ruling): its
+    ability goes with it to the end, death-triggered ones included —
+    the Sweetheart's and the Barber's (way 1, 13.10.2026)."""
+    taken = (s.philosophies() or {}).get(seat)
+    return bool(taken and taken[0] == role
+                and w.role_at(seat, phase) == "Philosopher"
+                and phase_index(phase) >= phase_index(taken[1]))
+
+
+def drunk_by_its_philosopher(w, s, seat, role, phase):
+    """Was the real holder drunk at that moment because a living
+    Philosopher had taken its character? Then its ability did nothing —
+    a Sweetheart or a Barber dying that way leaves nobody drunk and no
+    swap (way 1, 13.10.2026)."""
+    for who in (s.philosophies() or {}):
+        if who != seat and who in s.alive_set(phase) \
+                and took_it(w, s, who, role, phase):
+            return True
+    return False
+
+
+def falls_as(w, s, seat, role, phase):
+    """Did this seat die at that moment *as* that character, its ability
+    working as far as a Philosopher is concerned: holding it, and not
+    drunk because a Philosopher took it — or a Philosopher that took it."""
+    if w.role_at(seat, phase) == role:
+        return not drunk_by_its_philosopher(w, s, seat, role, phase)
+    return took_it(w, s, seat, role, phase)
+
+
+def taken_by_a_philosopher(s, role):
+    """Did any Philosopher on the board take that character?"""
+    return any(taken == role for taken, _since
+               in (s.philosophies() or {}).values())
+
+
 def _may_be_impaired(w, s, seat, night):
     """Could anything have made this seat drunk or poisoned that night?
 

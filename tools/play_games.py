@@ -456,10 +456,13 @@ def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):
     keys += rng.sample([k for k in sources if CHARACTERS[k].team == "minion"
                         and k not in keys]
                        or by("minion"), 1)
-    keys += rng.sample([k for k in movers
-                        if CHARACTERS[k].team == "townsfolk"
-                        and k not in keys] or by("townsfolk"),
-                       min(2, len(movers)))
+    # At most as many as are left: a Philosopher insisted on leaves one
+    # Townsfolk mover to draw, and asking for two fell over (13.10.2026).
+    # Every other script is drawn exactly as before.
+    pool = [k for k in movers
+            if CHARACTERS[k].team == "townsfolk" and k not in keys] \
+        or by("townsfolk")
+    keys += rng.sample(pool, min(2, len(movers), len(pool)))
     for team, want in (("townsfolk", 13), ("outsider", 4),
                        ("minion", 4), ("demon", 4)):
         spare = [k for k in by(team) if k not in keys]

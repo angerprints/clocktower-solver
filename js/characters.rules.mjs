@@ -17,6 +17,7 @@ import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
+import {fallsAs, takenByAPhilosopher} from "./info.mjs";
 
 // --------------------------------------------------------------------
 // Constants. Every one is a judgement rather than a fact, which is what
@@ -328,11 +329,14 @@ sourceRule(function aPukkaPoisonsWhoeverItWillKill(world, state, night) {
  * is not a coincidence that needs paying for.
  */
 sourceRule(function aSweetheartLeavesSomebodyDrunk(world, state, night) {
-  if (!inBag(state, "Sweetheart")) return [];
-  // Whoever was the Sweetheart when they died, dealt or made. See solver.py.
+  if (!inBag(state, "Sweetheart") && !takenByAPhilosopher(state, "Sweetheart"))
+    return [];
+  // Whoever was the Sweetheart when they died, dealt or made — or a
+  // Philosopher that took it; a real one it had drunk leaves nobody drunk
+  // (13.10.2026). See solver.py.
   const out = [];
   for (let seat = 0; seat < state.nPlayers; seat++) {
-    const gone = state.diedAt(seat).filter(p => world.roleAt(seat, p) === "Sweetheart");
+    const gone = state.diedAt(seat).filter(p => fallsAs(world, state, seat, "Sweetheart", p));
     if (!gone.length) continue;
     const first = gone.reduce((a, b) => phaseIndex(a) <= phaseIndex(b) ? a : b);
     if (phaseIndex(first) > phaseIndex(`N${night}`)) continue;
@@ -610,7 +614,7 @@ causeRule(function theDemonKills(world, state, night) {
   // Demon right after it kills her. See solver.py.
   for (let p = 0; p < state.nPlayers; p++)
     if (state.diedAt(p).includes(`N${night}`) &&
-        world.roleAt(p, `N${night}`) === "Sweetheart") reachable = false;
+        fallsAs(world, state, p, "Sweetheart", `N${night}`)) reachable = false;
   return [new Cause("Demon", DEMON, allSeats(state),
                     {capacity: 1, mustFire: true,
                      actor: reachable ? demon : null,
@@ -934,7 +938,7 @@ const aSweetheartDied = (world, state, night) => {
   const phase = `N${night}`;
   for (let p = 0; p < state.nPlayers; p++)
     if (state.diedAt(p).includes(phase)
-        && world.roleAt(p, phase) === "Sweetheart") return true;
+        && fallsAs(world, state, p, "Sweetheart", phase)) return true;
   return false;
 };
 

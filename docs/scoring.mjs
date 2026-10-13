@@ -21,8 +21,8 @@ import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
 import {Timeline, change, turnedEvil} from "./worlds.mjs";
 import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, pixieGain, survivalsOf,
         teaLadyFailedAtTheGallows} from "./characters.rules.mjs";
-import {actsAsCultLeader, besideAlive, cultSides, knowsItTurnedEvil,
-        livingNeighbours, wentOnAfter} from "./info.mjs";
+import {actsAsCultLeader, besideAlive, cultSides, fallsAs, knowsItTurnedEvil,
+        livingNeighbours, takenByAPhilosopher, wentOnAfter} from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
 // outcomes rather than true-or-false, because two of them are neither.
@@ -157,13 +157,15 @@ function moversIn(world, state) {
   const claimed = barberClaimants(state);
   const barberDied = deaths.some(([s]) => claimed.has(Number(s)));
   const roles = new Set([...world.roles, ...made]);
+  if (takenByAPhilosopher(state, "Barber")) roles.add("Barber");
   let count = (swapped ? 1 : 0) + (made.size ? 1 : 0);
   // A Huntsman that chose, and may have found the Damsel (10.10.2026).
   if (roles.has("Huntsman")
       && state.infos.some(i => i.type === "HuntsmanChoice")) count++;
   for (const [key, needs] of [["Barber", barberDied], ["Farmer", atNight],
                               ["FangGu", atNight], ["Ogre", true]])
-    if (needs && roles.has(key) && inBag(state, key)) count++;
+    if (needs && roles.has(key)
+        && (key === "Barber" ? barberOnBoard(state) : inBag(state, key))) count++;
   return count;
 }
 
@@ -361,7 +363,7 @@ export const BARBER_SWAP_PENALTY = 0.15;
  * because it is what usually happened.
  */
 const barberRule = transitionRule(function aBarberLetsTheDemonSwapTwo(world, state) {
-  if (!inBag(state, "Barber")) return [[[], 1.0]];
+  if (!barberOnBoard(state)) return [[[], 1.0]];
   // Its offers depend only on the board it is shown, and a night-by-night
   // solve shows it the same board once per story it already made — fifty
   // times over. Kept per deal and per exact set of changes. See solver.py.
@@ -383,7 +385,15 @@ export function barberClaimants(state) {
   for (const info of state.infos)
     if (info.type === "Became" && (info.role === "Barber" || info.was === "Barber"))
       out.add(Number(info.player));
+  // A Philosopher that wrote down taking the Barber (13.10.2026).
+  for (const [who, [taken]] of Object.entries(state.philosophies() || {}))
+    if (taken === "Barber") out.add(Number(who));
   return out;
+}
+
+/** A Barber on the script, or a Philosopher that took one (13.10.2026). */
+function barberOnBoard(state) {
+  return inBag(state, "Barber") || takenByAPhilosopher(state, "Barber");
 }
 
 function barberOffers(world, state) {
@@ -393,7 +403,7 @@ function barberOffers(world, state) {
   const deaths = [];
   for (let seat = 0; seat < state.nPlayers; seat++)
     if (claimed.has(seat)) for (const phase of state.diedAt(seat))
-      if (world.roleAt(seat, phase) === "Barber") deaths.push(phase);
+      if (fallsAs(world, state, seat, "Barber", phase)) deaths.push(phase);
   if (!deaths.length) return [[[], 1.0]];
 
   const stories = [[[], 1.0]];
@@ -876,7 +886,7 @@ function actedBeforeTheDemonOnly(world, state, night) {
       && world.roleAt(demon, phase) === "Pukka") return true;
   for (let p = 0; p < state.nPlayers; p++)
     if (state.diedAt(p).includes(phase)
-        && world.roleAt(p, phase) === "Sweetheart") return true;
+        && fallsAs(world, state, p, "Sweetheart", phase)) return true;
   return false;
 }
 
@@ -2350,7 +2360,7 @@ function bestStoryNow(world, state, outcome) {
  * than all-or-nothing. See solver.py. */
 export function storyShares(world, viable, state = null) {
   // A Barber swap gets the share the table gives it, not its price.
-  if (state && viable.length > 1 && inBag(state, "Barber") &&
+  if (state && viable.length > 1 && barberOnBoard(state) &&
       barberClaimants(state).size)
     viable = viable.map(([cost, changes]) =>
       [cost * barberShare(world, changes, state), changes]);

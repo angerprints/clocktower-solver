@@ -119,6 +119,39 @@ export function cultSides(w, s, seat, phase) {
  * Lycanthrope's faux paw on top: "one good player registers as evil",
  * surely, while the Lycanthrope lives and works (11.10.2026). See
  * `evil_options` in info.py. */
+/** Is this seat a Philosopher that took that character by then? Its
+ * ability goes with it, death-triggered ones too (13.10.2026). See
+ * botc/info.py. */
+export function tookIt(w, s, seat, role, phase) {
+  const taken = (s.philosophies() || {})[seat];
+  return !!(taken && taken[0] === role && w.roleAt(seat, phase) === "Philosopher"
+            && phaseIndex(phase) >= phaseIndex(taken[1]));
+}
+
+/** Was the real holder drunk then, because a living Philosopher had
+ * taken its character? */
+export function drunkByItsPhilosopher(w, s, seat, role, phase) {
+  for (const key of Object.keys(s.philosophies() || {})) {
+    const who = Number(key);
+    if (who !== seat && s.aliveSet(phase).has(who)
+        && tookIt(w, s, who, role, phase)) return true;
+  }
+  return false;
+}
+
+/** Did this seat die then *as* that character, as far as a Philosopher
+ * is concerned: holding it and not drunk by one, or one that took it. */
+export function fallsAs(w, s, seat, role, phase) {
+  if (w.roleAt(seat, phase) === role)
+    return !drunkByItsPhilosopher(w, s, seat, role, phase);
+  return tookIt(w, s, seat, role, phase);
+}
+
+/** Did any Philosopher on the board take that character? */
+export function takenByAPhilosopher(s, role) {
+  return Object.values(s.philosophies() || {}).some(([taken]) => taken === role);
+}
+
 export function evilOptions(w, s, seat, phase) {
   let got;
   if (s && cultOnScript(s) && actsAsCultLeader(w, s, seat, phase)) {

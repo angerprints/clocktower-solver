@@ -1728,6 +1728,30 @@ def _farmer_hands_it_on(d, night, rng):
                                                was=was))
 
 
+def _took(d, seat, role, phase):
+    """A Philosopher that took that character, and still the Philosopher
+    then. It chooses on its first night, so it has it from night one."""
+    return d.role_at(seat, phase) == "Philosopher" \
+        and (getattr(d, "philosophies", None) or {}).get(seat) == role
+
+
+def _drunk_by_its_philosopher(d, seat, role, phase):
+    """Was the real holder drunk then, because a living Philosopher had
+    taken its character? Alive at a phase includes dying at it."""
+    return any(p != seat and _took(d, p, role, phase)
+               and p in d.alive_at(phase)
+               for p in (getattr(d, "philosophies", None) or {}))
+
+
+def _falls_as(d, seat, role, phase):
+    """Died then as that character with its ability working, as far as a
+    Philosopher is concerned: the solver's `info.falls_as` (way 1 of A to
+    D, 13.10.2026)."""
+    if d.role_at(seat, phase) == role:
+        return not _drunk_by_its_philosopher(d, seat, role, phase)
+    return _took(d, seat, role, phase)
+
+
 def _barber_swap(d, night, rng):
     """If a Barber died yesterday, the Demon may swap two seats tonight.
 
@@ -1740,10 +1764,15 @@ def _barber_swap(d, night, rng):
     # Demon swap tonight, not tomorrow night — the swap is at slot 40,
     # after the kill. This waited a night, where the solver did not
     # (29.09.2026).
+    # And a Philosopher that took the Barber; a real one drunk by that
+    # Philosopher when it died swaps nothing (13.10.2026).
     died = [p for p in range(d.n)
-            if d.role_at(p, f"N{night}") == "Barber"
-            and d.deaths.get(p) in (f"D{yesterday}", f"E{yesterday}",
-                                    f"N{night}")]
+            if d.deaths.get(p) in (f"D{yesterday}", f"E{yesterday}",
+                                   f"N{night}")
+            and ((d.role_at(p, f"N{night}") == "Barber"
+                  and not _drunk_by_its_philosopher(d, p, "Barber",
+                                                    d.deaths[p]))
+                 or _took(d, p, "Barber", d.deaths[p]))]
     # At this table the Demon usually swaps, and half the time with one of
     # its own Minions — the Barber's death is loud, the swap is quiet
     # (table habit, 30.09.2026).
@@ -3931,6 +3960,10 @@ def _droisoned_info(d, seat, night, rng):
     # character it had given away (07.10.2026).
     apparent = d.token(seat, f"N{night}") or d.role_at(seat, f"N{night}")
     made = _for_role(d, seat, apparent, night, rng)
+    # A drunk Philosopher that took the Klutz still points on dying —
+    # in public, so the table sees it; nothing comes of it (13.10.2026).
+    if made is None and _took(d, seat, "Klutz", f"N{night}"):
+        made = _for_role(d, seat, "Klutz", night, rng)
     if made is None:
         return None
     # A quarter of the time the lie happens to be the truth. The rest of
@@ -4111,7 +4144,8 @@ def honest_info(d, night, rng):
         if d.deaths.get(seat) is not None and _died_before(d, seat, night):
             continue
         if d.deaths.get(seat) == f"N{night}" \
-                and d.role_at(seat, f"N{night}") not in ON_DEATH:
+                and d.role_at(seat, f"N{night}") not in ON_DEATH \
+                and not _took(d, seat, "Klutz", f"N{night}"):
             continue
         if not d.working(seat, night):
             # A droisoned seat is not silent. It wakes on the schedule of
@@ -4154,8 +4188,12 @@ def honest_info(d, night, rng):
         # Only the Ravenkeeper was listed, so a Sage killed by the Demon
         # said nothing at all.
         role_now = d.role_at(seat, f"N{night}")
+        # A Philosopher that took the Klutz points on dying too
+        # (13.10.2026).
         if (d.deaths.get(seat) == f"N{night}"
-                and role_now not in ON_DEATH):
+                and role_now not in ON_DEATH
+                and not (role_now == "Philosopher"
+                         and d.philosophies.get(seat) == "Klutz")):
             continue
         # The character it holds *now*, not the one it was dealt. A
         # Pit-Hag turns somebody into the Sage and the Sage should then
@@ -4365,9 +4403,15 @@ def droisoned_at(d, night, by_day=False):
         role = d.role_at(seat, phase)
         if role == "NoDashii" and seat in living:
             out |= nearest_townsfolk(seat)
-        elif role == "Sweetheart":
+        elif role == "Sweetheart" or (
+                role == "Philosopher"
+                and (getattr(d, "philosophies", None) or {}).get(seat)
+                == "Sweetheart"):
+            # A Philosopher that took it as well, and not a real one that
+            # Philosopher had drunk when it died (13.10.2026).
             gone = d.deaths.get(seat)
-            if gone and phase_index(gone) <= phase_index(phase):
+            if gone and phase_index(gone) <= phase_index(phase) \
+                    and _falls_as(d, seat, "Sweetheart", gone):
                 # Somebody, and the Storyteller never says who — the
                 # simulator has to pick, so it picks the seat after.
                 out.add((seat + 1) % d.n)

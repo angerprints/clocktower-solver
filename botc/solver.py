@@ -26,7 +26,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    acts_as_cult_leader, cult_sides, knows_it_turned_evil,
                    went_on_after, phase_index,
                    begin_reads, end_reads, listen_for_sides, replay_reads,
-                   _LISTENING)
+                   _LISTENING, falls_as, taken_by_a_philosopher)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
                     INVERTED, registers_as_role, evil_registrations,
@@ -360,6 +360,8 @@ def _movers_in(world, state):
     # A Barber counts only once a seat that claimed it has died.
     barber_died = bool(barber_claimants(state) & {s for s, _p in deaths})
     roles = set(world.roles) | made
+    if taken_by_a_philosopher(state, "Barber"):
+        roles.add("Barber")
     count = int(swapped) + int(bool(made))
     # A Huntsman that chose, and may have found the Damsel (10.10.2026).
     if "Huntsman" in roles and any(isinstance(info, HuntsmanChoice)
@@ -367,7 +369,9 @@ def _movers_in(world, state):
         count += 1
     for key, needs in (("Barber", barber_died), ("Farmer", at_night),
                        ("FangGu", at_night), ("Ogre", True)):
-        if needs and key in roles and _in_bag(state, key):
+        on = _barber_on_board(state) if key == "Barber" else _in_bag(state,
+                                                                     key)
+        if needs and key in roles and on:
             count += 1
     return count
 
@@ -623,7 +627,7 @@ def a_barber_lets_the_demon_swap_two(world, state):
     A "may", so doing nothing is always among the answers — and it comes
     first, because it is what usually happened.
     """
-    if not _in_bag(state, "Barber"):
+    if not _barber_on_board(state):
         return [((), 1.0)]
     # Its offers depend only on the board it is shown, and a night-by-night
     # solve shows it the same board once for every story it already made
@@ -636,6 +640,11 @@ def a_barber_lets_the_demon_swap_two(world, state):
     if got is None:
         got = memo[key] = _barber_offers(world, state)
     return list(got)
+
+
+def _barber_on_board(state):
+    """A Barber on the script, or a Philosopher that took one (13.10.2026)."""
+    return _in_bag(state, "Barber") or taken_by_a_philosopher(state, "Barber")
 
 
 def barber_claimants(state):
@@ -660,6 +669,11 @@ def barber_claimants(state):
     for info in state.infos:
         if isinstance(info, BecameInfo) and "Barber" in (info.role, info.was):
             out.add(info.player)
+    # A Philosopher that wrote down taking the Barber: as good as a claim
+    # (way 1 of C, 13.10.2026).
+    for who, (taken, _since) in (state.philosophies() or {}).items():
+        if taken == "Barber":
+            out.add(who)
     return out
 
 
@@ -670,10 +684,12 @@ def _barber_offers(world, state):
     # that was executed swapped nothing (29.09.2026). And only a seat that
     # claimed it: see `barber_claimants`.
     claimed = barber_claimants(state)
+    # A Philosopher that took it counts as one, and a real one drunk by
+    # that Philosopher when it died swaps nothing (13.10.2026).
     deaths = [(seat, phase) for seat in range(state.n_players)
               if seat in claimed
               for phase in state.died_at(seat)
-              if world.role_at(seat, phase) == "Barber"]
+              if falls_as(world, state, seat, "Barber", phase)]
     if not deaths:
         return [((), 1.0)]
 
@@ -1143,7 +1159,7 @@ def _acted_before_the_demon_only(world, state, night):
     if demon is not None and world.role_at(demon, phase) == "Pukka":
         return True
     return any(phase in state.died_at(p)
-               and world.role_at(p, phase) == "Sweetheart"
+               and falls_as(world, state, p, "Sweetheart", phase)
                for p in range(state.n_players))
 
 
@@ -1579,7 +1595,7 @@ def the_demon_kills(world, state, night):
     # Vortox that killed its Sweetheart made the board impossible
     # (29.09.2026). Left unasked tonight: permissive, never wrong.
     if any(f"N{night}" in state.died_at(p)
-           and world.role_at(p, f"N{night}") == "Sweetheart"
+           and falls_as(world, state, p, "Sweetheart", f"N{night}")
            for p in range(state.n_players)):
         reachable = False
     return [death_causes.Cause(
@@ -2452,7 +2468,7 @@ def a_gambler_may_lose(world, state, night):
 def _a_sweetheart_died(world, state, night):
     phase = f"N{night}"
     return any(phase in state.died_at(p)
-               and world.role_at(p, phase) == "Sweetheart"
+               and falls_as(world, state, p, "Sweetheart", phase)
                for p in range(state.n_players))
 
 
@@ -4577,14 +4593,17 @@ def a_sweetheart_leaves_somebody_drunk(world, state, night):
     picks, and picking somebody is not a coincidence that needs paying
     for.
     """
-    if not _in_bag(state, "Sweetheart"):
+    if not _in_bag(state, "Sweetheart") \
+            and not taken_by_a_philosopher(state, "Sweetheart"):
         return []
     # Whoever was the Sweetheart when they died — dealt one, or made one by
-    # a Pit-Hag. Only the dealt one was looked for (29.09.2026).
+    # a Pit-Hag. Only the dealt one was looked for (29.09.2026). And a
+    # Philosopher that took it; a real one a Philosopher had drunk when it
+    # died leaves nobody drunk (way 1 of A and B, 13.10.2026).
     out = []
     for seat in range(state.n_players):
         gone = [p for p in state.died_at(seat)
-                if world.role_at(seat, p) == "Sweetheart"]
+                if falls_as(world, state, seat, "Sweetheart", p)]
         if not gone:
             continue
         first = min(gone, key=phase_index)
@@ -5522,7 +5541,7 @@ def _story_shares(world, viable, state=None):
     """
     # A Barber swap gets the share the table gives it, not its price:
     # see `_barber_share`. Only asked where a swap was open at all.
-    if state is not None and len(viable) > 1 and _in_bag(state, "Barber") \
+    if state is not None and len(viable) > 1 and _barber_on_board(state) \
             and barber_claimants(state):
         viable = [(cost * _barber_share(world, changes, state), changes)
                   for cost, changes in viable]

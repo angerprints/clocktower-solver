@@ -1060,6 +1060,7 @@ def handmade():
 
     yield from the_eighth_five()
     yield from the_ninth_three()
+    yield from the_philosopher_takes()
 
 
 def the_eighth_five():
@@ -1233,6 +1234,44 @@ def the_ninth_three():
     for what, seed in (("all-three", 12), ("chambermaid", 10),
                        ("philosopher", 16), ("philosopher-all-three", 36)):
         yield played(f"x-nine-bmr-played-{what}", X9B, seed, 7, 4)
+
+
+def the_philosopher_takes():
+    """Open item 56, step 1 (13.10.2026): a Philosopher that took the
+    Sweetheart, the Barber or the Klutz has it on dying, and the real one
+    it drunk does not."""
+    P7 = ["Philosopher", "Oracle", "Clockmaker", "Dreamer", "Savant",
+          "Artist", "Juggler"]
+    def took(role):
+        return {"type": "PhilosopherChoice", "night": 1, "player": 0,
+                "role": role}
+    for role in ("Sweetheart", "Dreamer"):
+        yield board(f"sv-7-philosopher-{role.lower()}-dies", SV, P7,
+                    infos=[took(role), {"type": "OracleInfo", "night": 3,
+                                        "player": 1, "count": 1}],
+                    players_override={0: ["N2"]}, days_done=[1, 2])
+    R7 = ["Philosopher", "Oracle", "Sweetheart", "Dreamer", "Savant",
+          "Artist", "Juggler"]
+    yield board("sv-7-sweetheart-drunk-by-the-philosopher", SV, R7,
+                infos=[took("Sweetheart"), {"type": "OracleInfo",
+                                            "night": 3, "player": 1,
+                                            "count": 1}],
+                players_override={2: ["N2"]}, days_done=[1, 2])
+    for role in ("Barber", "Dreamer"):
+        yield board(f"sv-7-philosopher-{role.lower()}-executed", SV, P7,
+                    infos=[took(role)], players_override={0: ["X1"]},
+                    days_done=[1, 2])
+    B7 = ["Philosopher", "Oracle", "Barber", "Dreamer", "Savant", "Artist",
+          "Juggler"]
+    yield board("sv-7-barber-drunk-by-the-philosopher", SV, B7,
+                infos=[took("Barber")], players_override={2: ["X1"]},
+                days_done=[1, 2])
+    yield board("sv-7-philosopher-klutz-points", SV, P7,
+                infos=[took("Klutz"), {"type": "KlutzChoice", "night": 2,
+                                       "player": 0, "target": 3}],
+                players_override={0: ["N2"]}, days_done=[1, 2])
+    for what, seed in (("sweetheart", 21), ("barber", 66), ("klutz", 84)):
+        yield played(f"sv-played-philosopher-{what}", SV, seed, 7, 4)
 
 
 def generated(how_many=60):
