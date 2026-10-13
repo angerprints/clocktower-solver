@@ -1065,6 +1065,7 @@ def handmade():
     yield from the_philosopher_takes()
     yield from the_philosopher_takes_group_1()
     yield from the_philosopher_takes_group_2()
+    yield from the_philosopher_takes_group_3()
 
 
 def the_eighth_five():
@@ -1387,6 +1388,51 @@ def the_philosopher_takes_group_2():
             rng, must_have=("Philosopher",) + GROUP_2)
         yield played(f"x-killers-played-{seed}", script, seed, 7, 4,
                      rng=rng)
+
+
+def the_philosopher_takes_group_3():
+    """Open item 56, step 2, group 3 (13.10.2026): a Philosopher disturbs
+    with what it took. The boards of tests/test_philosopher_takes_2.py,
+    and four games."""
+    sys.path.insert(0, str(HERE))
+    from test_philosopher_takes_2 import GROUP_3, DISTURBERS, P7, G7, R
+    def took(role, seat=3):
+        return {"type": "PhilosopherChoice", "night": 1, "player": seat,
+                "role": role}
+
+    def empath(night, count):
+        return {"type": "Empath", "night": night, "player": 1,
+                "count": count}
+    for role in GROUP_3 + ("Chef",):
+        low = role.lower()
+        yield board(f"x-disturbers-7-philosopher-{low}-minion-hanged",
+                    DISTURBERS, R, infos=[took(role), empath(2, 2)],
+                    players_override={5: ["X1"]}, days_done=[1, 2])
+        yield board(f"x-disturbers-7-philosopher-{low}-preaches",
+                    DISTURBERS, P7,
+                    infos=[took(role), {"type": "PreacherChoice", "night": 1,
+                                        "player": 3, "target": 5},
+                           empath(2, 2)], days_done=[1, 2])
+        yield board(f"x-disturbers-7-philosopher-{low}-beside-the-empath",
+                    DISTURBERS, G7, infos=[took(role, 2), empath(2, 1)],
+                    days_done=[1, 2])
+        yield board(f"x-disturbers-7-philosopher-{low}-first-night",
+                    DISTURBERS, R, infos=[took(role), empath(1, 2)],
+                    days_done=[1])
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    for seed in PLAYED_GROUP_3:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(
+            rng, must_have=("Philosopher",) + GROUP_3)
+        yield played(f"x-disturbers-played-{seed}", script, seed, 7, 4,
+                     rng=rng)
+
+
+# Gate games where a Philosopher took one of group 3 and used it: the
+# Goon turned (120), a sermon (215), a Minion hanged beside the Minstrel
+# (235), a Puzzlemaster's guess (1305).
+PLAYED_GROUP_3 = (120, 215, 235, 1305)
 
 
 # Gate games where a Philosopher took one of group 2 and used it: the

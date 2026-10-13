@@ -27,7 +27,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    went_on_after, phase_index,
                    begin_reads, end_reads, listen_for_sides, replay_reads,
                    _LISTENING, falls_as, taken_by_a_philosopher, took_it,
-                   faux_paw_lycanthrope)
+                   faux_paw_lycanthrope, side_open)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
                     INVERTED, registers_as_role, evil_registrations,
@@ -1204,8 +1204,7 @@ def a_mezepheles_may_have_turned(world, state):
         for seat in seats:
             if seat == mez or world.evil_at(seat, phase):
                 continue
-            role = world.role_at(seat, phase)
-            if CHARACTERS[role].alignment_open \
+            if side_open(world, state, seat, phase) \
                     and not acts_as_cult_leader(world, state, seat, phase):
                 continue                  # a Goon's side nobody follows
             stories.append((MezephelesTurn(phase, seat, None, "evil"),))
@@ -1854,7 +1853,7 @@ def _beside_a_side_nobody_knows(world, state, lady, phase, alive=None):
     and a death beside her proves nothing about her (03.10.2026, the
     first played games in which a Goon turned).
     """
-    return any(CHARACTERS[world.role_at(p, phase)].alignment_open
+    return any(side_open(world, state, p, phase)
                for p in _living_beside(state, lady, phase, alive))
 
 
@@ -2342,8 +2341,7 @@ def _a_moonchilds_pick(world, state, night, child, name="Moonchild"):
         return []                         # it named somebody evil
     # A Goon it named may have been turned by then, and nobody knows:
     # the pick may kill and need not.
-    if any(CHARACTERS[world.role_at(seat, phase)].alignment_open
-           for seat in good):
+    if any(side_open(world, state, seat, phase) for seat in good):
         return [death_causes.Cause(name=name,
                                    kind=death_causes.OTHER,
                                    seats=good, capacity=1)]
@@ -4304,7 +4302,7 @@ def _surely_good(world, state, seat, phase):
     role = world.role_at(seat, phase)
     if acts_as_cult_leader(world, state, seat, phase):
         return cult_sides(world, state, seat, phase) == {False}
-    if CHARACTERS[role].alignment_open:
+    if side_open(world, state, seat, phase):
         return False
     return not world.evil_at(seat, phase)
 
@@ -4824,12 +4822,17 @@ def a_goon_drunks_whoever_chose_it(world, state, night):
     back and forth all game. That is handled where it shows: its side is
     open, so an Empath counting neighbours has to allow both.
     """
-    if not _in_bag(state, "Goon"):
+    if not _on_board(state, "Goon"):
         return []
     phase = f"N{night}"
-    goon = world.find_at("Goon", phase)
-    if goon is None or goon not in state.alive_set(phase):
-        return []
+    # The holder, and a Philosopher that took it (13.10.2026).
+    return [source for goon in _holders(world, state, "Goon", phase)
+            if goon in state.alive_set(phase)
+            for source in _a_goons_chooser(world, state, night, goon)]
+
+
+def _a_goons_chooser(world, state, night, goon):
+    phase = f"N{night}"
     pickers = frozenset(
         seat for seat in state.alive_set(phase)
         if seat != goon and CHARACTERS[world.role_at(seat, phase)].chooses)
@@ -4943,11 +4946,17 @@ def a_minstrel_silences_the_table(world, state, night):
     day share one key here, and stretching it back would wrongly excuse
     readings from a night that had already happened.
     """
-    if not _in_bag(state, "Minstrel"):
+    if not _on_board(state, "Minstrel"):
         return []
     phase = f"N{night}"
-    seat = world.find_at("Minstrel", phase)
-    if seat is None or seat not in state.alive_set(phase):
+    # The holder, and a Philosopher that took it (13.10.2026).
+    return [source for seat in _holders(world, state, "Minstrel", phase)
+            for source in _a_minstrels_song(world, state, night, seat)]
+
+
+def _a_minstrels_song(world, state, night, seat):
+    phase = f"N{night}"
+    if seat not in state.alive_set(phase):
         return []
     # There to hear it: a Minstrel raised tonight was dead when the
     # Minion hanged, and its ability did nothing.
@@ -5012,18 +5021,25 @@ def a_preacher_silences_its_minions(world, state, night):
     Preacher is drunk or poisoned is `plan_night_resting`; a Preacher
     that was off when it chose is the other story in `_impairment_plan`.
     """
-    if not _in_bag(state, "Preacher"):
+    if not _on_board(state, "Preacher"):
         return []
     phase = f"N{night}"
-    preacher = world.find_at("Preacher", phase)
-    if preacher is None or preacher not in state.alive_set(phase):
-        return []
+    # The holder, and a Philosopher that took it (13.10.2026).
+    return [source for preacher in _holders(world, state, "Preacher", phase)
+            if preacher in state.alive_set(phase)
+            for source in _a_preachers_sermons(world, state, night,
+                                               preacher)]
+
+
+def _a_preachers_sermons(world, state, night, preacher):
+    phase = f"N{night}"
     hit = set()
     for info in state.infos:
         if not isinstance(info, PreacherChoice) or info.player != preacher \
                 or info.night > night:
             continue
-        if world.role_at(preacher, f"N{info.night}") != "Preacher":
+        if not _has_ability(world, state, preacher, "Preacher",
+                            f"N{info.night}"):
             continue
         # An ability ends with the death of whoever has it.
         if _died_between(state, preacher, info.night, night):
@@ -5048,14 +5064,20 @@ def a_puzzlemaster_keeps_one_drunk(world, state, night):
     """ "1 player is drunk, even if you die." Whoever the Storyteller
     likes, evil too, for the whole game (10.10.2026). Free and never
     forced; one seat all game is not held to, as with the Sweetheart."""
-    if not _in_bag(state, "Puzzlemaster"):
+    if not _on_board(state, "Puzzlemaster"):
         return []
-    if "Puzzlemaster" not in world.roles:
+    # One drunk for the one dealt, and one for each Philosopher that took
+    # it by tonight (13.10.2026).
+    phase = f"N{night}"
+    many = (1 if "Puzzlemaster" in world.roles else 0) + sum(
+        1 for who in (state.philosophies() or {})
+        if took_it(world, state, who, "Puzzlemaster", phase))
+    if not many:
         return []                         # dealt, or nobody is drunk of it
     free = lambda who: 1.0
     return [impairment.Source("Puzzlemaster",
-                              frozenset(range(state.n_players)), capacity=1,
-                              cost=free, repeat_cost=free)]
+                              frozenset(range(state.n_players)),
+                              capacity=many, cost=free, repeat_cost=free)]
 
 
 @impairment.source_rule
@@ -5290,7 +5312,8 @@ def _impairment_plan(world, state, failures, forbidden):
     for info in state.infos:
         if not isinstance(info, PreacherChoice):
             continue
-        if world.role_at(info.player, f"N{info.night}") != "Preacher":
+        if not _has_ability(world, state, info.player, "Preacher",
+                            f"N{info.night}"):
             continue
         again = {night: set(seats) for night, seats in failures.items()}
         again.setdefault(info.night, set()).add(info.player)

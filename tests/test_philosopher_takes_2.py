@@ -23,6 +23,8 @@ Sailor, Tea Lady, Fool, Mayor, Pacifist, Exorcist, Princess.
 
 Group 2, the ones that kill: Gossip, Tinker, Moonchild, Lycanthrope,
 Acrobat.
+
+Group 3, the ones that disturb: Minstrel, Preacher, Goon, Puzzlemaster.
 """
 
 import json
@@ -227,6 +229,9 @@ class BothLanguagesAgree(SolverTest):
     def test_on_the_boards_of_group_two(self):
         self.agree(_payloads_2())
 
+    def test_on_the_boards_of_group_three(self):
+        self.agree(_payloads_3())
+
     def agree(self, cases):
         import app
         script = ("import {solveBoard} from './js/api.mjs';"
@@ -341,6 +346,85 @@ def _payloads_2():
     return out
 
 
+GROUP_3 = ("Minstrel", "Preacher", "Goon", "Puzzlemaster")
+
+DISTURB_IDS = ["philosopher", "minstrel", "preacher", "goon", "puzzlemaster",
+               "chef", "empath", "washerwoman", "investigator", "monk",
+               "drunk", "saint", "recluse", "poisoner", "scarletwoman",
+               "spy", "imp"]
+DISTURBERS = scripts.from_ids("Philosopher disturbers", DISTURB_IDS)
+#      0       1         2              3              4
+G7 = ["Chef", "Empath", "Philosopher", "Investigator", "Washerwoman",
+      "ScarletWoman", "Imp"]                                 # 5, 6
+
+
+def dcost(roles, rows=(), **kw):
+    kw.setdefault("days_done", {1, 2})
+    st = GameState(n_players=len(roles), script=DISTURBERS,
+                   claims=dict(enumerate(roles)), infos=list(rows), **kw)
+    return S.explanation_cost(World(tuple(roles), (None,) * len(roles)), st)
+
+
+class GroupThreeInTheSolver(SolverTest):
+    """An Empath between two good players, told something else: what
+    the Philosopher took has to explain it. With a Chef taken, nothing."""
+
+    def test_its_minstrel_drunks_the_table(self):
+        rows = [I.Empath(2, 1, count=2)]
+        hanged = {"deaths": {5: ("D1",)}, "executions": {1: 5}}
+        self.assertIsNotNone(dcost(R, [took("Minstrel")] + rows, **hanged))
+        self.assertIsNone(dcost(R, [took("Chef")] + rows, **hanged))
+
+    def test_its_preacher_silences_a_minion(self):
+        rows = [took("Preacher"), I.PreacherChoice(1, 3, target=5)]
+        st = GameState(n_players=7, script=DISTURBERS,
+                       claims=dict(enumerate(P7)), infos=rows,
+                       days_done={1, 2})
+        got = S.a_preacher_silences_its_minions(
+            World(tuple(P7), (None,) * 7), st, 2)
+        self.assertEqual([(x.name, sorted(x.seats), x.actor) for x in got],
+                         [("Preacher", [5], 3)])
+
+    def test_its_goon_may_be_on_either_side(self):
+        # Ruling G: the side changes. The Empath beside it may count it.
+        rows = [I.Empath(2, 1, count=1)]
+        self.assertIsNotNone(dcost(G7, [took("Goon", 2)] + rows))
+        self.assertIsNone(dcost(G7, [took("Chef", 2)] + rows))
+
+    def test_its_puzzlemaster_keeps_one_drunk(self):
+        rows = [I.Empath(1, 1, count=2)]
+        self.assertIsNotNone(dcost(R, [took("Puzzlemaster")] + rows,
+                                   days_done={1}))
+        self.assertIsNone(dcost(R, [took("Chef")] + rows, days_done={1}))
+
+
+def _payloads_3():
+    def pay(rows, events, roles, days=(1, 2)):
+        players = [{"claim": c, "events": events.get(i, [])}
+                   for i, c in enumerate(roles)]
+        return {"n_players": len(roles), "players": players, "infos": rows,
+                "script": {"name": DISTURBERS.name,
+                           "characters": DISTURB_IDS},
+                "days_done": list(days)}
+
+    def take(role, seat=3):
+        return {"type": "PhilosopherChoice", "night": 1, "player": seat,
+                "role": role}
+
+    def empath(night, count):
+        return {"type": "Empath", "night": night, "player": 1,
+                "count": count}
+    out = []
+    for role in GROUP_3 + ("Chef",):
+        out.append(pay([take(role), empath(2, 2)], {5: ["X1"]}, R))
+        out.append(pay([take(role), {"type": "PreacherChoice", "night": 1,
+                                     "player": 3, "target": 5},
+                        empath(2, 2)], {}, P7))
+        out.append(pay([take(role, 2), empath(2, 1)], {}, G7))
+        out.append(pay([take(role), empath(1, 2)], {}, R, days=(1,)))
+    return out
+
+
 class TheSimulatorPlaysThem(SolverTest):
     """L, and the gate in small: games that must hold a Philosopher and
     every character of group 1."""
@@ -410,6 +494,22 @@ class TheSimulatorPlaysThem(SolverTest):
 
     def test_the_true_world_is_kept_with_group_two(self):
         self.kept(GROUP_2)
+
+    def test_the_true_world_is_kept_with_group_three(self):
+        self.kept(GROUP_3)
+
+    def test_a_philosopher_disturbs_with_what_it_took(self):
+        sermons = guesses = turned = 0
+        for _seed, _script, _rng, deal, heard in self.games(group=GROUP_3):
+            for row in heard:
+                if row.player in deal.philosophies:
+                    sermons += type(row).__name__ == "PreacherChoice"
+                    guesses += type(row).__name__ == "PuzzlemasterGuess"
+            turned += sum(1 for _at, seat, _why, _side in deal.side_changes
+                          if deal.philosophies.get(seat) == "Goon")
+        self.assertGreater(sermons, 0)
+        self.assertGreater(guesses, 0)
+        self.assertGreater(turned, 0)
 
     def kept(self, group):
         import claims as C

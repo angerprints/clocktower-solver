@@ -1239,7 +1239,10 @@ def _the_goon_answers(d, night, chooser, target):
     phase = f"N{night}"
     if night in d.goon_first or target is None or chooser == target:
         return False
-    if d.role_at(target, phase) != "Goon" or d.deaths.get(target) is not None:
+    # Or a Philosopher that took it: it turns as well (ruling G,
+    # 13.10.2026).
+    if not _acts_as(d, target, "Goon", phase) \
+            or d.deaths.get(target) is not None:
         return False
     if not d.working(target, night):
         return False
@@ -2126,14 +2129,16 @@ def _preacher_preaches(d, night, rng):
     phase = f"N{night}"
     out = []
     for seat in d.alive_at(phase):
-        if not _acting_as(d, seat, "Preacher", phase):
+        # Or a Philosopher that took it (13.10.2026).
+        if not (_acting_as(d, seat, "Preacher", phase)
+                or _took(d, seat, "Preacher", phase)):
             continue
         others = [p for p in range(d.n) if p != seat]
         if not others:
             continue
         target = rng.choice(others)
         out.append(PreacherChoice(night, seat, target=target))
-        if d.role_at(seat, phase) != "Preacher":
+        if not _acts_as(d, seat, "Preacher", phase):
             continue                      # the Drunk's token: nothing
         if _the_goon_answers(d, night, seat, target) \
                 or not d.working(seat, night):
@@ -2149,7 +2154,7 @@ def _preached(d, night, phase=None, by_day=False):
     living = d.alive_at(f"D{night}" if by_day else phase)
     return {target for preacher, target, since in d.preached
             if since <= night and preacher in living
-            and d.role_at(preacher, phase) == "Preacher"
+            and _acts_as(d, preacher, "Preacher", phase)
             and TEAM[d.role_at(target, phase)] == "minion"}
 
 
@@ -2207,21 +2212,25 @@ def _puzzlemaster_guesses(d, day, rng, heard):
     living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
     for seat in living:
         if seat in d.puzzle_spent \
-                or not _acting_as(d, seat, "Puzzlemaster", phase):
+                or not (_acting_as(d, seat, "Puzzlemaster", phase)
+                        or _took(d, seat, "Puzzlemaster", phase)):
             continue
         if rng.random() >= 0.25:
             continue
         others = [p for p in range(d.n) if p != seat]
-        if d.puzzle_drunk is not None and d.puzzle_drunk != seat \
+        # Its own drunk: a Philosopher's is not the dealt one (13.10.2026).
+        mine = getattr(d, "puzzle_drunks", {}).get(seat, d.puzzle_drunk) \
+            if _took(d, seat, "Puzzlemaster", phase) else d.puzzle_drunk
+        if mine is not None and mine != seat \
                 and rng.random() < 0.4:
-            guess = d.puzzle_drunk
+            guess = mine
         else:
             guess = rng.choice(others)
         d.puzzle_spent.add(seat)
         demon = d.demon_at(phase)
-        real = d.role_at(seat, phase) == "Puzzlemaster" \
+        real = _acts_as(d, seat, "Puzzlemaster", phase) \
             and d.working(seat, day, by_day=True)
-        if real and guess == d.puzzle_drunk and demon is not None:
+        if real and guess == mine and demon is not None:
             shown = demon
         elif real:
             pool = [p for p in others if p != demon]
@@ -4177,6 +4186,11 @@ def early_choices(d, night, rng):
                 made = _for_role(d, seat, "Philosopher", night, rng)
                 if made is not None:
                     out.append(made)
+                # The Preacher preached before this pass; one this
+                # Philosopher has just drunk did it drunk (13.10.2026).
+                if d.philosophies.get(seat) == "Preacher":
+                    d.preached = [(p, t, since) for p, t, since in d.preached
+                                  if not (since == 1 and p != seat)]
     for seat in _in_night_order(d, night):
         role = before[seat]
         # A Philosopher that took an early chooser chooses early too. It
@@ -4462,11 +4476,15 @@ def droisoned_at(d, night, by_day=False):
     if day >= 1:
         # Alive tonight, and alive when the Minion hanged: one raised
         # since was not there for its ability to do anything.
-        minstrel = next((p for p in range(d.n)
-                         if d.role_at(p, phase) == "Minstrel"
-                         and p in living
-                         and p in d.alive_at(f"E{day}")), None)
-        if minstrel is not None:
+        # The holder, or a Philosopher that took it — and not the
+        # holder that Philosopher drunk (13.10.2026).
+        for minstrel in range(d.n):
+            if not _acts_as(d, minstrel, "Minstrel", phase) \
+                    or minstrel not in living \
+                    or minstrel not in d.alive_at(f"E{day}") \
+                    or _drunk_by_its_philosopher(d, minstrel, "Minstrel",
+                                                 phase):
+                continue
             executed = [p for p in d.died_on(f"E{day}")
                         if TEAM[d.role_at(p, f"D{day}")] == "minion"]
             if executed:
@@ -4563,7 +4581,7 @@ def droisoned_at(d, night, by_day=False):
     # one pass (10.10.2026). And the Puzzlemaster's drunk, all game.
     silenced = set()
     for preacher, target, since in getattr(d, "preached", ()):
-        if since > night or d.role_at(preacher, phase) != "Preacher":
+        if since > night or not _acts_as(d, preacher, "Preacher", phase):
             continue
         if preacher not in (d.alive_at(f"D{night}") if by_day else living):
             continue
@@ -4580,7 +4598,16 @@ def droisoned_at(d, night, by_day=False):
                      if TEAM[d.role_at(p, phase)] == "townsfolk"}
     out |= silenced
     if getattr(d, "puzzle_drunk", None) is not None:
-        out.add(d.puzzle_drunk)
+        # Not while a Philosopher that took the Puzzlemaster lives and
+        # drunks the real one (13.10.2026); that Philosopher's own instead.
+        held = next((p for p in range(d.n)
+                     if d.role_at(p, phase) == "Puzzlemaster"), None)
+        if held is None or not _drunk_by_its_philosopher(
+                d, held, "Puzzlemaster", phase):
+            out.add(d.puzzle_drunk)
+    for seat, drunk in getattr(d, "puzzle_drunks", {}).items():
+        if _took(d, seat, "Puzzlemaster", phase):
+            out.add(drunk)
     # The drunk Village Idiot, all game (11.10.2026).
     if getattr(d, "vi_drunk", None) is not None:
         out.add(d.vi_drunk)
@@ -5421,6 +5448,13 @@ def _for_role(d, seat, role, night, rng):
         d.philosophies[seat] = took
         # The Lycanthrope's "1 good player registers as evil" comes with
         # it, where nobody dealt one already chose (13.10.2026).
+        # The Puzzlemaster's "1 player is drunk" the same: one of its own.
+        if took == "Puzzlemaster":
+            town = [p for p in range(d.n) if TEAM[d.roles[p]] == "townsfolk"
+                    and p != seat]
+            if town:
+                d.puzzle_drunks = dict(getattr(d, "puzzle_drunks", {}))
+                d.puzzle_drunks[seat] = rng.choice(town)
         if took == "Lycanthrope" and getattr(d, "faux_paw", None) is None:
             good = [p for p in range(d.n) if not is_evil(d.roles[p])
                     and p != getattr(d, "bh_evil", None)]

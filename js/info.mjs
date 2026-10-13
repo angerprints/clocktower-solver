@@ -125,6 +125,13 @@ export function cultSides(w, s, seat, phase) {
 /** The living Lycanthrope whose faux paw reads evil then, if any: a
  * Philosopher that took it ahead of the holder it drunk (13.10.2026),
  * else the holder. See info.py. */
+/** Is this seat's side one nobody follows: a Goon, or a Philosopher that
+ * took the Goon (ruling G, 13.10.2026)? See info.py. */
+export function sideOpen(w, s, seat, phase) {
+  if (CHARACTERS[w.roleAt(seat, phase)].alignment_open) return true;
+  return !!s && tookIt(w, s, seat, "Goon", phase);
+}
+
 export function fauxPawLycanthrope(w, s, phase, living = true) {
   const alive = s.aliveSet(phase);
   const who = Object.keys(s.philosophies() || {}).map(Number)
@@ -174,6 +181,8 @@ export function evilOptions(w, s, seat, phase) {
     // evil whatever side that left it on (open item 55, 12.10.2026).
     const sides = cultSides(w, s, seat, phase);
     got = [true, false].filter(side => sides.has(side));
+  } else if (s && sideOpen(w, s, seat, phase)) {
+    got = [true, false];                 // a Philosopher's Goon
   } else {
     got = evilRegistrations(w.roleAt(seat, phase), w.alignmentAt(seat, phase));
   }
@@ -1844,6 +1853,7 @@ export const LycanthropeChose = define("LycanthropeChose", "Lycanthrope",
           || !s.aliveSet(phase).has(this.target)) return true;
       const hidden = s._hidden;
       if (hidden && hidden[0] === this.target) return true;
+      if (sideOpen(w, s, this.target, phase)) return true;  // a Philosopher's Goon
       return evilRegistrations(w.roleAt(this.target, phase),
                                w.alignmentAt(this.target, phase))
         .includes(true);
@@ -1901,11 +1911,11 @@ export const BountyHunterInfo = define("BountyHunterInfo", "BountyHunter",
       return s.diedAt(last.target).some(at => phaseIndex(at) <= here);
     },
     isTrue(w) { return !!w.evilAt(this.target, `N${this.night}`); },
-    leanedOn(w) {
+    leanedOn(w, s) {
       const phase = `N${this.night}`;
       if (w.evilAt(this.target, phase)) return [];
       const role = w.roleAt(this.target, phase);
-      if (CHARACTERS[role].alignment_open) return [];
+      if (sideOpen(w, s, this.target, phase)) return [];
       return evilRegistrations(role, w.alignmentAt(this.target, phase))
         .includes(true) ? [this.target] : [];
     },
@@ -1927,7 +1937,7 @@ export const CultCalled = define("CultCalled", "CultLeader",
       const joined = new Set([...(this.joined || [])].map(Number));
       for (let seat = 0; seat < s.nPlayers; seat++) {
         if (seat === this.player || joined.has(seat)) continue;
-        if (CHARACTERS[w.roleAt(seat, phase)].alignment_open) return [];
+        if (sideOpen(w, s, seat, phase)) return [];
         if (!w.evilAt(seat, phase)) return [];
       }
       return [this.player];

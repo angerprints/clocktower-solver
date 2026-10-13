@@ -707,7 +707,9 @@ def _note_what_we_were_not_told(state, deal, roles, night, hidden):
 # group by group (open item 56, step 2, 13.10.2026).
 TAKEN_ACTS = ("Sailor", "Innkeeper", "Monk", "Exorcist",
               # Group 2: the ones that kill (13.10.2026).
-              "Tinker", "Acrobat", "Gossip", "Moonchild", "Lycanthrope")
+              "Tinker", "Acrobat", "Gossip", "Moonchild", "Lycanthrope",
+              # Group 3: the ones that disturb (13.10.2026).
+              "Preacher")
 
 
 def _by_seat(hidden, key, night, seat):
@@ -1837,7 +1839,8 @@ def _goon_answers(state, chooser, target, slot):
     Order decides an *alignment* here, not merely whether an ability
     worked, which is why no amount of set arithmetic could hold it.
     """
-    if state.roles.get(target) != "Goon":
+    # Or a Philosopher that took it (13.10.2026).
+    if not state.has(target, "Goon"):
         return
     first_slot, first = state.chosen_by.get(target, (None, None))
     if first != chooser or first_slot != slot:

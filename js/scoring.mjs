@@ -23,7 +23,7 @@ import {Timeline, change, turnedEvil} from "./worlds.mjs";
 import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, pixieGain, survivalsOf,
         teaLadyFailedAtTheGallows} from "./characters.rules.mjs";
 import {actsAsCultLeader, besideAlive, cultSides, fallsAs, fauxPawLycanthrope,
-        knowsItTurnedEvil,
+        knowsItTurnedEvil, sideOpen,
         livingNeighbours, takenByAPhilosopher, wentOnAfter} from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -911,8 +911,7 @@ export function aMezephelesMayHaveTurned(world, state) {
       seats = [...seatsTheBoardLooksAt(world, state)].sort((a, b) => a - b);
     for (const seat of seats) {
       if (seat === mez || world.evilAt(seat, phase)) continue;
-      const role = world.roleAt(seat, phase);
-      if (CHARACTERS[role].alignment_open
+      if (sideOpen(world, state, seat, phase)
           && !actsAsCultLeader(world, state, seat, phase)) continue;
       stories.push([turnedEvil(phase, seat, "mezepheles")]);
     }
@@ -1608,7 +1607,7 @@ function surelyGood(world, state, seat, phase) {
     const sides = cultSides(world, state, seat, phase);
     return sides.size === 1 && sides.has(false);
   }
-  if (CHARACTERS[world.roleAt(seat, phase)].alignment_open) return false;
+  if (sideOpen(world, state, seat, phase)) return false;
   return !world.evilAt(seat, phase);
 }
 
@@ -1970,7 +1969,8 @@ function impairmentPlan(world, state, failures, forbidden) {
   // solver.py.
   for (const info of state.infos) {
     if (info.type !== "PreacherChoice") continue;
-    if (world.roleAt(info.player, `N${info.night}`) !== "Preacher") continue;
+    if (!hasAbility(world, state, info.player, "Preacher", `N${info.night}`))
+      continue;
     const again = {};
     for (const [night, seats] of Object.entries(failures))
       again[night] = new Set(seats);

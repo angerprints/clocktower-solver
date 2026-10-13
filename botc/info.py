@@ -729,6 +729,14 @@ def acts_as_cult_leader(w, s, seat, phase):
                 and phase_index(phase) >= phase_index(took[1]))
 
 
+def side_open(w, s, seat, phase):
+    """Is this seat's side one nobody follows: a Goon, or a Philosopher
+    that took the Goon (table ruling G, 13.10.2026: the side changes)."""
+    if CHARACTERS[w.role_at(seat, phase)].alignment_open:
+        return True
+    return s is not None and took_it(w, s, seat, "Goon", phase)
+
+
 def faux_paw_lycanthrope(w, s, phase, living=True):
     """The living Lycanthrope whose faux paw reads evil then, if any: a
     Philosopher that took it ahead of the holder it drunk (13.10.2026),
@@ -890,6 +898,8 @@ def evil_options(w, s, seat, phase):
         # the faux paw, which reads evil whatever side that left it on
         # (open item 55, 12.10.2026: this returned before asking).
         got = tuple(sorted(cult_sides(w, s, seat, phase), reverse=True))
+    elif s is not None and side_open(w, s, seat, phase):
+        got = (True, False)               # a Philosopher's Goon
     else:
         got = evil_registrations(w.role_at(seat, phase),
                                  w.alignment_at(seat, phase))
@@ -3623,6 +3633,8 @@ class LycanthropeChose(Info):
         hidden = getattr(s, "_hidden", None)
         if hidden and hidden[0] == self.target:
             return True                   # the faux paw
+        if side_open(w, s, self.target, phase):
+            return True                   # a Philosopher's Goon, too
         return True in evil_registrations(w.role_at(self.target, phase),
                                           w.alignment_at(self.target, phase))
 
@@ -3739,7 +3751,7 @@ class BountyHunterInfo(Info):
         if w.evil_at(self.target, phase):
             return ()
         role = w.role_at(self.target, phase)
-        if CHARACTERS[role].alignment_open:
+        if side_open(w, s, self.target, phase):
             return ()
         if True in evil_registrations(role, w.alignment_at(self.target,
                                                             phase)):
@@ -3784,8 +3796,7 @@ class CultCalled(Info):
         for seat in range(s.n_players):
             if seat == self.player or seat in self.joined:
                 continue
-            role = w.role_at(seat, phase)
-            if CHARACTERS[role].alignment_open:
+            if side_open(w, s, seat, phase):
                 return ()                 # may be good, and stayed out
             if not w.evil_at(seat, phase):
                 return ()                 # a good player who stayed out

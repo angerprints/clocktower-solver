@@ -17,7 +17,7 @@ import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
-import {fallsAs, takenByAPhilosopher, tookIt} from "./info.mjs";
+import {fallsAs, sideOpen, takenByAPhilosopher, tookIt} from "./info.mjs";
 
 // --------------------------------------------------------------------
 // Constants. Every one is a judgement rather than a fact, which is what
@@ -554,7 +554,7 @@ survivesExecutionRule(function aTeaLadyKeepsHerNeighboursFromTheGallows(
  * nothing about her (03.10.2026). */
 function besideASideNobodyKnows(world, state, lady, phase, alive = null) {
   for (const p of livingBeside(state, lady, phase, alive))
-    if (CHARACTERS[world.roleAt(p, phase)].alignment_open) return true;
+    if (sideOpen(world, state, p, phase)) return true;
   return false;
 }
 
@@ -924,7 +924,7 @@ function aMoonchildsPick(world, state, night, child, name = "Moonchild") {
   if (!aimed.size) return [];              // it named somebody evil
   // A Goon it named may have been turned by then, and nobody knows: the
   // pick may kill and need not.
-  if ([...aimed].some(x => CHARACTERS[world.roleAt(x, phase)].alignment_open))
+  if ([...aimed].some(x => sideOpen(world, state, x, phase)))
     return [new Cause(name, OTHER, aimed, {capacity: 1})];
   return [new Cause(name, PICKED, aimed,
                     {capacity: 1, mustFire: true})];
@@ -1500,10 +1500,16 @@ function aSailorsDrunk(world, state, night, seat, by) {
  * player — a Courtier names a character and never triggers one. Nobody
  * records who chose whom, so the reach is everybody who could have. */
 sourceRule(function aGoonDrunksWhoeverChoseIt(world, state, night) {
-  if (!inBag(state, "Goon")) return [];
+  if (!onBoard(state, "Goon")) return [];
+  // The holder, and a Philosopher that took it (13.10.2026).
   const phase = `N${night}`;
-  const goon = acting(world, state, "Goon", night);
-  if (goon === null) return [];
+  return holders(world, state, "Goon", phase)
+    .filter(goon => state.aliveSet(phase).has(goon))
+    .flatMap(goon => aGoonsChooser(world, state, night, goon));
+});
+
+function aGoonsChooser(world, state, night, goon) {
+  const phase = `N${night}`;
   const pickers = new Set([...state.aliveSet(phase)].filter(
     seat => seat !== goon && CHARACTERS[world.roleAt(seat, phase)].chooses));
   // A Leviathan chooses a good player each night but the first where its
@@ -1530,7 +1536,7 @@ sourceRule(function aGoonDrunksWhoeverChoseIt(world, state, night) {
   const free = () => 1.0;
   return [new Source("Goon", pickers, {capacity: 1, cost: free,
                                        repeatCost: free})];
-});
+}
 
 /** Whoever holds the named character, drunk for three days and nights.
  *
@@ -1588,9 +1594,14 @@ sourceRule(function aCourtierNamesACharacter(world, state, night) {
  * script. Two Minions executed on consecutive days gives two such nights
  * running, which is the thing to check if the span arithmetic is wrong. */
 sourceRule(function aMinstrelSilencesTheTable(world, state, night) {
-  if (!inBag(state, "Minstrel")) return [];
-  const seat = acting(world, state, "Minstrel", night);
-  if (seat === null) return [];
+  if (!onBoard(state, "Minstrel")) return [];
+  // The holder, and a Philosopher that took it (13.10.2026).
+  return holders(world, state, "Minstrel", `N${night}`).flatMap(
+    seat => aMinstrelsSong(world, state, night, seat));
+});
+
+function aMinstrelsSong(world, state, night, seat) {
+  if (!state.aliveSet(`N${night}`).has(seat)) return [];
   // There to hear it: a Minstrel raised tonight was dead when the Minion
   // hanged, and its ability did nothing.
   if (!state.aliveSet(`D${night - 1}`).has(seat)) return [];
@@ -1604,7 +1615,7 @@ sourceRule(function aMinstrelSilencesTheTable(world, state, night) {
   return [new Source("Minstrel", everyone,
                      {capacity: everyone.size, cost: 1.0, repeatCost: 1.0,
                       actor: seat})];
-});
+}
 
 /** "Each night, choose if you are drunk until dusk." Itself and nobody
  * else, its own choice, free and never forced (10.10.2026). */
@@ -1634,15 +1645,22 @@ sourceRule(function aWidowPoisonsOne(world, state, night) {
 /** A Minion the Preacher chose while working has no ability while the
  * Preacher lives and works (10.10.2026). Forced. See solver.py. */
 sourceRule(function aPreacherSilencesItsMinions(world, state, night) {
-  if (!inBag(state, "Preacher")) return [];
+  if (!onBoard(state, "Preacher")) return [];
+  // The holder, and a Philosopher that took it (13.10.2026).
   const phase = `N${night}`;
-  const preacher = world.findAt("Preacher", phase);
-  if (preacher === null || !state.aliveSet(phase).has(preacher)) return [];
+  return holders(world, state, "Preacher", phase)
+    .filter(preacher => state.aliveSet(phase).has(preacher))
+    .flatMap(preacher => aPreachersSermons(world, state, night, preacher));
+});
+
+function aPreachersSermons(world, state, night, preacher) {
+  const phase = `N${night}`;
   const hit = new Set();
   for (const info of state.infos) {
     if (info.type !== "PreacherChoice" || info.player !== preacher
         || info.night > night) continue;
-    if (world.roleAt(preacher, `N${info.night}`) !== "Preacher") continue;
+    if (!hasAbility(world, state, preacher, "Preacher", `N${info.night}`))
+      continue;
     if (diedBetween(state, preacher, info.night, night)) continue;
     if (world.teamAt(info.target, `N${info.night}`) === "minion"
         && world.teamAt(info.target, phase) === "minion") hit.add(info.target);
@@ -1655,15 +1673,21 @@ sourceRule(function aPreacherSilencesItsMinions(world, state, night) {
     ? () => 1.0 : 1.0;
   return [new Source("Preacher", hit, {capacity: hit.size, cost,
                                        repeatCost: cost, actor: preacher})];
-});
+}
 
 /** "1 player is drunk, even if you die." Free, never forced. */
 sourceRule(function aPuzzlemasterKeepsOneDrunk(world, state, night) {
-  if (!inBag(state, "Puzzlemaster")) return [];
-  if (!world.roles.includes("Puzzlemaster")) return [];
+  if (!onBoard(state, "Puzzlemaster")) return [];
+  // One drunk for the one dealt, and one for each Philosopher that took
+  // it by tonight (13.10.2026).
+  const phase = `N${night}`;
+  const many = (world.roles.includes("Puzzlemaster") ? 1 : 0)
+    + Object.keys(state.philosophies() || {}).map(Number).filter(
+      who => tookIt(world, state, who, "Puzzlemaster", phase)).length;
+  if (!many) return [];
   const everyone = new Set(Array.from({length: state.nPlayers}, (_, i) => i));
   return [new Source("Puzzlemaster", everyone,
-                     {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0})];
+                     {capacity: many, cost: () => 1.0, repeatCost: () => 1.0})];
 });
 
 /** "On night X, all Townsfolk are poisoned until dusk. [X Outsiders]"
