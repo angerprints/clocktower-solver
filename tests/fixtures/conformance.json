@@ -32777,56 +32777,57 @@
     "game_over": true
    },
    "expect": {
-    "valid": 3297,
+    "valid": 3519,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 0.9026,
+      "evil_pct": 0.8999,
       "demon_pct": 0.0,
-      "drunk_pct": 11.5772,
-      "lying_pct": 12.4797
+      "drunk_pct": 11.5427,
+      "lying_pct": 12.4426
      },
      {
-      "evil_pct": 95.685,
-      "demon_pct": 94.3621,
-      "drunk_pct": 0.9632,
-      "lying_pct": 96.6481
+      "evil_pct": 95.5853,
+      "demon_pct": 94.2605,
+      "drunk_pct": 0.9603,
+      "lying_pct": 96.5456
      },
      {
-      "evil_pct": 31.9297,
+      "evil_pct": 31.9097,
       "demon_pct": 0.0,
-      "drunk_pct": 24.3762,
-      "lying_pct": 56.306
+      "drunk_pct": 24.3527,
+      "lying_pct": 56.2624
      },
      {
-      "evil_pct": 38.515,
+      "evil_pct": 38.5185,
       "demon_pct": 0.0,
-      "drunk_pct": 22.2464,
-      "lying_pct": 60.7615
+      "drunk_pct": 22.1998,
+      "lying_pct": 60.7183
      },
      {
-      "evil_pct": 6.7237,
-      "demon_pct": 5.4384,
-      "drunk_pct": 1.0512,
-      "lying_pct": 7.7749
+      "evil_pct": 6.822,
+      "demon_pct": 5.5358,
+      "drunk_pct": 1.0482,
+      "lying_pct": 7.8702
      },
      {
-      "evil_pct": 25.9557,
+      "evil_pct": 25.9717,
       "demon_pct": 0.0,
-      "drunk_pct": 16.0584,
-      "lying_pct": 42.0141
+      "drunk_pct": 16.0107,
+      "lying_pct": 41.9824
      },
      {
-      "evil_pct": 0.3988,
-      "demon_pct": 0.1995,
-      "drunk_pct": 2.1142,
-      "lying_pct": 0.0424
+      "evil_pct": 0.4032,
+      "demon_pct": 0.2037,
+      "drunk_pct": 2.1127,
+      "lying_pct": 0.0425
      }
     ],
     "blame": {
      "2": {
       "0": {
-       "Demon": 1.0
+       "Demon": 0.7498,
+       "Gossip": 0.2502
       }
      },
      "4": {
@@ -32844,13 +32845,13 @@
     "players": [
      {
       "name": "",
-      "claim": "Pacifist",
+      "claim": "Clockmaker",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       2
+       3
       ],
       "nominated": [
        1,
@@ -32870,29 +32871,28 @@
       "voted": [
        2
       ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Philosopher",
-      "events": [
-       "X3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2,
-       3
-      ],
       "nominated": [
-       1,
        2
       ]
      },
      {
       "name": "",
-      "claim": "Gossip",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
       "events": [
        "N2"
       ],
@@ -32905,21 +32905,24 @@
      {
       "name": "",
       "claim": "Dreamer",
-      "events": [],
+      "events": [
+       "X3"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
        1,
-       2
+       2,
+       3
       ],
       "nominated": [
-       2
+       3
       ]
      },
      {
       "name": "",
-      "claim": "Minstrel",
+      "claim": "Dreamer",
       "events": [
        "X1"
       ],
@@ -32933,7 +32936,7 @@
      },
      {
       "name": "",
-      "claim": "Investigator",
+      "claim": "Innkeeper",
       "events": [
        "N3"
       ],
@@ -32974,17 +32977,17 @@
       "type": "DreamerInfo",
       "night": 2,
       "player": 4,
-      "target": 3,
-      "good_role": "Chambermaid",
-      "evil_role": "Poisoner"
+      "target": 6,
+      "good_role": "Pacifist",
+      "evil_role": "ScarletWoman"
      },
      {
       "type": "DreamerInfo",
       "night": 3,
       "player": 4,
       "target": 6,
-      "good_role": "Ravenkeeper",
-      "evil_role": "ScarletWoman"
+      "good_role": "Gossip",
+      "evil_role": "Vortox"
      }
     ],
     "script": {
@@ -33025,50 +33028,50 @@
     "game_over": true
    },
    "expect": {
-    "valid": 53,
+    "valid": 118,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 44.1026,
-      "demon_pct": 44.1026,
+      "evil_pct": 59.3213,
+      "demon_pct": 53.1961,
       "drunk_pct": 0.0,
-      "lying_pct": 44.1026
+      "lying_pct": 59.3213
      },
      {
-      "evil_pct": 86.7826,
+      "evil_pct": 10.2919,
+      "demon_pct": 1.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.2919
+     },
+     {
+      "evil_pct": 23.6067,
+      "demon_pct": 21.1567,
+      "drunk_pct": 0.0,
+      "lying_pct": 23.6067
+     },
+     {
+      "evil_pct": 0.4133,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.1667,
+      "lying_pct": 0.2467
+     },
+     {
+      "evil_pct": 39.6475,
+      "demon_pct": 24.6472,
+      "drunk_pct": 0.0,
+      "lying_pct": 39.6475
+     },
+     {
+      "evil_pct": 65.9401,
+      "demon_pct": 0.0,
+      "drunk_pct": 2.5001,
+      "lying_pct": 63.4401
+     },
+     {
+      "evil_pct": 0.7792,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 86.7826
-     },
-     {
-      "evil_pct": 15.539,
-      "demon_pct": 15.539,
-      "drunk_pct": 0.0,
-      "lying_pct": 15.539
-     },
-     {
-      "evil_pct": 13.2174,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 13.2174
-     },
-     {
-      "evil_pct": 40.3584,
-      "demon_pct": 40.3584,
-      "drunk_pct": 0.0,
-      "lying_pct": 40.3584
-     },
-     {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     },
-     {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 0.7792
      }
     ],
     "blame": {
@@ -33080,7 +33083,8 @@
      },
      "3": {
       "6": {
-       "Demon": 1.0
+       "Demon": 0.7832,
+       "Gossip": 0.2168
       }
      }
     }
@@ -69656,6 +69660,2997 @@
      "4": {
       "1": {
        "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-gossip-two-bodies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Gossip"
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 0.5,
+       "Gossip": 0.5
+      },
+      "3": {
+       "Gossip": 0.5,
+       "Demon": 0.5
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-tinker-two-bodies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Tinker"
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      },
+      "3": {
+       "Tinker": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-moonchild-two-bodies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Moonchild"
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-lycanthrope-two-bodies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Lycanthrope"
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-acrobat-two-bodies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Acrobat"
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-chef-two-bodies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-moonchild-picks",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Moonchild"
+     },
+     {
+      "type": "MoonchildChoice",
+      "night": 2,
+      "player": 3,
+      "target": 0
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Moonchild": 1.0
+      },
+      "1": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-chef-picks",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "MoonchildChoice",
+      "night": 2,
+      "player": 3,
+      "target": 0
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 2 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-lycanthrope-faux-paw",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Lycanthrope"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-chef-faux-paw",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "ScarletWoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Empath on night 1, seat 2"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-acrobat-falls",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Poisoner",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Acrobat"
+     },
+     {
+      "type": "Acrobat",
+      "night": 2,
+      "player": 3,
+      "target": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      },
+      "3": {
+       "Acrobat": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-killers-7-philosopher-chef-falls",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Poisoner",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     },
+     {
+      "name": "",
+      "claim": "Imp",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": ""
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "Acrobat",
+      "night": 2,
+      "player": 3,
+      "target": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher killers",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-killers-played-15",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Lycanthrope",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Librarian",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 5,
+      "role": "Tinker"
+     },
+     {
+      "type": "Investigator",
+      "night": 1,
+      "player": 6,
+      "a": 3,
+      "b": 4,
+      "role": "PitHag"
+     },
+     {
+      "type": "Chef",
+      "night": 1,
+      "player": 2,
+      "count": 2
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 2,
+      "player": 1,
+      "target": 5
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 3,
+      "player": 1,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "pithag",
+      "snakecharmer",
+      "gambler",
+      "choirboy",
+      "investigator",
+      "alsaahir",
+      "mayor",
+      "librarian",
+      "chef",
+      "king",
+      "mutant",
+      "zealot",
+      "mastermind",
+      "baron",
+      "cerenovus",
+      "nodashii",
+      "leviathan",
+      "fanggu",
+      "po"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 43,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 43.451,
+      "demon_pct": 31.6175,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.3715
+     },
+     {
+      "evil_pct": 0.5042,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.9713
+     },
+     {
+      "evil_pct": 12.9214,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 47.7635
+     },
+     {
+      "evil_pct": 55.156,
+      "demon_pct": 29.4604,
+      "drunk_pct": 0.0,
+      "lying_pct": 54.3935
+     },
+     {
+      "evil_pct": 31.2404,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 48.6256
+     },
+     {
+      "evil_pct": 55.8609,
+      "demon_pct": 38.9221,
+      "drunk_pct": 0.0,
+      "lying_pct": 80.5422
+     },
+     {
+      "evil_pct": 1.7757,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 12.5808
+     }
+    ],
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 0.5099,
+       "Lycanthrope": 0.4901
+      }
+     },
+     "2": {
+      "6": {
+       "Demon": 0.5187,
+       "Lycanthrope": 0.4813
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-killers-played-65",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "X1",
+       "R2",
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "sometimes",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Acrobat",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Lycanthrope"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 3,
+      "target": 2,
+      "swapped": false
+     },
+     {
+      "type": "WidowKnown",
+      "night": 1,
+      "player": 0
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 3,
+      "target": 2,
+      "swapped": false
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 2,
+      "player": 2,
+      "target": 4
+     },
+     {
+      "type": "Acrobat",
+      "night": 2,
+      "player": 4,
+      "target": 1
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 3,
+      "player": 0,
+      "target": 2,
+      "role": "Philosopher"
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 4,
+      "player": 2,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "widow",
+      "snakecharmer",
+      "mathematician",
+      "professor",
+      "soldier",
+      "sailor",
+      "exorcist",
+      "gambler",
+      "pixie",
+      "chambermaid",
+      "ogre",
+      "politician",
+      "mastermind",
+      "scarletwoman",
+      "organgrinder",
+      "nodashii",
+      "po",
+      "shabaloth",
+      "yaggababble"
+     ]
+    },
+    "quiet_nights": [
+     3,
+     4
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 633,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8083
+     },
+     {
+      "evil_pct": 1.3658,
+      "demon_pct": 0.6545,
+      "drunk_pct": 0.0,
+      "lying_pct": 4.0062
+     },
+     {
+      "evil_pct": 3.98,
+      "demon_pct": 1.6091,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.2857
+     },
+     {
+      "evil_pct": 9.6299,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 11.2568
+     },
+     {
+      "evil_pct": 1.1497,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.9156
+     },
+     {
+      "evil_pct": 83.8745,
+      "demon_pct": 41.9373,
+      "drunk_pct": 0.0,
+      "lying_pct": 84.0736
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 55.7992,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "4": {
+       "Demon": 0.3421,
+       "Acrobat": 0.323,
+       "Yaggababble, again": 0.0532,
+       "Lycanthrope": 0.2818
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-killers-played-750",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Ravenkeeper",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Lycanthrope",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Undertaker",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Ravenkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 5,
+      "role": "Acrobat"
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 2,
+      "player": 1,
+      "target": 5
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 2,
+      "player": 3,
+      "target": 5
+     },
+     {
+      "type": "Acrobat",
+      "night": 2,
+      "player": 5,
+      "target": 4
+     },
+     {
+      "type": "Ravenkeeper",
+      "night": 2,
+      "player": 2,
+      "target": 4,
+      "role": "Undertaker"
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 3,
+      "player": 3,
+      "target": 6
+     },
+     {
+      "type": "Acrobat",
+      "night": 3,
+      "player": 5,
+      "target": 2
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "marionette",
+      "snakecharmer",
+      "ravenkeeper",
+      "mayor",
+      "exorcist",
+      "tealady",
+      "monk",
+      "investigator",
+      "undertaker",
+      "knight",
+      "lunatic",
+      "zealot",
+      "eviltwin",
+      "baron",
+      "wraith",
+      "vigormortis",
+      "yaggababble",
+      "imp",
+      "nodashii"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 320,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 5.3025,
+      "demon_pct": 0.0,
+      "drunk_pct": 9.5987,
+      "lying_pct": 14.9012
+     },
+     {
+      "evil_pct": 17.7621,
+      "demon_pct": 0.0,
+      "drunk_pct": 3.6609,
+      "lying_pct": 21.423
+     },
+     {
+      "evil_pct": 0.977,
+      "demon_pct": 0.0,
+      "drunk_pct": 26.5396,
+      "lying_pct": 27.5166
+     },
+     {
+      "evil_pct": 11.0205,
+      "demon_pct": 8.013,
+      "drunk_pct": 0.8571,
+      "lying_pct": 11.8776
+     },
+     {
+      "evil_pct": 9.3983,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.2003,
+      "lying_pct": 9.5987
+     },
+     {
+      "evil_pct": 79.0383,
+      "demon_pct": 49.5953,
+      "drunk_pct": 11.1956,
+      "lying_pct": 90.2338
+     },
+     {
+      "evil_pct": 76.5012,
+      "demon_pct": 42.3916,
+      "drunk_pct": 9.6055,
+      "lying_pct": 71.9738
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Demon": 0.5572,
+       "Yaggababble, again": 0.0445,
+       "Lycanthrope": 0.3984
+      }
+     },
+     "2": {
+      "2": {
+       "Demon": 0.5386,
+       "Yaggababble, again": 0.0436,
+       "Lycanthrope": 0.4178
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-killers-played-1490",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Acrobat",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Monk",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sweetheart",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Tinker",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Princess",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 1,
+      "role": "Moonchild"
+     },
+     {
+      "type": "Acrobat",
+      "night": 2,
+      "player": 0,
+      "target": 2
+     },
+     {
+      "type": "MoonchildChoice",
+      "night": 3,
+      "player": 1,
+      "target": 4
+     },
+     {
+      "type": "Acrobat",
+      "night": 3,
+      "player": 0,
+      "target": 2
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "gossip",
+      "tinker",
+      "moonchild",
+      "lycanthrope",
+      "acrobat",
+      "xaan",
+      "snakecharmer",
+      "monk",
+      "bountyhunter",
+      "knight",
+      "cultleader",
+      "fool",
+      "savant",
+      "empath",
+      "princess",
+      "mutant",
+      "sweetheart",
+      "harpy",
+      "poisoner",
+      "fearmonger",
+      "shabaloth",
+      "fanggu",
+      "leviathan",
+      "ojo"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 1148,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 13.3648,
+      "demon_pct": 8.076,
+      "drunk_pct": 0.0,
+      "lying_pct": 18.0634
+     },
+     {
+      "evil_pct": 7.0066,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 50.8169,
+      "demon_pct": 31.9015,
+      "drunk_pct": 0.0,
+      "lying_pct": 63.3706
+     },
+     {
+      "evil_pct": 45.5206,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 45.5206
+     },
+     {
+      "evil_pct": 80.8281,
+      "demon_pct": 60.0225,
+      "drunk_pct": 0.0,
+      "lying_pct": 78.3469
+     },
+     {
+      "evil_pct": 6.8914,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 6.8914
+     },
+     {
+      "evil_pct": 1.8399,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 38.4004
+     }
+    ],
+    "blame": {
+     "3": {
+      "5": {
+       "Demon": 0.7851,
+       "Tinker": 0.2149
+      }
+     },
+     "2": {
+      "6": {
+       "Demon": 0.974,
+       "Gossip": 0.026
       }
      }
     }

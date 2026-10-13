@@ -122,6 +122,21 @@ export function cultSides(w, s, seat, phase) {
 /** Is this seat a Philosopher that took that character by then? Its
  * ability goes with it, death-triggered ones too (13.10.2026). See
  * botc/info.py. */
+/** The living Lycanthrope whose faux paw reads evil then, if any: a
+ * Philosopher that took it ahead of the holder it drunk (13.10.2026),
+ * else the holder. See info.py. */
+export function fauxPawLycanthrope(w, s, phase, living = true) {
+  const alive = s.aliveSet(phase);
+  const who = Object.keys(s.philosophies() || {}).map(Number)
+    .sort((a, b) => a - b);
+  for (const p of who)
+    if ((alive.has(p) || !living) && tookIt(w, s, p, "Lycanthrope", phase))
+      return p;
+  const lyc = w.findAt("Lycanthrope", phase);
+  return lyc !== null && lyc !== undefined && (alive.has(lyc) || !living)
+    ? lyc : null;
+}
+
 export function tookIt(w, s, seat, role, phase) {
   const taken = (s.philosophies() || {})[seat];
   return !!(taken && taken[0] === role && w.roleAt(seat, phase) === "Philosopher"
@@ -164,8 +179,8 @@ export function evilOptions(w, s, seat, phase) {
   }
   const hidden = s ? s._hidden : null;
   if (!hidden || hidden[0] === null || hidden[0] !== seat) return got;
-  const lyc = w.findAt("Lycanthrope", phase);
-  if (lyc === null || !s.aliveSet(phase).has(lyc)) return got;
+  const lyc = fauxPawLycanthrope(w, s, phase);
+  if (lyc === null) return got;
   s._fauxHit = true;
   if (s._fauxMode === "off") return got;
   return [true];

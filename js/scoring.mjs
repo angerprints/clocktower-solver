@@ -22,7 +22,8 @@ import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
 import {Timeline, change, turnedEvil} from "./worlds.mjs";
 import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, pixieGain, survivalsOf,
         teaLadyFailedAtTheGallows} from "./characters.rules.mjs";
-import {actsAsCultLeader, besideAlive, cultSides, fallsAs, knowsItTurnedEvil,
+import {actsAsCultLeader, besideAlive, cultSides, fallsAs, fauxPawLycanthrope,
+        knowsItTurnedEvil,
         livingNeighbours, takenByAPhilosopher, wentOnAfter} from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -1508,7 +1509,7 @@ function plainFailures(world, state, outcome = {}) {
         state._fauxMode = "off";
         const okOff = info.holds(world, state, null, seat);
         state._fauxMode = "on";
-        const lyc = world.findAt("Lycanthrope", phase);
+        const lyc = fauxPawLycanthrope(world, state, phase, false);
         if (ok && !okOff) fauxNeed = ["working", lyc];
         else if (okOff && !ok) fauxNeed = ["impaired", lyc];
       }
@@ -2074,7 +2075,9 @@ function fauxPawCandidates(world, state) {
  * host is anybody who died, or -1 for somebody who never did. */
 function hiddenChoices(world, state) {
   let faux = [null], host = [null];
-  if (inBag(state, "Lycanthrope") && world.roles.includes("Lycanthrope"))
+  if ((inBag(state, "Lycanthrope") || takenByAPhilosopher(state, "Lycanthrope"))
+      && (world.roles.includes("Lycanthrope")
+          || takenByAPhilosopher(state, "Lycanthrope")))
     faux = fauxPawCandidates(world, state);
   if (inBag(state, "Lleech")) {
     const lleech = world.find("Lleech");

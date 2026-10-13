@@ -17,7 +17,7 @@
 // Only `api.mjs` is imported, so the build can stamp this one import with
 // the release fingerprint the way it stamps the page's.
 
-import {guessworkFor, onProgress, reviewGame, solveBoard} from "./api.mjs?v=2fc1c968f887";
+import {guessworkFor, onProgress, reviewGame, solveBoard} from "./api.mjs?v=e964e202dc4a";
 
 self.onmessage = event => {
   const {id, kind, payload, truth} = event.data || {};

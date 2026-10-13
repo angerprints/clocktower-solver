@@ -500,7 +500,10 @@ def hidden_from(deal, night, heard):
     # host, and whether that host was already dead as the night began.
     aimed = getattr(deal, "lyc_aimed", {}).get(night)
     if aimed is not None:
-        out[("lycanthrope", night)] = {aimed[0]: aimed[1]}
+        # Each its own: the holder and a Philosopher that took it.
+        out[("lycanthrope", night)] = dict(
+            getattr(deal, "chose_by", {}).get(("Lycanthrope", night))
+            or {aimed[0]: aimed[1]})
     if getattr(deal, "faux_paw", None) is not None:
         out["faux_paw"] = deal.faux_paw
     mad = getattr(deal, "harpy_chose", {}).get(night)
@@ -617,6 +620,10 @@ def hidden_from(deal, night, heard):
     moon = row("MoonchildChoice")
     if moon:
         out[("moonchild", night)] = moon[0].target
+        out[("moonchilds", night)] = {m.player: m.target for m in moon}
+    acro = row("AcrobatChoice")
+    if acro:
+        out[("acrobats", night)] = {a.player: a.target for a in acro}
     # The grandchild a Grandmother has tonight: her latest reading from
     # before tonight, and none at all on the night she comes back — one
     # who died and returned is a new Grandmother (03.10.2026).
@@ -630,9 +637,14 @@ def hidden_from(deal, night, heard):
                 and h.player == seat and (h.night < night or night == 1)]
         if mine:
             out["grandchild"] = mine[-1].target
-    if any(deal.role_at(p, phase) == "Tinker"
-           and p in deal.died_on(phase) for p in range(deal.n)):
-        out[("tinker", night)] = True
+    # Which Tinkers went: the holder, or a Philosopher that took it.
+    took = getattr(deal, "philosophies", {}) or {}
+    went = {p for p in range(deal.n) if p in deal.died_on(phase)
+            and (deal.role_at(p, phase) == "Tinker"
+                 or (deal.role_at(p, phase) == "Philosopher"
+                     and took.get(p) == "Tinker"))}
+    if went:
+        out[("tinker", night)] = went
 
     executed = sorted(deal.died_on(f"E{night - 1}"))
     if executed:
@@ -693,7 +705,9 @@ def _note_what_we_were_not_told(state, deal, roles, night, hidden):
 # Characters a Philosopher may take that *act* in the night, beyond the
 # three the walk knew first (Snake Charmer, Nightwatchman, Gambler). Grown
 # group by group (open item 56, step 2, 13.10.2026).
-TAKEN_ACTS = ("Sailor", "Innkeeper", "Monk", "Exorcist")
+TAKEN_ACTS = ("Sailor", "Innkeeper", "Monk", "Exorcist",
+              # Group 2: the ones that kill (13.10.2026).
+              "Tinker", "Acrobat", "Gossip", "Moonchild", "Lycanthrope")
 
 
 def _by_seat(hidden, key, night, seat):
@@ -1005,7 +1019,9 @@ def walk(deal, night, hidden):
             elif role == "Tinker":
                 # May die at any time, and the Storyteller decides. Nothing
                 # to derive: the walk is told whether it went tonight.
-                if hidden.get(("tinker", night)) and seat in state.alive:
+                went = hidden.get(("tinker", night))
+                if went and (went is True or seat in went) \
+                        and seat in state.alive:
                     state.kill(seat, slot, "Tinker")
 
             elif role == "Acrobat":
@@ -1024,7 +1040,7 @@ def walk(deal, night, hidden):
                 # A droisoned Acrobat does not function: a plain ability
                 # simply does not work. And a dead player may be picked — the
                 # Drunk is drunk whether or not it is breathing.
-                target = hidden.get(("acrobat", night))
+                target = _by_seat(hidden, "acrobat", night, seat)
                 if target is None or seat not in state.alive:
                     continue
                 if not state.working(seat):
@@ -1056,7 +1072,7 @@ def walk(deal, night, hidden):
                 # Named somebody when it died in daylight; if they are good,
                 # they die tonight. Acts at 50, after the Demon, so it can
                 # add a body the Demon did not take.
-                target = hidden.get(("moonchild", night))
+                target = _by_seat(hidden, "moonchild", night, seat)
                 if target is None:
                     continue
                 # Its state *tonight* decides, and the dead can be drunk

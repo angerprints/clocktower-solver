@@ -26,7 +26,8 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    acts_as_cult_leader, cult_sides, knows_it_turned_evil,
                    went_on_after, phase_index,
                    begin_reads, end_reads, listen_for_sides, replay_reads,
-                   _LISTENING, falls_as, taken_by_a_philosopher, took_it)
+                   _LISTENING, falls_as, taken_by_a_philosopher, took_it,
+                   faux_paw_lycanthrope)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
                     INVERTED, registers_as_role, evil_registrations,
@@ -2190,11 +2191,13 @@ def a_gossip_may_kill(world, state, night):
     The Storyteller may sink it into somebody already dead, exactly as
     with the Demon's kill, so it can also come to nothing.
     """
-    if not _in_bag(state, "Gossip") or night < 2:
+    if not _on_board(state, "Gossip") or night < 2:
         return []
     phase = f"N{night}"
-    seat = world.find_at("Gossip", phase)
-    if seat is None or seat not in state.alive_set(phase):
+    # Any living holder, a Philosopher's too (13.10.2026). One kill
+    # however many: the holder a Philosopher took it from is drunk.
+    if not any(seat in state.alive_set(phase)
+               for seat in _holders(world, state, "Gossip", phase)):
         return []
     return [death_causes.Cause(
         name="Gossip", kind=death_causes.OTHER,
@@ -2273,14 +2276,16 @@ def a_tinker_may_go_at_any_time(world, state, night):
     against the Demon and the Storyteller is not the Demon. A Tea Lady or
     an Innkeeper does stop it, because they guard against everything.
     """
-    if not _in_bag(state, "Tinker"):
+    if not _on_board(state, "Tinker"):
         return []
     phase = f"N{night}"
-    seat = world.find_at("Tinker", phase)
-    if seat is None or seat not in state.alive_set(phase):
+    # Each living holder, a Philosopher's too (13.10.2026).
+    seats = frozenset(seat for seat in _holders(world, state, "Tinker", phase)
+                      if seat in state.alive_set(phase))
+    if not seats:
         return []
     return [death_causes.Cause(name="Tinker", kind=death_causes.OTHER,
-                               seats=frozenset({seat}), capacity=1,
+                               seats=seats, capacity=len(seats),
                                cost=TINKER_DEATH_PENALTY)]
 
 
@@ -2296,12 +2301,19 @@ def a_moonchild_takes_somebody_with_it(world, state, night):
     Only a good target dies. Picking an evil one does nothing at all,
     which is why this may fire rather than must.
     """
-    if not _in_bag(state, "Moonchild") or night < 2:
+    if not _on_board(state, "Moonchild") or night < 2:
         return []
     phase = f"N{night}"
-    child = world.find_at("Moonchild", phase)
-    if child is None:
-        return []
+    # The holder, and a Philosopher that took it (13.10.2026).
+    holders = _holders(world, state, "Moonchild", phase)
+    return [cause for child in holders
+            for cause in _a_moonchilds_pick(
+                world, state, night, child,
+                _cause_name(world, holders, "Moonchild", child, phase))]
+
+
+def _a_moonchilds_pick(world, state, night, child, name="Moonchild"):
+    phase = f"N{night}"
     # Did it go down in the span before this one?
     if not any(p in (f"N{night - 1}", f"D{night - 1}")
                for p in state.died_at(child)):
@@ -2322,7 +2334,7 @@ def a_moonchild_takes_somebody_with_it(world, state, night):
     if picked is None:
         if not good:
             return []
-        return [death_causes.Cause(name="Moonchild",
+        return [death_causes.Cause(name=name,
                                    kind=death_causes.OTHER,
                                    seats=good, capacity=1)]
     good = good & picked
@@ -2332,10 +2344,10 @@ def a_moonchild_takes_somebody_with_it(world, state, night):
     # the pick may kill and need not.
     if any(CHARACTERS[world.role_at(seat, phase)].alignment_open
            for seat in good):
-        return [death_causes.Cause(name="Moonchild",
+        return [death_causes.Cause(name=name,
                                    kind=death_causes.OTHER,
                                    seats=good, capacity=1)]
-    return [death_causes.Cause(name="Moonchild", kind=death_causes.PICKED,
+    return [death_causes.Cause(name=name, kind=death_causes.PICKED,
                                seats=good, capacity=1, must_fire=True)]
 
 
@@ -2369,17 +2381,21 @@ def an_acrobat_may_fall(world, state, night):
     prevented ability counts as one that went wrong, so a Mathematician
     sees that.
     """
-    if not _in_bag(state, "Acrobat") or night < 2:
+    if not _on_board(state, "Acrobat") or night < 2:
         return []
     phase = f"N{night}"
-    seat = world.find_at("Acrobat", phase)
-    if seat is None or seat not in state.alive_set(phase):
-        return []
-    if not any(isinstance(info, AcrobatChoice) and info.night == night
-               for info in state.infos):
+    # Each living holder with a pick recorded — its own, when a
+    # Philosopher took it too (13.10.2026).
+    holders = _holders(world, state, "Acrobat", phase)
+    seats = frozenset(
+        seat for seat in holders if seat in state.alive_set(phase)
+        and any(isinstance(info, AcrobatChoice) and info.night == night
+                and _by(holders, seat) in (None, info.player)
+                for info in state.infos))
+    if not seats:
         return []                         # no pick recorded, no risk
     return [death_causes.Cause(name="Acrobat", kind=death_causes.OTHER,
-                               seats=frozenset({seat}), capacity=1,
+                               seats=seats, capacity=len(seats),
                                must_fire=False)]
 
 
@@ -2621,12 +2637,31 @@ def a_lycanthrope_may_kill(world, state, night):
     Demon kills nobody (`deaths.Cause.quiets_demon`). A choice, so it may
     come to nothing and that costs nothing.
     """
-    if not _in_bag(state, "Lycanthrope") or night < 2:
+    if not _on_board(state, "Lycanthrope") or night < 2:
         return []
     phase = f"N{night}"
-    seat = world.find_at("Lycanthrope", phase)
-    if seat is None or seat not in state.alive_set(phase):
-        return []
+    # Each living holder, a Philosopher's too, with its own actor
+    # (13.10.2026).
+    holders = _holders(world, state, "Lycanthrope", phase)
+    return [cause for seat in holders
+            if seat in state.alive_set(phase)
+            for cause in _a_lycanthropes_pick(world, state, night, seat,
+                                              _cause_name(world, holders,
+                                                          "Lycanthrope",
+                                                          seat, phase))]
+
+
+def _cause_name(world, holders, role, seat, phase):
+    """A Philosopher's kill beside the holder's has a name of its own:
+    the death machinery counts each name's kills, and two of one name
+    were one Lycanthrope firing twice (13.10.2026)."""
+    if len(holders) > 1 and world.role_at(seat, phase) != role:
+        return f"{role} (Philosopher)"
+    return role
+
+
+def _a_lycanthropes_pick(world, state, night, seat, name="Lycanthrope"):
+    phase = f"N{night}"
     faux = _faux_paw(state)
     reach = frozenset(
         p for p in state.alive_set(phase)
@@ -2635,7 +2670,7 @@ def a_lycanthrope_may_kill(world, state, night):
     if not reach:
         return []
     return [death_causes.Cause(
-        name="Lycanthrope", kind=death_causes.OTHER, seats=reach,
+        name=name, kind=death_causes.OTHER, seats=reach,
         capacity=1, actor=seat, quiets_demon=True)]
 
 
@@ -4155,7 +4190,8 @@ def _plain_failures(world, state, outcome=None):
                 state._faux_mode = "off"
                 ok_off = info.holds(world, state, None, seat)
                 state._faux_mode = "on"
-                lyc = world.find_at("Lycanthrope", phase)
+                lyc = faux_paw_lycanthrope(world, state, phase,
+                                           living=False)
                 if ok and not ok_off:
                     faux_need = ("working", lyc)
                 elif ok_off and not ok:
@@ -5835,7 +5871,9 @@ def _hidden_choices(world, state):
     """
     faux = [None]
     host = [None]
-    if _in_bag(state, "Lycanthrope") and "Lycanthrope" in world.roles:
+    if _on_board(state, "Lycanthrope") and (
+            "Lycanthrope" in world.roles
+            or taken_by_a_philosopher(state, "Lycanthrope")):
         faux = _faux_paw_candidates(world, state)
     if _in_bag(state, "Lleech"):
         lleech = world.find("Lleech")

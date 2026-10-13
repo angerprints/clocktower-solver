@@ -20,6 +20,9 @@ group. The table's answers, way 1 for all of them (B to M):
 
 Group 1, the ones that keep somebody alive: Monk, Soldier, Innkeeper,
 Sailor, Tea Lady, Fool, Mayor, Pacifist, Exorcist, Princess.
+
+Group 2, the ones that kill: Gossip, Tinker, Moonchild, Lycanthrope,
+Acrobat.
 """
 
 import json
@@ -219,8 +222,13 @@ def _payloads():
 class BothLanguagesAgree(SolverTest):
 
     def test_on_the_boards_of_group_one(self):
+        self.agree(_payloads())
+
+    def test_on_the_boards_of_group_two(self):
+        self.agree(_payloads_2())
+
+    def agree(self, cases):
         import app
-        cases = _payloads()
         script = ("import {solveBoard} from './js/api.mjs';"
                   "const ps=JSON.parse(process.argv[1]);"
                   "console.log(JSON.stringify(ps.map(p => {"
@@ -239,17 +247,111 @@ class BothLanguagesAgree(SolverTest):
         self.assertTrue(any(v for v in py))  # and some of them kept
 
 
+GROUP_2 = ("Gossip", "Tinker", "Moonchild", "Lycanthrope", "Acrobat")
+
+KILL_IDS = ["philosopher", "gossip", "tinker", "moonchild", "lycanthrope",
+            "acrobat", "chef", "empath", "washerwoman", "investigator",
+            "monk", "drunk", "saint", "recluse", "poisoner", "scarletwoman",
+            "spy", "imp"]
+KILLERS = scripts.from_ids("Philosopher killers", KILL_IDS)
+#     0       1         2               3              4
+P7 = ["Chef", "Empath", "Investigator", "Philosopher", "Washerwoman",
+      "Poisoner", "Imp"]                                     # 5, 6
+
+
+def kcost(roles, rows=(), **kw):
+    kw.setdefault("days_done", {1, 2})
+    st = GameState(n_players=len(roles), script=KILLERS,
+                   claims=dict(enumerate(roles)), infos=list(rows), **kw)
+    return S.explanation_cost(World(tuple(roles), (None,) * len(roles)), st)
+
+
+class GroupTwoInTheSolver(SolverTest):
+    """Two bodies on night 2 and an Imp that kills one: the other needs
+    what the Philosopher took. With a Chef taken, nothing."""
+
+    TWO = {"deaths": {3: ("N2",), 0: ("N2",)}}
+
+    def test_its_tinker_may_simply_go(self):
+        self.assertIsNotNone(kcost(R, [took("Tinker")], **self.TWO))
+        self.assertIsNone(kcost(R, [took("Chef")], **self.TWO))
+
+    def test_its_gossip_may_kill(self):
+        dead = {"deaths": {1: ("N2",), 0: ("N2",)}}
+        self.assertIsNotNone(kcost(R, [took("Gossip")], **dead))
+        self.assertIsNone(kcost(R, [took("Chef")], **dead))
+
+    def test_its_moonchild_takes_somebody_with_it(self):
+        rows = [I.MoonchildChoice(2, 3, target=0)]
+        dead = {"deaths": {3: ("E1",), 0: ("N2",), 1: ("N2",)},
+                "executions": {1: 3}}
+        self.assertIsNotNone(kcost(R, [took("Moonchild")] + rows, **dead))
+        self.assertIsNone(kcost(R, [took("Chef")] + rows, **dead))
+
+    def test_its_faux_paw_reads_evil(self):
+        # An Empath between two good players told one.
+        rows = [I.Empath(1, 1, count=1)]
+        self.assertIsNotNone(kcost(R, [took("Lycanthrope")] + rows,
+                                   days_done={1}))
+        self.assertIsNone(kcost(R, [took("Chef")] + rows, days_done={1}))
+
+    def test_its_acrobat_falls_with_a_poisoned_pick(self):
+        rows = [I.AcrobatChoice(2, 3, target=1)]
+        self.assertIsNotNone(kcost(P7, [took("Acrobat")] + rows,
+                                   **self.TWO))
+        self.assertIsNone(kcost(P7, [took("Chef")] + rows, **self.TWO))
+
+    def test_two_lycanthropes_are_two_kills_by_name(self):
+        # Beside the real one, the Philosopher's kill has its own name:
+        # one name was one Lycanthrope firing twice.
+        roles = list(R)
+        roles[2] = "Lycanthrope"
+        world = World(tuple(roles), (None,) * 7)
+        st = GameState(n_players=7, script=KILLERS,
+                       claims=dict(enumerate(roles)),
+                       infos=[took("Lycanthrope")], days_done={1, 2})
+        names = sorted(c.name for c in S.a_lycanthrope_may_kill(
+            world, st, 2))
+        self.assertEqual(names, ["Lycanthrope", "Lycanthrope (Philosopher)"])
+
+
+def _payloads_2():
+    def pay(rows, events, roles, days=(1, 2)):
+        players = [{"claim": c, "events": events.get(i, [])}
+                   for i, c in enumerate(roles)]
+        return {"n_players": len(roles), "players": players, "infos": rows,
+                "script": {"name": KILLERS.name, "characters": KILL_IDS},
+                "days_done": list(days)}
+
+    def take(role):
+        return {"type": "PhilosopherChoice", "night": 1, "player": 3,
+                "role": role}
+    out = []
+    for role in GROUP_2 + ("Chef",):
+        out.append(pay([take(role)], {3: ["N2"], 0: ["N2"]}, R))
+        out.append(pay([take(role), {"type": "MoonchildChoice", "night": 2,
+                                     "player": 3, "target": 0}],
+                       {3: ["X1"], 0: ["N2"], 1: ["N2"]}, R))
+        out.append(pay([take(role), {"type": "Empath", "night": 1,
+                                     "player": 1, "count": 1}], {}, R,
+                       days=(1,)))
+        out.append(pay([take(role), {"type": "Acrobat", "night": 2,
+                                     "player": 3, "target": 1}],
+                       {3: ["N2"], 0: ["N2"]}, P7))
+    return out
+
+
 class TheSimulatorPlaysThem(SolverTest):
     """L, and the gate in small: games that must hold a Philosopher and
     every character of group 1."""
 
-    def games(self, how_many=400, nights=4):
+    def games(self, how_many=400, nights=4, group=GROUP_1):
         import play_games
         import simulate
         for seed in range(how_many):
             rng = random.Random(seed)
             script = play_games.an_awkward_script(
-                rng, must_have=("Philosopher",) + GROUP_1)
+                rng, must_have=("Philosopher",) + group)
             n = [7, 8, 9, 10, 11][seed % 5]
             deal, heard = simulate.play(n, rng, nights=nights, script=script)
             yield seed, script, rng, deal, heard
@@ -266,6 +368,19 @@ class TheSimulatorPlaysThem(SolverTest):
                     chose.add(key)
         self.assertTrue({"Sailor", "Innkeeper", "Exorcist", "Monk",
                          "Princess"} <= chose, chose)
+
+    def test_a_philosopher_kills_with_what_it_took(self):
+        rows, tinkers = set(), 0
+        for _seed, _script, _rng, deal, heard in self.games(group=GROUP_2):
+            for row in heard:
+                if row.player in deal.philosophies \
+                        and row.source_role in GROUP_2:
+                    rows.add(row.source_role)
+            tinkers += sum(1 for p, took in deal.philosophies.items()
+                           if took == "Tinker" and p in deal.deaths)
+        self.assertTrue({"Acrobat", "Lycanthrope", "Moonchild"} <= rows,
+                        rows)
+        self.assertGreater(tinkers, 0)
 
     def test_it_chooses_before_a_courtier_on_the_first_night(self):
         # The real Courtier it took from is drunk at its own turn, so what
@@ -291,10 +406,16 @@ class TheSimulatorPlaysThem(SolverTest):
         self.assertGreater(seen, 0)
 
     def test_the_true_world_is_kept(self):
+        self.kept(GROUP_1)
+
+    def test_the_true_world_is_kept_with_group_two(self):
+        self.kept(GROUP_2)
+
+    def kept(self, group):
         import claims as C
         lost = []
-        for seed, script, rng, deal, heard in self.games():
-            if not set(deal.philosophies.values()) & set(GROUP_1):
+        for seed, script, rng, deal, heard in self.games(group=group):
+            if not set(deal.philosophies.values()) & set(group):
                 continue
             cl, wk, _ = C.claims_for(deal, rng, script=script)
             st = GameState(n_players=deal.n, script=script, claims=cl,

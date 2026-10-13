@@ -729,6 +729,21 @@ def acts_as_cult_leader(w, s, seat, phase):
                 and phase_index(phase) >= phase_index(took[1]))
 
 
+def faux_paw_lycanthrope(w, s, phase, living=True):
+    """The living Lycanthrope whose faux paw reads evil then, if any: a
+    Philosopher that took it ahead of the holder it drunk (13.10.2026),
+    else the holder. `living=False`: the dead too, for whose working a
+    reading asks."""
+    alive = s.alive_set(phase)
+    for who in sorted(s.philosophies() or {}):
+        if (who in alive or not living) \
+                and took_it(w, s, who, "Lycanthrope", phase):
+            return who
+    lyc = w.find_at("Lycanthrope", phase)
+    return lyc if lyc is not None and (lyc in alive or not living) \
+        else None
+
+
 def took_it(w, s, seat, role, phase):
     """Is this seat a Philosopher that took that character by then?
 
@@ -881,8 +896,8 @@ def evil_options(w, s, seat, phase):
     hidden = getattr(s, "_hidden", None) if s is not None else None
     if not hidden or hidden[0] is None or hidden[0] != seat:
         return got
-    lyc = w.find_at("Lycanthrope", phase)
-    if lyc is None or lyc not in s.alive_set(phase):
+    lyc = faux_paw_lycanthrope(w, s, phase)
+    if lyc is None:
         return got
     s._faux_hit = True
     if getattr(s, "_faux_mode", "on") == "off":

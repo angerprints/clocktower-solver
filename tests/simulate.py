@@ -1191,7 +1191,8 @@ def _moonchild_takes_one(d, night, heard, rng):
     if day < 1:
         return
     for seat in range(d.n):
-        if d.role_at(seat, f"D{day}") != "Moonchild":
+        # Or a Philosopher that took it (13.10.2026).
+        if not _acts_as(d, seat, "Moonchild", f"D{day}"):
             continue
         if d.deaths.get(seat) not in (f"N{day}", f"D{day}", f"E{day}"):
             continue
@@ -1339,7 +1340,10 @@ def _gossip_comes_true(d, night, rng):
         return
     phase, day = f"N{night}", night - 1
     for seat in range(d.n):
-        if not _stands_to_act(d, seat, "Gossip", night):
+        if not _stands_to_act(d, seat, "Gossip", night) \
+                and not (_took(d, seat, "Gossip", phase)
+                         and seat in d.alive_at(phase)
+                         and d.deaths.get(seat) is None):
             continue
         if seat not in d.alive_at(f"E{day}"):
             continue                      # back tonight: it said nothing today
@@ -1455,7 +1459,8 @@ def _tinker_may_go(d, night, rng):
     """It dies when the Storyteller says, which is not often."""
     phase = f"N{night}"
     for seat in range(d.n):
-        if d.role_at(seat, phase) != "Tinker":
+        # Or a Philosopher that took it (13.10.2026).
+        if not _acts_as(d, seat, "Tinker", phase):
             continue
         if seat not in d.alive_at(phase):
             continue
@@ -1463,8 +1468,11 @@ def _tinker_may_go(d, night, rng):
         # dawn is a night the table sees nothing of.
         if d.back_at(seat, phase) is not None:
             continue
+        # The one a Philosopher took it from is drunk, so it does not go
+        # by its ability; asked after the dice, which stay as they were.
         if rng.random() < 0.15 and not _kept_alive_by_a_tea_lady(
-                d, seat, phase):
+                d, seat, phase) \
+                and not _drunk_by_its_philosopher(d, seat, "Tinker", phase):
             d.deaths.setdefault(seat, phase)
 
 
@@ -1596,7 +1604,8 @@ def _acrobat_may_fall(d, night, heard, rng):
     phase = f"N{night}"
     droisoned = droisoned_at(d, night)
     for seat in range(d.n):
-        if d.role_at(seat, phase) != "Acrobat" or night < 2:
+        # Or a Philosopher that took it (13.10.2026).
+        if not _acts_as(d, seat, "Acrobat", phase) or night < 2:
             continue
         if seat not in d.alive_at(phase):
             continue
@@ -2300,9 +2309,9 @@ def _reads_evil(d, seat, phase):
     if seat != getattr(d, "faux_paw", None):
         return False
     night = int(phase[1:])
-    lyc = next((p for p in d.alive_at(f"N{night}")
-                if d.role_at(p, f"N{night}") == "Lycanthrope"), None)
-    return lyc is not None and d.working(lyc, night)
+    # The holder, or a Philosopher that took it (13.10.2026).
+    return any(_acts_as(d, p, "Lycanthrope", f"N{night}")
+               and d.working(p, night) for p in d.alive_at(f"N{night}"))
 
 
 def _an_innkeeper_or_sailor_keeps(d, night, target):
@@ -2340,7 +2349,8 @@ def _lycanthrope_hunts(d, night, rng):
     out = []
     for seat in d.alive_at(phase):
         if d.deaths.get(seat) is not None \
-                or not _acting_as(d, seat, "Lycanthrope", phase):
+                or not (_acting_as(d, seat, "Lycanthrope", phase)
+                        or _took(d, seat, "Lycanthrope", phase)):
             continue
         living = [p for p in d.alive_at(phase)
                   if p != seat and d.deaths.get(p) is None]
@@ -2348,9 +2358,10 @@ def _lycanthrope_hunts(d, night, rng):
             continue
         target = rng.choice(living)
         d.lyc_aimed[night] = (seat, target)
+        _chose(d, "Lycanthrope", night, seat, target)
         if rng.random() < 0.7:
             out.append(LycanthropeChose(night, seat, target=target))
-        if d.role_at(seat, phase) != "Lycanthrope":
+        if not _acts_as(d, seat, "Lycanthrope", phase):
             continue                      # the Drunk's token: nothing
         if _the_goon_answers(d, night, seat, target) \
                 or not d.working(seat, night):
@@ -5408,6 +5419,13 @@ def _for_role(d, seat, role, night, rng):
             return None
         took = rng.choice(pool)
         d.philosophies[seat] = took
+        # The Lycanthrope's "1 good player registers as evil" comes with
+        # it, where nobody dealt one already chose (13.10.2026).
+        if took == "Lycanthrope" and getattr(d, "faux_paw", None) is None:
+            good = [p for p in range(d.n) if not is_evil(d.roles[p])
+                    and p != getattr(d, "bh_evil", None)]
+            if good:
+                d.faux_paw = rng.choice(good)
         return PhilosopherChoice(night, seat, role=took)
 
     if role == "Flowergirl" and night > 1:

@@ -820,8 +820,11 @@ causeRule(function aPitHagMakingADemonMakesDeathsArbitrary(world, state, night) 
  * not from this, and a grandchild lost to it leaves the Grandmother
  * standing. */
 causeRule(function aGossipMayKill(world, state, night) {
-  if (!inBag(state, "Gossip") || night < 2) return [];
-  if (acting(world, state, "Gossip", night) === null) return [];
+  if (!onBoard(state, "Gossip") || night < 2) return [];
+  // Any living holder, a Philosopher's too (13.10.2026). See solver.py.
+  const phase = `N${night}`;
+  if (!holders(world, state, "Gossip", phase)
+        .some(seat => state.aliveSet(phase).has(seat))) return [];
   return [new Cause("Gossip", OTHER, allSeats(state),
                     {capacity: 1, cost: PRIORS.GOSSIP_KILL_PENALTY,
                      mustFire: false})];
@@ -869,11 +872,15 @@ causeRule(function anAssassinKillsThroughAnything(world, state, night) {
  * Not the Demon's doing, which is why a Monk is no help. A Tea Lady or an
  * Innkeeper does stop it, because they guard against everything. */
 causeRule(function aTinkerMayGoAtAnyTime(world, state, night) {
-  if (!inBag(state, "Tinker")) return [];
-  const seat = acting(world, state, "Tinker", night);
-  if (seat === null) return [];
-  return [new Cause("Tinker", OTHER, new Set([seat]),
-                    {capacity: 1, cost: PRIORS.TINKER_DEATH_PENALTY})];
+  if (!onBoard(state, "Tinker")) return [];
+  // Each living holder, a Philosopher's too (13.10.2026).
+  const phase = `N${night}`;
+  const seats = new Set(holders(world, state, "Tinker", phase)
+    .filter(seat => state.aliveSet(phase).has(seat)));
+  if (!seats.size) return [];
+  return [new Cause("Tinker", OTHER, seats,
+                    {capacity: seats.size,
+                     cost: PRIORS.TINKER_DEATH_PENALTY})];
 });
 
 /** Its pick lands the night *after* it learns it died.
@@ -881,10 +888,24 @@ causeRule(function aTinkerMayGoAtAnyTime(world, state, night) {
  * Only a good target dies. Picking an evil one does nothing at all, which
  * is why this may fire rather than must. */
 causeRule(function aMoonchildTakesSomebodyWithIt(world, state, night) {
-  if (!inBag(state, "Moonchild") || night < 2) return [];
+  if (!onBoard(state, "Moonchild") || night < 2) return [];
+  // The holder, and a Philosopher that took it (13.10.2026).
+  const hs = holders(world, state, "Moonchild", `N${night}`);
+  return hs.flatMap(child => aMoonchildsPick(
+    world, state, night, child,
+    causeName(world, hs, "Moonchild", child, `N${night}`)));
+});
+
+/** A Philosopher's kill beside the holder's has a name of its own: the
+ * death machinery counts each name's kills (13.10.2026). See solver.py. */
+function causeName(world, hs, role, seat, phase) {
+  if (hs.length > 1 && world.roleAt(seat, phase) !== role)
+    return `${role} (Philosopher)`;
+  return role;
+}
+
+function aMoonchildsPick(world, state, night, child, name = "Moonchild") {
   const phase = `N${night}`;
-  const child = world.findAt("Moonchild", phase);
-  if (child === null) return [];
   const went = state.diedAt(child);
   if (!went.includes(`N${night - 1}`) && !went.includes(`D${night - 1}`))
     return [];
@@ -897,17 +918,17 @@ causeRule(function aMoonchildTakesSomebodyWithIt(world, state, night) {
   // (02.10.2026).
   const picked = chosen(state, "Moonchild", night, ["target"], child);
   if (picked === null)
-    return good.size ? [new Cause("Moonchild", OTHER, good, {capacity: 1})]
+    return good.size ? [new Cause(name, OTHER, good, {capacity: 1})]
                      : [];
   const aimed = new Set([...good].filter(x => picked.has(x)));
   if (!aimed.size) return [];              // it named somebody evil
   // A Goon it named may have been turned by then, and nobody knows: the
   // pick may kill and need not.
   if ([...aimed].some(x => CHARACTERS[world.roleAt(x, phase)].alignment_open))
-    return [new Cause("Moonchild", OTHER, aimed, {capacity: 1})];
-  return [new Cause("Moonchild", PICKED, aimed,
+    return [new Cause(name, OTHER, aimed, {capacity: 1})];
+  return [new Cause(name, PICKED, aimed,
                     {capacity: 1, mustFire: true})];
-});
+}
 
 /** Guessing wrong kills you, and nothing else.
  *
@@ -923,15 +944,18 @@ causeRule(function aMoonchildTakesSomebodyWithIt(world, state, night) {
  * because her neighbours cannot die at all.
  */
 causeRule(function anAcrobatMayFall(world, state, night) {
-  if (!inBag(state, "Acrobat") || night < 2) return [];
+  if (!onBoard(state, "Acrobat") || night < 2) return [];
   const phase = `N${night}`;
-  const seat = world.findAt("Acrobat", phase);
-  if (seat === null || !state.aliveSet(phase).has(seat)) return [];
-  const picked = state.infos.some(
-    i => i.sourceRole === "Acrobat" && i.night === night);
-  if (!picked) return [];
-  return [new Cause("Acrobat", OTHER, new Set([seat]), {capacity: 1,
-                                                   mustFire: false})];
+  // Each living holder with a pick recorded — its own, when a
+  // Philosopher took it too (13.10.2026). See solver.py.
+  const hs = holders(world, state, "Acrobat", phase);
+  const seats = new Set(hs.filter(seat =>
+    state.aliveSet(phase).has(seat) && state.infos.some(
+      i => i.sourceRole === "Acrobat" && i.night === night
+           && (byOf(hs, seat) === null || byOf(hs, seat) === i.player))));
+  if (!seats.size) return [];
+  return [new Cause("Acrobat", OTHER, seats, {capacity: seats.size,
+                                              mustFire: false})];
 });
 
 causeRule(function aGamblerMayLose(world, state, night) {
@@ -1053,10 +1077,19 @@ causeRule(function aLeviathanFellsABanshee(world, state, night) {
  * kill; never the faux paw; when it kills the Demon kills nobody
  * (`quietsDemon`). A choice, so it costs nothing (11.10.2026). */
 causeRule(function aLycanthropeMayKill(world, state, night) {
-  if (!inBag(state, "Lycanthrope") || night < 2) return [];
+  if (!onBoard(state, "Lycanthrope") || night < 2) return [];
+  // Each living holder, a Philosopher's too, with its own actor
+  // (13.10.2026).
   const phase = `N${night}`;
-  const seat = world.findAt("Lycanthrope", phase);
-  if (seat === null || !state.aliveSet(phase).has(seat)) return [];
+  const hs = holders(world, state, "Lycanthrope", phase);
+  return hs.filter(seat => state.aliveSet(phase).has(seat))
+    .flatMap(seat => aLycanthropesPick(
+      world, state, night, seat,
+      causeName(world, hs, "Lycanthrope", seat, phase)));
+});
+
+function aLycanthropesPick(world, state, night, seat, name = "Lycanthrope") {
+  const phase = `N${night}`;
   const faux = fauxPaw(state);
   const reach = new Set();
   for (const p of [...state.aliveSet(phase)].sort((a, b) => a - b))
@@ -1064,9 +1097,9 @@ causeRule(function aLycanthropeMayKill(world, state, night) {
                                         world.alignmentAt(p, phase))
           .includes(false)) reach.add(p);
   if (!reach.size) return [];
-  return [new Cause("Lycanthrope", OTHER, reach,
+  return [new Cause(name, OTHER, reach,
                     {capacity: 1, actor: seat, quietsDemon: true})];
-});
+}
 
 /** "You die if & only if they are dead": its host gone by tonight, the
  * Lleech dies — with it, or the night it works again. Nothing stops it. */

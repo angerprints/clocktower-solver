@@ -1064,6 +1064,7 @@ def handmade():
     yield from the_ninth_three()
     yield from the_philosopher_takes()
     yield from the_philosopher_takes_group_1()
+    yield from the_philosopher_takes_group_2()
 
 
 def the_eighth_five():
@@ -1338,6 +1339,59 @@ def the_philosopher_takes_group_1():
             rng, must_have=("Philosopher",) + GROUP_1)
         yield played(f"x-shields-played-{seed}", script, seed,
                      [7, 8, 9, 10, 11][seed % 5], 4, rng=rng)
+
+
+def the_philosopher_takes_group_2():
+    """Open item 56, step 2, group 2 (13.10.2026): a Philosopher kills
+    with what it took. On the script of tests/test_philosopher_takes_2.py:
+    the boards its tests solve in both languages, and four games."""
+    sys.path.insert(0, str(HERE))
+    from test_philosopher_takes_2 import GROUP_2, KILLERS, P7
+    R7 = ["Chef", "Empath", "Investigator", "Philosopher", "Washerwoman",
+          "ScarletWoman", "Imp"]
+
+    def took(role):
+        return {"type": "PhilosopherChoice", "night": 1, "player": 3,
+                "role": role}
+    for role in GROUP_2 + ("Chef",):
+        low = role.lower()
+        yield board(f"x-killers-7-philosopher-{low}-two-bodies", KILLERS, R7,
+                    infos=[took(role)],
+                    players_override={3: ["N2"], 0: ["N2"]},
+                    days_done=[1, 2])
+    for role in ("Moonchild", "Chef"):
+        yield board(f"x-killers-7-philosopher-{role.lower()}-picks",
+                    KILLERS, R7,
+                    infos=[took(role), {"type": "MoonchildChoice", "night": 2,
+                                        "player": 3, "target": 0}],
+                    players_override={3: ["X1"], 0: ["N2"], 1: ["N2"]},
+                    days_done=[1, 2])
+    for role in ("Lycanthrope", "Chef"):
+        yield board(f"x-killers-7-philosopher-{role.lower()}-faux-paw",
+                    KILLERS, R7,
+                    infos=[took(role), {"type": "Empath", "night": 1,
+                                        "player": 1, "count": 1}],
+                    days_done=[1])
+    for role in ("Acrobat", "Chef"):
+        yield board(f"x-killers-7-philosopher-{role.lower()}-falls",
+                    KILLERS, P7,
+                    infos=[took(role), {"type": "Acrobat", "night": 2,
+                                        "player": 3, "target": 1}],
+                    players_override={3: ["N2"], 0: ["N2"]},
+                    days_done=[1, 2])
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    for seed in PLAYED_GROUP_2:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(
+            rng, must_have=("Philosopher",) + GROUP_2)
+        yield played(f"x-killers-played-{seed}", script, seed, 7, 4,
+                     rng=rng)
+
+
+# Gate games where a Philosopher took one of group 2 and used it: the
+# Tinker (15), the Lycanthrope (65), the Acrobat (750), the Moonchild (1490).
+PLAYED_GROUP_2 = (15, 65, 750, 1490)
 
 
 # Gate games where a Philosopher took one of group 1 and used it.

@@ -515,6 +515,10 @@ STILL_LOST = {
         # Since the Philosopher chooses first on the first night, the
         # simulator plays this seed differently (13.10.2026).
         439: "a Barber's swap nobody announced",
+        # A Philosopher's Moonchild picks the Snake Charmer, who swaps
+        # into the Demon that night (open item 48 e): since a Philosopher
+        # has the Moonchild's pick, 13.10.2026.
+        204: "a Moonchild's pick that becomes the Demon that night",
     },
     FIVE: {
         205: "an Innkeeper guarding a Fang Gu that jumps",
