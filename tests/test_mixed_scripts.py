@@ -455,7 +455,7 @@ class TwoMayHoldOneAbility(SolverTest):
     def test_a_philosopher_with_the_gambler_dies_of_its_own_guess(self):
         """The rule looked at the seat holding the character, found the
         real Gambler — drunk and harmless — and stopped."""
-        deal, heard, state, world = game(8725)
+        deal, heard, state, world = game(9435)
         seat = next(p for p, took in deal.philosophies.items()
                     if took == "Gambler")
         wrong = next(r for r in heard if isinstance(r, I.GamblerGuess)
@@ -512,6 +512,9 @@ STILL_LOST = {
         21: "a Barber's swap nobody announced, under a Vortox",
         55: "a Barber's swap and a Snake Charmer's on one board",
         146: "a Barber's swap nobody announced",
+        # Since the Philosopher chooses first on the first night, the
+        # simulator plays this seed differently (13.10.2026).
+        439: "a Barber's swap nobody announced",
     },
     FIVE: {
         205: "an Innkeeper guarding a Fang Gu that jumps",

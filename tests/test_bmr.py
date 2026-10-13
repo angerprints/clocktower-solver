@@ -1457,6 +1457,9 @@ class ThePukkaTakesItsTurnByTheFlowchart(SolverTest):
         for seed in range(40):
             d = self.deal(marked=3)
             d.innkeeper_guarded[2] = (3, 6)
+            # Each holder's choice is kept on its own since 13.10.2026.
+            simulate._chose(d, "Innkeeper", 2, d.roles.index("Innkeeper"),
+                            (3, 6))
             got = self.turn(d, 2, seed)
             fresh = d.pukka_marks.get(2)
             with self.subTest(seed=seed, fresh=fresh):
@@ -1470,8 +1473,11 @@ class ThePukkaTakesItsTurnByTheFlowchart(SolverTest):
                 self.assertEqual(d.pukka_poisoned, fresh)
 
     def test_an_exorcist_stops_the_choosing_not_the_dying(self):
+        import simulate
         d = self.deal(marked=3)
         d.exorcised[2] = 8
+        simulate._chose(d, "Exorcist", 2, d.roles.index("Exorcist"), 8,
+                        last=True)
         self.assertEqual(self.turn(d, 2), [3])
         self.assertEqual(d.pukka_history[2], (3, None))
         self.assertIsNone(d.pukka_poisoned)

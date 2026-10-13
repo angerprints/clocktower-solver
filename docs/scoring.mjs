@@ -12,7 +12,8 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
-import {minionStillActs, planNightResting, sourcesOn} from "./impairment.mjs";
+import {RESTING, minionStillActs, planNightResting, silencedOut, sourcesOn}
+  from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {LISTENING, beginReads, differOnlyUnasked, endReads, listenForSides,
         phaseIndex, replayReads} from "./phases.mjs";
@@ -1207,7 +1208,7 @@ function plainFailures(world, state, outcome = {}) {
     if (world.roleAt(seat, `D${day}`) === "Saint") fail(day, seat);
     // A Sailor cannot die, and that holds in daylight — so a working one
     // walks away from its own execution.
-    if (world.roleAt(seat, `D${day}`) === "Sailor") fail(day, seat);
+    if (hasAbility(world, state, seat, "Sailor", `D${day}`)) fail(day, seat);
     // And the same for a Tea Lady's neighbour: executed and dead, so she
     // was not working. The mirror of her saving one.
     const lady = teaLadyFailedAtTheGallows(world, state, day, seat);
@@ -1362,6 +1363,10 @@ function plainFailures(world, state, outcome = {}) {
       const began = info.night > 1 ? `E${info.night - 1}` : "N0";  // the deal, as Python's `_before`
       seat = world.findAt(role, began);
       if (seat === null) seat = world.findAt(role, phase);
+      // Nobody holds it, and the one who said it believes it does: a
+      // Drunk with that token (13.10.2026). See solver.py.
+      if (seat === null && Number.isInteger(info.player)
+          && world.believes[info.player] === role) seat = info.player;
       if (seat === null)
         // Nobody holds it — but a Philosopher may be working it.
         for (const [who, [taken, since]]
@@ -1654,7 +1659,7 @@ function leviathanDemands(world, state, fail, either) {
     const hanged = state.executedOn(day);
     if (hanged !== null && whoNominatedTheExecuted(state, day) === lev) {
       const behind = [];
-      if (world.roleAt(hanged, phase) === "Soldier") behind.push(hanged);
+      if (hasAbility(world, state, hanged, "Soldier", phase)) behind.push(hanged);
       const night = `N${day}`;
       for (const info of state.infos) {
         if (info.night !== day) continue;
@@ -1827,6 +1832,24 @@ export const ACCOUNTS_KEPT = 400;
  * earlier night — a Pukka's — are made the long way (04.10.2026). See
  * _night_accounts in solver.py.
  */
+// Sources a fallback of the plan may set aside whole. See solver.py.
+const SET_ASIDE = ["Courtier", "Philosopher", "Preacher"];
+
+/** Seats impaired tonight whatever the plan decides (13.10.2026). See
+ * `_surely_impaired` in solver.py. */
+function surelyImpaired(world, state, night) {
+  const took = state.philosophies() || {};
+  const out = new Set();
+  for (const source of silencedOut(sourcesOn(world, state, night))) {
+    if (!source.unavoidable() || RESTING.includes(source.name)
+        || SET_ASIDE.includes(source.name)
+        || (source.actor !== null && source.actor !== undefined
+            && took[source.actor] !== undefined)) continue;
+    for (const seat of source.seats) out.add(seat);
+  }
+  return out;
+}
+
 function nightAccounts(world, state, impairedAlready = {}, workingAlready = {}) {
   const deaths = nightDeaths(state);
   const nights = new Set([...Object.keys(deaths).map(Number),
@@ -1837,6 +1860,7 @@ function nightAccounts(world, state, impairedAlready = {}, workingAlready = {}) 
   const done = [];
   for (const night of [...nights].sort((a, b) => a - b)) {
     const options = [];
+    let sure = null;
     for (const opt of theOnesTheBoardAllows(
         night, explainedNight(world, state, night,
                               () => new Set(deaths[night] || [])),
@@ -1844,6 +1868,12 @@ function nightAccounts(world, state, impairedAlready = {}, workingAlready = {}) 
       let clash = false;
       for (const s of opt.impaired) if (opt.working.has(s)) clash = true;
       if (clash) continue;              // asked to be both at once
+      if (opt.working.size) {
+        if (sure === null) sure = surelyImpaired(world, state, night);
+        let refused = false;
+        for (const s of opt.working) if (sure.has(s)) refused = true;
+        if (refused) continue;          // the plan would refuse it
+      }
       // A kill that started on an earlier night puts its demand back
       // where it belongs.
       const early = Object.entries(opt.earlier || {})
@@ -1929,7 +1959,10 @@ function impairmentPlan(world, state, failures, forbidden) {
     for (const [night, seats] of Object.entries(failures))
       again[night] = new Set(seats);
     (again[info.night] = again[info.night] || new Set()).add(holder);
-    const other = planAsGiven(world, state, again, forbidden, [source]);
+    // And a Philosopher that gained nothing has nothing of the character
+    // it named to act with (13.10.2026). See solver.py.
+    const mine = source === "Philosopher" ? [holder, info.role] : null;
+    const other = planAsGiven(world, state, again, forbidden, [source], mine);
     if (other !== null) return other;
   }
   // And a Preacher that was off when it chose silenced nobody. See
@@ -1947,7 +1980,8 @@ function impairmentPlan(world, state, failures, forbidden) {
   return null;
 }
 
-function planAsGiven(world, state, failures, forbidden, without = null) {
+function planAsGiven(world, state, failures, forbidden, without = null,
+                     mine = null) {
   let total = 1.0;
   let previous = {};
   const nights = new Set([...Object.keys(failures), ...Object.keys(forbidden)]
@@ -1958,6 +1992,8 @@ function planAsGiven(world, state, failures, forbidden, without = null) {
     for (const s of wanted) if (blocked.has(s)) return null;
     let sources = sourcesOn(world, state, night);
     if (without) sources = sources.filter(src => !without.includes(src.name));
+    if (mine) sources = sources.filter(
+      src => src.actor !== mine[0] || src.name !== mine[1]);
     const got = planNightResting(sources,
                           [...wanted].sort((a, b) => a - b),
                           [...blocked].sort((a, b) => a - b), previous);

@@ -103,6 +103,11 @@ class Deal:
         self.innkeeper_guarded = {}         # night -> the pair kept safe
         self.innkeeper_void = set()         # nights it chose with no ability
         self.innkeeper_drunk = {}           # night -> which of them is drunk
+        # Each holder's choice on its own, by (character, night) -> {seat:
+        # what it chose}: the real holder and a Philosopher that took the
+        # character both choose, and only a working one counts
+        # (13.10.2026). The fields above keep the first, for the walk.
+        self.chose_by = {}
         # What the table did in daylight. Only a Flowergirl and a Town
         # Crier ask, but the day is where the answer lives.
         # A Zombuul that survived its first death — registered dead, still
@@ -1347,7 +1352,7 @@ def _gossip_comes_true(d, night, rng):
             and d.back_at(p, phase) is None
             and not _kept_alive_by_a_tea_lady(d, p, phase)
             and not _an_innkeeper_or_sailor_keeps(d, night, p)
-            and not (d.role_at(p, phase) == "Fool" and p not in d.fool_spent
+            and not (_acts_as(d, p, "Fool", phase) and p not in d.fool_spent
                      and d.working(p, night))]
         if not able_to_die:
             continue
@@ -1400,7 +1405,7 @@ def _a_fool_shrugs_it_off(d, seat, phase):
     the town simply did not pick the Fool, and the Demon killed it like
     anybody else.
     """
-    if d.role_at(seat, phase) != "Fool" or seat in d.fool_spent:
+    if not _acts_as(d, seat, "Fool", phase) or seat in d.fool_spent:
         return False
     if not d.working(seat, int(phase[1:]), by_day=phase[0] != "N"):
         return False
@@ -1558,14 +1563,16 @@ def _monk_guards(d, night, rng):
     if night < 2:
         return
     phase = f"N{night}"
-    monk = next((p for p in range(d.n)
-                 if d.role_at(p, phase) == "Monk"
-                 and p in d.alive_at(phase)), None)
-    if monk is None or not d.working(monk, night):
+    # The first working one: the holder, or a Philosopher that took it
+    # while the holder is drunk (13.10.2026).
+    monk = next((p for p in _holders(d, "Monk", phase)
+                 if p in d.alive_at(phase) and d.working(p, night)), None)
+    if monk is None:
         return
     others = [p for p in d.alive_at(phase) if p != monk]
     if others:
         d.monk_guarded[night] = rng.choice(others)
+        _chose(d, "Monk", night, monk, d.monk_guarded[night])
 
 
 def _acrobat_may_fall(d, night, heard, rng):
@@ -1636,21 +1643,15 @@ def _kept_alive_by_a_tea_lady(d, seat, phase):
     # (02.10.2026).
     if phase[0] == "N":
         night = int(phase[1:])
-        if d.role_at(seat, phase) == "Sailor" and d.working(seat, night):
+        if _acts_as(d, seat, "Sailor", phase) and d.working(seat, night):
             return True
-        pair = d.innkeeper_guarded.get(night)
-        if pair and seat in pair and night not in d.innkeeper_void:
-            # Still standing: an Innkeeper the Demon took at 27 keeps
-            # nobody from a Moonchild's pick at 50. The same for a Tea
-            # Lady, below. (A Gambler at 10 asks before anybody has died.)
-            keeper = next((p for p in range(d.n)
-                           if d.role_at(p, phase) == "Innkeeper"
-                           and p in d.alive_at(phase)
-                           and d.deaths.get(p) is None), None)
-            if keeper is not None and d.working(keeper, night):
-                return True
+        # Still standing: an Innkeeper the Demon took at 27 keeps nobody
+        # from a Moonchild's pick at 50. The same for a Tea Lady, below.
+        # (A Gambler at 10 asks before anybody has died.)
+        if _an_innkeeper_guards(d, night, seat, standing=True):
+            return True
     for lady in range(d.n):
-        if d.role_at(lady, phase) != "TeaLady":
+        if not _acts_as(d, lady, "TeaLady", phase):
             continue
         if lady not in d.alive_at(phase) or not d.working(
                 lady, int(phase[1:]), by_day=phase[0] != "N") \
@@ -1750,6 +1751,80 @@ def _falls_as(d, seat, role, phase):
     if d.role_at(seat, phase) == role:
         return not _drunk_by_its_philosopher(d, seat, role, phase)
     return _took(d, seat, role, phase)
+
+
+def _acts_as(d, seat, role, phase):
+    """Holding that character then, or a Philosopher that took it."""
+    return d.role_at(seat, phase) == role or _took(d, seat, role, phase)
+
+
+def _answering(d, chooser, role, phase):
+    """Whose ability a recorded choice stands on: a Philosopher's own, or
+    else the character's holder as the night ends, as it always was — a
+    Pit-Hag may have made the one that chose something else after it
+    chose (13.10.2026, the gate of group 1)."""
+    if _took(d, chooser, role, phase):
+        return chooser
+    return next((p for p in range(d.n) if d.role_at(p, phase) == role),
+                None)
+
+
+def _holders(d, role, phase):
+    """Every seat with that ability then, in seat order."""
+    return [p for p in range(d.n) if _acts_as(d, p, role, phase)]
+
+
+def _chose(d, role, night, seat, what, last=False):
+    """Record one holder's choice. Of the dealt holders only one counts a
+    night, as it always did — the first, or for the Exorcist the last (a
+    Pit-Hag's new Innkeeper choosing after the old one); a Philosopher's
+    is kept beside it (13.10.2026)."""
+    got = d.chose_by.setdefault((role, night), {})
+    base = role.replace("Drunk", "").replace("Void", "")
+    phase = f"N{night}"
+    if not _took(d, seat, base, phase):
+        dealt = [p for p in got if not _took(d, p, base, phase)]
+        if dealt and not last:
+            return
+        for p in dealt:
+            del got[p]
+    got[seat] = what
+
+
+def _choices(d, role, night):
+    return d.chose_by.get((role, night), {})
+
+
+def _a_working_monk(d, night, living):
+    """The dealt Monk, as always; failing that a Philosopher that took the
+    Monk (13.10.2026). Working and alive, or None."""
+    monk = d.roles.index("Monk") if "Monk" in d.roles else None
+    if monk is not None and monk in living and d.working(monk, night):
+        return monk
+    phase = f"N{night}"
+    return next((p for p in range(d.n) if _took(d, p, "Monk", phase)
+                 and p in living and d.working(p, night)), None)
+
+
+def _an_innkeeper_guards(d, night, target, gone=(), standing=False):
+    """Is this seat in the pair of a working Innkeeper — the holder, or a
+    Philosopher that took it — alive tonight? `standing`: and not dead
+    yet, for a death that comes later in the night."""
+    phase = f"N{night}"
+    for chooser, pair in _choices(d, "Innkeeper", night).items():
+        if target not in pair:
+            continue
+        if _choices(d, "InnkeeperVoid", night).get(chooser):
+            continue
+        keeper = _answering(d, chooser, "Innkeeper", phase)
+        if keeper is None or keeper in gone \
+                or keeper not in d.alive_at(phase):
+            continue
+        if standing and d.deaths.get(keeper) is not None:
+            continue
+        if d.working(keeper, night):
+            return True
+    return False
 
 
 def _barber_swap(d, night, rng):
@@ -1910,7 +1985,7 @@ def _the_princess_stops(d, night):
     if princess is None:
         return False
     phase = f"N{night}"
-    return (d.role_at(princess, phase) == "Princess"
+    return (_acts_as(d, princess, "Princess", phase)
             and princess in d.alive_at(phase)
             and d.working(princess, night))
 
@@ -1920,7 +1995,8 @@ def _can_die_by_day(d, seat, day):
     a Tea Lady's good neighbour and a Fool's first death say no — the
     Fool's spent by the asking, so this is asked last."""
     phase = f"D{day}"
-    if d.role_at(seat, phase) == "Sailor" and d.working(seat, day, by_day=True):
+    if _acts_as(d, seat, "Sailor", phase) \
+            and d.working(seat, day, by_day=True):
         return False
     if _a_vizier_stands(d, seat, day):
         return False
@@ -2235,28 +2311,18 @@ def _an_innkeeper_or_sailor_keeps(d, night, target):
     night-walk kept them alive (11.10.2026, found with three Village
     Idiots and an Innkeeper)."""
     phase = f"N{night}"
-    pair = d.innkeeper_guarded.get(night)
-    if pair and target in pair and night not in d.innkeeper_void:
-        keeper = next((p for p in range(d.n)
-                       if d.role_at(p, phase) == "Innkeeper"
-                       and p in d.alive_at(phase)), None)
-        if keeper is not None and d.working(keeper, night):
-            return True
-    return d.role_at(target, phase) == "Sailor" and d.working(target, night)
+    if _an_innkeeper_guards(d, night, target):
+        return True
+    return _acts_as(d, target, "Sailor", phase) and d.working(target, night)
 
 
 def _kept_alive_at_night(d, night, target):
     """What stops a night death that is not the Demon's: an Innkeeper's
     pair, a sober Sailor, a Tea Lady, and a Fool's free death, last."""
     phase = f"N{night}"
-    pair = d.innkeeper_guarded.get(night)
-    if pair and target in pair and night not in d.innkeeper_void:
-        keeper = next((p for p in range(d.n)
-                       if d.role_at(p, phase) == "Innkeeper"
-                       and p in d.alive_at(phase)), None)
-        if keeper is not None and d.working(keeper, night):
-            return True
-    if d.role_at(target, phase) == "Sailor" and d.working(target, night):
+    if _an_innkeeper_guards(d, night, target):
+        return True
+    if _acts_as(d, target, "Sailor", phase) and d.working(target, night):
         return True
     if _kept_alive_by_a_tea_lady(d, target, phase):
         return True
@@ -2688,18 +2754,21 @@ def _stands_behind(d, seat, day):
     sober Soldier, the pair a working Innkeeper chose last night, the
     one a working Exorcist named (their jinxes — good would win)."""
     phase = f"D{day}"
-    if d.role_at(seat, phase) == "Soldier" \
+    if _acts_as(d, seat, "Soldier", phase) \
             and d.working(seat, day, by_day=True):
         return True
-    for role, picked in (("Innkeeper", d.innkeeper_guarded.get(day) or ()),
-                         ("Exorcist", (d.exorcised.get(day),))):
-        if seat not in picked:
-            continue
-        who = next((p for p in d.alive_at(phase)
-                    if d.role_at(p, phase) == role
-                    and d.deaths.get(p) is None), None)
-        if who is not None and d.working(who, day, by_day=True):
-            return True
+    # Each holder's own choice, and only a working one (13.10.2026).
+    for role, chosen in (("Innkeeper", _choices(d, "Innkeeper", day)),
+                         ("Exorcist", {who: (target,) for who, target
+                                       in _choices(d, "Exorcist",
+                                                   day).items()})):
+        for chooser, picked in chosen.items():
+            who = _answering(d, chooser, role, phase)
+            if seat in picked and who is not None \
+                    and who in d.alive_at(phase) \
+                    and d.deaths.get(who) is None \
+                    and d.working(who, day, by_day=True):
+                return True
     return False
 
 
@@ -2814,9 +2883,10 @@ def _hold_a_day(d, day, rng):
     princess = golem = None
     if "Princess" in d.script.keys:
         princess = next((p for p in living
-                         if d.role_at(p, phase) == "Princess"
-                         and (day == 1 or d.role_at(p, f"D{day - 1}")
-                              != "Princess")), None)
+                         if _acts_as(d, p, "Princess", phase)
+                         and (day == 1 or not _acts_as(d, p, "Princess",
+                                                       f"D{day - 1}"))),
+                        None)
         if princess is not None and rng.random() < 0.6:
             nominators = [princess] + [p for p in nominators if p != princess]
         else:
@@ -2954,7 +3024,7 @@ def _the_curse_bites(d, seat, day):
         return False
     if len(d.alive_at(phase)) <= 3:
         return False
-    if d.role_at(seat, phase) == "Sailor" and d.working(seat, day):
+    if _acts_as(d, seat, "Sailor", phase) and d.working(seat, day):
         return False
     if _a_vizier_stands(d, seat, day):
         return False
@@ -2980,7 +3050,8 @@ def _walks_away(d, seat, day, rng):
     """
     phase = f"D{day}"
     role = d.role_at(seat, phase)
-    if role == "Sailor" and d.working(seat, day, by_day=True):
+    if _acts_as(d, seat, "Sailor", phase) and d.working(seat, day,
+                                                         by_day=True):
         return "Sailor"
     if _a_vizier_stands(d, seat, day):
         return "Vizier"
@@ -3002,9 +3073,10 @@ def _walks_away(d, seat, day, rng):
             return "Psychopath"
         return None
     pacifist = next((p for p in d.alive_at(phase)
-                     if d.role_at(p, phase) == "Pacifist"
-                     and d.deaths.get(p) is None), None)
-    if pacifist is not None and d.working(pacifist, day, by_day=True) \
+                     if _acts_as(d, p, "Pacifist", phase)
+                     and d.deaths.get(p) is None
+                     and d.working(p, day, by_day=True)), None)
+    if pacifist is not None \
             and d.side_at(seat, phase) == "good":
         # "Once per game is usually about right."
         if rng.random() < (0.5 if d.pacifist_spared == 0 else 0.15):
@@ -3282,12 +3354,15 @@ def _exorcised(d, night):
     if d.exorcised.get(night) is None:
         return False
     demon = d.demon_at(phase)
-    if demon is None or d.exorcised[night] != demon:
+    if demon is None:
         return False
-    exo = next((p for p in range(d.n)
-                if d.role_at(p, phase) == "Exorcist"
-                and p in d.alive_at(phase)), None)
-    return exo is not None and d.working(exo, night)
+    # Each Exorcist's own choice, and only a working one (13.10.2026).
+    for chooser, target in _choices(d, "Exorcist", night).items():
+        exo = _answering(d, chooser, "Exorcist", phase)
+        if target == demon and exo is not None \
+                and exo in d.alive_at(phase) and d.working(exo, night):
+            return True
+    return False
 
 
 def _protected(d, night, target, by_exorcist=True, gone=()):
@@ -3319,13 +3394,13 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
     if night in getattr(d, "lyc_quiet", ()):
         return True
     # Working, which is every way of going wrong, not only the Poisoner.
-    if d.role_at(target, phase) == "Soldier" and d.working(target, night):
+    if _acts_as(d, target, "Soldier", phase) and d.working(target, night):
         return True
 
     # A sober Sailor cannot die. Missing here while the solver has always
     # had it as a shield; nothing tripped only because the Sailor is so
     # often the drunk one of its own pair.
-    if d.role_at(target, phase) == "Sailor" and d.working(target, night):
+    if _acts_as(d, target, "Sailor", phase) and d.working(target, night):
         return True
 
     # An Innkeeper keeps two players safe. The docstring above has
@@ -3343,7 +3418,8 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
     # never did — a Demon killed straight through her, and the board had
     # no legal world because nothing could explain why she failed.
     for lady in range(d.n):
-        if d.role_at(lady, phase) != "TeaLady" or lady not in d.alive_at(phase):
+        if not _acts_as(d, lady, "TeaLady", phase) \
+                or lady not in d.alive_at(phase):
             continue
         if not d.working(lady, night) or lady in gone:
             continue
@@ -3357,23 +3433,17 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
     if by_exorcist and _exorcised(d, night):
         return True
 
-    if d.monk_guarded.get(night) == target:
-        monk = next((p for p in range(d.n)
-                     if d.role_at(p, phase) == "Monk"
-                     and p in d.alive_at(phase)), None)
-        if monk is not None and d.working(monk, night) and monk not in gone:
+    for chooser, guarded in _choices(d, "Monk", night).items():
+        monk = _answering(d, chooser, "Monk", phase)
+        if guarded == target and monk is not None \
+                and monk in d.alive_at(phase) and d.working(monk, night) \
+                and monk not in gone:
             return True
 
-    pair = d.innkeeper_guarded.get(night)
-    if pair and target in pair and night not in d.innkeeper_void:
-        keeper = next((p for p in range(d.n)
-                       if d.role_at(p, phase) == "Innkeeper"
-                       and p in d.alive_at(phase)), None)
-        # A guard goes with whoever gave it: an Innkeeper the Shabaloth
-        # took first protects nobody from its second kill.
-        if keeper is not None and d.working(keeper, night) \
-                and keeper not in gone:
-            return True
+    # A guard goes with whoever gave it: an Innkeeper the Shabaloth took
+    # first protects nobody from its second kill.
+    if _an_innkeeper_guards(d, night, target, gone=gone):
+        return True
 
     # And a Fool, last: its one free death, spent only if nothing else
     # had already kept it alive.
@@ -3426,11 +3496,11 @@ def _demon_kills(d, night, rng):
     # the Demon never killed (03.10.2026, the night-walk again).
     others = [p for p in living if p != demon and d.deaths.get(p) is None]
 
-    # The Monk guards, whoever is swinging.
-    monk = d.roles.index("Monk") if "Monk" in d.roles else None
+    # The Monk guards, whoever is swinging — or a Philosopher that took
+    # it, while the Monk it drunk does not (13.10.2026).
+    monk = _a_working_monk(d, night, living)
     guarded = None
-    if monk is not None and monk in living and d.working(monk, night) \
-            and rng.random() < 0.3:
+    if monk is not None and rng.random() < 0.3:
         guarded = rng.choice([p for p in living if p != monk] or [monk])
 
     tried = d.demon_aimed[night] = []
@@ -3682,13 +3752,11 @@ def _demon_kill(d, night, rng):
         return None
     target = rng.choice(targets)
 
-    monk = d.roles.index("Monk") if "Monk" in d.roles else None
-    monk_works = (monk is not None and monk in living
-                  and d.working(monk, night))
-    if monk_works and rng.random() < 0.3 and target != monk:
+    monk = _a_working_monk(d, night, living)
+    if monk is not None and rng.random() < 0.3 and target != monk:
         return None                             # the Monk guarded them
 
-    if d.role_at(target, f"N{night}") == "Soldier" \
+    if _acts_as(d, target, "Soldier", f"N{night}") \
             and d.working(target, night):
         return None                             # a sober Soldier survives
     return target
@@ -4087,6 +4155,17 @@ def early_choices(d, night, rng):
     # question — the same distinction that made the swap look wrong when
     # written at the night in the first place.
     before = {seat: d.role_at(seat, f"N{night}") for seat in range(d.n)}
+    # The Philosopher chooses first on the first night, ahead of every
+    # early chooser: a real Courtier it took from is drunk at its own turn
+    # and names nobody. It chose in the late pass, so the Courtier's
+    # drunkenness still landed (13.10.2026, the gate of group 1).
+    if night == 1:
+        for seat in _in_night_order(d, night):
+            if before[seat] == "Philosopher" and seat not in d.philosophies \
+                    and seat in d.alive_at(f"N{night}"):
+                made = _for_role(d, seat, "Philosopher", night, rng)
+                if made is not None:
+                    out.append(made)
     for seat in _in_night_order(d, night):
         role = before[seat]
         # A Philosopher that took an early chooser chooses early too. It
@@ -4206,7 +4285,9 @@ def honest_info(d, night, rng):
         # a character change — it stays the Philosopher and works two at
         # once — so `role_at` does not see it and the seat said nothing
         # but its own choice, night after night.
-        if made is None and role == "Philosopher":
+        # Not on the first night: it chose in the early pass, and used
+        # nothing that night, as before.
+        if made is None and role == "Philosopher" and night > 1:
             took = d.philosophies.get(seat)
             # An early chooser it took has already acted, in the early pass.
             if took and not (took in CHOOSES_EARLY and night > 1):
@@ -4336,20 +4417,18 @@ def droisoned_at(d, night, by_day=False):
     # Third and fourth droison sources found missing from here, after the
     # Minstrel and the Philosopher. Worth a standing check: anything that
     # droisons must be *here*, not merely recorded where it happened.
-    got = d.innkeeper_drunk.get(night)
-    if got is not None:
-        keeper = next((p for p in range(d.n)
-                       if d.role_at(p, phase) == "Innkeeper"
-                       and p in living), None)
-        if keeper is not None and keeper not in out:
-            out.add(got)
-    got = d.sailor_drunk.get(night)
-    if got is not None:
-        sailor = next((p for p in range(d.n)
-                       if d.role_at(p, phase) == "Sailor"
-                       and p in living), None)
-        if sailor is not None and sailor not in out:
-            out.add(got)
+    # Each holder's own, and not one a Philosopher that took the same
+    # character has drunk — that Philosopher's own counts instead
+    # (13.10.2026).
+    for role, key in (("Innkeeper", "InnkeeperDrunk"),
+                      ("Sailor", "SailorDrunk")):
+        for chooser, got in _choices(d, key, night).items():
+            holder = _answering(d, chooser, role, phase)
+            if holder is not None and holder in living \
+                    and holder not in out \
+                    and not _drunk_by_its_philosopher(d, holder, role,
+                                                      phase):
+                out.add(got)
 
     # A Philosopher that took an ability drunks whoever really holds that
     # character, for the rest of the game. Never in this list, so a
@@ -5318,7 +5397,7 @@ def _for_role(d, seat, role, night, rng):
         d.changes.append((phase, target, became))
         return PitHagChoice(night, seat, target=target, role=became)
 
-    if role == "Philosopher" and night == 1:
+    if role == "Philosopher" and night == 1 and seat not in d.philosophies:
         # It takes a good character's ability, once a game. Not a change
         # of character — it stays the Philosopher and works two at once —
         # so this records the choice and nothing else. The gained
@@ -5520,6 +5599,7 @@ def _for_role(d, seat, role, night, rng):
         target = rng.choice(others)
         d.exorcised_last[seat] = target
         d.exorcised[night] = target
+        _chose(d, "Exorcist", night, seat, target, last=True)
         _the_goon_answers(d, night, seat, target)
         return ExorcistChoice(night, seat, target=target)
 
@@ -5594,6 +5674,7 @@ def _for_role(d, seat, role, night, rng):
         if not _the_goon_answers(d, night, seat, target) \
                 and not _still_under_the_token(d, night, seat):
             d.sailor_drunk.setdefault(night, drunk)
+            _chose(d, "SailorDrunk", night, seat, drunk)
         return SailorChoice(night, seat, target=target)
 
     if role == "Innkeeper" and night > 1:
@@ -5605,8 +5686,10 @@ def _for_role(d, seat, role, night, rng):
         a, b = sorted(rng.sample(others, 2))
         void = _still_under_the_token(d, night, seat)
         d.innkeeper_guarded.setdefault(night, (a, b))
+        _chose(d, "Innkeeper", night, seat, (a, b))
         if void:
             d.innkeeper_void.add(night)
+            _chose(d, "InnkeeperVoid", night, seat, True)
         drunk = rng.choice([a, b])
         # Asked first, as with the Sailor. An Innkeeper that picked the
         # Pukka and the Goon it had poisoned found a Goon with no ability
@@ -5615,6 +5698,7 @@ def _for_role(d, seat, role, night, rng):
         if not any([_the_goon_answers(d, night, seat, picked)
                     for picked in (a, b)]) and not void:
             d.innkeeper_drunk.setdefault(night, drunk)
+            _chose(d, "InnkeeperDrunk", night, seat, drunk)
         return InnkeeperChoice(night, seat, a=a, b=b)
 
     if role == "DevilsAdvocate":

@@ -577,11 +577,13 @@ def handmade():
     # Played games the solver once got wrong, kept so both languages are
     # held to them (29.09.2026): a charmer swapping with a Fang Gu that had
     # just jumped (1), a Barber's swap that keeps sides (61), a Philosopher
-    # working the Snake Charmer (981), and at seven seats — the eleven-seat
+    # working the Snake Charmer (981 until the Philosopher chose first on
+    # the first night, 13.10.2026; 1143 since, where it swaps with the
+    # Demon), and at seven seats — the eleven-seat
     # originals took minutes a board — two swaps in a row (1063) and a
     # swap and a Barber on the same night (672); on Bad Moon Rising a
     # Mastermind's extra day and a Zombuul surviving its execution.
-    for seed, n, nights in ((1, 8, 4), (61, 8, 4), (981, 8, 4),
+    for seed, n, nights in ((1, 8, 4), (61, 8, 4), (1143, 8, 4),
                             (1063, 7, 4), (672, 7, 4)):
         yield played(f"sv-played-{seed}", SV, seed, n, nights)
     yield played("bmr-played-mastermind", BMR, 5, 7, 4)
@@ -767,7 +769,7 @@ def handmade():
 
     for what, seed in (
             ("gambler-right-before-a-swap", 1250),
-            ("philosopher-gambler-dies", 8725),
+            ("philosopher-gambler-dies", 735),
             ("exorcist-names-the-heir", 1725),
             ("drunk-becomes-the-fang-gu", 3375),
             ("fortune-teller-herring-vortox", 450),
@@ -1061,6 +1063,7 @@ def handmade():
     yield from the_eighth_five()
     yield from the_ninth_three()
     yield from the_philosopher_takes()
+    yield from the_philosopher_takes_group_1()
 
 
 def the_eighth_five():
@@ -1270,8 +1273,75 @@ def the_philosopher_takes():
                 infos=[took("Klutz"), {"type": "KlutzChoice", "night": 2,
                                        "player": 0, "target": 3}],
                 players_override={0: ["N2"]}, days_done=[1, 2])
-    for what, seed in (("sweetheart", 21), ("barber", 66), ("klutz", 84)):
+    for what, seed in (("sweetheart", 21), ("barber", 66), ("klutz", 237)):
         yield played(f"sv-played-philosopher-{what}", SV, seed, 7, 4)
+
+
+def the_philosopher_takes_group_1():
+    """Open item 56, step 2, group 1 (13.10.2026): a Philosopher keeps
+    somebody alive with what it took, and the real one it took from is
+    drunk. On the script of tests/test_philosopher_takes_2.py."""
+    sys.path.insert(0, str(HERE))
+    from test_philosopher_takes_2 import GROUP_1, SHIELDS
+    R7 = ["Chef", "Empath", "Investigator", "Philosopher", "Washerwoman",
+          "ScarletWoman", "Imp"]
+
+    def took(role):
+        return {"type": "PhilosopherChoice", "night": 1, "player": 3,
+                "role": role}
+    for role in ("Monk", "Soldier", "Innkeeper", "Sailor", "TeaLady",
+                 "Chef"):
+        yield board(f"x-shields-7-philosopher-{role.lower()}-quiet",
+                    SHIELDS, R7, infos=[took(role)], quiet_nights=[2],
+                    days_done=[1, 2])
+    for target in (6, 2):
+        yield board(f"x-shields-7-philosopher-exorcist-names-{target}",
+                    SHIELDS, R7,
+                    infos=[took("Exorcist"),
+                           {"type": "ExorcistChoice", "night": 2,
+                            "player": 3, "target": target}],
+                    quiet_nights=[2], days_done=[1, 2])
+    for role, seat in (("Fool", 3), ("Pacifist", 2)):
+        yield board(f"x-shields-7-philosopher-{role.lower()}-gallows",
+                    SHIELDS, R7, infos=[took(role)],
+                    players_override={seat: ["S1"]}, days_done=[1, 2])
+    yield board("x-shields-7-philosopher-mayor-corpse", SHIELDS, R7,
+                infos=[took("Mayor")], players_override={1: ["X1"]},
+                quiet_nights=[2], days_done=[1, 2])
+    yield board("x-shields-7-philosopher-princess", SHIELDS, R7,
+                infos=[took("Princess"),
+                       {"type": "PrincessNominated", "night": 1,
+                        "player": 3, "target": 0}],
+                players_override={0: ["X1"], 1: ["N2"]}, days_done=[1])
+    S7 = list(R7)
+    S7[2] = "Soldier"
+    yield board("x-shields-7-soldier-drunk-by-the-philosopher", SHIELDS,
+                S7, infos=[took("Soldier")], players_override={2: ["N2"]},
+                days_done=[1, 2])
+    T7 = list(R7)
+    T7[2] = "Sailor"
+    for name, real, mine in (("philosopher", 4, 1), ("real", 1, 4)):
+        yield board(f"x-shields-7-two-sailors-{name}-hits", SHIELDS, T7,
+                    infos=[took("Sailor"),
+                           {"type": "SailorChoice", "night": 1, "player": 2,
+                            "target": real},
+                           {"type": "SailorChoice", "night": 1, "player": 3,
+                            "target": mine},
+                           {"type": "Empath", "night": 1, "player": 1,
+                            "count": 2}],
+                    days_done=[1])
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    for seed in PLAYED_GROUP_1:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(
+            rng, must_have=("Philosopher",) + GROUP_1)
+        yield played(f"x-shields-played-{seed}", script, seed,
+                     [7, 8, 9, 10, 11][seed % 5], 4, rng=rng)
+
+
+# Gate games where a Philosopher took one of group 1 and used it.
+PLAYED_GROUP_1 = (14, 805, 50)
 
 
 def generated(how_many=60):

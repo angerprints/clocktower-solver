@@ -345,9 +345,12 @@ def plan_night_resting(sources, required, forbidden, previous):
 
 # The two that take an ability away outright, and so stop every other
 # source whose actor they reach: a Preacher's Minions, a Xaan's Townsfolk
-# (10.10.2026). Only these: what an older source does to another's actor
-# was never asked of the plan, and is left as it was.
-SILENCERS = ("Preacher", "Xaan")
+# (10.10.2026). And a Philosopher's on whoever held what it took: two
+# Sailors both choose, and only the Philosopher's drunkenness lands,
+# because the real one is drunk (table ruling J, 13.10.2026). Only these:
+# what an older source does to another's actor was never asked of the
+# plan, and is left as it was.
+SILENCERS = ("Preacher", "Xaan", "Philosopher")
 
 
 def silenced_out(sources):

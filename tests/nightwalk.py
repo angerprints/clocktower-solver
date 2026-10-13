@@ -96,7 +96,14 @@ class Night:
         self.chosen_by.setdefault(target, (slot, chooser))
         self.log.append((slot, "chose", chooser, target))
 
-    def droison(self, seat, slot, why):
+    def has(self, seat, role):
+        """Holding that character, or a Philosopher that took it
+        (13.10.2026)."""
+        return self.roles.get(seat) == role or (
+            self.roles.get(seat) == "Philosopher"
+            and self.gained.get(seat) == role)
+
+    def droison(self, seat, slot, why, by=None):
         # A Sailor or an Innkeeper droisoned after making somebody drunk
         # tonight: that drunkenness ends with it. The simulator has it so,
         # and a Lleech the Sailor had drunked, whose Sailor the Poisoner
@@ -107,8 +114,10 @@ class Night:
                 self.droisoned.discard(target)
                 self.log.append((slot, "sober", target, why))
         if why in ("Sailor", "Innkeeper") and seat not in self.droisoned:
-            source = next((p for p, r in self.roles.items()
-                           if r == why and p in self.alive), None)
+            # Whoever made them drunk: told, or the one holding it.
+            source = by if by is not None else next(
+                (p for p, r in self.roles.items()
+                 if r == why and p in self.alive), None)
             if source is not None:
                 self.made_drunk[source] = seat
         self.droisoned.add(seat)
@@ -142,7 +151,7 @@ class Night:
         # the Innkeeper had just protected guessed wrong and died here,
         # where the simulator had it live (03.10.2026; one in a hundred
         # and sixty nights disagreed for this alone).
-        if self.roles.get(seat) == "Sailor" and self.working(seat):
+        if self.has(seat, "Sailor") and self.working(seat):
             self.prevented.add(seat)
             self.log.append((slot, "kept alive", seat, "Sailor"))
             return
@@ -154,7 +163,7 @@ class Night:
         # A Fool's first death does not happen. Last, so a guard that
         # held earlier has not used it up — and once, so the walk is told
         # which Fools had already spent theirs before tonight.
-        if self.roles.get(seat) == "Fool" and seat not in self.fool_spent \
+        if self.has(seat, "Fool") and seat not in self.fool_spent \
                 and self.working(seat):
             self.fool_spent.add(seat)
             self.prevented.add(seat)
@@ -165,8 +174,8 @@ class Night:
         self.log.append((slot, "died", seat, why))
 
     def _a_tea_lady_holds(self, seat):
-        for lady, role in self.roles.items():
-            if role != "TeaLady" or lady not in self.alive:
+        for lady in self.roles:
+            if not self.has(lady, "TeaLady") or lady not in self.alive:
                 continue
             if lady in self.droisoned:
                 continue
@@ -448,6 +457,15 @@ def hidden_from(deal, night, heard):
         out[("pukka_fresh", night)] = due[1]
     if deal.monk_guarded.get(night) is not None:
         out[("monk", night)] = deal.monk_guarded[night]
+    # Each holder's own choice, where the simulator kept them apart: the
+    # real holder and a Philosopher that took it (13.10.2026).
+    for role, key in (("Monk", "monk"), ("Innkeeper", "innkeeper"),
+                      ("InnkeeperDrunk", "innkeeper_drunk"),
+                      ("SailorDrunk", "sailor_drunk"),
+                      ("Exorcist", "exorcist")):
+        got = getattr(deal, "chose_by", {}).get((role, night))
+        if got:
+            out[(key + "s", night)] = dict(got)
     if deal.innkeeper_guarded.get(night):
         out[("innkeeper", night)] = deal.innkeeper_guarded[night]
     if deal.innkeeper_drunk.get(night) is not None:
@@ -568,6 +586,9 @@ def hidden_from(deal, night, heard):
         # one of them, and the walk gave both the same target.
         out[("snakecharmers", night)] = {c.player: c.target for c in charm}
 
+    sailors = row("SailorChoice")
+    if sailors:
+        out[("sailors", night)] = {r.player: r.target for r in sailors}
     for kind, key in (("SailorChoice", "sailor"),
                       ("SnakeCharmerChoice", "snakecharmer"),
                       ("ExorcistChoice", "exorcist"),
@@ -669,6 +690,22 @@ def _note_what_we_were_not_told(state, deal, roles, night, hidden):
             state.untold.add(role)
 
 
+# Characters a Philosopher may take that *act* in the night, beyond the
+# three the walk knew first (Snake Charmer, Nightwatchman, Gambler). Grown
+# group by group (open item 56, step 2, 13.10.2026).
+TAKEN_ACTS = ("Sailor", "Innkeeper", "Monk", "Exorcist")
+
+
+def _by_seat(hidden, key, night, seat):
+    """What this seat chose, where the walk is told each holder's choice
+    on its own (`key + "s"`): the real holder and a Philosopher that took
+    the character both choose (13.10.2026). Otherwise the one choice."""
+    by = hidden.get((key + "s", night))
+    if by is not None:
+        return by.get(seat)
+    return hidden.get((key, night))
+
+
 def walk(deal, night, hidden):
     """Replay one night and return what it produced.
 
@@ -755,6 +792,10 @@ def walk(deal, night, hidden):
     # dies of a wrong guess, where the real one beside it is drunk and
     # dies of nothing (07.10.2026).
     gamble_slot = getattr(CHARACTERS["Gambler"], field, 0)
+    # And every other character a Philosopher may take that *acts*: it
+    # does what they do, at their place in the night (open item 56, step
+    # 2, 13.10.2026). Readings it took are asked further down.
+    taken_slot = {g: getattr(CHARACTERS[g], field, 0) for g in TAKEN_ACTS}
     settled = False
     for slot in _turns(night):
         # Who holds a character with this slot **now**.
@@ -776,7 +817,11 @@ def walk(deal, night, hidden):
                     and state.gained.get(p) == "Nightwatchman")
                 or (state.roles[p] == "Philosopher" and gamble_slot
                     and slot == gamble_slot
-                    and state.gained.get(p) == "Gambler")]
+                    and state.gained.get(p) == "Gambler")
+                or (state.roles[p] == "Philosopher"
+                    and state.gained.get(p) in taken_slot
+                    and taken_slot[state.gained[p]]
+                    and slot == taken_slot[state.gained[p]])]
         for seat in here:
             role = state.roles[seat]
             # A Philosopher that took the Snake Charmer's ability on an
@@ -794,6 +839,9 @@ def walk(deal, night, hidden):
             if role == "Philosopher" and gamble_slot and slot == gamble_slot \
                     and state.gained.get(seat) == "Gambler":
                 role = "Gambler"
+            if role == "Philosopher" and state.gained.get(seat) in taken_slot \
+                    and slot == taken_slot[state.gained[seat]]:
+                role = state.gained[seat]
 
             if role == "Poisoner":
                 target = hidden.get(("poisoner", night))
@@ -807,7 +855,7 @@ def walk(deal, night, hidden):
                     state.droison(target, slot, "Poisoner")
 
             elif role == "Sailor":
-                target = hidden.get(("sailor", night))
+                target = _by_seat(hidden, "sailor", night, seat)
                 if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
@@ -816,9 +864,9 @@ def walk(deal, night, hidden):
                     continue      # drunk already, or by the Goon just now
                 # One of the two is drunk; which is the Storyteller's, so the
                 # walk is told rather than deciding.
-                drunk = hidden.get(("sailor_drunk", night))
+                drunk = _by_seat(hidden, "sailor_drunk", night, seat)
                 if drunk is not None:
-                    state.droison(drunk, slot, "Sailor")
+                    state.droison(drunk, slot, "Sailor", by=seat)
 
             elif role == "Philosopher":
                 # Takes a good character's ability. Acts at 2 — before almost
@@ -897,7 +945,7 @@ def walk(deal, night, hidden):
                 # Guards somebody from the Demon. Acts at 12, before every
                 # Demon, which is what makes the guard mean anything: the
                 # Demon arrives later and finds the seat already protected.
-                target = hidden.get(("monk", night))
+                target = _by_seat(hidden, "monk", night, seat)
                 if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
@@ -914,7 +962,7 @@ def walk(deal, night, hidden):
                 # A pair, but tolerate a single seat: the enumerator hands
                 # over a tuple sized by the source's capacity, and a source
                 # that can only reach one seat gives an int.
-                picked = hidden.get(("innkeeper", night)) or ()
+                picked = _by_seat(hidden, "innkeeper", night, seat) or ()
                 if isinstance(picked, int):
                     picked = (picked,)
                 if not picked or seat not in state.alive:
@@ -927,9 +975,9 @@ def walk(deal, night, hidden):
                     for target in picked:
                         state.safe[target] = seat
                         state.guards[target] = seat
-                    drunk = hidden.get(("innkeeper_drunk", night))
+                    drunk = _by_seat(hidden, "innkeeper_drunk", night, seat)
                     if drunk is not None:
-                        state.droison(drunk, slot, "Innkeeper")
+                        state.droison(drunk, slot, "Innkeeper", by=seat)
 
             elif role == "Gambler":
                 # Names somebody and a character, and dies if it guessed
@@ -1053,7 +1101,7 @@ def walk(deal, night, hidden):
             elif role == "Exorcist":
                 # Names the Demon, and it does not kill tonight. Acts at 21,
                 # before every Demon, which is what lets it work at all.
-                target = hidden.get(("exorcist", night))
+                target = _by_seat(hidden, "exorcist", night, seat)
                 if target is None or seat not in state.alive:
                     continue
                 state.choose(seat, target, slot)
@@ -1385,7 +1433,7 @@ def walk(deal, night, hidden):
                         state.log.append((slot, "guarded", target, role))
                         state.prevented.add(seat)
                         continue
-                    if state.roles.get(target) == "Soldier" \
+                    if state.has(target, "Soldier") \
                             and state.working(target):
                         state.log.append((slot, "guarded", target, "Soldier"))
                         state.prevented.add(seat)
@@ -1931,7 +1979,7 @@ def _the_princess_holds(state, hidden, night):
         return True                       # the Lycanthrope's, 11.10.2026
     princess = hidden.get(("princess", night))
     return princess is not None and state.working(princess) \
-        and state.roles.get(princess) == "Princess"
+        and state.has(princess, "Princess")
 
 
 def _pukka_takes_its_turn(state, seat, slot, hidden, night):
@@ -1977,8 +2025,9 @@ def _pukka_takes_its_turn(state, seat, slot, hidden, night):
     # A guard holds only while whoever gave it is still working, and the
     # Pukka has just poisoned somebody: an Innkeeper it chose tonight
     # protects nobody from the poison of the night before.
-    keepers = [p for p, r in state.roles.items()
-               if r in ("Innkeeper", "Monk") and p in state.alive]
+    keepers = [p for p in state.roles
+               if (state.has(p, "Innkeeper") or state.has(p, "Monk"))
+               and p in state.alive]
     if stale in state.guarded and any(state.working(p) for p in keepers):
         state.log.append((slot, "guarded", stale, "Pukka"))
         state.prevented.add(seat)

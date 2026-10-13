@@ -29,7 +29,7 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {cultSides} from "./info.mjs";
+import {cultSides, takenByAPhilosopher, tookIt} from "./info.mjs";
 
 export const NEVER = "never";
 export const FIRST = "first";
@@ -499,14 +499,19 @@ export function uncertain(world, state, seat, night) {
     if (raised === null) return true;
     return world.findAt("Shabaloth", `N${raised}`) !== null;
   }
-  if (!state.script.keys.includes("Exorcist")) return false;
+  if (!state.script.keys.includes("Exorcist")
+      && !takenByAPhilosopher(state, "Exorcist")) return false;
   if (world.demonAt(phase) !== seat) return false;
   // A Demon that does not wake at night has nothing for an Exorcist to
   // stop: a Yaggababble, a Leviathan with nobody to choose among.
   if (acting === "Yaggababble"
       || (acting === "Leviathan" && !leviathanChooses(state))) return false;
   const exorcist = world.findAt("Exorcist", phase);
-  return exorcist !== null && state.aliveSet(phase).has(exorcist);
+  if (exorcist !== null && state.aliveSet(phase).has(exorcist)) return true;
+  // Or a Philosopher that took it (13.10.2026). See waking.py.
+  return Object.keys(state.philosophies() || {}).map(Number).some(
+    who => tookIt(world, state, who, "Exorcist", phase)
+           && state.aliveSet(phase).has(who));
 }
 
 /** Every value "how many of these woke" could have taken. */

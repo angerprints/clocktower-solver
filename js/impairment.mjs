@@ -252,9 +252,10 @@ export function planNight(sources, required, forbidden, previous) {
   return best === null ? null : {cost: best, hits: bestHits};
 }
 
-// The two that take an ability away outright (10.10.2026). See
+// The two that take an ability away outright (10.10.2026), and a
+// Philosopher's on whoever held what it took (13.10.2026). See
 // impairment.py.
-export const SILENCERS = ["Preacher", "Xaan"];
+export const SILENCERS = ["Preacher", "Xaan", "Philosopher"];
 // Sources that rest while their actor is drunk or poisoned: the two
 // silencers, and a Lleech's poison on its host (11.10.2026).
 export const RESTING = ["Preacher", "Xaan", "Lleech"];

@@ -676,7 +676,9 @@ def uncertain(world, state, seat, night):
         if raised is None:
             return True
         return world.find_at("Shabaloth", f"N{raised}") is not None
-    if "Exorcist" not in state.script.keys:
+    from .info import taken_by_a_philosopher, took_it
+    if "Exorcist" not in state.script.keys \
+            and not taken_by_a_philosopher(state, "Exorcist"):
         return False
     if world.demon_at(phase) != seat:
         return False
@@ -686,7 +688,11 @@ def uncertain(world, state, seat, night):
             or (acting == "Leviathan" and not _leviathan_chooses(state)):
         return False
     exorcist = world.find_at("Exorcist", phase)
-    return exorcist is not None and exorcist in state.alive_set(phase)
+    if exorcist is not None and exorcist in state.alive_set(phase):
+        return True
+    return any(took_it(world, state, who, "Exorcist", phase)
+               and who in state.alive_set(phase)
+               for who in (state.philosophies() or {}))
 
 
 def possible_counts(world, state, seats, night, asleep=()):

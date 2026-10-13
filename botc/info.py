@@ -3125,7 +3125,11 @@ def _cannot_die_by_day(w, s, seat, phase):
     role = w.role_at(seat, phase)
     if role in ("Sailor", "Fool", "Vizier"):
         return True
-    return w.find_at("TeaLady", phase) is not None
+    # Or a Philosopher with one of those, or with the Tea Lady (13.10.2026).
+    if any(took_it(w, s, seat, taken, phase) for taken in ("Sailor", "Fool")):
+        return True
+    return w.find_at("TeaLady", phase) is not None \
+        or taken_by_a_philosopher(s, "TeaLady")
 
 
 @dataclass

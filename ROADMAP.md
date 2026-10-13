@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 12.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 13.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -1156,9 +1156,44 @@ Der volle Bericht steht in `claude/philosoph-schritt-1.md`.
 
 **Das Tor:** Sects & Violets 17 von 3.000 Partien verworfen (vorher 19, keine neue) bei 4 Nächten, dieselben 24 bei 6 Nächten, Night-Walk 0 abweichend. Der Simulator spielt 123 von 3.000 Partien anders, die Prüfsumme von Sects & Violets ist deshalb neu (`1b9cc9c20f8cfedd`). Gemischte Partien mit Philosoph und den vier: dieselben verworfenen wie vorher. Korpus 400 Bretter (10 neue, kein altes geändert), 1.586 Tests grün.
 
+### Philosoph mit genommener Fähigkeit, Schritt 2 · *Gruppe 1 erledigt am 13.10.2026, Gruppen 2 bis 6 offen*
+
+**Deine Antworten vom 13.10.2026** zu Schritt 2: B bis M jeweils Weg 1. Bei I zeigt der Erzähler dem Philosophen ein Plättchen passend zur echten Fähigkeit: nimmt er die Verrückte, sieht er einen Dämon, nimmt er den Trunkenbold, einen Bürger. F (Einsiedler registriert auch tot) ist noch offen und kommt vor Gruppe 6. Gebaut wird Gruppe für Gruppe, jede durch das Tor (M).
+
+**Gruppe 1, die Schützen:** Mönch, Soldat, Gastwirt, Segler, Teedame, Narr, Bürgermeister, Pazifist, Exorzist, Prinzessin. Ein Philosoph, der einen davon genommen hat, schützt wie der echte, in Solver (Python und JavaScript), Simulator und Night-Walk. Der echte, den er betrunken macht, schützt nicht. Wählen beide, werden beide Zeilen eingetragen, aber nur die Wahl des Philosophen wirkt (J).
+
+**Am Tor gefunden und gleich behoben**, nicht wegen der Gruppe, aber durch sie sichtbar:
+
+| Wo | Was |
+|---|---|
+| Simulator | Der Philosoph wählte in der ersten Nacht nach den frühen Wählern. Ein echter Höfling, den er betrunken gemacht hatte, machte trotzdem jemanden betrunken. Jetzt wählt er zuerst, wie am Tisch. Partien mit Philosoph laufen deshalb anders, die Prüfsumme von Sects & Violets ist neu. |
+| Simulator | Was ein Gastwirt, Mönch, Exorzist oder Segler wählt, hängt wie bisher am Halter des Charakters am Ende der Nacht (ein Grubenweib kann den Wählenden danach verwandeln); nur die Wahl eines Philosophen hängt an ihm selbst. |
+| Solver | Ein Philosoph, der beim Wählen betrunken war, hat nichts bekommen. Trotzdem durfte seine genommene Segler-Fähigkeit ihn selbst betrunken machen. Jetzt nicht mehr. |
+| Solver | Ein toter Soldat, Segler, Narr oder Bürgermeister bot weiter kostenlos seinen Schutz an, obwohl Tote keine Fähigkeit haben. Jetzt bleibt nur „der Dämon traf einen Toten“, mit seinem Preis. |
+| Solver | Erklärungen einer Nacht, die einen Sitz arbeitend brauchen, den eine unvermeidbare Quelle sicher stört (Minnesänger, Trunkenbold), fallen vor der Obergrenze von 400 Erklärungen heraus. Der Plan hätte sie ohnehin abgelehnt, aber sie nahmen die Plätze der richtigen weg (Seed 2413, 6 Nächte). Diese und die Zeile darüber ändern in 10 Brettern des Korpus die Prozente leicht, keine Zahl gültiger Welten. |
+| Solver | Ein Trunkenbold mit dem Plättchen des Ritters, der etwas anderes behauptet, sagt, was er gezeigt bekam. Hatte ein Philosoph den Ritter genommen, wurde die Zeile dem Philosophen zugeschrieben, der dann in einer Nacht gestört sein musste, in der ihn nichts erreichen konnte. Jetzt gehört die Zeile dem, der sie sagt und sich für den Ritter hält (gemischte Partie 44 mit den ersten fünf). |
+
+**Das Tor:**
+
+| Was | vorher | nachher |
+|---|---|---|
+| Gemischt mit Philosoph und Gruppe 1, 3.000 Partien, 4 Nächte | 9 verworfen | dieselben 9. In 804 Partien nimmt ein Philosoph einen aus Gruppe 1 (327-mal neben dem echten), keine davon verworfen |
+| dasselbe, 6 Nächte | 12 | 12: eine alte weniger (204), eine neue (1012, Barbier und Pukka; auch der alte Solver verwirft sie) |
+| Night-Walk dort, 4 Nächte | 29 von 8.372 | 27 von 8.387. Zwei neue Nächte aus bekannten Klassen: Gift der Pukka aus der Vornacht (wie Stelle 47) und ein Giftmischer, der nach seiner Wahl betrunken wird (wie Stelle 49) |
+| Gemischt ohne Pflicht | 5 | dieselben 5 |
+| Sects & Violets, 3.000 Partien, 4 / 6 Nächte | 17 / 24 | 16 / 23. Die neuen Verworfenen sind Partien, die der Simulator jetzt anders spielt; der alte Solver verwirft sie auch (Barbier, Mathematiker) |
+| Trouble Brewing, Bad Moon Rising | 0 | 0 |
+| Batch 9, zweites Skript | 1 | 0 |
+| Night-Walk TB, BMR, S&V (4 und 6 Nächte) | 0 | 0 |
+| Night-Walk Batch 9, zweites Skript | 2 von 8.245 | 1 von 8.233 (Bastler gegen Mondkind, Stelle 51) |
+| Prüfsummen | | TB und Oster-Skript gleich, S&V neu: `03f2299c74d793f5` |
+| Gemischte Partien in der Testsammlung (600 je Liste) | | eine neue Verworfene, Seed 439: ein Barbier-Tausch, den niemand angesagt hat (bekannte Klasse, jetzt in der Liste) |
+| Korpus | 400 Bretter | 418: 18 neue für Gruppe 1, ein gespieltes Brett ersetzt (`sv-played-981` heißt jetzt `sv-played-1143`, weil der Philosoph dort nicht mehr den Schlangenbeschwörer nimmt). Neue Seeds auch für `mixed-philosopher-gambler-dies` (735) und `sv-played-philosopher-klutz` (237). Python und JavaScript gleich |
+| Testsammlung | 1.586 grün | 1.602 grün (16 neue Tests), 2 übersprungen |
+
 ### Als Nächstes
 
-**1 · Philosoph, Schritt 2.** Die übrigen Charaktere, die handeln (Gastwirt, Segler, Mönch, Teedame, Soldat, Narr, Bürgermeister, Pazifist, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Schläger, Farmer, Jungfrau, Dämonenjäger, Heilige und weitere), mit Lesarten vorab. Danach der erste große Charakter einzeln, oder die Nachtreihenfolge, die du ans Ende gestellt hast.
+**1 · Philosoph, Schritt 2, Gruppen 2 bis 6.** Gruppe 2 (Töten): Schwätzer, Bastler, Mondkind, Werwolf, Akrobatin. Gruppe 3 (Stören): Minnesänger, Prediger, Schläger, Puzzlemeister. Gruppe 4 (Charakter und Fraktion): Farmer, Professor, Jäger, Feenkind, Kultführer, Oger. Gruppe 5 (am Tag): Dämonenjäger, Jungfrau, Golem, Alsaahir, Eiferer, Butler. Gruppe 6 (Spielende und Registrieren): Heilige, Ketzer, Politiker, Einsiedler, Unschuld, Großmutter, König, Chorknabe; vorher deine Antwort zu F. Dazu I (das Plättchen für Verrückte und Trunkenbold). Danach der erste große Charakter einzeln, oder die Nachtreihenfolge, die du ans Ende gestellt hast.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1222,7 +1257,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 40 | Simulator | **Der Schläger antwortet nicht auf verdeckte Wahlen.** Giftmischer, Mönch, Hexe, Grubenweib und Schlangenbeschwörer wählen im Simulator, ohne dass der Schläger reagiert. Der Night-Walk macht es richtig, deshalb weichen 9 von 8.316 Nächten ab. Kommt nur auf gemischten Skripten vor. Sauber wäre, diese Wahlen in die Reihenfolge der Nacht einzuordnen. Das teilt alle Partien mit einem Giftmischer neu aus. |
 | 41 | Regelfrage | **Ein Gastwirt schützt den Fang Gu, der in derselben Nacht in einen Außenseiter springt.** Im Simulator stirbt der alte Fang Gu trotzdem, der Solver hält ihn für geschützt. 2 von 3.000 gemischten Partien. Zu entscheiden ist, was am Tisch passiert. |
 | 42 | Solver | **Eine Auskunft, die nur durch Registrieren stimmt, verlangt, dass der registrierende Sitz nicht gestört war.** Die andere Erklärung, dass die Quelle selbst gestört war, prüft der Solver dann nicht mehr. Gefunden an einem Totengräber, dem ein Spion als Soldat gezeigt wurde, in einer Nacht, in der ein Minnesänger alle betrunken gemacht hatte. 1 von 3.000 gemischten Partien. |
-| 43 | Simulator | **Ein Philosoph nimmt einen Charakter, der echte Halter nennt seine Rolle nicht.** Dann rechnet der Solver die Auskunft des echten Halters dem Philosophen zu. 1 von 3.000 Partien in Sects & Violets (Seed 1698). Am 08.10.2026 dasselbe mit einem Trunkenbold, der glaubt, Träumer zu sein, und etwas anderes angibt: Seine Auskunft als Träumer wird dem Philosophen zugerechnet, der den Träumer genommen hat (Tor, Seed 2461). Am Tor von Batch 8 eine dritte Form: Ein Dorftrottel gibt einen anderen Charakter an und nennt trotzdem seine Auskunft. Bei zwei weiteren Dorftrottel-Claims rechnet der Solver sie dem ersten Dorftrottel zu, und zwei falsche Auskünfte brauchen dann zwei Störungen (gemischt, Seed 91). |
+| 43 | Simulator | **Ein Philosoph nimmt einen Charakter, der echte Halter nennt seine Rolle nicht.** Dann rechnet der Solver die Auskunft des echten Halters dem Philosophen zu. 1 von 3.000 Partien in Sects & Violets (Seed 1698). Am 08.10.2026 dasselbe mit einem Trunkenbold, der glaubt, Träumer zu sein, und etwas anderes angibt: Seine Auskunft als Träumer wird dem Philosophen zugerechnet, der den Träumer genommen hat (Tor, Seed 2461). Am Tor von Batch 8 eine dritte Form: Ein Dorftrottel gibt einen anderen Charakter an und nennt trotzdem seine Auskunft. Bei zwei weiteren Dorftrottel-Claims rechnet der Solver sie dem ersten Dorftrottel zu, und zwei falsche Auskünfte brauchen dann zwei Störungen (gemischt, Seed 91). *Die Form mit dem Trunkenbold ist am 13.10.2026 behoben:* Hält niemand den Charakter, gehört die Zeile dem, der sie sagt und sich für ihn hält. |
 | 44 | Night-Walk | **Akrobatin neben getauschten oder betrunkenen Sitzen:** Simulator und Night-Walk sind sich in etwa 12 von 8.316 Nächten nicht einig, ob das Ziel der Akrobatin gestört ist. Der Simulator vergiftet einen getauschten Dämon erst ab der nächsten Nacht, der Night-Walk sofort. |
 | 45 | erledigt | **Ein Höfling nennt den Schläger.** Deine Entscheidung vom 08.10.2026: Weg 1, wie im Wiki. Das zählt als Wahl des Schlägers. Gebaut in Solver, Simulator und Night-Walk. Die Abweichung für das Einzelspieler-Spiel steht in `claude/handover-hoefling-schlaeger.md`. |
 | 46 | Night-Walk | **Ein Segler wählt den Schläger zuerst, und der Gastwirt macht den Schläger in derselben Nacht betrunken.** Der Night-Walk bekommt den Schläger als von Anfang an betrunken gesagt und lässt ihn nicht antworten. 1 von 8.219 Nächten. |
@@ -1234,7 +1269,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 52 | Solver | **Skripte mit Kopfgeldjäger und Mezepheles rechnen lange.** *Verbessert am 12.10.2026:* Erzählungen, die sich nur in ungefragten Sitzen unterscheiden, werden nicht mehr einzeln erklärt. Auf den eigenen Skripten ist JavaScript bei 9 Spielern und 6 Nächten dreimal so schnell (langsamstes Brett 109 → 30 Sekunden), auf gemischten knapp doppelt so schnell. Offen bleibt: Große gemischte Bretter, auf denen Werwolf (Falsche Pfote), Kopfgeldjäger und Mezepheles zusammenkommen, brauchen im Browser ein bis zwei Minuten (langsamstes 99 Sekunden), weil dort fast jede Erzählung nach fast jedem Sitz fragt. |
 | 53 | Solver | **Die Barbier-Regel sieht eine Übergabe am Tag nicht.** Wo alle Regeln in einem Zug laufen, bietet sie „Dämon mit Scherge“ für einen schon hingerichteten Dämon und die Scharlachrote Frau an, die ihn beerbt hat. Der Absturz daraus ist am 11.10.2026 behoben, die Erzählung selbst bleibt und bekommt einen Anteil. Kein Grundskript hat Barbier und Scharlachrote Frau. |
 | 55 | erledigt | **Kultführer als Falsche Pfote des Werwolfs.** *Behoben am 12.10.2026* in Python und JavaScript: Erst die Fraktion aus den Nachbarn, dann die Falsche Pfote wie bei jedem guten Spieler. War 1 von 3.000 gemischten Partien am Tor von Batch 9 (Seed 1238). |
-| 56 | Solver, Simulator, Night-Walk | **Ein Philosoph hat eine genommene Fähigkeit, die handelt, meist nicht.** Gebaut nur für Schlangenbeschwörer, Glücksspieler, Nachtwächter, Banshee und Höfling. Gastwirt, Segler, Mönch, Teedame, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Pazifist und weitere schauen nur auf den Halter des Plättchens, in allen drei Werkzeugen gleich. Aufgefallen im Night-Walk: 9 von 8.233 Nächten auf dem zweiten Skript aus Batch 9. Am Tisch würde ein Solver eine Nacht falsch erklären, in der ein Philosoph als Gastwirt jemanden gerettet hat. Untersucht am 12.10.2026. Deine Entscheidung: Weg 1, in zwei Schritten. *Schritt 1 erledigt am 13.10.2026* (Liebchen, Barbier, Tollpatsch, Mutant), Schritt 2 offen. |
+| 56 | Solver, Simulator, Night-Walk | **Ein Philosoph hat eine genommene Fähigkeit, die handelt, meist nicht.** Gebaut nur für Schlangenbeschwörer, Glücksspieler, Nachtwächter, Banshee und Höfling. Gastwirt, Segler, Mönch, Teedame, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Pazifist und weitere schauen nur auf den Halter des Plättchens, in allen drei Werkzeugen gleich. Aufgefallen im Night-Walk: 9 von 8.233 Nächten auf dem zweiten Skript aus Batch 9. Am Tisch würde ein Solver eine Nacht falsch erklären, in der ein Philosoph als Gastwirt jemanden gerettet hat. Untersucht am 12.10.2026. Deine Entscheidung: Weg 1, in zwei Schritten. *Schritt 1 erledigt am 13.10.2026* (Liebchen, Barbier, Tollpatsch, Mutant). Schritt 2 in sechs Gruppen: *Gruppe 1 erledigt am 13.10.2026* (Mönch, Soldat, Gastwirt, Segler, Teedame, Narr, Bürgermeister, Pazifist, Exorzist, Prinzessin), Gruppen 2 bis 6 offen. |
 | 57 | erledigt | **Werwolf, Xaan und Adlige.** *Behoben am 12.10.2026:* Eine Auskunft, die nur mit der Falschen Pfote stimmt, darf auch falsch gewesen sein, weil ihre Quelle gestört war; je Nacht werden beide Wege versucht. War 1 von 3.000 gemischten Partien mit Werwolf (Seed 1177). |
 | 54 | Solver | **Der böse Bürger des Kopfgeldjägers mit falschem Claim** wird nur an einem Sitz gefunden, der als nicht vertrauenswürdig markiert ist. Sonst nimmt die Suche an, dass er seinen echten Charakter nennt. Der Jinx Leviathan–Mönch ist nicht gebaut, weil die Wahl des Mönchs nirgends steht. |
 

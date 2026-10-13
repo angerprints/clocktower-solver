@@ -1594,7 +1594,11 @@ const couldRegisterAsDemon = role =>
 function cannotDieByDay(w, s, seat, phase) {
   const role = w.roleAt(seat, phase);
   if (["Sailor", "Fool", "Vizier"].includes(role)) return true;
-  return w.findAt("TeaLady", phase) !== null;
+  // Or a Philosopher with one of those, or with the Tea Lady (13.10.2026).
+  if (["Sailor", "Fool"].some(taken => tookIt(w, s, seat, taken, phase)))
+    return true;
+  return w.findAt("TeaLady", phase) !== null
+    || takenByAPhilosopher(s, "TeaLady");
 }
 
 function kingsFallen(row, w, s) {
