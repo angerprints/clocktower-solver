@@ -174,6 +174,10 @@ export function abilityState(world, seat, role, phase, gained = null,
       if (vortoxed && TEAM[role] === "townsfolk") return INVERTED;
       return GENUINE;
     }
+    // One that took the Drunk lives by a Townsfolk it was shown: what it
+    // is told as that one is made up (I and S, 14.10.2026).
+    if (taken === "Drunk" && arrived && TEAM[role] === "townsfolk"
+        && world.roleAt(seat, phase) === "Philosopher") return ARBITRARY;
   }
   return ABSENT;
 }

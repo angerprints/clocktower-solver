@@ -1152,7 +1152,8 @@ implicationRule(function aGrandmotherGrieves(world, state, night, victim, kind) 
   for (const info of state.infos) {
     if (info.sourceRole !== "Grandmother" || info.target !== victim) continue;
     const seat = info.player;
-    if (world.roleAt(seat, `N${night}`) !== "Grandmother") continue;
+    // Or a Philosopher that took her; not the real one it made drunk.
+    if (!fallsAs(world, state, seat, "Grandmother", `N${night}`)) continue;
     // The grandchild she has *now*: her latest reading, from this life.
     // One who died and came back is a new Grandmother and is shown a new
     // grandchild (03.10.2026); the old one is nothing to her.
@@ -1378,10 +1379,11 @@ immunityRule(function aChoirboysKingFellToTheDemon(
     world, state, night, seat, kind) {
   if (kind === DEMON || !inBag(state, "Choirboy")) return [];
   const phase = `N${night}`;
-  if (world.roleAt(seat, phase) !== "King") return [];
+  // A Philosopher with either counts (group 6, Q, 14.10.2026).
+  if (!hasAbility(world, state, seat, "King", phase)) return [];
   for (const info of state.infos)
     if (info.type === "ChoirboyInfo" && info.night === night
-        && world.roleAt(info.player, phase) === "Choirboy")
+        && hasAbility(world, state, info.player, "Choirboy", phase))
       return [shield("Choirboy", {needs: info.player})];
   return [];
 });

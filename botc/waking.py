@@ -401,9 +401,11 @@ def _choirboy(world, state, seat, night):
 
 
 def _a_king_fell(world, state, night):
+    from .info import took_it
     phase = f"N{night}"
     return any(phase in state.died_at(seat)
-               and world.role_at(seat, phase) == "King"
+               and (world.role_at(seat, phase) == "King"
+                    or took_it(world, state, seat, "King", phase))
                for seat in range(len(world.roles)))
 
 
@@ -616,6 +618,12 @@ def uncertain(world, state, seat, night):
     if took and night > int(took[1][1:]) and took[0] != "Philosopher" \
             and not CHARACTERS[took[0]].believes:
         acting = took[0]
+    # One that took the Drunk or the Lunatic lives by a token it was
+    # shown, which nobody wrote down: it may have woken (I, 14.10.2026).
+    if took and night > int(took[1][1:]) and took[0] != "Philosopher" \
+            and CHARACTERS[took[0]].believes \
+            and seat in state.alive_set(phase):
+        return True
     if acting == "Choirboy":
         # Woken if the Demon killed the King tonight. A King dead in the
         # night may have been the Demon's or anybody else's (10.10.2026).

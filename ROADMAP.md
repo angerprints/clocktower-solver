@@ -1156,7 +1156,7 @@ Der volle Bericht steht in `claude/philosoph-schritt-1.md`.
 
 **Das Tor:** Sects & Violets 17 von 3.000 Partien verworfen (vorher 19, keine neue) bei 4 Nächten, dieselben 24 bei 6 Nächten, Night-Walk 0 abweichend. Der Simulator spielt 123 von 3.000 Partien anders, die Prüfsumme von Sects & Violets ist deshalb neu (`1b9cc9c20f8cfedd`). Gemischte Partien mit Philosoph und den vier: dieselben verworfenen wie vorher. Korpus 400 Bretter (10 neue, kein altes geändert), 1.586 Tests grün.
 
-### Philosoph mit genommener Fähigkeit, Schritt 2 · *Gruppen 1 bis 3 erledigt am 13.10.2026, Gruppen 4 und 5 am 14.10.2026, Gruppe 6 offen*
+### Philosoph mit genommener Fähigkeit, Schritt 2 · *erledigt am 14.10.2026 (Gruppen 1 bis 3 am 13.10., 4 bis 6 und I am 14.10.)*
 
 **Deine Antworten vom 13.10.2026** zu Schritt 2: B bis M jeweils Weg 1. Bei I zeigt der Erzähler dem Philosophen ein Plättchen passend zur echten Fähigkeit: nimmt er die Verrückte, sieht er einen Dämon, nimmt er den Trunkenbold, einen Bürger. F (Einsiedler registriert auch tot) ist noch offen und kommt vor Gruppe 6. Gebaut wird Gruppe für Gruppe, jede durch das Tor (M).
 
@@ -1263,6 +1263,32 @@ Am Tor gefunden und behoben:
 | Korpus | 520 | 552 (32 neue, davon vier gespielte Partien), ein altes Brett geändert (siehe oben). Python und JavaScript gleich |
 | Testsammlung | 1.644 grün | 1.654 grün, 2 übersprungen |
 
+**Gruppe 6, Spielende und Registrieren, und I** · *erledigt am 14.10.2026.* Der Bericht zu ganz Schritt 2 steht in `claude/philosoph-schritt-2.md`. Deine Antworten vom 14.10.2026: F und N bis T jeweils Weg 1.
+
+| Charakter | Was jetzt gilt |
+|---|---|
+| Heilige | Wird ein arbeitender Philosoph mit der Heiligen hingerichtet, verliert Gut (D). Läuft die Partie weiter, war er gestört. Der Simulator richtet ihn, wie die echte Heilige, nicht hin. |
+| Einsiedler | Ein Philosoph mit dem Einsiedler kann für jede Auskunft wie der Einsiedler registrieren, auch tot (N, F). Gebaut als zweiter Blick: Hält eine Auskunft nicht, fragt der Solver sie noch einmal mit diesem Sitz als Einsiedler; dann war er nüchtern, oder die Quelle der Auskunft war gestört. Der Simulator lässt ihn nie falsch registrieren. |
+| Unschuld | Rät ein Scherge auf den Philosophen mit der Unschuld, gewinnt Böse (O). Der Jäger macht ihn zu einem Bürger, der nicht im Spiel ist (P). |
+| Großmutter | Er sieht in der Nacht des Nehmens einen Enkel und stirbt mit ihm, wenn der Dämon ihn tötet. |
+| König, Chorknabe | Er erfährt als König einen lebenden Charakter wie der echte. Tötet der Dämon ihn, erfährt der Chorknabe den Dämon (Q). Was der Dämon über den König weiß, bildet der Solver nicht ab (R). |
+| Ketzer, Politiker | Für niemanden gebaut, auch nicht für die echten. Nichts zu tun. |
+| Trunkenbold (I, S) | Er sieht einen Bürger, der nicht im Spiel ist, wacht als dieser, bekommt erfundene Auskünfte und behauptet ihn. Die Suche nimmt für ihn den Philosophen als ausgeteilten Charakter. |
+| Verrückte (I, T) | Er sieht den Dämon im Spiel, wacht wie dieser und wählt, ohne dass jemand stirbt. Eine Kammerzofe darf ihn wach gezählt haben. |
+
+Am Tor gefunden und behoben: Der Night-Walk kannte nur eine Großmutter; ein Philosoph mit ihr starb dort nicht mit seinem Enkel.
+
+| Was | vorher | nachher |
+|---|---|---|
+| Gemischt mit Philosoph, Heilige, Einsiedler, Unschuld, Großmutter, König, Chorknabe, 3.000 Partien, 4 / 6 Nächte | 4 / 4 verworfen | dieselben 4 / 4. In 452 Partien nimmt ein Philosoph einen davon (147-mal neben dem echten), keine davon verworfen |
+| Gemischt mit Philosoph, Ketzer, Politiker, Trunkenbold, Verrückte, 4 / 6 Nächte | 3 / 3 | dieselben 3 / 3. In 312 Partien nimmt ein Philosoph einen davon |
+| Night-Walk dort | 7 von 7.726 / 6 von 8.022 | 7 von 7.709 / 6 von 8.019 |
+| Gemischt ohne Pflicht | 6 | dieselben 6 |
+| Trouble Brewing, Bad Moon Rising, Oster-Skript, Sects & Violets, Batch 4, 5, 8, 9 | 0, S&V 16 | gleich, Night-Walk gleich |
+| Prüfsummen | | gleich |
+| Korpus | 564 | 627 (63 neue, davon neun gespielte Partien), kein altes Brett geändert. Python und JavaScript gleich |
+| Testsammlung | 1.663 grün | 1.676 grün, 2 übersprungen |
+
 ### Stelle 59: Dämonenjäger und Jungfrau im Simulator · *erledigt am 14.10.2026*
 
 Der Bericht steht in `claude/stelle-59-daemonenjaeger-jungfrau.md`.
@@ -1342,7 +1368,7 @@ Alle 10 übrigen auf Batch 8 haben einen guten Spieler, der grundlos einen ander
 
 ### Als Nächstes
 
-**1 · Philosoph, Schritt 2, Gruppe 6.** Gruppe 6 (Spielende und Registrieren): Heilige, Ketzer, Politiker, Einsiedler, Unschuld, Großmutter, König, Chorknabe; vorher deine Antwort zu F. Dazu I (das Plättchen für Verrückte und Trunkenbold). Danach der erste große Charakter einzeln, oder die Nachtreihenfolge, die du ans Ende gestellt hast.
+**1 · Nach Schritt 2 des Philosophen:** der erste große Charakter einzeln, oder die Nachtreihenfolge aller Charaktere, die du ans Ende gestellt hast. Dazu die offenen Stellen 60 (zwei kleine Klassen) und, falls du willst, Ketzer und Politiker für die echten.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1418,7 +1444,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 52 | Solver | **Skripte mit Kopfgeldjäger und Mezepheles rechnen lange.** *Verbessert am 12.10.2026:* Erzählungen, die sich nur in ungefragten Sitzen unterscheiden, werden nicht mehr einzeln erklärt. Auf den eigenen Skripten ist JavaScript bei 9 Spielern und 6 Nächten dreimal so schnell (langsamstes Brett 109 → 30 Sekunden), auf gemischten knapp doppelt so schnell. Offen bleibt: Große gemischte Bretter, auf denen Werwolf (Falsche Pfote), Kopfgeldjäger und Mezepheles zusammenkommen, brauchen im Browser ein bis zwei Minuten (langsamstes 99 Sekunden), weil dort fast jede Erzählung nach fast jedem Sitz fragt. |
 | 53 | Solver | **Die Barbier-Regel sieht eine Übergabe am Tag nicht.** Wo alle Regeln in einem Zug laufen, bietet sie „Dämon mit Scherge“ für einen schon hingerichteten Dämon und die Scharlachrote Frau an, die ihn beerbt hat. Der Absturz daraus ist am 11.10.2026 behoben, die Erzählung selbst bleibt und bekommt einen Anteil. Kein Grundskript hat Barbier und Scharlachrote Frau. |
 | 55 | erledigt | **Kultführer als Falsche Pfote des Werwolfs.** *Behoben am 12.10.2026* in Python und JavaScript: Erst die Fraktion aus den Nachbarn, dann die Falsche Pfote wie bei jedem guten Spieler. War 1 von 3.000 gemischten Partien am Tor von Batch 9 (Seed 1238). |
-| 56 | Solver, Simulator, Night-Walk | **Ein Philosoph hat eine genommene Fähigkeit, die handelt, meist nicht.** Gebaut nur für Schlangenbeschwörer, Glücksspieler, Nachtwächter, Banshee und Höfling. Gastwirt, Segler, Mönch, Teedame, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Pazifist und weitere schauen nur auf den Halter des Plättchens, in allen drei Werkzeugen gleich. Aufgefallen im Night-Walk: 9 von 8.233 Nächten auf dem zweiten Skript aus Batch 9. Am Tisch würde ein Solver eine Nacht falsch erklären, in der ein Philosoph als Gastwirt jemanden gerettet hat. Untersucht am 12.10.2026. Deine Entscheidung: Weg 1, in zwei Schritten. *Schritt 1 erledigt am 13.10.2026* (Liebchen, Barbier, Tollpatsch, Mutant). Schritt 2 in sechs Gruppen: *Gruppe 1 erledigt am 13.10.2026* (Mönch, Soldat, Gastwirt, Segler, Teedame, Narr, Bürgermeister, Pazifist, Exorzist, Prinzessin), *Gruppe 2 auch* (Schwätzer, Bastler, Mondkind, Werwolf, Akrobatin), *Gruppe 3 auch* (Minnesänger, Prediger, Schläger, Puzzlemeister), *Gruppe 4 am 14.10.2026* (Farmer, Professor, Jäger, Feenkind, Kultführer, Oger), *Gruppe 5 auch* (Dämonenjäger, Jungfrau, Golem, Alsaahir, Eiferer, Butler), Gruppe 6 offen. |
+| 56 | erledigt | **Ein Philosoph hat eine genommene Fähigkeit, die handelt, meist nicht.** *Erledigt am 14.10.2026* in zwei Schritten: Schritt 1 am 13.10.2026 (Liebchen, Barbier, Tollpatsch, Mutant), Schritt 2 in sechs Gruppen und I am 13. und 14.10.2026. Bericht `claude/philosoph-schritt-2.md`. |
 | 57 | erledigt | **Werwolf, Xaan und Adlige.** *Behoben am 12.10.2026:* Eine Auskunft, die nur mit der Falschen Pfote stimmt, darf auch falsch gewesen sein, weil ihre Quelle gestört war; je Nacht werden beide Wege versucht. War 1 von 3.000 gemischten Partien mit Werwolf (Seed 1177). |
 | 54 | Solver | **Der böse Bürger des Kopfgeldjägers mit falschem Claim** wird nur an einem Sitz gefunden, der als nicht vertrauenswürdig markiert ist. Sonst nimmt die Suche an, dass er seinen echten Charakter nennt. Der Jinx Leviathan–Mönch ist nicht gebaut, weil die Wahl des Mönchs nirgends steht. |
 | 58 | erledigt | **Der Erbe des Farmers sagt nur „Farmer“.** *Behoben am 14.10.2026* (A bis F, siehe Abschnitt „Stelle 58“). Die Seite nimmt bei einem guten Spieler an, dass er seinen ausgeteilten Charakter nennt. War der alte Charakter des Erben wichtig (gemischte Partie 693 mit 7 Spielern: als Teedame hatte er am Vortag seinen Nachbarn vor der Hinrichtung bewahrt), findet sie keine Welt. Gilt genauso beim echten Farmer. Aufgefallen am 14.10.2026 bei Gruppe 4 des Philosophen, nicht gebaut. |

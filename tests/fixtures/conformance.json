@@ -94988,6 +94988,9569 @@
    }
   },
   {
+   "name": "x-at-the-end-7-philosopher-saint-hanged",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Saint"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "PhilosopherChoice on night 1, seat 4"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-saint-guessed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Saint"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 5,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-saint-grieves",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Saint"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-saint-king-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Choirboy",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Saint"
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-saint-beside-empath",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Saint"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Empath on night 1, seat 2"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-saint-librarian",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Librarian",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Saint"
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 1,
+      "role": "Drunk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Librarian on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-recluse-hanged",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Recluse"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-recluse-guessed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Recluse"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 5,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-recluse-grieves",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Recluse"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-recluse-king-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Choirboy",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Recluse"
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-recluse-beside-empath",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Recluse"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-recluse-librarian",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Librarian",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Recluse"
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 1,
+      "role": "Drunk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Librarian on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-damsel-hanged",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Damsel"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-damsel-guessed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Damsel"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 5,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "PhilosopherChoice on night 1, seat 4"
+      },
+      {
+       "kind": "information",
+       "label": "DamselGuess on night 1, seat 6"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-damsel-grieves",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Damsel"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-damsel-king-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Choirboy",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Damsel"
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-damsel-beside-empath",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Damsel"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Empath on night 1, seat 2"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-damsel-librarian",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Librarian",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Damsel"
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 1,
+      "role": "Drunk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Librarian on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-grandmother-hanged",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Grandmother"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-grandmother-guessed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Grandmother"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 5,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-grandmother-grieves",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Grandmother"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      },
+      "3": {
+       "followed on": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-grandmother-king-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Choirboy",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Grandmother"
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-grandmother-beside-empath",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Grandmother"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Empath on night 1, seat 2"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-grandmother-librarian",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Librarian",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Grandmother"
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 1,
+      "role": "Drunk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Librarian on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-king-hanged",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "King"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-king-guessed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "King"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 5,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-king-grieves",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "King"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-king-king-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Choirboy",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "King"
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-king-beside-empath",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "King"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Empath on night 1, seat 2"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-king-librarian",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Librarian",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "King"
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 1,
+      "role": "Drunk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Librarian on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-choirboy-hanged",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Choirboy"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-choirboy-guessed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Choirboy"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 5,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-choirboy-grieves",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Choirboy"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-choirboy-king-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Choirboy",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Choirboy"
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-choirboy-beside-empath",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Choirboy"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Empath on night 1, seat 2"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-choirboy-librarian",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Librarian",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Choirboy"
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 1,
+      "role": "Drunk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Librarian on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-drunk-hanged",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Drunk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-drunk-guessed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Drunk"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 5,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-drunk-grieves",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Drunk"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-drunk-king-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Choirboy",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Drunk"
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-drunk-beside-empath",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Drunk"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Empath on night 1, seat 2"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-drunk-librarian",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Librarian",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Drunk"
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 1,
+      "role": "Drunk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-lunatic-hanged",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Lunatic"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-lunatic-guessed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Lunatic"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 5,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-lunatic-grieves",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Lunatic"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-lunatic-king-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Choirboy",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Lunatic"
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-lunatic-beside-empath",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Lunatic"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Empath on night 1, seat 2"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-lunatic-librarian",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Librarian",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Lunatic"
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 1,
+      "role": "Drunk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Librarian on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-chef-hanged",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-chef-guessed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 5,
+      "target": 3
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-chef-grieves",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "role": "Chef"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 4 dying"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-chef-king-killed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Choirboy",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [],
+     "complete": true,
+     "unsupported": []
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-chef-beside-empath",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Chef"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Empath on night 1, seat 2"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-7-philosopher-chef-librarian",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Librarian",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 3,
+      "a": 0,
+      "b": 1,
+      "role": "Drunk"
+     }
+    ],
+    "script": {
+     "name": "Philosopher at the end",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "huntsman",
+      "drunk",
+      "lunatic",
+      "heretic",
+      "politician",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "librarian",
+      "monk",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "Librarian on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-played-0",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "King",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "W2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 1,
+      "role": "Saint"
+     },
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Philosopher"
+     },
+     {
+      "type": "OracleInfo",
+      "night": 2,
+      "player": 5,
+      "count": 0
+     },
+     {
+      "type": "JugglerInfo",
+      "night": 2,
+      "player": 6,
+      "guesses": [
+       {
+        "player": 4,
+        "role": "Mayor"
+       },
+       {
+        "player": 5,
+        "role": "Oracle"
+       },
+       {
+        "player": 2,
+        "role": "Mayor"
+       },
+       {
+        "player": 1,
+        "role": "Philosopher"
+       },
+       {
+        "player": 0,
+        "role": "Philosopher"
+       }
+      ],
+      "count": 3
+     },
+     {
+      "type": "OracleInfo",
+      "night": 3,
+      "player": 5,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "widow",
+      "snakecharmer",
+      "investigator",
+      "mayor",
+      "professor",
+      "courtier",
+      "juggler",
+      "mathematician",
+      "innkeeper",
+      "oracle",
+      "goon",
+      "vizier",
+      "godfather",
+      "witch",
+      "pukka",
+      "zombuul",
+      "ojo",
+      "po"
+     ]
+    },
+    "quiet_nights": [
+     2,
+     3,
+     4
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 30,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 40.625,
+      "demon_pct": 32.5,
+      "drunk_pct": 0.0,
+      "lying_pct": 40.625
+     },
+     {
+      "evil_pct": 59.375,
+      "demon_pct": 47.5,
+      "drunk_pct": 0.0,
+      "lying_pct": 59.375
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 20.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-at-the-end-played-39",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "PoppyGrower",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "King"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 2,
+      "target": 1,
+      "role": "Slayer"
+     },
+     {
+      "type": "KingInfo",
+      "night": 2,
+      "player": 0,
+      "role": ""
+     },
+     {
+      "type": "SlayerShot",
+      "night": 2,
+      "player": 1,
+      "target": 5,
+      "died": false
+     },
+     {
+      "type": "KingInfo",
+      "night": 3,
+      "player": 4,
+      "role": "Philosopher"
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "pithag",
+      "snakecharmer",
+      "seamstress",
+      "librarian",
+      "acrobat",
+      "slayer",
+      "juggler",
+      "poppygrower",
+      "chambermaid",
+      "washerwoman",
+      "moonchild",
+      "harpy",
+      "marionette",
+      "mezepheles",
+      "pukka",
+      "imp",
+      "po",
+      "zombuul"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 411,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 10.9467,
+      "demon_pct": 4.8617,
+      "drunk_pct": 0.0,
+      "lying_pct": 9.0968
+     },
+     {
+      "evil_pct": 2.7355,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0854
+     },
+     {
+      "evil_pct": 41.8773,
+      "demon_pct": 0.0,
+      "drunk_pct": 15.2414,
+      "lying_pct": 24.2741
+     },
+     {
+      "evil_pct": 86.0774,
+      "demon_pct": 65.6824,
+      "drunk_pct": 4.674,
+      "lying_pct": 81.4034
+     },
+     {
+      "evil_pct": 57.8557,
+      "demon_pct": 29.4559,
+      "drunk_pct": 10.1609,
+      "lying_pct": 46.0142
+     },
+     {
+      "evil_pct": 9.7975,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.4674,
+      "lying_pct": 7.0941
+     },
+     {
+      "evil_pct": 3.822,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0346,
+      "lying_pct": 1.4537
+     }
+    ],
+    "blame": {
+     "3": {
+      "5": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-played-90",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Choirboy",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "SailorChoice",
+      "night": 1,
+      "player": 1,
+      "target": 2
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 5,
+      "target": 0,
+      "swapped": true
+     },
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 6,
+      "role": "Recluse"
+     },
+     {
+      "type": "ShugenjaInfo",
+      "night": 1,
+      "player": 3,
+      "clockwise": true
+     },
+     {
+      "type": "SailorChoice",
+      "night": 2,
+      "player": 1,
+      "target": 5
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 0,
+      "target": 5,
+      "swapped": false
+     },
+     {
+      "type": "DamselGuess",
+      "night": 2,
+      "player": 6,
+      "target": 1
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 0,
+      "target": 3,
+      "swapped": false
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 4,
+      "player": 0,
+      "target": 3,
+      "swapped": false
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "pithag",
+      "snakecharmer",
+      "innkeeper",
+      "shugenja",
+      "chambermaid",
+      "pacifist",
+      "mathematician",
+      "steward",
+      "oracle",
+      "sailor",
+      "lunatic",
+      "eviltwin",
+      "vizier",
+      "marionette",
+      "zombuul",
+      "vortox",
+      "pukka",
+      "imp"
+     ]
+    },
+    "quiet_nights": [
+     2
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 27,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 2.12,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 75.7324
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 13.1374,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 97.88,
+      "demon_pct": 86.8626,
+      "drunk_pct": 0.0,
+      "lying_pct": 24.2676
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "4": {
+      "3": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "4": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-played-95",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Steward",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "VillageIdiot",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Grandmother"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 3,
+      "target": 4,
+      "role": "Moonchild"
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 1,
+      "target": 4,
+      "role": "FortuneTeller"
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 1,
+      "player": 2,
+      "target": 1,
+      "evil": false
+     },
+     {
+      "type": "MoonchildChoice",
+      "night": 2,
+      "player": 4,
+      "target": 0
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 2,
+      "player": 2,
+      "target": 4,
+      "evil": false
+     },
+     {
+      "type": "DamselGuess",
+      "night": 2,
+      "player": 5,
+      "target": 2
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "xaan",
+      "snakecharmer",
+      "courtier",
+      "librarian",
+      "ravenkeeper",
+      "villageidiot",
+      "washerwoman",
+      "tealady",
+      "fortuneteller",
+      "steward",
+      "moonchild",
+      "assassin",
+      "spy",
+      "psychopath",
+      "leviathan",
+      "vortox",
+      "ojo",
+      "shabaloth"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 80,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 94.5192,
+      "demon_pct": 55.4688,
+      "drunk_pct": 0.0,
+      "lying_pct": 94.5192
+     },
+     {
+      "evil_pct": 27.6849,
+      "demon_pct": 16.5276,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.6849
+     },
+     {
+      "evil_pct": 5.891,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 5.891
+     },
+     {
+      "evil_pct": 0.4436,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.4436
+     },
+     {
+      "evil_pct": 15.0995,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 15.0995
+     },
+     {
+      "evil_pct": 55.8968,
+      "demon_pct": 28.0036,
+      "drunk_pct": 0.0,
+      "lying_pct": 55.8968
+     },
+     {
+      "evil_pct": 0.4649,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "3": {
+      "3": {
+       "Demon": 0.9989,
+       "Moonchild": 0.0011
+      }
+     },
+     "2": {
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-played-193",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Balloonist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Choirboy"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 1,
+      "target": 5,
+      "swapped": false
+     },
+     {
+      "type": "Balloonist",
+      "night": 1,
+      "player": 0,
+      "target": 5
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 1,
+      "target": 0,
+      "swapped": false
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 3,
+      "target": 6
+     },
+     {
+      "type": "Balloonist",
+      "night": 2,
+      "player": 0,
+      "target": 6
+     },
+     {
+      "type": "MathematicianInfo",
+      "night": 2,
+      "player": 4,
+      "count": 0
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 1,
+      "target": 3,
+      "swapped": false
+     },
+     {
+      "type": "Balloonist",
+      "night": 3,
+      "player": 0,
+      "target": 4
+     },
+     {
+      "type": "DamselGuess",
+      "night": 3,
+      "player": 5,
+      "target": 6
+     },
+     {
+      "type": "Balloonist",
+      "night": 4,
+      "player": 0,
+      "target": 5
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "xaan",
+      "snakecharmer",
+      "preacher",
+      "balloonist",
+      "mathematician",
+      "minstrel",
+      "clockmaker",
+      "gambler",
+      "slayer",
+      "librarian",
+      "lunatic",
+      "godfather",
+      "wraith",
+      "organgrinder",
+      "lleech",
+      "leviathan",
+      "ojo",
+      "shabaloth"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 1916,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 2.9244,
+      "demon_pct": 1.1494,
+      "drunk_pct": 0.3178,
+      "lying_pct": 3.2422
+     },
+     {
+      "evil_pct": 0.6312,
+      "demon_pct": 0.0,
+      "drunk_pct": 3.3465,
+      "lying_pct": 0.2612
+     },
+     {
+      "evil_pct": 1.785,
+      "demon_pct": 0.0,
+      "drunk_pct": 12.7959,
+      "lying_pct": 14.5809
+     },
+     {
+      "evil_pct": 18.768,
+      "demon_pct": 0.0,
+      "drunk_pct": 2.9359,
+      "lying_pct": 21.7039
+     },
+     {
+      "evil_pct": 62.6956,
+      "demon_pct": 0.0,
+      "drunk_pct": 6.2686,
+      "lying_pct": 68.9642
+     },
+     {
+      "evil_pct": 13.7958,
+      "demon_pct": 0.1982,
+      "drunk_pct": 29.1664,
+      "lying_pct": 42.9622
+     },
+     {
+      "evil_pct": 99.4,
+      "demon_pct": 98.6524,
+      "drunk_pct": 0.2545,
+      "lying_pct": 99.6546
+     }
+    ],
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 0.9934,
+       "Godfather": 0.0066
+      }
+     },
+     "2": {
+      "2": {
+       "Demon": 1.0
+      }
+     },
+     "4": {
+      "5": {
+       "Demon": 0.9994,
+       "Godfather": 0.0006
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-at-the-end-played-683",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Alsaahir",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "D2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Undertaker",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Damsel"
+     },
+     {
+      "type": "KingInfo",
+      "night": 2,
+      "player": 5,
+      "role": ""
+     },
+     {
+      "type": "HarpyMadness",
+      "night": 2,
+      "player": 3,
+      "second": 0
+     },
+     {
+      "type": "KingInfo",
+      "night": 3,
+      "player": 5,
+      "role": "King"
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "saint",
+      "recluse",
+      "damsel",
+      "grandmother",
+      "king",
+      "choirboy",
+      "widow",
+      "snakecharmer",
+      "clockmaker",
+      "acrobat",
+      "ravenkeeper",
+      "undertaker",
+      "minstrel",
+      "chef",
+      "alsaahir",
+      "professor",
+      "klutz",
+      "harpy",
+      "goblin",
+      "wraith",
+      "fanggu",
+      "vigormortis",
+      "imp",
+      "shabaloth"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 219,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 22.2615,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 22.2615
+     },
+     {
+      "evil_pct": 14.0322,
+      "demon_pct": 9.6486,
+      "drunk_pct": 0.0,
+      "lying_pct": 14.0322
+     },
+     {
+      "evil_pct": 40.8127,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 40.8127
+     },
+     {
+      "evil_pct": 16.3251,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.3251
+     },
+     {
+      "evil_pct": 2.7208,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.7208
+     },
+     {
+      "evil_pct": 21.8296,
+      "demon_pct": 16.2152,
+      "drunk_pct": 0.0,
+      "lying_pct": 21.8296
+     },
+     {
+      "evil_pct": 82.0181,
+      "demon_pct": 74.1362,
+      "drunk_pct": 0.0,
+      "lying_pct": 82.0181
+     }
+    ],
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "4": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-tokens-played-39",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Steward",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Zealot",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Acrobat",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Drunk"
+     },
+     {
+      "type": "Washerwoman",
+      "night": 1,
+      "player": 3,
+      "a": 2,
+      "b": 5,
+      "role": "Minstrel"
+     },
+     {
+      "type": "SeamstressInfo",
+      "night": 1,
+      "player": 0,
+      "a": 1,
+      "b": 4,
+      "same": true
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 2,
+      "target": 3,
+      "died": false
+     },
+     {
+      "type": "HarpyMadness",
+      "night": 1,
+      "player": 1,
+      "second": 5
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "drunk",
+      "lunatic",
+      "pithag",
+      "snakecharmer",
+      "seamstress",
+      "librarian",
+      "acrobat",
+      "slayer",
+      "juggler",
+      "banshee",
+      "minstrel",
+      "washerwoman",
+      "steward",
+      "mayor",
+      "shugenja",
+      "zealot",
+      "barber",
+      "poisoner",
+      "witch",
+      "harpy",
+      "zombuul",
+      "fanggu",
+      "imp",
+      "yaggababble"
+     ]
+    },
+    "quiet_nights": [
+     2,
+     3,
+     4
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 951,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 35.8573,
+      "demon_pct": 25.8143,
+      "drunk_pct": 9.9528,
+      "lying_pct": 42.8379
+     },
+     {
+      "evil_pct": 10.3324,
+      "demon_pct": 2.8738,
+      "drunk_pct": 8.7165,
+      "lying_pct": 18.676
+     },
+     {
+      "evil_pct": 28.065,
+      "demon_pct": 21.0802,
+      "drunk_pct": 4.6721,
+      "lying_pct": 31.4227
+     },
+     {
+      "evil_pct": 4.9426,
+      "demon_pct": 1.7655,
+      "drunk_pct": 2.3733,
+      "lying_pct": 6.5878
+     },
+     {
+      "evil_pct": 21.0732,
+      "demon_pct": 15.0089,
+      "drunk_pct": 11.8153,
+      "lying_pct": 31.1808
+     },
+     {
+      "evil_pct": 71.4862,
+      "demon_pct": 22.1391,
+      "drunk_pct": 23.1612,
+      "lying_pct": 94.6474
+     },
+     {
+      "evil_pct": 28.2433,
+      "demon_pct": 11.3182,
+      "drunk_pct": 9.1716,
+      "lying_pct": 35.5732
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-tokens-played-86",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Choirboy",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "CultLeader",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Magician",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "D2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 5,
+      "role": "Drunk"
+     },
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 5,
+      "role": "Mathematician"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 2,
+      "count": 1
+     },
+     {
+      "type": "Empath",
+      "night": 2,
+      "player": 2,
+      "count": 0
+     },
+     {
+      "type": "MathematicianInfo",
+      "night": 2,
+      "player": 0,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "drunk",
+      "lunatic",
+      "poisoner",
+      "snakecharmer",
+      "magician",
+      "washerwoman",
+      "choirboy",
+      "empath",
+      "king",
+      "courtier",
+      "cultleader",
+      "fool",
+      "mathematician",
+      "banshee",
+      "seamstress",
+      "mutant",
+      "golem",
+      "godfather",
+      "wraith",
+      "fearmonger",
+      "imp",
+      "ojo",
+      "shabaloth",
+      "lleech"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 1985,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 27.222,
+      "demon_pct": 15.4776,
+      "drunk_pct": 11.2274,
+      "lying_pct": 33.7054
+     },
+     {
+      "evil_pct": 22.8589,
+      "demon_pct": 12.4964,
+      "drunk_pct": 7.0653,
+      "lying_pct": 27.9486
+     },
+     {
+      "evil_pct": 52.2154,
+      "demon_pct": 28.8666,
+      "drunk_pct": 17.39,
+      "lying_pct": 64.7496
+     },
+     {
+      "evil_pct": 55.5641,
+      "demon_pct": 0.0,
+      "drunk_pct": 5.0237,
+      "lying_pct": 27.4344
+     },
+     {
+      "evil_pct": 38.3651,
+      "demon_pct": 22.2849,
+      "drunk_pct": 9.9485,
+      "lying_pct": 45.9752
+     },
+     {
+      "evil_pct": 0.239,
+      "demon_pct": 0.0,
+      "drunk_pct": 4.9062,
+      "lying_pct": 2.3267
+     },
+     {
+      "evil_pct": 36.689,
+      "demon_pct": 20.8745,
+      "drunk_pct": 11.7912,
+      "lying_pct": 45.2431
+     }
+    ],
+    "blame": {
+     "2": {
+      "5": {
+       "Demon": 0.9626,
+       "Godfather": 0.0374
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-tokens-played-9",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Shugenja",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "TownCrier",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Ravenkeeper",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Lunatic"
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 6,
+      "a": 3,
+      "b": 1,
+      "yes": true
+     },
+     {
+      "type": "Balloonist",
+      "night": 1,
+      "player": 5,
+      "target": 0
+     },
+     {
+      "type": "ShugenjaInfo",
+      "night": 1,
+      "player": 2,
+      "clockwise": true
+     },
+     {
+      "type": "WidowKnown",
+      "night": 1,
+      "player": 5
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 2,
+      "player": 6,
+      "a": 1,
+      "b": 4,
+      "yes": true
+     },
+     {
+      "type": "Balloonist",
+      "night": 2,
+      "player": 5,
+      "target": 1
+     },
+     {
+      "type": "Ravenkeeper",
+      "night": 3,
+      "player": 4,
+      "target": 5,
+      "role": "Balloonist"
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 3,
+      "player": 6,
+      "a": 1,
+      "b": 0,
+      "yes": true
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "drunk",
+      "lunatic",
+      "widow",
+      "snakecharmer",
+      "clockmaker",
+      "ravenkeeper",
+      "balloonist",
+      "shugenja",
+      "washerwoman",
+      "towncrier",
+      "courtier",
+      "sailor",
+      "pacifist",
+      "fortuneteller",
+      "huntsman",
+      "puzzlemaster",
+      "damsel",
+      "marionette",
+      "devilsadvocate",
+      "mezepheles",
+      "nodashii",
+      "leviathan",
+      "vigormortis",
+      "pukka"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 95,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 64.6061,
+      "demon_pct": 34.2373,
+      "drunk_pct": 44.8051,
+      "lying_pct": 55.1949
+     },
+     {
+      "evil_pct": 80.9461,
+      "demon_pct": 58.8562,
+      "drunk_pct": 0.0,
+      "lying_pct": 80.7741
+     },
+     {
+      "evil_pct": 23.0036,
+      "demon_pct": 0.0,
+      "drunk_pct": 10.0308,
+      "lying_pct": 17.5935
+     },
+     {
+      "evil_pct": 2.9704,
+      "demon_pct": 0.0,
+      "drunk_pct": 1.9092,
+      "lying_pct": 3.7832
+     },
+     {
+      "evil_pct": 6.8173,
+      "demon_pct": 0.0,
+      "drunk_pct": 3.5513,
+      "lying_pct": 4.2955
+     },
+     {
+      "evil_pct": 15.9618,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.8003,
+      "lying_pct": 14.9454
+     },
+     {
+      "evil_pct": 10.4743,
+      "demon_pct": 6.9065,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.2677
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "4": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "random-00",
    "payload": {
     "n_players": 9,

@@ -696,7 +696,9 @@ transitionRule(function aHuntsmanFindsTheDamsel(world, state) {
         && o.player === info.player && o.night <= night)) continue;
     const began = night > 1 ? `E${night - 1}` : "N0";
     const target = info.target;
-    if (world.roleAt(target, began) !== "Damsel") continue;
+    // Or a Philosopher that took her (group 6, P, 14.10.2026).
+    if (world.roleAt(target, began) !== "Damsel"
+        && !tookIt(world, state, target, "Damsel", began)) continue;
     const said = state.infos.filter(b => b.type === "Became"
       && b.player === target && b.night >= night
       && state.script.townsfolk.includes(b.role)).map(b => b.role);
@@ -1174,6 +1176,38 @@ function sourceSeats(state) {
   return state._sourceSeats;
 }
 
+/** The world with one seat read as the Recluse, for registration only: a
+ * Philosopher that took it registers as it would, dead or alive (group 6,
+ * N and F, 14.10.2026). Everything but these three is the world's own.
+ * See solver.py. */
+function asRecluse(world, who) {
+  const roleAt = (seat, phase) =>
+    seat === who ? "Recluse" : world.roleAt(seat, phase);
+  const own = {
+    roleAt,
+    teamAt: (seat, phase) => TEAM[roleAt(seat, phase)],
+    findAt: (role, phase) => {
+      for (let seat = 0; seat < world.roles.length; seat++)
+        if (roleAt(seat, phase) === role) return seat;
+      return null;
+    },
+  };
+  return new Proxy(world, {
+    get(target, prop) {
+      if (prop in own) return own[prop];
+      const value = target[prop];
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
+}
+
+/** Philosophers that took the Recluse, by then — alive or dead (F). */
+function philosopherRecluses(world, state, phase) {
+  return Object.keys(state.philosophies() || {}).map(Number)
+    .sort((a, b) => a - b)
+    .filter(who => tookIt(world, state, who, "Recluse", phase));
+}
+
 /** Sort every ledger row into: fits, contradicts, or was invented.
  *
  * Returns {failures, ftInfos, invented, mustWork}, or null if the world
@@ -1292,7 +1326,8 @@ function plainFailures(world, state, outcome = {}) {
   for (const day of Object.keys(state.executions || {}).map(Number)) {
     const seat = state.executionDeath(day);
     if (seat === null) continue;
-    if (world.roleAt(seat, `D${day}`) === "Saint") fail(day, seat);
+    // And a Philosopher that took her (group 6, D, 14.10.2026).
+    if (hasAbility(world, state, seat, "Saint", `D${day}`)) fail(day, seat);
     // A Sailor cannot die, and that holds in daylight — so a working one
     // walks away from its own execution.
     if (hasAbility(world, state, seat, "Sailor", `D${day}`)) fail(day, seat);
@@ -1624,6 +1659,22 @@ function plainFailures(world, state, outcome = {}) {
     }
     if (ok === null && info.type !== "FortuneTeller")
       ok = info.holds(world, state, null, seat);
+    // Or it holds with a Philosopher that took the Recluse read as the
+    // Recluse: then that Philosopher was working (group 6, N).
+    let recluseNeed = null;
+    if (ok === false && info.type !== "FortuneTeller")
+      for (const who of philosopherRecluses(world, state, phase))
+        if (info.holds(asRecluse(world, who), state, null, seat)) {
+          recluseNeed = who; break;
+        }
+    // That, or its own source was off: either explains it.
+    if (recluseNeed !== null && !witnessed) {
+      either.push({night: info.night, source: [seat], impaired: [],
+                   working: [recluseNeed]});
+      outcome[idx] = EXCUSED;
+      return;
+    }
+    if (recluseNeed !== null) ok = true;
 
     if (fauxNeed !== null && fauxNeed[0] === "impaired" && !witnessed) {
       either.push({night: info.night, source: [seat],
@@ -1665,6 +1716,9 @@ function plainFailures(world, state, outcome = {}) {
       // from having been droisoned that night.
       for (const who of (info.leanedOn ? info.leanedOn(world, state, seat) : []))
         (working[info.night] || (working[info.night] = new Set())).add(who);
+      if (recluseNeed !== null)
+        (working[info.night] || (working[info.night] = new Set()))
+          .add(recluseNeed);
       // And one that held only if somebody else was impaired or working:
       // a Chambermaid's count that turns on a Wraith, which a drunk one
       // does not wake. Its own source being off explains it as well.
@@ -1788,7 +1842,7 @@ function leviathanDemands(world, state, fail, either) {
       for (const info of state.infos)
         if (info.type === "GrandmotherInfo" && info.target === dead
             && info.night <= day && state.aliveSet(phase).has(info.player)
-            && world.roleAt(info.player, phase) === "Grandmother")
+            && hasAbility(world, state, info.player, "Grandmother", phase))
           either.push({night: day, source: [lev], impaired: [info.player],
                        working: []});
   }
@@ -2360,7 +2414,9 @@ function explainOnce(world, state, outcome = null) {
       // means the Vortox was not working. True, not legal — a yes on a
       // Recluse is false.
       if (vortox !== null) { fits = !info.isTrueWith(world, rh); src = vortox; }
-      else fits = info.holds(world, state, rh, source);
+      else fits = info.holds(world, state, rh, source)
+        || philosopherRecluses(world, state, `N${info.night}`).some(who =>
+          info.holds(asRecluse(world, who), state, rh, source));
       if (fits) marks[idx] = HELD;
       else {
         combined[info.night] = combined[info.night] || new Set();

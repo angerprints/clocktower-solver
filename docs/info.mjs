@@ -1592,7 +1592,8 @@ export const DamselGuess = define("DamselGuess", "Damsel",
     mustHaveFailed(w, s) {
       const day = this.night, phase = `D${day}`;
       if (w.teamAt(this.player, phase) !== "minion") return [];
-      if (w.roleAt(this.target, phase) !== "Damsel"
+      // Or a Philosopher that took her (group 6, O, 14.10.2026).
+      if (!hasIt(w, s, this.target, "Damsel", phase)
           || !s.aliveSet(phase).has(this.target)) return [];
       if (!this.theMinionsFirst(w, s)) return [];
       if (spyEver(w, day)) return [];   // poisoned all game: nothing
@@ -1668,7 +1669,7 @@ function cannotDieByDay(w, s, seat, phase) {
 function kingsFallen(row, w, s) {
   const phase = `N${row.night}`;
   return w.roles.map((_, seat) => seat).filter(seat =>
-    s.diedAt(seat).includes(phase) && w.roleAt(seat, phase) === "King");
+    s.diedAt(seat).includes(phase) && hasIt(w, s, seat, "King", phase));
 }
 
 /** Shown the Demon's player, on the night the Demon killed the King. */
@@ -1800,8 +1801,9 @@ PreacherChoice.isAChoice = true;
 export const HuntsmanChoice = define("HuntsmanChoice", "Huntsman",
   function (w, s) {
     if (earlierSame(this, s)) return true;   // spent already
-    if (w.roleAt(this.target, began(this.night)) !== "Damsel") return true;
-    return w.roleAt(this.target, `D${this.night}`) !== "Damsel";
+    // A Philosopher that took her is found as well (group 6, P).
+    if (!hasIt(w, s, this.target, "Damsel", began(this.night))) return true;
+    return !hasIt(w, s, this.target, "Damsel", `D${this.night}`);
   });
 HuntsmanChoice.isAChoice = true;
 

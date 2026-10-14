@@ -262,4 +262,10 @@ def ability_state(world, seat, role, phase, gained=None,
             if vortoxed and TEAM[role] == "townsfolk":
                 return INVERTED
             return GENUINE
+        # One that took the Trunkenbold was shown a Townsfolk and lives
+        # by it: what it is told as that one is made up (I and S,
+        # 14.10.2026).
+        if taken == "Drunk" and arrived and TEAM.get(role) == "townsfolk" \
+                and world.role_at(seat, phase) == "Philosopher":
+            return ARBITRARY
     return ABSENT

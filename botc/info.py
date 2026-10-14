@@ -361,6 +361,11 @@ class GameState:
                 first[info.player] = (info.night, info.was)
         for seat, (_night, was) in first.items():
             out[seat] = was
+        # A Philosopher that took the Drunk claims the Townsfolk it was
+        # shown; it was dealt the Philosopher (I and S, 14.10.2026).
+        for seat, (taken, _since) in self.philosophies().items():
+            if taken == "Drunk" and seat in out and seat not in first:
+                out[seat] = "Philosopher"
         self._dealt_claims = (key, out)
         return out
 
@@ -3096,7 +3101,8 @@ class DamselGuess(Info):
         phase = f"D{day}"
         if w.team_at(self.player, phase) != "minion":
             return ()
-        if w.role_at(self.target, phase) != "Damsel" \
+        # Or a Philosopher that took her (group 6, O, 14.10.2026).
+        if not has_it(w, s, self.target, "Damsel", phase) \
                 or self.target not in s.alive_set(phase):
             return ()
         if not self._the_minions_first(w, s):
@@ -3256,9 +3262,10 @@ class ChoirboyInfo(Info):
 
     def _kings(self, w, s):
         phase = f"N{self.night}"
+        # And a Philosopher that took the King (group 6, Q).
         return [seat for seat in range(len(w.roles))
                 if phase in s.died_at(seat)
-                and w.role_at(seat, phase) == "King"]
+                and has_it(w, s, seat, "King", phase)]
 
     def holds(self, w, s, rh, seat=None):
         phase = f"N{self.night}"
@@ -3529,9 +3536,10 @@ class HuntsmanChoice(Info):
     def holds(self, w, s, rh, seat=None):
         if self._earlier(s):
             return True                   # spent already: nothing happens
-        if w.role_at(self.target, _began(self.night)) != "Damsel":
+        # A Philosopher that took her is found as well (group 6, P).
+        if not has_it(w, s, self.target, "Damsel", _began(self.night)):
             return True
-        return w.role_at(self.target, f"D{self.night}") != "Damsel"
+        return not has_it(w, s, self.target, "Damsel", f"D{self.night}")
 
 
 @dataclass

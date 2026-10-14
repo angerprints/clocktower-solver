@@ -288,7 +288,8 @@ condition("Choirboy", () => false);
 
 const aKingFell = (world, state, night) =>
   world.roles.some((_, seat) => state.diedAt(seat).includes(`N${night}`)
-                   && world.roleAt(seat, `N${night}`) === "King");
+                   && (world.roleAt(seat, `N${night}`) === "King"
+                       || tookIt(world, state, seat, "King", `N${night}`)));
 
 /** On its first night as the Widow, to look and to choose. */
 condition("Widow", (world, state, seat, night) =>
@@ -445,6 +446,11 @@ export function uncertain(world, state, seat, night) {
   if (took && night > Number(took[1].slice(1)) && took[0] !== "Philosopher"
       && !CHARACTERS[took[0]].believes)
     acting = took[0];
+  // One that took the Drunk or the Lunatic lives by a token it was shown,
+  // which nobody wrote down: it may have woken (I, 14.10.2026).
+  if (took && night > Number(took[1].slice(1)) && took[0] !== "Philosopher"
+      && CHARACTERS[took[0]].believes && state.aliveSet(phase).has(seat))
+    return true;
   if (acting === "Choirboy")
     // Woken if the Demon killed the King tonight, and whose kill a King's
     // death was is not known here (10.10.2026).

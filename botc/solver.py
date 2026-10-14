@@ -879,7 +879,9 @@ def a_huntsman_finds_the_damsel(world, state):
             continue
         began = f"E{night - 1}" if night > 1 else "N0"
         target = info.target
-        if world.role_at(target, began) != "Damsel":
+        # Or a Philosopher that took her (group 6, P, 14.10.2026).
+        if world.role_at(target, began) != "Damsel" \
+                and not took_it(world, state, target, "Damsel", began):
             continue
         said = [b.role for b in state.infos
                 if isinstance(b, BecameInfo) and b.player == target
@@ -2801,7 +2803,9 @@ def a_grandmother_grieves(world, state, night, victim, kind):
         if not isinstance(info, GrandmotherInfo) or info.target != victim:
             continue
         seat = info.player
-        if world.role_at(seat, f"N{night}") != "Grandmother":
+        # Or a Philosopher that took her; not the real one it made drunk
+        # (group 6, 14.10.2026).
+        if not falls_as(world, state, seat, "Grandmother", f"N{night}"):
             continue
         # The grandchild she has *now*: her latest reading, from this
         # life. One who died and came back is a new Grandmother and is
@@ -3071,12 +3075,14 @@ def a_choirboys_king_fell_to_the_demon(world, state, night, seat, kind):
     if kind == death_causes.DEMON or not _in_bag(state, "Choirboy"):
         return []
     phase = f"N{night}"
-    if world.role_at(seat, phase) != "King":
+    # A Philosopher with either counts (group 6, Q, 14.10.2026).
+    if not _has_ability(world, state, seat, "King", phase):
         return []
     out = []
     for info in state.infos:
         if isinstance(info, ChoirboyInfo) and info.night == night \
-                and world.role_at(info.player, phase) == "Choirboy":
+                and _has_ability(world, state, info.player, "Choirboy",
+                                 phase):
             out.append(death_causes.Shield("Choirboy", needs=info.player))
     return out[:1]
 
@@ -3759,6 +3765,42 @@ def _a_zealot_kept_its_hand_down(world, state):
     return False
 
 
+class _AsRecluse:
+    """The world with one seat read as the Recluse, for registration only.
+
+    A Philosopher that took the Recluse registers as it would, dead or
+    alive (group 6, N and F, 14.10.2026). Registration is asked in fifty
+    places by character; rather than teach each one, a row that does not
+    hold is asked again with that seat read as the Recluse. Everything
+    else is the world's own."""
+
+    def __init__(self, world, seat):
+        self._world = world
+        self._seat = seat
+
+    def role_at(self, seat, phase):
+        return "Recluse" if seat == self._seat \
+            else self._world.role_at(seat, phase)
+
+    def team_at(self, seat, phase):
+        return TEAM[self.role_at(seat, phase)]
+
+    def find_at(self, role, phase):
+        for seat in range(len(self._world.roles)):
+            if self.role_at(seat, phase) == role:
+                return seat
+        return None
+
+    def __getattr__(self, name):
+        return getattr(self._world, name)
+
+
+def _philosopher_recluses(world, state, phase):
+    """Philosophers that took the Recluse, by then — alive or dead (F)."""
+    return [who for who in sorted(state.philosophies() or {})
+            if took_it(world, state, who, "Recluse", phase)]
+
+
 def _plain_failures(world, state, outcome=None):
     """Sort every ledger row into: fits, contradicts, or was invented.
 
@@ -3917,7 +3959,8 @@ def _plain_failures(world, state, outcome=None):
         seat = state.execution_death(day)
         if seat is None:
             continue
-        if world.role_at(seat, f"D{day}") == "Saint":
+        # And a Philosopher that took her (group 6, D, 14.10.2026).
+        if _has_ability(world, state, seat, "Saint", f"D{day}"):
             failures[day].add(seat)
         # A Sailor cannot die, and that holds in daylight too — so a
         # working one walks away from its own execution. Somebody
@@ -4314,6 +4357,22 @@ def _plain_failures(world, state, outcome=None):
             state._faux_hit = False
         if ok is None and not isinstance(info, FortuneTeller):
             ok = info.holds(world, state, None, seat)
+        # Or it holds with a Philosopher that took the Recluse read as the
+        # Recluse: then that Philosopher was working (group 6, N).
+        recluse_need = None
+        if ok is False and not isinstance(info, FortuneTeller):
+            for who in _philosopher_recluses(world, state, phase):
+                if info.holds(_AsRecluse(world, who), state, None, seat):
+                    recluse_need = who
+                    break
+        # That, or its own source was off: either explains it.
+        if recluse_need is not None and not witnessed:
+            either.append((info.night, frozenset({seat}), frozenset(),
+                           frozenset({recluse_need})))
+            outcome[idx] = EXCUSED
+            continue
+        if recluse_need is not None:
+            ok = True
 
         if faux_need is not None and faux_need[0] == "impaired" \
                 and not witnessed:
@@ -4365,6 +4424,8 @@ def _plain_failures(world, state, outcome=None):
             # the first caller to use it for registration.
             for who in info.leaned_on(world, state, seat):
                 working.setdefault(info.night, set()).add(who)
+            if recluse_need is not None:
+                working.setdefault(info.night, set()).add(recluse_need)
             # And one that held only if somebody else was impaired or
             # working: a Chambermaid's count that turns on a Wraith, which
             # a drunk one does not wake (table ruling, 08.10.2026). Its
@@ -4536,7 +4597,8 @@ def _leviathan_demands(world, state, failures, either):
                 if isinstance(info, GrandmotherInfo) and info.target == dead \
                         and info.night <= day \
                         and info.player in state.alive_set(phase) \
-                        and world.role_at(info.player, phase) == "Grandmother":
+                        and _has_ability(world, state, info.player,
+                                         "Grandmother", phase):
                     either.append((day, frozenset({lev}),
                                    frozenset({info.player}), frozenset()))
 
@@ -6221,7 +6283,10 @@ def _explain_once(world, state, outcome=None):
                 # legal — a yes on a Recluse is false.
                 fits, src = not info.is_true_with(world, rh), vortox
             else:
-                fits = info.holds(world, state, rh, src)
+                fits = info.holds(world, state, rh, src) or any(
+                    info.holds(_AsRecluse(world, who), state, rh, src)
+                    for who in _philosopher_recluses(
+                        world, state, f"N{info.night}"))
             if fits:
                 marks[idx] = HELD
             else:

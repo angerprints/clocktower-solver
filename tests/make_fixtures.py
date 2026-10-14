@@ -1070,6 +1070,7 @@ def handmade():
     yield from the_farmers_heir()
     yield from the_philosopher_takes_group_5()
     yield from the_slayer_and_the_virgin()
+    yield from the_philosopher_takes_group_6()
 
 
 def the_eighth_five():
@@ -1511,6 +1512,38 @@ def the_philosopher_takes_group_5():
 # Games where a Philosopher took one of group 5 and used it: the Golem
 # (42, 120), the Alsaahir (106, 452).
 PLAYED_GROUP_5 = (42, 120, 106, 452)
+
+
+def the_philosopher_takes_group_6():
+    """Open item 56, step 2, group 6 and I (14.10.2026): a Philosopher at
+    the end of the game and registering, and one that took the Drunk or
+    the Lunatic. The boards of tests/test_philosopher_takes_2.py and
+    played games."""
+    sys.path.insert(0, str(HERE))
+    from test_philosopher_takes_2 import GROUP_6, TOKENS, _payloads_6
+    kinds = ("hanged", "guessed", "grieves", "king-killed", "beside-empath",
+             "librarian")
+    for i, payload in enumerate(_payloads_6()):
+        role = (GROUP_6 + TOKENS + ("Chef",))[i // len(kinds)].lower()
+        yield {"name": f"x-at-the-end-7-philosopher-{role}-"
+                       f"{kinds[i % len(kinds)]}", "payload": payload}
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    for group, seeds, name in ((GROUP_6, PLAYED_GROUP_6, "at-the-end"),
+                               (TOKENS, PLAYED_TOKENS, "tokens")):
+        for seed in seeds:
+            rng = random.Random(seed)
+            script = play_games.an_awkward_script(
+                rng, must_have=("Philosopher",) + group)
+            yield played(f"x-{name}-played-{seed}", script, seed, 7, 4,
+                         rng=rng)
+
+
+# Games where a Philosopher took one and it showed: the Saint (0), the
+# King (39), the Recluse (90), the Grandmother (95), the Choirboy (193),
+# the Damsel (683); the Drunk (39, 86) and the Lunatic (9).
+PLAYED_GROUP_6 = (0, 39, 90, 95, 193, 683)
+PLAYED_TOKENS = (39, 86, 9)
 
 
 def the_slayer_and_the_virgin():

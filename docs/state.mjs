@@ -150,6 +150,11 @@ export class GameState {
         first[info.player] = [info.night, info.was];
     }
     for (const [seat, [, was]] of Object.entries(first)) out[seat] = was;
+    // A Philosopher that took the Drunk claims the Townsfolk it was shown;
+    // it was dealt the Philosopher (I and S, 14.10.2026).
+    for (const [seat, [taken]] of Object.entries(this.philosophies()))
+      if (taken === "Drunk" && seat in out && !(seat in first))
+        out[seat] = "Philosopher";
     this._dealtClaims = [key, out];
     return out;
   }

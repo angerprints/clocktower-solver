@@ -627,8 +627,12 @@ def hidden_from(deal, night, heard):
     # The grandchild a Grandmother has tonight: her latest reading from
     # before tonight, and none at all on the night she comes back — one
     # who died and returned is a new Grandmother (03.10.2026).
+    # And a Philosopher that took her has one of its own (group 6).
+    took = getattr(deal, "philosophies", {}) or {}
     for seat in range(deal.n):
-        if deal.role_at(seat, phase) != "Grandmother":
+        if deal.role_at(seat, phase) != "Grandmother" \
+                and not (deal.role_at(seat, phase) == "Philosopher"
+                         and took.get(seat) == "Grandmother"):
             continue
         if getattr(deal, "back_at", lambda *_: None)(seat, phase) is not None:
             continue
@@ -637,6 +641,7 @@ def hidden_from(deal, night, heard):
                 and h.player == seat and (h.night < night or night == 1)]
         if mine:
             out["grandchild"] = mine[-1].target
+            out.setdefault("grandchildren", {})[seat] = mine[-1].target
     # Which Tinkers went: the holder, or a Philosopher that took it.
     took = getattr(deal, "philosophies", {}) or {}
     went = {p for p in range(deal.n) if p in deal.died_on(phase)
@@ -1815,15 +1820,18 @@ def _grandmother_grieves(state, victim, slot, hidden, night):
     Which seat is the grandchild was settled on night one and is handed
     in, like every other thing the walk is told rather than guesses.
     """
-    child = hidden.get("grandchild")
-    if child is None or child != victim:
+    children = hidden.get("grandchildren") or {}
+    if victim not in children.values():
         return
     # Only if the grandchild really died. A Tea Lady keeping them alive
     # left nothing to grieve, and this grieved anyway (03.10.2026).
     if victim in state.alive:
         return
-    for seat, role in state.roles.items():
-        if role != "Grandmother" or seat not in state.alive:
+    # Each Grandmother whose grandchild it was, and a Philosopher that
+    # took her (group 6, 14.10.2026).
+    for seat in list(state.roles):
+        if children.get(seat) != victim or seat not in state.alive \
+                or not state.has(seat, "Grandmother"):
             continue
         if not state.working(seat):
             continue                      # droisoned: she feels nothing

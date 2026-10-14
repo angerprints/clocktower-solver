@@ -239,6 +239,9 @@ class BothLanguagesAgree(SolverTest):
     def test_on_the_boards_of_group_five(self):
         self.agree(_payloads_5())
 
+    def test_on_the_boards_of_group_six(self):
+        self.agree(_payloads_6())
+
     def agree(self, cases):
         import app
         script = ("import {solveBoard} from './js/api.mjs';"
@@ -657,6 +660,135 @@ def _payloads_5():
     return out
 
 
+GROUP_6 = ("Saint", "Recluse", "Damsel", "Grandmother", "King", "Choirboy")
+TOKENS = ("Drunk", "Lunatic")
+
+END_IDS = ["philosopher", "saint", "recluse", "damsel", "grandmother",
+           "king", "choirboy", "huntsman", "drunk", "lunatic", "heretic",
+           "politician", "chef", "empath", "washerwoman", "investigator",
+           "librarian", "monk", "scarletwoman", "baron", "imp"]
+AT_THE_END = scripts.from_ids("Philosopher at the end", END_IDS)
+
+
+def ecost(roles, rows=(), claims=None, **kw):
+    kw.setdefault("days_done", {1, 2})
+    st = GameState(n_players=len(roles), script=AT_THE_END,
+                   claims=dict(enumerate(claims or roles)),
+                   infos=list(rows), **kw)
+    return S.explanation_cost(World(tuple(roles), (None,) * len(roles)), st)
+
+
+class GroupSixInTheSolver(SolverTest):
+    """The end of the game and registering. With a Chef taken, the board
+    reads the other way. Heretic and Politician are not modelled for
+    anybody, so there is nothing for them to do."""
+
+    def test_its_saint_executed_ends_the_game(self):
+        # Ruling D: the game went on, so it cannot have been working.
+        hanged = {"deaths": {3: ("E1",)}}
+        self.assertIsNone(ecost(R, [took("Saint")], **hanged))
+        self.assertIsNotNone(ecost(R, [took("Chef")], **hanged))
+
+    def test_its_damsel_guessed_by_a_minion(self):
+        # O: the Minion's first guess landed and the game went on.
+        rows = [I.DamselGuess(1, 5, target=3)]
+        self.assertIsNone(ecost(R, [took("Damsel")] + rows))
+        self.assertIsNotNone(ecost(R, [took("Chef")] + rows))
+
+    def test_its_damsel_is_found_by_the_huntsman(self):
+        # P: it becomes a Townsfolk not in play.
+        roles = list(R)
+        roles[0] = "Huntsman"
+        rows = [I.HuntsmanChoice(2, 0, target=3)]
+        world = World(tuple(roles), (None,) * 7)
+        st = GameState(n_players=7, script=AT_THE_END,
+                       claims=dict(enumerate(roles)),
+                       infos=[took("Damsel")] + rows, days_done={1, 2})
+        found = S.a_huntsman_finds_the_damsel(world, st)
+        self.assertTrue(any(c and c[0].seat == 3 for c, _w in found))
+
+    def test_its_grandmother_grieves(self):
+        rows = [I.GrandmotherInfo(1, 3, target=0, role="Chef")]
+        both = {"deaths": {0: ("N2",), 3: ("N2",)}}
+        self.assertIsNotNone(ecost(R, [took("Grandmother")] + rows, **both))
+        self.assertIsNone(ecost(R, [took("Chef")] + rows, **both))
+
+    def test_its_king_killed_tells_the_choirboy(self):
+        # Q: the Choirboy learns the Demon when the Demon kills it.
+        roles = list(R)
+        roles[0] = "Choirboy"
+        rows = [I.ChoirboyInfo(2, 0, target=6)]
+        dead = {"deaths": {3: ("N2",)}}
+        self.assertIsNotNone(ecost(roles, [took("King")] + rows, **dead))
+        self.assertIsNone(ecost(roles, [took("Chef")] + rows, **dead))
+
+    def test_its_recluse_may_read_evil(self):
+        # N: the Empath beside it counts it.
+        rows = [I.Empath(1, 1, count=1)]
+        self.assertIsNotNone(ecost(G7, [took("Recluse", 2)] + rows,
+                                   days_done={1}))
+        self.assertIsNone(ecost(G7, [took("Chef", 2)] + rows,
+                                days_done={1}))
+
+    def test_its_drunk_lives_by_a_townsfolk(self):
+        # I and S: it claims the Librarian it was shown, and what it was
+        # told as one is made up.
+        claims = list(R)
+        claims[3] = "Librarian"
+        rows = [I.Librarian(1, 3, a=0, b=1, role="Drunk")]
+        st = GameState(n_players=7, script=AT_THE_END,
+                       claims=dict(enumerate(claims)),
+                       infos=[took("Drunk")] + rows, days_done={1})
+        self.assertEqual(st.dealt_claims()[3], "Philosopher")
+        world = World(tuple(R), (None,) * 7)
+        self.assertEqual(S.explanation_cost(world, st), 1.0)
+
+    def test_its_lunatic_may_have_woken(self):
+        from botc import waking
+        world = World(tuple(R), (None,) * 7)
+        st = GameState(n_players=7, script=AT_THE_END,
+                       claims=dict(enumerate(R)), infos=[took("Lunatic")],
+                       days_done={1, 2})
+        self.assertTrue(waking.uncertain(world, st, 3, 2))
+
+
+def _payloads_6():
+    def pay(rows, events, roles=R, days=(1, 2), claims=None):
+        players = [{"claim": c, "events": events.get(i, [])}
+                   for i, c in enumerate(claims or roles)]
+        return {"n_players": len(roles), "players": players, "infos": rows,
+                "script": {"name": AT_THE_END.name, "characters": END_IDS},
+                "days_done": list(days)}
+
+    def take(role, seat=3):
+        return {"type": "PhilosopherChoice", "night": 1, "player": seat,
+                "role": role}
+    choir = list(R)
+    choir[0] = "Choirboy"
+    librarian = list(R)
+    librarian[3] = "Librarian"
+    out = []
+    for role in GROUP_6 + TOKENS + ("Chef",):
+        out.append(pay([take(role)], {3: ["X1"]}))
+        out.append(pay([take(role), {"type": "DamselGuess", "night": 1,
+                                     "player": 5, "target": 3}], {}))
+        out.append(pay([take(role), {"type": "GrandmotherInfo", "night": 1,
+                                     "player": 3, "target": 0,
+                                     "role": "Chef"}],
+                       {0: ["N2"], 3: ["N2"]}))
+        out.append(pay([take(role), {"type": "ChoirboyInfo", "night": 2,
+                                     "player": 0, "target": 6}],
+                       {3: ["N2"]}, choir))
+        out.append(pay([take(role, 2), {"type": "Empath", "night": 1,
+                                        "player": 1, "count": 1}], {}, G7,
+                       days=(1,)))
+        out.append(pay([take(role), {"type": "Librarian", "night": 1,
+                                     "player": 3, "a": 0, "b": 1,
+                                     "role": "Drunk"}], {}, R, days=(1,),
+                       claims=librarian))
+    return out
+
+
 class TheSimulatorPlaysThem(SolverTest):
     """L, and the gate in small: games that must hold a Philosopher and
     every character of group 1."""
@@ -766,6 +898,32 @@ class TheSimulatorPlaysThem(SolverTest):
                     rows[type(row).__name__] += 1
         for name in ("GolemNomination", "AlsaahirGuess"):
             self.assertGreater(rows[name], 0, rows)
+
+    def test_the_true_world_is_kept_with_group_six(self):
+        self.kept(GROUP_6)
+
+    def test_the_true_world_is_kept_with_the_tokens(self):
+        self.kept(TOKENS)
+
+    def test_a_philosopher_ends_and_registers_with_what_it_took(self):
+        rows = collections.Counter()
+        for _seed, _script, _rng, deal, heard in self.games(group=GROUP_6):
+            for row in heard:
+                if row.player in deal.philosophies:
+                    rows[type(row).__name__] += 1
+        for name in ("GrandmotherInfo", "KingInfo"):
+            self.assertGreater(rows[name], 0, rows)
+
+    def test_a_philosopher_lives_by_the_token_it_was_shown(self):
+        shown = 0
+        for _seed, _script, _rng, deal, _heard in self.games(group=TOKENS):
+            for seat, took_ in deal.philosophies.items():
+                if took_ in TOKENS and deal.phil_token.get(seat):
+                    shown += 1
+                    if took_ == "Drunk":
+                        self.assertEqual(deal.apparent(seat),
+                                         deal.phil_token[seat])
+        self.assertGreater(shown, 5)
 
     def kept(self, group):
         import claims as C

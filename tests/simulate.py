@@ -186,6 +186,7 @@ class Deal:
         self.princess_nominated = {}        # day -> (Princess, her nominee)
         self.princess_stop = {}             # night -> the Princess stopping it
         self.golem_spent = set()            # Golems whose nomination is gone
+        self.phil_token = {}                # Philosopher -> token shown (I)
         self.slayer_spent = set()           # Slayers that have shot
         self.virgin_spent = set()           # Virgins nominated once
         self.virgin_executed = {}           # {day: nominator executed}
@@ -306,7 +307,11 @@ class Deal:
         return World(tuple(self.roles), tuple(self.believes))
 
     def apparent(self, seat):
-        """The character this seat believes they are."""
+        """The character this seat believes they are. A Philosopher that
+        took the Trunkenbold lives by the Townsfolk it was shown (I, S)."""
+        if self.philosophies.get(seat) == "Drunk" \
+                and self.phil_token.get(seat):
+            return self.phil_token[seat]
         return self.believes[seat] or self.roles[seat]
 
     def token(self, seat, phase):
@@ -494,6 +499,11 @@ class Deal:
         Demon killed straight through its own silencing: the kill asked
         `working`, which said yes, while `droisoned_at` said no.
         """
+        # A Philosopher that took the Trunkenbold has no ability that
+        # works: what it does as the Townsfolk it was shown does nothing
+        # (I, 14.10.2026). Not a droisoning the Mathematician counts.
+        if self.philosophies.get(seat) == "Drunk":
+            return False
         return seat not in droisoned_at(self, night, by_day)
 
 
@@ -863,7 +873,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                         # And able to die at all: a Tea Lady beside her,
                         # or an Innkeeper's pick, stops grief like
                         # anything else. The night-walk had that right.
-                        if d.role_at(gran, f"N{night}") == "Grandmother" \
+                        if _acts_as(d, gran, "Grandmother", f"N{night}") \
                                 and gran in d.alive_at(f"N{night}") \
                                 and d.deaths.get(gran) is None \
                                 and d.working(gran, night) \
@@ -2251,7 +2261,8 @@ def _a_minion_guesses_the_damsel(d, day, rng, heard):
     if not minions or rng.random() >= 0.25:
         return False
     who = rng.choice(minions)
-    damsel = next((p for p in living if d.role_at(p, phase) == "Damsel"),
+    # Or a Philosopher that took her (group 6, O, 14.10.2026).
+    damsel = next((p for p in living if _acts_as(d, p, "Damsel", phase)),
                   None)
     if damsel is not None and rng.random() < 0.4:
         target = damsel
@@ -2341,7 +2352,7 @@ def _huntsman_hunts(d, night, rng):
         if not living:
             continue
         damsel = next((p for p in living
-                       if d.role_at(p, phase) == "Damsel"), None)
+                       if _acts_as(d, p, "Damsel", phase)), None)
         target = damsel if damsel is not None and rng.random() < 0.4 \
             else rng.choice(living)
         d.huntsman_spent.add(seat)
@@ -2351,8 +2362,9 @@ def _huntsman_hunts(d, night, rng):
             continue
         if _the_goon_answers(d, night, seat, target) \
                 or not d.working(seat, night) \
-                or d.role_at(target, phase) != "Damsel":
+                or not _acts_as(d, target, "Damsel", phase):
             continue
+        was = _claimed_before(d, target, phase)
         in_play = {d.role_at(p, phase) for p in range(d.n)}
         in_play |= {b for b in d.believes if b}
         spare = [k for k in d.script.townsfolk if k not in in_play]
@@ -2362,7 +2374,7 @@ def _huntsman_hunts(d, night, rng):
         d.changes.append((phase, target, made))
         d.huntsman_chose[night] = (seat, target, made)
         if rng.random() < 0.8:
-            out.append(BecameInfo(night, target, role=made, was="Damsel"))
+            out.append(BecameInfo(night, target, role=made, was=was))
     return out
 
 
@@ -2981,7 +2993,7 @@ def _leviathan_takes_the_day(d, day, hanged, rng, heard):
                 gran = info.player
                 if info is _grandchild_row(heard, gran, day + 1) \
                         and d.deaths.get(gran) is None \
-                        and d.role_at(gran, f"D{day}") == "Grandmother" \
+                        and _acts_as(d, gran, "Grandmother", f"D{day}") \
                         and d.working(gran, day, by_day=True):
                     return True
     return day >= 5 and working
@@ -3330,6 +3342,7 @@ def _execute(d, day, rng, allow_takeover=False):
     # morning's nominations, though "alive today" still lists them.
     living = [p for p in d.alive_at(phase)
               if d.role_at(p, phase) != "Saint"
+              and not _took(d, p, "Saint", phase)
               and d.deaths.get(p) is None]
     # Nor the good twin while the Evil Twin stands: evil wins on the spot,
     # the same as with the Saint, and the record would run on past the
@@ -4005,6 +4018,14 @@ def _woke_for_own_ability(d, p, night, shown=False):
     # "once a game, so not tonight" and never woke again.
     if what == "Philosopher" and p in d.philosophies and night > 1:
         what = d.philosophies[p]
+        # Took the Trunkenbold: the Townsfolk it was shown. Took the
+        # Verrückte: the Demon in play, as a Lunatic (I, 14.10.2026).
+        if what == "Drunk":
+            what = d.phil_token.get(p) or "Drunk"
+        elif what == "Lunatic":
+            real = d.demon_at(f"N{night}")
+            what = (d.role_at(real, f"N{night}") if real is not None
+                    else "Lunatic")
     # A Lunatic lives the night of the Demon it thinks it is —
     # here always the real one — and choosing who it thinks it
     # kills counts (table ruling, 02.10.2026).
@@ -4191,7 +4212,7 @@ def _conditionally_woke(d, seat, role, night):
 def _a_king_fell(d, night):
     """Did the Demon kill a King tonight? Its own kill only."""
     phase = f"N{night}"
-    return any(d.role_at(p, phase) == "King"
+    return any(_acts_as(d, p, "King", phase)
                for p in d.demon_killed.get(night, ()))
 
 
@@ -4219,7 +4240,7 @@ def _the_dead_have_it(d):
                for p in range(d.n))
 
 
-def _droisoned_info(d, seat, night, rng):
+def _droisoned_info(d, seat, night, rng, apparent=None):
     """What a droisoned seat was told, which is the Storyteller's choice.
 
     Read off what the seat *believes* it is: a Drunk holding a Fortune
@@ -4236,7 +4257,11 @@ def _droisoned_info(d, seat, night, rng):
     # character and wakes on its own schedule. Read off the deal, a seat
     # a Snake Charmer had swapped went on hearing answers for the
     # character it had given away (07.10.2026).
-    apparent = d.token(seat, f"N{night}") or d.role_at(seat, f"N{night}")
+    if apparent is None and d.philosophies.get(seat) == "Drunk" \
+            and night > 1:
+        apparent = d.phil_token.get(seat)
+    apparent = apparent or d.token(seat, f"N{night}") \
+        or d.role_at(seat, f"N{night}")
     made = _for_role(d, seat, apparent, night, rng)
     # A drunk Philosopher that took the Klutz still points on dying —
     # in public, so the table sees it; nothing comes of it (13.10.2026).
@@ -4393,6 +4418,24 @@ def early_choices(d, night, rng):
                 if d.philosophies.get(seat) == "Preacher":
                     d.preached = [(p, t, since) for p, t, since in d.preached
                                   if not (since == 1 and p != seat)]
+                # Shown a grandchild from the night of taking (C, group 6).
+                if d.philosophies.get(seat) == "Grandmother":
+                    shown = _for_role(d, seat, "Grandmother", night, rng)
+                    if shown is not None and (
+                            _vortox_working(d, night)
+                            or (not d.working(seat, night)
+                                and rng.random() < 0.75)):
+                        shown = _make_false(d, shown, night, rng)
+                    if shown is not None:
+                        out.append(shown)
+                # Took the Trunkenbold: it lives by the Townsfolk it was
+                # shown, and what it is told as that one is made up (I).
+                if d.philosophies.get(seat) == "Drunk" \
+                        and d.phil_token.get(seat):
+                    made = _droisoned_info(d, seat, night, rng,
+                                           apparent=d.phil_token[seat])
+                    if made is not None:
+                        out.append(made)
     for seat in _in_night_order(d, night):
         role = before[seat]
         # A Philosopher that took an early chooser chooses early too. It
@@ -4514,6 +4557,16 @@ def honest_info(d, night, rng):
         # but its own choice, night after night.
         # Not on the first night: it chose in the early pass, and used
         # nothing that night, as before.
+        # One that took the Trunkenbold is told, as the Townsfolk it was
+        # shown, whatever the Storyteller likes (I, 14.10.2026).
+        if made is None and role == "Philosopher" and night > 1 \
+                and d.philosophies.get(seat) == "Drunk" \
+                and d.phil_token.get(seat):
+            made = _droisoned_info(d, seat, night, rng,
+                                   apparent=d.phil_token[seat])
+            if made is not None:
+                out.append(made)
+            continue
         if made is None and role == "Philosopher" and night > 1:
             took = d.philosophies.get(seat)
             # An early chooser it took has already acted, in the early pass.
@@ -5667,6 +5720,17 @@ def _for_role(d, seat, role, night, rng):
             if town:
                 d.puzzle_drunks = dict(getattr(d, "puzzle_drunks", {}))
                 d.puzzle_drunks[seat] = rng.choice(town)
+        # Ruling I: shown a token to match. The Trunkenbold a Townsfolk
+        # not in play (S), the Verrückte the Demon in play (T).
+        if took == "Drunk":
+            in_play = set(d.roles) | {b for b in d.believes if b}
+            spare = [k for k in d.script.townsfolk if k not in in_play]
+            if spare:
+                d.phil_token[seat] = rng.choice(spare)
+        if took == "Lunatic":
+            demon = d.demon_at("N1")
+            if demon is not None:
+                d.phil_token[seat] = d.role_at(demon, "N1")
         if took == "Lycanthrope" and getattr(d, "faux_paw", None) is None:
             good = [p for p in range(d.n) if not is_evil(d.roles[p])
                     and p != getattr(d, "bh_evil", None)]
