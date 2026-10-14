@@ -181,6 +181,13 @@ def claims_for(deal, rng, script=None):
                            f"{claims[seat]}")
             continue
 
+        # Who shot in the open, or whose nominator just fell as a Virgin,
+        # has shown the town what it is and says so (Stelle 59).
+        if seat in getattr(deal, "shown_in_the_open", ()):
+            claims[seat] = honest
+            notes[seat] = f"good {role}, shown in the open, claiming it"
+            continue
+
         if rng.random() < GOOD_LIE_CHANCE:
             if TEAM[role] == "outsider" and rng.random() < HIDING_SHARE:
                 hidden = _hiding_claim(deal, seat, rng, script)

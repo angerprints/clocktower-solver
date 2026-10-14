@@ -26,7 +26,8 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    acts_as_cult_leader, cult_sides, knows_it_turned_evil,
                    went_on_after, phase_index,
                    begin_reads, end_reads, listen_for_sides, replay_reads,
-                   _LISTENING, falls_as, taken_by_a_philosopher, took_it,
+                   _LISTENING, falls_as, holding_now, taken_by_a_philosopher,
+                   took_it,
                    faux_paw_lycanthrope, side_open)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
@@ -2066,7 +2067,7 @@ def a_zombuul_kills_on_a_quiet_day(world, state, night):
     if not _in_bag(state, "Zombuul") or night < 2:
         return []
     phase = f"N{night}"
-    seat = world.find_at("Zombuul", phase)
+    seat = holding_now(world, state, "Zombuul", phase)
     if seat is None or not _zombuul_still_going(world, state, seat, phase):
         return []
     if any(f"D{night - 1}" in state.died_at(who)
@@ -2091,7 +2092,7 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
     if not _in_bag(state, "Pukka") or night < 2:
         return []
     phase = f"N{night}"
-    seat = world.find_at("Pukka", phase)
+    seat = holding_now(world, state, "Pukka", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
     # Three ways a Pukka's night passes without a body besides "the one
@@ -2108,7 +2109,7 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
     excuses = []
     for back in (1, 2):
         chose = night - 1 - back          # the night the resting token is from
-        if any(world.find_at("Pukka", f"N{k}") != seat
+        if any(holding_now(world, state, "Pukka", f"N{k}") != seat
                or seat not in state.alive_set(f"N{k}")
                or not _could_be_stopped(world, state, seat, k)
                for k in range(max(chose, 0) + 1, night)):
@@ -2117,7 +2118,7 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
         if chose < 1:
             excuses.append((None, demands))
             break
-        if world.find_at("Pukka", f"N{chose}") != seat \
+        if holding_now(world, state, "Pukka", f"N{chose}") != seat \
                 or seat not in state.alive_set(f"N{chose}"):
             break
         excuses.append((frozenset(state.alive_set(f"N{chose}")), demands))
@@ -2141,7 +2142,7 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
         chose = night - 1 - late
         if chose < 1:
             break
-        if any(world.find_at("Pukka", f"N{k}") != seat
+        if any(holding_now(world, state, "Pukka", f"N{k}") != seat
                or seat not in state.alive_set(f"N{k}")
                for k in range(chose, night)):
             break
@@ -2163,7 +2164,7 @@ def a_shabaloth_kills_twice(world, state, night):
     if not _in_bag(state, "Shabaloth") or night < 2:
         return []
     phase = f"N{night}"
-    seat = world.find_at("Shabaloth", phase)
+    seat = holding_now(world, state, "Shabaloth", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
     return [death_causes.Cause(
@@ -2186,7 +2187,7 @@ def a_po_kills_none_or_three(world, state, night):
     if not _in_bag(state, "Po") or night < 2:
         return []
     phase = f"N{night}"
-    seat = world.find_at("Po", phase)
+    seat = holding_now(world, state, "Po", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
     # A Po charges by taking **nobody**, and then takes three.
@@ -3627,8 +3628,22 @@ def forced_roles(state):
     pinned = {}
 
     def pin(seat, roles):
+        if seat in changed:
+            return                        # it said it was handed another
         roles = frozenset(roles)
         pinned[seat] = roles if seat not in pinned else pinned[seat] & roles
+
+    # Pinned on the character the seat was *dealt*, which is what the
+    # search enumerates. Where something can change characters that is
+    # not the one it held in daylight: a Pit-Hag's Slayer, a Snake
+    # Charmer that swapped into the Demon it was then shot as (Stelle 59,
+    # 14.10.2026). Then nothing is pinned and the hard row does the work.
+    movers = ("PitHag", "Barber", "SnakeCharmer", "Farmer", "Huntsman",
+              "FangGu")
+    if any(_on_board(state, key) for key in movers):
+        return pinned
+    changed = {info.player for info in state.infos
+               if isinstance(info, BecameInfo)}
 
     # A Philosopher that wrote down taking it may be the one (group 5,
     # 14.10.2026).
@@ -3648,11 +3663,10 @@ def forced_roles(state):
             pin(info.nominator, townsfolk + spies)
         elif isinstance(info, SlayerShot) and info.died:
             pin(info.player, or_its_philosopher(info.player, "Slayer"))
-            # Any Demon on the script, not only the Imp, and the Recluse;
-            # beside a Lleech its host may fall too, so nothing pinned
-            # (found 14.10.2026: a landed shot at a Po had no world).
-            if not _in_bag(state, "Lleech"):
-                pin(info.target, list(state.script.demons) + ["Recluse"])
+            # Not the target: the Demon it hit may be a Minion that caught
+            # the star, which was dealt something else. It pinned Imp or
+            # Recluse until 14.10.2026, which also lost every landed shot
+            # at another Demon.
     return pinned
 
 
@@ -3804,7 +3818,7 @@ def _plain_failures(world, state, outcome=None):
     for day in sorted(state.days_done or ()):
         if day in (state.executions or {}):
             continue                      # somebody was executed
-        vortox = world.find_at("Vortox", f"D{day}")
+        vortox = holding_now(world, state, "Vortox", f"D{day}")
         if vortox is None or vortox not in state.alive_set(f"D{day}"):
             continue
         failures[day].add(vortox)
@@ -3990,7 +4004,7 @@ def _plain_failures(world, state, outcome=None):
                     for seat, phases in (state.resurrections or {}).items()
                     for phase in phases if phase[1:].isdigit())
     for night, seat, phase in raises:
-        shabaloth = (world.find_at("Shabaloth", phase)
+        shabaloth = (holding_now(world, state, "Shabaloth", phase)
                      if _in_bag(state, "Shabaloth") else None)
         if shabaloth is not None and night >= 3 \
                 and shabaloth in state.alive_set(phase):
@@ -4126,7 +4140,7 @@ def _plain_failures(world, state, outcome=None):
         # false. Alive, because a dead Demon does nothing; and its own
         # droisoning is left to the plan below rather than decided here,
         # the same way poison always has been.
-        vortox = world.find_at("Vortox", phase)
+        vortox = holding_now(world, state, "Vortox", phase)
         vortoxed = vortox is not None and vortox in state.alive_set(phase)
         # Asked of the moment it *acted*. A Snake Charmer swap is dated
         # at the night, so at `phase` the charmer no longer holds the
@@ -4202,6 +4216,13 @@ def _plain_failures(world, state, outcome=None):
         # *that* reading is inverted, a Gambler that guesses wrong still
         # dies, a Snake Charmer that chose the Vortox still swaps.
         # One question, asked in one place: does a Vortox reach this row?
+        # A shot or a Virgin's nomination is not information either, but
+        # what the town watched is still checked like any act: a missed
+        # shot at the Demon under a Vortox wants the Slayer off (Stelle
+        # 59, 14.10.2026).
+        if held is INVERTED and not info.is_information(state) \
+                and getattr(info, "in_the_open", False):
+            held = GENUINE
         if held is INVERTED and not info.is_information(state):
             outcome[idx] = HELD
             continue
@@ -4585,7 +4606,7 @@ def a_no_dashii_poisons_its_townsfolk_neighbours(world, state, night):
     if not _in_bag(state, "NoDashii"):
         return []
     phase = f"N{night}"
-    seat = world.find_at("NoDashii", phase)
+    seat = holding_now(world, state, "NoDashii", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
     hit = _nearest_townsfolk(world, state, seat, phase, state.n_players)
@@ -4602,7 +4623,7 @@ def a_no_dashii_poisons_its_townsfolk_neighbours(world, state, night):
     # came of it, and by the end of the night it was an Evil Twin with
     # no reason to have failed (02.10.2026). On offer, not forced.
     began = _before(night, phase)
-    then = world.find_at("NoDashii", began)
+    then = holding_now(world, state, "NoDashii", began)
     if then is not None:
         earlier = _nearest_townsfolk(world, state, then, began,
                                      state.n_players) - set(hit)
@@ -4632,7 +4653,7 @@ def killed_by_a_vigormortis(world, state, who, phase):
     killer = world.demon_at(first)
     if killer is None or world.role_at(killer, first) != "Vigormortis":
         return False
-    now = world.find_at("Vigormortis", phase)
+    now = holding_now(world, state, "Vigormortis", phase)
     return now is not None and now in state.alive_set(phase)
 
 
@@ -4662,7 +4683,7 @@ def a_vigormortis_poisons_beside_its_dead_minions(world, state, night):
     if not _in_bag(state, "Vigormortis"):
         return []
     phase = f"N{night}"
-    seat = world.find_at("Vigormortis", phase)
+    seat = holding_now(world, state, "Vigormortis", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
     out = []
@@ -4793,7 +4814,7 @@ def a_pukka_poisons_whoever_it_will_kill(world, state, night):
     if not _in_bag(state, "Pukka"):
         return []
     phase = f"N{night}"
-    seat = world.find_at("Pukka", phase)
+    seat = holding_now(world, state, "Pukka", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
     alive = frozenset(state.alive_set(phase))

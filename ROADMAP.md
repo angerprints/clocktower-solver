@@ -1263,6 +1263,45 @@ Am Tor gefunden und behoben:
 | Korpus | 520 | 552 (32 neue, davon vier gespielte Partien), ein altes Brett geändert (siehe oben). Python und JavaScript gleich |
 | Testsammlung | 1.644 grün | 1.654 grün, 2 übersprungen |
 
+### Stelle 59: Dämonenjäger und Jungfrau im Simulator · *erledigt am 14.10.2026*
+
+Der Bericht steht in `claude/stelle-59-daemonenjaeger-jungfrau.md`.
+
+**Deine Antwort vom 14.10.2026:** „ja baue 59“. Der Simulator spielt jetzt beide, die echten und einen Philosophen, der sie genommen hat:
+
+| Charakter | Wie der Simulator ihn spielt |
+|---|---|
+| Dämonenjäger | Vor den Nominierungen schießt er an manchen Tagen (25 %), einmal pro Spiel, in einem Drittel der Fälle auf den Dämon, sonst auf irgendwen. Gestört schießt er, und nichts passiert. Ein arbeitender Einsiedler kann als Dämon registrieren (50 %). Trifft er den Dämon, übernimmt die Scharlachrote Frau bei fünf Lebenden, sonst hat Gut gewonnen. Auf einen Dämon, der davon nicht sterben würde (Zombuul, Lleech mit Wirt), schießt er nicht. |
+| Jungfrau | Ihre erste Nominierung: Ist der Nominierende ein Bürger (oder der Spion), wird er sofort hingerichtet, und das ist die Hinrichtung des Tages. Gestört passiert nichts, die Fähigkeit ist trotzdem verbraucht. |
+| Claims | Wer geschossen hat oder als Jungfrau ihren Nominierenden verloren hat, ist vor dem Dorf aufgedeckt und behauptet seinen Charakter. |
+
+Am Tor gefunden und behoben:
+
+| Wo | Was |
+|---|---|
+| Solver | Unter einem Vortox galten Schuss und Nominierung der Jungfrau als Auskunft und wurden umgedreht. Jetzt nicht mehr, aber sie werden weiter geprüft: Ein Fehlschuss auf den Dämon heißt, der Dämonenjäger war gestört. |
+| Solver | Nach einer Übernahme durch die Scharlachrote Frau fragten Poe, Pukka, Shabaloth, Zombuul, Vortox, No Dashii und Vigormortis den toten alten Dämon, nicht den neuen. Ein Poe, den die Scharlachrote Frau erbte, tötete im Solver nie. Am Tisch genauso nach einer Hinrichtung. Jetzt gilt der Dämon, der ihn gerade hat. |
+| Seite | Ein Treffer des Dämonenjägers legte das Ziel auf einen ausgeteilten Dämon fest. Hatte die Scharlachrote Frau übernommen oder ein Schlangenbeschwörer getauscht, gab es keine Welt. Das Ziel wird nicht mehr festgelegt; den Schützen und die Jungfrau legt die Seite nur noch fest, wenn auf dem Skript niemand Charaktere verändern kann. |
+| Solver | Ein Philosoph mit dem Professor kann ihn ungesehen verbraucht haben, wie der echte. Die Kammerzofe neben ihm durfte das bisher nicht annehmen. |
+| Solver | Ein Golem, der beim Nominieren durch die Yaggababble tot umfällt, hat keine Fähigkeit mehr. Sein Nominierter durfte trotzdem nicht überleben. |
+
+**Das Tor** (3.000 Partien je Zeile):
+
+| Was | vorher | nachher |
+|---|---|---|
+| Trouble Brewing, 4 / 6 Nächte | 0 / 0 verworfen, kein Schuss, keine Jungfrau | 0 / 0. 546 Schüsse, 219 Treffer, 131 Spiele enden durch einen Treffer; 574 Nominierungen der Jungfrau, 313 lösen aus |
+| Oster-Skript | 0 | 0 (498 Schüsse, 578 Nominierungen) |
+| Über die Seite, Trouble Brewing, 179 Partien mit Schuss oder Jungfrau | | 2 ohne Welt, beide mit einem guten Spieler, der grundlos lügt |
+| Gemischt mit Philosoph, Dämonenjäger, Jungfrau, 4 / 6 Nächte | | 2 / 4 verworfen, alle aus bekannten Klassen (Barbier, Philosoph als Schlangenbeschwörer) oder Stelle 60. 33 Schüsse und 48 Nominierungen von Philosophen |
+| Gemischt ohne Pflicht | 5 | 6: eine alte weniger, zwei neue mit Barbier (Stelle 4) |
+| Gemischt mit Gruppe 5, 4 / 6 Nächte | 4 / 5 | 6 / 6. Die Partien laufen jetzt anders; die neuen sind Barbier (Stelle 4) oder Stelle 60 |
+| Gemischt mit Gruppe 4 | 8 | dieselben 8 |
+| Sects & Violets, Batch 4, 8, 9 (zweites Skript) | 16 / 0 / 0 / 0 | gleich |
+| Night-Walk Trouble Brewing, Oster-Skript | 0 | 0 |
+| Prüfsummen | | TB neu `6a929947cb5980b0`, Oster-Skript neu `c13863aafcc20af1`, S&V gleich |
+| Korpus | 552 | 564 (12 neue). 13 gespielte Bretter auf Skripten mit Dämonenjäger oder Jungfrau sind jetzt andere Partien; 8 alte Bretter geben leicht andere Zahlen, meist ein paar Welten mehr, durch die Fehler oben. Python und JavaScript gleich |
+| Testsammlung | 1.654 grün | 1.663 grün, 2 übersprungen. Drei alte Tests angepasst: das Ziel eines Treffers ist nicht mehr festgelegt, eine gemischte Partie hat einen neuen Seed (169 statt 140), und die Suche nach einer „sicher falschen“ Partie verlangt jetzt, dass die Wahrheit nichts kostet |
+
 ### Stelle 58: Wer einen Charakter bekommt, sagt es · *erledigt am 14.10.2026*
 
 Der Bericht steht in `claude/stelle-58-farmer-erbe.md`.
@@ -1383,7 +1422,8 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 57 | erledigt | **Werwolf, Xaan und Adlige.** *Behoben am 12.10.2026:* Eine Auskunft, die nur mit der Falschen Pfote stimmt, darf auch falsch gewesen sein, weil ihre Quelle gestört war; je Nacht werden beide Wege versucht. War 1 von 3.000 gemischten Partien mit Werwolf (Seed 1177). |
 | 54 | Solver | **Der böse Bürger des Kopfgeldjägers mit falschem Claim** wird nur an einem Sitz gefunden, der als nicht vertrauenswürdig markiert ist. Sonst nimmt die Suche an, dass er seinen echten Charakter nennt. Der Jinx Leviathan–Mönch ist nicht gebaut, weil die Wahl des Mönchs nirgends steht. |
 | 58 | erledigt | **Der Erbe des Farmers sagt nur „Farmer“.** *Behoben am 14.10.2026* (A bis F, siehe Abschnitt „Stelle 58“). Die Seite nimmt bei einem guten Spieler an, dass er seinen ausgeteilten Charakter nennt. War der alte Charakter des Erben wichtig (gemischte Partie 693 mit 7 Spielern: als Teedame hatte er am Vortag seinen Nachbarn vor der Hinrichtung bewahrt), findet sie keine Welt. Gilt genauso beim echten Farmer. Aufgefallen am 14.10.2026 bei Gruppe 4 des Philosophen, nicht gebaut. |
-| 59 | Simulator | **Dämonenjäger und Jungfrau spielt der Simulator nicht.** Kein Schuss, keine Nominierung einer Jungfrau, auch bei den echten nicht. Der Solver kennt beide (Zeilen „Slayer shot“ und „Virgin nominated“), aber kein Tor prüft sie, nur Testbretter. Aufgefallen am 14.10.2026 bei Gruppe 5 des Philosophen, nicht gebaut. |
+| 59 | erledigt | **Dämonenjäger und Jungfrau spielt der Simulator nicht.** *Gebaut am 14.10.2026*, siehe Abschnitt „Stelle 59“. |
+| 60 | Solver | **Zwei kleine Klassen, sichtbar geworden durch Stelle 59, nicht gebaut.** (a) Die Scharlachrote Frau übernimmt am Tag, und in einer späteren Nacht wählt ein Schlangenbeschwörer sie: Der Solver bietet den Tausch nicht an, weil er Übernahme und Tausch in getrennten Schritten erzählt (gemischt mit Gruppe 5, Seed 127; mit Dämonenjäger und Jungfrau, 6 Nächte, Seed 2001). (b) Ein Savant, der am Tag des Treffers etwas über den Dämon erfährt: Der Simulator nimmt den Dämon vor dem Schuss, der Solver den danach (Seed 1209). |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

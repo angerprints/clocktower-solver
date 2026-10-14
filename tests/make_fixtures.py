@@ -1069,6 +1069,7 @@ def handmade():
     yield from the_philosopher_takes_group_4()
     yield from the_farmers_heir()
     yield from the_philosopher_takes_group_5()
+    yield from the_slayer_and_the_virgin()
 
 
 def the_eighth_five():
@@ -1510,6 +1511,37 @@ def the_philosopher_takes_group_5():
 # Games where a Philosopher took one of group 5 and used it: the Golem
 # (42, 120), the Alsaahir (106, 452).
 PLAYED_GROUP_5 = (42, 120, 106, 452)
+
+
+def the_slayer_and_the_virgin():
+    """Stelle 59 (14.10.2026): the simulator plays the Slayer and the
+    Virgin. The boards of tests/test_slayer_virgin.py, under a Vortox, and
+    played Trouble Brewing games: a shot that missed, one that landed, a
+    Virgin that took its nominator, and mixed ones with a Philosopher."""
+    sys.path.insert(0, str(HERE))
+    from test_slayer_virgin import _payloads
+    names = ("missed", "missed-the-vortox", "quiet", "triggered",
+             "quiet-on-a-townsfolk")
+    for name, payload in zip(names, _payloads()):
+        yield {"name": f"x-in-the-open-{name}", "payload": payload}
+    for seed in PLAYED_TB_OPEN:
+        yield played(f"tb-played-in-the-open-{seed}", TB, seed, 7, 4)
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    for seed in PLAYED_MIXED_OPEN:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(
+            rng, must_have=("Philosopher", "Slayer", "Virgin"))
+        yield played(f"x-in-the-open-played-{seed}", script, seed, 7, 4,
+                     rng=rng)
+
+
+# A shot that missed (1), a quiet nomination (5), a Virgin that took its
+# nominator (7), a shot that landed and went to the Scarlet Woman (80), a
+# shot that ended the game (105); mixed ones where a Philosopher shot or
+# was nominated as the Virgin (26, 65).
+PLAYED_TB_OPEN = (1, 5, 7, 80, 105)
+PLAYED_MIXED_OPEN = (26, 65)
 
 
 def the_farmers_heir():

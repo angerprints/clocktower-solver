@@ -113,11 +113,13 @@ class WitnessedEventsPrune(SolverTest):
         self.assertIn("Spy", pinned[2])
         self.assertNotIn("Imp", pinned[2])
 
-    def test_a_landed_slayer_shot_pins_shooter_and_target(self):
+    def test_a_landed_slayer_shot_pins_the_shooter_only(self):
+        # Not the target: the Demon it hit may be a Minion that caught the
+        # star, dealt something else (Stelle 59, 14.10.2026).
         state = game(9, infos=[SlayerShot(2, 4, target=2, died=True)])
         pinned = forced_roles(state)
         self.assertEqual(pinned[4], frozenset({"Slayer"}))
-        self.assertEqual(pinned[2], frozenset({"Imp", "Recluse"}))
+        self.assertNotIn(2, pinned)
 
     def test_a_shot_that_missed_pins_nothing(self):
         state = game(9, infos=[SlayerShot(2, 4, target=2, died=False)])

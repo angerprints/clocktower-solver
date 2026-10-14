@@ -607,6 +607,15 @@ def uncertain(world, state, seat, night):
     """
     phase = f"N{night}"
     acting = _acts_as(world, seat, phase)
+    # A Philosopher after the night it took something wakes on that
+    # character's schedule (`_philosopher`), and is as uncertain as it:
+    # one that took the Professor may have spent it unseen (found
+    # 14.10.2026, a Chambermaid beside one).
+    took = (state.philosophies() or {}).get(seat) \
+        if acting == "Philosopher" else None
+    if took and night > int(took[1][1:]) and took[0] != "Philosopher" \
+            and not CHARACTERS[took[0]].believes:
+        acting = took[0]
     if acting == "Choirboy":
         # Woken if the Demon killed the King tonight. A King dead in the
         # night may have been the Demon's or anybody else's (10.10.2026).
@@ -680,7 +689,9 @@ def uncertain(world, state, seat, night):
         raised = _raised_on(state)
         if raised is None:
             return True
-        return world.find_at("Shabaloth", f"N{raised}") is not None
+        from .info import holding_now
+        return holding_now(world, state, "Shabaloth", f"N{raised}") \
+            is not None
     from .info import taken_by_a_philosopher, took_it
     if "Exorcist" not in state.script.keys \
             and not taken_by_a_philosopher(state, "Exorcist"):

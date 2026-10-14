@@ -656,6 +656,11 @@ def a_confidently_wrong_game(among=range(900, 1000)):
         truth = World(tuple(deal.roles), tuple(deal.believes))
         if truth in everything:
             continue
+        # And one the truth explains at no cost at all: a shot that
+        # missed through poison, since the simulator plays the Slayer
+        # (14.10.2026), is a price and not the point here.
+        if S.explanation_cost(truth, state) != 1.0:
+            continue
         rows = S.summarize(valid, state)
         demon = deal.demon_at(state.final_phase())
         best = max(r["demon_pct"] for r in rows)

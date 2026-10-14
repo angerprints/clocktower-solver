@@ -616,14 +616,15 @@ class GroupFiveInTheSolver(SolverTest):
         self.assertIsNone(dycost(R, [took("Zealot")], **kept_down))
         self.assertIsNotNone(dycost(R, [took("Chef")], **kept_down))
 
-    def test_a_landed_shot_pins_the_shooter_and_any_demon(self):
+    def test_a_landed_shot_pins_the_shooter_only(self):
         st = GameState(n_players=7, script=BY_DAY, claims=dict(enumerate(R)),
                        infos=[took("Slayer"),
                               I.SlayerShot(1, 3, target=6, died=True)],
                        deaths={6: ("D1",)}, days_done={1})
         pinned = S.forced_roles(st)
         self.assertEqual(pinned[3], {"Slayer", "Philosopher"})
-        self.assertEqual(pinned[6], {"Imp", "Po", "Recluse"})
+        # The Demon it hit may be a Minion that caught the star.
+        self.assertNotIn(6, pinned)
 
 
 def _payloads_5():

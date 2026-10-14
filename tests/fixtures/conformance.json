@@ -31199,67 +31199,67 @@
     "game_over": true
    },
    "expect": {
-    "valid": 303,
+    "valid": 311,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 23.9713,
-      "demon_pct": 7.17,
+      "evil_pct": 23.2399,
+      "demon_pct": 6.9512,
       "drunk_pct": 0.0,
-      "lying_pct": 3.9533
+      "lying_pct": 3.8326
      },
      {
-      "evil_pct": 51.9648,
+      "evil_pct": 53.3706,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 51.9648
+      "lying_pct": 53.3706
      },
      {
-      "evil_pct": 0.738,
+      "evil_pct": 0.7753,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.738
+      "lying_pct": 0.7753
      },
      {
-      "evil_pct": 6.2245,
-      "demon_pct": 2.02,
+      "evil_pct": 6.0346,
+      "demon_pct": 1.9584,
       "drunk_pct": 0.0,
-      "lying_pct": 6.2245
+      "lying_pct": 6.0346
      },
      {
-      "evil_pct": 99.1256,
-      "demon_pct": 90.3413,
+      "evil_pct": 99.1523,
+      "demon_pct": 90.636,
       "drunk_pct": 0.0,
-      "lying_pct": 37.254
+      "lying_pct": 39.1684
      },
      {
-      "evil_pct": 2.0084,
-      "demon_pct": 0.4687,
+      "evil_pct": 1.9472,
+      "demon_pct": 0.4544,
       "drunk_pct": 0.0,
-      "lying_pct": 64.0768
+      "lying_pct": 62.1218
      },
      {
-      "evil_pct": 15.9673,
+      "evil_pct": 15.4801,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 15.9673
+      "lying_pct": 15.4801
      }
     ],
     "blame": {
      "2": {
       "2": {
-       "Demon": 0.9361,
-       "Assassin": 0.0639
+       "Demon": 0.9381,
+       "Assassin": 0.0619
       }
      },
      "3": {
       "3": {
-       "Demon": 0.9789,
-       "Assassin": 0.0211
+       "Demon": 0.9795,
+       "Assassin": 0.0205
       },
       "5": {
-       "Demon": 0.9789,
-       "Assassin": 0.0211
+       "Demon": 0.9795,
+       "Assassin": 0.0205
       }
      }
     }
@@ -32218,7 +32218,7 @@
     "game_over": true
    },
    "expect": {
-    "valid": 31,
+    "valid": 35,
     "sampled": false,
     "rows": [
      {
@@ -32246,22 +32246,22 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 11.4432,
-      "demon_pct": 11.4432,
+      "evil_pct": 13.0307,
+      "demon_pct": 13.0307,
       "drunk_pct": 0.0,
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 51.3,
-      "demon_pct": 51.3,
+      "evil_pct": 47.7202,
+      "demon_pct": 47.7202,
       "drunk_pct": 0.0,
-      "lying_pct": 51.3
+      "lying_pct": 47.7202
      },
      {
-      "evil_pct": 37.2568,
-      "demon_pct": 37.2568,
+      "evil_pct": 39.2491,
+      "demon_pct": 39.2491,
       "drunk_pct": 0.0,
-      "lying_pct": 37.2568
+      "lying_pct": 39.2491
      }
     ],
     "blame": {
@@ -32784,57 +32784,57 @@
     "game_over": true
    },
    "expect": {
-    "valid": 3519,
+    "valid": 3647,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 0.8999,
+      "evil_pct": 0.9532,
       "demon_pct": 0.0,
-      "drunk_pct": 11.5427,
-      "lying_pct": 12.4426
+      "drunk_pct": 11.541,
+      "lying_pct": 12.4942
      },
      {
-      "evil_pct": 95.5853,
-      "demon_pct": 94.2605,
-      "drunk_pct": 0.9603,
-      "lying_pct": 96.5456
+      "evil_pct": 95.3645,
+      "demon_pct": 94.0434,
+      "drunk_pct": 1.0365,
+      "lying_pct": 96.401
      },
      {
-      "evil_pct": 31.9097,
+      "evil_pct": 31.8184,
       "demon_pct": 0.0,
-      "drunk_pct": 24.3527,
-      "lying_pct": 56.2624
+      "drunk_pct": 24.3733,
+      "lying_pct": 56.1917
      },
      {
-      "evil_pct": 38.5185,
+      "evil_pct": 38.6316,
       "demon_pct": 0.0,
-      "drunk_pct": 22.1998,
-      "lying_pct": 60.7183
+      "drunk_pct": 22.1764,
+      "lying_pct": 60.808
      },
      {
-      "evil_pct": 6.822,
-      "demon_pct": 5.5358,
-      "drunk_pct": 1.0482,
-      "lying_pct": 7.8702
+      "evil_pct": 7.0194,
+      "demon_pct": 5.737,
+      "drunk_pct": 1.0463,
+      "lying_pct": 8.0657
      },
      {
-      "evil_pct": 25.9717,
+      "evil_pct": 25.9044,
       "demon_pct": 0.0,
-      "drunk_pct": 16.0107,
-      "lying_pct": 41.9824
+      "drunk_pct": 16.0,
+      "lying_pct": 41.9044
      },
      {
-      "evil_pct": 0.4032,
-      "demon_pct": 0.2037,
-      "drunk_pct": 2.1127,
-      "lying_pct": 0.0425
+      "evil_pct": 0.4186,
+      "demon_pct": 0.2196,
+      "drunk_pct": 2.1105,
+      "lying_pct": 0.0589
      }
     ],
     "blame": {
      "2": {
       "0": {
-       "Demon": 0.7498,
-       "Gossip": 0.2502
+       "Demon": 0.75,
+       "Gossip": 0.25
       }
      },
      "4": {
@@ -33039,46 +33039,46 @@
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 59.3213,
-      "demon_pct": 53.1961,
+      "evil_pct": 58.7223,
+      "demon_pct": 52.659,
       "drunk_pct": 0.0,
-      "lying_pct": 59.3213
+      "lying_pct": 58.7223
      },
      {
-      "evil_pct": 10.2919,
-      "demon_pct": 1.0,
+      "evil_pct": 11.1779,
+      "demon_pct": 0.9899,
       "drunk_pct": 0.0,
-      "lying_pct": 10.2919
+      "lying_pct": 11.1779
      },
      {
-      "evil_pct": 23.6067,
-      "demon_pct": 21.1567,
+      "evil_pct": 23.3684,
+      "demon_pct": 20.9431,
       "drunk_pct": 0.0,
-      "lying_pct": 23.6067
+      "lying_pct": 23.3684
      },
      {
-      "evil_pct": 0.4133,
+      "evil_pct": 0.429,
       "demon_pct": 0.0,
-      "drunk_pct": 0.1667,
-      "lying_pct": 0.2467
+      "drunk_pct": 0.165,
+      "lying_pct": 0.264
      },
      {
-      "evil_pct": 39.6475,
-      "demon_pct": 24.6472,
+      "evil_pct": 40.2569,
+      "demon_pct": 25.408,
       "drunk_pct": 0.0,
-      "lying_pct": 39.6475
+      "lying_pct": 40.2569
      },
      {
-      "evil_pct": 65.9401,
+      "evil_pct": 65.2743,
       "demon_pct": 0.0,
-      "drunk_pct": 2.5001,
-      "lying_pct": 63.4401
+      "drunk_pct": 2.4748,
+      "lying_pct": 62.7995
      },
      {
-      "evil_pct": 0.7792,
+      "evil_pct": 0.7713,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.7792
+      "lying_pct": 0.7713
      }
     ],
     "blame": {
@@ -33090,8 +33090,8 @@
      },
      "3": {
       "6": {
-       "Demon": 0.7832,
-       "Gossip": 0.2168
+       "Demon": 0.7873,
+       "Gossip": 0.2127
       }
      }
     }
@@ -34789,38 +34789,35 @@
     "players": [
      {
       "name": "",
-      "claim": "Chef",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": [
-       3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Banshee",
+      "claim": "",
       "events": [
        "N3"
       ],
       "certainty": "",
       "read": 0,
-      "wake": "",
+      "wake": "first",
       "voted": [
-       1
+       2
       ],
       "nominated": [
-       2
+       1
       ]
      },
      {
       "name": "",
-      "claim": "Undertaker",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Heretic",
       "events": [
        "X3"
       ],
@@ -34828,38 +34825,42 @@
       "read": 0,
       "wake": "",
       "voted": [
-       1
+       1,
+       3
       ],
       "nominated": [
-       2,
        3
       ]
      },
      {
       "name": "",
-      "claim": "Zealot",
+      "claim": "Monk",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
-      "nominated": []
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
      },
      {
       "name": "",
-      "claim": "",
+      "claim": "Ravenkeeper",
       "events": [
-       "N2"
+       "X2"
       ],
       "certainty": "",
       "read": 0,
-      "wake": "sometimes",
+      "wake": "",
       "voted": [
-       1
+       1,
+       2
       ],
-      "nominated": [
-       1
-      ]
+      "nominated": []
      },
      {
       "name": "",
@@ -34875,18 +34876,19 @@
      },
      {
       "name": "",
-      "claim": "Chef",
-      "events": [
-       "X2"
-      ],
+      "claim": "",
+      "events": [],
       "certainty": "",
       "read": 0,
-      "wake": "",
+      "wake": "never",
       "voted": [
-       2
+       1,
+       2,
+       3
       ],
       "nominated": [
-       2
+       2,
+       3
       ]
      }
     ],
@@ -34900,21 +34902,16 @@
       "role": ""
      },
      {
-      "type": "GoblinClaim",
+      "type": "SlayerShot",
       "night": 1,
-      "player": 5
+      "player": 5,
+      "target": 0,
+      "died": false
      },
      {
-      "type": "Ravenkeeper",
+      "type": "GoblinClaim",
       "night": 2,
-      "player": 4,
-      "target": 3,
-      "role": "Ojo"
-     },
-     {
-      "type": "BansheeAnnounced",
-      "night": 3,
-      "player": 1
+      "player": 4
      },
      {
       "type": "GoblinClaim",
@@ -34950,7 +34947,9 @@
       "imp"
      ]
     },
-    "quiet_nights": [],
+    "quiet_nights": [
+     2
+    ],
     "days_done": [
      1,
      2
@@ -34958,60 +34957,55 @@
     "game_over": true
    },
    "expect": {
-    "valid": 12,
+    "valid": 1686,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 53.7234,
-      "demon_pct": 7.4468,
-      "drunk_pct": 0.0,
-      "lying_pct": 53.7234
-     },
-     {
-      "evil_pct": 0.0,
+      "evil_pct": 0.3179,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 0.1523
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 16.7533,
+      "demon_pct": 8.3766,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 16.7533
      },
      {
       "evil_pct": 100.0,
-      "demon_pct": 92.5532,
+      "demon_pct": 66.4934,
       "drunk_pct": 0.0,
       "lying_pct": 100.0
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 33.5066,
+      "demon_pct": 16.7533,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 33.5066
      },
      {
-      "evil_pct": 0.0,
+      "evil_pct": 21.7793,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 21.7793
      },
      {
-      "evil_pct": 46.2766,
+      "evil_pct": 10.8896,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 46.2766
+      "lying_pct": 10.8896
+     },
+     {
+      "evil_pct": 16.7533,
+      "demon_pct": 8.3766,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.7533
      }
     ],
     "blame": {
      "3": {
-      "1": {
-       "Demon": 1.0
-      }
-     },
-     "2": {
-      "4": {
+      "0": {
        "Demon": 1.0
       }
      }
@@ -39984,24 +39978,9 @@
      {
       "name": "",
       "claim": "Slayer",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
+      "events": [
+       "N2"
       ],
-      "nominated": [
-       1,
-       2,
-       3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Ravenkeeper",
-      "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
@@ -40012,14 +39991,28 @@
      },
      {
       "name": "",
-      "claim": "Chef",
+      "claim": "FortuneTeller",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
+       1,
        2
       ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
       "nominated": [
        1,
        2
@@ -40029,13 +40022,15 @@
       "name": "",
       "claim": "",
       "events": [
-       "X1"
+       "X3"
       ],
       "certainty": "",
       "read": 0,
       "wake": "every",
       "voted": [
-       1
+       1,
+       2,
+       3
       ],
       "nominated": [
        1
@@ -40056,13 +40051,14 @@
      {
       "name": "",
       "claim": "",
-      "events": [],
+      "events": [
+       "X1"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "never",
       "voted": [
-       1,
-       2
+       1
       ],
       "nominated": []
      },
@@ -40070,13 +40066,18 @@
       "name": "",
       "claim": "Librarian",
       "events": [
-       "N2"
+       "N4"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
-      "nominated": []
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2,
+       3
+      ]
      }
     ],
     "infos": [
@@ -40093,6 +40094,20 @@
       "night": 1,
       "player": 1,
       "target": 4
+     },
+     {
+      "type": "Undertaker",
+      "night": 2,
+      "player": 3,
+      "target": 5,
+      "role": "Soldier"
+     },
+     {
+      "type": "Undertaker",
+      "night": 3,
+      "player": 3,
+      "target": 4,
+      "role": "Magician"
      }
     ],
     "script": {
@@ -40123,65 +40138,69 @@
      ]
     },
     "quiet_nights": [
-     3,
-     4
+     3
     ],
     "days_done": [
      1,
      2,
      3
     ],
-    "game_over": false
+    "game_over": true
    },
    "expect": {
-    "valid": 1112,
+    "valid": 776,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 54.2297,
-      "demon_pct": 32.2868,
+      "evil_pct": 5.1047,
+      "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 54.2297
+      "lying_pct": 5.1047
      },
      {
-      "evil_pct": 54.2297,
-      "demon_pct": 32.2868,
+      "evil_pct": 75.3996,
+      "demon_pct": 49.4686,
       "drunk_pct": 0.0,
-      "lying_pct": 54.2297
+      "lying_pct": 75.3996
      },
      {
-      "evil_pct": 53.4011,
-      "demon_pct": 31.7365,
+      "evil_pct": 73.721,
+      "demon_pct": 47.8313,
       "drunk_pct": 0.0,
-      "lying_pct": 53.4011
+      "lying_pct": 73.721
      },
      {
-      "evil_pct": 5.954,
+      "evil_pct": 7.0787,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 24.4423,
+      "evil_pct": 25.628,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 24.4423
+      "lying_pct": 25.628
      },
      {
-      "evil_pct": 6.473,
-      "demon_pct": 3.6899,
-      "drunk_pct": 0.0,
-      "lying_pct": 5.7726
-     },
-     {
-      "evil_pct": 1.2702,
+      "evil_pct": 5.96,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 1.2702
+      "lying_pct": 5.96
+     },
+     {
+      "evil_pct": 7.108,
+      "demon_pct": 2.7001,
+      "drunk_pct": 0.0,
+      "lying_pct": 7.108
      }
     ],
     "blame": {
      "2": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
+     "4": {
       "6": {
        "Demon": 1.0
       }
@@ -40442,26 +40461,25 @@
     "players": [
      {
       "name": "",
-      "claim": "Undertaker",
-      "events": [
-       "X3"
-      ],
+      "claim": "",
+      "events": [],
       "certainty": "",
       "read": 0,
-      "wake": "",
+      "wake": "every",
       "voted": [
+       2,
        3
       ],
       "nominated": [
-       1,
-       2
+       2,
+       3
       ]
      },
      {
       "name": "",
-      "claim": "Damsel",
+      "claim": "Recluse",
       "events": [
-       "N3"
+       "N2"
       ],
       "certainty": "",
       "read": 0,
@@ -40475,6 +40493,52 @@
       "name": "",
       "claim": "FortuneTeller",
       "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [
        "X1"
       ],
       "certainty": "",
@@ -40485,53 +40549,17 @@
      },
      {
       "name": "",
-      "claim": "Washerwoman",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [],
-      "nominated": [
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Empath",
+      "claim": "Slayer",
       "events": [
-       "N2"
+       "N3"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Chef",
-      "events": [
-       "X2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "never",
       "voted": [
-       3
+       2
       ],
-      "nominated": [
-       3
-      ]
+      "nominated": []
      }
     ],
     "infos": [
@@ -40561,23 +40589,40 @@
       "player": 1
      },
      {
+      "type": "Empath",
+      "night": 2,
+      "player": 4,
+      "count": 1
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 2,
+      "player": 2,
+      "a": 3,
+      "b": 4,
+      "yes": true
+     },
+     {
       "type": "Undertaker",
       "night": 2,
       "player": 0,
-      "target": 2,
-      "role": "FortuneTeller"
+      "target": 5,
+      "role": "Chef"
      },
      {
-      "type": "BlindVote",
-      "night": 2,
-      "player": 1
+      "type": "FortuneTeller",
+      "night": 3,
+      "player": 2,
+      "a": 3,
+      "b": 0,
+      "yes": true
      },
      {
       "type": "Undertaker",
       "night": 3,
       "player": 0,
-      "target": 5,
-      "role": "Chef"
+      "target": 4,
+      "role": "Empath"
      }
     ],
     "script": {
@@ -40615,7 +40660,7 @@
     "game_over": true
    },
    "expect": {
-    "valid": 12,
+    "valid": 4,
     "sampled": false,
     "rows": [
      {
@@ -40662,13 +40707,13 @@
      }
     ],
     "blame": {
-     "3": {
+     "2": {
       "1": {
        "Demon": 1.0
       }
      },
-     "2": {
-      "4": {
+     "3": {
+      "6": {
        "Demon": 1.0
       }
      }
@@ -51368,29 +51413,33 @@
      {
       "name": "",
       "claim": "VillageIdiot",
-      "events": [],
+      "events": [
+       "N3"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       3
+       1,
+       2
       ],
       "nominated": [
-       2,
-       3
+       2
       ]
      },
      {
       "name": "",
       "claim": "Slayer",
       "events": [
-       "N2"
+       "X3"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       1
+       1,
+       2,
+       3
       ],
       "nominated": [
        1
@@ -51398,7 +51447,23 @@
      },
      {
       "name": "",
-      "claim": "Mathematician",
+      "claim": "Undertaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Chef",
       "events": [
        "X1"
       ],
@@ -51412,53 +51477,43 @@
      },
      {
       "name": "",
-      "claim": "Chef",
-      "events": [
-       "N3"
-      ],
+      "claim": "",
+      "events": [],
       "certainty": "",
       "read": 0,
-      "wake": "",
+      "wake": "every",
       "voted": [
-       1
+       2,
+       3
       ],
       "nominated": [
-       1
+       2,
+       3
       ]
      },
      {
       "name": "",
-      "claim": "Monk",
+      "claim": "Mathematician",
       "events": [
-       "X3"
+       "S2"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       1
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Washerwoman",
-      "events": [
-       "D3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
+       1,
+       2,
        3
       ],
-      "nominated": []
+      "nominated": [
+       2
+      ]
      },
      {
       "name": "",
       "claim": "",
       "events": [
-       "X2"
+       "N2"
       ],
       "certainty": "",
       "read": 0,
@@ -51466,7 +51521,9 @@
       "voted": [
        1
       ],
-      "nominated": []
+      "nominated": [
+       1
+      ]
      }
     ],
     "infos": [
@@ -51493,15 +51550,8 @@
       "type": "VillageIdiotInfo",
       "night": 2,
       "player": 0,
-      "target": 4,
+      "target": 3,
       "evil": false
-     },
-     {
-      "type": "VillageIdiotInfo",
-      "night": 3,
-      "player": 0,
-      "target": 5,
-      "evil": true
      }
     ],
     "script": {
@@ -51533,69 +51583,74 @@
       "lleech"
      ]
     },
-    "quiet_nights": [],
+    "quiet_nights": [
+     4
+    ],
     "days_done": [
      1,
-     2
+     2,
+     3
     ],
-    "game_over": true
+    "game_over": false
    },
    "expect": {
-    "valid": 885,
+    "valid": 1329,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 20.3688,
-      "demon_pct": 15.3099,
-      "drunk_pct": 0.0,
-      "lying_pct": 23.2357
-     },
-     {
-      "evil_pct": 3.3504,
+      "evil_pct": 0.591,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 5.1268
+      "lying_pct": 7.2541
      },
      {
-      "evil_pct": 48.3473,
+      "evil_pct": 41.8878,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 50.015
+      "lying_pct": 44.9027
      },
      {
-      "evil_pct": 3.2472,
+      "evil_pct": 42.6482,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 84.083
+      "lying_pct": 47.1228
      },
      {
-      "evil_pct": 24.1927,
-      "demon_pct": 8.1167,
-      "drunk_pct": 0.0,
-      "lying_pct": 25.8658
-     },
-     {
-      "evil_pct": 85.1534,
-      "demon_pct": 76.5735,
-      "drunk_pct": 0.0,
-      "lying_pct": 86.3218
-     },
-     {
-      "evil_pct": 15.3401,
+      "evil_pct": 8.2338,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 14.623
+      "lying_pct": 64.5238
+     },
+     {
+      "evil_pct": 6.2624,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.3752
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.3769,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.2514
      }
     ],
     "blame": {
-     "2": {
-      "1": {
-       "Demon": 1.0
+     "3": {
+      "0": {
+       "Demon": 0.9344,
+       "Lycanthrope": 0.0656
       }
      },
-     "3": {
-      "3": {
-       "Demon": 1.0
+     "2": {
+      "6": {
+       "Demon": 0.9342,
+       "Lycanthrope": 0.0658
       }
      }
     }
@@ -56716,24 +56771,27 @@
     "players": [
      {
       "name": "",
-      "claim": "Soldier",
+      "claim": "Farmer",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       2,
        3
       ],
-      "nominated": []
+      "nominated": [
+       2
+      ]
      },
      {
       "name": "",
-      "claim": "",
-      "events": [],
+      "claim": "BountyHunter",
+      "events": [
+       "X2"
+      ],
       "certainty": "",
       "read": 0,
-      "wake": "first",
+      "wake": "",
       "voted": [
        1,
        2
@@ -56742,15 +56800,30 @@
      },
      {
       "name": "",
-      "claim": "Saint",
-      "events": [
-       "X1"
-      ],
+      "claim": "Butler",
+      "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
+       1,
+       2
+      ],
+      "nominated": [
        1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1,
+       2,
+       3
       ],
       "nominated": []
      },
@@ -56761,23 +56834,11 @@
       "certainty": "",
       "read": 0,
       "wake": "sometimes",
-      "voted": [],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Sage",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
       "voted": [
-       2
-      ],
-      "nominated": [
-       2,
+       1,
        3
-      ]
+      ],
+      "nominated": []
      },
      {
       "name": "",
@@ -56787,20 +56848,26 @@
       "read": 0,
       "wake": "",
       "voted": [
-       1
+       1,
+       3
       ],
-      "nominated": []
+      "nominated": [
+       2
+      ]
      },
      {
       "name": "",
-      "claim": "Ravenkeeper",
+      "claim": "Slayer",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
-      "nominated": [
+      "voted": [
        1
+      ],
+      "nominated": [
+       1,
+       3
       ]
      }
     ],
@@ -56832,16 +56899,20 @@
       ]
      },
      {
-      "type": "ExecutionNomination",
-      "night": 1,
-      "player": 6
-     },
-     {
       "type": "SageInfo",
       "night": 3,
       "player": 4,
       "a": 0,
-      "b": 5
+      "b": 6
+     },
+     {
+      "type": "CultCalled",
+      "night": 3,
+      "player": 3,
+      "joined": [
+       0,
+       4
+      ]
      }
     ],
     "script": {
@@ -56886,50 +56957,50 @@
     "game_over": false
    },
    "expect": {
-    "valid": 76,
+    "valid": 810,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 64.3006,
-      "demon_pct": 58.5069,
+      "evil_pct": 55.7667,
+      "demon_pct": 32.8042,
       "drunk_pct": 0.0,
-      "lying_pct": 58.5069
+      "lying_pct": 50.6581
      },
      {
-      "evil_pct": 8.0975,
-      "demon_pct": 0.8425,
+      "evil_pct": 13.0404,
+      "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 2.1665
      },
      {
       "evil_pct": 100.0,
-      "demon_pct": 0.0,
+      "demon_pct": 42.0544,
       "drunk_pct": 0.0,
       "lying_pct": 100.0
      },
      {
-      "evil_pct": 7.8782,
-      "demon_pct": 0.0,
+      "evil_pct": 18.3457,
+      "demon_pct": 1.8895,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 3.779
      },
      {
-      "evil_pct": 20.9028,
-      "demon_pct": 10.2972,
+      "evil_pct": 27.6772,
+      "demon_pct": 1.8994,
       "drunk_pct": 0.0,
-      "lying_pct": 10.2972
+      "lying_pct": 4.0362
      },
      {
-      "evil_pct": 91.0826,
-      "demon_pct": 28.5514,
+      "evil_pct": 87.9914,
+      "demon_pct": 8.2307,
       "drunk_pct": 0.0,
-      "lying_pct": 28.5514
+      "lying_pct": 16.4615
      },
      {
-      "evil_pct": 7.5957,
-      "demon_pct": 1.802,
+      "evil_pct": 28.0246,
+      "demon_pct": 13.1217,
       "drunk_pct": 0.0,
-      "lying_pct": 1.802
+      "lying_pct": 22.4238
      }
     ]
    }
@@ -56947,10 +57018,12 @@
       "read": 0,
       "wake": "",
       "voted": [
-       2
+       2,
+       3
       ],
       "nominated": [
-       1
+       2,
+       3
       ]
      },
      {
@@ -56961,7 +57034,8 @@
       "read": 0,
       "wake": "",
       "voted": [
-       1
+       1,
+       3
       ],
       "nominated": [
        2
@@ -56969,22 +57043,7 @@
      },
      {
       "name": "",
-      "claim": "",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "every",
-      "voted": [
-       1,
-       3
-      ],
-      "nominated": [
-       1
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Saint",
+      "claim": "Empath",
       "events": [],
       "certainty": "",
       "read": 0,
@@ -56994,7 +57053,25 @@
        2,
        3
       ],
-      "nominated": []
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Banshee",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
      },
      {
       "name": "",
@@ -57016,11 +57093,11 @@
       "read": 0,
       "wake": "",
       "voted": [
-       1
-      ],
-      "nominated": [
+       1,
+       2,
        3
-      ]
+      ],
+      "nominated": []
      },
      {
       "name": "",
@@ -57030,8 +57107,7 @@
       "read": 0,
       "wake": "",
       "voted": [
-       2,
-       3
+       2
       ],
       "nominated": [
        2
@@ -57054,38 +57130,20 @@
       "type": "Empath",
       "night": 2,
       "player": 2,
-      "count": 2
-     },
-     {
-      "type": "CultCalled",
-      "night": 2,
-      "player": 0,
-      "joined": [
-       3,
-       5,
-       6
-      ]
+      "count": 1
      },
      {
       "type": "SageInfo",
       "night": 3,
       "player": 5,
       "a": 3,
-      "b": 4
+      "b": 6
      },
      {
       "type": "Empath",
       "night": 3,
       "player": 2,
       "count": 2
-     },
-     {
-      "type": "CultCalled",
-      "night": 3,
-      "player": 0,
-      "joined": [
-       5
-      ]
      },
      {
       "type": "Empath",
@@ -57136,50 +57194,50 @@
     "game_over": false
    },
    "expect": {
-    "valid": 78,
+    "valid": 38,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 48.1905,
-      "demon_pct": 0.604,
+      "evil_pct": 52.0446,
+      "demon_pct": 1.9511,
       "drunk_pct": 0.0,
-      "lying_pct": 5.714
+      "lying_pct": 11.8981
      },
      {
-      "evil_pct": 79.0426,
-      "demon_pct": 12.4017,
+      "evil_pct": 64.2918,
+      "demon_pct": 6.1039,
       "drunk_pct": 0.0,
-      "lying_pct": 78.5443
+      "lying_pct": 63.9574
      },
      {
-      "evil_pct": 2.4866,
-      "demon_pct": 0.302,
+      "evil_pct": 20.3258,
+      "demon_pct": 0.4681,
       "drunk_pct": 0.0,
-      "lying_pct": 0.8054
+      "lying_pct": 8.7158
      },
      {
-      "evil_pct": 100.0,
-      "demon_pct": 84.0442,
+      "evil_pct": 76.5229,
+      "demon_pct": 65.7124,
       "drunk_pct": 0.0,
-      "lying_pct": 100.0
+      "lying_pct": 76.3278
      },
      {
-      "evil_pct": 4.6763,
+      "evil_pct": 0.3344,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 4.0269
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 12.0362,
-      "demon_pct": 2.044,
+      "evil_pct": 15.7055,
+      "demon_pct": 7.9586,
       "drunk_pct": 0.0,
-      "lying_pct": 4.088
+      "lying_pct": 14.8324
      },
      {
-      "evil_pct": 6.2123,
-      "demon_pct": 0.604,
+      "evil_pct": 24.4635,
+      "demon_pct": 17.8059,
       "drunk_pct": 0.0,
-      "lying_pct": 5.714
+      "lying_pct": 24.2685
      }
     ]
    }
@@ -57640,21 +57698,16 @@
       "read": 0,
       "wake": "",
       "voted": [
-       1,
-       2,
        3
       ],
       "nominated": [
-       2,
-       3
+       1
       ]
      },
      {
       "name": "",
       "claim": "Slayer",
-      "events": [
-       "X1"
-      ],
+      "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
@@ -57669,9 +57722,26 @@
       "events": [],
       "certainty": "",
       "read": 0,
-      "wake": "sometimes",
+      "wake": "never",
       "voted": [
        1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
        3
       ],
       "nominated": [
@@ -57688,27 +57758,10 @@
       "wake": "",
       "voted": [
        1,
-       2,
        3
       ],
       "nominated": [
-       1,
        3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Sage",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2,
-       3
-      ],
-      "nominated": [
-       2
       ]
      },
      {
@@ -57720,27 +57773,23 @@
       "wake": "",
       "voted": [
        1,
-       2,
        3
       ],
       "nominated": []
      },
      {
       "name": "",
-      "claim": "Farmer",
-      "events": [],
+      "claim": "",
+      "events": [
+       "X1"
+      ],
       "certainty": "",
       "read": 0,
-      "wake": "",
+      "wake": "sometimes",
       "voted": [
-       1,
-       2,
-       3
+       1
       ],
-      "nominated": [
-       1,
-       3
-      ]
+      "nominated": []
      }
     ],
     "infos": [
@@ -57750,18 +57799,33 @@
       "player": 3
      },
      {
-      "type": "Ravenkeeper",
-      "night": 2,
-      "player": 6,
-      "target": 1,
-      "role": "Slayer"
+      "type": "ExecutionNomination",
+      "night": 1,
+      "player": 3
      },
      {
-      "type": "Became",
-      "night": 4,
-      "player": 6,
-      "role": "Farmer",
-      "was": "Ravenkeeper"
+      "type": "CultCalled",
+      "night": 2,
+      "player": 2,
+      "joined": [
+       3,
+       4
+      ]
+     },
+     {
+      "type": "CultCalled",
+      "night": 3,
+      "player": 2,
+      "joined": [
+       1
+      ]
+     },
+     {
+      "type": "SlayerShot",
+      "night": 3,
+      "player": 1,
+      "target": 0,
+      "died": false
      }
     ],
     "script": {
@@ -57806,50 +57870,50 @@
     "game_over": false
    },
    "expect": {
-    "valid": 483,
+    "valid": 2835,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 42.2222,
-      "demon_pct": 20.3533,
+      "evil_pct": 34.7369,
+      "demon_pct": 7.5658,
       "drunk_pct": 0.0,
-      "lying_pct": 38.9712
+      "lying_pct": 31.483
      },
      {
-      "evil_pct": 23.4183,
+      "evil_pct": 28.5763,
+      "demon_pct": 11.8309,
+      "drunk_pct": 0.0,
+      "lying_pct": 23.0467
+     },
+     {
+      "evil_pct": 20.9544,
+      "demon_pct": 6.418,
+      "drunk_pct": 0.0,
+      "lying_pct": 11.4636
+     },
+     {
+      "evil_pct": 45.2126,
+      "demon_pct": 24.3652,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.2981
+     },
+     {
+      "evil_pct": 45.2126,
+      "demon_pct": 24.3652,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.2981
+     },
+     {
+      "evil_pct": 46.1345,
+      "demon_pct": 25.4549,
+      "drunk_pct": 0.0,
+      "lying_pct": 44.066
+     },
+     {
+      "evil_pct": 15.4094,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 10.0093
-     },
-     {
-      "evil_pct": 24.823,
-      "demon_pct": 5.7639,
-      "drunk_pct": 0.0,
-      "lying_pct": 9.8544
-     },
-     {
-      "evil_pct": 42.2222,
-      "demon_pct": 20.3533,
-      "drunk_pct": 0.0,
-      "lying_pct": 38.9712
-     },
-     {
-      "evil_pct": 43.5091,
-      "demon_pct": 21.3387,
-      "drunk_pct": 0.0,
-      "lying_pct": 40.8491
-     },
-     {
-      "evil_pct": 40.7737,
-      "demon_pct": 20.3533,
-      "drunk_pct": 0.0,
-      "lying_pct": 38.9712
-     },
-     {
-      "evil_pct": 32.3625,
-      "demon_pct": 11.8376,
-      "drunk_pct": 0.0,
-      "lying_pct": 21.0102
+      "lying_pct": 4.2756
      }
     ]
    }
@@ -58100,21 +58164,7 @@
     "players": [
      {
       "name": "",
-      "claim": "",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "never",
-      "voted": [
-       1
-      ],
-      "nominated": [
-       3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Monk",
+      "claim": "Slayer",
       "events": [],
       "certainty": "",
       "read": 0,
@@ -58123,33 +58173,55 @@
        2,
        3
       ],
-      "nominated": []
+      "nominated": [
+       1,
+       3
+      ]
      },
      {
       "name": "",
-      "claim": "Saint",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Empath",
+      "claim": "Monk",
       "events": [
        "X1"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [
+      "voted": [],
+      "nominated": [
        1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sage",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
       ],
-      "nominated": []
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       2
+      ]
      },
      {
       "name": "",
@@ -58158,11 +58230,11 @@
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
-      "nominated": [
+      "voted": [
        1,
-       2
-      ]
+       3
+      ],
+      "nominated": []
      },
      {
       "name": "",
@@ -58171,19 +58243,22 @@
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
+      "voted": [
+       1,
+       3
+      ],
       "nominated": []
      },
      {
       "name": "",
-      "claim": "Undertaker",
+      "claim": "Butler",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       2,
-       3
+       1,
+       2
       ],
       "nominated": [
        3
@@ -58203,9 +58278,34 @@
       "player": 2
      },
      {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 0,
+      "target": 4,
+      "died": false
+     },
+     {
       "type": "ExecutionNomination",
       "night": 1,
-      "player": 4
+      "player": 0
+     },
+     {
+      "type": "Empath",
+      "night": 2,
+      "player": 3,
+      "count": 1
+     },
+     {
+      "type": "Empath",
+      "night": 3,
+      "player": 3,
+      "count": 1
+     },
+     {
+      "type": "Empath",
+      "night": 4,
+      "player": 3,
+      "count": 1
      }
     ],
     "script": {
@@ -58250,50 +58350,50 @@
     "game_over": false
    },
    "expect": {
-    "valid": 218,
+    "valid": 25,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 8.7236,
-      "demon_pct": 2.1809,
+      "evil_pct": 0.745,
+      "demon_pct": 0.3725,
       "drunk_pct": 0.0,
-      "lying_pct": 4.3618
+      "lying_pct": 0.745
      },
      {
-      "evil_pct": 26.1709,
-      "demon_pct": 13.0854,
+      "evil_pct": 0.1192,
+      "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 26.1709
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 62.1782,
+      "demon_pct": 31.0295,
+      "drunk_pct": 0.0,
+      "lying_pct": 62.0591
+     },
+     {
+      "evil_pct": 1.5887,
+      "demon_pct": 0.7944,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.5887
+     },
+     {
+      "evil_pct": 33.8638,
+      "demon_pct": 2.7151,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.7446
+     },
+     {
+      "evil_pct": 1.8625,
+      "demon_pct": 0.9313,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8625
      },
      {
       "evil_pct": 100.0,
-      "demon_pct": 53.2714,
+      "demon_pct": 64.1572,
       "drunk_pct": 0.0,
       "lying_pct": 100.0
-     },
-     {
-      "evil_pct": 6.5427,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 6.5427
-     },
-     {
-      "evil_pct": 9.2743,
-      "demon_pct": 4.6372,
-      "drunk_pct": 0.0,
-      "lying_pct": 9.2743
-     },
-     {
-      "evil_pct": 27.4794,
-      "demon_pct": 13.7397,
-      "drunk_pct": 0.0,
-      "lying_pct": 27.4794
-     },
-     {
-      "evil_pct": 26.1709,
-      "demon_pct": 13.0854,
-      "drunk_pct": 0.0,
-      "lying_pct": 26.1709
      }
     ]
    }
@@ -58577,23 +58677,23 @@
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [
-       1
-      ],
+      "voted": [],
       "nominated": [
        1
       ]
      },
      {
       "name": "",
-      "claim": "CultLeader",
+      "claim": "Saint",
       "events": [
        "N2"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
+      "voted": [
+       1
+      ],
       "nominated": []
      },
      {
@@ -58604,29 +58704,14 @@
       "read": 0,
       "wake": "",
       "voted": [
-       1
-      ],
-      "nominated": [
-       1
-      ]
-     },
-     {
-      "name": "",
-      "claim": "",
-      "events": [
-       "N2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "never",
-      "voted": [
-       1
+       1,
+       2
       ],
       "nominated": []
      },
      {
       "name": "",
-      "claim": "Empath",
+      "claim": "Slayer",
       "events": [],
       "certainty": "",
       "read": 0,
@@ -58635,21 +58720,30 @@
        1
       ],
       "nominated": [
-       1,
-       2
+       1
       ]
      },
      {
       "name": "",
-      "claim": "Undertaker",
+      "claim": "Empath",
       "events": [
-       "X2"
+       "D3"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
       "voted": [
-       2
+       1
       ],
       "nominated": [
        2
@@ -58659,7 +58753,7 @@
       "name": "",
       "claim": "Ravenkeeper",
       "events": [
-       "N2"
+       "X2"
       ],
       "certainty": "",
       "read": 0,
@@ -58667,7 +58761,9 @@
       "voted": [
        1
       ],
-      "nominated": []
+      "nominated": [
+       1
+      ]
      }
     ],
     "infos": [
@@ -58678,18 +58774,25 @@
       "count": 0
      },
      {
-      "type": "Ravenkeeper",
-      "night": 2,
-      "player": 6,
-      "target": 0,
-      "role": "Sage"
-     },
-     {
       "type": "Undertaker",
       "night": 2,
       "player": 5,
       "target": 0,
       "role": "Sage"
+     },
+     {
+      "type": "Undertaker",
+      "night": 3,
+      "player": 5,
+      "target": 6,
+      "role": "Ravenkeeper"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 3,
+      "player": 3,
+      "target": 4,
+      "died": true
      }
     ],
     "script": {
@@ -58721,72 +58824,67 @@
       "yaggababble"
      ]
     },
-    "quiet_nights": [],
+    "quiet_nights": [
+     3
+    ],
     "days_done": [
-     1
+     1,
+     2
     ],
     "game_over": true
    },
    "expect": {
-    "valid": 227,
+    "valid": 36,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 26.3259,
+      "evil_pct": 2.9767,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 23.5862
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 40.0004,
+      "evil_pct": 100.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 4.8132
+      "lying_pct": 100.0
      },
      {
-      "evil_pct": 62.2793,
-      "demon_pct": 34.8838,
-      "drunk_pct": 0.0,
-      "lying_pct": 62.785
-     },
-     {
-      "evil_pct": 3.5312,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.6933
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 69.5681,
-      "demon_pct": 43.7137,
-      "drunk_pct": 0.0,
-      "lying_pct": 70.3746
-     },
-     {
-      "evil_pct": 37.198,
-      "demon_pct": 21.4025,
-      "drunk_pct": 0.0,
-      "lying_pct": 36.1058
-     },
-     {
-      "evil_pct": 3.8614,
+      "evil_pct": 2.9767,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 1.642
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 2.9767,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 2.9767,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      }
     ],
     "blame": {
      "2": {
       "1": {
-       "Demon": 0.2857,
-       "Yaggababble, again": 0.7143
-      },
-      "3": {
-       "Yaggababble, again": 0.7143,
-       "Demon": 0.2857
-      },
-      "6": {
-       "Yaggababble, again": 0.7143,
-       "Demon": 0.2857
+       "Demon": 0.8371,
+       "Yaggababble, again": 0.1629
       }
      }
     }
@@ -62816,14 +62914,14 @@
     "game_over": true
    },
    "expect": {
-    "valid": 75,
+    "valid": 78,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 77.2586,
+      "evil_pct": 79.7784,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 77.2586
+      "lying_pct": 79.7784
      },
      {
       "evil_pct": 0.0,
@@ -62838,10 +62936,10 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 22.7414,
+      "evil_pct": 20.2216,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 22.7414
+      "lying_pct": 20.2216
      },
      {
       "evil_pct": 41.6667,
@@ -63081,50 +63179,50 @@
     "game_over": true
    },
    "expect": {
-    "valid": 493,
+    "valid": 494,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 4.1148,
+      "evil_pct": 4.6265,
       "demon_pct": 0.0,
-      "drunk_pct": 7.0622,
-      "lying_pct": 3.3906
+      "drunk_pct": 7.0245,
+      "lying_pct": 3.3725
      },
      {
-      "evil_pct": 3.6774,
+      "evil_pct": 3.6577,
       "demon_pct": 0.0,
-      "drunk_pct": 15.777,
-      "lying_pct": 3.6774
+      "drunk_pct": 15.6928,
+      "lying_pct": 3.6577
      },
      {
-      "evil_pct": 61.6609,
-      "demon_pct": 44.659,
+      "evil_pct": 61.8654,
+      "demon_pct": 44.9543,
       "drunk_pct": 0.0,
-      "lying_pct": 61.6609
+      "lying_pct": 61.8654
      },
      {
-      "evil_pct": 1.127,
+      "evil_pct": 1.1209,
       "demon_pct": 0.0,
-      "drunk_pct": 9.2664,
-      "lying_pct": 1.127
+      "drunk_pct": 9.217,
+      "lying_pct": 1.1209
      },
      {
-      "evil_pct": 7.7331,
-      "demon_pct": 4.8466,
-      "drunk_pct": 8.1798,
-      "lying_pct": 7.7331
+      "evil_pct": 7.6918,
+      "demon_pct": 4.8207,
+      "drunk_pct": 8.1361,
+      "lying_pct": 7.6918
      },
      {
-      "evil_pct": 51.3233,
+      "evil_pct": 51.0494,
       "demon_pct": 0.0,
-      "drunk_pct": 3.1842,
-      "lying_pct": 51.3233
+      "drunk_pct": 3.1672,
+      "lying_pct": 51.0494
      },
      {
-      "evil_pct": 70.3636,
-      "demon_pct": 50.4944,
-      "drunk_pct": 1.0558,
-      "lying_pct": 70.3636
+      "evil_pct": 69.9881,
+      "demon_pct": 50.225,
+      "drunk_pct": 1.0501,
+      "lying_pct": 69.9881
      }
     ],
     "blame": {
@@ -72110,41 +72208,41 @@
       "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 1.8083
+      "lying_pct": 1.8082
      },
      {
-      "evil_pct": 1.3658,
-      "demon_pct": 0.6545,
+      "evil_pct": 1.3711,
+      "demon_pct": 0.6571,
       "drunk_pct": 0.0,
-      "lying_pct": 4.0062
+      "lying_pct": 4.0205
      },
      {
-      "evil_pct": 3.98,
-      "demon_pct": 1.6091,
+      "evil_pct": 3.9955,
+      "demon_pct": 1.6153,
       "drunk_pct": 0.0,
-      "lying_pct": 2.2857
+      "lying_pct": 2.2946
      },
      {
-      "evil_pct": 9.6299,
+      "evil_pct": 9.3235,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 11.2568
+      "lying_pct": 10.9559
      },
      {
-      "evil_pct": 1.1497,
+      "evil_pct": 1.11,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 2.9156
+      "lying_pct": 2.8763
      },
      {
-      "evil_pct": 83.8745,
-      "demon_pct": 41.9373,
+      "evil_pct": 84.2,
+      "demon_pct": 42.1,
       "drunk_pct": 0.0,
-      "lying_pct": 84.0736
+      "lying_pct": 84.3927
      },
      {
       "evil_pct": 100.0,
-      "demon_pct": 55.7992,
+      "demon_pct": 55.6276,
       "drunk_pct": 0.0,
       "lying_pct": 100.0
      }
@@ -72152,9 +72250,9 @@
     "blame": {
      "2": {
       "4": {
-       "Demon": 0.3421,
-       "Acrobat": 0.323,
-       "Yaggababble, again": 0.0532,
+       "Demon": 0.3418,
+       "Acrobat": 0.3231,
+       "Yaggababble, again": 0.0534,
        "Lycanthrope": 0.2818
       }
      }
@@ -84034,65 +84132,65 @@
     "game_over": true
    },
    "expect": {
-    "valid": 288,
+    "valid": 296,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 79.3272,
-      "demon_pct": 57.1747,
-      "drunk_pct": 5.4002,
-      "lying_pct": 74.1348
+      "evil_pct": 79.2482,
+      "demon_pct": 57.1177,
+      "drunk_pct": 5.3948,
+      "lying_pct": 74.0609
      },
      {
-      "evil_pct": 94.9727,
-      "demon_pct": 40.0697,
-      "drunk_pct": 33.2913,
-      "lying_pct": 66.7087
+      "evil_pct": 94.878,
+      "demon_pct": 40.0298,
+      "drunk_pct": 33.2582,
+      "lying_pct": 66.7418
      },
      {
-      "evil_pct": 19.4351,
+      "evil_pct": 19.5139,
       "demon_pct": 0.0,
-      "drunk_pct": 7.2395,
-      "lying_pct": 12.6347
+      "drunk_pct": 7.2323,
+      "lying_pct": 12.7203
      },
      {
-      "evil_pct": 4.8057,
+      "evil_pct": 4.8362,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 3.7757,
-      "demon_pct": 1.8985,
+      "evil_pct": 3.8396,
+      "demon_pct": 1.9643,
       "drunk_pct": 0.0,
-      "lying_pct": 4.9693
+      "lying_pct": 5.032
      },
      {
-      "evil_pct": 0.6329,
+      "evil_pct": 0.6337,
       "demon_pct": 0.0,
       "drunk_pct": 0.0129,
-      "lying_pct": 1.8519
+      "lying_pct": 1.8515
      },
      {
-      "evil_pct": 1.8564,
-      "demon_pct": 0.8571,
-      "drunk_pct": 0.2299,
-      "lying_pct": 28.4009
+      "evil_pct": 1.8866,
+      "demon_pct": 0.8883,
+      "drunk_pct": 0.2297,
+      "lying_pct": 28.4046
      }
     ],
     "blame": {
      "3": {
       "1": {
-       "Demon": 0.9238,
-       "Yaggababble, again": 0.0762
+       "Demon": 0.9239,
+       "Yaggababble, again": 0.0761
       },
       "4": {
-       "Demon": 0.9238,
-       "Yaggababble, again": 0.0762
+       "Demon": 0.9239,
+       "Yaggababble, again": 0.0761
       },
       "6": {
-       "Demon": 0.9238,
-       "Yaggababble, again": 0.0762
+       "Demon": 0.9239,
+       "Yaggababble, again": 0.0761
       }
      },
      "2": {
@@ -87070,6 +87168,51 @@
     "players": [
      {
       "name": "",
+      "claim": "Slayer",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Nightwatchman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Nightwatchman",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
       "claim": "Pacifist",
       "events": [],
       "certainty": "",
@@ -87077,18 +87220,32 @@
       "wake": "",
       "voted": [
        1,
-       3
+       2
       ],
       "nominated": [
-       2,
-       3
+       1,
+       2
       ]
      },
      {
       "name": "",
-      "claim": "Philosopher",
+      "claim": "Seamstress",
       "events": [
        "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [
+       "N2"
       ],
       "certainty": "",
       "read": 0,
@@ -87102,80 +87259,14 @@
       "name": "",
       "claim": "",
       "events": [
-       "N2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "every",
-      "voted": [
-       1
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Nightwatchman",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": [
-       1,
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Nightwatchman",
-      "events": [
-       "N3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": [
-       1,
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Virgin",
-      "events": [
        "X1"
       ],
       "certainty": "",
       "read": 0,
-      "wake": "",
-      "voted": [
-       1
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Washerwoman",
-      "events": [
-       "X3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
+      "wake": "first",
+      "voted": [],
       "nominated": [
-       1,
-       3
+       1
       ]
      }
     ],
@@ -87209,38 +87300,31 @@
       "target": 2
      },
      {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 5,
+      "nominator": 6,
+      "triggered": true
+     },
+     {
       "type": "SailorChoice",
       "night": 2,
       "player": 2,
-      "target": 6
+      "target": 4
      },
      {
       "type": "PitHagChoice",
       "night": 2,
       "player": 0,
-      "target": 4,
-      "role": "Philosopher"
-     },
-     {
-      "type": "Became",
-      "night": 2,
-      "player": 4,
-      "role": "Philosopher",
-      "was": "Seamstress"
-     },
-     {
-      "type": "PitHagChoice",
-      "night": 3,
-      "player": 0,
-      "target": 4,
+      "target": 2,
       "role": "Nightwatchman"
      },
      {
       "type": "Became",
-      "night": 3,
-      "player": 4,
+      "night": 2,
+      "player": 2,
       "role": "Nightwatchman",
-      "was": "Philosopher"
+      "was": "Sailor"
      }
     ],
     "script": {
@@ -87281,60 +87365,60 @@
     "game_over": true
    },
    "expect": {
-    "valid": 1898,
+    "valid": 970,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 56.1014,
-      "demon_pct": 38.5594,
-      "drunk_pct": 1.7046,
-      "lying_pct": 65.0333
+      "evil_pct": 62.8844,
+      "demon_pct": 37.0467,
+      "drunk_pct": 0.2111,
+      "lying_pct": 77.6161
      },
      {
-      "evil_pct": 20.7386,
+      "evil_pct": 38.581,
+      "demon_pct": 23.3789,
+      "drunk_pct": 0.1865,
+      "lying_pct": 65.1095
+     },
+     {
+      "evil_pct": 1.6768,
+      "demon_pct": 0.8759,
+      "drunk_pct": 0.0,
+      "lying_pct": 7.9529
+     },
+     {
+      "evil_pct": 66.2323,
+      "demon_pct": 38.6985,
+      "drunk_pct": 0.0235,
+      "lying_pct": 80.6605
+     },
+     {
+      "evil_pct": 30.6255,
+      "demon_pct": 0.0,
+      "drunk_pct": 4.3729,
+      "lying_pct": 41.7384
+     },
+     {
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 42.5858
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 0.3663,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
-      "drunk_pct": 0.0205,
-      "lying_pct": 4.2923
-     },
-     {
-      "evil_pct": 51.5806,
-      "demon_pct": 33.8507,
-      "drunk_pct": 0.012,
-      "lying_pct": 64.8236
-     },
-     {
-      "evil_pct": 3.0818,
-      "demon_pct": 1.9046,
       "drunk_pct": 0.0,
-      "lying_pct": 13.1581
-     },
-     {
-      "evil_pct": 20.8469,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.1084,
-      "lying_pct": 39.4828
-     },
-     {
-      "evil_pct": 47.3429,
-      "demon_pct": 25.6853,
-      "drunk_pct": 4.2616,
-      "lying_pct": 50.7497
+      "lying_pct": 0.0
      }
     ],
     "blame": {
-     "2": {
+     "3": {
       "2": {
        "Demon": 1.0
       }
      },
-     "3": {
-      "4": {
+     "2": {
+      "5": {
        "Demon": 1.0
       }
      }
@@ -91749,67 +91833,77 @@
      {
       "name": "",
       "claim": "Banshee",
-      "events": [
-       "X1"
-      ],
+      "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
-      "nominated": []
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1
+      ]
      },
      {
       "name": "",
       "claim": "Philosopher",
       "events": [
-       "X2"
+       "X3"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
-      "nominated": [
-       2
-      ]
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
      },
      {
       "name": "",
-      "claim": "Virgin",
+      "claim": "Clockmaker",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
-      "nominated": [
+      "voted": [
        1,
+       2
+      ],
+      "nominated": [
+       2,
        3
       ]
      },
      {
       "name": "",
       "claim": "",
-      "events": [],
+      "events": [
+       "X2"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "never",
       "voted": [
-       1,
-       2,
-       3
+       1
       ],
       "nominated": []
      },
      {
       "name": "",
       "claim": "Slayer",
-      "events": [
-       "D2"
-      ],
+      "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
-      "voted": [],
-      "nominated": []
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
      },
      {
       "name": "",
@@ -91819,27 +91913,26 @@
       "read": 0,
       "wake": "",
       "voted": [
+       1,
+       2,
        3
       ],
-      "nominated": [
-       3
-      ]
+      "nominated": []
      },
      {
       "name": "",
-      "claim": "Golem",
+      "claim": "Saint",
       "events": [
-       "X3"
+       "X1"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       2
+       1
       ],
       "nominated": [
-       2,
-       3
+       1
       ]
      }
     ],
@@ -91851,11 +91944,11 @@
       "role": "Golem"
      },
      {
-      "type": "GolemNomination",
-      "night": 2,
-      "player": 1,
-      "target": 4,
-      "died": true
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 4,
+      "target": 5,
+      "died": false
      }
     ],
     "script": {
@@ -91901,48 +91994,48 @@
     "game_over": false
    },
    "expect": {
-    "valid": 228,
+    "valid": 426,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 23.6594,
-      "demon_pct": 11.8297,
+      "evil_pct": 28.4221,
+      "demon_pct": 16.1656,
       "drunk_pct": 0.0,
-      "lying_pct": 23.6594
+      "lying_pct": 28.4221
      },
      {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
+      "evil_pct": 9.8052,
+      "demon_pct": 4.9026,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 9.8052
      },
      {
-      "evil_pct": 28.0113,
-      "demon_pct": 16.1816,
+      "evil_pct": 26.4392,
+      "demon_pct": 15.0378,
       "drunk_pct": 0.0,
-      "lying_pct": 28.0113
+      "lying_pct": 26.4392
      },
      {
-      "evil_pct": 16.9765,
-      "demon_pct": 4.9035,
+      "evil_pct": 10.3276,
+      "demon_pct": 2.8504,
       "drunk_pct": 0.0,
-      "lying_pct": 8.4883
+      "lying_pct": 5.7007
      },
      {
-      "evil_pct": 11.8297,
-      "demon_pct": 0.0,
+      "evil_pct": 11.3689,
+      "demon_pct": 6.4662,
       "drunk_pct": 0.0,
-      "lying_pct": 11.8297
+      "lying_pct": 11.3689
      },
      {
-      "evil_pct": 28.0113,
-      "demon_pct": 16.1816,
+      "evil_pct": 18.2639,
+      "demon_pct": 6.0073,
       "drunk_pct": 0.0,
-      "lying_pct": 28.0113
+      "lying_pct": 18.2639
      },
      {
       "evil_pct": 100.0,
-      "demon_pct": 50.9036,
+      "demon_pct": 48.5701,
       "drunk_pct": 0.0,
       "lying_pct": 100.0
      }
@@ -92182,83 +92275,53 @@
     "players": [
      {
       "name": "",
-      "claim": "Slayer",
-      "events": [
-       "S2",
-       "N3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Damsel",
-      "events": [
-       "N3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Lycanthrope",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": [
-       1
-      ]
-     },
-     {
-      "name": "",
       "claim": "",
-      "events": [],
+      "events": [
+       "N4"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "never",
       "voted": [
-       1,
-       2
+       1
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Zealot",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
       ],
       "nominated": [
        2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
       ]
      },
      {
       "name": "",
       "claim": "Pacifist",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": [
-       1,
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Minstrel",
       "events": [
        "X1"
       ],
@@ -92272,7 +92335,7 @@
      },
      {
       "name": "",
-      "claim": "Soldier",
+      "claim": "Pacifist",
       "events": [],
       "certainty": "",
       "read": 0,
@@ -92282,7 +92345,31 @@
        2
       ],
       "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
        1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [],
+      "nominated": [
        2
       ]
      }
@@ -92299,30 +92386,6 @@
       "night": 1,
       "player": 1,
       "target": 4
-     },
-     {
-      "type": "Alsaahir",
-      "night": 2,
-      "player": 3,
-      "demons": [
-       6
-      ],
-      "minions": [
-       0
-      ],
-      "won": false
-     },
-     {
-      "type": "Alsaahir",
-      "night": 3,
-      "player": 3,
-      "demons": [
-       2
-      ],
-      "minions": [
-       1
-      ],
-      "won": true
      }
     ],
     "script": {
@@ -92356,16 +92419,18 @@
      ]
     },
     "quiet_nights": [
-     2
+     2,
+     3
     ],
     "days_done": [
      1,
-     2
+     2,
+     3
     ],
     "game_over": false
    },
    "expect": {
-    "valid": 16,
+    "valid": 208,
     "sampled": false,
     "rows": [
      {
@@ -92379,6 +92444,18 @@
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
       "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      },
      {
       "evil_pct": 100.0,
@@ -92397,26 +92474,11 @@
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
       "lying_pct": 0.0
-     },
-     {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     },
-     {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
      }
     ],
     "blame": {
-     "3": {
+     "4": {
       "0": {
-       "Demon": 1.0
-      },
-      "1": {
        "Demon": 1.0
       }
      }
@@ -92431,65 +92493,24 @@
      {
       "name": "",
       "claim": "Princess",
-      "events": [
-       "N2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1
-      ],
-      "nominated": [
-       1
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Philosopher",
-      "events": [
-       "X3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Slayer",
-      "events": [
-       "X2"
-      ],
+      "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
        1,
-       2
+       2,
+       3
       ],
       "nominated": [
-       1
+       1,
+       2,
+       3
       ]
      },
      {
       "name": "",
-      "claim": "FortuneTeller",
-      "events": [
-       "X1"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Damsel",
+      "claim": "Huntsman",
       "events": [
        "N3"
       ],
@@ -92506,25 +92527,57 @@
      },
      {
       "name": "",
-      "claim": "King",
-      "events": [],
+      "claim": "Alsaahir",
+      "events": [
+       "X1"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       1,
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
        2,
        3
       ],
       "nominated": [
-       2,
        3
       ]
      },
      {
       "name": "",
-      "claim": "SnakeCharmer",
-      "events": [],
+      "claim": "King",
+      "events": [
+       "X2"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "",
@@ -92533,7 +92586,23 @@
        2
       ],
       "nominated": [
-       2
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
       ]
      }
     ],
@@ -92562,25 +92631,13 @@
       "type": "PrincessNominated",
       "night": 1,
       "player": 0,
-      "target": 6
-     },
-     {
-      "type": "Alsaahir",
-      "night": 2,
-      "player": 1,
-      "demons": [
-       4
-      ],
-      "minions": [
-       5
-      ],
-      "won": false
+      "target": 1
      },
      {
       "type": "KingInfo",
-      "night": 3,
+      "night": 2,
       "player": 5,
-      "role": "King"
+      "role": ""
      }
     ],
     "script": {
@@ -92621,29 +92678,168 @@
     "game_over": true
    },
    "expect": {
-    "valid": 38,
+    "valid": 51,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 2.1475,
+      "evil_pct": 47.0588,
+      "demon_pct": 47.0588,
+      "drunk_pct": 0.0,
+      "lying_pct": 45.098
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 15.6863,
+      "lying_pct": 84.3137
+     },
+     {
+      "evil_pct": 6.7227,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 13.1653,
-      "demon_pct": 10.9244,
-      "drunk_pct": 0.0,
-      "lying_pct": 10.9244
-     },
-     {
-      "evil_pct": 2.1475,
+      "evil_pct": 6.7227,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 2.1475,
+      "evil_pct": 33.3333,
+      "demon_pct": 29.4118,
+      "drunk_pct": 0.0,
+      "lying_pct": 29.4118
+     },
+     {
+      "evil_pct": 6.7227,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 23.5294,
+      "demon_pct": 23.5294,
+      "drunk_pct": 0.0,
+      "lying_pct": 23.5294
+     }
+    ],
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-in-the-open-missed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Slayer",
+      "events": []
+     },
+     {
+      "claim": "Virgin",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Vortox",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 2,
+      "target": 0,
+      "died": false
+     }
+    ],
+    "script": {
+     "name": "In the open",
+     "characters": [
+      "slayer",
+      "virgin",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "philosopher",
+      "professor",
+      "chambermaid",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "vortox",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
       "lying_pct": 0.0
@@ -92651,31 +92847,2141 @@
      {
       "evil_pct": 100.0,
       "demon_pct": 0.0,
-      "drunk_pct": 6.3025,
-      "lying_pct": 93.6975
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 27.6377,
-      "demon_pct": 26.0504,
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
       "drunk_pct": 0.0,
-      "lying_pct": 26.0504
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-in-the-open-missed-the-vortox",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
      },
      {
-      "evil_pct": 63.0252,
-      "demon_pct": 63.0252,
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Slayer",
+      "events": []
+     },
+     {
+      "claim": "Virgin",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Vortox",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 2,
+      "target": 6,
+      "died": false
+     }
+    ],
+    "script": {
+     "name": "In the open",
+     "characters": [
+      "slayer",
+      "virgin",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "philosopher",
+      "professor",
+      "chambermaid",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "vortox",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 63.0252
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 3"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-in-the-open-quiet",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Slayer",
+      "events": []
+     },
+     {
+      "claim": "Virgin",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Vortox",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 3,
+      "nominator": 5,
+      "triggered": false
+     }
+    ],
+    "script": {
+     "name": "In the open",
+     "characters": [
+      "slayer",
+      "virgin",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "philosopher",
+      "professor",
+      "chambermaid",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "vortox",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-in-the-open-triggered",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Slayer",
+      "events": []
+     },
+     {
+      "claim": "Virgin",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Vortox",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 3,
+      "nominator": 0,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "In the open",
+     "characters": [
+      "slayer",
+      "virgin",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "philosopher",
+      "professor",
+      "chambermaid",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "vortox",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-in-the-open-quiet-on-a-townsfolk",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Slayer",
+      "events": []
+     },
+     {
+      "claim": "Virgin",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Vortox",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 3,
+      "nominator": 0,
+      "triggered": false
+     }
+    ],
+    "script": {
+     "name": "In the open",
+     "characters": [
+      "slayer",
+      "virgin",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "philosopher",
+      "professor",
+      "chambermaid",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "vortox",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "VirginNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "tb-played-in-the-open-1",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Soldier",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "Investigator",
+      "night": 1,
+      "player": 2,
+      "a": 0,
+      "b": 3,
+      "role": "Baron"
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 1,
+      "a": 0,
+      "b": 5,
+      "yes": true
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 4,
+      "target": 6,
+      "died": false
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 2,
+      "player": 1,
+      "a": 0,
+      "b": 5,
+      "yes": true
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 3,
+      "player": 1,
+      "a": 5,
+      "b": 2,
+      "yes": true
+     }
+    ],
+    "script": {
+     "name": "Trouble Brewing",
+     "characters": [
+      "washerwoman",
+      "librarian",
+      "investigator",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "undertaker",
+      "monk",
+      "ravenkeeper",
+      "virgin",
+      "slayer",
+      "soldier",
+      "mayor",
+      "butler",
+      "drunk",
+      "recluse",
+      "saint",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 45,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 30.6929,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 30.6929
+     },
+     {
+      "evil_pct": 3.8472,
+      "demon_pct": 2.3036,
+      "drunk_pct": 0.0,
+      "lying_pct": 3.8472
+     },
+     {
+      "evil_pct": 86.6698,
+      "demon_pct": 66.8012,
+      "drunk_pct": 0.0,
+      "lying_pct": 86.6698
+     },
+     {
+      "evil_pct": 2.4468,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.4468
+     },
+     {
+      "evil_pct": 1.9575,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.9575
+     },
+     {
+      "evil_pct": 49.9173,
+      "demon_pct": 30.8952,
+      "drunk_pct": 0.0,
+      "lying_pct": 49.9173
+     },
+     {
+      "evil_pct": 24.4685,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 24.4685
      }
     ],
     "blame": {
      "2": {
-      "0": {
+      "3": {
        "Demon": 1.0
       }
      },
      "3": {
       "4": {
        "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "tb-played-in-the-open-5",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "first",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "Investigator",
+      "night": 1,
+      "player": 5,
+      "a": 1,
+      "b": 4,
+      "role": "ScarletWoman"
+     },
+     {
+      "type": "Chef",
+      "night": 1,
+      "player": 4,
+      "count": 0
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 2,
+      "count": 2
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 0,
+      "a": 3,
+      "b": 2,
+      "yes": true
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 2,
+      "player": 0,
+      "a": 4,
+      "b": 1,
+      "yes": false
+     },
+     {
+      "type": "VirginNomination",
+      "night": 3,
+      "player": 6,
+      "nominator": 1,
+      "triggered": false
+     }
+    ],
+    "script": {
+     "name": "Trouble Brewing",
+     "characters": [
+      "washerwoman",
+      "librarian",
+      "investigator",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "undertaker",
+      "monk",
+      "ravenkeeper",
+      "virgin",
+      "slayer",
+      "soldier",
+      "mayor",
+      "butler",
+      "drunk",
+      "recluse",
+      "saint",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 113,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 84.227,
+      "demon_pct": 16.6077,
+      "drunk_pct": 0.0,
+      "lying_pct": 84.227
+     },
+     {
+      "evil_pct": 15.9451,
+      "demon_pct": 0.0,
+      "drunk_pct": 2.458,
+      "lying_pct": 15.9451
+     },
+     {
+      "evil_pct": 89.8574,
+      "demon_pct": 76.1211,
+      "drunk_pct": 0.0,
+      "lying_pct": 89.8574
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 2.6993,
+      "demon_pct": 0.0,
+      "drunk_pct": 25.2664,
+      "lying_pct": 2.6993
+     },
+     {
+      "evil_pct": 7.2712,
+      "demon_pct": 7.2712,
+      "drunk_pct": 0.0,
+      "lying_pct": 7.2712
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "5": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "tb-played-in-the-open-7",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Undertaker",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "first",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Monk",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Butler",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "Investigator",
+      "night": 1,
+      "player": 5,
+      "a": 1,
+      "b": 6,
+      "role": "Poisoner"
+     },
+     {
+      "type": "Chef",
+      "night": 1,
+      "player": 2,
+      "count": 0
+     },
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 1,
+      "nominator": 0,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "Trouble Brewing",
+     "characters": [
+      "washerwoman",
+      "librarian",
+      "investigator",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "undertaker",
+      "monk",
+      "ravenkeeper",
+      "virgin",
+      "slayer",
+      "soldier",
+      "mayor",
+      "butler",
+      "drunk",
+      "recluse",
+      "saint",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 60,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 20.9878,
+      "demon_pct": 12.9499,
+      "drunk_pct": 18.0048,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 64.2136,
+      "demon_pct": 42.6007,
+      "drunk_pct": 3.9832,
+      "lying_pct": 64.2136
+     },
+     {
+      "evil_pct": 2.6078,
+      "demon_pct": 0.0,
+      "drunk_pct": 20.7198,
+      "lying_pct": 2.6078
+     },
+     {
+      "evil_pct": 65.1692,
+      "demon_pct": 44.4494,
+      "drunk_pct": 10.2706,
+      "lying_pct": 65.1692
+     },
+     {
+      "evil_pct": 47.0215,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 47.0215
+     }
+    ],
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "4": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "tb-played-in-the-open-80",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Monk",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "D1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "first",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Librarian",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "Librarian",
+      "night": 1,
+      "player": 5,
+      "a": null,
+      "b": null,
+      "role": ""
+     },
+     {
+      "type": "Investigator",
+      "night": 1,
+      "player": 2,
+      "a": 1,
+      "b": 4,
+      "role": "ScarletWoman"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 6,
+      "target": 1,
+      "died": true
+     },
+     {
+      "type": "VirginNomination",
+      "night": 2,
+      "player": 3,
+      "nominator": 6,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "Trouble Brewing",
+     "characters": [
+      "washerwoman",
+      "librarian",
+      "investigator",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "undertaker",
+      "monk",
+      "ravenkeeper",
+      "virgin",
+      "slayer",
+      "soldier",
+      "mayor",
+      "butler",
+      "drunk",
+      "recluse",
+      "saint",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 4,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 2.1739,
+      "demon_pct": 2.1739,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 97.8261,
+      "demon_pct": 97.8261,
+      "drunk_pct": 0.0,
+      "lying_pct": 97.8261
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "3": {
+      "2": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "5": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "tb-played-in-the-open-105",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Recluse",
+      "events": [
+       "D2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "sometimes",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "Chef",
+      "night": 1,
+      "player": 6,
+      "count": 1
+     },
+     {
+      "type": "Undertaker",
+      "night": 2,
+      "player": 3,
+      "target": 5,
+      "role": "Mayor"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 2,
+      "player": 0,
+      "target": 2,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Trouble Brewing",
+     "characters": [
+      "washerwoman",
+      "librarian",
+      "investigator",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "undertaker",
+      "monk",
+      "ravenkeeper",
+      "virgin",
+      "slayer",
+      "soldier",
+      "mayor",
+      "butler",
+      "drunk",
+      "recluse",
+      "saint",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "baron",
+      "imp"
+     ]
+    },
+    "quiet_nights": [
+     2
+    ],
+    "days_done": [
+     1
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 77,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 54.1011,
+      "demon_pct": 26.0462,
+      "drunk_pct": 10.7131,
+      "lying_pct": 54.1011
+     },
+     {
+      "evil_pct": 25.8119,
+      "demon_pct": 21.8614,
+      "drunk_pct": 0.0,
+      "lying_pct": 25.8119
+     },
+     {
+      "evil_pct": 21.9618,
+      "demon_pct": 11.6505,
+      "drunk_pct": 28.1219,
+      "lying_pct": 20.6227
+     },
+     {
+      "evil_pct": 47.0372,
+      "demon_pct": 26.381,
+      "drunk_pct": 8.0348,
+      "lying_pct": 47.0372
+     },
+     {
+      "evil_pct": 22.1627,
+      "demon_pct": 0.0,
+      "drunk_pct": 8.5705,
+      "lying_pct": 22.1627
+     },
+     {
+      "evil_pct": 28.9253,
+      "demon_pct": 14.0609,
+      "drunk_pct": 18.7479,
+      "lying_pct": 28.9253
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-in-the-open-played-26",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Ravenkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Princess",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Puzzlemaster",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Preacher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 5,
+      "role": "Slayer"
+     },
+     {
+      "type": "LeviathanAnnounced",
+      "night": 1,
+      "player": 6
+     },
+     {
+      "type": "SlayerShot",
+      "night": 2,
+      "player": 3,
+      "target": 4,
+      "died": false
+     },
+     {
+      "type": "SlayerShot",
+      "night": 3,
+      "player": 5,
+      "target": 1,
+      "died": false
+     },
+     {
+      "type": "ExecutionNomination",
+      "night": 3,
+      "player": 2
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "pithag",
+      "snakecharmer",
+      "sailor",
+      "fool",
+      "minstrel",
+      "chef",
+      "ravenkeeper",
+      "preacher",
+      "princess",
+      "courtier",
+      "investigator",
+      "puzzlemaster",
+      "snitch",
+      "sweetheart",
+      "zealot",
+      "mastermind",
+      "wraith",
+      "mezepheles",
+      "shabaloth",
+      "leviathan",
+      "imp",
+      "yaggababble"
+     ]
+    },
+    "quiet_nights": [
+     2,
+     3,
+     4
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 132,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 31.2488,
+      "demon_pct": 15.6244,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.2488
+     },
+     {
+      "evil_pct": 16.7494,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 15.6244
+     },
+     {
+      "evil_pct": 10.5943,
+      "demon_pct": 4.7347,
+      "drunk_pct": 0.0,
+      "lying_pct": 8.2857
+     },
+     {
+      "evil_pct": 12.937,
+      "demon_pct": 6.2498,
+      "drunk_pct": 0.0,
+      "lying_pct": 12.4995
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 56.6872,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 3.6874,
+      "demon_pct": 2.4999,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.7499
+     },
+     {
+      "evil_pct": 28.408,
+      "demon_pct": 14.204,
+      "drunk_pct": 0.0,
+      "lying_pct": 28.408
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-in-the-open-played-65",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Gossip",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "D2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Exorcist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Klutz",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 4,
+      "role": "Slayer"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 1,
+      "target": 3,
+      "swapped": true
+     },
+     {
+      "type": "WidowKnown",
+      "night": 1,
+      "player": 2
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 3,
+      "target": 1,
+      "swapped": false
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 2,
+      "player": 2,
+      "target": 3
+     },
+     {
+      "type": "SlayerShot",
+      "night": 2,
+      "player": 4,
+      "target": 1,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "widow",
+      "snakecharmer",
+      "flowergirl",
+      "gambler",
+      "mayor",
+      "exorcist",
+      "innkeeper",
+      "gossip",
+      "villageidiot",
+      "chambermaid",
+      "savant",
+      "zealot",
+      "klutz",
+      "recluse",
+      "heretic",
+      "eviltwin",
+      "assassin",
+      "boomdandy",
+      "nodashii",
+      "ojo",
+      "imp",
+      "po"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 16,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "5": {
+       "Demon": 0.7143,
+       "Gossip": 0.2857
       }
      }
     }

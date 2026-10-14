@@ -22,6 +22,23 @@
 import {LISTENING, beginReads, endReads, phaseIndex, replayReads}
   from "./phases.mjs";
 
+/** The seat holding that character now: the Demon if it is that one, else
+ * a living holder, else the first. A copy of info.mjs's `holdingNow`,
+ * kept here so this module imports nothing above it (Stelle 59). */
+function holdingNow(w, s, role, phase) {
+  const demon = w.demonAt(phase);
+  if (demon !== null && demon !== undefined && w.roleAt(demon, phase) === role)
+    return demon;
+  const alive = s.aliveSet(phase);
+  let first = null;
+  for (let seat = 0; seat < w.roles.length; seat++)
+    if (w.roleAt(seat, phase) === role) {
+      if (alive.has(seat)) return seat;
+      if (first === null) first = seat;
+    }
+  return first;
+}
+
 /** Is this a dead Minion a living Vigormortis killed?
  *
  * "Minions you kill keep their ability": at night, while a Vigormortis was
@@ -36,7 +53,7 @@ export function killedByAVigormortis(world, state, who, phase) {
   const killer = world.demonAt(first);
   if (killer === null || killer === undefined ||
       world.roleAt(killer, first) !== "Vigormortis") return false;
-  const now = world.findAt("Vigormortis", phase);
+  const now = holdingNow(world, state, "Vigormortis", phase);
   return now !== null && state.aliveSet(phase).has(now);
 }
 

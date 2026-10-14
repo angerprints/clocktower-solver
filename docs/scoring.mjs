@@ -24,6 +24,7 @@ import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
   from "./characters.rules.mjs";
 import {actsAsCultLeader, besideAlive, cultSides, fallsAs, fauxPawLycanthrope,
+        holdingNow,
         knowsItTurnedEvil, sideOpen,
         livingNeighbours, takenByAPhilosopher, tookIt, wentOnAfter}
   from "./info.mjs";
@@ -1085,7 +1086,16 @@ export function nightDeaths(state) {
  */
 export function forcedRoles(state) {
   const pinned = {};
+  // Pinned on the dealt character; where something can change characters
+  // nothing is pinned, and the hard row does the work (Stelle 59). See
+  // solver.py.
+  const movers = ["PitHag", "Barber", "SnakeCharmer", "Farmer", "Huntsman",
+                  "FangGu"];
+  if (movers.some(key => onBoard(state, key))) return pinned;
+  const changed = new Set(state.infos.filter(i => i.type === "Became")
+    .map(i => i.player));
   const pin = (seat, roles) => {
+    if (changed.has(seat)) return;      // it said it was handed another
     const wanted = new Set(roles);
     pinned[seat] = pinned[seat]
       ? new Set([...pinned[seat]].filter(r => wanted.has(r)))
@@ -1106,10 +1116,8 @@ export function forcedRoles(state) {
       pin(info.nominator, [...state.script.townsfolk, ...spies]);
     } else if (info.type === "SlayerShot" && info.died) {
       pin(info.player, orItsPhilosopher(info.player, "Slayer"));
-      // Any Demon on the script and the Recluse; beside a Lleech its host
-      // may fall too, so nothing pinned (14.10.2026).
-      if (!inBag(state, "Lleech"))
-        pin(info.target, [...state.script.demons, "Recluse"]);
+      // Not the target: the Demon it hit may be a Minion that caught the
+      // star (14.10.2026).
     }
   }
   return pinned;
@@ -1218,7 +1226,7 @@ function plainFailures(world, state, outcome = {}) {
   // than per game, because a Pit-Hag can bring one along later.
   for (const day of [...state.daysDone].sort((a, b) => a - b)) {
     if ((state.executions || {})[day] !== undefined) continue;
-    const vortox = world.findAt("Vortox", `D${day}`);
+    const vortox = holdingNow(world, state, "Vortox", `D${day}`);
     if (vortox === null || !state.aliveSet(`D${day}`).has(vortox)) continue;
     fail(day, vortox);
   }
@@ -1361,7 +1369,7 @@ function plainFailures(world, state, outcome = {}) {
   for (const [night, seat, phase] of raises) {
     {
       const shabaloth = inBag(state, "Shabaloth")
-        ? world.findAt("Shabaloth", phase) : null;
+        ? holdingNow(world, state, "Shabaloth", phase) : null;
       if (shabaloth !== null && night >= 3 &&
           state.aliveSet(phase).has(shabaloth)) continue;
       // The holder, or a Philosopher that took it, ahead (13.10.2026).
@@ -1485,7 +1493,7 @@ function plainFailures(world, state, outcome = {}) {
     // A Vortox in play makes every Townsfolk ability yield something
     // false. Alive, because a dead Demon does nothing; its own
     // droisoning is left to the plan rather than decided here.
-    const vortox = world.findAt("Vortox", phase);
+    const vortox = holdingNow(world, state, "Vortox", phase);
     const vortoxed = vortox !== null && state.aliveSet(phase).has(vortox);
     // Judged at the moment it acted. A Snake Charmer swap is dated at
     // the night, so at `phase` the charmer no longer holds the character
@@ -1545,6 +1553,10 @@ function plainFailures(world, state, outcome = {}) {
     }
     // A Vortox falsifies information, not choices.
     // One question, asked in one place: does a Vortox reach this row?
+    // A shot or a Virgin's nomination is still checked like any act
+    // (Stelle 59, 14.10.2026). See solver.py.
+    if (held === INVERTED && !info.isInformation(state) && info.inTheOpen)
+      held = GENUINE;
     if (held === INVERTED && !info.isInformation(state)) {
       outcome[idx] = HELD;
       return;

@@ -169,6 +169,24 @@ export function fallsAs(w, s, seat, role, phase) {
   return tookIt(w, s, seat, role, phase);
 }
 
+/** The seat holding that character now: the Demon if it is that one, else
+ * a living holder, else whoever held it first. A Demon that went to the
+ * Scarlet Woman still holds its character on its corpse, and the rules
+ * asked the corpse (Stelle 59, 14.10.2026). See info.py. */
+export function holdingNow(w, s, role, phase) {
+  const demon = w.demonAt(phase);
+  if (demon !== null && demon !== undefined && w.roleAt(demon, phase) === role)
+    return demon;
+  const alive = s.aliveSet(phase);
+  let first = null;
+  for (let seat = 0; seat < w.roles.length; seat++)
+    if (w.roleAt(seat, phase) === role) {
+      if (alive.has(seat)) return seat;
+      if (first === null) first = seat;
+    }
+  return first;
+}
+
 /** Could this seat's ability as that character have worked then, as far
  * as a Philosopher is concerned? For what the town watched in daylight
  * (group 5, 14.10.2026). See info.py. */
@@ -1471,6 +1489,11 @@ PitHagChoice.isAChoice = true;
 Became.isAChoice = true;
 Acrobat.isAChoice = true;
 Alsaahir.isAChoice = true;
+// What the town watched, not information (Stelle 59, 14.10.2026).
+SlayerShot.isAChoice = true;
+VirginNomination.isAChoice = true;
+SlayerShot.prototype.inTheOpen = true;
+VirginNomination.prototype.inTheOpen = true;
 CourtierChoice.isAChoice = true;
 KlutzChoice.isAChoice = true;
 GamblerGuess.isAChoice = true;
@@ -1690,6 +1713,8 @@ export const GolemNomination = define("GolemNomination", "Golem",
       return worksAs(w, s, this.player, "Golem", phase)
         && TEAM[target] !== "demon" && !earlier;
     if (earlier) return true;          // spent already: nothing happens
+    // Dropped dead as it nominated: no ability left (14.10.2026).
+    if (s.diedAt(this.player).includes(phase)) return true;
     return couldRegisterAsDemon(target)
       || cannotDieByDay(w, s, this.target, phase);
   }, {

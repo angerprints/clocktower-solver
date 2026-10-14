@@ -413,8 +413,10 @@ class ANightIsNotOneMoment(SolverTest):
 
     def test_a_gambler_dead_of_its_guess_may_be_remade_the_same_night(self):
         """By a Pit-Hag at sixteen. The night then ends with no Gambler
-        on the board, and the death still has to be its own."""
-        deal, heard, state, world = game(140)
+        on the board, and the death still has to be its own. Seed 169
+        since 14.10.2026: the simulator plays the Slayer and the Virgin
+        now (Stelle 59), and 140 became another game."""
+        deal, heard, state, world = game(169)
         guess = next(r for r in heard if isinstance(r, I.GamblerGuess)
                      and deal.deaths.get(r.player) == f"N{r.night}")
         self.assertNotEqual(deal.role_at(guess.player, f"N{guess.night}"),

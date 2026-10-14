@@ -29,7 +29,7 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {cultSides, takenByAPhilosopher, tookIt} from "./info.mjs";
+import {cultSides, holdingNow, takenByAPhilosopher, tookIt} from "./info.mjs";
 
 export const NEVER = "never";
 export const FIRST = "first";
@@ -213,7 +213,7 @@ export function reallyLiving(world, state, night) {
   const living = new Set(state.aliveAt(phase)
     .filter(q => !state.diedAt(q).includes(phase)));
   if (state.script.keys.includes("Zombuul")) {
-    const zombuul = world.findAt("Zombuul", phase);
+    const zombuul = holdingNow(world, state, "Zombuul", phase);
     if (zombuul !== null && zombuul !== undefined && !living.has(zombuul)) {
       const now = phaseIndex(phase);
       const gone = state.diedAt(zombuul).filter(at => phaseIndex(at) <= now);
@@ -436,7 +436,15 @@ function actsAs(world, seat, phase) {
  */
 export function uncertain(world, state, seat, night) {
   const phase = `N${night}`;
-  const acting = actsAs(world, seat, phase);
+  let acting = actsAs(world, seat, phase);
+  // A Philosopher after the night it took something is as uncertain as
+  // that character: one that took the Professor may have spent it unseen
+  // (14.10.2026). See waking.py.
+  const took = acting === "Philosopher"
+    ? (state.philosophies() || {})[seat] : null;
+  if (took && night > Number(took[1].slice(1)) && took[0] !== "Philosopher"
+      && !CHARACTERS[took[0]].believes)
+    acting = took[0];
   if (acting === "Choirboy")
     // Woken if the Demon killed the King tonight, and whose kill a King's
     // death was is not known here (10.10.2026).
@@ -501,7 +509,7 @@ export function uncertain(world, state, seat, night) {
     if (night < 3 || !state.aliveSet(phase).has(seat)) return false;
     const raised = raisedOn(state);
     if (raised === null) return true;
-    return world.findAt("Shabaloth", `N${raised}`) !== null;
+    return holdingNow(world, state, "Shabaloth", `N${raised}`) !== null;
   }
   if (!state.script.keys.includes("Exorcist")
       && !takenByAPhilosopher(state, "Exorcist")) return false;

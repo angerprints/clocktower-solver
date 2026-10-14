@@ -815,6 +815,29 @@ def falls_as(w, s, seat, role, phase):
     return took_it(w, s, seat, role, phase)
 
 
+def holding_now(w, s, role, phase):
+    """The seat holding that character now: the Demon if it is that one,
+    else a living holder, else whoever held it first.
+
+    `find_at` gives the first seat holding it, and a Demon that died and
+    went to the Scarlet Woman still holds its character on its corpse.
+    So a Po, a Pukka or a Vortox the Scarlet Woman inherited never acted:
+    the rules asked the corpse (found 14.10.2026, Stelle 59, once a
+    Slayer's shot handed a Po on in daylight)."""
+    demon = w.demon_at(phase)
+    if demon is not None and w.role_at(demon, phase) == role:
+        return demon
+    alive = s.alive_set(phase)
+    first = None
+    for seat in range(len(w.roles)):
+        if w.role_at(seat, phase) == role:
+            if seat in alive:
+                return seat
+            if first is None:
+                first = seat
+    return first
+
+
 def works_as(w, s, seat, role, phase):
     """Could this seat's ability as that character have worked then, as
     far as a Philosopher is concerned? Holding it and not drunk because a
@@ -2355,7 +2378,7 @@ def really_living(w, s, night):
     phase = f"N{night}"
     living = {q for q in s.alive_at(phase) if phase not in s.died_at(q)}
     if "Zombuul" in s.script.keys:
-        zombuul = w.find_at("Zombuul", phase)
+        zombuul = holding_now(w, s, "Zombuul", phase)
         if zombuul is not None and zombuul not in living:
             now = phase_index(phase)
             gone = [at for at in s.died_at(zombuul) if phase_index(at) <= now]
@@ -2808,6 +2831,13 @@ class VirginNomination(Info):
     triggered: bool = True
     source_role = "Virgin"
 
+    # What the town watched happen, not something the Storyteller told
+    # anybody: a Vortox has nothing to falsify. It inverted a quiet
+    # nomination under a Vortox once the simulator played the Virgin
+    # (Stelle 59, 14.10.2026), as it once did the Alsaahir's guess.
+    is_a_choice = True
+    in_the_open = True
+
     def hard(self):
         # A trigger is a death everyone saw. A quiet nomination is not,
         # so it goes through the usual claim gate instead.
@@ -2834,6 +2864,11 @@ class SlayerShot(Info):
     target: int = 0
     died: bool = False
     source_role = "Slayer"
+
+    # A shot in the open, not information: a Vortox has nothing to
+    # falsify (Stelle 59, 14.10.2026).
+    is_a_choice = True
+    in_the_open = True
 
     def hard(self):
         # A shot that killed someone is not a story anyone can tell - a
@@ -3313,6 +3348,10 @@ class GolemNomination(Info):
                     and TEAM[target] != "demon" and not self._earlier(s))
         if self._earlier(s):
             return True                   # spent already: nothing happens
+        # Dropped dead as it nominated (a Yaggababble's word): no ability
+        # left to strike with (14.10.2026).
+        if phase in s.died_at(self.player):
+            return True
         return (_could_register_as_demon(target)
                 or _cannot_die_by_day(w, s, self.target, phase))
 

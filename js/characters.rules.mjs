@@ -17,7 +17,8 @@ import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
-import {fallsAs, sideOpen, takenByAPhilosopher, tookIt} from "./info.mjs";
+import {fallsAs, holdingNow, sideOpen, takenByAPhilosopher, tookIt}
+  from "./info.mjs";
 
 // --------------------------------------------------------------------
 // Constants. Every one is a judgement rather than a fact, which is what
@@ -45,7 +46,10 @@ const allSeats = state => state._allSeats ||
 /** The seat holding this character, if it is standing tonight. */
 function acting(world, state, key, night) {
   const phase = `N${night}`;
-  const seat = world.findAt(key, phase);
+  // A Demon: the holder now, not the corpse it was dealt to (Stelle 59).
+  const seat = CHARACTERS[key].team === "demon"
+    ? holdingNow(world, state, key, phase)
+    : world.findAt(key, phase);
   if (seat === null || !state.aliveSet(phase).has(seat)) return null;
   return seat;
 }
@@ -196,7 +200,7 @@ sourceRule(function aSwappedSnakeCharmerIsPoisonedForGood(world, state, night) {
 sourceRule(function aNoDashiiPoisonsItsTownsfolkNeighbours(world, state, night) {
   if (!inBag(state, "NoDashii")) return [];
   const phase = `N${night}`;
-  const seat = world.findAt("NoDashii", phase);
+  const seat = holdingNow(world, state, "NoDashii", phase);
   if (seat === null || !state.aliveSet(phase).has(seat)) return [];
   const hit = nearestTownsfolk(world, state, seat, phase);
   const out = [];
@@ -209,7 +213,7 @@ sourceRule(function aNoDashiiPoisonsItsTownsfolkNeighbours(world, state, night) 
   // neighbour was poisoned for the part of the night before it happened.
   // On offer, not forced.
   const began = beganAt(night);
-  const then = world.findAt("NoDashii", began);
+  const then = holdingNow(world, state, "NoDashii", began);
   if (then !== null) {
     const earlier = new Set([...nearestTownsfolk(world, state, then, began)]
       .filter(p => !hit.has(p)));
@@ -230,7 +234,7 @@ sourceRule(function aNoDashiiPoisonsItsTownsfolkNeighbours(world, state, night) 
 sourceRule(function aVigormortisPoisonsBesideItsDeadMinions(world, state, night) {
   if (!inBag(state, "Vigormortis")) return [];
   const phase = `N${night}`;
-  const seat = world.findAt("Vigormortis", phase);
+  const seat = holdingNow(world, state, "Vigormortis", phase);
   if (seat === null || !state.aliveSet(phase).has(seat)) return [];
   const out = [];
   for (let who = 0; who < state.nPlayers; who++) {
@@ -329,7 +333,7 @@ function diedOn(state, night) {
 sourceRule(function aPukkaPoisonsWhoeverItWillKill(world, state, night) {
   if (!inBag(state, "Pukka")) return [];
   const phase = `N${night}`;
-  const seat = world.findAt("Pukka", phase);
+  const seat = holdingNow(world, state, "Pukka", phase);
   if (seat === null || !state.aliveSet(phase).has(seat)) return [];
   const alive = state.aliveSet(phase);
   const dueTomorrow = diedOn(state, night + 1);
@@ -692,7 +696,7 @@ function zombuulStillGoing(world, state, seat, phase) {
 causeRule(function aZombuulKillsOnAQuietDay(world, state, night) {
   if (!inBag(state, "Zombuul") || night < 2) return [];
   const phase = `N${night}`;
-  const seat = world.findAt("Zombuul", phase);
+  const seat = holdingNow(world, state, "Zombuul", phase);
   if (seat === null || !zombuulStillGoing(world, state, seat, phase)) return [];
   if (anyDiedAt(state, `D${night - 1}`)) return [];   // somebody went by day
   return [new Cause("Demon", DEMON, allSeats(state),

@@ -22,6 +22,7 @@ from botc.info import (registers_as_role,
                        BlindVote,
                        ChoirboyInfo, PrincessNominated, GolemNomination,
                        PsychopathKill, PsychopathRoshambo, WidowKnown,
+                       SlayerShot, VirginNomination,
                        PreacherChoice, HuntsmanChoice, PuzzlemasterGuess,
                        BoomdandyExploded, BecameInfo,
                        PixieLearned, VillageIdiotInfo, LycanthropeChose,
@@ -185,6 +186,11 @@ class Deal:
         self.princess_nominated = {}        # day -> (Princess, her nominee)
         self.princess_stop = {}             # night -> the Princess stopping it
         self.golem_spent = set()            # Golems whose nomination is gone
+        self.slayer_spent = set()           # Slayers that have shot
+        self.virgin_spent = set()           # Virgins nominated once
+        self.virgin_executed = {}           # {day: nominator executed}
+        self.shown_in_the_open = set()      # a Slayer that shot, a Virgin
+                                            # that took its nominator
         self.psychopath_struck = {}         # day -> (Psychopath, target)
         self.roshambo = {}                  # day -> the Psychopath executed
         self.widow_poison = []              # [(Widow, target, night)]
@@ -1023,6 +1029,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # A Psychopath may kill somebody in the open, before the
             # nominations (10.10.2026).
             _psychopath_strikes(d, night, rng, heard)
+            # A Slayer may shoot, before the nominations (Stelle 59).
+            if _slayer_shoots(d, night, rng, heard):
+                d.ended_at, d.ended_why = f"D{night}", "slayer"
+                d.game_ends_after = night
+                break
             _harpy_strikes(d, night, rng, heard)
             if _lleech_follows(d, f"D{night}", night, rng, by_day=True):
                 d.ended_at, d.ended_why = f"D{night}", "lleech"
@@ -1041,7 +1052,14 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 d.ended_at, d.ended_why = f"D{night}", "two alive"
                 d.game_ends_after = night
                 break
-            executed = _execute(d, night, rng, allow_takeover)
+            # A Virgin's nominator was executed on the spot: that was
+            # the day's execution (Stelle 59).
+            if night in d.virgin_executed:
+                executed = d.virgin_executed[night]
+                if night in d.walked_because:
+                    executed = None
+            else:
+                executed = _execute(d, night, rng, allow_takeover)
             if executed is not None:
                 d.deaths[executed] = f"E{night}"
             # The Lleech's host on the gallows takes the Lleech with it.
@@ -2111,6 +2129,84 @@ def _psychopath_strikes(d, day, rng, heard):
     heard.append(PsychopathKill(day, psycho, target=target, died=died))
 
 
+def _slayer_shoots(d, day, rng, heard):
+    """ "Once per game, during the day, publicly choose a player: if they
+    are the Demon, they die." Now and then, at the Demon one time in three
+    and otherwise at anybody, with a Philosopher that took it shooting too
+    (Stelle 59, 14.10.2026). Drunk or poisoned it shoots and nothing
+    happens; a working Recluse may register as the Demon.
+
+    A Demon that would not die of it (a Zombuul's first death, a Lleech
+    with its host) is not shot at: that game is not what is being tested.
+    Hitting the Demon hands it to a Scarlet Woman with five alive, or ends
+    the game — returns True then.
+    """
+    if "Slayer" not in d.script.keys:
+        return False
+    phase = f"D{day}"
+    living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    if len(living) < 4:
+        return False
+    for seat in living:
+        if not _acts_as(d, seat, "Slayer", phase) or seat in d.slayer_spent:
+            continue
+        if rng.random() >= 0.25:
+            continue
+        demon = d.demon_at(phase)
+        pool = [p for p in living if p != seat]
+        safe = [p for p in pool if TEAM[d.role_at(p, phase)] != "demon"]
+        target = demon if demon in pool and rng.random() < 0.3 \
+            else rng.choice(pool)
+        working = d.working(seat, day, by_day=True)
+        if target == demon and (d.role_at(demon, phase) == "Zombuul"
+                                or not _can_die_by_day(d, demon, day)):
+            if not safe:
+                return False
+            target = rng.choice(safe)
+        held = d.role_at(target, phase)
+        died = False
+        if working and TEAM[held] == "demon":
+            died = True
+        elif working and held == "Recluse" \
+                and d.working(target, day, by_day=True) \
+                and _can_die_by_day(d, target, day) and rng.random() < 0.5:
+            died = True
+        d.slayer_spent.add(seat)
+        d.shown_in_the_open.add(seat)
+        heard.append(SlayerShot(day, seat, target=target, died=died))
+        if not died:
+            return False
+        if TEAM[held] == "demon":
+            heir = _heir(d, phase, rng)
+            if heir is not None and d.roles[heir] == "ScarletWoman" \
+                    and len(d.alive_at(phase)) >= 5:
+                d.deaths[target] = phase
+                d.handovers.append((phase, heir))
+                d.changes.append((phase, heir, held))
+                return False
+            d.deaths[target] = phase
+            return True                   # good has won
+        d.deaths[target] = phase
+        return False
+    return False
+
+
+def _virgin_answers(d, day, who, nominee, rng):
+    """ "The 1st time you are nominated, if the nominator is a Townsfolk,
+    they are executed immediately." Its first nomination, drunk or not,
+    and a Philosopher that took it too (Stelle 59, 14.10.2026). A Spy
+    nominating registers as a Townsfolk, as the solver reads it. Returns
+    the row, or None if the nominee is no Virgin it spends."""
+    phase = f"D{day}"
+    if nominee in d.virgin_spent or not _acts_as(d, nominee, "Virgin", phase):
+        return None
+    d.virgin_spent.add(nominee)
+    held = d.role_at(who, phase)
+    townsfolk = TEAM[held] == "townsfolk" or held == "Spy"
+    triggered = townsfolk and d.working(nominee, day, by_day=True)
+    return VirginNomination(day, nominee, nominator=who, triggered=triggered)
+
+
 def _golem_strikes(d, golem, nominee, day, rng):
     """ "When you [nominate], if the nominee is not the Demon, they die."
     Once a game, drunk or not; a Recluse may register as the Demon."""
@@ -3022,8 +3118,32 @@ def _hold_a_day(d, day, rng):
             if not free:
                 continue
             nominee = rng.choice(free)
+        # Not a Virgin's nominator whose execution would end the game:
+        # the good twin with the Evil Twin standing (Stelle 59).
+        twins = getattr(d, "twins", None)
+        if "Virgin" in d.script.keys and twins is not None \
+                and who == twins[1] \
+                and _acts_as(d, nominee, "Virgin", f"D{day}"):
+            others = [p for p in living if p not in (who, nominee)
+                      and d.deaths.get(p) is None]
+            if not others:
+                continue
+            nominee = rng.choice(others)
         d.nominations.setdefault(day, set()).add(who)
         d.nominated_by.setdefault(day, {}).setdefault(nominee, who)
+        if "Virgin" in d.script.keys and d.deaths.get(who) is None:
+            row = _virgin_answers(d, day, who, nominee, rng)
+            if row is not None:
+                d.day_heard.append(row)
+                if row.triggered:
+                    d.shown_in_the_open.add(nominee)
+                    # Executed at once, and that is the day's execution.
+                    why = _walks_away(d, who, day, rng)
+                    if why is not None:
+                        d.executions[day] = who
+                        d.walked_because[day] = why
+                    d.virgin_executed[day] = who
+                    break
         if who == drops and day not in d.witch_deaths \
                 and _can_die_by_day(d, who, day):
             d.deaths[who] = f"D{day}"
