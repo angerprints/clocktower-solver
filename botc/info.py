@@ -815,6 +815,20 @@ def falls_as(w, s, seat, role, phase):
     return took_it(w, s, seat, role, phase)
 
 
+def works_as(w, s, seat, role, phase):
+    """Could this seat's ability as that character have worked then, as
+    far as a Philosopher is concerned? Holding it and not drunk because a
+    Philosopher took it, or a Philosopher that took it. For what the town
+    watched happen in daylight: a landed shot, a Virgin's nominator
+    falling, a Golem's nominee, an Alsaahir's win (group 5, 14.10.2026)."""
+    return falls_as(w, s, seat, role, phase)
+
+
+def has_it(w, s, seat, role, phase):
+    """Holding that character then, or a Philosopher that took it."""
+    return w.role_at(seat, phase) == role or took_it(w, s, seat, role, phase)
+
+
 def taken_by_a_philosopher(s, role):
     """Did any Philosopher on the board take that character?"""
     return any(taken == role for taken, _since
@@ -2060,8 +2074,11 @@ class AlsaahirGuess(Info):
     won: bool = False
     source_role = "Alsaahir"
 
-    def settled(self):
-        # A game that ended is not a story anybody can tell.
+    def hard(self):
+        # A game that ended is not a story anybody can tell. Written as
+        # `settled` and never asked, so a won guess from a seat that could
+        # not have been the Alsaahir cost 0.4 instead of ruling the world
+        # out (found 14.10.2026 with group 5 of the Philosopher).
         return self.won
 
     def said_by(self):
@@ -2084,12 +2101,12 @@ class AlsaahirGuess(Info):
     def holds(self, w, s, rh, seat=None):
         phase = f"D{self.night}"
         if self.won:
-            return (w.role_at(self.player, phase) == "Alsaahir"
+            return (works_as(w, s, self.player, "Alsaahir", phase)
                     and self._exact(w, s, phase))
         # A guess that did nothing is only evidence if a real Alsaahir
-        # made it. Otherwise anybody may guess and be wrong, which says
-        # nothing about the board.
-        if w.role_at(self.player, phase) != "Alsaahir":
+        # made it — or a Philosopher that took it. Otherwise anybody may
+        # guess and be wrong, which says nothing about the board.
+        if not has_it(w, s, self.player, "Alsaahir", phase):
             return True
         return not self._exact(w, s, phase)
 
@@ -2802,7 +2819,7 @@ class VirginNomination(Info):
     def holds(self, w, s, rh, seat=None):
         phase = f"D{self.night}"
         if self.triggered:
-            return (w.role_at(self.player, phase) == "Virgin"
+            return (works_as(w, s, self.player, "Virgin", phase)
                     and _registers_townsfolk(w.role_at(self.nominator, phase)))
         return not _registers_townsfolk(w.role_at(self.nominator, phase))
 
@@ -2844,7 +2861,7 @@ class SlayerShot(Info):
             hit_host = (host is not None and host >= 0
                         and self.target == host
                         and w.find_at("Lleech", phase) is not None)
-            return (w.role_at(self.player, phase) == "Slayer"
+            return (works_as(w, s, self.player, "Slayer", phase)
                     and (demon or t == "Recluse" or hit_host))
         # A shot that did nothing is only evidence if a real Slayer fired
         # it, and that is handled by the usual claim gate. A Lleech whose
@@ -3292,7 +3309,7 @@ class GolemNomination(Info):
         phase = f"D{self.night}"
         target = w.role_at(self.target, phase)
         if self.died:
-            return (w.role_at(self.player, phase) == "Golem"
+            return (works_as(w, s, self.player, "Golem", phase)
                     and TEAM[target] != "demon" and not self._earlier(s))
         if self._earlier(s):
             return True                   # spent already: nothing happens

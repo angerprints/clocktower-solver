@@ -1091,17 +1091,25 @@ export function forcedRoles(state) {
       ? new Set([...pinned[seat]].filter(r => wanted.has(r)))
       : wanted;
   };
+  // A Philosopher that wrote down taking it may be the one (group 5).
+  const orItsPhilosopher = (seat, role) => {
+    const taken = (state.philosophies() || {})[seat];
+    return taken && taken[0] === role ? [role, "Philosopher"] : [role];
+  };
   for (const info of state.infos) {
     if (info.type === "VirginNomination" && info.triggered) {
-      pin(info.player, ["Virgin"]);
+      pin(info.player, orItsPhilosopher(info.player, "Virgin"));
       // The nomination only fires on a Townsfolk, or the Spy wearing one.
       // The Drunk is an Outsider, so a Drunk nominator is out.
       const spies = state.script.keys.filter(
         k => CHARACTERS[k].registers.includes("townsfolk"));
       pin(info.nominator, [...state.script.townsfolk, ...spies]);
     } else if (info.type === "SlayerShot" && info.died) {
-      pin(info.player, ["Slayer"]);
-      pin(info.target, ["Imp", "Recluse"]);
+      pin(info.player, orItsPhilosopher(info.player, "Slayer"));
+      // Any Demon on the script and the Recluse; beside a Lleech its host
+      // may fall too, so nothing pinned (14.10.2026).
+      if (!inBag(state, "Lleech"))
+        pin(info.target, [...state.script.demons, "Recluse"]);
     }
   }
   return pinned;
@@ -1129,8 +1137,10 @@ function aZealotKeptItsHandDown(world, state) {
                                    && hanged !== p).length;
     if (alive.length - fell < 5) continue;
     for (const seat of alive)
+      // And a Philosopher that took it (group 5, 14.10.2026).
       if (!voted.has(seat) && !state.diedAt(seat).includes(phase)
-          && world.roleAt(seat, phase) === "Zealot")
+          && (world.roleAt(seat, phase) === "Zealot"
+              || tookIt(world, state, seat, "Zealot", phase)))
         return true;
   }
   return false;

@@ -169,6 +169,18 @@ export function fallsAs(w, s, seat, role, phase) {
   return tookIt(w, s, seat, role, phase);
 }
 
+/** Could this seat's ability as that character have worked then, as far
+ * as a Philosopher is concerned? For what the town watched in daylight
+ * (group 5, 14.10.2026). See info.py. */
+export function worksAs(w, s, seat, role, phase) {
+  return fallsAs(w, s, seat, role, phase);
+}
+
+/** Holding that character then, or a Philosopher that took it. */
+export function hasIt(w, s, seat, role, phase) {
+  return w.roleAt(seat, phase) === role || tookIt(w, s, seat, role, phase);
+}
+
 /** Did any Philosopher on the board take that character? */
 export function takenByAPhilosopher(s, role) {
   return Object.values(s.philosophies() || {}).some(([taken]) => taken === role);
@@ -986,7 +998,7 @@ export const Balloonist = define("Balloonist", "Balloonist",
   {weighed: () => false});
 
 export const Alsaahir = define("Alsaahir", "Alsaahir",
-  function (w) {
+  function (w, s) {
     const phase = `D${this.night}`;
     const demons = new Set(), minions = new Set();
     for (let p = 0; p < w.roles.length; p++) {
@@ -998,9 +1010,14 @@ export const Alsaahir = define("Alsaahir", "Alsaahir",
       && b.every(x => a.has(x));
     const exact = same(demons, this.demons || [])
                && same(minions, this.minions || []);
-    if (this.won) return exact;
-    if (w.roleAt(this.player, phase) !== "Alsaahir") return true;
+    if (this.won)
+      return worksAs(w, s, this.player, "Alsaahir", phase) && exact;
+    if (!hasIt(w, s, this.player, "Alsaahir", phase)) return true;
     return !exact;
+  },
+  {
+    // A game that ended is not a story anybody can tell (14.10.2026).
+    hard() { return !!this.won; },
   });
 
 // Experimental, one at a time (from 05.10.2026). Each is the mirror of
@@ -1351,10 +1368,10 @@ export const CourtierChoice = define("CourtierChoice", "Courtier",
  * Virgin was poisoned.
  */
 export const VirginNomination = define("VirginNomination", "Virgin",
-  function (w) {
+  function (w, s) {
     const phase = `D${this.night}`;
     if (this.triggered)
-      return w.roleAt(this.player, phase) === "Virgin" &&
+      return worksAs(w, s, this.player, "Virgin", phase) &&
              registersTownsfolk(w.roleAt(this.nominator, phase));
     return !registersTownsfolk(w.roleAt(this.nominator, phase));
   },
@@ -1375,7 +1392,7 @@ export const SlayerShot = define("SlayerShot", "Slayer",
       // (11.10.2026).
       const hitHost = host !== null && host >= 0 && this.target === host
         && w.findAt("Lleech", phase) !== null;
-      return w.roleAt(this.player, phase) === "Slayer" &&
+      return worksAs(w, s, this.player, "Slayer", phase) &&
              (DEMONS.has(t) || t === "Recluse" || hitHost);
     }
     // A shot that did nothing is only evidence if a real Slayer fired it,
@@ -1670,7 +1687,7 @@ export const GolemNomination = define("GolemNomination", "Golem",
       && info.type === "GolemNomination" && info.player === this.player
       && info.night <= this.night);
     if (this.died)
-      return w.roleAt(this.player, phase) === "Golem"
+      return worksAs(w, s, this.player, "Golem", phase)
         && TEAM[target] !== "demon" && !earlier;
     if (earlier) return true;          // spent already: nothing happens
     return couldRegisterAsDemon(target)

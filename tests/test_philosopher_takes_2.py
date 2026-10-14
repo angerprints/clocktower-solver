@@ -236,6 +236,9 @@ class BothLanguagesAgree(SolverTest):
     def test_on_the_boards_of_group_four(self):
         self.agree(_payloads_4())
 
+    def test_on_the_boards_of_group_five(self):
+        self.agree(_payloads_5())
+
     def agree(self, cases):
         import app
         script = ("import {solveBoard} from './js/api.mjs';"
@@ -554,6 +557,105 @@ def _payloads_4():
     return out
 
 
+GROUP_5 = ("Slayer", "Virgin", "Golem", "Alsaahir", "Zealot", "Butler")
+
+DAY_IDS = ["philosopher", "slayer", "virgin", "golem", "alsaahir", "zealot",
+           "butler", "chef", "empath", "washerwoman", "investigator", "monk",
+           "drunk", "saint", "recluse", "poisoner", "scarletwoman", "spy",
+           "imp", "po"]
+BY_DAY = scripts.from_ids("Philosopher by day", DAY_IDS)
+
+
+def dycost(roles, rows=(), **kw):
+    kw.setdefault("days_done", {1})
+    st = GameState(n_players=len(roles), script=BY_DAY,
+                   claims=dict(enumerate(roles)), infos=list(rows), **kw)
+    return S.explanation_cost(World(tuple(roles), (None,) * len(roles)), st)
+
+
+class GroupFiveInTheSolver(SolverTest):
+    """What the town watched in daylight needs what the Philosopher took.
+    With a Chef taken, nothing fits. The Butler is not modelled for
+    anybody, so there is nothing for it to do."""
+
+    def test_its_slayer_shot_lands(self):
+        rows = [I.SlayerShot(1, 3, target=6, died=True)]
+        dead = {"deaths": {6: ("D1",)}}
+        self.assertIsNotNone(dycost(R, [took("Slayer")] + rows, **dead))
+        self.assertIsNone(dycost(R, [took("Chef")] + rows, **dead))
+
+    def test_the_real_slayer_it_drunk_misses(self):
+        roles = list(R)
+        roles[2] = "Slayer"
+        rows = [I.SlayerShot(1, 2, target=6, died=True)]
+        dead = {"deaths": {6: ("D1",)}}
+        self.assertIsNone(dycost(roles, [took("Slayer")] + rows, **dead))
+        self.assertIsNotNone(dycost(roles, [took("Chef")] + rows, **dead))
+
+    def test_its_virgin_takes_the_nominator(self):
+        rows = [I.VirginNomination(1, 3, nominator=0, triggered=True)]
+        hanged = {"deaths": {0: ("E1",)}}
+        self.assertIsNotNone(dycost(R, [took("Virgin")] + rows, **hanged))
+        self.assertIsNone(dycost(R, [took("Chef")] + rows, **hanged))
+
+    def test_its_golem_nominee_dies(self):
+        rows = [I.GolemNomination(1, 3, target=0, died=True)]
+        dead = {"deaths": {0: ("D1",)}}
+        self.assertIsNotNone(dycost(R, [took("Golem")] + rows, **dead))
+        self.assertIsNone(dycost(R, [took("Chef")] + rows, **dead))
+
+    def test_its_alsaahir_wins(self):
+        rows = [I.AlsaahirGuess(1, 3, demons=frozenset({6}),
+                                minions=frozenset({5}), won=True)]
+        self.assertIsNotNone(dycost(R, [took("Alsaahir")] + rows,
+                                    game_over=True))
+        self.assertIsNone(dycost(R, [took("Chef")] + rows, game_over=True))
+
+    def test_its_zealot_must_vote(self):
+        kept_down = {"votes": {1: {0, 1, 2}}, "nominations": {1: {0}}}
+        self.assertIsNone(dycost(R, [took("Zealot")], **kept_down))
+        self.assertIsNotNone(dycost(R, [took("Chef")], **kept_down))
+
+    def test_a_landed_shot_pins_the_shooter_and_any_demon(self):
+        st = GameState(n_players=7, script=BY_DAY, claims=dict(enumerate(R)),
+                       infos=[took("Slayer"),
+                              I.SlayerShot(1, 3, target=6, died=True)],
+                       deaths={6: ("D1",)}, days_done={1})
+        pinned = S.forced_roles(st)
+        self.assertEqual(pinned[3], {"Slayer", "Philosopher"})
+        self.assertEqual(pinned[6], {"Imp", "Po", "Recluse"})
+
+
+def _payloads_5():
+    def pay(rows, events, roles=R, days=(1,), **more):
+        players = [{"claim": c, "events": events.get(i, [])}
+                   for i, c in enumerate(roles)]
+        return {"n_players": len(roles), "players": players, "infos": rows,
+                "script": {"name": BY_DAY.name, "characters": DAY_IDS},
+                "days_done": list(days), **more}
+
+    def take(role, seat=3):
+        return {"type": "PhilosopherChoice", "night": 1, "player": seat,
+                "role": role}
+    po = list(R)
+    po[6] = "Po"
+    out = []
+    for role in GROUP_5 + ("Chef",):
+        out.append(pay([take(role), {"type": "SlayerShot", "night": 1,
+                                     "player": 3, "target": 6,
+                                     "died": True}], {6: ["D1"]}))
+        out.append(pay([take(role), {"type": "SlayerShot", "night": 1,
+                                     "player": 3, "target": 6,
+                                     "died": True}], {6: ["D1"]}, po))
+        out.append(pay([take(role), {"type": "VirginNomination", "night": 1,
+                                     "player": 3, "nominator": 0,
+                                     "triggered": True}], {0: ["X1"]}))
+        out.append(pay([take(role), {"type": "GolemNomination", "night": 1,
+                                     "player": 3, "target": 0,
+                                     "died": True}], {0: ["D1"]}))
+    return out
+
+
 class TheSimulatorPlaysThem(SolverTest):
     """L, and the gate in small: games that must hold a Philosopher and
     every character of group 1."""
@@ -650,6 +752,18 @@ class TheSimulatorPlaysThem(SolverTest):
                 if row.player in deal.philosophies:
                     rows[type(row).__name__] += 1
         for name in ("OgreChoice", "PixieLearned", "HuntsmanChoice"):
+            self.assertGreater(rows[name], 0, rows)
+
+    def test_the_true_world_is_kept_with_group_five(self):
+        self.kept(GROUP_5)
+
+    def test_a_philosopher_acts_by_day_with_what_it_took(self):
+        rows = collections.Counter()
+        for _seed, _script, _rng, deal, heard in self.games(group=GROUP_5):
+            for row in list(heard) + list(getattr(deal, "day_heard", [])):
+                if row.player in deal.philosophies:
+                    rows[type(row).__name__] += 1
+        for name in ("GolemNomination", "AlsaahirGuess"):
             self.assertGreater(rows[name], 0, rows)
 
     def kept(self, group):

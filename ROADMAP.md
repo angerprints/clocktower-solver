@@ -1156,7 +1156,7 @@ Der volle Bericht steht in `claude/philosoph-schritt-1.md`.
 
 **Das Tor:** Sects & Violets 17 von 3.000 Partien verworfen (vorher 19, keine neue) bei 4 Nächten, dieselben 24 bei 6 Nächten, Night-Walk 0 abweichend. Der Simulator spielt 123 von 3.000 Partien anders, die Prüfsumme von Sects & Violets ist deshalb neu (`1b9cc9c20f8cfedd`). Gemischte Partien mit Philosoph und den vier: dieselben verworfenen wie vorher. Korpus 400 Bretter (10 neue, kein altes geändert), 1.586 Tests grün.
 
-### Philosoph mit genommener Fähigkeit, Schritt 2 · *Gruppen 1 bis 3 erledigt am 13.10.2026, Gruppe 4 am 14.10.2026, Gruppen 5 und 6 offen*
+### Philosoph mit genommener Fähigkeit, Schritt 2 · *Gruppen 1 bis 3 erledigt am 13.10.2026, Gruppen 4 und 5 am 14.10.2026, Gruppe 6 offen*
 
 **Deine Antworten vom 13.10.2026** zu Schritt 2: B bis M jeweils Weg 1. Bei I zeigt der Erzähler dem Philosophen ein Plättchen passend zur echten Fähigkeit: nimmt er die Verrückte, sieht er einen Dämon, nimmt er den Trunkenbold, einen Bürger. F (Einsiedler registriert auch tot) ist noch offen und kommt vor Gruppe 6. Gebaut wird Gruppe für Gruppe, jede durch das Tor (M).
 
@@ -1242,6 +1242,27 @@ Am Tor gefunden und behoben:
 | Korpus | 458 | 507 (49 neue, davon sechs gespielte Partien und die Partie 881 aus Batch 9). Ein altes Brett geändert: `x-nine-bmr-played-philosopher` 0 → 100 Welten (siehe oben). Python und JavaScript gleich |
 | Testsammlung | 1.618 grün | 1.629 grün, 2 übersprungen |
 
+**Gruppe 5, am Tag** · *erledigt am 14.10.2026:* Dämonenjäger, Jungfrau, Golem, Alsaahir, Eiferer, Butler. Was die Stadt am Tag sieht (ein Treffer, ein Nominierender, der stirbt, ein toter Nominierter des Golems, ein gewonnener Rateversuch), kommt jetzt auch von einem Philosophen, der den Charakter genommen hat, in Python und JavaScript. Der echte, den er betrunken macht, schafft es nicht. Ein Philosoph mit dem Eiferer muss abstimmen wie der echte. Der Butler ist für niemanden gebaut, auch nicht für den echten; für ihn gibt es nichts zu tun. Im Simulator nominiert ein Philosoph als Golem, rät als Alsaahir und stimmt als Eiferer ab.
+
+**Unerwartet:** Der Simulator spielt Dämonenjäger und Jungfrau gar nicht, auch die echten nicht. Kein Schuss, keine Nominierung einer Jungfrau. Für diese zwei prüfen nur die Testbretter, nicht das Tor. Neue offene Stelle 59.
+
+Am Tor gefunden und behoben:
+
+| Wo | Was |
+|---|---|
+| Solver | Ein Treffer des Dämonenjägers legte das Ziel auf Imp oder Einsiedler fest, ein Wert aus Trouble Brewing. Ein Treffer auf einen anderen Dämon (Poe, Pukka, …) hatte über die Seite keine Welt. Jetzt jeder Dämon des Skripts oder der Einsiedler; neben einem Lleech wird nichts festgelegt, weil sein Wirt fallen kann. |
+| Solver | Ein gewonnener Rateversuch des Alsaahir sollte eine Tatsache sein, wurde aber nie so gelesen: Kam er von einem Spieler, der kein Alsaahir sein konnte, kostete er nur 0,4. Jetzt fällt die Welt. JavaScript prüfte bei einem Sieg gar nicht, wer geraten hatte. Ein gespieltes Korpus-Brett mit Grubenweib und Alsaahir hat dadurch 12 statt 93 Welten. |
+
+| Was | vorher | nachher |
+|---|---|---|
+| Gemischt mit Philosoph und Gruppe 5, 3.000 Partien, 4 / 6 Nächte | 5 / 6 verworfen | 4 / 5, eine alte weniger (873), keine neue. In 460 Partien nimmt ein Philosoph einen aus Gruppe 5 (137-mal neben dem echten), keine davon verworfen. Die eine „wegen der neuen Zeilen“ bei 6 Nächten (1947) ist auch vorher da: ein Golem, den der Schlangenbeschwörer aus dem Leviathan gemacht hat |
+| Night-Walk dort, 4 Nächte | 5 von 7.543 | 4 von 7.520 |
+| Trouble Brewing, Batch 2 (beide Skripte), Batch 5 (beide), 3.000 Partien | 0 | 0, Night-Walk gleich |
+| Gemischt ohne Pflicht | 5 | dieselben 5 |
+| Prüfsummen | | gleich |
+| Korpus | 520 | 552 (32 neue, davon vier gespielte Partien), ein altes Brett geändert (siehe oben). Python und JavaScript gleich |
+| Testsammlung | 1.644 grün | 1.654 grün, 2 übersprungen |
+
 ### Stelle 58: Wer einen Charakter bekommt, sagt es · *erledigt am 14.10.2026*
 
 Der Bericht steht in `claude/stelle-58-farmer-erbe.md`.
@@ -1282,7 +1303,7 @@ Alle 10 übrigen auf Batch 8 haben einen guten Spieler, der grundlos einen ander
 
 ### Als Nächstes
 
-**1 · Philosoph, Schritt 2, Gruppen 5 und 6.** Gruppe 5 (am Tag): Dämonenjäger, Jungfrau, Golem, Alsaahir, Eiferer, Butler. Gruppe 6 (Spielende und Registrieren): Heilige, Ketzer, Politiker, Einsiedler, Unschuld, Großmutter, König, Chorknabe; vorher deine Antwort zu F. Dazu I (das Plättchen für Verrückte und Trunkenbold). Danach der erste große Charakter einzeln, oder die Nachtreihenfolge, die du ans Ende gestellt hast.
+**1 · Philosoph, Schritt 2, Gruppe 6.** Gruppe 6 (Spielende und Registrieren): Heilige, Ketzer, Politiker, Einsiedler, Unschuld, Großmutter, König, Chorknabe; vorher deine Antwort zu F. Dazu I (das Plättchen für Verrückte und Trunkenbold). Danach der erste große Charakter einzeln, oder die Nachtreihenfolge, die du ans Ende gestellt hast.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1358,10 +1379,11 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 52 | Solver | **Skripte mit Kopfgeldjäger und Mezepheles rechnen lange.** *Verbessert am 12.10.2026:* Erzählungen, die sich nur in ungefragten Sitzen unterscheiden, werden nicht mehr einzeln erklärt. Auf den eigenen Skripten ist JavaScript bei 9 Spielern und 6 Nächten dreimal so schnell (langsamstes Brett 109 → 30 Sekunden), auf gemischten knapp doppelt so schnell. Offen bleibt: Große gemischte Bretter, auf denen Werwolf (Falsche Pfote), Kopfgeldjäger und Mezepheles zusammenkommen, brauchen im Browser ein bis zwei Minuten (langsamstes 99 Sekunden), weil dort fast jede Erzählung nach fast jedem Sitz fragt. |
 | 53 | Solver | **Die Barbier-Regel sieht eine Übergabe am Tag nicht.** Wo alle Regeln in einem Zug laufen, bietet sie „Dämon mit Scherge“ für einen schon hingerichteten Dämon und die Scharlachrote Frau an, die ihn beerbt hat. Der Absturz daraus ist am 11.10.2026 behoben, die Erzählung selbst bleibt und bekommt einen Anteil. Kein Grundskript hat Barbier und Scharlachrote Frau. |
 | 55 | erledigt | **Kultführer als Falsche Pfote des Werwolfs.** *Behoben am 12.10.2026* in Python und JavaScript: Erst die Fraktion aus den Nachbarn, dann die Falsche Pfote wie bei jedem guten Spieler. War 1 von 3.000 gemischten Partien am Tor von Batch 9 (Seed 1238). |
-| 56 | Solver, Simulator, Night-Walk | **Ein Philosoph hat eine genommene Fähigkeit, die handelt, meist nicht.** Gebaut nur für Schlangenbeschwörer, Glücksspieler, Nachtwächter, Banshee und Höfling. Gastwirt, Segler, Mönch, Teedame, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Pazifist und weitere schauen nur auf den Halter des Plättchens, in allen drei Werkzeugen gleich. Aufgefallen im Night-Walk: 9 von 8.233 Nächten auf dem zweiten Skript aus Batch 9. Am Tisch würde ein Solver eine Nacht falsch erklären, in der ein Philosoph als Gastwirt jemanden gerettet hat. Untersucht am 12.10.2026. Deine Entscheidung: Weg 1, in zwei Schritten. *Schritt 1 erledigt am 13.10.2026* (Liebchen, Barbier, Tollpatsch, Mutant). Schritt 2 in sechs Gruppen: *Gruppe 1 erledigt am 13.10.2026* (Mönch, Soldat, Gastwirt, Segler, Teedame, Narr, Bürgermeister, Pazifist, Exorzist, Prinzessin), *Gruppe 2 auch* (Schwätzer, Bastler, Mondkind, Werwolf, Akrobatin), *Gruppe 3 auch* (Minnesänger, Prediger, Schläger, Puzzlemeister), *Gruppe 4 am 14.10.2026* (Farmer, Professor, Jäger, Feenkind, Kultführer, Oger), Gruppen 5 und 6 offen. |
+| 56 | Solver, Simulator, Night-Walk | **Ein Philosoph hat eine genommene Fähigkeit, die handelt, meist nicht.** Gebaut nur für Schlangenbeschwörer, Glücksspieler, Nachtwächter, Banshee und Höfling. Gastwirt, Segler, Mönch, Teedame, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Pazifist und weitere schauen nur auf den Halter des Plättchens, in allen drei Werkzeugen gleich. Aufgefallen im Night-Walk: 9 von 8.233 Nächten auf dem zweiten Skript aus Batch 9. Am Tisch würde ein Solver eine Nacht falsch erklären, in der ein Philosoph als Gastwirt jemanden gerettet hat. Untersucht am 12.10.2026. Deine Entscheidung: Weg 1, in zwei Schritten. *Schritt 1 erledigt am 13.10.2026* (Liebchen, Barbier, Tollpatsch, Mutant). Schritt 2 in sechs Gruppen: *Gruppe 1 erledigt am 13.10.2026* (Mönch, Soldat, Gastwirt, Segler, Teedame, Narr, Bürgermeister, Pazifist, Exorzist, Prinzessin), *Gruppe 2 auch* (Schwätzer, Bastler, Mondkind, Werwolf, Akrobatin), *Gruppe 3 auch* (Minnesänger, Prediger, Schläger, Puzzlemeister), *Gruppe 4 am 14.10.2026* (Farmer, Professor, Jäger, Feenkind, Kultführer, Oger), *Gruppe 5 auch* (Dämonenjäger, Jungfrau, Golem, Alsaahir, Eiferer, Butler), Gruppe 6 offen. |
 | 57 | erledigt | **Werwolf, Xaan und Adlige.** *Behoben am 12.10.2026:* Eine Auskunft, die nur mit der Falschen Pfote stimmt, darf auch falsch gewesen sein, weil ihre Quelle gestört war; je Nacht werden beide Wege versucht. War 1 von 3.000 gemischten Partien mit Werwolf (Seed 1177). |
 | 54 | Solver | **Der böse Bürger des Kopfgeldjägers mit falschem Claim** wird nur an einem Sitz gefunden, der als nicht vertrauenswürdig markiert ist. Sonst nimmt die Suche an, dass er seinen echten Charakter nennt. Der Jinx Leviathan–Mönch ist nicht gebaut, weil die Wahl des Mönchs nirgends steht. |
 | 58 | erledigt | **Der Erbe des Farmers sagt nur „Farmer“.** *Behoben am 14.10.2026* (A bis F, siehe Abschnitt „Stelle 58“). Die Seite nimmt bei einem guten Spieler an, dass er seinen ausgeteilten Charakter nennt. War der alte Charakter des Erben wichtig (gemischte Partie 693 mit 7 Spielern: als Teedame hatte er am Vortag seinen Nachbarn vor der Hinrichtung bewahrt), findet sie keine Welt. Gilt genauso beim echten Farmer. Aufgefallen am 14.10.2026 bei Gruppe 4 des Philosophen, nicht gebaut. |
+| 59 | Simulator | **Dämonenjäger und Jungfrau spielt der Simulator nicht.** Kein Schuss, keine Nominierung einer Jungfrau, auch bei den echten nicht. Der Solver kennt beide (Zeilen „Slayer shot“ und „Virgin nominated“), aber kein Tor prüft sie, nur Testbretter. Aufgefallen am 14.10.2026 bei Gruppe 5 des Philosophen, nicht gebaut. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

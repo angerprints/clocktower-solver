@@ -1068,6 +1068,7 @@ def handmade():
     yield from the_philosopher_takes_group_3()
     yield from the_philosopher_takes_group_4()
     yield from the_farmers_heir()
+    yield from the_philosopher_takes_group_5()
 
 
 def the_eighth_five():
@@ -1484,6 +1485,31 @@ def the_philosopher_takes_group_4():
                      rng=rng)
     yield played("x-nine-bmr-played-philosopher-professor", NINE_BMR, 881,
                  8, 4)
+
+
+def the_philosopher_takes_group_5():
+    """Open item 56, step 2, group 5 (14.10.2026): a Philosopher acts by
+    day with what it took. The boards of tests/test_philosopher_takes_2.py
+    and games where it used the Golem or the Alsaahir."""
+    sys.path.insert(0, str(HERE))
+    from test_philosopher_takes_2 import GROUP_5, _payloads_5
+    kinds = ("shot", "shot-at-a-po", "virgin", "golem")
+    for i, payload in enumerate(_payloads_5()):
+        role = (GROUP_5 + ("Chef",))[i // len(kinds)].lower()
+        yield {"name": f"x-by-day-7-philosopher-{role}-{kinds[i % len(kinds)]}",
+               "payload": payload}
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    for seed in PLAYED_GROUP_5:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(
+            rng, must_have=("Philosopher",) + GROUP_5)
+        yield played(f"x-by-day-played-{seed}", script, seed, 7, 4, rng=rng)
+
+
+# Games where a Philosopher took one of group 5 and used it: the Golem
+# (42, 120), the Alsaahir (106, 452).
+PLAYED_GROUP_5 = (42, 120, 106, 452)
 
 
 def the_farmers_heir():

@@ -3630,9 +3630,16 @@ def forced_roles(state):
         roles = frozenset(roles)
         pinned[seat] = roles if seat not in pinned else pinned[seat] & roles
 
+    # A Philosopher that wrote down taking it may be the one (group 5,
+    # 14.10.2026).
+    def or_its_philosopher(seat, role):
+        taken = (state.philosophies() or {}).get(seat)
+        return [role, "Philosopher"] if taken and taken[0] == role \
+            else [role]
+
     for info in state.infos:
         if isinstance(info, VirginNomination) and info.triggered:
-            pin(info.player, ["Virgin"])
+            pin(info.player, or_its_philosopher(info.player, "Virgin"))
             # The nomination only fires on a Townsfolk, or the Spy wearing
             # one. The Drunk is an Outsider, so a Drunk nominator is out.
             townsfolk = list(state.script.townsfolk)
@@ -3640,8 +3647,12 @@ def forced_roles(state):
                      if "townsfolk" in CHARACTERS[k].registers]
             pin(info.nominator, townsfolk + spies)
         elif isinstance(info, SlayerShot) and info.died:
-            pin(info.player, ["Slayer"])
-            pin(info.target, ["Imp", "Recluse"])
+            pin(info.player, or_its_philosopher(info.player, "Slayer"))
+            # Any Demon on the script, not only the Imp, and the Recluse;
+            # beside a Lleech its host may fall too, so nothing pinned
+            # (found 14.10.2026: a landed shot at a Po had no world).
+            if not _in_bag(state, "Lleech"):
+                pin(info.target, list(state.script.demons) + ["Recluse"])
     return pinned
 
 
@@ -3726,8 +3737,10 @@ def _a_zealot_kept_its_hand_down(world, state):
         if len(alive) - fell < 5:
             continue
         for seat in alive:
+            # And a Philosopher that took it (group 5, 14.10.2026).
             if seat not in voted and phase not in state.died_at(seat) \
-                    and world.role_at(seat, phase) == "Zealot":
+                    and (world.role_at(seat, phase) == "Zealot"
+                         or took_it(world, state, seat, "Zealot", phase)):
                 return True
     return False
 

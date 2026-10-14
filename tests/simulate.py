@@ -1987,7 +1987,8 @@ def _alsaahir_guesses(d, day, rng, heard):
     """
     phase = f"D{day}"
     for seat in range(d.n):
-        if d.role_at(seat, phase) != "Alsaahir":
+        # And a Philosopher that took it (group 5, 14.10.2026).
+        if not _acts_as(d, seat, "Alsaahir", phase):
             continue
         if seat not in d.alive_at(phase):
             continue
@@ -2940,8 +2941,10 @@ def _hold_a_day(d, day, rng):
     # poisoned changes nothing: it cannot know.
     zealots = set()
     if "Zealot" in d.script.keys:
+        # And a Philosopher that took it (group 5, 14.10.2026).
         zealots = {p for p in living
-                   if (d.token(p, phase) or d.role_at(p, phase)) == "Zealot"}
+                   if (d.token(p, phase) or d.role_at(p, phase)) == "Zealot"
+                   or _took(d, p, "Zealot", phase)}
 
     # An Organ Grinder with its ability — not drunk by its own choice nor
     # by anything else — has everybody vote with their eyes closed, and
@@ -2980,7 +2983,7 @@ def _hold_a_day(d, day, rng):
             princess = None
     if "Golem" in d.script.keys:
         golem = next((p for p in living
-                      if d.role_at(p, phase) == "Golem"
+                      if _acts_as(d, p, "Golem", phase)
                       and p not in d.golem_spent and p != cursed), None)
         if golem is not None and rng.random() < 0.3:
             nominators = [golem] + [p for p in nominators if p != golem]

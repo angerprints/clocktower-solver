@@ -87852,61 +87852,4829 @@
     "game_over": false
    },
    "expect": {
-    "valid": 93,
+    "valid": 12,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 0.1717,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.1717
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 73.0341,
-      "demon_pct": 23.8274,
-      "drunk_pct": 0.0,
-      "lying_pct": 73.0341
-     },
-     {
-      "evil_pct": 9.9417,
+      "evil_pct": 100.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 9.9417
+      "lying_pct": 100.0
      },
      {
-      "evil_pct": 19.3501,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 19.3501
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 12.3118,
-      "demon_pct": 6.3669,
-      "drunk_pct": 0.0,
-      "lying_pct": 12.3118
-     },
-     {
-      "evil_pct": 83.063,
-      "demon_pct": 69.8057,
-      "drunk_pct": 0.0,
-      "lying_pct": 83.063
-     },
-     {
-      "evil_pct": 2.1276,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 2.1276
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      }
     ],
     "blame": {
      "2": {
       "0": {
-       "Demon": 0.5976,
-       "Lycanthrope": 0.4024
+       "Demon": 0.5,
+       "Lycanthrope": 0.5
       }
      },
      "3": {
       "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-slayer-shot",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Slayer"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-slayer-shot-at-a-po",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Po",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Slayer"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-slayer-virgin",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Slayer"
+     },
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 3,
+      "nominator": 0,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "VirginNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-slayer-golem",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "D1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Slayer"
+     },
+     {
+      "type": "GolemNomination",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "GolemNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-virgin-shot",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Virgin"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-virgin-shot-at-a-po",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Po",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Virgin"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-virgin-virgin",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Virgin"
+     },
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 3,
+      "nominator": 0,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-virgin-golem",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "D1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Virgin"
+     },
+     {
+      "type": "GolemNomination",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "GolemNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-golem-shot",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Golem"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-golem-shot-at-a-po",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Po",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Golem"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-golem-virgin",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Golem"
+     },
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 3,
+      "nominator": 0,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "VirginNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-golem-golem",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "D1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Golem"
+     },
+     {
+      "type": "GolemNomination",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-alsaahir-shot",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Alsaahir"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-alsaahir-shot-at-a-po",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Po",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Alsaahir"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-alsaahir-virgin",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Alsaahir"
+     },
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 3,
+      "nominator": 0,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "VirginNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-alsaahir-golem",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "D1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Alsaahir"
+     },
+     {
+      "type": "GolemNomination",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "GolemNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-zealot-shot",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Zealot"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-zealot-shot-at-a-po",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Po",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Zealot"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-zealot-virgin",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Zealot"
+     },
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 3,
+      "nominator": 0,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "VirginNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-zealot-golem",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "D1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Zealot"
+     },
+     {
+      "type": "GolemNomination",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "GolemNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-butler-shot",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Butler"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-butler-shot-at-a-po",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Po",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Butler"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-butler-virgin",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Butler"
+     },
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 3,
+      "nominator": 0,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "VirginNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-butler-golem",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "D1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Butler"
+     },
+     {
+      "type": "GolemNomination",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "GolemNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-chef-shot",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-chef-shot-at-a-po",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Po",
+      "events": [
+       "D1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 3,
+      "target": 6,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "SlayerShot on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-chef-virgin",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 3,
+      "nominator": 0,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "VirginNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-7-philosopher-chef-golem",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "D1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Philosopher",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "ScarletWoman",
+      "events": []
+     },
+     {
+      "claim": "Imp",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Chef"
+     },
+     {
+      "type": "GolemNomination",
+      "night": 1,
+      "player": 3,
+      "target": 0,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Philosopher by day",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "chef",
+      "empath",
+      "washerwoman",
+      "investigator",
+      "monk",
+      "drunk",
+      "saint",
+      "recluse",
+      "poisoner",
+      "scarletwoman",
+      "spy",
+      "imp",
+      "po"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 0,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "GolemNomination on night 1, seat 4"
+      }
+     ],
+     "complete": true
+    }
+   }
+  },
+  {
+   "name": "x-by-day-played-42",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Banshee",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [
+       "D2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Ravenkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Golem",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 1,
+      "role": "Golem"
+     },
+     {
+      "type": "GolemNomination",
+      "night": 2,
+      "player": 1,
+      "target": 4,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "poisoner",
+      "snakecharmer",
+      "princess",
+      "flowergirl",
+      "dreamer",
+      "clockmaker",
+      "ravenkeeper",
+      "cultleader",
+      "undertaker",
+      "banshee",
+      "saint",
+      "widow",
+      "wraith",
+      "scarletwoman",
+      "imp",
+      "zombuul",
+      "shabaloth",
+      "lleech"
+     ]
+    },
+    "quiet_nights": [
+     2,
+     3,
+     4
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 228,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 23.6594,
+      "demon_pct": 11.8297,
+      "drunk_pct": 0.0,
+      "lying_pct": 23.6594
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 28.0113,
+      "demon_pct": 16.1816,
+      "drunk_pct": 0.0,
+      "lying_pct": 28.0113
+     },
+     {
+      "evil_pct": 16.9765,
+      "demon_pct": 4.9035,
+      "drunk_pct": 0.0,
+      "lying_pct": 8.4883
+     },
+     {
+      "evil_pct": 11.8297,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 11.8297
+     },
+     {
+      "evil_pct": 28.0113,
+      "demon_pct": 16.1816,
+      "drunk_pct": 0.0,
+      "lying_pct": 28.0113
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 50.9036,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-by-day-played-120",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Alsaahir",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Soldier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Choirboy",
+      "events": [
+       "D2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Shugenja",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Golem"
+     },
+     {
+      "type": "EvilTwinPair",
+      "night": 1,
+      "player": 6,
+      "a": 6,
+      "b": 4
+     },
+     {
+      "type": "ChoirboyInfo",
+      "night": 2,
+      "player": 4,
+      "target": 0
+     },
+     {
+      "type": "GolemNomination",
+      "night": 2,
+      "player": 3,
+      "target": 4,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "xaan",
+      "snakecharmer",
+      "soldier",
+      "shugenja",
+      "choirboy",
+      "fool",
+      "king",
+      "courtier",
+      "fortuneteller",
+      "savant",
+      "klutz",
+      "mastermind",
+      "eviltwin",
+      "cerenovus",
+      "fanggu",
+      "leviathan",
+      "pukka",
+      "zombuul"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 290,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 72.3171,
+      "demon_pct": 64.0544,
+      "drunk_pct": 0.0,
+      "lying_pct": 72.3171
+     },
+     {
+      "evil_pct": 65.6283,
+      "demon_pct": 32.378,
+      "drunk_pct": 0.0,
+      "lying_pct": 65.6283
+     },
+     {
+      "evil_pct": 5.2559,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.7812
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 46.5732,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 46.5732
+     },
+     {
+      "evil_pct": 0.0751,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0751
+     },
+     {
+      "evil_pct": 10.1504,
+      "demon_pct": 3.5676,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.1504
+     }
+    ],
+    "blame": {
+     "2": {
+      "5": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-by-day-played-106",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [
+       "S2",
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Lycanthrope",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Minstrel",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Soldier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Alsaahir"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 1,
+      "target": 4
+     },
+     {
+      "type": "Alsaahir",
+      "night": 2,
+      "player": 3,
+      "demons": [
+       6
+      ],
+      "minions": [
+       0
+      ],
+      "won": false
+     },
+     {
+      "type": "Alsaahir",
+      "night": 3,
+      "player": 3,
+      "demons": [
+       2
+      ],
+      "minions": [
+       1
+      ],
+      "won": true
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "widow",
+      "snakecharmer",
+      "pacifist",
+      "minstrel",
+      "lycanthrope",
+      "professor",
+      "chef",
+      "mathematician",
+      "empath",
+      "soldier",
+      "damsel",
+      "pithag",
+      "goblin",
+      "wraith",
+      "leviathan",
+      "lleech",
+      "po",
+      "shabaloth"
+     ]
+    },
+    "quiet_nights": [
+     2
+    ],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 16,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Demon": 1.0
+      },
+      "1": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-by-day-played-452",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Princess",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "FortuneTeller",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 1,
+      "role": "Alsaahir"
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 3,
+      "a": 6,
+      "b": 5,
+      "yes": true
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 4,
+      "target": 2
+     },
+     {
+      "type": "PrincessNominated",
+      "night": 1,
+      "player": 0,
+      "target": 6
+     },
+     {
+      "type": "Alsaahir",
+      "night": 2,
+      "player": 1,
+      "demons": [
+       4
+      ],
+      "minions": [
+       5
+      ],
+      "won": false
+     },
+     {
+      "type": "KingInfo",
+      "night": 3,
+      "player": 5,
+      "role": "King"
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "philosopher",
+      "slayer",
+      "virgin",
+      "golem",
+      "alsaahir",
+      "zealot",
+      "butler",
+      "marionette",
+      "snakecharmer",
+      "king",
+      "cultleader",
+      "princess",
+      "oracle",
+      "seamstress",
+      "fortuneteller",
+      "villageidiot",
+      "huntsman",
+      "damsel",
+      "psychopath",
+      "organgrinder",
+      "mezepheles",
+      "vortox",
+      "ojo",
+      "nodashii",
+      "imp"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 38,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 2.1475,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 13.1653,
+      "demon_pct": 10.9244,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.9244
+     },
+     {
+      "evil_pct": 2.1475,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 2.1475,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 6.3025,
+      "lying_pct": 93.6975
+     },
+     {
+      "evil_pct": 27.6377,
+      "demon_pct": 26.0504,
+      "drunk_pct": 0.0,
+      "lying_pct": 26.0504
+     },
+     {
+      "evil_pct": 63.0252,
+      "demon_pct": 63.0252,
+      "drunk_pct": 0.0,
+      "lying_pct": 63.0252
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "4": {
        "Demon": 1.0
       }
      }
