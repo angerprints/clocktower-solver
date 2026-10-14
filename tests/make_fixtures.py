@@ -1067,6 +1067,7 @@ def handmade():
     yield from the_philosopher_takes_group_2()
     yield from the_philosopher_takes_group_3()
     yield from the_philosopher_takes_group_4()
+    yield from the_farmers_heir()
 
 
 def the_eighth_five():
@@ -1483,6 +1484,35 @@ def the_philosopher_takes_group_4():
                      rng=rng)
     yield played("x-nine-bmr-played-philosopher-professor", NINE_BMR, 881,
                  8, 4)
+
+
+def the_farmers_heir():
+    """Stelle 58 (14.10.2026): whoever is handed a character says so,
+    and the search reads it. The boards of tests/test_farmer_heir.py and
+    played games: heirs on the first script of batch 8, one killed the
+    same night, and good players the Pit-Hag changed."""
+    sys.path.insert(0, str(HERE))
+    from test_farmer_heir import _payloads
+    from test_experimental_8 import EIGHT
+    names = ("row", "row-chef", "row-wrong-chef", "no-row", "two-heirs",
+             "pit-hag-unwritten", "pit-hag-unwritten-chef")
+    for name, payload in zip(names, _payloads()):
+        yield {"name": f"x-farmer-heir-{name}", "payload": payload}
+    for seed in PLAYED_HEIRS:
+        yield played(f"x-eight-played-farmer-heir-{seed}", EIGHT, seed, 7, 4)
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    for seed in PLAYED_PIT_HAG:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=("PitHag",))
+        yield played(f"x-pit-hag-played-{seed}", script, seed, 7, 4,
+                     rng=rng)
+
+
+# Played games: heirs on batch 8, and good players the Pit-Hag changed
+# saying so (mixed scripts with the Pit-Hag, seven players).
+PLAYED_HEIRS = (18, 75, 312)       # one heir; one killed and handing on; a Spy saying so
+PLAYED_PIT_HAG = (12, 39, 41)
 
 
 # Games where a Philosopher took one of group 4 and used it: the Ogre

@@ -817,6 +817,44 @@ def a_pit_hag_makes_somebody_else(world, state):
 
 
 @transition_rule
+def a_pit_hag_nobody_wrote_down(world, state):
+    """A seat said it became something, on a night a Pit-Hag could have
+    made it so, and no Pit-Hag row names it: that may have been the
+    Pit-Hag, whose choice an evil player does not say. Free, like any
+    choice evil keeps to itself (Stelle 58, C, 14.10.2026).
+
+    Only from the second night, with the Pit-Hag alive, and only for a
+    character nobody held as the night began — the Pit-Hag cannot make
+    one that is in play, so beside a Farmer who died that night it was
+    the Farmer.
+    """
+    if not _in_bag(state, "PitHag"):
+        return [((), 1.0)]
+    recorded = {(info.night, info.target) for info in state.infos
+                if getattr(info, "source_role", None) == "PitHag"
+                and getattr(info, "role", None)}
+    stories = [((), 1.0)]
+    for info in state.infos:
+        if not isinstance(info, BecameInfo) or info.night < 2 \
+                or info.role not in CHARACTERS \
+                or (info.night, info.player) in recorded:
+            continue
+        phase = f"N{info.night}"
+        before = _before(info.night, phase)
+        hag = world.find_at("PitHag", phase)
+        if hag is None or hag not in state.alive_set(phase):
+            continue
+        if any(world.role_at(p, before) == info.role
+               for p in range(state.n_players)):
+            continue
+        side = "evil" if world.evil_at(info.player, before) else "good"
+        made = Change(phase, info.player, info.role, side)
+        stories = (stories + [(changes + (made,), cost)
+                              for changes, cost in stories])[:48]
+    return stories
+
+
+@transition_rule
 def a_huntsman_finds_the_damsel(world, state):
     """A Damsel the Huntsman chose becomes a Townsfolk not in play.
 
@@ -948,8 +986,14 @@ def a_farmer_hands_it_on(world, state):
                 continue
             seat = holders[0]
             after = f"D{night}"
-            heirs = [p for p in state.alive_set(phase)
-                     if p != seat and _could_be_good(view, p, phase)]
+            # Whoever said they became the Farmer that night first, so the
+            # cap below keeps them (Stelle 58, 14.10.2026).
+            told = {info.player for info in state.infos
+                    if isinstance(info, BecameInfo) and info.role == "Farmer"
+                    and info.night == night}
+            heirs = sorted((p for p in state.alive_set(phase)
+                            if p != seat and _could_be_good(view, p, phase)),
+                           key=lambda p: (p not in told, p))
             # "Nothing happened" stays among the answers, and it is the
             # droisoned case: a droisoned Farmer's ability does not
             # function, so the character is not handed on at all.
@@ -960,9 +1004,19 @@ def a_farmer_hands_it_on(world, state):
             # it runs. So both stories are offered and the plan pays for
             # whichever it needs, the same shape as the Barber's "may".
             grown.append((changes, cost))
-            for heir in heirs:
-                grown.append((changes + (Change(after, heir, "Farmer", None),),
-                              cost))
+
+            # An heir killed the same night hands it on at once, so the
+            # next day two may say they became the Farmer, one of them
+            # alive (Stelle 58, D, 14.10.2026).
+            def hand_on(made, gone):
+                for heir in heirs:
+                    if heir in gone:
+                        continue
+                    more = made + (Change(after, heir, "Farmer", None),)
+                    grown.append((more, cost))
+                    if phase in state.died_at(heir):
+                        hand_on(more, gone | {heir})
+            hand_on(changes, {seat})
         stories = grown[:48]
     return stories
 
@@ -3203,7 +3257,7 @@ def mastermind_days(state, allow_good_lies=False, max_worlds=200_000):
 
     was_demon = {seat: 0.0 for _day, seat in executed}
     total = 0.0
-    for world in iter_worlds(state.n_players, state.claims,
+    for world in iter_worlds(state.n_players, state.dealt_claims(),
                              getattr(state, "certainties", None),
                              allow_good_lies, forced_roles(state),
                              getattr(state, "wakes", None), state.script,
@@ -6172,7 +6226,7 @@ def is_lying(world, state, p):
     # Somebody handed the wrong token is not lying when they name it.
     # That holds however evil the character underneath turns out to be —
     # a Marionette believes what it says as sincerely as the Drunk does.
-    claim = state.claims.get(p)
+    claim = state.dealt_claims().get(p)
     if claim and not (role == claim
                       or (believes_another(role) and believed == claim)):
         return True
@@ -6320,7 +6374,7 @@ def prior_weight(world, state):
     bluffs = defaultdict(int)
     for p in range(state.n_players):
         if is_evil(world.roles[p]) and is_lying(world, state, p):
-            claimed = state.claims.get(p)
+            claimed = state.dealt_claims().get(p)
             if claimed:
                 bluffs[claimed] += 1
 
@@ -6353,7 +6407,7 @@ def prior_weight(world, state):
                 else:
                     w *= TOWNSFOLK_LIE_PENALTY
             else:
-                claim = state.claims.get(p)
+                claim = state.dealt_claims().get(p)
                 if claim and (in_play(world, claim) or bluffs[claim] > 1):
                     w *= BLUFF_COLLISION_PENALTY
         step = reads.get(p, 0)
@@ -6389,7 +6443,7 @@ def ranked(valid, state):
 # --------------------------------------------------------------------------
 
 def solve(state, allow_good_lies=False, max_worlds=DEFAULT_MAX_WORLDS):
-    all_worlds = enumerate_worlds(state.n_players, state.claims,
+    all_worlds = enumerate_worlds(state.n_players, state.dealt_claims(),
                                   getattr(state, "certainties", None),
                                   allow_good_lies=allow_good_lies,
                                   max_worlds=max_worlds,
@@ -6424,7 +6478,7 @@ def sampled_rows(state, dives=8000, rng=None, allow_good_lies=False):
     # all — it returned nothing on the first real board it was handed.
     if not allow_good_lies:
         setups = _sampling_setups(
-            state.n_players, state.claims,
+            state.n_players, state.dealt_claims(),
             getattr(state, "certainties", None), False, forced_roles(state),
             getattr(state, "wakes", None), state.script or DEFAULT,
             tuple(getattr(state, "fabled", ())))
@@ -6433,7 +6487,7 @@ def sampled_rows(state, dives=8000, rng=None, allow_good_lies=False):
 
     seen, weights = [], []
     for world, share in sample_worlds(
-            state.n_players, state.claims,
+            state.n_players, state.dealt_claims(),
             certainties=getattr(state, "certainties", None),
             allow_good_lies=allow_good_lies,
             forced=forced_roles(state),
@@ -6659,7 +6713,7 @@ def pilot_size(state, allow_good_lies=False, walks=1500, rng=None):
     total = 0.0
     walked = 0
     for _world, stands_for in sample_worlds(
-            state.n_players, state.claims, getattr(state, "certainties", None),
+            state.n_players, state.dealt_claims(), getattr(state, "certainties", None),
             allow_good_lies, forced_roles(state),
             getattr(state, "wakes", None), dives=walks, rng=rng,
             script=state.script, fabled=getattr(state, "fabled", ())):
@@ -6701,7 +6755,7 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
     # world's cost is the same story that says which rows held.
     told = [defaultdict(float) for _ in state.infos]
 
-    for world in iter_worlds(n, state.claims,
+    for world in iter_worlds(n, state.dealt_claims(),
                              getattr(state, "certainties", None),
                              allow_good_lies, forced_roles(state),
                              getattr(state, "wakes", None), state.script,
@@ -6882,7 +6936,7 @@ def estimate(state, allow_good_lies=False, dives=25_000, keep_samples=8,
     best = []
 
     for world, stands_for in sample_worlds(
-            n, state.claims, getattr(state, "certainties", None),
+            n, state.dealt_claims(), getattr(state, "certainties", None),
             allow_good_lies, forced_roles(state),
             getattr(state, "wakes", None), dives=dives, rng=rng,
             script=state.script, fabled=getattr(state, "fabled", ())):
@@ -7018,7 +7072,7 @@ def _anything_fits(state, allow_good_lies=False, ceiling=120_000):
     the second return value saying whether the search finished.
     """
     seen = 0
-    for world in iter_worlds(state.n_players, state.claims,
+    for world in iter_worlds(state.n_players, state.dealt_claims(),
                              getattr(state, "certainties", None),
                              allow_good_lies, forced_roles(state),
                              getattr(state, "wakes", None), state.script,
@@ -7085,7 +7139,7 @@ def claims_cannot_fill_the_bag(state, allow_good_lies=False):
     claimed_outsider = 0
     hidden = set()
     for seat in range(n):
-        claim = state.claims.get(seat)
+        claim = state.dealt_claims().get(seat)
         certainty = (getattr(state, "certainties", None) or {}).get(seat, "")
         if claim is None or certainty in ("hiding", "unsure") or allow_good_lies:
             open_seats += 1

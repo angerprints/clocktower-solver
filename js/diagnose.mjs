@@ -25,7 +25,7 @@ import {bags, eachWorld} from "./worlds.mjs";
 export function anythingFits(state, allowGoodLies = false,
                              ceiling = 120_000) {
   let seen = 0, found = false, complete = true;
-  eachWorld(state.nPlayers, state.claims, {
+  eachWorld(state.nPlayers, state.dealtClaims(), {
     certainties: state.certainties,
     allowGoodLies,
     forced: forcedRoles(state),
@@ -96,7 +96,7 @@ export function claimsCannotFillTheBag(state, allowGoodLies = false) {
   let openSeats = 0, claimedOutsider = 0;
   const hidden = new Set();
   for (let seat = 0; seat < n; seat++) {
-    const claim = state.claims[seat];
+    const claim = state.dealtClaims()[seat];
     const certainty = (state.certainties || {})[seat] || "";
     if (!claim || certainty === "hiding" || certainty === "unsure" ||
         allowGoodLies) {

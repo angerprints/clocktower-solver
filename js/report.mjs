@@ -64,7 +64,7 @@ export const nightDeathFactor = night =>
 export function isLying(world, state, p) {
   const role = world.roles[p];
   const believed = world.believes[p];
-  const claim = state.claims[p];
+  const claim = state.dealtClaims()[p];
   if (claim && !(role === claim ||
                  (believesAnother(role) && believed === claim))) return true;
   const said = (state.wakes || {})[p];
@@ -120,7 +120,7 @@ export function priorWeight(world, state) {
   const bluffs = {};
   for (let p = 0; p < state.nPlayers; p++) {
     if (isEvil(world.roles[p]) && isLying(world, state, p)) {
-      const claimed = state.claims[p];
+      const claimed = state.dealtClaims()[p];
       if (claimed) bluffs[claimed] = (bluffs[claimed] || 0) + 1;
     }
   }
@@ -137,7 +137,7 @@ export function priorWeight(world, state) {
         else if (madness > 0) { w *= PRIORS.CERENOVUS_MADNESS_PENALTY; madness--; }
         else w *= PRIORS.TOWNSFOLK_LIE_PENALTY;
       } else {
-        const claim = state.claims[p];
+        const claim = state.dealtClaims()[p];
         if (claim && (inPlay(world, claim) || (bluffs[claim] || 0) > 1))
           w *= PRIORS.BLUFF_COLLISION_PENALTY;
       }
@@ -175,7 +175,7 @@ const searchOptions = (state, allowGoodLies) => ({
 export function solve(state, allowGoodLies = false,
                       maxWorlds = DEFAULT_MAX_WORLDS) {
   const all = [];
-  eachWorld(state.nPlayers, state.claims,
+  eachWorld(state.nPlayers, state.dealtClaims(),
             searchOptions(state, allowGoodLies), world => {
     all.push(world);
     return all.length < maxWorlds;
@@ -337,7 +337,7 @@ export function margin(pct, ess) {
 export function pilotSize(state, allowGoodLies = false, walks = 1500,
                           rng = null) {
   let total = 0.0, walked = 0;
-  sampleWorlds(state.nPlayers, state.claims, {
+  sampleWorlds(state.nPlayers, state.dealtClaims(), {
     ...searchOptions(state, allowGoodLies),
     dives: walks, rng: rng || new Rng(0),
   }, (_world, standsFor) => { walked += 1; total += standsFor; });
@@ -396,7 +396,7 @@ export function estimate(state, allowGoodLies = false, dives = 25000,
     evil: 0, demon: 0, drunk: 0, lying: 0, roles: {},
   }));
 
-  sampleWorlds(n, state.claims, {
+  sampleWorlds(n, state.dealtClaims(), {
     ...searchOptions(state, allowGoodLies), dives, rng,
   }, (world, standsFor) => {
     walked += 1;
@@ -487,7 +487,7 @@ export function analyze(state, allowGoodLies = false,
     evil: 0, demon: 0, drunk: 0, lying: 0, roles: {},
   }));
 
-  eachWorld(n, state.claims, searchOptions(state, allowGoodLies), world => {
+  eachWorld(n, state.dealtClaims(), searchOptions(state, allowGoodLies), world => {
     legal += 1;
     // Against the pilot's estimate of how many worlds there are, which is
     // a guess; held below 100 % until the walk really ends.

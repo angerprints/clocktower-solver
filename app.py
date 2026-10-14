@@ -511,7 +511,11 @@ def run_solve(payload):
                     "BansheeAnnounced", "FearmongerChose",
                     "VizierAnnounced", "BlindVote", "LeviathanAnnounced",
                     # Said in daylight, and the dead may speak.
-                    "DamselGuess")
+                    "DamselGuess",
+                    # Handed a character as they died: a Farmer's heir
+                    # killed the same night hands it on again, and both
+                    # say so the next day (Stelle 58, D, 14.10.2026).
+                    "Became")
     for d in raw_infos:
         speaker = _int(d, "player", 0)
         night = _int(d, "night", 1)

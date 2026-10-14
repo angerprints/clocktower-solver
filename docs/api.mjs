@@ -318,7 +318,9 @@ export function readBoard(payload) {
                          "BansheeAnnounced", "FearmongerChose",
                          "VizierAnnounced", "BlindVote", "LeviathanAnnounced",
                          // Said in daylight, and the dead may speak.
-                         "DamselGuess"];
+                         "DamselGuess",
+                         // Handed a character as they died (Stelle 58, D).
+                         "Became"];
     const speaker = Number(row.player || 0);
     const night = Number(row.night || 1);
     if ((deaths[speaker] || []).includes(`N${night}`) &&

@@ -334,6 +334,36 @@ class GameState:
             self._philosophies = got
         return got
 
+    def dealt_claims(self):
+        """The claims as the search reads them.
+
+        A seat that said it was handed its character ("Claim changed")
+        is searched as what it said before: the first `was` of its rows,
+        not what it claims now. A Farmer's heir, a Pit-Hag's good victim,
+        a Barber's swap (Stelle 58, B, 14.10.2026). Its claim still says
+        what it is now, which is whose readings it gives.
+
+        Only for a seat that has a claim, so a board with one claim set
+        aside keeps it set aside.
+        """
+        key = (len(self.infos), tuple(sorted((self.claims or {}).items())))
+        got = self.__dict__.get("_dealt_claims")
+        if got is not None and got[0] == key:
+            return got[1]
+        out = dict(self.claims or {})
+        first = {}
+        for info in self.infos:
+            if type(info).__name__ != "BecameInfo" or not info.was \
+                    or info.player not in out \
+                    or info.was not in self.script.keys:
+                continue
+            if info.player not in first or info.night < first[info.player][0]:
+                first[info.player] = (info.night, info.was)
+        for seat, (_night, was) in first.items():
+            out[seat] = was
+        self._dealt_claims = (key, out)
+        return out
+
     def alive_set(self, phase):
         """`alive_at` as a set, cached. Sources ask for it per night of
         every world, and building it each time is most of what the

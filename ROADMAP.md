@@ -1242,6 +1242,44 @@ Am Tor gefunden und behoben:
 | Korpus | 458 | 507 (49 neue, davon sechs gespielte Partien und die Partie 881 aus Batch 9). Ein altes Brett geändert: `x-nine-bmr-played-philosopher` 0 → 100 Welten (siehe oben). Python und JavaScript gleich |
 | Testsammlung | 1.618 grün | 1.629 grün, 2 übersprungen |
 
+### Stelle 58: Wer einen Charakter bekommt, sagt es · *erledigt am 14.10.2026*
+
+Der Bericht steht in `claude/stelle-58-farmer-erbe.md`.
+
+**Deine Antworten vom 14.10.2026:** A, B, C, F Weg 1. D: Stirbt der Erbe in derselben Nacht, gibt es sofort einen neuen Erben; am nächsten Tag können zwei sagen, dass sie Farmer geworden sind, nur einer lebt. E: Der Spion kann es sagen oder nicht.
+
+| | Was jetzt gilt |
+|---|---|
+| A | Der Erbe des Farmers sagt es immer, als Zeile „Claim changed“ (jetzt Farmer, vorher X), und behauptet danach den Farmer. |
+| B | Die Suche liest die Zeile: Ein Spieler mit einer solchen Zeile wird als sein erstes „vorher“ gesucht, nicht als sein jetziger Claim. Das gilt für jede solche Zeile, also auch für Grubenweib, Barbier und die Unschuld, die der Jäger findet. Wer so einen Charakter bekommen hat, lügt nicht. Python und JavaScript. |
+| C | „Wurde X“ erklärt der Solver mit einem Farmer, der in dieser Nacht starb, mit den Wegen, die es schon gab (Jinx mit dem Leviathan, Barbier, Jäger), oder neu mit einem Grubenweib, dessen Wahl niemand eingetragen hat: kostenlos, ab Nacht 2, das Grubenweib lebt, und nur für einen Charakter, der zu Beginn der Nacht nicht im Spiel war. |
+| D | Ein Erbe, der in derselben Nacht stirbt, gibt den Farmer sofort weiter, in Simulator und Solver. Die Seite nimmt die Zeile „Claim changed“ auch von einem Spieler an, der in dieser Nacht starb. |
+| E | Ein Spion, der Farmer wird, sagt es in der Hälfte der Partien (dann ohne „vorher“) und behauptet danach den Farmer; sonst behält er seine Tarnung. |
+| F | Ein guter Spieler, den das Grubenweib verwandelt, sagt es mit derselben Zeile. Zwei solche Zeilen eines Spielers in einer Nacht werden eine. |
+
+**Über die Seite gelöst** (7 Spieler, 4 Nächte, 3.000 Partien je Zeile):
+
+| Partien | vorher ohne Welt | nachher |
+|---|---|---|
+| Batch 8, erstes Skript, 425 mit Farmer-Erben | 74 | 10 |
+| gemischt mit Farmer, 312 mit Farmer-Erben | 50 und 2 Fehlermeldungen | 11 und 1 |
+| gemischt mit Grubenweib, 197 mit einem guten Opfer | 15 und 1 | 7 und 1 |
+
+Alle 10 übrigen auf Batch 8 haben einen guten Spieler, der grundlos einen anderen Charakter behauptet (Modell der Claims). Die Seite sucht solche Lügen nur, wenn man sie erlaubt. Die übrigen gemischten, die ich angesehen habe, sind dieselbe Klasse.
+
+**Das Tor:**
+
+| Was | vorher | nachher |
+|---|---|---|
+| Sects & Violets, 3.000 Partien | 16 verworfen | dieselben 16 |
+| Batch 8, beide Skripte | 0 | 0 |
+| Gemischt ohne Pflicht | 5 | dieselben 5 |
+| Gemischt mit Grubenweib und Farmer | 14 | dieselben 14, Night-Walk gleich (11 von 7.998) |
+| Night-Walk Sects & Violets, Batch 8 | 0 | 0 |
+| Prüfsummen | | TB und Oster-Skript gleich, S&V neu (`2ecc6b64b260df86`), weil Opfer des Grubenweibs es jetzt sagen |
+| Korpus | 507 | 520 (13 neue). Neun gespielte Bretter geben mehr Welten, weil dort jetzt die Zeile steht oder die Suche sie liest (Unschuld, die der Jäger findet; Jinx Leviathan–Farmer; Farmer-Erben). Python und JavaScript gleich |
+| Testsammlung | 1.629 grün | 1.644 grün, 2 übersprungen |
+
 ### Als Nächstes
 
 **1 · Philosoph, Schritt 2, Gruppen 5 und 6.** Gruppe 5 (am Tag): Dämonenjäger, Jungfrau, Golem, Alsaahir, Eiferer, Butler. Gruppe 6 (Spielende und Registrieren): Heilige, Ketzer, Politiker, Einsiedler, Unschuld, Großmutter, König, Chorknabe; vorher deine Antwort zu F. Dazu I (das Plättchen für Verrückte und Trunkenbold). Danach der erste große Charakter einzeln, oder die Nachtreihenfolge, die du ans Ende gestellt hast.
@@ -1323,7 +1361,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 56 | Solver, Simulator, Night-Walk | **Ein Philosoph hat eine genommene Fähigkeit, die handelt, meist nicht.** Gebaut nur für Schlangenbeschwörer, Glücksspieler, Nachtwächter, Banshee und Höfling. Gastwirt, Segler, Mönch, Teedame, Schwätzer, Bastler, Exorzist, Professor, Minnesänger, Mondkind, Pazifist und weitere schauen nur auf den Halter des Plättchens, in allen drei Werkzeugen gleich. Aufgefallen im Night-Walk: 9 von 8.233 Nächten auf dem zweiten Skript aus Batch 9. Am Tisch würde ein Solver eine Nacht falsch erklären, in der ein Philosoph als Gastwirt jemanden gerettet hat. Untersucht am 12.10.2026. Deine Entscheidung: Weg 1, in zwei Schritten. *Schritt 1 erledigt am 13.10.2026* (Liebchen, Barbier, Tollpatsch, Mutant). Schritt 2 in sechs Gruppen: *Gruppe 1 erledigt am 13.10.2026* (Mönch, Soldat, Gastwirt, Segler, Teedame, Narr, Bürgermeister, Pazifist, Exorzist, Prinzessin), *Gruppe 2 auch* (Schwätzer, Bastler, Mondkind, Werwolf, Akrobatin), *Gruppe 3 auch* (Minnesänger, Prediger, Schläger, Puzzlemeister), *Gruppe 4 am 14.10.2026* (Farmer, Professor, Jäger, Feenkind, Kultführer, Oger), Gruppen 5 und 6 offen. |
 | 57 | erledigt | **Werwolf, Xaan und Adlige.** *Behoben am 12.10.2026:* Eine Auskunft, die nur mit der Falschen Pfote stimmt, darf auch falsch gewesen sein, weil ihre Quelle gestört war; je Nacht werden beide Wege versucht. War 1 von 3.000 gemischten Partien mit Werwolf (Seed 1177). |
 | 54 | Solver | **Der böse Bürger des Kopfgeldjägers mit falschem Claim** wird nur an einem Sitz gefunden, der als nicht vertrauenswürdig markiert ist. Sonst nimmt die Suche an, dass er seinen echten Charakter nennt. Der Jinx Leviathan–Mönch ist nicht gebaut, weil die Wahl des Mönchs nirgends steht. |
-| 58 | Seite, Solver | **Der Erbe des Farmers sagt nur „Farmer“.** Die Seite nimmt bei einem guten Spieler an, dass er seinen ausgeteilten Charakter nennt. War der alte Charakter des Erben wichtig (gemischte Partie 693 mit 7 Spielern: als Teedame hatte er am Vortag seinen Nachbarn vor der Hinrichtung bewahrt), findet sie keine Welt. Gilt genauso beim echten Farmer. Aufgefallen am 14.10.2026 bei Gruppe 4 des Philosophen, nicht gebaut. |
+| 58 | erledigt | **Der Erbe des Farmers sagt nur „Farmer“.** *Behoben am 14.10.2026* (A bis F, siehe Abschnitt „Stelle 58“). Die Seite nimmt bei einem guten Spieler an, dass er seinen ausgeteilten Charakter nennt. War der alte Charakter des Erben wichtig (gemischte Partie 693 mit 7 Spielern: als Teedame hatte er am Vortag seinen Nachbarn vor der Hinrichtung bewahrt), findet sie keine Welt. Gilt genauso beim echten Farmer. Aufgefallen am 14.10.2026 bei Gruppe 4 des Philosophen, nicht gebaut. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

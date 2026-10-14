@@ -1114,7 +1114,56 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             if d.game_ends_after is not None and night >= d.game_ends_after:
                 break
 
-    return d, heard
+    return d, _one_change_a_night(heard)
+
+
+def _one_change_a_night(heard):
+    """Two "Claim changed" rows for one seat on one night become one:
+    what it was before the first, what it is after the last. The page
+    takes one a night (a Pit-Hag's Klutz handed the Farmer the same
+    night, say)."""
+    from botc.info import BecameInfo
+    first = {}
+    out = []
+    for row in heard:
+        if isinstance(row, BecameInfo):
+            key = (row.night, row.player)
+            if key in first:
+                merged = BecameInfo(row.night, row.player, role=row.role,
+                                    was=first[key].was or row.was)
+                out[out.index(first[key])] = merged
+                first[key] = merged
+                continue
+            first[key] = row
+        out.append(row)
+    return out
+
+
+def _claimed_before(d, seat, phase):
+    """What this seat claimed before a change at this moment: the last
+    character it was handed, or what it was dealt as it believes it."""
+    from botc.info import phase_index
+    here = phase_index(phase)
+    earlier = [what for when, who, what in d.changes
+               if who == seat and phase_index(when) < here]
+    return earlier[-1] if earlier else d.apparent(seat)
+
+
+def _says_it_became(d, night, seat, role, phase, rng):
+    """The "Claim changed" row a seat handed a character files (Stelle 58,
+    14.10.2026): always when it is good (A, F); an evil one, a Spy made
+    the Farmer, may keep its bluff instead (E), and then the row has no
+    "was" — what it bluffed is decided later, with the claims."""
+    from botc.info import BecameInfo
+    if d.side_at(seat, phase) == "good":
+        d.said_by_others.append(BecameInfo(
+            night, seat, role=role, was=_claimed_before(d, seat, phase)))
+        return
+    if rng.random() < 0.5:
+        if not hasattr(d, "evil_told_became"):
+            d.evil_told_became = set()
+        d.evil_told_became.add(seat)
+        d.said_by_others.append(BecameInfo(night, seat, role=role, was=""))
 
 
 def _evil_has_won(d, phase):
@@ -1723,13 +1772,23 @@ def _farmer_hands_it_on(d, night, rng):
                 return True
             return bool({"townsfolk", "outsider"}
                         & CHARACTERS[role].registers)
-        heirs = [p for p in d.alive_at(phase)
-                 if p != seat and good_enough(p)]
-        if not heirs:
-            continue
-        # From the day after, like every change that follows an ability
-        # working: the Farmer was still the Farmer when it did.
-        d.changes.append((f"D{night}", rng.choice(heirs), "Farmer"))
+        # An heir killed the same night hands it on at once, so the next
+        # day two may say they became the Farmer, one of them alive
+        # (Stelle 58, D, 14.10.2026).
+        gone = {seat}
+        while True:
+            heirs = [p for p in d.alive_at(phase)
+                     if p not in gone and good_enough(p)]
+            if not heirs:
+                break
+            # From the day after, like every change that follows an
+            # ability working: the Farmer was still the Farmer when it did.
+            heir = rng.choice(heirs)
+            _says_it_became(d, night, heir, "Farmer", phase, rng)
+            d.changes.append((f"D{night}", heir, "Farmer"))
+            if d.deaths.get(heir) != phase or not d.working(heir, night):
+                break
+            gone = gone | {heir}
     # Its jinx with the Leviathan: "a chosen Farmer uses their ability
     # but does not die" (11.10.2026). The new one says so.
     lev, chosen = getattr(d, "lev_chose", {}).get(night, (None, None))
@@ -5451,7 +5510,9 @@ def _for_role(d, seat, role, night, rng):
         if not d.working(seat, night):
             return None
         # The side does not move: a Townsfolk turned into the Poisoner is
-        # a *good* Poisoner.
+        # a *good* Poisoner. A good one says what it became (Stelle 58, F).
+        if d.side_at(target, phase) == "good":
+            _says_it_became(d, night, target, became, phase, rng)
         d.changes.append((phase, target, became))
         return PitHagChoice(night, seat, target=target, role=became)
 

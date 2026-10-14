@@ -121,6 +121,12 @@ def claims_for(deal, rng, script=None):
         # Charmer were charged to whoever else claimed one (29.09.2026).
         became = [(when, who, what) for when, who, what in deal.changes
                   if who == seat]
+        # An evil seat that said it was handed a character (a Spy made the
+        # Farmer, Stelle 58, E): it claims what it became.
+        if became and seat in getattr(deal, "evil_told_became", ()):
+            claims[seat] = became[-1][2]
+            notes[seat] = f"the {role}, made the {claims[seat]}, saying so"
+            continue
         if became:
             when, _who, now = became[-1]
             if deal.side_at(seat, when) == "good" and now != role \

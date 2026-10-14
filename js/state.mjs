@@ -133,6 +133,27 @@ export class GameState {
     return this._philosophies;
   }
 
+  /** The claims as the search reads them: a seat that said it was handed
+   * its character ("Claim changed") is searched as what it said before,
+   * the first `was` of its rows (Stelle 58, B, 14.10.2026). Only for a
+   * seat that has a claim. */
+  dealtClaims() {
+    const key = `${this.infos.length}|${JSON.stringify(this.claims || {})}`;
+    if (this._dealtClaims && this._dealtClaims[0] === key)
+      return this._dealtClaims[1];
+    const out = {...(this.claims || {})};
+    const first = {};
+    for (const info of this.infos) {
+      if (info.type !== "Became" || !info.was || !(info.player in out)
+          || !this.script.keys.includes(info.was)) continue;
+      if (!(info.player in first) || info.night < first[info.player][0])
+        first[info.player] = [info.night, info.was];
+    }
+    for (const [seat, [, was]] of Object.entries(first)) out[seat] = was;
+    this._dealtClaims = [key, out];
+    return out;
+  }
+
   aliveSet(phase) {
     let cached = this._aliveSetCache.get(phase);
     if (!cached) {

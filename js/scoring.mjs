@@ -639,6 +639,36 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
   return [[changes, 1.0]];
 });
 
+/** A seat said it became something, on a night a Pit-Hag could have made
+ * it so, and no Pit-Hag row names it: that may have been the Pit-Hag,
+ * whose choice evil does not say. Free. From the second night, with the
+ * Pit-Hag alive, and only for a character nobody held as the night began
+ * (Stelle 58, C, 14.10.2026). See solver.py. */
+transitionRule(function aPitHagNobodyWroteDown(world, state) {
+  if (!inBag(state, "PitHag")) return [[[], 1.0]];
+  const recorded = new Set(state.infos
+    .filter(i => i.sourceRole === "PitHag" && i.role)
+    .map(i => `${i.night}|${i.target}`));
+  let stories = [[[], 1.0]];
+  for (const info of state.infos) {
+    if (info.type !== "Became" || info.night < 2 || !CHARACTERS[info.role]
+        || recorded.has(`${info.night}|${info.player}`)) continue;
+    const phase = `N${info.night}`;
+    const before = `E${info.night - 1}`;
+    const hag = world.findAt("PitHag", phase);
+    if (hag === null || !state.aliveSet(phase).has(hag)) continue;
+    let held = false;
+    for (let p = 0; p < state.nPlayers; p++)
+      if (world.roleAt(p, before) === info.role) held = true;
+    if (held) continue;
+    const side = world.evilAt(info.player, before) ? "evil" : "good";
+    const made = change(phase, info.player, info.role, side);
+    stories = [...stories, ...stories.map(([c, w]) => [[...c, made], w])]
+      .slice(0, 48);
+  }
+  return stories;
+});
+
 /** Choosing the Demon swaps character and side, both ways.
  *
  * The only handover where the star moves *sideways* rather than on: the
@@ -742,12 +772,27 @@ transitionRule(function aFarmerHandsItOn(world, state) {
         continue;
       }
       const seat = holders[0];
+      // Whoever said they became the Farmer that night first, so the cap
+      // below keeps them (Stelle 58, 14.10.2026).
+      const told = new Set(state.infos
+        .filter(i => i.type === "Became" && i.role === "Farmer"
+                && i.night === night).map(i => i.player));
       const heirs = [...state.aliveSet(phase)]
-        .filter(p => p !== seat && couldBeGood(view, p, phase));
+        .filter(p => p !== seat && couldBeGood(view, p, phase))
+        .sort((a, b) => (told.has(a) ? 0 : 1) - (told.has(b) ? 0 : 1)
+                        || a - b);
       grown.push([changes, cost]);
-      for (const heir of heirs)
-        grown.push([[...changes, change(`D${night}`, heir, "Farmer", null)],
-                    cost]);
+      // An heir killed the same night hands it on at once (Stelle 58, D).
+      const handOn = (made, gone) => {
+        for (const heir of heirs) {
+          if (gone.has(heir)) continue;
+          const more = [...made, change(`D${night}`, heir, "Farmer", null)];
+          grown.push([more, cost]);
+          if (state.diedAt(heir).includes(phase))
+            handOn(more, new Set([...gone, heir]));
+        }
+      };
+      handOn(changes, new Set([seat]));
     }
     stories = grown.slice(0, 48);
   }
