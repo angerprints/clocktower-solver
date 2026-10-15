@@ -349,13 +349,14 @@ def _movers_in(world, state):
     the world — dealt, or made by a recorded Pit-Hag creation — and has
     the death that sets it off, an Ogre only if one was dealt.
     """
-    made, swapped = set(), False
+    made, swapped, last_swap = set(), False, 0
     for info in state.infos:
         source = getattr(info, "source_role", None)
         if source == "PitHag" and getattr(info, "role", None):
             made.add(info.role)
         elif source == "SnakeCharmer" and getattr(info, "swapped", False):
             swapped = True
+            last_swap = max(last_swap, info.night)
     deaths = [(s, p) for s, p in state.death_phases() if p]
     phases = [p for _s, p in deaths]
     at_night = any(p[0].upper() == "N" for p in phases)
@@ -366,6 +367,18 @@ def _movers_in(world, state):
     # Huntsman (13.10.2026).
     roles |= {taken for taken, _since in (state.philosophies() or {}).values()}
     count = int(swapped) + int(bool(made))
+    # The Demon handed on before a Snake Charmer chose it: a Scarlet Woman
+    # stepping up in daylight, or a starpass. Run all at once, the charmer
+    # (slot 11) is asked before the lineage (last) and looks for the Demon
+    # where it was dealt, so the swap with the heir was never offered
+    # (Stelle 60, 15.10.2026).
+    if swapped:
+        dealt = {seat for seat, role in enumerate(world.roles)
+                 if TEAM[role] == "demon"}
+        if any(seat in dealt
+               and phase_index(p) < phase_index(f"N{last_swap}")
+               for seat, p in deaths):
+            count += 1
     # A Huntsman that chose, and may have found the Damsel (10.10.2026).
     if "Huntsman" in roles and any(isinstance(info, HuntsmanChoice)
                                    for info in state.infos):
