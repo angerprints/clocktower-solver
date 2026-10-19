@@ -1071,6 +1071,7 @@ def handmade():
     yield from the_philosopher_takes_group_5()
     yield from the_slayer_and_the_virgin()
     yield from the_philosopher_takes_group_6()
+    yield from stelle_60()
 
 
 def the_eighth_five():
@@ -1566,6 +1567,23 @@ def the_slayer_and_the_virgin():
         script = play_games.an_awkward_script(
             rng, must_have=("Philosopher", "Slayer", "Virgin"))
         yield played(f"x-in-the-open-played-{seed}", script, seed, 7, 4,
+                     rng=rng)
+
+
+def stelle_60():
+    """Stelle 60 (19.10.2026): played games the solver lost. A Snake
+    Charmer choosing the Scarlet Woman after she stepped up in daylight
+    (a); a Savant asking on the day of a Slayer's hit, before it (b); a
+    Savant told about a Cult Leader that had turned, or a Goon, with and
+    without a Vortox."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_stelle_60 import PLAYED
+    for name, seed, n, nights, must in PLAYED:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=must)
+        yield played(f"x-stelle-60-{name}-{seed}", script, seed, n, nights,
                      rng=rng)
 
 

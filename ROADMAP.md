@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 14.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 19.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -1366,9 +1366,29 @@ Alle 10 übrigen auf Batch 8 haben einen guten Spieler, der grundlos einen ander
 | Korpus | 507 | 520 (13 neue). Neun gespielte Bretter geben mehr Welten, weil dort jetzt die Zeile steht oder die Suche sie liest (Unschuld, die der Jäger findet; Jinx Leviathan–Farmer; Farmer-Erben). Python und JavaScript gleich |
 | Testsammlung | 1.629 grün | 1.644 grün, 2 übersprungen |
 
+### Stelle 60: Schlangenbeschwörer nach einer Übernahme, Savant am Tag eines Treffers · *erledigt am 19.10.2026*
+
+Der Bericht steht in `claude/stelle-60.md`. **Deine Antwort zu (b) vom 19.10.2026:** Weg 2.
+
+| | Was falsch war | Jetzt |
+|---|---|---|
+| (a) | Übernahm die Scharlachrote Frau am Tag und wählte sie später ein Schlangenbeschwörer, bot der Solver den Tausch nicht an. Er las die Partie in einem Durchgang, und darin kommt der Schlangenbeschwörer vor der Übernahme dran. | Ist der ausgeteilte Dämon vor dem Tausch gestorben, liest der Solver die Partie Nacht für Nacht. |
+| (b) | Der Savant wurde am Ende des Tages geprüft, also nach Treffer und Übernahme. | Seine zwei Aussagen dürfen sich auf den Morgen oder den Abend beziehen. Das macht nur an Tagen einen Unterschied, an denen tagsüber ein neuer Dämon entsteht. Unter dem Vortox müssen beide zu einem dieser Zeitpunkte falsch sein. |
+| (c) | Am Tor gefunden: Der Savant las die Fraktion eines Kultführers (auch eines Philosophen mit ihm) und eines Schlägers so, wie sie ausgeteilt war. | Wie alle anderen Auskünfte, auch unter dem Vortox. Die Falsche Pfote zählt für den Savant bewusst nicht; mit ihr verwarf das Tor mit Werwolf 18 statt 7 Partien, weil der Simulator dem Savant die echte Fraktion sagt. |
+
+| Tor (3.000 Partien je Zeile) | vorher | nachher |
+|---|---|---|
+| Gemischt mit Schlangenbeschwörer, Scharlachroter Frau, Dämonenjäger, 4 / 6 Nächte | 13 / 15 | 7 / 9, die wegen neuer Zeilen alle mit Barbier (Stelle 4) |
+| Gemischt mit Savant, Scharlachroter Frau, Dämonenjäger, 4 / 6 Nächte | 10 / 11 | 6 / 7, keine wegen neuer Zeilen |
+| Gemischt mit Savant und Vortox / Kultführer und Philosoph / Werwolf und Schläger | 15 / 9 / 7 | 14 / 8 / 6 |
+| Gemischt ohne Pflicht, Sects & Violets 4 / 6 Nächte | 6, 16 / 23 | gleich |
+| Prüfsummen | | gleich |
+| Korpus | 627 | 633 (6 gespielte Partien dieser Stelle). Ein altes Brett gibt mehr Welten (`mixed-gambler-right-before-a-swap`, 311 → 325), weil es jetzt Nacht für Nacht gelesen wird. Python und JavaScript gleich |
+| Testsammlung | 1.676 grün | 1.684 grün, 2 übersprungen |
+
 ### Als Nächstes
 
-**1 · Nach Schritt 2 des Philosophen:** der erste große Charakter einzeln, oder die Nachtreihenfolge aller Charaktere, die du ans Ende gestellt hast. Dazu die offenen Stellen 60 (zwei kleine Klassen) und, falls du willst, Ketzer und Politiker für die echten.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln, dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1449,7 +1469,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 54 | Solver | **Der böse Bürger des Kopfgeldjägers mit falschem Claim** wird nur an einem Sitz gefunden, der als nicht vertrauenswürdig markiert ist. Sonst nimmt die Suche an, dass er seinen echten Charakter nennt. Der Jinx Leviathan–Mönch ist nicht gebaut, weil die Wahl des Mönchs nirgends steht. |
 | 58 | erledigt | **Der Erbe des Farmers sagt nur „Farmer“.** *Behoben am 14.10.2026* (A bis F, siehe Abschnitt „Stelle 58“). Die Seite nimmt bei einem guten Spieler an, dass er seinen ausgeteilten Charakter nennt. War der alte Charakter des Erben wichtig (gemischte Partie 693 mit 7 Spielern: als Teedame hatte er am Vortag seinen Nachbarn vor der Hinrichtung bewahrt), findet sie keine Welt. Gilt genauso beim echten Farmer. Aufgefallen am 14.10.2026 bei Gruppe 4 des Philosophen, nicht gebaut. |
 | 59 | erledigt | **Dämonenjäger und Jungfrau spielt der Simulator nicht.** *Gebaut am 14.10.2026*, siehe Abschnitt „Stelle 59“. |
-| 60 | Solver | **Zwei kleine Klassen, sichtbar geworden durch Stelle 59, nicht gebaut.** (a) Die Scharlachrote Frau übernimmt am Tag, und in einer späteren Nacht wählt ein Schlangenbeschwörer sie: Der Solver bietet den Tausch nicht an, weil er Übernahme und Tausch in getrennten Schritten erzählt (gemischt mit Gruppe 5, Seed 127; mit Dämonenjäger und Jungfrau, 6 Nächte, Seed 2001). (b) Ein Savant, der am Tag des Treffers etwas über den Dämon erfährt: Der Simulator nimmt den Dämon vor dem Schuss, der Solver den danach (Seed 1209). |
+| 60 | erledigt | **Schlangenbeschwörer nach einer Übernahme, Savant am Tag eines Treffers.** *Behoben am 19.10.2026*, siehe Abschnitt „Stelle 60“. Dabei gefunden und behoben: Der Savant las Kultführer und Schläger mit ihrer ausgeteilten Fraktion. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

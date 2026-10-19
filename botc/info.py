@@ -1520,18 +1520,32 @@ SAVANT_KINDS = ("evil", "good", "same", "different", "demon_among",
                 "in_play", "not_in_play", "outsiders", "is")
 
 
-def savant_truths(says, w, phase, real=False):
+def savant_truths(says, w, phase, real=False, s=None):
     """Which answers could this statement have had?
 
     A set of booleans, because registration can make one statement
     either: a Recluse "is evil" is true or false as the Storyteller
     likes. With `real`, what the seat actually is — the Vortox's question,
     since a misregistered statement is already false.
+
+    With the state, a side that moves is read as it may have moved: a
+    Cult Leader's from its neighbours, a Philosopher's Goon either way.
+    Without it, a Cult Leader that had turned was asked for the side it
+    was dealt (found at the gate of Stelle 60, 19.10.2026). Not the
+    Lycanthrope's faux paw, which `evil_options` adds for the other
+    readings: whether it reaches a Savant is a question of its own.
     """
     kind = says.get("kind")
     n = len(getattr(w, "roles", ()))
 
     def evil(seat):
+        # Its side is open either way, real or read: which side the Cult
+        # Leader took or the Goon was given is the Storyteller's.
+        if s is not None and _cult_on_script(s) \
+                and acts_as_cult_leader(w, s, seat, phase):
+            return set(cult_sides(w, s, seat, phase))
+        if s is not None and side_open(w, s, seat, phase):
+            return {True, False}
         if real:
             return {bool(w.evil_at(seat, phase))}
         return set(evil_registrations(w.role_at(seat, phase),
@@ -1629,21 +1643,55 @@ class SavantInfo(Info):
     def _phase(self):
         return f"D{self.night}"
 
+    def _visits(self, w):
+        """The boards the Savant may have asked about: the day as it
+        ended, and — when a Demon was made in daylight — the morning
+        before it.
+
+        Patrick, Stelle 60 (b), Weg 2 (19.10.2026): a Savant may visit
+        the Storyteller at any time of the day, before a Slayer's hit or
+        an execution or after it. A Scarlet Woman stepping up in daylight
+        is the change that tells the two apart; a Farmer's heir, dated at
+        the day too, came from the night and stays in the morning.
+        """
+        boards = [w]
+        changes = getattr(w, "changes", None)
+        if not changes:
+            return boards
+        day = phase_index(self._phase())
+        kept = tuple(c for c in changes
+                     if not (phase_index(c.phase) == day
+                             and TEAM.get(getattr(c, "role", None))
+                             == "demon"))
+        if len(kept) != len(changes):
+            from .worlds import Timeline
+            boards.append(Timeline(w.world, kept) if kept else w.world)
+        return boards
+
     def holds(self, w, s, rh, seat=None):
         if not self.weighed(s):
             return True                # the words are kept, not weighed
-        one = savant_truths(self.first_says, w, self._phase())
-        two = savant_truths(self.second_says, w, self._phase())
-        return any(a != b for a in one for b in two)
+        for board in self._visits(w):
+            one = savant_truths(self.first_says, board, self._phase(), s=s)
+            two = savant_truths(self.second_says, board, self._phase(), s=s)
+            if any(a != b for a in one for b in two):
+                return True
+        return False
 
     def is_true(self, w, s, seat=None):
         """For the Vortox: was anything in it *really* true? Under a
-        working Vortox both statements are false."""
+        working Vortox both statements are false — at whichever time of
+        the day the Savant visited."""
         if not self.weighed(s):
             return False
-        return (True in savant_truths(self.first_says, w, self._phase(), True)
-                or True in savant_truths(self.second_says, w, self._phase(),
-                                         True))
+        # True unless both could really have been false. A side that is
+        # open (a Cult Leader's, a Goon's) can be either.
+        return all(
+            not (False in savant_truths(self.first_says, board,
+                                        self._phase(), True, s)
+                 and False in savant_truths(self.second_says, board,
+                                            self._phase(), True, s))
+            for board in self._visits(w))
 
 
 @dataclass

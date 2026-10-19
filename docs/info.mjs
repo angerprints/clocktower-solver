@@ -15,6 +15,7 @@ import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./
 import {ORGAN_GRINDER_BY_CHOICE, killedByAVigormortis, minionStillActs, sourcesOn}
   from "./impairment.mjs";
 import {LISTENING, noteSideRead, phaseIndex} from "./phases.mjs";
+import {Timeline} from "./worlds.mjs";
 import {possibleCounts, reallyLiving, theDeadOutnumberOrEqual, wokenWraiths}
   from "./waking.mjs";
 import {OTHER, shieldsOn} from "./deaths.mjs";
@@ -739,10 +740,19 @@ export function savantSays(said) {
 /** Which answers could this statement have had? A set of booleans,
  * because registration can make one either. With `real`, what the seat
  * actually is — the Vortox's question. */
-export function savantTruths(says, w, phase, real = false) {
+export function savantTruths(says, w, phase, real = false, s = null) {
   const n = w.roles.length;
-  const evil = seat => real ? [!!w.evilAt(seat, phase)]
-    : evilRegistrations(w.roleAt(seat, phase), w.alignmentAt(seat, phase));
+  // With the state, a side that moves is read as it may have moved: a
+  // Cult Leader's from its neighbours, a Philosopher's Goon. Not the faux
+  // paw (Stelle 60, 19.10.2026). See info.py.
+  const evil = seat => {
+    // Open either way, real or read. See info.py.
+    if (s && cultOnScript(s) && actsAsCultLeader(w, s, seat, phase))
+      return [...cultSides(w, s, seat, phase)];
+    if (s && sideOpen(w, s, seat, phase)) return [true, false];
+    if (real) return [!!w.evilAt(seat, phase)];
+    return evilRegistrations(w.roleAt(seat, phase), w.alignmentAt(seat, phase));
+  };
   const set = xs => new Set(xs);
   switch (says.kind) {
     case "evil": return set(evil(says.seat));
@@ -814,25 +824,45 @@ function savantPair(row) {
   return row._pair;
 }
 
+/** The boards a Savant may have asked about: the day as it ended and,
+ *  when a Demon was made in daylight, the morning before it. Stelle 60
+ *  (b), Weg 2 (19.10.2026). See info.py. */
+function savantVisits(row, w) {
+  const boards = [w];
+  const changes = w.changes;
+  if (!changes || !changes.length) return boards;
+  const day = phaseIndex(`D${row.night}`);
+  const kept = changes.filter(c => !(phaseIndex(c.phase) === day
+                                     && TEAM[c.role] === "demon"));
+  if (kept.length !== changes.length)
+    boards.push(kept.length ? new Timeline(w.world, kept) : w.world);
+  return boards;
+}
+
 export const SavantInfo = define("SavantInfo", "Savant",
   function (w, s) {
     const [one, two] = savantPair(this);
     if (!one || !two) return true;       // the words are kept, not weighed
     const phase = `D${this.night}`;
-    const a = savantTruths(one, w, phase), b = savantTruths(two, w, phase);
-    for (const x of a) for (const y of b) if (x !== y) return true;
+    for (const board of savantVisits(this, w)) {
+      const a = savantTruths(one, board, phase, false, s);
+      const b = savantTruths(two, board, phase, false, s);
+      for (const x of a) for (const y of b) if (x !== y) return true;
+    }
     return false;
   }, {
     weighed() {
       const [one, two] = savantPair(this);
       return !!one && !!two;
     },
-    isTrue(w) {
+    isTrue(w, s) {
       const [one, two] = savantPair(this);
       if (!one || !two) return false;
       const phase = `D${this.night}`;
-      return savantTruths(one, w, phase, true).has(true) ||
-             savantTruths(two, w, phase, true).has(true);
+      // True unless both could really have been false. See info.py.
+      return savantVisits(this, w).every(board =>
+        !(savantTruths(one, board, phase, true, s).has(false) &&
+          savantTruths(two, board, phase, true, s).has(false)));
     },
   });
 

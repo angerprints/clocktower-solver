@@ -149,11 +149,14 @@ export function possibleTimelines(world, state, cap = 128) {
 /** How many kinds of change could actually happen in this world. */
 function moversIn(world, state) {
   const made = new Set();
-  let swapped = false;
+  let swapped = false, lastSwap = 0;
   for (const info of state.infos) {
     const source = info.sourceRole;
     if (source === "PitHag" && info.role) made.add(info.role);
-    else if (source === "SnakeCharmer" && info.swapped) swapped = true;
+    else if (source === "SnakeCharmer" && info.swapped) {
+      swapped = true;
+      lastSwap = Math.max(lastSwap, info.night);
+    }
   }
   const deaths = [...state.deathPhases()].filter(([, p]) => p);
   const phases = deaths.map(([, p]) => p);
@@ -166,6 +169,15 @@ function moversIn(world, state) {
   for (const [taken] of Object.values(state.philosophies() || {}))
     roles.add(taken);
   let count = (swapped ? 1 : 0) + (made.size ? 1 : 0);
+  // The Demon handed on before a Snake Charmer chose it (Stelle 60,
+  // 15.10.2026). See solver.py.
+  if (swapped) {
+    const dealt = new Set();
+    world.roles.forEach((r, seat) => { if (TEAM[r] === "demon") dealt.add(seat); });
+    const until = phaseIndex(`N${lastSwap}`);
+    if (deaths.some(([s, p]) => dealt.has(Number(s)) && phaseIndex(p) < until))
+      count++;
+  }
   // A Huntsman that chose, and may have found the Damsel (10.10.2026).
   if (roles.has("Huntsman")
       && state.infos.some(i => i.type === "HuntsmanChoice")) count++;
