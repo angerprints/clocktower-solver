@@ -513,7 +513,6 @@ STILL_LOST = {
     (): {
         21: "a Barber's swap nobody announced, under a Vortox",
         55: "a Barber's swap and a Snake Charmer's on one board",
-        146: "a Barber's swap nobody announced",
         # Since the Philosopher chooses first on the first night, the
         # simulator plays this seed differently (13.10.2026).
         439: "a Barber's swap nobody announced",
@@ -523,8 +522,10 @@ STILL_LOST = {
         204: "a Moonchild's pick that becomes the Demon that night",
     },
     FIVE: {
-        205: "an Innkeeper guarding a Fang Gu that jumps",
-        461: "a Drunk Snake Charmer, a Philosopher's and a jump",
+        # 205 (an Innkeeper guarding a Fang Gu that jumps) and 461 left
+        # with Lesart J (20.10.2026): a Fang Gu that cannot die does not
+        # jump. The same seed now plays a Monk's guard and a Barber's swap.
+        562: "a Barber's swap nobody announced",
     },
 }
 

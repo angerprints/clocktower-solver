@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 20.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 21.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -1448,15 +1448,23 @@ Der Bericht steht in `claude/stellen-62-63.md`.
 | Korpus | 643 | 646 (3 neu; zwei alte mit etwas mehr Welten) |
 | Testsammlung | 1.700 | 1.704 grün, 2 übersprungen |
 
-**Offen:** J (Fang Gu, den der Gastwirt schützt, springt) und K (die Unschuld wird in Nacht 1 nach dem Platz ihres neuen Charakters ein Bürger) warten auf deine Entscheidung.
+**Deine Antworten vom 20.10.2026, gebaut im Simulator:** J Weg 3 (ein Fang Gu, der nicht sterben kann, springt nicht; der Außenseiter stirbt normal, der Sprung bleibt unverbraucht). K Weg 1, außer der neue Charakter ist eine Erste-Nacht-Rolle: dann erfährt er seine Information sofort (ein Feenkind aus der Unschuld in Nacht 1 sieht einen Bürger im Spiel; ein Philosoph wählt erst später).
+
+| Tor (3.000 Partien je Zeile) | vorher (wegen der Zeilen) | nachher |
+|---|---|---|
+| Gastwirt, Psychopath, Segler | 11 (5) | 8 (2, beide Barbier) |
+| Fang Gu, Gastwirt, Teedame, Mönch | 20 (15) | 5 (0) |
+| Jäger, Unschuld, Feenkind | 12 (7) | 6 (1, Stelle 65) |
+| Korpus | 646 | 649 |
+| Testsammlung | 1.704 | 1.707 grün, 2 übersprungen |
 
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026; neue Reihenfolge vorgeschlagen, siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026; als Nächstes die Al-Hadikhia, Reihenfolge siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 127 Einträge. Von den 138 Spielercharakteren der App sind 126 im Katalog (dazu der Wächter, ein Fabled), 12 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen, 2 Dämonen. Davon sind 10 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Mein Vorschlag dazu, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
+Stand des Katalogs: 127 Einträge. Von den 138 Spielercharakteren der App sind 126 im Katalog (dazu der Wächter, ein Fabled), 12 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen, 2 Dämonen. Davon sind 10 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1536,8 +1544,9 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 60 | erledigt | **Schlangenbeschwörer nach einer Übernahme, Savant am Tag eines Treffers.** *Behoben am 19.10.2026*, siehe Abschnitt „Stelle 60“. Dabei gefunden und behoben: Der Savant las Kultführer und Schläger mit ihrer ausgeteilten Fraktion. |
 | 61 | erledigt | **Der Gastwirt stirbt in der Nacht, seine Trunkenheit bleibt.** *Berichtigt am 20.10.2026*: Am Tag danach ist sein Betrunkener nüchtern, beim Segler genauso. |
 | 62 | erledigt | **Kopfgeldjäger und Werwolf zusammen.** *Behoben am 20.10.2026*: Der Spieler des Kopfgeldjägers wird als Falsche Pfote probiert. |
-| 63 | teilweise | **Gastwirt und Segler im Tor.** *Bearbeitet am 20.10.2026*: Mathematiker unter dem Vortox behoben (13 → 11). Offen: Lesarten J (Fang Gu mit Gastwirt, Seeds 480, 1259) und K (Feenkind aus der Unschuld in Nacht 1, Seed 1439); zwei Barbier (Stelle 4). |
+| 63 | erledigt | **Gastwirt und Segler im Tor.** *Erledigt am 21.10.2026*: Mathematiker unter dem Vortox behoben, Lesarten J und K gebaut. Übrig nur Barbier (Stelle 4). |
 | 64 | Solver | **Mathematiker neben einem Höfling, der den Philosophen nennt.** Der Solver zählt anders als der Simulator (gemischt mit Mathematiker und Vortox, Seed 2278). Nicht untersucht. |
+| 65 | Solver | **Leviathan, Jäger und Unschuld.** Eine gemischte Partie (Pflicht Jäger, Unschuld, Feenkind, Seed 1988) scheitert schon ohne jede Zeile; die Unschuld wird erst Mathematiker, dann Narr. Nicht untersucht. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

@@ -2414,6 +2414,27 @@ def _preached(d, night, phase=None, by_day=False):
             and TEAM[d.role_at(target, phase)] == "minion"}
 
 
+def _made_after_its_place(d, seat, night):
+    """Made tonight by the Huntsman, after its own place in the night?
+
+    Then it waits for its next night (Patrick, Lesart K, Weg 1,
+    20.10.2026) — unless it is a first-night character, which learns at
+    once; that is not asked here. A Philosopher the Damsel became on the
+    first night chose straight away, at slot 2 of a night already at 30.
+    """
+    from botc.catalogue import CHARACTERS as _C
+    got = d.huntsman_chose.get(night)
+    if not got or got[1] != seat:
+        return False
+    made = _C[got[2]]
+    if made.nights == "first":
+        return False
+    slot = made.first_night if night == 1 else made.other_night
+    hunts = (_C["Huntsman"].first_night if night == 1
+             else _C["Huntsman"].other_night)
+    return 0 < slot < hunts
+
+
 def _huntsman_hunts(d, night, rng):
     """Once a game it points at a living player; a Damsel it finds while
     working becomes a Townsfolk not in play, and says so most of the
@@ -2455,6 +2476,18 @@ def _huntsman_hunts(d, night, rng):
         made = rng.choice(spare)
         d.changes.append((phase, target, made))
         d.huntsman_chose[night] = (seat, target, made)
+        # A first-night character made tonight learns its information at
+        # once, its own place passed or not (Patrick, Lesart K,
+        # 20.10.2026); any other waits for its next night. The Pixie is
+        # the one whose place comes before the Huntsman's on the first
+        # night: it is shown a Townsfolk really in play, as when dealt.
+        if made == "Pixie" and night == 1:
+            town = [d.role_at(p, phase) for p in range(d.n)
+                    if p != target and TEAM[d.role_at(p, phase)]
+                    == "townsfolk"]
+            if town:
+                d.pixie_learned[target] = rng.choice(town)
+                d.pixie_mad[target] = rng.random() < 0.8
         if rng.random() < 0.8:
             out.append(BecameInfo(night, target, role=made, was=was))
     return out
@@ -3971,6 +4004,15 @@ def _demon_kills(d, night, rng):
         # simply killed it — a game the rules do not allow, and one the
         # solver never objected to because it does not insist on the jump.
         got = take(others)
+        # A Fang Gu that cannot die tonight cannot die instead, so the
+        # Outsider does not become it either — it dies like anybody, and
+        # the Fang Gu lives (Patrick, Lesart J, Weg 3, 20.10.2026: the
+        # second half of the ability is an "and"). Not spent: no Outsider
+        # became a Fang Gu.
+        if got is not None and not d.fanggu_jumped \
+                and TEAM[d.role_at(got, phase)] == "outsider" \
+                and _protected(d, night, demon, by_exorcist=False):
+            return [got]
         if got is not None and not d.fanggu_jumped \
                 and TEAM[d.role_at(got, phase)] == "outsider":
             d.fanggu_jumped = True
@@ -5780,7 +5822,8 @@ def _for_role(d, seat, role, night, rng):
         d.changes.append((phase, target, became))
         return PitHagChoice(night, seat, target=target, role=became)
 
-    if role == "Philosopher" and night == 1 and seat not in d.philosophies:
+    if role == "Philosopher" and night == 1 and seat not in d.philosophies \
+            and not _made_after_its_place(d, seat, night):
         # It takes a good character's ability, once a game. Not a change
         # of character — it stays the Philosopher and works two at once —
         # so this records the choice and nothing else. The gained

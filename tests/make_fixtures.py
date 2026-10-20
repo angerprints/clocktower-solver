@@ -1621,6 +1621,10 @@ def stellen_62_63():
     import play_games
     from test_stelle_62_63 import PLAYED
     for name, seed, n, nights, must in PLAYED:
+        # Too big to count, so sampled, and the corpus holds no sampled
+        # board: its test keeps it.
+        if name == "pixie-made-on-night-one":
+            continue
         rng = random.Random(seed)
         script = play_games.an_awkward_script(rng, must_have=must)
         yield played(f"x-stelle-62-63-{name}-{seed}", script, seed, n,
