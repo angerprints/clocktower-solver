@@ -1547,6 +1547,54 @@ export const DATA = {
    "nights": "other",
    "other_night": 31,
    "lines_up": true
+  },
+  "Kazali": {
+   "id": "kazali",
+   "name": "Kazali",
+   "team": "demon",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "setup": [
+    {},
+    {
+     "townsfolk": -1,
+     "outsider": 1
+    },
+    {
+     "townsfolk": 1,
+     "outsider": -1
+    },
+    {
+     "townsfolk": -2,
+     "outsider": 2
+    },
+    {
+     "townsfolk": 2,
+     "outsider": -2
+    },
+    {
+     "townsfolk": -3,
+     "outsider": 3
+    },
+    {
+     "townsfolk": 3,
+     "outsider": -3
+    },
+    {
+     "townsfolk": -4,
+     "outsider": 4
+    },
+    {
+     "townsfolk": 4,
+     "outsider": -4
+    }
+   ],
+   "chooses": true,
+   "nights": "every",
+   "first_night": 1,
+   "other_night": 31
   }
  },
  "scripts": {

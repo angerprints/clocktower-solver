@@ -659,6 +659,19 @@ _EXPERIMENTAL = [
        {FIRST, EVERY}, nights="other", chooses=True, lines_up=True,
        setup=tuple({"townsfolk": -1 - k, "outsider": k, "minion": 1}
                    for k in (0, 1, -1, 2, -2, 3, -3, 4, -4))),
+    # The second (20.10.2026, claude/kazali-lesarten.md). Kills like any
+    # Demon. "[You choose which players are which Minions. -? to +?
+    # Outsiders]": no Minions are dealt, and on the first night it makes
+    # the usual number out of any players it likes (A, Weg 1) — waking
+    # for its own ability to do it (B, Weg 1). Their old characters are
+    # out of play. So the bag holds the usual Minions and any number of
+    # Outsiders, like the Xaan's. Its jinxes need nothing more: a
+    # Marionette already sits beside the Demon, and a Bounty Hunter made
+    # a Minion is no Bounty Hunter.
+    _c("Kazali", "kazali", "Kazali", "demon", {FIRST, EVERY},
+       nights="every", chooses=True,
+       setup=tuple({"townsfolk": -k, "outsider": k} if k else {}
+                   for k in (0, 1, -1, 2, -2, 3, -3, 4, -4))),
 ]
 
 
@@ -748,6 +761,10 @@ _NOT_IN_THE_FILE = {
     # (31) and the Vigormortis (32), so it shares the Vortox's slot. Its
     # first night is the Storyteller's, not its own.
     "lordoftyphon": (0, 31),
+    # The Kazali (20.10.2026): first of all on the first night, before the
+    # Philosopher and the Minion info, sharing slot 1 with the
+    # Travellers there; the Demons' place on the others, the Vortox's.
+    "kazali": (1, 31),
     # The publisher's other nights run ... Vortox, Lord of Typhon,
     # Vigormortis, Ojo, Al-Hadikhia ... — after the Vigormortis at 32 and
     # before anything the file numbers 33, so it shares the Vigormortis's

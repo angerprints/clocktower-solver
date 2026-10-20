@@ -591,12 +591,18 @@ def deal(n, rng, script=None, told=None):
     # One Minion more than the table has, and the Outsiders anywhere from
     # two fewer to two more, as room allows.
     typhon = "LordOfTyphon" in picked_demons
+    # "[You choose which players are which Minions. -? to +? Outsiders]":
+    # the Kazali (20.10.2026). The usual Minions (A, Weg 1), made on the
+    # first night out of players who were dealt good tokens, and the
+    # Outsiders anywhere as for the Lord of Typhon.
+    kazali = "Kazali" in picked_demons
     if typhon:
         more = [m for m in minions if m not in picked_minions]
         if more and tf >= 1:
             picked_minions.append(rng.choice(more))
             mi += 1
             tf -= 1
+    if typhon or kazali:
         room = [x for x in range(max(0, out - 2), out + 3)
                 if x <= len(outsiders) and 0 <= n - mi - de - x
                 <= len(townsfolk)]
@@ -690,8 +696,11 @@ def deal(n, rng, script=None, told=None):
         believes[seat] = believes_for.get(role)
     if typhon:
         roles, believes = _typhon_seats(roles, believes, rng)
+    if typhon or kazali:
         # Each Minion was handed a good token first and turned on the
-        # first night; that token is not in play (Lesart D, 19.10.2026).
+        # first night; that token is not in play (Lord of Typhon D,
+        # 19.10.2026; Kazali C and D, 20.10.2026: a Townsfolk or an
+        # Outsider, whoever the Kazali picked).
         unused = [r for r in spare[tf:] + [o for o in outsiders
                                            if o not in picked_outsiders]
                   if r not in roles and r not in believes
@@ -800,8 +809,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
 
     d = Deal(roles, believes, red_herring, {}, {}, None)
     d.script = script
-    # The good tokens the Lord of Typhon's Minions were handed first.
-    d.typhon_tokens = dict(told)
+    # The good tokens the Lord of Typhon's or the Kazali's Minions were
+    # handed first.
+    d.first_tokens = dict(told)
     heard = []
     # "1 player is drunk, even if you die": mostly a Townsfolk, now and
     # then an Outsider, never evil here (10.10.2026).
@@ -4776,6 +4786,12 @@ def droisoned_at(d, night, by_day=False):
                       ("Sailor", "SailorDrunk")):
         for chooser, got in _choices(d, key, night).items():
             holder = _answering(d, chooser, role, phase)
+            # Killed later that night, it leaves its drunk sober for the
+            # day, like the Goon above: an ability ends with its holder's
+            # death (Stelle 61, 20.10.2026).
+            if by_day and holder is not None \
+                    and d.deaths.get(holder) == phase:
+                continue
             if holder is not None and holder in living \
                     and holder not in out \
                     and not _drunk_by_its_philosopher(d, holder, role,

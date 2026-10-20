@@ -107479,6 +107479,816 @@
    }
   },
   {
+   "name": "x-kazali-quiet",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Kazali",
+     "characters": [
+      "kazali",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "marionette",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "chambermaid",
+      "recluse",
+      "saint",
+      "drunk",
+      "butler"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 740,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 28.1081,
+      "demon_pct": 14.0541,
+      "drunk_pct": 15.0,
+      "lying_pct": 26.6216
+     },
+     {
+      "evil_pct": 27.8378,
+      "demon_pct": 13.9189,
+      "drunk_pct": 14.8649,
+      "lying_pct": 26.4865
+     },
+     {
+      "evil_pct": 27.8378,
+      "demon_pct": 13.9189,
+      "drunk_pct": 14.8649,
+      "lying_pct": 26.4865
+     },
+     {
+      "evil_pct": 27.8378,
+      "demon_pct": 13.9189,
+      "drunk_pct": 14.8649,
+      "lying_pct": 26.4865
+     },
+     {
+      "evil_pct": 27.8378,
+      "demon_pct": 13.9189,
+      "drunk_pct": 14.8649,
+      "lying_pct": 26.4865
+     },
+     {
+      "evil_pct": 28.1081,
+      "demon_pct": 14.0541,
+      "drunk_pct": 15.0,
+      "lying_pct": 26.6216
+     },
+     {
+      "evil_pct": 32.4324,
+      "demon_pct": 16.2162,
+      "drunk_pct": 1.6216,
+      "lying_pct": 30.8108
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-kazali-a-night-death",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Kazali",
+     "characters": [
+      "kazali",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "marionette",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "chambermaid",
+      "recluse",
+      "saint",
+      "drunk",
+      "butler"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 668,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 33.1052,
+      "demon_pct": 16.6451,
+      "drunk_pct": 14.4442,
+      "lying_pct": 31.0708
+     },
+     {
+      "evil_pct": 32.7353,
+      "demon_pct": 16.4601,
+      "drunk_pct": 14.2593,
+      "lying_pct": 30.8859
+     },
+     {
+      "evil_pct": 30.9321,
+      "demon_pct": 15.5817,
+      "drunk_pct": 13.6952,
+      "lying_pct": 30.0074
+     },
+     {
+      "evil_pct": 1.2391,
+      "demon_pct": 0.0,
+      "drunk_pct": 18.587,
+      "lying_pct": 1.1467
+     },
+     {
+      "evil_pct": 30.9321,
+      "demon_pct": 15.5817,
+      "drunk_pct": 13.6952,
+      "lying_pct": 30.0074
+     },
+     {
+      "evil_pct": 33.1052,
+      "demon_pct": 16.6451,
+      "drunk_pct": 14.4442,
+      "lying_pct": 31.0708
+     },
+     {
+      "evil_pct": 37.9508,
+      "demon_pct": 19.0864,
+      "drunk_pct": 2.2193,
+      "lying_pct": 35.7315
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-kazali-executed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Butler",
+      "events": []
+     },
+     {
+      "claim": "Recluse",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Kazali",
+     "characters": [
+      "kazali",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "marionette",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "chambermaid",
+      "recluse",
+      "saint",
+      "drunk",
+      "butler"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 579,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 19.5164,
+      "demon_pct": 0.0,
+      "drunk_pct": 18.8256,
+      "lying_pct": 17.962
+     },
+     {
+      "evil_pct": 27.6339,
+      "demon_pct": 15.544,
+      "drunk_pct": 16.0622,
+      "lying_pct": 26.943
+     },
+     {
+      "evil_pct": 28.3247,
+      "demon_pct": 15.544,
+      "drunk_pct": 16.5803,
+      "lying_pct": 26.943
+     },
+     {
+      "evil_pct": 28.3247,
+      "demon_pct": 15.544,
+      "drunk_pct": 16.5803,
+      "lying_pct": 26.943
+     },
+     {
+      "evil_pct": 28.6701,
+      "demon_pct": 15.7168,
+      "drunk_pct": 16.753,
+      "lying_pct": 27.1157
+     },
+     {
+      "evil_pct": 34.1969,
+      "demon_pct": 18.8256,
+      "drunk_pct": 1.8998,
+      "lying_pct": 32.2971
+     },
+     {
+      "evil_pct": 33.3333,
+      "demon_pct": 18.8256,
+      "drunk_pct": 1.0363,
+      "lying_pct": 32.2971
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-kazali-played-0",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Puzzlemaster",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Farmer",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Puzzlemaster"
+     },
+     {
+      "type": "EvilTwinPair",
+      "night": 1,
+      "player": 4,
+      "a": 4,
+      "b": 1
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 1,
+      "player": 6,
+      "a": 2,
+      "b": 4,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "kazali",
+      "widow",
+      "philosopher",
+      "snakecharmer",
+      "mayor",
+      "courtier",
+      "innkeeper",
+      "juggler",
+      "princess",
+      "mathematician",
+      "exorcist",
+      "oracle",
+      "chambermaid",
+      "farmer",
+      "bountyhunter",
+      "mutant",
+      "tinker",
+      "puzzlemaster",
+      "saint",
+      "xaan",
+      "eviltwin",
+      "organgrinder",
+      "leviathan",
+      "ojo",
+      "pukka"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 416,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 41.0522,
+      "demon_pct": 29.7346,
+      "drunk_pct": 0.0,
+      "lying_pct": 71.9123
+     },
+     {
+      "evil_pct": 60.532,
+      "demon_pct": 40.5307,
+      "drunk_pct": 0.0,
+      "lying_pct": 60.532
+     },
+     {
+      "evil_pct": 0.5083,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 5.3403
+     },
+     {
+      "evil_pct": 41.0522,
+      "demon_pct": 29.7346,
+      "drunk_pct": 0.0,
+      "lying_pct": 71.9123
+     },
+     {
+      "evil_pct": 2.9903,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.9903
+     },
+     {
+      "evil_pct": 26.9325,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 37.0916
+     },
+     {
+      "evil_pct": 26.9325,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 37.0916
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "4": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-kazali-played-31",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Ravenkeeper",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "PoppyGrower",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Shugenja",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Ravenkeeper"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 0,
+      "target": 7,
+      "swapped": false
+     },
+     {
+      "type": "KingInfo",
+      "night": 2,
+      "player": 1,
+      "role": ""
+     },
+     {
+      "type": "Ravenkeeper",
+      "night": 3,
+      "player": 2,
+      "target": 4,
+      "role": "Psychopath"
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "kazali",
+      "poisoner",
+      "philosopher",
+      "snakecharmer",
+      "poppygrower",
+      "juggler",
+      "virgin",
+      "shugenja",
+      "investigator",
+      "ravenkeeper",
+      "monk",
+      "gambler",
+      "slayer",
+      "king",
+      "huntsman",
+      "mutant",
+      "drunk",
+      "golem",
+      "damsel",
+      "eviltwin",
+      "psychopath",
+      "fearmonger",
+      "vortox",
+      "vigormortis",
+      "shabaloth"
+     ]
+    },
+    "quiet_nights": [
+     2
+    ],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 3352,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 6.7193,
+      "demon_pct": 0.0,
+      "drunk_pct": 5.6309,
+      "lying_pct": 11.5419
+     },
+     {
+      "evil_pct": 16.7329,
+      "demon_pct": 9.7497,
+      "drunk_pct": 4.8526,
+      "lying_pct": 20.7477
+     },
+     {
+      "evil_pct": 1.8859,
+      "demon_pct": 0.0,
+      "drunk_pct": 20.3568,
+      "lying_pct": 15.5594
+     },
+     {
+      "evil_pct": 58.3975,
+      "demon_pct": 36.5156,
+      "drunk_pct": 31.8342,
+      "lying_pct": 68.1658
+     },
+     {
+      "evil_pct": 37.4907,
+      "demon_pct": 19.6893,
+      "drunk_pct": 3.532,
+      "lying_pct": 44.7545
+     },
+     {
+      "evil_pct": 15.0644,
+      "demon_pct": 0.0,
+      "drunk_pct": 4.8349,
+      "lying_pct": 25.2355
+     },
+     {
+      "evil_pct": 35.1514,
+      "demon_pct": 20.8127,
+      "drunk_pct": 3.8789,
+      "lying_pct": 42.8116
+     },
+     {
+      "evil_pct": 28.5579,
+      "demon_pct": 13.2327,
+      "drunk_pct": 4.2032,
+      "lying_pct": 36.9765
+     }
+    ],
+    "blame": {
+     "3": {
+      "2": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "random-00",
    "payload": {
     "n_players": 9,

@@ -1073,6 +1073,7 @@ def handmade():
     yield from the_philosopher_takes_group_6()
     yield from stelle_60()
     yield from the_lord_of_typhon()
+    yield from the_kazali()
 
 
 def the_eighth_five():
@@ -1589,6 +1590,25 @@ def the_lord_of_typhon():
 
 
 PLAYED_TYPHON = ((0, 7), (12, 9))
+
+
+def the_kazali():
+    """The Kazali (20.10.2026): the boards of tests/test_kazali.py and
+    played games with one dealt."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_kazali import _payloads
+    for name, payload in zip(("quiet", "a-night-death", "executed"),
+                             _payloads()):
+        yield {"name": f"x-kazali-{name}", "payload": payload}
+    for seed, n in PLAYED_KAZALI:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=("Kazali",))
+        yield played(f"x-kazali-played-{seed}", script, seed, n, 3, rng=rng)
+
+
+PLAYED_KAZALI = ((0, 7), (31, 8))
 
 
 def stelle_60():

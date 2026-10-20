@@ -130,7 +130,7 @@ class TheSimulatorDealsIt(SolverTest):
         said = told = 0
         for _seed, sc, rng, deal, _heard in games():
             cl, _wk, _ = C.claims_for(deal, rng, script=sc)
-            for seat, token in deal.typhon_tokens.items():
+            for seat, token in deal.first_tokens.items():
                 told += 1
                 said += cl.get(seat) == token
                 self.assertNotIn(token, deal.roles)
