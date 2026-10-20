@@ -6077,8 +6077,12 @@ def _faux_paw_candidates(world, state):
             everybody = True
             break
         for field in ("a", "b", "c", "target"):
+            # And the Bounty Hunter's evil player (Stelle 62, 20.10.2026):
+            # left off, the faux paw it was shown was never tried, so a
+            # Bounty Hunter told of a good player read as droisoned.
             if kind in ("SeamstressInfo", "NobleInfo", "StewardInfo",
-                        "VillageIdiotInfo", "LycanthropeChose"):
+                        "VillageIdiotInfo", "LycanthropeChose",
+                        "BountyHunterInfo"):
                 got = getattr(info, field, None)
                 if isinstance(got, int):
                     looked.add(got)

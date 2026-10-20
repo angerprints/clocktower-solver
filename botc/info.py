@@ -2632,6 +2632,21 @@ class MathematicianInfo(Info):
         low, high = _possible_impairment_counts(w, s, self.night)
         return low <= self.count <= high
 
+    def is_true(self, w, s, seat=None):
+        """For the Vortox: was the number certainly the true one?
+
+        `holds` checks a range — the count could have been anything in
+        it — so under a Vortox a number inside the range was read as
+        true, and the Vortox or the Mathematician had to be droisoned. A
+        false number can sit inside the range as well as a true one. Only
+        a range of one, the shown number, is certainly true (Stelle 63,
+        20.10.2026: a Vortox, a Snake Charmer and a Sailor, seed 2801).
+        """
+        if _unbuilt_impairer(s.script):
+            return False
+        low, high = _possible_impairment_counts(w, s, self.night)
+        return low == high == self.count
+
 
 @dataclass
 class ClockmakerInfo(Info):

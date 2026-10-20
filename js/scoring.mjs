@@ -2241,8 +2241,9 @@ function fauxPawCandidates(world, state) {
   for (const info of state.infos) {
     if (["Chef", "Empath", "OracleInfo", "ShugenjaInfo"].includes(info.type))
       return good;
+    // And the Bounty Hunter's evil player (Stelle 62). See solver.py.
     if (["SeamstressInfo", "Noble", "StewardInfo", "VillageIdiotInfo",
-         "LycanthropeChose"].includes(info.type))
+         "LycanthropeChose", "BountyHunterInfo"].includes(info.type))
       for (const field of ["a", "b", "c", "target"])
         if (Number.isInteger(info[field])) looked.add(info[field]);
   }

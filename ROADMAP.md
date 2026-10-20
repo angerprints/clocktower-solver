@@ -1429,13 +1429,34 @@ Der Bericht steht in `claude/kazali.md`, die Lesarten in `claude/kazali-lesarten
 | Korpus | 638 → 643, kein altes Brett geändert | |
 | Testsammlung | 1.692 → 1.700 grün, 2 übersprungen | |
 
+### Stellen 62 und 63 · *bearbeitet am 20.10.2026*
+
+Der Bericht steht in `claude/stellen-62-63.md`.
+
+| Stelle | Gebaut |
+|---|---|
+| 62 | Der Spieler, den der Kopfgeldjäger als böse gezeigt bekommt, wird als Falsche Pfote des Werwolfs probiert. Vorher nie, daher fand der Solver neben einem lügenden bösen Bürger keine Erklärung. |
+| 63 | Unter dem Vortox gilt die Zahl des Mathematikers nur dann als sicher wahr, wenn keine andere möglich war. Vorher galt jede mögliche Zahl als wahr, und der Vortox oder der Mathematiker musste gestört sein. Die übrigen Fälle: zwei Barbier (Stelle 4), zwei offene Lesarten (J, K). |
+
+| Tor (3.000 Partien je Zeile) | vorher (wegen der Zeilen) | nachher |
+|---|---|---|
+| Gastwirt, Psychopath, Segler | 13 (7) | 11 (5) |
+| Kopfgeldjäger, Werwolf | 7 (2) | 5 (0) |
+| Mathematiker, Vortox | 17 (5) | 13 (1) |
+| Sects & Violets, 4 / 6 Nächte | 16 / 23 | 15 / 22 |
+| Ohne Pflicht, Prüfsummen | | gleich |
+| Korpus | 643 | 646 (3 neu; zwei alte mit etwas mehr Welten) |
+| Testsammlung | 1.700 | 1.704 grün, 2 übersprungen |
+
+**Offen:** J (Fang Gu, den der Gastwirt schützt, springt) und K (die Unschuld wird in Nacht 1 nach dem Platz ihres neuen Charakters ein Bürger) warten auf deine Entscheidung.
+
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, als Nächstes der Alchemist), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026; neue Reihenfolge vorgeschlagen, siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 127 Einträge. Von den 138 Spielercharakteren der App sind 126 im Katalog (dazu der Wächter, ein Fabled), 12 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen, 2 Dämonen. Davon sind 10 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Die großen in der Reihenfolge, der du am 19.10.2026 zugestimmt hast: Lord of Typhon (erledigt am 20.10.2026), Kazali (erledigt am 20.10.2026), Alchemist, Kannibale, Laborratte, Pestdoktor, Ingenieur, Hutmacher, Eremit, Beschwörer, Al-Hadikhia, Lil' Monsta. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
+Stand des Katalogs: 127 Einträge. Von den 138 Spielercharakteren der App sind 126 im Katalog (dazu der Wächter, ein Fabled), 12 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen, 2 Dämonen. Davon sind 10 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Mein Vorschlag dazu, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1514,8 +1535,9 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 59 | erledigt | **Dämonenjäger und Jungfrau spielt der Simulator nicht.** *Gebaut am 14.10.2026*, siehe Abschnitt „Stelle 59“. |
 | 60 | erledigt | **Schlangenbeschwörer nach einer Übernahme, Savant am Tag eines Treffers.** *Behoben am 19.10.2026*, siehe Abschnitt „Stelle 60“. Dabei gefunden und behoben: Der Savant las Kultführer und Schläger mit ihrer ausgeteilten Fraktion. |
 | 61 | erledigt | **Der Gastwirt stirbt in der Nacht, seine Trunkenheit bleibt.** *Berichtigt am 20.10.2026*: Am Tag danach ist sein Betrunkener nüchtern, beim Segler genauso. |
-| 62 | Solver | **Kopfgeldjäger und Werwolf zusammen.** Lügt der böse Bürger des Kopfgeldjägers und registriert zugleich ein Außenseiter durch die Falsche Pfote als böse, findet der Solver beides nicht gleichzeitig; einzeln geht jedes. Auch mit dem Imp (gemischt mit Kazali und Kopfgeldjäger, Seed 2255). Nicht gebaut. |
-| 63 | Solver | **Gastwirt und Segler im Tor.** In 3.000 gemischten Partien mit Gastwirt, Psychopath und Segler verwirft der Solver 7 wegen ihrer Zeilen, schon vor der Kazali: ein Gastwirt, den der Psychopath am Tag tötet (Seed 480), Segler neben Mathematiker oder Totengräber (1674, 2759, 2801), ein Segler mit Jäger und Unschuld (1439) und andere. Nicht untersucht. |
+| 62 | erledigt | **Kopfgeldjäger und Werwolf zusammen.** *Behoben am 20.10.2026*: Der Spieler des Kopfgeldjägers wird als Falsche Pfote probiert. |
+| 63 | teilweise | **Gastwirt und Segler im Tor.** *Bearbeitet am 20.10.2026*: Mathematiker unter dem Vortox behoben (13 → 11). Offen: Lesarten J (Fang Gu mit Gastwirt, Seeds 480, 1259) und K (Feenkind aus der Unschuld in Nacht 1, Seed 1439); zwei Barbier (Stelle 4). |
+| 64 | Solver | **Mathematiker neben einem Höfling, der den Philosophen nennt.** Der Solver zählt anders als der Simulator (gemischt mit Mathematiker und Vortox, Seed 2278). Nicht untersucht. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

@@ -1074,6 +1074,7 @@ def handmade():
     yield from stelle_60()
     yield from the_lord_of_typhon()
     yield from the_kazali()
+    yield from stellen_62_63()
 
 
 def the_eighth_five():
@@ -1609,6 +1610,21 @@ def the_kazali():
 
 
 PLAYED_KAZALI = ((0, 7), (31, 8))
+
+
+def stellen_62_63():
+    """Stellen 62 and 63 (20.10.2026): a Bounty Hunter shown the faux
+    paw, and a Mathematician's number under a Vortox — played games the
+    solver lost."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_stelle_62_63 import PLAYED
+    for name, seed, n, nights, must in PLAYED:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=must)
+        yield played(f"x-stelle-62-63-{name}-{seed}", script, seed, n,
+                     nights, rng=rng)
 
 
 def stelle_60():

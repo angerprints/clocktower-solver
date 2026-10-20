@@ -1282,6 +1282,13 @@ export const MathematicianInfo = define("MathematicianInfo", "Mathematician",
     // Silent on a script it cannot account for, and silence has to
     // survive a Vortox.
     weighed(state) { return !scriptHasUnbuiltImpairer(state.script); },
+    // For the Vortox: true only where nothing else could have been the
+    // count (Stelle 63, 20.10.2026). See info.py.
+    isTrue(w, s) {
+      if (scriptHasUnbuiltImpairer(s.script)) return false;
+      const [low, high] = possibleImpairmentCounts(w, s, this.night);
+      return low === high && high === this.count;
+    },
   });
 
 /** How many steps from the Demon to its nearest Minion.
