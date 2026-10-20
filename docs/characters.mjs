@@ -1487,6 +1487,66 @@ export const DATA = {
    "modelled": false,
    "note": "its advice is kept but not weighed — strategy rather than a fact, and a drunk or poisoned one may be told something unhelpful",
    "handled": "partly"
+  },
+  "LordOfTyphon": {
+   "id": "lordoftyphon",
+   "name": "Lord of Typhon",
+   "team": "demon",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "setup": [
+    {
+     "townsfolk": -1,
+     "outsider": 0,
+     "minion": 1
+    },
+    {
+     "townsfolk": -2,
+     "outsider": 1,
+     "minion": 1
+    },
+    {
+     "townsfolk": 0,
+     "outsider": -1,
+     "minion": 1
+    },
+    {
+     "townsfolk": -3,
+     "outsider": 2,
+     "minion": 1
+    },
+    {
+     "townsfolk": 1,
+     "outsider": -2,
+     "minion": 1
+    },
+    {
+     "townsfolk": -4,
+     "outsider": 3,
+     "minion": 1
+    },
+    {
+     "townsfolk": 2,
+     "outsider": -3,
+     "minion": 1
+    },
+    {
+     "townsfolk": -5,
+     "outsider": 4,
+     "minion": 1
+    },
+    {
+     "townsfolk": 3,
+     "outsider": -4,
+     "minion": 1
+    }
+   ],
+   "chooses": true,
+   "nights": "other",
+   "other_night": 31,
+   "lines_up": true
   }
  },
  "scripts": {

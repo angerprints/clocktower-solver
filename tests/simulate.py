@@ -507,7 +507,7 @@ class Deal:
         return seat not in droisoned_at(self, night, by_day)
 
 
-def deal(n, rng, script=None):
+def deal(n, rng, script=None, told=None):
     """A random legal setup for n seats, from a script.
 
     The script argument is the whole reason the other two published
@@ -586,6 +586,23 @@ def deal(n, rng, script=None):
                         if d not in ("FangGu", "Vigormortis")]
         picked_demons = list(rng.sample(spare_demons, de)) \
             if len(spare_demons) >= de else list(rng.sample(demons, de))
+
+    # "[+1 Minion. -? to +? Outsiders]": the Lord of Typhon (19.10.2026).
+    # One Minion more than the table has, and the Outsiders anywhere from
+    # two fewer to two more, as room allows.
+    typhon = "LordOfTyphon" in picked_demons
+    if typhon:
+        more = [m for m in minions if m not in picked_minions]
+        if more and tf >= 1:
+            picked_minions.append(rng.choice(more))
+            mi += 1
+            tf -= 1
+        room = [x for x in range(max(0, out - 2), out + 3)
+                if x <= len(outsiders) and 0 <= n - mi - de - x
+                <= len(townsfolk)]
+        if room:
+            out = rng.choice(room)
+            tf = n - mi - de - out
 
     # "[X Outsiders]": a Xaan sets the number, whatever else would move
     # it — here 1 to 3, as the wiki suggests (10.10.2026).
@@ -671,6 +688,19 @@ def deal(n, rng, script=None):
     for seat, role in zip(order, chosen):
         roles[seat] = role
         believes[seat] = believes_for.get(role)
+    if typhon:
+        roles, believes = _typhon_seats(roles, believes, rng)
+        # Each Minion was handed a good token first and turned on the
+        # first night; that token is not in play (Lesart D, 19.10.2026).
+        unused = [r for r in spare[tf:] + [o for o in outsiders
+                                           if o not in picked_outsiders]
+                  if r not in roles and r not in believes
+                  and r not in ("Drunk", "Marionette", "Lunatic")]
+        rng.shuffle(unused)
+        for seat, role in enumerate(roles):
+            if TEAM[role] == "minion" and role != "Marionette" and unused:
+                if told is not None:
+                    told[seat] = unused.pop()
 
     # "[You neighbour the Demon]": if the shuffle put it elsewhere, it
     # trades seats with whoever sits beside the Demon. Written from the
@@ -684,6 +714,45 @@ def deal(n, rng, script=None):
             roles[m], roles[swap] = roles[swap], roles[m]
             believes[m], believes[swap] = believes[swap], believes[m]
     return roles, believes
+
+
+def _typhon_seats(roles, believes, rng):
+    """Seat the evil team in a line, the Lord of Typhon not at an end.
+
+    Patrick, 19.10.2026: anywhere in the line but an end (A, Weg 2); a
+    Recluse may stand anywhere in it, registering as a Minion — here a
+    third of the time. A Marionette sits beside the Lord of Typhon, as it
+    must beside any Demon. Everybody else keeps the order the shuffle
+    gave them.
+    """
+    n = len(roles)
+    pairs = list(zip(roles, believes))
+    lord = next(pr for pr in pairs if pr[0] == "LordOfTyphon")
+    minions = [pr for pr in pairs if TEAM[pr[0]] == "minion"]
+    rest = [pr for pr in pairs if pr is not lord and pr not in minions]
+    rng.shuffle(minions)
+    recluse = next((pr for pr in rest if pr[0] == "Recluse"), None)
+    line = list(minions)
+    if recluse is not None and rng.random() < 1 / 3:
+        rest.remove(recluse)
+        line.insert(rng.randrange(len(line) + 1), recluse)
+    if len(line) < 2:
+        return roles, believes            # nobody to stand either side
+    at = rng.randrange(1, len(line))      # never at an end
+    line.insert(at, lord)
+    puppet = next((i for i, pr in enumerate(line)
+                   if pr[0] == "Marionette"), None)
+    if puppet is not None and abs(puppet - at) != 1:
+        near = at - 1 if puppet < at else at + 1
+        line[puppet], line[near] = line[near], line[puppet]
+    start = rng.randrange(n)
+    seats = [None] * n
+    for i, pr in enumerate(line):
+        seats[(start + i) % n] = pr
+    free = [s for s in range(n) if seats[s] is None]
+    for s, pr in zip(free, rest):
+        seats[s] = pr
+    return [pr[0] for pr in seats], [pr[1] for pr in seats]
 
 
 def _heir(d, phase, rng):
@@ -719,7 +788,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     """
     from botc import scripts as script_mod
     script = script or script_mod.TROUBLE_BREWING
-    roles, believes = deal(n, rng, script)
+    told = {}
+    roles, believes = deal(n, rng, script, told)
     good = [p for p in range(n) if not is_evil(roles[p])]
     # Only when there is a Fortune Teller to have one. The red herring is
     # *that character's* — the Storyteller picks a good player who will
@@ -730,6 +800,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
 
     d = Deal(roles, believes, red_herring, {}, {}, None)
     d.script = script
+    # The good tokens the Lord of Typhon's Minions were handed first.
+    d.typhon_tokens = dict(told)
     heard = []
     # "1 player is drunk, even if you die": mostly a Townsfolk, now and
     # then an Outsider, never evil here (10.10.2026).

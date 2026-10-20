@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 19.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 20.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -1386,13 +1386,36 @@ Der Bericht steht in `claude/stelle-60.md`. **Deine Antwort zu (b) vom 19.10.202
 | Korpus | 627 | 633 (6 gespielte Partien dieser Stelle). Ein altes Brett gibt mehr Welten (`mixed-gambler-right-before-a-swap`, 311 → 325), weil es jetzt Nacht für Nacht gelesen wird. Python und JavaScript gleich |
 | Testsammlung | 1.676 grün | 1.684 grün, 2 übersprungen |
 
+### Lord of Typhon, der erste große Charakter · *erledigt am 20.10.2026*
+
+Der Bericht steht in `claude/lord-of-typhon.md`, die Lesarten in `claude/lord-of-typhon-lesarten.md`.
+
+**Deine Antworten vom 19.10.2026:** A Weg 2, und der Einsiedler kann an jeder Stelle der Reihe als Scherge registrieren. B Weg 1. C Weg 1. D Weg 1, aber nicht ausschließlich.
+
+| | Gebaut |
+|---|---|
+| Töten | Jede Nacht außer der ersten, wie ein gewöhnlicher Dämon, ohne Weitergabe. Nachtplatz vorerst der des Vortox. |
+| Beutel | Ein Scherge mehr, Außenseiter zwischen vier weniger und vier mehr (wie beim Xaan). |
+| Sitzregel | Alle Schergen und der Lord in einer lückenlosen Reihe, der Lord nicht an einem Ende. Ein Einsiedler darf an jeder Stelle mitstehen, mit Kopfgeldjäger auch ein Bürger. Nur beim Aufbau. Neues Feld `lines_up` im Katalog, geprüft in `worlds.seated_legally` und `worlds.mjs`. |
+| Simulator | Teilt den Lord mit einem Schergen mehr aus, setzt die Bösen in eine Reihe (ein Einsiedler in einem Drittel der Partien darin), die Marionette neben den Lord. Seine Schergen behaupten in 70 % das gute Plättchen, das sie zuerst gesehen haben. |
+
+| Tor (3.000 Partien je Zeile) | Partien mit Lord | verworfen | davon mit Lord |
+|---|---|---|---|
+| Lord of Typhon, 4 / 6 Nächte | 782 | 11 / 11 | 0 |
+| mit Marionette und Einsiedler | 733 | 5 | 0 |
+| mit Kopfgeldjäger | 773 | 10 | 0 |
+| ohne Pflicht, Prüfsummen, feste Skripte | | gleich | |
+| Über die Seite, 7 bis 9 Spieler | 175 | 0 durch den Lord; länger als 2 Minuten 8 % (mit No Dashii 5 %), Median 3 s (2 s) | |
+| Korpus | | 633 → 638, kein altes Brett geändert | |
+| Testsammlung | | 1.684 → 1.692 grün, 2 übersprungen | |
+
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln, dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon erledigt am 20.10.2026, als Nächstes Kazali), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 125 Einträge. Von den 138 Spielercharakteren der App sind 124 im Katalog (dazu der Wächter, ein Fabled), 14 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen, 4 Dämonen. Nach meiner Einschätzung sind davon 12 groß (Alchemist, Kannibale, Ingenieur, Hutmacher, Eremit, Pestdoktor, Laborratte, Beschwörer, Al-Hadikhia, Kazali, Lil' Monsta, Lord of Typhon) und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr.
+Stand des Katalogs: 126 Einträge. Von den 138 Spielercharakteren der App sind 125 im Katalog (dazu der Wächter, ein Fabled), 13 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen, 3 Dämonen. Davon sind 11 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Die großen in der Reihenfolge, der du am 19.10.2026 zugestimmt hast: Lord of Typhon (erledigt am 20.10.2026), Kazali, Alchemist, Kannibale, Laborratte, Pestdoktor, Ingenieur, Hutmacher, Eremit, Beschwörer, Al-Hadikhia, Lil' Monsta. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1470,6 +1493,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 58 | erledigt | **Der Erbe des Farmers sagt nur „Farmer“.** *Behoben am 14.10.2026* (A bis F, siehe Abschnitt „Stelle 58“). Die Seite nimmt bei einem guten Spieler an, dass er seinen ausgeteilten Charakter nennt. War der alte Charakter des Erben wichtig (gemischte Partie 693 mit 7 Spielern: als Teedame hatte er am Vortag seinen Nachbarn vor der Hinrichtung bewahrt), findet sie keine Welt. Gilt genauso beim echten Farmer. Aufgefallen am 14.10.2026 bei Gruppe 4 des Philosophen, nicht gebaut. |
 | 59 | erledigt | **Dämonenjäger und Jungfrau spielt der Simulator nicht.** *Gebaut am 14.10.2026*, siehe Abschnitt „Stelle 59“. |
 | 60 | erledigt | **Schlangenbeschwörer nach einer Übernahme, Savant am Tag eines Treffers.** *Behoben am 19.10.2026*, siehe Abschnitt „Stelle 60“. Dabei gefunden und behoben: Der Savant las Kultführer und Schläger mit ihrer ausgeteilten Fraktion. |
+| 61 | Simulator | **Der Gastwirt stirbt in der Nacht, seine Trunkenheit bleibt.** Wählt der Gastwirt und stirbt in derselben Nacht, bleibt sein Betrunkener im Simulator bis zur Abenddämmerung betrunken. Nach deiner Regel vom 03.10.2026 endet eine Fähigkeit mit dem Tod; der Solver rechnet so. Gesehen am 20.10.2026 in einer Partie mit Psychopath (gemischt, Seed 2899, als der Lord noch frei gezogen wurde). Nicht gebaut. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

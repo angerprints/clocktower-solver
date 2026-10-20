@@ -552,8 +552,42 @@ export function seatedLegally(roles) {
     // "[+the King]": a Choirboy dealt means a King dealt (10.10.2026).
     for (const other of CHARACTERS[roles[seat]].brings || [])
       if (!roles.includes(other)) return false;
+    if (CHARACTERS[roles[seat]].lines_up && !inALine(roles, seat))
+      return false;
   }
   return true;
+}
+
+/** Do the evil characters sit in one line, `lord` not at either end? The
+ * Lord of Typhon's setup (19.10.2026). See worlds.py. */
+export function inALine(roles, lord) {
+  const n = roles.length;
+  const evil = new Set();
+  roles.forEach((r, s) => {
+    if (TEAM[r] === "minion" || TEAM[r] === "demon") evil.add(s);
+  });
+  const bounty = roles.includes("BountyHunter");
+  const kinds = roles.map((r, s) => {
+    if (evil.has(s)) return "evil";
+    if (CHARACTERS[r].registers.includes("minion")) return "registers";
+    if (bounty && TEAM[r] === "townsfolk") return "townsfolk";
+    return null;
+  });
+  if (kinds[(lord + n - 1) % n] === null || kinds[(lord + 1) % n] === null)
+    return false;
+  for (let start = 0; start < n; start++) {
+    if (kinds[start] === null || start === lord) continue;
+    let townsfolk = 0, covered = 0;
+    for (let length = 1; length <= n; length++) {
+      const seat = (start + length - 1) % n;
+      if (kinds[seat] === null) break;
+      if (kinds[seat] === "townsfolk") townsfolk++;
+      if (townsfolk > 1) break;
+      if (evil.has(seat)) covered++;
+      if (covered === evil.size && seat !== lord && length >= 3) return true;
+    }
+  }
+  return false;
 }
 
 /** Hand every legal assignment to `emit`, one at a time.

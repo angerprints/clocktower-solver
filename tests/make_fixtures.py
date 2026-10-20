@@ -1072,6 +1072,7 @@ def handmade():
     yield from the_slayer_and_the_virgin()
     yield from the_philosopher_takes_group_6()
     yield from stelle_60()
+    yield from the_lord_of_typhon()
 
 
 def the_eighth_five():
@@ -1568,6 +1569,26 @@ def the_slayer_and_the_virgin():
             rng, must_have=("Philosopher", "Slayer", "Virgin"))
         yield played(f"x-in-the-open-played-{seed}", script, seed, 7, 4,
                      rng=rng)
+
+
+def the_lord_of_typhon():
+    """The Lord of Typhon (19.10.2026): the boards of
+    tests/test_lord_of_typhon.py and played games with one dealt."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_lord_of_typhon import _payloads
+    for name, payload in zip(("quiet", "a-night-death", "executed"),
+                             _payloads()):
+        yield {"name": f"x-typhon-{name}", "payload": payload}
+    for seed, n in PLAYED_TYPHON:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(
+            rng, must_have=("LordOfTyphon",))
+        yield played(f"x-typhon-played-{seed}", script, seed, n, 3, rng=rng)
+
+
+PLAYED_TYPHON = ((0, 7), (12, 9))
 
 
 def stelle_60():

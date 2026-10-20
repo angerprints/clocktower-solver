@@ -106610,6 +106610,875 @@
    }
   },
   {
+   "name": "x-typhon-quiet",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Typhon",
+     "characters": [
+      "lordoftyphon",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "recluse",
+      "saint",
+      "drunk",
+      "butler",
+      "bountyhunter",
+      "pithag",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 420,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 41.9048,
+      "demon_pct": 15.2381,
+      "drunk_pct": 11.4286,
+      "lying_pct": 41.9048
+     },
+     {
+      "evil_pct": 39.0476,
+      "demon_pct": 12.381,
+      "drunk_pct": 11.4286,
+      "lying_pct": 39.0476
+     },
+     {
+      "evil_pct": 36.1905,
+      "demon_pct": 12.381,
+      "drunk_pct": 11.4286,
+      "lying_pct": 36.1905
+     },
+     {
+      "evil_pct": 36.1905,
+      "demon_pct": 12.381,
+      "drunk_pct": 11.4286,
+      "lying_pct": 36.1905
+     },
+     {
+      "evil_pct": 39.0476,
+      "demon_pct": 12.381,
+      "drunk_pct": 11.4286,
+      "lying_pct": 39.0476
+     },
+     {
+      "evil_pct": 41.9048,
+      "demon_pct": 15.2381,
+      "drunk_pct": 11.4286,
+      "lying_pct": 41.9048
+     },
+     {
+      "evil_pct": 54.2857,
+      "demon_pct": 20.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 54.2857
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-typhon-a-night-death",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Typhon",
+     "characters": [
+      "lordoftyphon",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "recluse",
+      "saint",
+      "drunk",
+      "butler",
+      "bountyhunter",
+      "pithag",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 396,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 64.1399,
+      "demon_pct": 23.3236,
+      "drunk_pct": 4.9198,
+      "lying_pct": 64.1399
+     },
+     {
+      "evil_pct": 43.1487,
+      "demon_pct": 18.9504,
+      "drunk_pct": 9.0743,
+      "lying_pct": 43.1487
+     },
+     {
+      "evil_pct": 21.7201,
+      "demon_pct": 2.551,
+      "drunk_pct": 13.3382,
+      "lying_pct": 21.7201
+     },
+     {
+      "evil_pct": 2.3324,
+      "demon_pct": 0.0,
+      "drunk_pct": 17.4927,
+      "lying_pct": 2.3324
+     },
+     {
+      "evil_pct": 26.0933,
+      "demon_pct": 2.551,
+      "drunk_pct": 13.3382,
+      "lying_pct": 26.0933
+     },
+     {
+      "evil_pct": 47.5219,
+      "demon_pct": 23.3236,
+      "drunk_pct": 9.0743,
+      "lying_pct": 47.5219
+     },
+     {
+      "evil_pct": 80.3207,
+      "demon_pct": 29.3003,
+      "drunk_pct": 0.0,
+      "lying_pct": 80.3207
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-typhon-executed",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Butler",
+      "events": []
+     },
+     {
+      "claim": "Recluse",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Typhon",
+     "characters": [
+      "lordoftyphon",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "recluse",
+      "saint",
+      "drunk",
+      "butler",
+      "bountyhunter",
+      "pithag",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ]
+   },
+   "expect": {
+    "valid": 446,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 47.0852,
+      "demon_pct": 0.0,
+      "drunk_pct": 13.4529,
+      "lying_pct": 47.0852
+     },
+     {
+      "evil_pct": 30.9417,
+      "demon_pct": 15.4709,
+      "drunk_pct": 16.1435,
+      "lying_pct": 30.9417
+     },
+     {
+      "evil_pct": 28.2511,
+      "demon_pct": 10.0897,
+      "drunk_pct": 16.1435,
+      "lying_pct": 28.2511
+     },
+     {
+      "evil_pct": 37.6682,
+      "demon_pct": 8.0717,
+      "drunk_pct": 14.7982,
+      "lying_pct": 37.6682
+     },
+     {
+      "evil_pct": 53.8117,
+      "demon_pct": 10.7623,
+      "drunk_pct": 12.1076,
+      "lying_pct": 53.8117
+     },
+     {
+      "evil_pct": 66.3677,
+      "demon_pct": 38.565,
+      "drunk_pct": 0.0,
+      "lying_pct": 66.3677
+     },
+     {
+      "evil_pct": 34.0807,
+      "demon_pct": 17.0404,
+      "drunk_pct": 0.0,
+      "lying_pct": 34.0807
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-typhon-played-0",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "first",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Princess",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Puzzlemaster"
+     },
+     {
+      "type": "EvilTwinPair",
+      "night": 1,
+      "player": 0,
+      "a": 0,
+      "b": 2
+     },
+     {
+      "type": "BountyHunterInfo",
+      "night": 1,
+      "player": 3,
+      "target": 1
+     },
+     {
+      "type": "PrincessNominated",
+      "night": 1,
+      "player": 4,
+      "target": 6
+     },
+     {
+      "type": "BlindVote",
+      "night": 1,
+      "player": 5
+     },
+     {
+      "type": "BountyHunterInfo",
+      "night": 2,
+      "player": 3,
+      "target": 0
+     },
+     {
+      "type": "BlindVote",
+      "night": 2,
+      "player": 5
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "lordoftyphon",
+      "widow",
+      "philosopher",
+      "snakecharmer",
+      "mayor",
+      "courtier",
+      "innkeeper",
+      "juggler",
+      "princess",
+      "mathematician",
+      "exorcist",
+      "oracle",
+      "chambermaid",
+      "farmer",
+      "bountyhunter",
+      "mutant",
+      "tinker",
+      "puzzlemaster",
+      "saint",
+      "xaan",
+      "eviltwin",
+      "organgrinder",
+      "leviathan",
+      "ojo",
+      "pukka"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 196,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 83.4438,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 83.4438
+     },
+     {
+      "evil_pct": 25.4403,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 41.8351
+     },
+     {
+      "evil_pct": 31.8283,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 11.9713
+     },
+     {
+      "evil_pct": 18.4832,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.3556
+     },
+     {
+      "evil_pct": 62.1727,
+      "demon_pct": 9.2035,
+      "drunk_pct": 0.0,
+      "lying_pct": 59.3735
+     },
+     {
+      "evil_pct": 82.2637,
+      "demon_pct": 42.4058,
+      "drunk_pct": 0.0,
+      "lying_pct": 74.3272
+     },
+     {
+      "evil_pct": 86.3751,
+      "demon_pct": 48.3907,
+      "drunk_pct": 0.0,
+      "lying_pct": 80.4516
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "3": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-typhon-played-12",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Heretic",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Butler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "Washerwoman",
+      "night": 1,
+      "player": 4,
+      "a": 2,
+      "b": 3,
+      "role": "Clockmaker"
+     },
+     {
+      "type": "ClockmakerInfo",
+      "night": 1,
+      "player": 2,
+      "count": 1
+     },
+     {
+      "type": "CerenovusMadness",
+      "night": 1,
+      "player": 6,
+      "role": "Sailor"
+     },
+     {
+      "type": "PitHagChoice",
+      "night": 2,
+      "player": 0,
+      "target": 1,
+      "role": "Slayer"
+     },
+     {
+      "type": "Became",
+      "night": 2,
+      "player": 1,
+      "role": "Slayer",
+      "was": "Savant"
+     },
+     {
+      "type": "CerenovusMadness",
+      "night": 2,
+      "player": 5,
+      "role": "Heretic"
+     },
+     {
+      "type": "VirginNomination",
+      "night": 2,
+      "player": 6,
+      "nominator": 1,
+      "triggered": true
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "lordoftyphon",
+      "widow",
+      "philosopher",
+      "snakecharmer",
+      "virgin",
+      "seamstress",
+      "washerwoman",
+      "savant",
+      "exorcist",
+      "clockmaker",
+      "steward",
+      "sailor",
+      "nightwatchman",
+      "pacifist",
+      "slayer",
+      "damsel",
+      "butler",
+      "mutant",
+      "heretic",
+      "pithag",
+      "devilsadvocate",
+      "cerenovus",
+      "shabaloth",
+      "imp",
+      "ojo"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 251,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 4.186,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 18.1441
+     },
+     {
+      "evil_pct": 3.3645,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 15.4799
+     },
+     {
+      "evil_pct": 1.6531,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 5.9596
+     },
+     {
+      "evil_pct": 55.6308,
+      "demon_pct": 23.3765,
+      "drunk_pct": 0.0,
+      "lying_pct": 55.6308
+     },
+     {
+      "evil_pct": 33.8961,
+      "demon_pct": 26.1982,
+      "drunk_pct": 0.0,
+      "lying_pct": 37.2144
+     },
+     {
+      "evil_pct": 34.4412,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 34.4412
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 54.1263,
+      "demon_pct": 29.2206,
+      "drunk_pct": 0.0,
+      "lying_pct": 54.1263
+     },
+     {
+      "evil_pct": 36.7655,
+      "demon_pct": 21.2047,
+      "drunk_pct": 0.0,
+      "lying_pct": 47.3143
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "2": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "random-00",
    "payload": {
     "n_players": 9,

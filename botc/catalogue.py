@@ -115,6 +115,10 @@ class Character(NamedTuple):
     # neighbours the Demon. Only the deal — a Demon that moves on later
     # does not move the Marionette with it.
     beside: str = ""
+    # The Lord of Typhon's setup: every evil character in one line, this
+    # one not at either end (worlds.seated_legally). Only the deal, like
+    # `beside` (Patrick, Lord of Typhon C, Weg 1, 19.10.2026).
+    lines_up: bool = False
     # Can the holder not say what it is? A Mutant "mad about being an
     # Outsider" might be executed, so it never claims one: it always
     # stands behind a Townsfolk. Unlike every other good player, whose
@@ -641,6 +645,20 @@ _EXPERIMENTAL = [
        note="its advice is kept but not weighed — strategy rather than a "
             "fact, and a drunk or poisoned one may be told something "
             "unhelpful"),
+
+    # The first of the big characters (19.10.2026), read with the table
+    # before anything was built (claude/lord-of-typhon-lesarten.md).
+    #
+    # Kills like any Demon and passes the star to nobody. "[Evil
+    # characters are in a line, you are in the middle. +1 Minion. -? to
+    # +? Outsiders]": one Minion more, any number of Outsiders, and a
+    # seating rule on the deal (`lines_up`, worlds.seated_legally). Its
+    # Minions were handed good tokens and turned on the first night, when
+    # the Lord of Typhon itself does not wake.
+    _c("LordOfTyphon", "lordoftyphon", "Lord of Typhon", "demon",
+       {FIRST, EVERY}, nights="other", chooses=True, lines_up=True,
+       setup=tuple({"townsfolk": -1 - k, "outsider": k, "minion": 1}
+                   for k in (0, 1, -1, 2, -2, 3, -3, 4, -4))),
 ]
 
 
@@ -726,6 +744,10 @@ _NOT_IN_THE_FILE = {
     # shares the Fearmonger's slots (10.10.2026). The Vizier needs none:
     # it never wakes for itself.
     "organgrinder": (26, 17),
+    # The Lord of Typhon (19.10.2026): other nights between the Vortox
+    # (31) and the Vigormortis (32), so it shares the Vortox's slot. Its
+    # first night is the Storyteller's, not its own.
+    "lordoftyphon": (0, 31),
     # The publisher's other nights run ... Vortox, Lord of Typhon,
     # Vigormortis, Ojo, Al-Hadikhia ... — after the Vigormortis at 32 and
     # before anything the file numbers 33, so it shares the Vigormortis's

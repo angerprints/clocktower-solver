@@ -138,6 +138,14 @@ def claims_for(deal, rng, script=None):
         # A Marionette is evil and does not know it, so it claims the
         # token it was handed like any good player — only the knowing
         # evil bluff.
+        # A Lord of Typhon's Minion saw a good token before it turned, and
+        # that token is surely not in play: mostly it claims that one
+        # (Lesart D, Weg 1, "aber nicht ausschließlich", 19.10.2026).
+        token = getattr(deal, "typhon_tokens", {}).get(seat)
+        if token and not became and rng.random() < 0.7:
+            claims[seat] = token
+            notes[seat] = f"evil, claiming the {token} it was handed first"
+            continue
         if is_evil(role) and knows_what_it_is(role):
             # The team knows each other and divides the three between
             # them, so two Minions do not walk in claiming the same

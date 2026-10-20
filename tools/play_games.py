@@ -410,6 +410,14 @@ SINCE_THE_NAMED_GAMES = ("Banshee", "Zealot", "Heretic", "Goblin", "Ojo",
                          "Leviathan", "Yaggababble")
 
 
+# The big characters, built one at a time from 19.10.2026: drawn only
+# when a caller insists on one. Drawn freely, each one reshuffled every
+# mixed script, and every seed a test or the corpus names for what it
+# shows (a Snake Charmer taking the Scarlet Woman's star, a Philosopher's
+# Golem) became some other game. Each gets its own gate instead.
+ONLY_WHEN_ASKED = ("LordOfTyphon",)
+
+
 def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):
     """A script chosen to make characters meet who never have.
 
@@ -432,7 +440,8 @@ def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):
     from botc.catalogue import CHARACTERS, IMPAIRS
     from botc import scripts as _s
     every = {k: c for k, c in CHARACTERS.items() if c.modelled
-             and not (as_named and k in SINCE_THE_NAMED_GAMES)}
+             and not (as_named and k in SINCE_THE_NAMED_GAMES)
+             and (k not in ONLY_WHEN_ASKED or k in must_have)}
     by = lambda team: [k for k, c in every.items() if c.team == team]
 
     # At least two droison sources, and at least one character that moves

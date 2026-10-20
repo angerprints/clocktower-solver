@@ -18,7 +18,9 @@ coherent: legal worlds, well-formed rules, sane numbers, and nothing that
 crashes or hangs.
 """
 
+import os
 import random
+import sys
 import unittest
 
 from helpers import SolverTest                    # sets up the import path
@@ -32,9 +34,17 @@ from botc.worlds import _bags, enumerate_worlds   # noqa: E402
 # Everything the catalogue holds that can be dealt and is not refused
 # outright. The Fabled are excluded because they take no seat; Legion and
 # Riot because the solver declines them by name.
+#
+# Not the big characters built one at a time (tools/play_games.py,
+# ONLY_WHEN_ASKED): each one drawn here reshuffled every random board.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), "tools"))
+from play_games import ONLY_WHEN_ASKED            # noqa: E402
+
 POOL = {team: sorted(k for k, c in CHARACTERS.items()
                      if c.team == team and c.seated
-                     and k not in limits.UNSUPPORTED)
+                     and k not in limits.UNSUPPORTED
+                     and k not in ONLY_WHEN_ASKED)
         for team in ("townsfolk", "outsider", "minion", "demon")}
 
 SHAPE = {"townsfolk": 13, "outsider": 4, "minion": 4, "demon": 2}

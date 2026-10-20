@@ -29,6 +29,7 @@ const DEFAULTS = {
   registers: [], setup: [], believes: false, believes_from: ["townsfolk"],
   modelled: true, note: "", chooses: false, alignment_open: false,
   nights: "never", seated: true, beside: "", brings: [], copies: 1,
+  lines_up: false,
 };
 
 export const CHARACTERS = Object.fromEntries(

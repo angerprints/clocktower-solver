@@ -654,6 +654,55 @@ def _prune(options, count, target, look, order, k, used):
     return [o for o in options if verdict[TEAM[o[0]]]]
 
 
+def in_a_line(roles, lord):
+    """Do the evil characters sit in one line, `lord` not at either end?
+
+    The Lord of Typhon's setup (Patrick, 19.10.2026):
+
+    * A: anywhere in the line but at an end — evil on both sides.
+    * Who may stand in the line beside the Minions and the Demon: a
+      character that can register as a Minion, at any place in it (the
+      Recluse), and an evil Townsfolk of the Bounty Hunter's (B, Weg 1:
+      may be part of it, need not). Which Townsfolk turned evil is the
+      Bounty Hunter's story, not the deal's, so any one Townsfolk may
+      stand in for it while a Bounty Hunter was dealt — permissive.
+    """
+    n = len(roles)
+    evil = {s for s, r in enumerate(roles)
+            if TEAM[r] in ("minion", "demon")}
+    bounty = "BountyHunter" in roles
+
+    def kind(seat):
+        role = roles[seat]
+        if seat in evil:
+            return "evil"
+        if "minion" in CHARACTERS[role].registers:
+            return "registers"
+        if bounty and TEAM[role] == "townsfolk":
+            return "townsfolk"
+        return None
+
+    kinds = [kind(s) for s in range(n)]
+    if kinds[(lord - 1) % n] is None or kinds[(lord + 1) % n] is None:
+        return False
+    for start in range(n):
+        if kinds[start] is None or start == lord:
+            continue
+        townsfolk = 0
+        covered = 0
+        for length in range(1, n + 1):
+            seat = (start + length - 1) % n
+            if kinds[seat] is None:
+                break
+            townsfolk += kinds[seat] == "townsfolk"
+            if townsfolk > 1:
+                break
+            covered += seat in evil
+            if covered == len(evil) and seat != lord and length >= 3:
+                return True
+    return False
+
+
 def seated_legally(roles):
     """Does every character sit where the setup says it must?
 
@@ -672,6 +721,8 @@ def seated_legally(roles):
         team = CHARACTERS[role].beside
         if team and not any(TEAM[roles[(seat + step) % n]] == team
                             for step in (-1, 1)):
+            return False
+        if CHARACTERS[role].lines_up and not in_a_line(roles, seat):
             return False
         # "[+the King]": a Choirboy dealt means a King dealt (10.10.2026).
         for other in CHARACTERS[role].brings:
