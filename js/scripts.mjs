@@ -25,7 +25,8 @@ export function makeScript(name, keys, author = "", unknown = []) {
     demons: by("demon"),
     // The characters that can actually be dealt to a seat. A Fabled is
     // put on the table by the Storyteller and held by nobody.
-    seatedKeys: keys.filter(k => CHARACTERS[k].seated),
+    // Not Lil' Monsta, which changes the bag and nobody is dealt.
+    seatedKeys: keys.filter(k => CHARACTERS[k].seated && CHARACTERS[k].dealt),
     fabled: keys.filter(k => !CHARACTERS[k].seated),
   };
   // Only the *dealt* characters move the bag here. The Fabled move it

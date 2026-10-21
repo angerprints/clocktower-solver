@@ -131,6 +131,12 @@ class Character(NamedTuple):
     # but the Village Idiot: "[+0 to +2 Village Idiots]", in place of
     # other Townsfolk (11.10.2026).
     copies: int = 1
+    # Is it ever dealt to a seat? Lil' Monsta goes in the bag and changes
+    # it — one Minion more, no Demon — and is in play, but nobody holds
+    # its token: the Minions hand it round, and whoever babysits "is the
+    # Demon" (21.10.2026). So it moves the bag like any seated character
+    # and is never a seat's candidate.
+    dealt: bool = True
 
 
 def _handled(self):
@@ -679,6 +685,14 @@ _EXPERIMENTAL = [
        nights="every", chooses=True,
        setup=tuple({"townsfolk": -k, "outsider": k} if k else {}
                    for k in (0, 1, -1, 2, -2, 3, -3, 4, -4))),
+    # The fourth (21.10.2026, claude/lil-monsta-lesarten.md). Nobody is
+    # dealt it: "[+1 Minion]" and no Demon in the bag. Each night the
+    # Minions choose who babysits it and "is the Demon"
+    # (solver.the_minions_choose_a_babysitter, worlds.Babysits), and from
+    # the second night a player might die (solver.a_lil_monsta_may_kill).
+    # Not a player, so it cannot be drunk or poisoned.
+    _c("LilMonsta", "lilmonsta", "Lil' Monsta", "demon", {NEVER},
+       dealt=False, setup=({"demon": -1, "minion": 1},)),
 ]
 
 
@@ -772,6 +786,9 @@ _NOT_IN_THE_FILE = {
     # Philosopher and the Minion info, sharing slot 1 with the
     # Travellers there; the Demons' place on the others, the Vortox's.
     "kazali": (1, 31),
+    # Lil' Monsta (21.10.2026) is in the file: 15 on the first night,
+    # before the Poisoner, and 35 on the others — after the Exorcist and
+    # the Demons, before the Fortune Teller.
     # The Al-Hadikhia (21.10.2026): "... Vigormortis, Ojo, Al-Hadikhia
     # ..." on the other nights, so the Vigormortis's slot like the Ojo.
     "alhadikhia": (0, 32),

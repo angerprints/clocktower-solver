@@ -99,6 +99,18 @@ export const change = (phase, seat, role = null, side = null) =>
 export const turnedEvil = (phase, seat, by) =>
   ({phase, seat, role: null, side: "evil", turned: by});
 
+/** Who babysits Lil' Monsta from this night on, and "is the Demon"
+ * (21.10.2026). Changes nothing about the seat. `Babysits` in Python. */
+export const babysits = (phase, seat) =>
+  ({phase, seat, role: null, side: null, babysits: true});
+
+/** Was this world dealt with Lil' Monsta in the bag — nobody holding a
+ * Demon? See worlds.py. */
+export const BABYSAT_READS = {now: null};
+
+export const lilMonstaWorld = world =>
+  !world.roles.some(r => TEAM[r] === "demon");
+
 /** A world plus the times a character changed hands.
  *
  * The world underneath is still one starting assignment. What changes
@@ -129,13 +141,14 @@ export class Timeline {
     const roles = new Map(), sides = new Map(), demons = [], held = new Set();
     for (const c of this.changes) {
       const at = phaseIndex(c.phase);
+      if (c.babysits) { demons.push([at, c.seat, c.phase]); continue; }
       if (!sides.has(c.seat)) sides.set(c.seat, []);
       sides.get(c.seat).push([at, c]);
       if (c.role !== null && c.role !== undefined) {
         if (!roles.has(c.seat)) roles.set(c.seat, []);
         roles.get(c.seat).push([at, c.role]);
         held.add(c.role);
-        if (TEAM[c.role] === "demon") demons.push([at, c.seat]);
+        if (TEAM[c.role] === "demon") demons.push([at, c.seat, null]);
       }
     }
     return (this._index = {roles, sides, demons, held});
@@ -203,12 +216,21 @@ export class Timeline {
     const demons = this._indexed().demons;
     if (demons.length) {
       const here = phaseIndex(phase);
-      for (const [at, changed] of demons) if (at <= here) seat = changed;
+      let sat = null;
+      for (const [at, changed, babysat] of demons)
+        if (at <= here) { seat = changed; sat = babysat; }
+      // Which nights' babysitters were looked at (bestBabysatStory).
+      if (sat !== null && BABYSAT_READS.now) BABYSAT_READS.now.add(sat);
     }
     return seat;
   }
 
   teamAt(seat, phase) { return TEAM[this.roleAt(seat, phase)]; }
+
+  /** A story with Lil' Monsta in it: somebody babysits. See worlds.py. */
+  get lilMonsta() {
+    return this._indexed().demons.some(([, , babysat]) => babysat !== null);
+  }
 }
 
 // --------------------------------------------------------------------
@@ -245,7 +267,8 @@ function itself(key, script) {
  * the Soldier — a deliberate lie from somebody who thinks they are good.
  */
 function evilOptions(evil, script) {
-  const out = evil.filter(knowsWhatItIs).map(key => [key, null]);
+  const out = evil.filter(k => knowsWhatItIs(k) && CHARACTERS[k].dealt)
+    .map(key => [key, null]);
   // Somebody who thinks they are the Demon bluffs like the Demon. A
   // Lunatic is good and lies anyway, because as far as it knows it has
   // every reason to.
@@ -298,6 +321,9 @@ function candidatesFromClaim(claim, allowGoodLies, certainty, script) {
 
   // Openly claiming an evil character. Still needs its token if it is the
   // kind that holds one.
+  // Lil' Monsta is nobody's character: claiming it says nothing about
+  // the seat (21.10.2026).
+  if (evil.includes(claim) && !CHARACTERS[claim].dealt) return anything(script);
   if (evil.includes(claim)) return itself(claim, script);
 
   // Nobody can claim a character that is not in the bag. Treating this as
@@ -531,7 +557,9 @@ function branches(nPlayers, claims, certainties, allowGoodLies, forced,
     // Seats with fewest options first, so the search prunes earlier.
     const order = [...Array(nPlayers).keys()]
       .sort((a, b) => cands[a].length - cands[b].length);
-    out.push({target, cands, order, required: present});
+    // What has to land on a seat: not Lil' Monsta (21.10.2026).
+    const required = new Set([...present].filter(k => CHARACTERS[k].dealt));
+    out.push({target, cands, order, required});
   }
   return out;
 }
@@ -545,8 +573,12 @@ function branches(nPlayers, claims, certainties, allowGoodLies, forced,
  * worlds.py. */
 export function seatedLegally(roles) {
   const n = roles.length;
+  // No Demon dealt is Lil' Monsta's bag: a Marionette sits beside the
+  // first babysitter instead (scoring.mjs theMinionsChooseABabysitter).
+  const noDemon = !roles.some(r => TEAM[r] === "demon");
   for (let seat = 0; seat < n; seat++) {
     const team = CHARACTERS[roles[seat]].beside;
+    if (team === "demon" && noDemon) continue;
     if (team && TEAM[roles[(seat + n - 1) % n]] !== team &&
         TEAM[roles[(seat + 1) % n]] !== team) return false;
     // "[+the King]": a Choirboy dealt means a King dealt (10.10.2026).

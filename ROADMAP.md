@@ -1477,13 +1477,34 @@ Der Bericht steht in `claude/al-hadikhia.md`, die Lesarten in `claude/al-hadikhi
 | Korpus | 649 → 659, kein altes Brett geändert | |
 | Testsammlung | 1.707 → 1.722 grün, 2 übersprungen | |
 
+### Lil' Monsta, der vierte große Charakter · *erledigt am 21.10.2026*
+
+Der Bericht steht in `claude/lil-monsta.md`, die Lesarten in `claude/lil-monsta-lesarten.md`. **Deine Antworten vom 21.10.2026:** A bis H Weg 1, I einverstanden.
+
+| | Gebaut |
+|---|---|
+| Lil' Monsta | Kein Spieler ist der Dämon, dafür 1 Scherge mehr. Pro Nacht ein Babysitter, der als Dämon registriert, gesucht nur für Nächte, nach denen eine Information fragt (bis 64 Kombinationen alle, darüber Nacht für Nacht). Neue Zeile „hütet Lil' Monsta“. Ab Nacht 2 höchstens ein Toter, nie der Babysitter, als Tod durch den Dämon. Schlangenbeschwörer tauscht mit dem Babysitter der Nacht davor, Exorzist stoppt den Tod. Jinxes mit Scharlachroter Frau, Psychopath, Wesir, Magierin, Marionette gebaut; der Strippenzieher gibt einen Tag mehr, außer er hütet selbst. Nicht gebaut: Grubenweib erzeugt einen zweiten Dämon. |
+| Nebenbei | Zwei Teedamen (der Philosoph nahm sie) neben einem Hingerichteten: Der Solver fragt jetzt beide, nicht nur die erste. Ein Babysitter gibt es nur in Geschichten, in denen jemand hütet, nicht wo das Grubenweib den Dämon zu etwas anderem machte. |
+
+| Tor (3.000 Partien je Zeile) | verworfen | mit Lil' Monsta |
+|---|---|---|
+| Lil' Monsta, 4 / 6 Nächte | 10 / 9 | 0 / 1 (Stelle 36) |
+| mit Schlangenbeschwörer, Exorzist, Kammerzofe | 11 | 1 (Stelle 36) |
+| mit Scharlachroter Frau, Strippenzieher, Dämonenjäger | 9 | 1 (Barbier) |
+| mit Magierin, Marionette, Psychopath, Wesir | 7 | 1 (Barbier) |
+| mit Wahrsagerin, Uhrmacher, Blumenmädchen, Ritter | 9 | 2 (Barbier) |
+| ohne Pflicht, feste Skripte, Prüfsummen | gleich | – |
+| Über die Seite, 7 bis 9 Spieler | 65 Partien, 0 ohne Welt durch Lil' Monsta (eine braucht „gute Spieler dürfen lügen“); in Python 4 länger als 2 Minuten, Median 4 s; in JavaScript diese 4 geschätzt in 7 bis 15 s | |
+| Korpus | 659 → 668, kein altes Brett geändert | |
+| Testsammlung | 1.722 → 1.739 grün, 2 übersprungen | |
+
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia am 21.10.2026; als Nächstes Lil' Monsta, Reihenfolge siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia und Lil' Monsta am 21.10.2026; als Nächstes der Beschwörer, Reihenfolge siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 128 Einträge. Von den 138 Spielercharakteren der App sind 127 im Katalog (dazu der Wächter, ein Fabled), 11 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen, 1 Dämon. Davon sind 9 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia (21.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
+Stand des Katalogs: 129 Einträge. Von den 138 Spielercharakteren der App sind 128 im Katalog (dazu der Wächter, ein Fabled), 10 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen. Davon sind 8 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia und Lil' Monsta (21.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1536,7 +1557,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
 | 30 | Simulator gegen Night-Walk | *Erledigt am 05.10.2026:* Die 60 abweichenden Nächte in Sects & Violets waren zwei Lücken des Night-Walk, beide repariert. Jetzt 0 von 16.641. |
 | 35 | Simulator | *Erledigt am 05.10.2026:* Die Reihenfolge der Nacht liest den aktuellen Charakter, nicht den ausgeteilten. |
-| 36 | Sects & Violets | **Wer früh in der Nacht handelt und in derselben Nacht verwandelt wird:** Ein Schlangenbeschwörer wählt an Platz 11, das Grubenweib macht ihn an Platz 16 zu etwas anderem. Der Solver rechnet in ganzen Nächten und verwirft die Wahl. 1 von 6.000 Partien (Seed 1078, 4 Nächte). Gefunden am 05.10.2026, nicht gebaut. Am 08.10.2026 dieselbe Klasse in einer gemischten Partie: Ein Glücksspieler wählt den Schläger und wird betrunken, später in derselben Nacht springt ein Fang Gu in den Schläger. Der Solver sieht ab dem Sprung keinen Schläger mehr und hält den Glücksspieler für nüchtern, der Mathematiker zählt ihn aber (Tor, Seed 55). Am Tor von Batch 8 dieselbe Klasse dreimal: ein Schlangenbeschwörer tauscht, und der Barbier-Tausch folgt in derselben Nacht (Seed 1450, wahre Welt verloren); und im Night-Walk ein Mönch, der schützt und in derselben Nacht vom Grubenweib verwandelt wird (Seeds 1499 und 2295): Der Night-Walk hält den Schutz, der Simulator nicht. |
+| 36 | Sects & Violets | **Wer früh in der Nacht handelt und in derselben Nacht verwandelt wird:** Ein Schlangenbeschwörer wählt an Platz 11, das Grubenweib macht ihn an Platz 16 zu etwas anderem. Der Solver rechnet in ganzen Nächten und verwirft die Wahl. 1 von 6.000 Partien (Seed 1078, 4 Nächte). Gefunden am 05.10.2026, nicht gebaut. Am 08.10.2026 dieselbe Klasse in einer gemischten Partie: Ein Glücksspieler wählt den Schläger und wird betrunken, später in derselben Nacht springt ein Fang Gu in den Schläger. Der Solver sieht ab dem Sprung keinen Schläger mehr und hält den Glücksspieler für nüchtern, der Mathematiker zählt ihn aber (Tor, Seed 55). Am Tor von Batch 8 dieselbe Klasse dreimal: ein Schlangenbeschwörer tauscht, und der Barbier-Tausch folgt in derselben Nacht (Seed 1450, wahre Welt verloren); und im Night-Walk ein Mönch, der schützt und in derselben Nacht vom Grubenweib verwandelt wird (Seeds 1499 und 2295): Der Night-Walk hält den Schutz, der Simulator nicht. Am Tor von Lil' Monsta (21.10.2026) zweimal mit der Kammerzofe: Sie zählt im Simulator nach dem Charakter am Ende der Nacht und lässt einen Segler weg, den das Grubenweib danach zum Philosophen machte (Seed 73, 6 Nächte), und einen Schlangenbeschwörer, der mit einem guten Babysitter tauschte (Seed 2934). |
 | 37 | Gemischte Skripte | *Erledigt am 07.10.2026:* Der Solver verlor in 3,2 % der gemischten Partien die wahre Welt (96 von 3.000), jetzt in 0,4 % (11 von 3.000). Der Rest steht in den Stellen 4, 6, 36, 41 und 42. |
 | 38 | Solver | *Erledigt am 07.10.2026:* Vortox und Registrieren. Deine Entscheidung: Die Wirklichkeit zählt, auch bei der Adligen. Gebaut für Koch, Empath, Orakel, Schneiderin, Wahrsagerin, Jongleur, Großmutter und Adlige. |
 | 39 | Werkzeug | **Die Nachtreihenfolge im Repo ist veraltet** (130 von 181 Charakteren). Für Gutsverwalter, Ritter und Shugenja sind die Plätze von Hand eingetragen. |

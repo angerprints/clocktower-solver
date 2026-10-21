@@ -70,6 +70,10 @@ def _scarlet_woman(world, state, seat, night):
     own ability and does not count.
     """
     demon = world.demon_at(f"N{night}")
+    # Babysitting Lil' Monsta is no waking of her own (G, Weg 1).
+    from .info import babysitter_at
+    if babysitter_at(world, f"N{night}") == seat:
+        return False
     return demon == seat and world.demon_at("N1") != seat
 
 
@@ -593,7 +597,14 @@ def _acts_as(world, seat, phase):
     if world.believes[seat]:
         return world.believes[seat]
     demon = world.demon_at(phase)
-    return world.role_at(demon, phase) if demon is not None else "Imp"
+    if demon is None:
+        return "Imp"
+    # A babysitter's character is not the Demon's: the Demon in play is
+    # Lil' Monsta, which wakes for nothing of its own (21.10.2026).
+    from .info import babysitter_at
+    if babysitter_at(world, phase) == demon:
+        return "LilMonsta"
+    return world.role_at(demon, phase)
 
 
 def uncertain(world, state, seat, night):
@@ -709,6 +720,11 @@ def uncertain(world, state, seat, night):
             and not taken_by_a_philosopher(state, "Exorcist"):
         return False
     if world.demon_at(phase) != seat:
+        return False
+    # A babysitter wakes as whatever it holds; an Exorcist sends no
+    # Minion to bed (21.10.2026).
+    from .info import babysitter_at
+    if babysitter_at(world, phase) == seat:
         return False
     # A Demon that does not wake at night has nothing for an Exorcist to
     # stop: a Yaggababble, a Leviathan with nobody to choose among.

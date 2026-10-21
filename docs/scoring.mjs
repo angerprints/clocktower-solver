@@ -19,7 +19,8 @@ import {LISTENING, beginReads, differOnlyUnasked, endReads, listenForSides,
         phaseIndex, replayReads} from "./phases.mjs";
 import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
-import {Timeline, change, turnedEvil} from "./worlds.mjs";
+import {BABYSAT_READS, Timeline, babysits, change, lilMonstaWorld,
+        turnedEvil} from "./worlds.mjs";
 import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
   from "./characters.rules.mjs";
@@ -27,7 +28,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, fallsAs,
         fauxPawLycanthrope,
         holdingNow,
         knowsItTurnedEvil, sideOpen,
-        livingNeighbours, takenByAPhilosopher, tookIt, wentOnAfter}
+        livingNeighbours, takenByAPhilosopher, tookIt, wentOnAfter,
+        babysitterAt}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -103,6 +105,9 @@ export const TRANSITION_RULES = [];
 // 11, almost exactly backwards.
 const ACTS_AT = {
   aBountyHunterBringsAnEvilTownsfolk: 0, // the setup
+  // Ahead of the Snake Charmer, which on night two points at night one's
+  // babysitter (21.10.2026).
+  theMinionsChooseABabysitter: 5,
   aSnakeCharmerTakesTheStar: 11,
   aPitHagMakesSomebodyElse: 16,
   aBarberLetsTheDemonSwapTwo: 40,
@@ -136,6 +141,9 @@ export function possibleTimelines(world, state, cap = 128) {
   if (inBag(state, "BountyHunter") && world.roles.includes("BountyHunter"))
     cap *= Math.max(1, world.roles.filter(
       r => TEAM[r] === "townsfolk").length);
+  // Room for every babysitter story Lil' Monsta offers (21.10.2026).
+  if (inBag(state, "LilMonsta") && lilMonstaWorld(world))
+    cap = Math.max(cap, LIL_MONSTA_STORIES);
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -530,6 +538,8 @@ function mastermindDay(world, state, phase, holder) {
   if (!executed(state, day, holder)) return false;
   const seat = world.findAt("Mastermind", phase);
   if (seat === null || !state.aliveSet(phase).has(seat)) return false;
+  // Hanged itself, babysitting Lil' Monsta: it has no day to buy.
+  if (seat === holder) return false;
   return phaseIndex(state.finalPhase()) <= phaseIndex(`D${day + 1}`);
 }
 
@@ -538,7 +548,7 @@ function mastermindDay(world, state, phase, holder) {
 export const mastermindMarker = (phase, seat) => change(phase, seat, null, null);
 export const isMastermindMarker = c =>
   (c.role === null || c.role === undefined) &&
-  (c.side === null || c.side === undefined);
+  (c.side === null || c.side === undefined) && !c.babysits && !c.fell;
 
 /** Every way the Demon could have changed hands in this world.
  *
@@ -549,7 +559,29 @@ export const isMastermindMarker = c =>
  *
  * Empty means no story fits, and the world is impossible.
  */
+/** "If Lil' Monsta dies with 5 or more players alive, the Scarlet Woman
+ * babysits Lil' Monsta for the rest of the game", from the moment after,
+ * and she has to see it through. See solver.py. */
+function theScarletWomanBabysits(world, state) {
+  const fell = (world.changes || []).filter(c => c.fell);
+  if (!fell.length) return [[]];
+  const at = fell[0].phase, seat = fell[0].seat;
+  const scarlet = world.findAt("ScarletWoman", at);
+  if (scarlet === null || scarlet === seat
+      || !scarletWomanTakesOver(world, state, at)) return [];
+  const index = phaseIndex(at) + 1;
+  const after = `${index % 2 ? "D" : "N"}${Math.floor(index / 2) + 1}`;
+  const final = phaseIndex(state.finalPhase());
+  if (state.diedAt(scarlet).some(gone => phaseIndex(gone) >= index
+      && !(state.gameOver && phaseIndex(gone) >= final))) return [];
+  return [[babysits(after, scarlet)]];
+}
+
 export function demonLineages(world, state, cap = 24) {
+  // Lil' Monsta's babysitters are the Minions' choice; what a
+  // babysitter's death leads to is settled where they are chosen.
+  if (inBag(state, "LilMonsta") && lilMonstaWorld(world))
+    return theScarletWomanBabysits(world, state);
   const start = world.demonAt("N1");
   if (start === null) return [[]];
 
@@ -1023,6 +1055,185 @@ function whoeverWorks(world, state, role, phase) {
   return null;
 }
 
+// --------------------------------------------------------------------
+// Lil' Monsta (21.10.2026). See solver.py: each night the Minions choose
+// a babysitter, who "is the Demon"; one babysitter a night, searched only
+// where a reading asks (A, B, Weg 1).
+// --------------------------------------------------------------------
+
+export const LIL_MONSTA_STORIES = 256;
+// Up to this many combinations of babysitters are all told; beyond it a
+// night at a time (bestBabysatStory).
+export const BABYSITTERS_TOLD_IN_FULL = 64;
+
+/** Each night's babysitters worth trying, in order. See solver.py. */
+export function babysitterOptions(world, state) {
+  const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
+  const asked = babysitterAsked(state);
+  const out = [];
+  for (let night = 1; night <= last; night++)
+    out.push(babysittersOn(world, state, night, asked));
+  return out;
+}
+
+/** {night: [pointed at, ruled out, every seat]}. See solver.py. */
+function babysitterAsked(state) {
+  const asked = new Map();
+  const at = night => {
+    if (!asked.has(night)) asked.set(night, [new Set(), new Set(), [false]]);
+    return asked.get(night);
+  };
+  for (const info of state.infos) {
+    const k = info.night;
+    switch (info.type) {
+      case "FortuneTeller":
+        [info.a, info.b].forEach(x => at(k)[info.yes ? 0 : 1].add(x)); break;
+      case "SageInfo": at(k)[0].add(info.a); at(k)[0].add(info.b); break;
+      case "ChoirboyInfo": at(k)[0].add(info.target); break;
+      case "KnightInfo": at(k)[1].add(info.a); at(k)[1].add(info.b); break;
+      case "ClockmakerInfo": at(k)[2][0] = true; break;
+      case "LilMonstaBabysat": at(k)[0].add(info.player); break;
+      case "SlayerShot": at(k)[info.died ? 0 : 1].add(info.target); break;
+      case "GolemNomination": at(k)[info.died ? 1 : 0].add(info.target); break;
+      case "PuzzlemasterGuess": at(k)[0].add(info.shown); break;
+      case "SavantInfo":
+        for (const says of [info.first_says, info.second_says])
+          if (says && says.kind === "demon_among")
+            for (const x of says.seats || []) at(k)[0].add(Number(x));
+        break;
+      case "FlowergirlInfo":
+        if (k > 1)
+          for (const v of (state.votes || {})[k - 1] || [])
+            at(k - 1)[info.voted ? 0 : 1].add(v);
+        break;
+      case "SnakeCharmerChoice":
+        at(k > 1 ? k - 1 : 1)[info.swapped ? 0 : 1].add(info.target); break;
+      case "ExorcistChoice":
+        // Naming last night's babysitter stops the kill and says nothing
+        // else: it may well have.
+        if (k > 1) at(k - 1)[0].add(info.target);
+        break;
+      default: break;
+    }
+  }
+  return asked;
+}
+
+/** Seats the board says may have become a Minion: a Snake Charmer that
+ * swapped, a Pit-Hag's Minion. */
+function madeMinions(state) {
+  const out = new Set();
+  for (const info of state.infos) {
+    if (info.type === "SnakeCharmerChoice" && info.swapped) out.add(info.player);
+    else if (info.sourceRole === "PitHag" && info.role
+             && TEAM[info.role] === "minion") out.add(info.target);
+  }
+  return out;
+}
+
+/** The seats worth trying as this night's babysitter, best first. */
+function babysittersOn(world, state, night, asked) {
+  const phase = `N${night}`;
+  let alive = [...state.aliveSet(phase)].sort((a, b) => a - b);
+  if (!alive.length) return [];
+  // Read off the deal, not the story: asked again on later passes, what
+  // it settled for an earlier night has to come out the same.
+  const dealt = world.roles;
+  // The Magician's jinx: the Storyteller picks among the Minions.
+  const magician = world.find("Magician");
+  if (magician !== null && state.aliveSet(phase).has(magician)
+      && onBoard(state, "Magician")) {
+    const made = madeMinions(state);
+    alive = alive.filter(p => TEAM[dealt[p]] === "minion" || made.has(p));
+  }
+  // The Marionette's: it starts beside the first babysitter.
+  if (night === 1) {
+    const marionette = world.find("Marionette");
+    if (marionette !== null) {
+      const n = state.nPlayers;
+      alive = alive.filter(p => p === (marionette + n - 1) % n
+                           || p === (marionette + 1) % n);
+    }
+  }
+  const [pointed, ruledOut, every] =
+    asked.get(night) || [new Set(), new Set(), [false]];
+  if (every[0]) return alive;
+  const lo = phaseIndex(phase), hi = phaseIndex(`D${night}`);
+  // Dead in the span, or on the gallows that day: tried, but never
+  // standing in for the seats nothing asks about.
+  const died = new Set(alive.filter(p => state.diedAt(p).some(at => {
+    const i = phaseIndex(at);
+    return lo <= i && i <= hi;
+  }) || state.executedOn(night) === p));
+  const out = alive.filter(p => pointed.has(p));
+  for (const p of alive) if (died.has(p) && !out.includes(p)) out.push(p);
+  const neutral = alive.filter(p => !pointed.has(p) && !ruledOut.has(p)
+                               && !died.has(p));
+  // First, the one standing for every seat nothing asks about: where it
+  // will do, it is the story told (bestBabysatStory).
+  if (neutral.length) {
+    const minions = neutral.filter(p => TEAM[dealt[p]] === "minion");
+    out.unshift((minions.length ? minions : neutral)[0]);
+  } else {
+    // Nobody nothing asks about: then anybody, the ruled out last.
+    for (const p of alive) if (!out.includes(p) && !ruledOut.has(p)) out.push(p);
+    for (const p of alive) if (!out.includes(p)) out.push(p);
+  }
+  return out;
+}
+
+/** What becomes of the babysitter chosen on this night, until the
+ * Minions choose again. See solver.py. */
+function babysitterFalls(world, state, seat, night) {
+  const lo = phaseIndex(`N${night}`), hi = phaseIndex(`D${night}`);
+  const gone = state.diedAt(seat).filter(at => {
+    const i = phaseIndex(at);
+    return lo <= i && i <= hi;
+  }).sort((a, b) => phaseIndex(a) - phaseIndex(b));
+  if (!gone.length) return [["go on", []]];
+  const at = gone[0];
+  const out = [];
+  if (state.gameOver && phaseIndex(at) >= phaseIndex(state.finalPhase()))
+    out.push(["over", []]);
+  // The Scarlet Woman: who holds her by then is settled once the whole
+  // story is in, so the fall is marked and the handovers settle it.
+  if (onBoard(state, "ScarletWoman"))
+    out.push(["scarlet", [{phase: at, seat, role: null, side: null,
+                           fell: true}]]);
+  if (mastermindDay(world, state, at, seat))
+    out.push(["mastermind", [mastermindMarker(at, seat)]]);
+  return out;
+}
+
+transitionRule(function theMinionsChooseABabysitter(world, state) {
+  if (!inBag(state, "LilMonsta") || !lilMonstaWorld(world))
+    return [[[], 1.0]];
+  const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
+  // One babysitter a night, as bestBabysatStory is trying them; the first
+  // of each night's options where nobody says.
+  const fixed = state._babysitters
+    || babysitterOptions(world, state).map(o => (o.length ? o[0] : null));
+  const stories = [];
+  const walk = (night, soFar) => {
+    if (stories.length >= LIL_MONSTA_STORIES) return;
+    if (night > last) { stories.push([soFar, 1.0]); return; }
+    const one = night - 1 < fixed.length ? fixed[night - 1] : null;
+    for (const seat of one === null ? [] : [one]) {
+      const chosen = [...soFar, babysits(`N${night}`, seat)];
+      for (const [how, extra] of babysitterFalls(world, state, seat, night)) {
+        if (how === "go on") {
+          walk(night + 1, chosen);
+        } else {
+          stories.push([[...chosen, ...extra], 1.0]);
+        }
+        if (stories.length >= LIL_MONSTA_STORIES) return;
+      }
+    }
+  };
+  walk(1, []);
+  return stories;
+});
+
 transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
   const swaps = state.infos.filter(
     i => i.sourceRole === "SnakeCharmer" && i.swapped);
@@ -1043,9 +1254,16 @@ transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
     // Philosopher — else whoever works it. See solver.py.
     const charmer = hasAbility(world, state, info.player, "SnakeCharmer", began)
       ? info.player : whoeverWorks(world, state, "SnakeCharmer", began);
-    const demon = world.demonAt(began);
+    let demon = world.demonAt(began);
+    // Lil' Monsta's first babysitter is chosen at 15, before the charmer
+    // at 20 (E, Weg 1, 21.10.2026).
+    if (demon === null && info.night === 1) demon = babysitterAt(world, phase);
     if (charmer === null || demon === null || charmer === demon) continue;
     if (info.target !== demon) continue;   // they pointed at somebody else
+    // A babysitter is swapped like a Demon: character and side, both ways.
+    const sitter = babysitterAt(world, info.night > 1 ? began : phase);
+    const sides = sitter !== demon ? ["evil", "good"]
+      : [world.alignmentAt(demon, began), world.alignmentAt(charmer, began)];
     // From the night: the swap is immediate (settled at the table; the
     // attribution above reads the board as it began). Python has written
     // it at the night for a while and this still said the day after.
@@ -1058,8 +1276,8 @@ transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
        // so on a night with a Pit-Hag the charmer was handed the
        // Pit-Hag's gift instead of the Demon's character and the Demon
        // vanished from the board.
-       change(after, charmer, world.roleAt(demon, began), "evil"),
-       change(after, demon, "SnakeCharmer", "good")],
+       change(after, charmer, world.roleAt(demon, began), sides[0]),
+       change(after, demon, "SnakeCharmer", sides[1])],
       cost]);
   }
   return stories;
@@ -1332,7 +1550,10 @@ function plainFailures(world, state, outcome = {}) {
     if (mastermind === null || !state.aliveSet(c.phase).has(mastermind))
       return null;
     (working[day] = working[day] || new Set()).add(mastermind);
-    if (scarletWomanTakesOver(world, state, c.phase))
+    // Not when she is the one executed: a Scarlet Woman babysitting Lil'
+    // Monsta (21.10.2026).
+    if (scarletWomanTakesOver(world, state, c.phase)
+        && world.findAt("ScarletWoman", c.phase) !== c.seat)
       fail(day, world.findAt("ScarletWoman", c.phase));
   }
 
@@ -1346,15 +1567,17 @@ function plainFailures(world, state, outcome = {}) {
     if (hasAbility(world, state, seat, "Sailor", `D${day}`)) fail(day, seat);
     // And the same for a Tea Lady's neighbour: executed and dead, so she
     // was not working. The mirror of her saving one.
-    const lady = teaLadyFailedAtTheGallows(world, state, day, seat);
-    if (lady !== null) fail(day, lady);
+    for (const lady of teaLadyFailedAtTheGallows(world, state, day, seat))
+      fail(day, lady);
   }
 
   // A Vizier cannot die during the day. One that did was not working —
   // drunk or poisoned it dies like anybody (table ruling, 10.10.2026).
   if (inBag(state, "Vizier"))
     for (const [seat, phase] of state.deathPhases())
-      if (phase[0] === "D" && world.roleAt(seat, phase) === "Vizier")
+      if (phase[0] === "D" && world.roleAt(seat, phase) === "Vizier"
+          && !(executed(state, Number(phase.slice(1)), seat)
+               && babysitterAt(world, phase) === seat))
         fail(Number(phase.slice(1)), seat);
 
   // A Lleech dies when its host does and not before (11.10.2026). The
@@ -1493,6 +1716,13 @@ function plainFailures(world, state, outcome = {}) {
     // ask about sides nobody needs any more (`explainOrRecall`).
     if (impossible) return;
     if (spent.has(idx)) { outcome[idx] = SPENT; return; }
+    // Shown Lil' Monsta: true of whoever babysat that night, made up by
+    // anybody else (21.10.2026, C).
+    if (info.type === "LilMonstaBabysat") {
+      if (info.holds(world, state, null)) outcome[idx] = HELD;
+      else { invented *= inventionCost(info); outcome[idx] = INVENTED; }
+      return;
+    }
     if (info.hard()) {
       if (!info.holds(world, state, null)) { impossible = true; }
       else {
@@ -2527,6 +2757,134 @@ function explainOrRecall(world, changes, state, withMarks, toldBefore) {
 }
 
 function bestStoryNow(world, state, outcome) {
+  if (inBag(state, "LilMonsta") && lilMonstaWorld(world))
+    return bestBabysatStory(world, state, outcome);
+  return bestStoryTold(world, state, outcome);
+}
+
+/** Lil' Monsta's babysitters, one a night: the stand-ins first, then one
+ * night at a time with each of its other seats, keeping what explains
+ * the board better, until nothing improves. See solver.py. */
+function bestBabysatStory(world, state, outcome) {
+  const options = babysitterOptions(world, state);
+  if (!options.length || options.some(o => !o.length))
+    return {cost: null, changes: [], viable: []};
+  const tried = new Map();
+  // Tellings that fitted nothing, with the nights they asked about; a
+  // babysitter dead or on the gallows in its span is always asked about.
+  // See solver.py.
+  const failed = [];
+  const marked = options.map((seats, night) => {
+    const lo = phaseIndex(`N${night + 1}`), hi = phaseIndex(`D${night + 1}`);
+    return new Set(seats.filter(p => state.executedOn(night + 1) === p
+      || state.diedAt(p).some(at => {
+        const i = phaseIndex(at);
+        return lo <= i && i <= hi;
+      })));
+  });
+  const tell = fixed => {
+    const key = fixed.join(",");
+    if (tried.has(key)) return tried.get(key);
+    for (const [before, asked] of failed)
+      if (fixed.every((seat, k) => (asked.has(k) ? seat === before[k]
+                                                  : !marked[k].has(seat)))) {
+        const none = {cost: null, changes: [], viable: [], marks: null};
+        tried.set(key, none);
+        return none;
+      }
+    state._babysitters = fixed;
+    const reads = BABYSAT_READS.now = new Set();
+    let got;
+    try {
+      const marks = outcome ? {} : null;
+      const told = bestStoryTold(world, state, marks);
+      got = {...told, marks};
+    } finally { state._babysitters = null; BABYSAT_READS.now = null; }
+    if (got.cost === null) {
+      const asked = new Set();
+      for (const at of reads)
+        if (at[0] === "N") asked.add(parseInt(at.slice(1), 10) - 1);
+      fixed.forEach((seat, k) => {
+        if (k < marked.length && marked[k].has(seat)) asked.add(k);
+      });
+      failed.push([fixed, asked]);
+    }
+    tried.set(key, got);
+    return got;
+  };
+  let fixed = options.map(o => o[0]);
+  let best = tell(fixed);
+  // Few enough to tell them all: then every one is (itertools.product's
+  // order, the last night turning fastest).
+  const size = options.reduce((n, o) => n * o.length, 1);
+  let rest = options;
+  if (size <= BABYSITTERS_TOLD_IN_FULL) {
+    const at = options.map(() => 0);
+    for (let i = 0; i < size; i++) {
+      if (best.cost !== null && best.cost >= 1.0) break;
+      const trial = at.map((j, night) => options[night][j]);
+      const got = tell(trial);
+      if (got.cost !== null && (best.cost === null || got.cost > best.cost)) {
+        best = got; fixed = trial;
+      }
+      for (let night = at.length - 1; night >= 0; night--) {
+        if (++at[night] < options[night].length) break;
+        at[night] = 0;
+      }
+    }
+    rest = [];                            // nothing left to try
+  }
+  // Where to start: the stand-ins, and — the Minions mostly keep it —
+  // each seat babysitting every night it can.
+  const seen = [];
+  for (const o of rest) for (const p of o) if (!seen.includes(p)) seen.push(p);
+  for (const seat of seen) {
+    if (best.cost !== null && best.cost >= 1.0) break;
+    const trial = rest.map(o => (o.includes(seat) ? seat : o[0]));
+    const got = tell(trial);
+    if (got.cost !== null && (best.cost === null || got.cost > best.cost)) {
+      best = got; fixed = trial;
+    }
+  }
+  // Nothing fitted yet: one night changed from any of the starts.
+  if (best.cost === null) {
+    for (const key of [...tried.keys()]) {
+      const start = key.split(",").map(Number);
+      for (let night = 0; night < rest.length; night++)
+        for (const seat of rest[night]) {
+          const trial = [...start];
+          trial[night] = seat;
+          const got = tell(trial);
+          if (got.cost !== null && (best.cost === null || got.cost > best.cost)) {
+            best = got; fixed = trial;
+          }
+        }
+      if (best.cost !== null) break;
+    }
+  }
+  for (let round = 0; round < 3; round++) {
+    let better = false;
+    for (let night = 0; night < rest.length; night++) {
+      if (best.cost !== null && best.cost >= 1.0) break;
+      for (const seat of rest[night]) {
+        if (seat === fixed[night]) continue;
+        const trial = [...fixed];
+        trial[night] = seat;
+        const got = tell(trial);
+        if (got.cost !== null && (best.cost === null || got.cost > best.cost)) {
+          best = got; fixed = trial; better = true;
+        }
+      }
+    }
+    if (!better) break;
+  }
+  const viable = [];
+  for (const got of tried.values()) viable.push(...got.viable);
+  if (outcome && best.marks) Object.assign(outcome, best.marks);
+  return {cost: best.cost, changes: best.changes, viable};
+}
+
+function bestStoryTold(world, state, outcome) {
   const stories = possibleTimelines(world, state);
   if (!stories.length) return {cost: null, changes: [], viable: []};
   const turning = inBag(state, "Mezepheles");

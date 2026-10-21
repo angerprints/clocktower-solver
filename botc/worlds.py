@@ -134,6 +134,28 @@ class TurnedEvil(Change):
     __slots__ = ()
 
 
+class Babysits(Change):
+    """Who babysits Lil' Monsta from this night on, and "is the Demon"
+    (21.10.2026). Chosen by the Minions each night at its place in the
+    night — so one made on night three is the Demon for whoever reads
+    after that place on night three, and on day three. Changes nothing
+    about the seat: no character, no side (B, Weg 1: anybody may).
+    """
+    __slots__ = ()
+
+
+# Which nights' babysitters were looked at, while somebody is listening
+# (solver._best_babysat_story): a telling that failed without asking
+# about a night fails the same whoever babysat then.
+BABYSAT_READS = [None]
+
+
+def lil_monsta_world(world):
+    """Was this world dealt with Lil' Monsta in the bag — nobody holding a
+    Demon? Nothing else in the catalogue deals no Demon."""
+    return not any(TEAM[r] == "demon" for r in world.roles)
+
+
 @dataclass(frozen=True)
 class Timeline:
     """A world plus the times a character changed hands.
@@ -177,16 +199,24 @@ class Timeline:
         roles, sides, demons, held = {}, {}, [], set()
         for change in self.changes:
             at = phase_index(change.phase)
+            if isinstance(change, Babysits):
+                demons.append((at, change.seat, change.phase))
+                continue
             sides.setdefault(change.seat, []).append((at, change))
             if change.role is not None:
                 roles.setdefault(change.seat, []).append((at, change.role))
                 held.add(change.role)
                 if TEAM[change.role] == "demon":
-                    demons.append((at, change.seat))
+                    demons.append((at, change.seat, None))
         object.__setattr__(self, "_roles_by_seat", roles)
         object.__setattr__(self, "_sides_by_seat", sides)
         object.__setattr__(self, "_demon_changes", demons)
         object.__setattr__(self, "_roles_changed_to", held)
+        # A story with Lil' Monsta in it: somebody babysits. Only then is
+        # a Demon holding no Demon character a babysitter — not where a
+        # Pit-Hag made the Demon something else (21.10.2026).
+        object.__setattr__(self, "lil_monsta", any(
+            babysat is not None for _at, _seat, babysat in demons))
 
     # Questions about the whole game go straight through: who was dealt
     # what, who claimed what. Only questions about a moment consult the
@@ -266,9 +296,13 @@ class Timeline:
         seat = self.world.demon_at(phase)
         if self._demon_changes:
             here = phase_index(phase)
-            for at, changed in self._demon_changes:
+            sat = None
+            for at, changed, babysat in self._demon_changes:
                 if at <= here:
-                    seat = changed
+                    seat, sat = changed, babysat
+            reads = BABYSAT_READS[0]
+            if sat is not None and reads is not None:
+                reads.add(sat)
         return seat
 
     def team_at(self, seat, phase):
@@ -369,7 +403,8 @@ def _evil_options(evil, script):
     Soldier, and that is a deliberate lie from somebody who thinks they
     are good.
     """
-    out = [(key, None) for key in evil if knows_what_it_is(key)]
+    out = [(key, None) for key in evil
+           if knows_what_it_is(key) and CHARACTERS[key].dealt]
     # Somebody who thinks they are the Demon bluffs like the Demon. A
     # Lunatic is good and lies anyway, because as far as it knows it has
     # every reason to.
@@ -436,6 +471,11 @@ def _candidates_from_claim(claim, allow_good_lies, certainty="",
             out.extend((r, None) for r in outsiders
                        if r != claim and not believes_another(r))
         return out
+
+    if claim in evil and not CHARACTERS[claim].dealt:
+        # Lil' Monsta is nobody's character: claiming it says nothing
+        # about the seat (a babysitter says so in its own row).
+        return _anything(script)
 
     if claim in evil:
         # Openly claiming an evil character. Still needs its token if it
@@ -547,7 +587,10 @@ def _branches(n_players, claims, certainties, allow_good_lies, forced, wakes,
 
         # Seats with fewest options first, so the search prunes earlier
         order = sorted(range(n_players), key=lambda i: len(cands[i]))
-        out.append((target, cands, order, present))
+        # What has to land on a seat: not Lil' Monsta, which changes the
+        # bag and is never dealt (21.10.2026).
+        dealt = frozenset(k for k in present if CHARACTERS[k].dealt)
+        out.append((target, cands, order, dealt))
     return out
 
 
@@ -717,8 +760,14 @@ def seated_legally(roles):
     would have to know which seats are still empty.
     """
     n = len(roles)
+    # No Demon dealt is Lil' Monsta's bag: a Marionette sits beside the
+    # first babysitter instead, which the Minions choose on the first
+    # night (its jinx, solver.the_minions_choose_a_babysitter).
+    no_demon = not any(TEAM[r] == "demon" for r in roles)
     for seat, role in enumerate(roles):
         team = CHARACTERS[role].beside
+        if team == "demon" and no_demon:
+            continue
         if team and not any(TEAM[roles[(seat + step) % n]] == team
                             for step in (-1, 1)):
             return False

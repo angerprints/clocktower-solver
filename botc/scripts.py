@@ -27,7 +27,8 @@ class Script(NamedTuple):
     @property
     def seated_keys(self):
         """The characters that can actually be dealt to a seat."""
-        return [k for k in self.keys if CHARACTERS[k].seated]
+        return [k for k in self.keys
+                if CHARACTERS[k].seated and CHARACTERS[k].dealt]
 
     @property
     def fabled(self):

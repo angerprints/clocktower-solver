@@ -1607,6 +1607,23 @@ export const DATA = {
    "nights": "every",
    "first_night": 1,
    "other_night": 31
+  },
+  "LilMonsta": {
+   "id": "lilmonsta",
+   "name": "Lil' Monsta",
+   "team": "demon",
+   "wake": [
+    "never"
+   ],
+   "setup": [
+    {
+     "demon": -1,
+     "minion": 1
+    }
+   ],
+   "first_night": 15,
+   "other_night": 35,
+   "dealt": false
   }
  },
  "scripts": {

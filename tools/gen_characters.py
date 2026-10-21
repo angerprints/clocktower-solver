@@ -36,7 +36,7 @@ DEFAULTS = {
     "seated": True, "impairs": False, "handled": "fully", "settled": False,
     "first_night": 0, "other_night": 0, "beside": "", "hides": False,
     "lines_up": False,
-    "brings": (), "copies": 1,
+    "brings": (), "copies": 1, "dealt": True,
 }
 
 

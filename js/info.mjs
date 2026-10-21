@@ -497,7 +497,8 @@ export const FortuneTeller = define("FortuneTeller", "FortuneTeller",
     // has turned is nothing to it.
     // Any seat holding a Demon character, dead or alive — a dead Demon
     // still gets the nod. See FortuneTeller in info.py.
-    const hardDemon = pair.some(x => TEAM[w.roleAt(x, phase)] === "demon");
+    const hardDemon = pair.some(x => TEAM[w.roleAt(x, phase)] === "demon")
+      || pair.includes(babysitterAt(w, phase));
     const recluse = pair.some(x => w.roleAt(x, phase) === "Recluse");
     const herring = pair.includes(rh);
     if (this.yes) return hardDemon || recluse || herring;
@@ -511,7 +512,7 @@ export const FortuneTeller = define("FortuneTeller", "FortuneTeller",
       const pair = [this.a, this.b];
       const phase = `N${this.night}`;
       const really = pair.some(x => TEAM[w.roleAt(x, phase)] === "demon")
-        || pair.includes(rh);
+        || pair.includes(babysitterAt(w, phase)) || pair.includes(rh);
       return !!this.yes === really;
     },
   });
@@ -1090,7 +1091,8 @@ export const KnightInfo = define("KnightInfo", "Knight",
     const phase = `N${this.night}`;
     if (this.a === this.b) return false;         // "2 players"
     return [this.a, this.b].every(
-      x => TEAM[w.roleAt(x, phase)] !== "demon");
+      x => TEAM[w.roleAt(x, phase)] !== "demon")
+      && ![this.a, this.b].includes(babysitterAt(w, phase));
   });
 
 /** Every other seat as [steps, way, seat]: the shorter way round, and
@@ -1309,7 +1311,9 @@ export const ClockmakerInfo = define("ClockmakerInfo", "Clockmaker",
     const n = w.roles.length;
     let nearest = null;
     for (let m = 0; m < n; m++) {
-      if (w.teamAt(m, phase) !== "minion") continue;
+      // Not itself: a Minion babysitting Lil' Monsta counts to its
+      // nearest other Minion (21.10.2026).
+      if (m === demon || w.teamAt(m, phase) !== "minion") continue;
       const steps = Math.min((m - demon + n) % n, (demon - m + n) % n);
       if (nearest === null || steps < nearest) nearest = steps;
     }
@@ -1448,13 +1452,14 @@ export const SlayerShot = define("SlayerShot", "Slayer",
       const hitHost = host !== null && host >= 0 && this.target === host
         && w.findAt("Lleech", phase) !== null;
       return worksAs(w, s, this.player, "Slayer", phase) &&
-             (DEMONS.has(t) || t === "Recluse" || hitHost);
+             (DEMONS.has(t) || babysitterAt(w, phase) === this.target
+              || t === "Recluse" || hitHost);
     }
     // A shot that did nothing is only evidence if a real Slayer fired it,
     // and that is the usual claim gate's business. A Lleech whose host
     // lives cannot die of it.
     if (t === "Lleech") return true;
-    return !DEMONS.has(t);
+    return !DEMONS.has(t) && babysitterAt(w, phase) !== this.target;
   },
   {
     // A shot that killed somebody is not a story anyone can tell — a body
@@ -1749,11 +1754,13 @@ export const GolemNomination = define("GolemNomination", "Golem",
       && info.night <= this.night);
     if (this.died)
       return worksAs(w, s, this.player, "Golem", phase)
-        && TEAM[target] !== "demon" && !earlier;
+        && TEAM[target] !== "demon" && babysitterAt(w, phase) !== this.target
+        && !earlier;
     if (earlier) return true;          // spent already: nothing happens
     // Dropped dead as it nominated: no ability left (14.10.2026).
     if (s.diedAt(this.player).includes(phase)) return true;
     return couldRegisterAsDemon(target)
+      || babysitterAt(w, phase) === this.target
       || cannotDieByDay(w, s, this.target, phase);
   }, {
     hard() { return !!this.died; },
@@ -2065,6 +2072,30 @@ export function alHadikhiaForTheGame(w, s, ah, night) {
     && s.aliveSet(`D${day}`).has(mastermind);
 }
 
+/** Who babysits Lil' Monsta at this moment and so "is the Demon", or
+ * null (21.10.2026). See babysitter_at in info.py. */
+export function babysitterAt(w, phase) {
+  // Only in a story somebody babysits in: a Pit-Hag that made the Demon
+  // something else is no babysitter (21.10.2026). See info.py.
+  if (!w.lilMonsta) return null;
+  const demon = w.demonAt(phase);
+  if (demon === null || demon === undefined
+      || TEAM[w.roleAt(demon, phase)] === "demon") return null;
+  return demon;
+}
+
+/** "I was woken and shown Lil' Monsta", said by a babysitter. Told the
+ * truth, good or evil; anybody else made it up (21.10.2026, C).
+ * scoring.mjs asks this directly. */
+export const LilMonstaBabysat = define("LilMonstaBabysat", "LilMonsta",
+  function (w) {
+    const phase = `N${this.night}`;
+    return babysitterAt(w, phase) === this.player;
+  }, {
+    isInformation() { return false; },
+    sourceSeat() { return this.player; },
+  });
+
 export const AlHadikhiaChose = define("AlHadikhiaChose", "AlHadikhia",
   function (w, s) {
     if (this.night < 2) return false;
@@ -2145,6 +2176,7 @@ export const KINDS = {
   PixieLearned, VillageIdiotInfo, LycanthropeChose, HarpyMadness,
   BountyHunterInfo, CultCalled, LeviathanAnnounced, ExecutionNomination,
   HighPriestessInfo, GeneralInfo, FishermanAdvice, AlHadikhiaChose,
+  LilMonstaBabysat,
 };
 
 const GENERAL_SAYS = ["good", "evil", "neither"];

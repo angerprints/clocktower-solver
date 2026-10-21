@@ -153,6 +153,16 @@ class TwoHoldersBothChoose(SolverTest):
         rows = [took("Sailor"), sails(3, 4), WRONG]
         self.assertIsNone(cost(TWO, rows, days_done={1}))
 
+    def test_two_tea_ladies_beside_the_gallows(self):
+        # Both beside the executed seat, and the real one drunk for the
+        # Philosopher: the Philosopher's kept it. Asking only the first
+        # demanded the drunk one and lost the world (21.10.2026, seed 2677
+        # of the gate with Lil' Monsta).
+        roles = ["Chef", "TeaLady", "Empath", "Philosopher", "Washerwoman",
+                 "ScarletWoman", "Imp"]
+        self.assertEqual(cost(roles, [took("TeaLady")], executions={1: 2},
+                              days_done={1}), 1.0)
+
 
 class ADrunksRowIsItsOwn(SolverTest):
     """A Drunk with the Knight's token says what it was shown, claiming

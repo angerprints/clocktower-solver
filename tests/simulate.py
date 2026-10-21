@@ -115,6 +115,9 @@ class Deal:
         # the Demon, still killing on quiet days. And the day after which
         # a Mastermind's extra day runs out and the game is over.
         self.zombuul_up = None
+        # Lil' Monsta (21.10.2026): who babysat it each night, chosen by
+        # the Minions, and so "is the Demon" from then on.
+        self.babysat = {}                   # night -> seat
         self.fanggu_jumped = False
         self.game_ends_after = None
         # The moment evil won, if it did: "N4" at dawn, "D3" when a Witch's
@@ -247,6 +250,13 @@ class Deal:
         # on killing from a seat that was no longer the Demon.
         seat = next((i for i in range(len(self.roles))
                      if TEAM[self.role_at(i, phase)] == "demon"), None)
+        # Lil' Monsta's babysitter: chosen at its place in the night, so
+        # whatever reads before that tonight still sees last night's.
+        if seat is None and self.babysat:
+            night = int(phase[1:])
+            upto = [k for k in self.babysat if k <= night]
+            if upto:
+                seat = self.babysat[max(upto)]
         for when, heir in self.handovers:
             if phase_index(when) <= here:
                 seat = heir
@@ -587,6 +597,19 @@ def deal(n, rng, script=None, told=None):
         picked_demons = list(rng.sample(spare_demons, de)) \
             if len(spare_demons) >= de else list(rng.sample(demons, de))
 
+    # "[+1 Minion]" and no Demon dealt: Lil' Monsta (21.10.2026). The
+    # Minions hand it round from the first night.
+    if "LilMonsta" in picked_demons:
+        more = [m for m in minions if m not in picked_minions
+                and m not in ("Baron", "Godfather")]
+        if more:
+            picked_demons.remove("LilMonsta")
+            picked_minions.append(rng.choice(more))
+            mi, de = mi + 1, de - 1
+        else:
+            picked_demons[picked_demons.index("LilMonsta")] = next(
+                k for k in demons if k != "LilMonsta")
+
     # "[+1 Minion. -? to +? Outsiders]": the Lord of Typhon (19.10.2026).
     # One Minion more than the table has, and the Outsiders anywhere from
     # two fewer to two more, as room allows.
@@ -714,7 +737,21 @@ def deal(n, rng, script=None, told=None):
     # "[You neighbour the Demon]": if the shuffle put it elsewhere, it
     # trades seats with whoever sits beside the Demon. Written from the
     # rule rather than from the solver's catalogue field on purpose.
-    if "Marionette" in roles:
+    # With Lil' Monsta it sits beside the first babysitter instead, whom
+    # the Minions choose on the first night (`_minions_choose`).
+    # So it trades seats to sit beside another Minion, who may then be
+    # chosen first even under the Magician's jinx.
+    if "Marionette" in roles and not any(TEAM[r] == "demon" for r in roles):
+        m = roles.index("Marionette")
+        others = [i for i in range(n)
+                  if TEAM[roles[i]] == "minion" and i != m]
+        if others and not any(TEAM[roles[(m + k) % n]] == "minion"
+                              for k in (-1, 1)):
+            mate = rng.choice(others)
+            swap = rng.choice([(mate - 1) % n, (mate + 1) % n])
+            roles[m], roles[swap] = roles[swap], roles[m]
+            believes[m], believes[swap] = believes[swap], believes[m]
+    if "Marionette" in roles and any(TEAM[r] == "demon" for r in roles):
         m = roles.index("Marionette")
         demon = next(i for i in range(n) if TEAM[roles[i]] == "demon")
         beside = [(demon - 1) % n, (demon + 1) % n]
@@ -955,6 +992,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
 
     d = Deal(roles, believes, red_herring, {}, {}, None)
     d.script = script
+    # Lil' Monsta in play: no Demon was dealt (21.10.2026).
+    d.lil_monsta = "LilMonsta" in script.keys \
+        and not any(TEAM[r] == "demon" for r in roles)
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -974,6 +1014,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     for night in range(1, nights + 1):
         d.nights_played = night
         living = d.alive_at(f"N{night}")
+        # Lil' Monsta's first babysitter, at 15: before the Poisoner and
+        # the Snake Charmer, who may choose it.
+        if d.lil_monsta and night == 1:
+            _minions_choose(d, 1, rng, heard)
         # The Preacher acts before every Minion (14, then 6), so a Minion
         # it chooses has no ability from tonight (10.10.2026).
         heard += _preacher_preaches(d, night, rng)
@@ -998,7 +1042,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # poisoned all the same, and the night-walk, which asks, found a
         # Monk nobody had told it about.
         if (poisoner is not None and poisoner in living
-                and d.demon_at(f"N{night}") != poisoner
+                and (d.demon_at(f"N{night}") != poisoner
+                     or _babysits(d, poisoner, f"N{night}"))
                 and d.working(poisoner, night)):
             d.poisoned[night] = rng.choice(living)
             d.poisoned_by[night] = poisoner
@@ -1081,6 +1126,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 # Grandmother grieves (21.10.2026).
                 aimed = (_al_hadikhia_chooses(d, night, rng, heard)
                          if _al_hadikhia_acts(d, night)
+                         else _lil_monsta_night(d, night, rng, heard)
+                         if d.lil_monsta
                          else _demon_kills(d, night, rng))
                 # What it *aimed* at, kept for the replay: a Shabaloth
                 # kill sunk into a corpse leaves no body, so reading the
@@ -1238,6 +1285,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # player left — and every measurement taken over several nights
         # counted those as games (04.10.2026). The night itself is played
         # to its end, so the record of the last night is a whole one.
+        # Lil' Monsta's babysitter killed in the night by something else:
+        # good has won at dawn, or the Scarlet Woman babysits from now.
+        if d.lil_monsta and _lil_monsta_check(d, f"N{night}"):
+            d.ended_at, d.ended_why = d.lm_fallen, "lil monsta"
+            d.game_ends_after = night
+            break
         if _evil_has_won(d, f"N{night}"):
             d.ended_at, d.ended_why = f"N{night}", "two alive"
             d.game_ends_after = night
@@ -1361,6 +1414,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # their team loses, dead of it or not (10.10.2026).
             if hanged is not None and _the_fearmonger_wins(d, night, hanged):
                 d.ended_at, d.ended_why = f"E{night}", "fearmonger"
+                d.game_ends_after = night
+                break
+            # Lil' Monsta's babysitter died today — on the gallows or
+            # otherwise.
+            if d.lil_monsta and _lil_monsta_check(d, f"E{night}"):
+                d.ended_at, d.ended_why = d.lm_fallen, "lil monsta"
                 d.game_ends_after = night
                 break
             # Or the town hangs one of the last three.
@@ -1583,8 +1642,10 @@ def _stands_to_act(d, seat, role, night):
 
 def _good_and_standing(d, night, but=()):
     phase = f"N{night}"
+    # Never Lil' Monsta's babysitter: the Minions know who it is.
+    sitter = d.babysat.get(night) if d.babysat else None
     return [p for p in d.alive_at(phase)
-            if d.deaths.get(p) is None and p not in but
+            if d.deaths.get(p) is None and p not in but and p != sitter
             and d.side_at(p, phase) == "good"]
 
 
@@ -2215,6 +2276,9 @@ def _barber_swap(d, night, rng):
         a, b = rng.sample(living, 2)
     got_a = d.role_at(a, phase)
     got_b = d.role_at(b, phase)
+    # Lil' Monsta's babysitter keeps the baby: it is the player's, not
+    # the character's (21.10.2026).
+    sitter = demon if _babysits(d, demon, phase) else None
     d.changes.append((phase, a, got_b))
     d.changes.append((phase, b, got_a))
     # Kept for the night walk, which swaps at the Barber's own slot when
@@ -2223,7 +2287,7 @@ def _barber_swap(d, night, rng):
         d.barber_swaps = {}
     d.barber_swaps[night] = (a, b)
     # And the star moves with the character, as with the Snake Charmer.
-    if demon in (a, b):
+    if demon in (a, b) and sitter is None:
         d.handovers.append((phase, b if demon == a else a))
     # "Each player learns which character they become." A good player
     # handed a good character says so, often — the one trace a swap leaves
@@ -2404,7 +2468,8 @@ def _slayer_shoots(d, day, rng, heard):
             continue
         demon = d.demon_at(phase)
         pool = [p for p in living if p != seat]
-        safe = [p for p in pool if TEAM[d.role_at(p, phase)] != "demon"]
+        safe = [p for p in pool if TEAM[d.role_at(p, phase)] != "demon"
+                and not _babysits(d, p, phase)]
         target = demon if demon in pool and rng.random() < 0.3 \
             else rng.choice(pool)
         working = d.working(seat, day, by_day=True)
@@ -2415,7 +2480,8 @@ def _slayer_shoots(d, day, rng, heard):
             target = rng.choice(safe)
         held = d.role_at(target, phase)
         died = False
-        if working and TEAM[held] == "demon":
+        if working and (TEAM[held] == "demon"
+                        or _babysits(d, target, phase)):
             died = True
         elif working and held == "Recluse" \
                 and d.working(target, day, by_day=True) \
@@ -2426,6 +2492,9 @@ def _slayer_shoots(d, day, rng, heard):
         heard.append(SlayerShot(day, seat, target=target, died=died))
         if not died:
             return False
+        if _babysits(d, target, phase):
+            d.deaths[target] = phase
+            return _lil_monsta_check(d, phase)
         if TEAM[held] == "demon":
             heir = _heir(d, phase, rng)
             if heir is not None and d.roles[heir] == "ScarletWoman" \
@@ -2465,7 +2534,7 @@ def _golem_strikes(d, golem, nominee, day, rng):
     if not d.working(golem, day, by_day=True):
         return False
     held = d.role_at(nominee, phase)
-    if TEAM[held] == "demon":
+    if TEAM[held] == "demon" or _babysits(d, nominee, phase):
         return False
     if held == "Recluse" and d.working(nominee, day, by_day=True) \
             and rng.random() < 0.5:
@@ -3659,6 +3728,9 @@ def _execute(d, day, rng, allow_takeover=False):
                  and mastermind is not None
                  and d.role_at(mastermind, phase) == "Mastermind"
                  and mastermind in d.alive_at(phase)
+                 # Hanged itself, babysitting Lil' Monsta: dead, it has
+                 # no ability to buy the day with (21.10.2026).
+                 and mastermind != demon
                  and d.working(mastermind, day)
                  and d.game_ends_after is None)
     # Or a Devil's Advocate has it covered, and it walks away.
@@ -3726,6 +3798,13 @@ def _execute(d, day, rng, allow_takeover=False):
             # jinx with the Mastermind, 21.10.2026).
             if d.role_at(demon, phase) == "AlHadikhia":
                 d.ah_final_night = day + 1
+        elif _babysits(d, victim, phase):
+            # Lil' Monsta's babysitter: the Scarlet Woman babysits for the
+            # rest of the game (their jinx), from the night after.
+            d.handovers.append((f"N{day + 1}", heir))
+            d.lm_fallen = phase
+            d.lm_fallen_seats = getattr(d, "lm_fallen_seats", set()) \
+                | {victim}
         else:
             d.handovers.append((phase, heir))
             d.changes.append((phase, heir, d.roles[victim]))
@@ -3735,6 +3814,144 @@ def _execute(d, day, rng, allow_takeover=False):
 def simulate(n, rng, nights=1):
     """Backwards-compatible single return for the night-one checks."""
     return play(n, rng, nights)[0]
+
+
+# --------------------------------------------------------------------------
+# Lil' Monsta (21.10.2026, claude/lil-monsta-lesarten.md)
+# --------------------------------------------------------------------------
+
+def _babysits(d, seat, phase):
+    """Is this seat Lil' Monsta's babysitter at this moment — "the Demon"
+    without a Demon character?"""
+    if not d.babysat or seat is None:
+        return False
+    return d.demon_at(phase) == seat \
+        and TEAM[d.role_at(seat, phase)] != "demon"
+
+
+def _lil_monsta_lives(d, phase):
+    """Is there a babysitter standing — Lil' Monsta not yet dead?"""
+    sitter = d.demon_at(phase)
+    return (sitter is not None and d.deaths.get(sitter) is None
+            and TEAM[d.role_at(sitter, phase)] != "demon")
+
+
+def _minions_choose(d, night, rng, heard):
+    """The Minions point at tonight's babysitter (H, Weg 1): the same one
+    seven nights in ten, a Minion nearly always, now and then somebody
+    good — who is woken and shown the token, and says so (C).
+
+    Not after the Scarlet Woman took it over: hers for the rest of the
+    game. The Magician's jinx keeps it with a Minion; the Marionette's
+    has the first one sit beside it.
+    """
+    from botc.info import LilMonstaBabysat
+    phase = f"N{night}"
+    if d.handovers:
+        return None
+    living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    if not living:
+        return None
+    minions = [p for p in living if TEAM[d.role_at(p, phase)] == "minion"]
+    magician = next((p for p in living
+                     if d.role_at(p, phase) == "Magician"), None)
+    pool = minions if magician is not None and minions else living
+    before = d.babysat.get(night - 1)
+    if night == 1 and "Marionette" in d.roles:
+        m = d.roles.index("Marionette")
+        beside = [p for p in ((m - 1) % d.n, (m + 1) % d.n) if p in pool]
+        pick = rng.choice(beside) if beside else rng.choice(pool)
+    elif before in pool and rng.random() < 0.7:
+        pick = before
+    elif minions and (magician is not None or rng.random() < 0.95):
+        pick = rng.choice([p for p in minions if p in pool] or minions)
+    else:
+        others = [p for p in pool if p not in minions]
+        pick = rng.choice(others or pool)
+    d.babysat[night] = pick
+    if d.side_at(pick, phase) == "good":
+        heard.append(LilMonstaBabysat(night, pick))
+    return pick
+
+
+def _lil_monsta_night(d, night, rng, heard):
+    """A night but the first: the Minions choose, and then a player might
+    die (D, Weg 1). Never the babysitter; a Minion now and then late on,
+    so good is not left guessing among several. Whatever keeps a player
+    from the Demon keeps them from this, an Exorcist that named last
+    night's babysitter included — so the kill is settled before tonight's
+    choice is written down."""
+    phase = f"N{night}"
+    if not _lil_monsta_lives(d, f"D{night - 1}"):
+        return []                         # a Mastermind's day: no Demon
+    sitter = d.babysat.get(night - 1) if not d.handovers \
+        else d.demon_at(phase)
+    choice = None
+    if not d.handovers:
+        living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+        minions = [p for p in living if TEAM[d.role_at(p, phase)] == "minion"]
+        # Chosen now, written down after the kill.
+        snapshot = dict(d.babysat)
+        choice = _minions_choose(d, night, rng, heard)
+        d.babysat = snapshot
+        sitter = choice
+    living = [p for p in d.alive_at(phase)
+              if d.deaths.get(p) is None and p != sitter]
+    aimed = []
+    if living and rng.random() < 0.85:
+        minions = [p for p in living if TEAM[d.role_at(p, phase)] == "minion"]
+        good = [p for p in living if d.side_at(p, phase) == "good"]
+        if minions and len(living) <= 5 and rng.random() < 0.3:
+            target = rng.choice(minions)
+        elif good:
+            target = rng.choice(good)
+        else:
+            target = None
+        if target is not None:
+            d.lm_aimed = getattr(d, "lm_aimed", {})
+            d.lm_aimed[night] = target
+            if not _protected(d, night, target):
+                aimed = [target]
+    if choice is not None:
+        d.babysat[night] = choice
+    return aimed
+
+
+def _lil_monsta_fell(d, phase):
+    """Lil' Monsta's babysitter died at this moment. With five or more
+    alive the Scarlet Woman babysits for the rest of the game, from the
+    moment after (their jinx); otherwise good has won — True."""
+    from botc.info import phase_index
+    index = phase_index(phase) + 1
+    after = f"{'D' if index % 2 else 'N'}{index // 2 + 1}"
+    scarlet = next((p for p in d.alive_at(phase)
+                    if d.role_at(p, phase) == "ScarletWoman"
+                    and d.deaths.get(p) is None), None)
+    d.lm_fallen = phase
+    if scarlet is not None and len(d.alive_at(phase)) >= 5:
+        d.handovers.append((after, scarlet))
+        return False
+    return True
+
+
+def _lil_monsta_check(d, phase):
+    """After a night or a day: did the babysitter die of something else?
+    True if the game ended there."""
+    if not d.babysat:
+        return False
+    sitter = d.demon_at(phase)
+    if sitter is None or d.deaths.get(sitter) is None:
+        return False
+    if d.game_ends_after is not None:
+        return False                      # a Mastermind's day
+    fallen = getattr(d, "lm_fallen_seats", set())
+    if sitter in fallen:
+        return False                      # seen to already
+    d.lm_fallen_seats = fallen | {sitter}
+    if fallen:
+        d.lm_fallen = d.deaths[sitter]
+        return True                       # the Scarlet Woman fell too
+    return _lil_monsta_fell(d, d.deaths[sitter])
 
 
 def _alive(deaths, n, phase):
@@ -4319,6 +4536,10 @@ def _woke_for_own_ability(d, p, night, shown=False):
         real = d.demon_at(f"N{night}")
         what = (d.role_at(real, f"N{night}") if real is not None
                 else "Lunatic")
+        # With Lil' Monsta the Demon in play is Lil' Monsta, which wakes
+        # for nothing of its own (21.10.2026).
+        if _babysits(d, real, f"N{night}"):
+            what = "LilMonsta"
     char = CHARACTERS[what]
     when, patterns = char.nights, char.wake
     # Back from the dead tonight: "they wake later tonight if they
@@ -5272,6 +5493,7 @@ def _make_false(d, info, night, rng):
         # was so no Trouble Brewing game is dealt anew.
         phase = f"N{night}"
         really = any(TEAM[d.role_at(x, phase)] == "demon"
+                     or _babysits(d, x, phase)
                      for x in (info.a, info.b)) \
             or d.red_herring in (info.a, info.b)
         info.yes = not really
@@ -5738,8 +5960,14 @@ def _for_role(d, seat, role, night, rng):
         # Steps from the Demon to its nearest Minion, the shorter way
         # round the circle.
         demon = d.demon_at("N1")
+        # The Minions at its turn, after a Snake Charmer that swapped
+        # with Lil' Monsta's babysitter (21.10.2026); the deal otherwise,
+        # as always.
+        held = (d.role_at if getattr(d, "lil_monsta", False)
+                else lambda m, _phase: d.roles[m])
         gaps = [min((m - demon) % d.n, (demon - m) % d.n)
-                for m in range(d.n) if TEAM[d.roles[m]] == "minion"]
+                for m in range(d.n)
+                if m != demon and TEAM[held(m, "N1")] == "minion"]
         if not gaps:
             return None
         return ClockmakerInfo(1, seat, count=min(gaps))
@@ -5901,6 +6129,19 @@ def _for_role(d, seat, role, night, rng):
             # and was right.
             after = f"N{night}"
             became = d.role_at(demon, phase)
+            # Lil' Monsta's babysitter is swapped like a Demon, character
+            # and side both ways, and keeps the baby until the Minions
+            # choose again (E, Weg 1, 21.10.2026).
+            if _babysits(d, demon, phase):
+                sides = (d.side_at(demon, phase), d.side_at(seat, phase))
+                d.changes.append((after, seat, became))
+                d.changes.append((after, demon, "SnakeCharmer"))
+                d.side_changes.append((after, seat, became, sides[0]))
+                d.side_changes.append((after, demon, "SnakeCharmer",
+                                       sides[1]))
+                d.perma_poisoned.add(demon)
+                return SnakeCharmerChoice(night, seat, target=target,
+                                          swapped=True)
             d.changes.append((after, seat, became))
             d.changes.append((after, demon, "SnakeCharmer"))
             # And the star moves with it. `demon_at` reads the handovers
@@ -6328,7 +6569,8 @@ def _for_role(d, seat, role, night, rng):
         _devils_advocate_picks(d, night, rng)
         return None
 
-    if role == "Lunatic" and night > 1:
+    if role == "Lunatic" and night > 1 and not getattr(d, "lil_monsta",
+                                                       False):
         # It lives a Demon's night and points at somebody; nothing comes
         # of it. But it is a player choosing a player, and that counts
         # for the Goon (table ruling, 02.10.2026).

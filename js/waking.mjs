@@ -29,7 +29,8 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {cultSides, holdingNow, takenByAPhilosopher, tookIt} from "./info.mjs";
+import {babysitterAt, cultSides, holdingNow, takenByAPhilosopher, tookIt}
+  from "./info.mjs";
 
 export const NEVER = "never";
 export const FIRST = "first";
@@ -55,8 +56,10 @@ condition("Undertaker", (world, state, seat, night) =>
  * The first night she is woken to be shown the Demon, which is not her
  * own ability and does not count.
  */
+// Babysitting Lil' Monsta is no waking of her own (G, Weg 1).
 condition("ScarletWoman", (world, state, seat, night) =>
-  world.demonAt(`N${night}`) === seat && world.demonAt("N1") !== seat);
+  world.demonAt(`N${night}`) === seat && world.demonAt("N1") !== seat
+  && babysitterAt(world, `N${night}`) !== seat);
 
 /** On the schedule of the Demon it thinks it is, and it counts.
  *
@@ -425,8 +428,12 @@ function actsAs(world, seat, phase) {
   // that is really in play, which is what a Storyteller reaches for.
   if (world.believes[seat]) return world.believes[seat];
   const demon = world.demonAt(phase);
-  return demon !== null && demon !== undefined
-    ? world.roleAt(demon, phase) : "Imp";
+  if (demon === null || demon === undefined) return "Imp";
+  // A babysitter's character is not the Demon's: the Demon in play is
+  // Lil' Monsta, which wakes for nothing of its own (21.10.2026).
+  if (babysitterAt(world, phase) === demon)
+    return "LilMonsta";
+  return world.roleAt(demon, phase);
 }
 
 /** Could this seat's waking have gone either way?
@@ -525,6 +532,8 @@ export function uncertain(world, state, seat, night) {
   if (!state.script.keys.includes("Exorcist")
       && !takenByAPhilosopher(state, "Exorcist")) return false;
   if (world.demonAt(phase) !== seat) return false;
+  // A babysitter wakes as whatever it holds (21.10.2026).
+  if (babysitterAt(world, phase) === seat) return false;
   // A Demon that does not wake at night has nothing for an Exorcist to
   // stop: a Yaggababble, a Leviathan with nobody to choose among.
   if (acting === "Yaggababble"

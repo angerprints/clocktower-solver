@@ -17,8 +17,8 @@ import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
-import {alHadikhiaChosen, fallsAs, holdingNow, sideOpen, takenByAPhilosopher,
-        tookIt} from "./info.mjs";
+import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
+        takenByAPhilosopher, tookIt} from "./info.mjs";
 
 // --------------------------------------------------------------------
 // Constants. Every one is a judgement rather than a fact, which is what
@@ -441,6 +441,8 @@ const aDevilsAdvocateSavesFromTheGallows = survivesExecutionRule(
 survivesExecutionRule(function aVizierCannotDieByDay(world, state, day, seat) {
   if (!inBag(state, "Vizier")) return [];
   if (world.roleAt(seat, `D${day}`) !== "Vizier") return [];
+  // Babysitting Lil' Monsta, it dies when executed (their jinx).
+  if (babysitterAt(world, `D${day}`) === seat) return [];
   const out = [seat];
   for (const info of state.infos) {
     if (info.sourceRole === "Courtier" && info.role === "Vizier"
@@ -486,6 +488,8 @@ survivesExecutionRule(function aPsychopathWinsAtRoshambo(
     world, state, day, seat) {
   if (!inBag(state, "Psychopath")) return [];
   if (world.roleAt(seat, `D${day}`) !== "Psychopath") return [];
+  // Babysitting Lil' Monsta, it dies when executed (their jinx).
+  if (babysitterAt(world, `D${day}`) === seat) return [];
   return [seat];
 });
 
@@ -521,11 +525,17 @@ function atTheGallows(state, day, world = null) {
 }
 
 function teaLadyKeeping(world, state, seat, phase, alive = null) {
+  const ladies = teaLadiesKeeping(world, state, seat, phase, alive);
+  return ladies.length ? ladies[0] : null;
+}
+
+/** Every Tea Lady whose protection covers this seat right now. There can
+ * be two: a Philosopher that took the Tea Lady, and the real one drunk
+ * for it (21.10.2026). See solver.py. */
+function teaLadiesKeeping(world, state, seat, phase, alive = null) {
   if (alive === null) alive = state.aliveSet(phase);
-  for (const lady of holders(world, state, "TeaLady", phase))
-    if (alive.has(lady) && keeps(world, state, lady, seat, phase, alive))
-      return lady;
-  return null;
+  return holders(world, state, "TeaLady", phase).filter(
+    lady => alive.has(lady) && keeps(world, state, lady, seat, phase, alive));
 }
 
 /** Does this Tea Lady's protection cover this seat right now? */
@@ -549,9 +559,8 @@ function keeps(world, state, lady, seat, phase, alive) {
 survivesExecutionRule(function aTeaLadyKeepsHerNeighboursFromTheGallows(
     world, state, day, seat) {
   if (!onBoard(state, "TeaLady")) return [];
-  const lady = teaLadyKeeping(world, state, seat, `D${day}`,
-                              atTheGallows(state, day));
-  return lady === null ? [] : [lady];
+  return teaLadiesKeeping(world, state, seat, `D${day}`,
+                          atTheGallows(state, day));
 });
 
 /** Is one of her living neighbours on a side that can turn?
@@ -566,15 +575,13 @@ function besideASideNobodyKnows(world, state, lady, phase, alive = null) {
   return false;
 }
 
-/** Executed and dead beside a Tea Lady: she was not working. */
+/** Executed and dead beside a Tea Lady: she was not working — each of
+ * them, when two keep the seat. */
 export function teaLadyFailedAtTheGallows(world, state, day, seat) {
-  if (!onBoard(state, "TeaLady")) return null;
+  if (!onBoard(state, "TeaLady")) return [];
   const standing = atTheGallows(state, day, world);
-  const lady = teaLadyKeeping(world, state, seat, `D${day}`, standing);
-  if (lady !== null
-      && besideASideNobodyKnows(world, state, lady, `D${day}`, standing))
-    return null;
-  return lady;
+  return teaLadiesKeeping(world, state, seat, `D${day}`, standing).filter(
+    lady => !besideASideNobodyKnows(world, state, lady, `D${day}`, standing));
 }
 
 /** Its one free death covers the gallows as well as the night. */
@@ -650,6 +657,8 @@ causeRule(function theDemonKills(world, state, night) {
   // impossible — an ordinary board reading as a contradiction, which is
   // much worse than a Demon whose special trick is not modelled yet.
   if (KILLS_ITS_OWN_WAY.has(world.roleAt(demon, phase))) return [];
+  // A babysitter holds no Demon character: Lil' Monsta kills its own way.
+  if (babysitterAt(world, phase) === demon) return [];
   if (!state.aliveSet(phase).has(demon)) return [];
   // Stopped at its source only when something tonight could reach it —
   // offered blindly it crowded the real story out of the first 24
@@ -789,6 +798,22 @@ causeRule(function anAlHadikhiaChooses(world, state, night) {
                     {capacity: chosen.length, mustFire: true, actor: seat,
                      actorCost: PRIORS.DEMON_POISONED_PENALTY,
                      excuses: corpse ? [[null, []]] : []})];
+});
+
+/** "Each night*, a player might die": the Storyteller's choice, never the
+ * babysitter, a kill by the Demon that nothing droisons (D, Weg 1,
+ * 21.10.2026). See solver.py. */
+causeRule(function aLilMonstaMayKill(world, state, night) {
+  if (night < 2 || !inBag(state, "LilMonsta")) return [];
+  const phase = `N${night}`;
+  const sitter = babysitterAt(world, phase);
+  if (sitter === null || !state.aliveSet(phase).has(sitter)) return [];
+  if (state.diedAt(sitter).some(at => phaseIndex(at) < phaseIndex(phase)))
+    return [];
+  const seats = [];
+  for (let p = 0; p < state.nPlayers; p++) if (p !== sitter) seats.push(p);
+  return [new Cause("LilMonsta", DEMON, seats,
+                    {capacity: 1, mustFire: false})];
 });
 
 /** Two a night, and either can be aimed at somebody already dead, so the
@@ -1374,6 +1399,9 @@ function anExorcistsChoice(world, state, night, exorcist) {
   // itself (07.10.2026).
   let demonThen = world.demonAt(`N${night}`);
   const began = world.demonAt(`D${night - 1}`);
+  // Lil' Monsta's babysitter is chosen after the Exorcist: it is last
+  // night's the Exorcist can name (F, Weg 1, 21.10.2026).
+  if (babysitterAt(world, `N${night}`) !== null) demonThen = began;
   // Only a Demon that died *as* one: a Snake Charmer swaps at 11, ahead
   // of the Exorcist, and the new Demon may then kill the old.
   if (began !== null && began !== demonThen

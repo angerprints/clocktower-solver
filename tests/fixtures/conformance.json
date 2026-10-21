@@ -110107,6 +110107,1568 @@
    }
   },
   {
+   "name": "x-lil-monsta-one-dies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Lil' Monsta",
+     "characters": [
+      "lilmonsta",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "vizier",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "slayer",
+      "exorcist",
+      "snakecharmer",
+      "chambermaid",
+      "clockmaker",
+      "grandmother",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 420,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 26.4706,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 1.9608,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.9608
+     },
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 22.549,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 18.6275,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 14.7059,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 10.7843,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 6.8627,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.4,
+       "LilMonsta": 0.6
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-lil-monsta-fortune-teller",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 2,
+      "a": 0,
+      "b": 1,
+      "yes": true
+     }
+    ],
+    "script": {
+     "name": "Lil' Monsta",
+     "characters": [
+      "lilmonsta",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "vizier",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "slayer",
+      "exorcist",
+      "snakecharmer",
+      "chambermaid",
+      "clockmaker",
+      "grandmother",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 420,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 31.0345,
+      "demon_pct": 24.8276,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.0345
+     },
+     {
+      "evil_pct": 31.0345,
+      "demon_pct": 21.3793,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.0345
+     },
+     {
+      "evil_pct": 13.7931,
+      "demon_pct": 8.2759,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.7931
+     },
+     {
+      "evil_pct": 31.0345,
+      "demon_pct": 16.5517,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.0345
+     },
+     {
+      "evil_pct": 31.0345,
+      "demon_pct": 13.1034,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.0345
+     },
+     {
+      "evil_pct": 31.0345,
+      "demon_pct": 9.6552,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.0345
+     },
+     {
+      "evil_pct": 31.0345,
+      "demon_pct": 6.2069,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.0345
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-lil-monsta-babysat",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "LilMonstaBabysat",
+      "night": 1,
+      "player": 0
+     },
+     {
+      "type": "LilMonstaBabysat",
+      "night": 2,
+      "player": 0
+     }
+    ],
+    "script": {
+     "name": "Lil' Monsta",
+     "characters": [
+      "lilmonsta",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "vizier",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "slayer",
+      "exorcist",
+      "snakecharmer",
+      "chambermaid",
+      "clockmaker",
+      "grandmother",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 420,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 66.1503,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 10.2123,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 8.4405,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 1.9608,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.9608
+     },
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 6.7531,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 5.0656,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 33.0065,
+      "demon_pct": 3.3782,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Demon": 0.0964,
+       "LilMonsta": 0.9036
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-lil-monsta-slayer",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Slayer",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": [
+       "D1"
+      ]
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 2,
+      "target": 5,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Lil' Monsta",
+     "characters": [
+      "lilmonsta",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "vizier",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "slayer",
+      "exorcist",
+      "snakecharmer",
+      "chambermaid",
+      "clockmaker",
+      "grandmother",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 190,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 32.8514,
+      "demon_pct": 0.2677,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.8514
+     },
+     {
+      "evil_pct": 32.8514,
+      "demon_pct": 0.2677,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.8514
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 32.8514,
+      "demon_pct": 0.2677,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.8514
+     },
+     {
+      "evil_pct": 32.8514,
+      "demon_pct": 0.2677,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.8514
+     },
+     {
+      "evil_pct": 35.743,
+      "demon_pct": 98.6613,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.743
+     },
+     {
+      "evil_pct": 32.8514,
+      "demon_pct": 0.2677,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.8514
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-lil-monsta-scarlet-woman",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Slayer",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": [
+       "D1"
+      ]
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SlayerShot",
+      "night": 1,
+      "player": 2,
+      "target": 5,
+      "died": true
+     }
+    ],
+    "script": {
+     "name": "Lil' Monsta",
+     "characters": [
+      "lilmonsta",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "vizier",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "slayer",
+      "exorcist",
+      "snakecharmer",
+      "chambermaid",
+      "clockmaker",
+      "grandmother",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 60,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 43.5185,
+      "demon_pct": 25.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.5185
+     },
+     {
+      "evil_pct": 1.2346,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.2346
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 43.5185,
+      "demon_pct": 25.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.5185
+     },
+     {
+      "evil_pct": 43.5185,
+      "demon_pct": 25.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.5185
+     },
+     {
+      "evil_pct": 24.6914,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 24.6914
+     },
+     {
+      "evil_pct": 43.5185,
+      "demon_pct": 25.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.5185
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.0823,
+       "LilMonsta": 0.9177
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-lil-monsta-two-yeses",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 2,
+      "a": 1,
+      "b": 3,
+      "yes": true
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 2,
+      "player": 2,
+      "a": 3,
+      "b": 4,
+      "yes": true
+     }
+    ],
+    "script": {
+     "name": "Lil' Monsta",
+     "characters": [
+      "lilmonsta",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "vizier",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "slayer",
+      "exorcist",
+      "snakecharmer",
+      "chambermaid",
+      "clockmaker",
+      "grandmother",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 411,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 38.3188,
+      "demon_pct": 26.0876,
+      "drunk_pct": 0.0,
+      "lying_pct": 38.3188
+     },
+     {
+      "evil_pct": 2.4547,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.4547
+     },
+     {
+      "evil_pct": 7.6876,
+      "demon_pct": 2.7858,
+      "drunk_pct": 0.0,
+      "lying_pct": 7.6876
+     },
+     {
+      "evil_pct": 34.8461,
+      "demon_pct": 29.5424,
+      "drunk_pct": 0.0,
+      "lying_pct": 34.8461
+     },
+     {
+      "evil_pct": 40.0552,
+      "demon_pct": 9.6681,
+      "drunk_pct": 0.0,
+      "lying_pct": 40.0552
+     },
+     {
+      "evil_pct": 38.3188,
+      "demon_pct": 18.8124,
+      "drunk_pct": 0.0,
+      "lying_pct": 38.3188
+     },
+     {
+      "evil_pct": 38.3188,
+      "demon_pct": 13.1038,
+      "drunk_pct": 0.0,
+      "lying_pct": 38.3188
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.3687,
+       "LilMonsta": 0.6313
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-lil-monsta-played-9-7",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Balloonist",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "other",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Ravenkeeper",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 0,
+      "role": "Damsel"
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 2,
+      "a": 1,
+      "b": 0,
+      "yes": true
+     },
+     {
+      "type": "Balloonist",
+      "night": 1,
+      "player": 4,
+      "target": 1
+     },
+     {
+      "type": "WidowKnown",
+      "night": 1,
+      "player": 5
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 1,
+      "target": 0
+     },
+     {
+      "type": "TownCrierInfo",
+      "night": 2,
+      "player": 5,
+      "nominated": true
+     },
+     {
+      "type": "Balloonist",
+      "night": 2,
+      "player": 4,
+      "target": 5
+     },
+     {
+      "type": "TownCrierInfo",
+      "night": 3,
+      "player": 5,
+      "nominated": false
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "lilmonsta",
+      "widow",
+      "philosopher",
+      "snakecharmer",
+      "ravenkeeper",
+      "balloonist",
+      "lycanthrope",
+      "shugenja",
+      "washerwoman",
+      "towncrier",
+      "courtier",
+      "sailor",
+      "pacifist",
+      "fortuneteller",
+      "huntsman",
+      "damsel",
+      "drunk",
+      "ogre",
+      "sweetheart",
+      "mezepheles",
+      "wraith",
+      "goblin",
+      "pukka",
+      "yaggababble",
+      "shabaloth"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 3719,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 21.7769,
+      "demon_pct": 0.0,
+      "drunk_pct": 8.1011,
+      "lying_pct": 16.9447
+     },
+     {
+      "evil_pct": 42.2815,
+      "demon_pct": 41.2643,
+      "drunk_pct": 0.0,
+      "lying_pct": 42.2815
+     },
+     {
+      "evil_pct": 7.5406,
+      "demon_pct": 0.0,
+      "drunk_pct": 45.663,
+      "lying_pct": 2.2656
+     },
+     {
+      "evil_pct": 57.498,
+      "demon_pct": 0.0,
+      "drunk_pct": 3.9258,
+      "lying_pct": 55.5185
+     },
+     {
+      "evil_pct": 5.6273,
+      "demon_pct": 0.0,
+      "drunk_pct": 11.8069,
+      "lying_pct": 0.2266
+     },
+     {
+      "evil_pct": 18.5304,
+      "demon_pct": 8.9089,
+      "drunk_pct": 12.4197,
+      "lying_pct": 12.8178
+     },
+     {
+      "evil_pct": 69.9454,
+      "demon_pct": 49.8268,
+      "drunk_pct": 2.4017,
+      "lying_pct": 69.9454
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 0.3505,
+       "Yaggababble, again": 0.0421,
+       "Lycanthrope": 0.0584,
+       "LilMonsta": 0.549
+      }
+     },
+     "3": {
+      "4": {
+       "Demon": 0.3533,
+       "Yaggababble, again": 0.0421,
+       "Lycanthrope": 0.0563,
+       "LilMonsta": 0.5483
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-lil-monsta-played-12-7",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Steward",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sailor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "SailorChoice",
+      "night": 1,
+      "player": 2,
+      "target": 6
+     },
+     {
+      "type": "Washerwoman",
+      "night": 1,
+      "player": 6,
+      "a": 2,
+      "b": 5,
+      "role": "Sailor"
+     },
+     {
+      "type": "SeamstressInfo",
+      "night": 1,
+      "player": 4,
+      "a": 0,
+      "b": 3,
+      "same": true
+     },
+     {
+      "type": "StewardInfo",
+      "night": 1,
+      "player": 1,
+      "target": 6
+     },
+     {
+      "type": "DamselGuess",
+      "night": 1,
+      "player": 0,
+      "target": 2
+     },
+     {
+      "type": "SailorChoice",
+      "night": 2,
+      "player": 2,
+      "target": 5
+     },
+     {
+      "type": "SailorChoice",
+      "night": 3,
+      "player": 2,
+      "target": 4
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "lilmonsta",
+      "widow",
+      "philosopher",
+      "snakecharmer",
+      "virgin",
+      "seamstress",
+      "washerwoman",
+      "savant",
+      "exorcist",
+      "clockmaker",
+      "steward",
+      "sailor",
+      "nightwatchman",
+      "pacifist",
+      "slayer",
+      "damsel",
+      "butler",
+      "mutant",
+      "heretic",
+      "pithag",
+      "devilsadvocate",
+      "cerenovus",
+      "shabaloth",
+      "imp",
+      "ojo"
+     ]
+    },
+    "quiet_nights": [
+     2
+    ],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 265,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 60.5928,
+      "demon_pct": 45.8906,
+      "drunk_pct": 0.0,
+      "lying_pct": 60.5928
+     },
+     {
+      "evil_pct": 21.9686,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 21.9686
+     },
+     {
+      "evil_pct": 1.1941,
+      "demon_pct": 1.0544,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.1941
+     },
+     {
+      "evil_pct": 60.5928,
+      "demon_pct": 29.5608,
+      "drunk_pct": 0.0,
+      "lying_pct": 60.5928
+     },
+     {
+      "evil_pct": 4.2173,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 4.2173
+     },
+     {
+      "evil_pct": 44.7633,
+      "demon_pct": 23.4942,
+      "drunk_pct": 0.0,
+      "lying_pct": 44.7633
+     },
+     {
+      "evil_pct": 6.6709,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 6.6709
+     }
+    ],
+    "blame": {
+     "3": {
+      "4": {
+       "Demon": 0.5362,
+       "LilMonsta": 0.4638
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-lil-monsta-played-19-7",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "S1",
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Chambermaid",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "DreamerInfo",
+      "night": 1,
+      "player": 3,
+      "target": 1,
+      "good_role": "Oracle",
+      "evil_role": "Zombuul"
+     },
+     {
+      "type": "WidowKnown",
+      "night": 1,
+      "player": 1
+     },
+     {
+      "type": "CerenovusMadness",
+      "night": 1,
+      "player": 0,
+      "role": "Goon"
+     },
+     {
+      "type": "DreamerInfo",
+      "night": 2,
+      "player": 3,
+      "target": 0,
+      "good_role": "Mayor",
+      "evil_role": "Widow"
+     },
+     {
+      "type": "OracleInfo",
+      "night": 2,
+      "player": 1,
+      "count": 4
+     },
+     {
+      "type": "JugglerInfo",
+      "night": 2,
+      "player": 2,
+      "guesses": [
+       {
+        "player": 4,
+        "role": "Widow"
+       }
+      ],
+      "count": 1
+     },
+     {
+      "type": "DreamerInfo",
+      "night": 3,
+      "player": 3,
+      "target": 0,
+      "good_role": "Mayor",
+      "evil_role": "LilMonsta"
+     },
+     {
+      "type": "CerenovusMadness",
+      "night": 3,
+      "player": 5,
+      "role": "Chambermaid"
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "lilmonsta",
+      "poisoner",
+      "snakecharmer",
+      "philosopher",
+      "juggler",
+      "oracle",
+      "professor",
+      "dreamer",
+      "chambermaid",
+      "virgin",
+      "pacifist",
+      "mayor",
+      "undertaker",
+      "princess",
+      "sage",
+      "moonchild",
+      "goon",
+      "saint",
+      "puzzlemaster",
+      "cerenovus",
+      "spy",
+      "widow",
+      "ojo",
+      "shabaloth",
+      "zombuul"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 112,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 3.4866,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 3.4866
+     },
+     {
+      "evil_pct": 97.0188,
+      "demon_pct": 92.8824,
+      "drunk_pct": 0.0,
+      "lying_pct": 97.0188
+     },
+     {
+      "evil_pct": 3.3767,
+      "demon_pct": 0.4883,
+      "drunk_pct": 0.0,
+      "lying_pct": 3.3767
+     },
+     {
+      "evil_pct": 44.3579,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 44.3579
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 51.7601,
+      "demon_pct": 6.6293,
+      "drunk_pct": 0.0,
+      "lying_pct": 51.7601
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 0.1586,
+       "LilMonsta": 0.8414
+      }
+     },
+     "3": {
+      "1": {
+       "Demon": 0.1586,
+       "LilMonsta": 0.8414
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "x-stelle-62-63-bounty-hunter-faux-paw-2255",
    "payload": {
     "n_players": 7,

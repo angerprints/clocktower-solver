@@ -9,6 +9,7 @@ Worlds are no longer counted equally. Two things change a world's weight:
     seat is evil, so a read shifts the picture without ever forcing it.
 """
 
+import itertools
 import math
 import random
 import sys
@@ -23,6 +24,9 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    PixieLearned, VillageIdiotInfo, LycanthropeChose,
                    LeviathanAnnounced, ExecutionNomination, InnkeeperChoice,
                    ExorcistChoice, GolemNomination, AlHadikhiaChose,
+                   LilMonstaBabysat, SageInfo, SavantInfo, KnightInfo,
+                   ClockmakerInfo, FlowergirlInfo, SnakeCharmerChoice,
+                   PuzzlemasterGuess, babysitter_at,
                    acts_as_cult_leader, cult_sides, knows_it_turned_evil,
                    went_on_after, phase_index,
                    begin_reads, end_reads, listen_for_sides, replay_reads,
@@ -37,8 +41,10 @@ from . import deaths as death_causes
 from . import impairment
 from .catalogue import CHARACTERS
 from .waking import LEVIATHAN_CHOOSES_FOR
-from .worlds import (Change, Timeline, TurnedEvil, World, enumerate_worlds,
-                     iter_worlds, sample_worlds)
+from .worlds import (BABYSAT_READS, Babysits, Change, Timeline, TurnedEvil,
+                     World,
+                     enumerate_worlds, iter_worlds, lil_monsta_world,
+                     sample_worlds)
 
 # Two different limits, and keeping them apart matters.
 #
@@ -253,6 +259,10 @@ TRANSITION_RULES = []
 # a field `Change` does not have: the *actor's* slot, not the granted
 # character's. Ordering the rules needs nothing new at all.
 _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
+            # Ahead of the Snake Charmer (11), which on night two points
+            # at night one's babysitter: each night's is chosen at 35,
+            # after every reader of the last one (21.10.2026).
+            "the_minions_choose_a_babysitter": 5,
             "a_snake_charmer_takes_the_star": 11,
             "a_pit_hag_makes_somebody_else": 16,
             "a_barber_lets_the_demon_swap_two": 40,
@@ -325,6 +335,9 @@ def possible_timelines(world, state, cap=128):
     # evil, beside everything else: room for all of them (11.10.2026).
     if _in_bag(state, "BountyHunter") and "BountyHunter" in world.roles:
         cap *= max(1, sum(1 for r in world.roles if TEAM[r] == "townsfolk"))
+    # Room for every babysitter story Lil' Monsta offers (21.10.2026).
+    if _in_bag(state, "LilMonsta") and lil_monsta_world(world):
+        cap = max(cap, LIL_MONSTA_STORIES)
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -1354,10 +1367,20 @@ def a_snake_charmer_takes_the_star(world, state):
                                    "SnakeCharmer", before)
                    else _whoever_works(world, state, "SnakeCharmer", before))
         demon = world.demon_at(before)
+        # Lil' Monsta's first babysitter is chosen at 15, before the
+        # charmer's turn at 20 (E, Weg 1, 21.10.2026).
+        if demon is None and info.night == 1:
+            demon = babysitter_at(world, phase)
         if charmer is None or demon is None or charmer == demon:
             continue
         if info.target != demon:
             continue                      # they pointed at somebody else
+        # A babysitter is swapped like a Demon: character and side, both
+        # ways, and the old babysitter is the poisoned Snake Charmer.
+        sitter = babysitter_at(world, before if info.night > 1 else phase)
+        sides = (("evil", "good") if sitter != demon
+                 else (world.alignment_at(demon, before),
+                       world.alignment_at(charmer, before)))
         # Applied from the night, because the swap is immediate.
         #
         # Settled at the table: a Snake Charmer acts at slot 11 and every
@@ -1393,10 +1416,226 @@ def a_snake_charmer_takes_the_star(world, state):
         # `before` was already being computed to find *who* the Demon is,
         # and correctly. It simply was not used for *what* to copy.
         stories = [(changes + (Change(after, charmer,
-                                      world.role_at(demon, before), "evil"),
-                               Change(after, demon, "SnakeCharmer", "good")),
+                                      world.role_at(demon, before), sides[0]),
+                               Change(after, demon, "SnakeCharmer",
+                                      sides[1])),
                     cost)
                    for changes, cost in stories]
+    return stories
+
+
+# --------------------------------------------------------------------------
+# Lil' Monsta (21.10.2026, claude/lil-monsta-lesarten.md)
+# --------------------------------------------------------------------------
+# Nobody is dealt it. Each night the Minions choose a babysitter, who "is
+# the Demon" until they choose again: written into the story as
+# `Babysits` changes, one a night, which `demon_at` reads.
+#
+# A, Weg 1: one babysitter a night, the same for every reading of that
+# night and the day after — searched only where something asks. Each
+# night offers the seats a reading points at as the Demon, and one seat
+# nothing asks about, standing for all of them: who it is changes nothing
+# that is checked. B, Weg 1: anybody alive may babysit.
+
+def _babysitter_asked(state):
+    """{night: (pointed at, ruled out, every seat)} — what the board's
+    readings ask about the babysitter of each night.
+
+    "Pointed at" are seats a reading could find to be the Demon: a
+    Fortune Teller's yes, a Sage's pair, a Snake Charmer that swapped.
+    "Ruled out" are seats a reading says are not, if it worked: a no, a
+    Knight's pair, a shot that missed. A seat in neither is one nothing
+    asks about. A Clockmaker counts from the Demon's seat, so every seat
+    matters on the first night.
+    """
+    asked = {}
+
+    def at(night):
+        return asked.setdefault(night, (set(), set(), [False]))
+
+    for info in state.infos:
+        k = info.night
+        if isinstance(info, FortuneTeller):
+            at(k)[0 if info.yes else 1].update((info.a, info.b))
+        elif isinstance(info, SageInfo):
+            at(k)[0].update((info.a, info.b))
+        elif isinstance(info, ChoirboyInfo):
+            at(k)[0].add(info.target)
+        elif isinstance(info, KnightInfo):
+            at(k)[1].update((info.a, info.b))
+        elif isinstance(info, ClockmakerInfo):
+            at(k)[2][0] = True
+        elif isinstance(info, LilMonstaBabysat):
+            at(k)[0].add(info.player)
+        elif isinstance(info, SlayerShot):
+            at(k)[0 if info.died else 1].add(info.target)
+        elif isinstance(info, GolemNomination):
+            at(k)[1 if info.died else 0].add(info.target)
+        elif isinstance(info, PuzzlemasterGuess):
+            at(k)[0].add(info.shown)
+        elif isinstance(info, SavantInfo):
+            for says in (info.first_says, info.second_says):
+                if says and says.get("kind") == "demon_among":
+                    at(k)[0].update(int(x) for x in says.get("seats") or ())
+        elif isinstance(info, FlowergirlInfo) and k > 1:
+            voters = set((state.votes or {}).get(k - 1, ()))
+            at(k - 1)[0 if info.voted else 1].update(voters)
+        elif isinstance(info, SnakeCharmerChoice):
+            # At slot 11: last night's babysitter, or on the first night
+            # the one chosen at 15 before it.
+            before = k - 1 if k > 1 else 1
+            at(before)[0 if info.swapped else 1].add(info.target)
+        elif isinstance(info, ExorcistChoice) and k > 1:
+            # Naming last night's babysitter stops the kill and says
+            # nothing else: it may well have.
+            at(k - 1)[0].add(info.target)
+    return asked
+
+
+def _made_minions(state):
+    """Seats the board says may have become a Minion: a Snake Charmer that
+    swapped, a Pit-Hag's Minion."""
+    out = set()
+    for info in state.infos:
+        if isinstance(info, SnakeCharmerChoice) and info.swapped:
+            out.add(info.player)
+        elif getattr(info, "source_role", None) == "PitHag" \
+                and TEAM.get(getattr(info, "role", None) or "") == "minion":
+            out.add(info.target)
+    return out
+
+
+def _babysitters_on(world, state, night, asked):
+    """The seats worth trying as this night's babysitter, best first."""
+    phase = f"N{night}"
+    alive = sorted(state.alive_set(phase))
+    if not alive:
+        return []
+    # Read off the deal, not the story: this rule is asked again on later
+    # passes with other rules' changes in view, and what it settled for
+    # an earlier night has to come out the same (a Pit-Hag that made the
+    # stand-in a Townsfolk moved it, and no story was left).
+    dealt = world.roles
+    # The Magician's jinx: the Storyteller picks among the Minions.
+    magician = world.find("Magician")
+    if magician is not None and magician in state.alive_set(phase) \
+            and _on_board(state, "Magician"):
+        alive = [p for p in alive if TEAM[dealt[p]] == "minion"
+                 or p in _made_minions(state)]
+    # The Marionette's: it starts beside the first babysitter.
+    if night == 1:
+        marionette = world.find("Marionette")
+        if marionette is not None:
+            n = state.n_players
+            alive = [p for p in alive
+                     if p in ((marionette - 1) % n, (marionette + 1) % n)]
+    pointed, ruled_out, every = asked.get(night, (set(), set(), [False]))
+    if every[0]:
+        return alive
+    span = (phase_index(phase), phase_index(f"D{night}"))
+    # Dead in the span, or on the gallows that day: what became of them
+    # is a question for the story, so they are tried but never stand in
+    # for the seats nothing asks about.
+    died = {p for p in alive
+            if any(span[0] <= phase_index(at) <= span[1]
+                   for at in state.died_at(p))
+            or state.executed_on(night) == p}
+    out = [p for p in alive if p in pointed]
+    # A seat that died in the span is tried too: it may have been the
+    # babysitter, and what followed is the story's to explain.
+    out += [p for p in alive if p in died and p not in out]
+    neutral = [p for p in alive
+               if p not in pointed and p not in ruled_out and p not in died]
+    # First, the one standing for every seat nothing asks about: where it
+    # will do, it is the story told (`_best_babysat_story`).
+    if neutral:
+        minions = [p for p in neutral if TEAM[dealt[p]] == "minion"]
+        out.insert(0, (minions or neutral)[0])
+    else:
+        # Nobody nothing asks about: then anybody, the ruled out last.
+        out += [p for p in alive if p not in out and p not in ruled_out]
+        out += [p for p in alive if p not in out]
+    return out
+
+
+def _babysitter_falls(world, state, seat, night, last):
+    """What becomes of the babysitter chosen on this night, until the
+    Minions choose again: (how the story goes on, the changes it needs).
+
+    "go on" — it lives; "over" — it died and the game ended there, good
+    winning; "scarlet" — it died with five or more alive and the Scarlet
+    Woman babysits for the rest of the game (their jinx); "mastermind" —
+    executed, with a Mastermind buying one more day. None if its death
+    leaves no story.
+    """
+    span = (phase_index(f"N{night}"), phase_index(f"D{night}"))
+    gone = sorted((at for at in state.died_at(seat)
+                   if span[0] <= phase_index(at) <= span[1]),
+                  key=phase_index)
+    if not gone:
+        return [("go on", ())]
+    at = gone[0]
+    out = []
+    if getattr(state, "game_over", False) \
+            and phase_index(at) >= phase_index(state.final_phase()):
+        out.append(("over", ()))
+    # The Scarlet Woman: who holds her by then is settled once the whole
+    # story is in (a Snake Charmer may have swapped into her at 11, after
+    # this rule), so the fall is marked and the handovers settle it.
+    if _on_board(state, "ScarletWoman"):
+        out.append(("scarlet", (LilMonstaFell(at, seat),)))
+    if _mastermind_day(world, state, at, seat):
+        out.append(("mastermind", (mastermind_marker(at, seat),)))
+    return out
+
+
+LIL_MONSTA_STORIES = 256
+# Up to this many combinations of babysitters are all told; beyond it a
+# night at a time (`_best_babysat_story`).
+BABYSITTERS_TOLD_IN_FULL = 64
+
+
+def babysitter_options(world, state):
+    """Each night's babysitters worth trying, in order: [[seats], ...]."""
+    last = max(1, int(state.final_phase()[1:]))
+    asked = _babysitter_asked(state)
+    return [_babysitters_on(world, state, night, asked)
+            for night in range(1, last + 1)]
+
+
+@transition_rule
+def the_minions_choose_a_babysitter(world, state):
+    """Every night, who babysat Lil' Monsta (A and B, Weg 1)."""
+    if not _in_bag(state, "LilMonsta") or not lil_monsta_world(world):
+        return [((), 1.0)]
+    last = max(1, int(state.final_phase()[1:]))
+    # One babysitter a night, as `_best_babysat_story` is trying them; the
+    # first of each night's options where nobody says.
+    fixed = getattr(state, "_babysitters", None)
+    if fixed is None:
+        fixed = tuple(options[0] if options else None
+                      for options in babysitter_options(world, state))
+    stories = []
+
+    def walk(night, so_far):
+        if len(stories) >= LIL_MONSTA_STORIES:
+            return
+        if night > last:
+            stories.append((so_far, 1.0))
+            return
+        seat = fixed[night - 1] if night - 1 < len(fixed) else None
+        for seat in ([] if seat is None else [seat]):
+            chosen = so_far + (Babysits(f"N{night}", seat),)
+            for how, extra in _babysitter_falls(world, state, seat, night,
+                                                last):
+                if how == "go on":
+                    walk(night + 1, chosen)
+                else:
+                    stories.append((chosen + extra, 1.0))
+                if len(stories) >= LIL_MONSTA_STORIES:
+                    return
+
+    walk(1, ())
     return stories
 
 
@@ -1486,6 +1725,10 @@ def _mastermind_day(world, state, phase, holder):
     seat = world.find_at("Mastermind", phase)
     if seat is None or seat not in state.alive_set(phase):
         return False
+    # Hanged itself, babysitting Lil' Monsta: dead, it has no ability to
+    # buy the day with (21.10.2026).
+    if seat == holder:
+        return False
     latest = phase_index(state.final_phase())
     return latest <= phase_index(f"D{day + 1}")
 
@@ -1502,7 +1745,39 @@ def mastermind_marker(phase, seat):
 
 
 def is_mastermind_marker(change):
-    return change.role is None and change.side is None
+    return change.role is None and change.side is None \
+        and not isinstance(change, (Babysits, LilMonstaFell))
+
+
+class LilMonstaFell(Change):
+    """Lil' Monsta's babysitter died here and the game went on: the
+    Scarlet Woman's jinx, settled by `_the_scarlet_woman_babysits`."""
+    __slots__ = ()
+
+
+def _the_scarlet_woman_babysits(world, state):
+    """"If Lil' Monsta dies with 5 or more players alive, the Scarlet
+    Woman babysits Lil' Monsta for the rest of the game" — from the
+    moment after: a reading of the moment it died, the Slayer's own shot,
+    was about the babysitter that fell. She has to see it through."""
+    fell = [c for c in getattr(world, "changes", ())
+            if isinstance(c, LilMonstaFell)]
+    if not fell:
+        return [()]
+    at, seat = fell[0].phase, fell[0].seat
+    scarlet = world.find_at("ScarletWoman", at)
+    if scarlet is None or scarlet == seat \
+            or not scarlet_woman_takes_over(world, state, at):
+        return []
+    index = phase_index(at) + 1
+    after = f"{'D' if index % 2 else 'N'}{index // 2 + 1}"
+    over = getattr(state, "game_over", False)
+    final = phase_index(state.final_phase())
+    if any(phase_index(gone) >= index and not (over
+                                               and phase_index(gone) >= final)
+           for gone in state.died_at(scarlet)):
+        return []
+    return [(Babysits(after, scarlet),)]
 
 
 def demon_lineages(world, state, cap=24):
@@ -1521,6 +1796,12 @@ def demon_lineages(world, state, cap=24):
     Returns a list of handover tuples. Empty means no story fits, and the
     world is impossible.
     """
+    # Lil' Monsta's babysitters are the Minions' choice, and what a
+    # babysitter's death leads to is settled where they are chosen
+    # (the_minions_choose_a_babysitter) — but for the Scarlet Woman's
+    # jinx, settled here with the whole story in view.
+    if _in_bag(state, "LilMonsta") and lil_monsta_world(world):
+        return _the_scarlet_woman_babysits(world, state)
     start = world.demon_at("N1")
     if start is None:
         return [()]
@@ -1666,6 +1947,10 @@ def the_demon_kills(world, state, night):
     # much worse than a Demon whose special trick is not modelled yet.
     if world.role_at(demon, f"N{night}") in KILLS_ITS_OWN_WAY:
         return []
+    # A babysitter holds no Demon character: Lil' Monsta kills its own
+    # way (a_lil_monsta_may_kill).
+    if babysitter_at(world, f"N{night}") == demon:
+        return []
     if demon not in state.alive_set(f"N{night}"):
         return []                         # it was not standing to do it
     # The Demon may have been stopped at its source — a poisoned Imp kills
@@ -1793,6 +2078,9 @@ def a_vizier_cannot_die_by_day(world, state, day, seat):
     phase = f"D{day}"
     if world.role_at(seat, phase) != "Vizier":
         return []
+    # Babysitting Lil' Monsta, it dies when executed (their jinx).
+    if babysitter_at(world, phase) == seat:
+        return []
     out = [seat]
     for info in state.infos:
         if getattr(info, "source_role", None) == "Courtier" \
@@ -1829,6 +2117,9 @@ def a_psychopath_wins_at_roshambo(world, state, day, seat):
     if not _in_bag(state, "Psychopath"):
         return []
     if world.role_at(seat, f"D{day}") != "Psychopath":
+        return []
+    # Babysitting Lil' Monsta, it dies when executed (their jinx).
+    if babysitter_at(world, f"D{day}") == seat:
         return []
     return [seat]
 
@@ -1908,12 +2199,22 @@ def _tea_lady_keeping(world, state, seat, phase, alive=None):
     a phase, because who is living beside her changes as people die —
     and it is asked at night and in daylight alike.
     """
+    ladies = _tea_ladies_keeping(world, state, seat, phase, alive)
+    return ladies[0] if ladies else None
+
+
+def _tea_ladies_keeping(world, state, seat, phase, alive=None):
+    """Every Tea Lady whose protection covers this seat right now.
+
+    There can be two: a Philosopher that took the Tea Lady sits beside
+    the seat as well, and the real one is drunk for it. Asking only the
+    first had the drunk one keep a neighbour from the gallows, and the
+    world that really happened was not a world (21.10.2026)."""
     if alive is None:
         alive = state.alive_set(phase)
-    for lady in _holders(world, state, "TeaLady", phase):
-        if lady in alive and _keeps(world, state, lady, seat, phase, alive):
-            return lady
-    return None
+    return [lady for lady in _holders(world, state, "TeaLady", phase)
+            if lady in alive and _keeps(world, state, lady, seat, phase,
+                                        alive)]
 
 
 def _keeps(world, state, lady, seat, phase, alive):
@@ -1959,9 +2260,8 @@ def a_tea_lady_keeps_her_neighbours_from_the_gallows(world, state, day,
     """
     if not _on_board(state, "TeaLady"):
         return []
-    lady = _tea_lady_keeping(world, state, seat, f"D{day}",
-                             _at_the_gallows(state, day))
-    return [] if lady is None else [lady]
+    return _tea_ladies_keeping(world, state, seat, f"D{day}",
+                               _at_the_gallows(state, day))
 
 
 @survives_execution_rule
@@ -2216,6 +2516,32 @@ def an_al_hadikhia_chooses(world, state, night):
         seats=frozenset(chosen), capacity=len(chosen), must_fire=True,
         actor=seat, actor_cost=DEMON_POISONED_PENALTY,
         excuses=((None, ()),) if corpse else ())]
+
+
+@death_causes.cause_rule
+def a_lil_monsta_may_kill(world, state, night):
+    """"Each night*, a player might die" (D, Weg 1, 21.10.2026).
+
+    The Storyteller's choice, so it may kill nobody, and never the
+    babysitter. A kill by the Demon: a Monk, a Soldier, a Tea Lady keep
+    a player from it, a Princess's day or an Exorcist that named the
+    babysitter stop it, a Grandmother goes with her grandchild. Lil'
+    Monsta is no player, so nothing droisons it. Once its babysitter is
+    dead it kills nobody: a Mastermind's day.
+    """
+    if night < 2 or not _in_bag(state, "LilMonsta"):
+        return []
+    phase = f"N{night}"
+    sitter = babysitter_at(world, phase)
+    if sitter is None or sitter not in state.alive_set(phase):
+        return []
+    if any(phase_index(at) < phase_index(phase)
+           for at in state.died_at(sitter)):
+        return []
+    return [death_causes.Cause(
+        name="LilMonsta", kind=death_causes.DEMON,
+        seats=frozenset(p for p in range(state.n_players) if p != sitter),
+        capacity=1, must_fire=False)]
 
 
 @death_causes.cause_rule
@@ -3086,6 +3412,10 @@ def _an_exorcists_choice(world, state, night, exorcist):
     # impossible, and the game was lost (07.10.2026).
     demon = world.demon_at(phase)
     began = world.demon_at(f"D{night - 1}")
+    # Lil' Monsta's babysitter is chosen at 35, after the Exorcist: it is
+    # last night's that the Exorcist can name (F, Weg 1, 21.10.2026).
+    if babysitter_at(world, phase) is not None:
+        demon = began
     # Only a Demon that died *as* one. A Snake Charmer swaps at 11, ahead
     # of the Exorcist, and the new Demon may then kill the old — which
     # is a charmer by now, and was already one when the Exorcist chose.
@@ -4005,7 +4335,11 @@ def _plain_failures(world, state, outcome=None):
                 or mastermind not in state.alive_set(change.phase):
             return None, None, 1.0, None
         working.setdefault(day, set()).add(mastermind)
-        if scarlet_woman_takes_over(world, state, change.phase):
+        # Not when she is the one executed: a Scarlet Woman babysitting
+        # Lil' Monsta (21.10.2026).
+        if scarlet_woman_takes_over(world, state, change.phase) \
+                and world.find_at("ScarletWoman", change.phase) \
+                != change.seat:
             failures[day].add(world.find_at("ScarletWoman", change.phase))
 
     # Executing the Saint ends the game on the spot — while it is
@@ -4034,10 +4368,11 @@ def _plain_failures(world, state, outcome=None):
         # she was not working. The mirror of her saving one.
         if _on_board(state, "TeaLady"):
             standing = _at_the_gallows(state, day, world)
-            lady = _tea_lady_keeping(world, state, seat, f"D{day}", standing)
-            if lady is not None and not _beside_a_side_nobody_knows(
-                    world, state, lady, f"D{day}", standing):
-                failures[day].add(lady)
+            for lady in _tea_ladies_keeping(world, state, seat, f"D{day}",
+                                            standing):
+                if not _beside_a_side_nobody_knows(
+                        world, state, lady, f"D{day}", standing):
+                    failures[day].add(lady)
 
     # A Vizier cannot die during the day — by the gallows or anything
     # else. One that did was not working: drunk or poisoned, it dies like
@@ -4047,7 +4382,9 @@ def _plain_failures(world, state, outcome=None):
     if _in_bag(state, "Vizier"):
         for seat, phase in state.death_phases():
             if phase[:1] == "D" \
-                    and world.role_at(seat, phase) == "Vizier":
+                    and world.role_at(seat, phase) == "Vizier" \
+                    and not (_executed(state, int(phase[1:]), seat)
+                             and babysitter_at(world, phase) == seat):
                 failures[int(phase[1:])].add(seat)
 
     # A Lleech dies when its host does and not before (11.10.2026). The
@@ -4189,6 +4526,15 @@ def _plain_failures(world, state, outcome=None):
         if idx in spent:
             outcome[idx] = SPENT
             continue                      # the Virgin was already used up
+        # Shown Lil' Monsta: true of whoever babysat that night, and made
+        # up by anybody else (21.10.2026, C, Weg 1).
+        if isinstance(info, LilMonstaBabysat):
+            if info.holds(world, state, None):
+                outcome[idx] = HELD
+            else:
+                invented *= invention_cost(info)
+                outcome[idx] = INVENTED
+            continue
         if info.hard():
             if not info.holds(world, state, None):
                 return None, None, 1.0, None   # this cannot have happened
@@ -5797,6 +6143,128 @@ def best_story(world, state, outcome=None, viable=None):
 
 
 def _best_story(world, state, outcome, viable):
+    if _in_bag(state, "LilMonsta") and lil_monsta_world(world):
+        return _best_babysat_story(world, state, outcome, viable)
+    return _best_story_told(world, state, outcome, viable)
+
+
+def _best_babysat_story(world, state, outcome, viable):
+    """Lil' Monsta's babysitters, one a night (A, Weg 1, 21.10.2026).
+
+    Every combination is too many to tell: a few seats a night over four
+    nights, times whatever else the story may hold. So the stand-ins are
+    told first — the seat nothing asks about, each night — and then one
+    night at a time is tried with each of its other seats, keeping what
+    explains the board better, until nothing improves. A night's
+    babysitter is read by that night, the day after and the start of the
+    next, so the nights hardly lean on each other.
+    """
+    options = babysitter_options(world, state)
+    if not options or any(not got for got in options):
+        return None, ()
+    tried = {}
+    # Tellings that fitted nothing, with the nights they asked about: one
+    # that differs from them only on other nights fails the same, and is
+    # not told (the shortcut `_explain_or_recall` takes for sides).
+    failed = []
+    # A babysitter dead or on the gallows in its span is always asked
+    # about: what followed is part of the story.
+    marked = []
+    for night, seats in enumerate(options):
+        span = (phase_index(f"N{night + 1}"), phase_index(f"D{night + 1}"))
+        marked.append({p for p in seats
+                       if state.executed_on(night + 1) == p
+                       or any(span[0] <= phase_index(at) <= span[1]
+                              for at in state.died_at(p))})
+
+    def tell(fixed):
+        if fixed in tried:
+            return tried[fixed]
+        for before, asked in failed:
+            if all(fixed[k] == before[k] if k in asked
+                   else fixed[k] not in marked[k]
+                   for k in range(len(fixed))):
+                tried[fixed] = (None, (), None, None)
+                return tried[fixed]
+        state._babysitters = fixed
+        reads = BABYSAT_READS[0] = set()
+        try:
+            marks = {} if outcome is not None else None
+            fits = [] if viable is not None else None
+            cost, changes = _best_story_told(world, state, marks, fits)
+        finally:
+            state._babysitters = None
+            BABYSAT_READS[0] = None
+        if cost is None:
+            asked = {int(at[1:]) - 1 for at in reads if at[:1] == "N"}
+            asked |= {k for k, seat in enumerate(fixed)
+                      if k < len(marked) and seat in marked[k]}
+            failed.append((fixed, asked))
+        tried[fixed] = (cost, changes, marks, fits)
+        return tried[fixed]
+
+    fixed = tuple(got[0] for got in options)
+    best = tell(fixed)
+    # Few enough to tell them all: then every one is.
+    size = 1
+    for got in options:
+        size *= len(got)
+    if size <= BABYSITTERS_TOLD_IN_FULL:
+        for trial in itertools.product(*options):
+            if best[0] is not None and best[0] >= 1.0:
+                break
+            got = tell(tuple(trial))
+            if got[0] is not None and (best[0] is None or got[0] > best[0]):
+                best, fixed = got, tuple(trial)
+        options = []                      # nothing left to try
+    # Where to start: the stand-ins, and — the Minions mostly keep it —
+    # each seat babysitting every night it can.
+    seen = []
+    for got in options:
+        seen += [p for p in got if p not in seen]
+    for seat in seen:
+        if best[0] is not None and best[0] >= 1.0:
+            break
+        trial = tuple(seat if seat in got else got[0] for got in options)
+        got = tell(trial)
+        if got[0] is not None and (best[0] is None or got[0] > best[0]):
+            best, fixed = got, trial
+    # Nothing fitted yet: one night changed from any of the starts.
+    if best[0] is None:
+        for start in list(tried):
+            for night, seats in enumerate(options):
+                for seat in seats:
+                    trial = start[:night] + (seat,) + start[night + 1:]
+                    got = tell(trial)
+                    if got[0] is not None and (best[0] is None
+                                               or got[0] > best[0]):
+                        best, fixed = got, trial
+            if best[0] is not None:
+                break
+    for _round in range(3):
+        better = False
+        for night, seats in enumerate(options):
+            if best[0] is not None and best[0] >= 1.0:
+                break
+            for seat in seats:
+                if seat == fixed[night]:
+                    continue
+                trial = fixed[:night] + (seat,) + fixed[night + 1:]
+                got = tell(trial)
+                if got[0] is not None and (best[0] is None
+                                           or got[0] > best[0]):
+                    best, fixed, better = got, trial, True
+        if not better:
+            break
+    if viable is not None:
+        for _cost, _changes, _marks, fits in tried.values():
+            viable.extend(fits or ())
+    if outcome is not None and best[2]:
+        outcome.update(best[2])
+    return best[0], best[1]
+
+
+def _best_story_told(world, state, outcome, viable):
     stories = possible_timelines(world, state)
     if not stories:
         return None, ()

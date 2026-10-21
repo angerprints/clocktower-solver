@@ -804,6 +804,7 @@ const SCHEMA = {
   // the same player may come up twice (21.10.2026). Who died and who came
   // back goes on the seats as usual.
   AlHadikhiaChose:     [["a","player"],["b","player"],["c","player"]],
+  LilMonstaBabysat:    [],
   // The ninth three, kept and not weighed: whom the High Priestess was
   // pointed at, which side the General was told is winning, and the
   // advice the Fisherman was given (a day row, once per game).
@@ -874,7 +875,7 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   LycanthropeChose:"Lycanthrope", HarpyMadness:"Harpy",
   BountyHunterInfo:"BountyHunter", CultCalled:"CultLeader",
   LeviathanAnnounced:"Leviathan", ExecutionNomination:"Leviathan",
-  AlHadikhiaChose:"AlHadikhia",
+  AlHadikhiaChose:"AlHadikhia", LilMonstaBabysat:"LilMonsta",
   HighPriestessInfo:"HighPriestess", GeneralInfo:"General",
   FishermanAdvice:"Fisherman",
   GrandmotherInfo:"Grandmother", ChambermaidInfo:"Chambermaid",
@@ -906,7 +907,7 @@ const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
   PsychopathKill:"psychopath", PsychopathRoshambo:"executed",
   WidowKnown:"told player", BoomdandyExploded:"executed",
   CultCalled:"called by", LeviathanAnnounced:"noted by",
-  AlHadikhiaChose:"noted by",
+  AlHadikhiaChose:"noted by", LilMonstaBabysat:"babysitter",
   ExecutionNomination:"nominator" };
 // Rows spoken by somebody the ability was used *on*, not by whoever
 // holds the character. They are never somebody relaying the holder's
@@ -917,7 +918,8 @@ const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
 const WITNESS_ROWS = ["NightwatchmanSeen","BansheeAnnounced","GoblinClaim",
   "DamselGuess","FearmongerChose","VizierAnnounced","BlindVote",
   "PsychopathRoshambo","WidowKnown","BoomdandyExploded",
-  "CultCalled","LeviathanAnnounced","ExecutionNomination","AlHadikhiaChose"];
+  "CultCalled","LeviathanAnnounced","ExecutionNomination","AlHadikhiaChose",
+  "LilMonstaBabysat"];
 // A few readings are named for the *act* rather than the character,
 // because that is what the table saw: a Slayer shot, a Gambler's guess.
 // Everything else is just the character, and is worked out rather than
@@ -946,6 +948,7 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   BountyHunterInfo:"Bounty Hunter", CultCalled:"Cult called",
   LeviathanAnnounced:"Leviathan announced",
   AlHadikhiaChose:"Al-Hadikhia chose",
+  LilMonstaBabysat:"Babysat Lil' Monsta",
   ExecutionNomination:"Nominated the executed",
   HighPriestessInfo:"High Priestess shown", GeneralInfo:"General told",
   FishermanAdvice:"Fisherman advice" };
@@ -1811,6 +1814,8 @@ function describeRow(r){
       return `the table was told the Al-Hadikhia chose ${
         [r.a, r.b, r.c].filter(x => x !== null && x !== undefined && x !== "")
           .map(who).join(", ")}`;
+    case "LilMonstaBabysat":
+      return `was woken and shown Lil' Monsta: babysat it tonight`;
     case "HighPriestessInfo":
       return `was pointed at ${who(r.target)} — kept, not weighed`;
     case "GeneralInfo":

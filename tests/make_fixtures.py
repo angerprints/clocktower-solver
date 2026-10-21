@@ -1075,6 +1075,7 @@ def handmade():
     yield from the_lord_of_typhon()
     yield from the_kazali()
     yield from the_al_hadikhia()
+    yield from the_lil_monsta()
     yield from stellen_62_63()
 
 
@@ -1634,6 +1635,28 @@ def the_al_hadikhia():
 
 # Two with a return (2 and 19), two without (0 and 12).
 PLAYED_AL_HADIKHIA = ((0, 8), (2, 8), (12, 7), (19, 7))
+
+
+def the_lil_monsta():
+    """Lil' Monsta (21.10.2026): the boards of tests/test_lil_monsta.py
+    and played games with it in the bag."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_lil_monsta import _payloads
+    names = ("one-dies", "fortune-teller", "babysat", "slayer",
+             "scarlet-woman", "two-yeses")
+    for name, payload in zip(names, _payloads(), strict=True):
+        yield {"name": f"x-lil-monsta-{name}", "payload": payload}
+    for seed, n in PLAYED_LIL_MONSTA:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=("LilMonsta",))
+        yield played(f"x-lil-monsta-played-{seed}-{n}", script, seed, n, 3,
+                     rng=rng)
+
+
+# Small and quick to count, none of them sampled.
+PLAYED_LIL_MONSTA = ((9, 7), (12, 7), (19, 7))
 
 
 def stellen_62_63():

@@ -68,6 +68,8 @@ export const INFO_SOURCES = {
   LeviathanAnnounced: "Leviathan", ExecutionNomination: "Leviathan",
   // The Al-Hadikhia's three, announced to everybody (21.10.2026).
   AlHadikhiaChose: "AlHadikhia",
+  // Shown the token by the Storyteller: whoever babysat (21.10.2026).
+  LilMonstaBabysat: "LilMonsta",
   // The ninth three: kept, not weighed.
   HighPriestessInfo: "HighPriestess", GeneralInfo: "General",
   FishermanAdvice: "Fisherman",

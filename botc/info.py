@@ -32,6 +32,24 @@ def _as_phases(value):
 _PHASE_INDEX = {}
 
 
+def babysitter_at(w, phase):
+    """Who babysits Lil' Monsta at this moment and so "is the Demon", or
+    None (21.10.2026). The Demon of a story whose seat holds no Demon
+    character: only a babysitter is that. Readings that look for a Demon
+    *character* ask this as well.
+
+    Only in a story somebody babysits in. A Pit-Hag that made the Demon
+    something else leaves a Demon holding no Demon character too, and
+    reading that as a babysitter lost worlds on boards without Lil'
+    Monsta (21.10.2026)."""
+    if not getattr(w, "lil_monsta", False):
+        return None
+    demon = w.demon_at(phase)
+    if demon is None or TEAM[w.role_at(demon, phase)] == "demon":
+        return None
+    return demon
+
+
 def phase_index(phase):
     """'N1' -> 0, 'D1' -> 1, 'N2' -> 2, ...
 
@@ -1103,7 +1121,8 @@ class FortuneTeller(Info):
         # asked `demon_at` — who acts tonight — and a true yes on the old
         # Imp read as impossible. Found by the engine of the single-player
         # game, which had it right.
-        hard_demon = any(TEAM[w.role_at(x, phase)] == "demon" for x in pair)
+        hard_demon = any(TEAM[w.role_at(x, phase)] == "demon" for x in pair) \
+            or babysitter_at(w, phase) in pair
         recluse = any(w.role_at(x, phase) == "Recluse" for x in pair)
         herring = rh in pair
         if self.yes:
@@ -1125,7 +1144,7 @@ class FortuneTeller(Info):
         pair = (self.a, self.b)
         phase = f"N{self.night}"
         really = any(TEAM[w.role_at(x, phase)] == "demon" for x in pair) \
-            or rh in pair
+            or babysitter_at(w, phase) in pair or rh in pair
         return self.yes == really
 
 
@@ -2332,7 +2351,8 @@ class KnightInfo(Info):
         if self.a == self.b:
             return False                  # "2 players"
         return all(TEAM[w.role_at(x, phase)] != "demon"
-                   for x in (self.a, self.b))
+                   for x in (self.a, self.b)) \
+            and babysitter_at(w, phase) not in (self.a, self.b)
 
 
 def _round_the_circle(n, seat):
@@ -2670,8 +2690,11 @@ class ClockmakerInfo(Info):
         if demon is None:
             return False
         n = len(w.roles)
+        # Not itself: a Minion babysitting Lil' Monsta is "the Demon" and
+        # counts to its nearest other Minion (21.10.2026).
         steps = [min((m - demon) % n, (demon - m) % n)
-                 for m in range(n) if w.team_at(m, phase) == "minion"]
+                 for m in range(n)
+                 if m != demon and w.team_at(m, phase) == "minion"]
         return bool(steps) and min(steps) == self.count
 
 
@@ -2955,7 +2978,8 @@ class SlayerShot(Info):
         # Any Demon, not only the Imp: this read `DEMONS`, which is
         # Trouble Brewing's list, while the JavaScript asks the team
         # (found 11.10.2026 with the Lleech).
-        demon = TEAM.get(t) == "demon"
+        demon = TEAM.get(t) == "demon" \
+            or babysitter_at(w, phase) == self.target
         hidden = getattr(s, "_hidden", None)
         host = hidden[1] if hidden else None
         if self.died:
@@ -3415,7 +3439,9 @@ class GolemNomination(Info):
         target = w.role_at(self.target, phase)
         if self.died:
             return (works_as(w, s, self.player, "Golem", phase)
-                    and TEAM[target] != "demon" and not self._earlier(s))
+                    and TEAM[target] != "demon"
+                    and babysitter_at(w, phase) != self.target
+                    and not self._earlier(s))
         if self._earlier(s):
             return True                   # spent already: nothing happens
         # Dropped dead as it nominated (a Yaggababble's word): no ability
@@ -3423,6 +3449,7 @@ class GolemNomination(Info):
         if phase in s.died_at(self.player):
             return True
         return (_could_register_as_demon(target)
+                or babysitter_at(w, phase) == self.target
                 or _cannot_die_by_day(w, s, self.target, phase))
 
     def leaned_on(self, w, s, seat=None):
@@ -4019,6 +4046,30 @@ def al_hadikhia_for_the_game(w, s, ah, night):
         return False
     mastermind = w.find_at("Mastermind", f"D{day}")
     return mastermind is not None and mastermind in s.alive_set(f"D{day}")
+
+
+@dataclass
+class LilMonstaBabysat(Info):
+    """"I was woken and shown Lil' Monsta": said by a player the Minions
+    chose to babysit it that night (21.10.2026, C, Weg 1).
+
+    The Storyteller shows the token to whoever babysits, good or evil, and
+    Lil' Monsta is no player, so nothing droisons it: a babysitter is told
+    the truth. A good one says so; an evil one may say it falsely, like
+    any made-up row (solver._plain_failures asks this directly).
+    """
+
+    source_role = "LilMonsta"
+
+    def is_information(self, state):
+        return False                      # no Townsfolk ability, no Vortox
+
+    def source_seat(self, state):
+        return self.player                # their own night, never relayed
+
+    def holds(self, w, s, rh, seat=None):
+        return w.demon_at(f"N{self.night}") == self.player \
+            and babysitter_at(w, f"N{self.night}") == self.player
 
 
 @dataclass

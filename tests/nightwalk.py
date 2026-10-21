@@ -582,6 +582,21 @@ def hidden_from(deal, night, heard):
         out[("ah_picks", night)] = list(picks)
         out[("ah_answers", night)] = list(
             getattr(deal, "ah_answers", {}).get(night, ()))
+    # Lil' Monsta (21.10.2026): who babysat it as the night began — the
+    # one a Snake Charmer at 11 or an Exorcist at 21 can name — whom the
+    # Minions chose tonight, and whom it went for. On the first night the
+    # choice at 15 comes before the Snake Charmer at 20.
+    if getattr(deal, "lil_monsta", False):
+        before = deal.demon_at(f"E{night - 1}") if night > 1 \
+            else deal.babysat.get(1)
+        out[("lm", night)] = {
+            "before": before,
+            "tonight": deal.demon_at(f"N{night}"),
+            "aimed": getattr(deal, "lm_aimed", {}).get(night),
+            # Standing as the night began — asked of the record, not of
+            # the end of the game.
+            "alive": night > 1 and before is not None
+            and before in deal.alive_at(f"N{night}")}
     if getattr(deal, "zombuul_up", None) is not None:
         out[("zombuul_up", night)] = deal.zombuul_up
     # Fools whose one free death was gone before tonight.
@@ -843,7 +858,17 @@ def walk(deal, night, hidden):
     # 2, 13.10.2026). Readings it took are asked further down.
     taken_slot = {g: getattr(CHARACTERS[g], field, 0) for g in TAKEN_ACTS}
     settled = False
+    lm = hidden.get(("lm", night))
+    lm_slot = getattr(CHARACTERS["LilMonsta"], field, 0)
+    state.lm_sitter = lm["before"] if lm else None
+    state.lm_silenced = False
     for slot in _turns(night):
+        # Lil' Monsta at 35: the Minions choose, then a player might die
+        # — never the babysitter, nobody an Exorcist that named last
+        # night's babysitter left awake for (21.10.2026).
+        if lm and slot == lm_slot:
+            _lil_monsta_takes_its_turn(state, lm, slot, hidden, night)
+            continue
         # Who holds a character with this slot **now**.
         #
         # Asked afresh at every slot, because a swap moves characters
@@ -963,6 +988,17 @@ def walk(deal, night, hidden):
                 if not state.working(seat):
                     continue      # drunk already, or by the Goon just now
                 if not state.working(seat):
+                    continue
+                # Lil' Monsta's babysitter is swapped like a Demon, and
+                # keeps the baby until the Minions choose (E, Weg 1).
+                if target == getattr(state, "lm_sitter", None):
+                    became = state.roles[target]
+                    state.roles[seat], state.roles[target] = \
+                        became, "SnakeCharmer"
+                    state.sides[seat], state.sides[target] = \
+                        state.sides[target], state.sides[seat]
+                    state.droison(target, slot, "SnakeCharmer swap")
+                    state.log.append((slot, "swapped", seat, target))
                     continue
                 if TEAM.get(state.roles.get(target, ""), "") != "demon":
                     continue
@@ -1160,6 +1196,12 @@ def walk(deal, night, hidden):
                         and TEAM.get(state.roles.get(target, ""), "") == "demon":
                     state.silenced.add(target)
                     state.log.append((slot, "exorcised", target, ""))
+                # Last night's babysitter named: Lil' Monsta kills nobody
+                # tonight (F, Weg 1).
+                if state.working(seat) \
+                        and target == getattr(state, "lm_sitter", None):
+                    state.lm_silenced = True
+                    state.log.append((slot, "exorcised", target, "baby"))
 
             elif role == "DevilsAdvocate":
                 # Keeps somebody from dying by execution tomorrow. Nothing
@@ -1837,6 +1879,19 @@ def _shows_as(state, seat, team):
     return team in CHARACTERS[role].registers
 
 
+def _lil_monsta_takes_its_turn(state, lm, slot, hidden, night):
+    """The Minions' choice, then the kill it may make (21.10.2026)."""
+    target = lm["aimed"]
+    if night > 1 and lm["alive"] and target is not None \
+            and not state.lm_silenced and target in state.alive \
+            and not _the_princess_holds(state, hidden, night) \
+            and not _a_guard_holds(state, target, slot, None, "LilMonsta"):
+        state.kill(target, slot, "LilMonsta")
+        if target in state.died:
+            _grandmother_grieves(state, target, slot, hidden, night)
+    state.lm_sitter = lm["tonight"]
+
+
 def _grandmother_grieves(state, victim, slot, hidden, night):
     """Her grandchild taken by the Demon takes her with it.
 
@@ -2105,11 +2160,13 @@ def _a_guard_holds(state, target, slot, demon, role):
     giver = state.guards.get(target)
     if target in state.guarded and (giver is None or state.working(giver)):
         state.log.append((slot, "guarded", target, role))
-        state.prevented.add(demon)
+        if demon is not None:             # Lil' Monsta is nobody
+            state.prevented.add(demon)
         return True
     if state.has(target, "Soldier") and state.working(target):
         state.log.append((slot, "guarded", target, "Soldier"))
-        state.prevented.add(demon)
+        if demon is not None:
+            state.prevented.add(demon)
         return True
     return False
 

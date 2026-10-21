@@ -193,6 +193,8 @@ def build_info(d):
         return I.AlHadikhiaChose(night, player, trust,
                                  a=_int(d, "a", None), b=_int(d, "b", None),
                                  c=_int(d, "c", None))
+    if kind == "LilMonstaBabysat":
+        return I.LilMonstaBabysat(night, player, trust)
     if kind == "HighPriestessInfo":
         return I.HighPriestessInfo(night, player, trust,
                                    target=_int(d, "target"))
@@ -781,6 +783,8 @@ INFO_SOURCES = {
     "LeviathanAnnounced": "Leviathan", "ExecutionNomination": "Leviathan",
     # The Al-Hadikhia's three, announced to everybody (21.10.2026).
     "AlHadikhiaChose": "AlHadikhia",
+    # Shown the token by the Storyteller: whoever babysat (21.10.2026).
+    "LilMonstaBabysat": "LilMonsta",
     # The ninth three: kept, not weighed.
     "HighPriestessInfo": "HighPriestess", "GeneralInfo": "General",
     "FishermanAdvice": "Fisherman",
