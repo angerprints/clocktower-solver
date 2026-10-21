@@ -693,6 +693,15 @@ _EXPERIMENTAL = [
     # Not a player, so it cannot be drunk or poisoned.
     _c("LilMonsta", "lilmonsta", "Lil' Monsta", "demon", {NEVER},
        dealt=False, setup=({"demon": -1, "minion": 1},)),
+    # The fifth (21.10.2026, claude/beschwoerer-lesarten.md). A Minion,
+    # and no Demon in the bag: "[No Demon]", one Townsfolk more instead.
+    # Shown three bluffs on the first night; on the third it makes any
+    # player an evil Demon of the script (solver.the_summoner_summons,
+    # worlds.Summoned) — a Pukka already on the second, their jinx. Until
+    # then there is no Demon at all.
+    _c("Summoner", "summoner", "Summoner", "minion", {FIRST, SOMETIMES},
+       nights="conditional", chooses=True,
+       setup=({"demon": -1, "townsfolk": 1},)),
 ]
 
 
@@ -819,6 +828,13 @@ _NOT_IN_THE_FILE = {
     # current order — the whole order is to be gone through once at the
     # end (Patrick, 12.10.2026).
     "highpriestess": (50, 69),
+    # The Summoner (21.10.2026). The publisher's first night runs ...
+    # Snitch, Lunatic, Summoner, (Demon info), King ... — slot 9, free
+    # between the Lunatic (8) and the King (10). The other nights ...
+    # Scarlet Woman, Summoner, Lunatic, Exorcist ...: after the Scarlet
+    # Woman (19) and before the Lunatic (20), so it shares her slot.
+    # Nothing can step up before there is a Demon to step up from.
+    "summoner": (9, 19),
 }
 
 

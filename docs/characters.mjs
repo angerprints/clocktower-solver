@@ -1624,6 +1624,25 @@ export const DATA = {
    "first_night": 15,
    "other_night": 35,
    "dealt": false
+  },
+  "Summoner": {
+   "id": "summoner",
+   "name": "Summoner",
+   "team": "minion",
+   "wake": [
+    "first",
+    "sometimes"
+   ],
+   "setup": [
+    {
+     "demon": -1,
+     "townsfolk": 1
+    }
+   ],
+   "chooses": true,
+   "nights": "conditional",
+   "first_night": 9,
+   "other_night": 19
   }
  },
  "scripts": {

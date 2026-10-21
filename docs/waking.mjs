@@ -61,6 +61,15 @@ condition("ScarletWoman", (world, state, seat, night) =>
   world.demonAt(`N${night}`) === seat && world.demonAt("N1") !== seat
   && babysitterAt(world, `N${night}`) !== seat);
 
+/** Shown its bluffs on the first night, its own ability (G, Weg 1,
+ * 21.10.2026), and woken on the night it makes the Demon: the third, or
+ * the second for a Pukka. See waking.py. */
+condition("Summoner", (world, state, seat, night) => {
+  if (night === 1) return true;
+  const made = (world.changes || []).find(c => c.summoned);
+  return night === (made ? parseInt(made.phase.slice(1), 10) : 3);
+});
+
 /** On the schedule of the Demon it thinks it is, and it counts.
  *
  * Being woken to choose who you think you kill is a Lunatic's ability

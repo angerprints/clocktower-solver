@@ -77,6 +77,20 @@ def _scarlet_woman(world, state, seat, night):
     return demon == seat and world.demon_at("N1") != seat
 
 
+@condition("Summoner")
+def _summoner(world, state, seat, night):
+    """Shown its three bluffs on the first night, which is its own
+    ability (G, Weg 1, 21.10.2026), and woken on the night it makes the
+    Demon: the third, or the second for a Pukka (their jinx). Drunk or
+    poisoned it is woken and chooses all the same."""
+    if night == 1:
+        return True
+    from .worlds import Summoned
+    made = next((c for c in getattr(world, "changes", ())
+                 if isinstance(c, Summoned)), None)
+    return night == (int(made.phase[1:]) if made is not None else 3)
+
+
 # Woken to be *shown* something rather than to do anything.
 #
 # A Spy is shown the grimoire and an Evil Twin its twin. They wake, and

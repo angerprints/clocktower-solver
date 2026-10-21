@@ -1306,8 +1306,15 @@ export const MathematicianInfo = define("MathematicianInfo", "Mathematician",
 export const ClockmakerInfo = define("ClockmakerInfo", "Clockmaker",
   function (w) {
     const phase = `N${this.night}`;
-    const demon = w.demonAt(phase);
-    if (demon === null) return false;
+    let demon = w.demonAt(phase);
+    // The Summoner registers as the Demon to the Clockmaker (their jinx)
+    // while there is none yet; with no other Minion it learns 0 (F,
+    // 21.10.2026). See info.py.
+    let summoner = null;
+    if ((demon === null || demon === undefined)
+        && w.roles.includes("Summoner"))
+      summoner = demon = w.findAt("Summoner", phase);
+    if (demon === null || demon === undefined) return false;
     const n = w.roles.length;
     let nearest = null;
     for (let m = 0; m < n; m++) {
@@ -1317,6 +1324,7 @@ export const ClockmakerInfo = define("ClockmakerInfo", "Clockmaker",
       const steps = Math.min((m - demon + n) % n, (demon - m + n) % n);
       if (nearest === null || steps < nearest) nearest = steps;
     }
+    if (summoner !== null && nearest === null) return this.count === 0;
     return nearest !== null && nearest === this.count;
   });
 

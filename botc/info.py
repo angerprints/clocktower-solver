@@ -2687,6 +2687,12 @@ class ClockmakerInfo(Info):
     def holds(self, w, s, rh, seat=None):
         phase = f"N{self.night}"
         demon = w.demon_at(phase)
+        # "The Summoner registers as the Demon to the Clockmaker" (their
+        # jinx), while there is no Demon yet. With no other Minion the
+        # Clockmaker learns 0 (F, Patrick, 21.10.2026).
+        summoner = None
+        if demon is None and "Summoner" in w.roles:
+            summoner = demon = w.find_at("Summoner", phase)
         if demon is None:
             return False
         n = len(w.roles)
@@ -2695,6 +2701,8 @@ class ClockmakerInfo(Info):
         steps = [min((m - demon) % n, (demon - m) % n)
                  for m in range(n)
                  if m != demon and w.team_at(m, phase) == "minion"]
+        if summoner is not None and not steps:
+            return self.count == 0
         return bool(steps) and min(steps) == self.count
 
 

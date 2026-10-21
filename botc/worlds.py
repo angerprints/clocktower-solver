@@ -152,8 +152,39 @@ BABYSAT_READS = [None]
 
 def lil_monsta_world(world):
     """Was this world dealt with Lil' Monsta in the bag — nobody holding a
-    Demon? Nothing else in the catalogue deals no Demon."""
-    return not any(TEAM[r] == "demon" for r in world.roles)
+    Demon? The only other bag without one has a Summoner in it."""
+    return not any(TEAM[r] == "demon" for r in world.roles) \
+        and "Summoner" not in world.roles
+
+
+class Summoned(Change):
+    """The player the Summoner made an evil Demon of its choice
+    (21.10.2026, claude/beschwoerer-lesarten.md): on the third night, or
+    a Pukka on the second (their jinx). Before it there is no Demon at
+    all. A character change like any other — the old one is gone — told
+    apart so the search over who and which can see it was asked about.
+    """
+    __slots__ = ()
+
+
+class NotSummoned(Change):
+    """No Demon came: the Summoner died before its turn, or was drunk or
+    poisoned on it, and good won there (D and E, Weg 1, 21.10.2026). A
+    mark that changes nothing, at the moment the game ended."""
+    __slots__ = ()
+
+
+# Whether anything about the summoned Demon was looked at while a story
+# was told (solver._best_summoned_story): who held what, or which side,
+# or who the Demon was, from the moment of the summoning on. A telling
+# that failed without looking fails the same for every summoning.
+SUMMON_READS = [None]
+
+
+def summoner_world(world):
+    """Was the Summoner dealt in this world? Then nobody was dealt the
+    Demon."""
+    return "Summoner" in world.roles
 
 
 @dataclass(frozen=True)
@@ -217,6 +248,10 @@ class Timeline:
         # Pit-Hag made the Demon something else (21.10.2026).
         object.__setattr__(self, "lil_monsta", any(
             babysat is not None for _at, _seat, babysat in demons))
+        # Where a Summoner made the Demon, if it did in this story.
+        object.__setattr__(self, "_summon_at", next(
+            (phase_index(c.phase) for c in self.changes
+             if isinstance(c, Summoned)), None))
 
     # Questions about the whole game go straight through: who was dealt
     # what, who claimed what. Only questions about a moment consult the
@@ -238,7 +273,15 @@ class Timeline:
     def evil_players(self):
         return self.world.evil_players()
 
+    def _summon_read(self, phase):
+        """Anything asked from the summoning on depends on it."""
+        if self._summon_at is not None and SUMMON_READS[0] is not None \
+                and phase_index(phase) >= self._summon_at:
+            SUMMON_READS[0][0] = True
+
     def role_at(self, seat, phase):
+        if self._summon_at is not None:
+            self._summon_read(phase)
         role = self.world.roles[seat]
         mine = self._roles_by_seat.get(seat)
         if mine:
@@ -251,6 +294,8 @@ class Timeline:
     def alignment_at(self, seat, phase):
         if _READS:
             note_side_read(seat, phase)
+        if self._summon_at is not None:
+            self._summon_read(phase)
         side = alignment(self.world.roles[seat])
         mine = self._sides_by_seat.get(seat)
         if mine:
@@ -294,6 +339,8 @@ class Timeline:
         wrong character; the tracking was never the fault.
         """
         seat = self.world.demon_at(phase)
+        if self._summon_at is not None:
+            self._summon_read(phase)
         if self._demon_changes:
             here = phase_index(phase)
             sat = None

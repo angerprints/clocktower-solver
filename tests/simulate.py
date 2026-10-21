@@ -538,6 +538,7 @@ def deal(n, rng, script=None, told=None):
     demons = list(script.demons)
 
     tf, out, mi, de = SETUP[n]
+    dealt_tf, dealt_out = tf, out
 
     # One setup changer at most, chosen before the bag is filled — which
     # is how the Storyteller does it.
@@ -597,11 +598,20 @@ def deal(n, rng, script=None, told=None):
         picked_demons = list(rng.sample(spare_demons, de)) \
             if len(spare_demons) >= de else list(rng.sample(demons, de))
 
+    # "[No Demon]": the Summoner (21.10.2026). A Townsfolk instead, and
+    # the Demon comes on the third night.
+    if "Summoner" in picked_minions:
+        # A Demon that moved the Outsiders is not in play after all.
+        if changer in ("FangGu", "Vigormortis"):
+            tf, out = dealt_tf, dealt_out
+        tf += de
+        picked_demons, de = [], 0
+
     # "[+1 Minion]" and no Demon dealt: Lil' Monsta (21.10.2026). The
     # Minions hand it round from the first night.
     if "LilMonsta" in picked_demons:
         more = [m for m in minions if m not in picked_minions
-                and m not in ("Baron", "Godfather")]
+                and m not in ("Baron", "Godfather", "Summoner")]
         if more:
             picked_demons.remove("LilMonsta")
             picked_minions.append(rng.choice(more))
@@ -620,7 +630,9 @@ def deal(n, rng, script=None, told=None):
     # Outsiders anywhere as for the Lord of Typhon.
     kazali = "Kazali" in picked_demons
     if typhon:
-        more = [m for m in minions if m not in picked_minions]
+        # Never a Summoner: it comes with no Demon at all (21.10.2026).
+        more = [m for m in minions if m not in picked_minions
+                and m != "Summoner"]
         if more and tf >= 1:
             picked_minions.append(rng.choice(more))
             mi += 1
@@ -741,7 +753,10 @@ def deal(n, rng, script=None, told=None):
     # the Minions choose on the first night (`_minions_choose`).
     # So it trades seats to sit beside another Minion, who may then be
     # chosen first even under the Magician's jinx.
-    if "Marionette" in roles and not any(TEAM[r] == "demon" for r in roles):
+    # With a Summoner the Demon is made beside it instead (their jinx,
+    # `_summoner_summons`).
+    if "Marionette" in roles and not any(TEAM[r] == "demon" for r in roles) \
+            and "Summoner" not in roles:
         m = roles.index("Marionette")
         others = [i for i in range(n)
                   if TEAM[roles[i]] == "minion" and i != m]
@@ -995,6 +1010,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     # Lil' Monsta in play: no Demon was dealt (21.10.2026).
     d.lil_monsta = "LilMonsta" in script.keys \
         and not any(TEAM[r] == "demon" for r in roles)
+    # The Summoner, and what it made when (21.10.2026).
+    d.summoner = roles.index("Summoner") if "Summoner" in roles else None
+    d.summoned = None                   # (night, seat, Demon)
+    d.summon_failed = None              # the night it made none
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -1087,6 +1106,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         _harpy_chooses(d, night, rng, heard)
         # The Mezepheles at 18 too: whoever said its word turns evil.
         _mezepheles_turns(d, night, rng)
+        # The Summoner at 19, after the Scarlet Woman and before the
+        # Lunatic, the Exorcist and every Demon (21.10.2026).
+        if d.summoner is not None:
+            _summoner_summons(d, night, rng, heard)
 
         # A Pukka poisons on the *first* night and kills from the
         # second, so it is the one Demon that acts before anybody else
@@ -1291,6 +1314,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             d.ended_at, d.ended_why = d.lm_fallen, "lil monsta"
             d.game_ends_after = night
             break
+        # No Demon came, or none can come now: good has won.
+        if d.summoner is not None and _summoner_check(d, night):
+            d.game_ends_after = night
+            break
         if _evil_has_won(d, f"N{night}"):
             d.ended_at, d.ended_why = f"N{night}", "two alive"
             d.game_ends_after = night
@@ -1420,6 +1447,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # otherwise.
             if d.lil_monsta and _lil_monsta_check(d, f"E{night}"):
                 d.ended_at, d.ended_why = d.lm_fallen, "lil monsta"
+                d.game_ends_after = night
+                break
+            # The Summoner died today with no Demon made: good has won.
+            if d.summoner is not None and _summoner_check(d, night):
                 d.game_ends_after = night
                 break
             # Or the town hangs one of the last three.
@@ -1588,6 +1619,11 @@ def _moonchild_takes_one(d, night, heard, rng):
         if not d.working(seat, night):
             continue
         if d.side_at(target, f"D{day}") != "good":
+            continue
+        # Made the Demon tonight, before the Moonchild's turn: evil by
+        # then (21.10.2026).
+        made = getattr(d, "summoned", None)
+        if made is not None and made[:2] == (night, target):
             continue
         if d.deaths.get(target) is not None:
             continue                      # the Demon got there first
@@ -2983,8 +3019,10 @@ def _lleech_lost(d, phase):
 
 
 def _host_gone(d, host, phase):
-    return any(phase_index(at) <= phase_index(phase)
-               for at in d.deaths_of(host))
+    # Dead now, not once: a host the Professor raised before the Lleech
+    # chose it is alive (21.10.2026).
+    at = d.deaths.get(host)
+    return at is not None and phase_index(at) <= phase_index(phase)
 
 
 def _a_lleech_holds(d, seat, phase, night, by_day=False):
@@ -3820,6 +3858,137 @@ def simulate(n, rng, nights=1):
 # Lil' Monsta (21.10.2026, claude/lil-monsta-lesarten.md)
 # --------------------------------------------------------------------------
 
+# The Summoner (21.10.2026, claude/beschwoerer-lesarten.md). Patrick's H:
+# it makes a living good player the Demon — one whose character the
+# table has seen confirmed, if there is one, otherwise any — and the
+# Demon at random from the script's; a Pukka mostly on the second night.
+
+def _confirmed(d, seat, heard, phase):
+    """Has the table seen this seat's character confirmed by now: named
+    by a Washerwoman, Librarian or Grandmother, shown good to a Steward,
+    or out in the open as a Slayer that shot or a Virgin that took her
+    nominator?"""
+    if seat in d.shown_in_the_open:
+        return True
+    role = d.role_at(seat, phase)
+    for row in heard:
+        kind = type(row).__name__
+        if kind in ("Washerwoman", "Librarian") \
+                and seat in (row.a, row.b) and row.role == role:
+            return True
+        if kind == "GrandmotherInfo" and row.target == seat:
+            return True
+        if kind == "StewardInfo" and row.target == seat:
+            return True
+        if kind == "VirginNomination" and row.triggered \
+                and row.player == seat:
+            return True
+    return False
+
+
+def _summoner_has_it(d, night):
+    """Is the Summoner's ability worked tonight — by itself, or by the
+    Storyteller where a Courtier or a Preacher took it (their jinxes)?"""
+    s = d.summoner
+    if d.working(s, night):
+        return True
+    courtier = any(holder == s and n <= night <= n + 2
+                   for n, holder, _c in d.courtier_drunks)
+    preached = any(minion == s for _p, minion, _n in d.preached)
+    return courtier or preached
+
+
+def _summoner_summons(d, night, rng, heard):
+    """The third night, or the second for a Pukka: somebody becomes an
+    evil Demon of the script."""
+    if d.summoned is not None or night not in (2, 3):
+        return
+    s = d.summoner
+    phase = f"N{night}"
+    if s not in d.alive_at(phase) or d.deaths.get(s) is not None:
+        return
+    if getattr(d, "summon_pick", None) is None:
+        allowed = [k for k in d.script.demons
+                   if k not in ("LilMonsta", "Legion", "Riot")]
+        d.summon_pick = rng.choice(allowed) if allowed else None
+    demon = d.summon_pick
+    if demon is None:
+        return
+    if night == 2 and not (demon == "Pukka" and rng.random() < 0.75):
+        return
+    if not _summoner_has_it(d, night):
+        if night == 3:
+            d.summon_failed = 3           # no Demon: good wins at dawn
+        return
+    n = d.n
+    # Standing at its turn: not somebody a Gambler's guess took earlier
+    # tonight.
+    living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    good = [p for p in living if d.side_at(p, phase) == "good"]
+    pool = good
+    # A Zombuul may be made of somebody dead, who has then died once.
+    dead = [p for p in range(n) if p not in living
+            and d.side_at(p, phase) == "good"]
+    if demon == "Zombuul" and dead and rng.random() < 0.15:
+        pool = dead
+    # A living Poppy Grower: the Storyteller picks the player.
+    if any(d.role_at(p, phase) == "PoppyGrower" for p in living):
+        pool = list(living)
+    # The Marionette's jinx: the Demon starts beside it, while one of its
+    # neighbours can be.
+    if "Marionette" in d.roles:
+        m = d.roles.index("Marionette")
+        near = {(m - 1) % n, (m + 1) % n}
+        pool = [p for p in pool if p in near] \
+            or [p for p in living if p in near] or pool
+    # The Lord of Typhon's: beside a Minion.
+    minion = lambda p: TEAM[d.role_at(p, phase)] == "minion"
+    if demon == "LordOfTyphon":
+        pool = [p for p in pool
+                if any(minion(q) for q in ((p - 1) % n, (p + 1) % n))]
+        if not pool:
+            return
+    confirmed = [p for p in pool if p in living
+                 and _confirmed(d, p, heard, phase)]
+    seat = rng.choice(confirmed or pool) if (confirmed or pool) else s
+    d.changes.append((phase, seat, demon))
+    d.side_changes.append((phase, seat, demon, "evil"))
+    d.summoned = (night, seat, demon)
+    if seat not in living:
+        d.zombuul_up = seat               # "has already died once"
+    # A Lleech made tonight chooses its host tonight, at its own turn.
+    if demon == "Lleech":
+        _lleech_picks_a_host(d, night, rng)
+    if demon == "LordOfTyphon":
+        left, right = (seat - 1) % n, (seat + 1) % n
+        other = right if minion(left) else left
+        if not minion(other) and other != seat:
+            held = {d.role_at(p, phase) for p in range(n)}
+            spare = [k for k in d.script.minions
+                     if k not in held and k != "Summoner"]
+            if spare:
+                role = rng.choice(spare)
+                d.changes.append((phase, other, role))
+                d.side_changes.append((phase, other, role, "evil"))
+                d.summoned_extra = ((other, role),)
+
+
+def _summoner_check(d, night):
+    """After a night or a day: did the game end because no Demon came?
+    The Summoner dead before it made one, or drunk on its turn."""
+    if d.summoned is not None:
+        return False
+    s = d.summoner
+    if d.summon_failed is not None:
+        d.ended_at, d.ended_why = f"N{d.summon_failed}", "summoner"
+        return True
+    gone = d.deaths.get(s)
+    if gone is None:
+        return False
+    d.ended_at, d.ended_why = gone, "summoner"
+    return True
+
+
 def _babysits(d, seat, phase):
     """Is this seat Lil' Monsta's babysitter at this moment — "the Demon"
     without a Demon character?"""
@@ -4536,6 +4705,10 @@ def _woke_for_own_ability(d, p, night, shown=False):
         real = d.demon_at(f"N{night}")
         what = (d.role_at(real, f"N{night}") if real is not None
                 else "Lunatic")
+        # Before a Summoner has made the Demon it is shown one all the
+        # same and woken as one: an Imp's nights (21.10.2026).
+        if real is None and getattr(d, "summoner", None) is not None:
+            what = "Imp"
         # With Lil' Monsta the Demon in play is Lil' Monsta, which wakes
         # for nothing of its own (21.10.2026).
         if _babysits(d, real, f"N{night}"):
@@ -4614,6 +4787,14 @@ def _conditionally_woke(d, seat, role, night):
     from botc.roles import TEAM
     if role == "Undertaker":
         return bool(d.died_on(f"E{night - 1}"))
+    # The Summoner: shown its bluffs on the first night (its own ability,
+    # G, Weg 1) and woken on the night it summons — drunk or not
+    # (21.10.2026).
+    if role == "Summoner":
+        if night == 1:
+            return True
+        made = getattr(d, "summoned", None)
+        return night == (made[0] if made is not None else 3)
     if role in ("Ravenkeeper", "Sage") and seat == getattr(
             d, "lev_chose", {}).get(night, (None, None))[1]:
         return True                       # chosen by the Leviathan: a jinx
@@ -5960,6 +6141,14 @@ def _for_role(d, seat, role, night, rng):
         # Steps from the Demon to its nearest Minion, the shorter way
         # round the circle.
         demon = d.demon_at("N1")
+        # "The Summoner registers as the Demon to the Clockmaker" (their
+        # jinx): counted from it, and 0 with no other Minion (F,
+        # 21.10.2026).
+        summoner = getattr(d, "summoner", None)
+        if demon is None and summoner is not None:
+            demon = summoner
+        if demon is None:
+            return None
         # The Minions at its turn, after a Snake Charmer that swapped
         # with Lil' Monsta's babysitter (21.10.2026); the deal otherwise,
         # as always.
@@ -5969,6 +6158,8 @@ def _for_role(d, seat, role, night, rng):
                 for m in range(d.n)
                 if m != demon and TEAM[held(m, "N1")] == "minion"]
         if not gaps:
+            if demon == summoner:
+                return ClockmakerInfo(1, seat, count=0)
             return None
         return ClockmakerInfo(1, seat, count=min(gaps))
 
@@ -6844,6 +7035,10 @@ def _savant_line(d, rng, true_one):
     from botc.roles import TEAM
     demon = d.demon_at("N1")
     outsiders = sum(1 for r in d.roles if TEAM[r] == "outsider")
+    # No Demon yet with a Summoner (21.10.2026): the count only.
+    if demon is None:
+        return (f"there are {outsiders} outsiders in play" if true_one
+                else f"there are {outsiders + 1} outsiders in play")
     if true_one:
         return rng.choice([
             f"there are {outsiders} outsiders in play",

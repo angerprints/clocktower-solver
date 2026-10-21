@@ -19,7 +19,8 @@ import {LISTENING, beginReads, differOnlyUnasked, endReads, listenForSides,
         phaseIndex, replayReads} from "./phases.mjs";
 import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
-import {BABYSAT_READS, Timeline, babysits, change, lilMonstaWorld,
+import {BABYSAT_READS, SUMMON_READS, Timeline, babysits, change,
+        lilMonstaWorld, notSummoned, summoned, summonerWorld,
         turnedEvil} from "./worlds.mjs";
 import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
@@ -110,6 +111,9 @@ const ACTS_AT = {
   theMinionsChooseABabysitter: 5,
   aSnakeCharmerTakesTheStar: 11,
   aPitHagMakesSomebodyElse: 16,
+  // After the Scarlet Woman, before the Lunatic, the Exorcist and every
+  // Demon (21.10.2026).
+  theSummonerSummons: 19,
   aBarberLetsTheDemonSwapTwo: 40,
   aHuntsmanFindsTheDamsel: 45,
   aFarmerHandsItOn: 48,
@@ -190,6 +194,9 @@ function moversIn(world, state) {
   // A Huntsman that chose, and may have found the Damsel (10.10.2026).
   if (roles.has("Huntsman")
       && state.infos.some(i => i.type === "HuntsmanChoice")) count++;
+  // The Summoner's Demon, once the board reaches it (21.10.2026).
+  if (summonerWorld(world) && inBag(state, "Summoner")
+      && phaseIndex(state.finalPhase()) >= phaseIndex("N2")) count++;
   for (const [key, needs] of [["Barber", barberDied], ["Farmer", atNight],
                               ["FangGu", atNight], ["Ogre", true]])
     if (needs && roles.has(key)
@@ -313,6 +320,7 @@ function nightsItActs(rule, state) {
       return new Set(state.infos.filter(i => i.type === "HuntsmanChoice")
         .map(i => i.night));
     case "demonHandovers": return new Set(deaths.map(([k]) => k));
+    case "theSummonerSummons": return new Set([2, 3]);
     default: return null;
   }
 }
@@ -548,7 +556,8 @@ function mastermindDay(world, state, phase, holder) {
 export const mastermindMarker = (phase, seat) => change(phase, seat, null, null);
 export const isMastermindMarker = c =>
   (c.role === null || c.role === undefined) &&
-  (c.side === null || c.side === undefined) && !c.babysits && !c.fell;
+  (c.side === null || c.side === undefined) && !c.babysits && !c.fell
+  && !c.notSummoned;
 
 /** Every way the Demon could have changed hands in this world.
  *
@@ -582,13 +591,21 @@ export function demonLineages(world, state, cap = 24) {
   // babysitter's death leads to is settled where they are chosen.
   if (inBag(state, "LilMonsta") && lilMonstaWorld(world))
     return theScarletWomanBabysits(world, state);
-  const start = world.demonAt("N1");
-  if (start === null) return [[]];
+  let start = world.demonAt("N1");
+  // The Summoner's Demon starts its line where it was made (21.10.2026).
+  let since = null;
+  if (start === null) {
+    const made = summonedChange(world);
+    if (!made) return [[]];
+    start = made.seat;
+    since = phaseIndex(made.phase);
+  }
 
   const found = [];
 
   const walk = (view, holder, soFar, after = -1, held = new Set()) => {
     if (found.length >= cap) return;
+    const first = holder === start && since !== null && !soFar.length;
     // The first time they went down. A Demon raised afterwards is
     // somebody else's problem to model; the star passed when it fell.
     // A seat that stopped being the Demon before it died hands nothing
@@ -600,7 +617,13 @@ export function demonLineages(world, state, cap = 24) {
     // A Zombuul's first death is not one: it registers dead and goes on
     // killing, so nobody inherits. Only the second is real. See solver.py.
     let phases = state.diedAt(holder);
-    if (phases.length && view.roleAt(holder, phases[0]) === "Zombuul")
+    // Made a Zombuul while dead, it "has already died once" (their jinx).
+    let spent = false;
+    if (first) {
+      spent = phases.some(p => phaseIndex(p) < since);
+      phases = phases.filter(p => phaseIndex(p) >= since);
+    }
+    if (phases.length && !spent && view.roleAt(holder, phases[0]) === "Zombuul")
       phases = phases.slice(1);
     // Not yet, on a pass that only looks this far (possibleTimelines).
     const horizon = state._horizon ?? null;
@@ -661,7 +684,7 @@ export function demonLineages(world, state, cap = 24) {
     }
   };
 
-  walk(world, start, []);
+  walk(world, start, [], since === null ? -1 : since);
   return found;
 }
 
@@ -1205,6 +1228,110 @@ function babysitterFalls(world, state, seat, night) {
   return out;
 }
 
+// --------------------------------------------------------------------
+// The Summoner (21.10.2026, claude/beschwoerer-lesarten.md). See
+// solver.py for the readings.
+// --------------------------------------------------------------------
+const NOT_SUMMONED = new Set(["LilMonsta", "Legion", "Riot"]);
+
+const summonable = state => state.script.keys.filter(
+  k => TEAM[k] === "demon" && !NOT_SUMMONED.has(k));
+
+const neighboursOf = (n, seat) => [(seat - 1 + n) % n, (seat + 1) % n];
+
+function summonedSeats(world, state, night, demon) {
+  const n = state.nPlayers;
+  const standing = state.aliveSet(`N${night}`);
+  let seats = [];
+  for (let p = 0; p < n; p++)
+    if (standing.has(p) || demon === "Zombuul") seats.push(p);
+  // The Marionette's jinx: the Demon is made beside it.
+  if (world.roles.includes("Marionette")) {
+    const near = neighboursOf(n, world.roles.indexOf("Marionette"));
+    // Back tonight is back after the Summoner's turn. See solver.py.
+    const back = new Set(Object.entries(state.resurrections || {})
+      .filter(([, at]) => at.includes(`N${night}`)).map(([p]) => Number(p)));
+    const beside = seats.filter(p => near.includes(p) && !back.has(p));
+    if (beside.length) seats = beside;
+  }
+  return seats;
+}
+
+function typhonNeighbours(world, state, night, seat, demon) {
+  if (demon !== "LordOfTyphon") return [[]];
+  const n = state.nPlayers;
+  const before = night > 1 ? `E${night - 1}` : "N0";
+  const phase = `N${night}`;
+  const minion = p => TEAM[world.roleAt(p, before)] === "minion";
+  const held = new Set();
+  for (let p = 0; p < n; p++) held.add(world.roleAt(p, before));
+  const spare = state.script.keys.filter(
+    k => TEAM[k] === "minion" && !held.has(k) && k !== "Summoner");
+  const out = [], seen = new Set();
+  const [left, right] = neighboursOf(n, seat);
+  for (const [mate, other] of [[left, right], [right, left]]) {
+    if (mate === seat || !minion(mate)) continue;
+    if (minion(other) || other === seat) {
+      if (!seen.has("")) { seen.add(""); out.push([]); }
+      continue;
+    }
+    for (const role of spare) {
+      const key = `${other}|${role}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push([change(phase, other, role, "evil")]);
+    }
+  }
+  return out;
+}
+
+/** Every way the Summoner's ability can have gone. See solver.py. */
+export function summonOptions(world, state) {
+  const summoner = world.roles.indexOf("Summoner");
+  const final = state.finalPhase();
+  const reached = night => phaseIndex(final) >= phaseIndex(`N${night}`);
+  const died = [...state.diedAt(summoner)]
+    .sort((a, b) => phaseIndex(a) - phaseIndex(b));
+  const gone = died.length ? died[0] : null;
+  const over = !!state.gameOver;
+  const standing = night => gone === null
+    || phaseIndex(gone) >= phaseIndex(`N${night}`);
+  const out = [];
+  for (const demon of summonable(state))
+    for (const night of (demon === "Pukka" ? [2, 3] : [3])) {
+      if (!reached(night) || !standing(night)) continue;
+      for (const seat of summonedSeats(world, state, night, demon))
+        for (const extra of typhonNeighbours(world, state, night, seat, demon))
+          out.push([summoned(`N${night}`, seat, demon), ...extra]);
+    }
+  if (standing(3)) {
+    if (!reached(3)) out.unshift([]);
+    else if (over && phaseIndex(final) === phaseIndex("N3"))
+      out.push([notSummoned("N3", summoner)]);
+  } else if (over && phaseIndex(final) === phaseIndex(gone)) {
+    out.push([notSummoned(gone, summoner)]);
+  }
+  return out;
+}
+
+/** The night the Summoner made the Demon, as bestSummonedStory is trying
+ * it; the first way where nobody is asking. */
+transitionRule(function theSummonerSummons(world, state) {
+  if (!inBag(state, "Summoner") || !summonerWorld(world)) return [[[], 1.0]];
+  let fixed = state._summoned ?? null;
+  if (fixed === null) {
+    const options = summonOptions(world, state);
+    if (!options.length) return [];
+    fixed = options[0];
+  }
+  return [[[...fixed], 1.0]];
+});
+
+/** The Summoned change of this story, or null. */
+export function summonedChange(world) {
+  return (world.changes || []).find(c => c.summoned) || null;
+}
+
 transitionRule(function theMinionsChooseABabysitter(world, state) {
   if (!inBag(state, "LilMonsta") || !lilMonstaWorld(world))
     return [[[], 1.0]];
@@ -1555,6 +1682,24 @@ function plainFailures(world, state, outcome = {}) {
     if (scarletWomanTakesOver(world, state, c.phase)
         && world.findAt("ScarletWoman", c.phase) !== c.seat)
       fail(day, world.findAt("ScarletWoman", c.phase));
+  }
+
+  // The Summoner (21.10.2026): working when it made the Demon, unless a
+  // Courtier or a Preacher took its ability (their jinxes); drunk or
+  // poisoned on a turn that made none (E, Weg 1). See solver.py.
+  if (inBag(state, "Summoner")) {
+    const summoner = world.find("Summoner");
+    if (summoner !== null && summoner !== undefined)
+      for (const c of world.changes || []) {
+        const night = parseInt(c.phase.slice(1), 10);
+        if (c.summoned) {
+          if (!(onBoard(state, "Courtier") || onBoard(state, "Preacher")))
+            (working[night] = working[night] || new Set()).add(summoner);
+        } else if (c.notSummoned && c.phase === "N3"
+                   && state.aliveSet("N3").has(summoner)) {
+          fail(night, summoner);
+        }
+      }
   }
 
   for (const day of Object.keys(state.executions || {}).map(Number)) {
@@ -2759,7 +2904,39 @@ function explainOrRecall(world, changes, state, withMarks, toldBefore) {
 function bestStoryNow(world, state, outcome) {
   if (inBag(state, "LilMonsta") && lilMonstaWorld(world))
     return bestBabysatStory(world, state, outcome);
+  if (inBag(state, "Summoner") && summonerWorld(world))
+    return bestSummonedStory(world, state, outcome);
   return bestStoryTold(world, state, outcome);
+}
+
+// Measured both ways on the gate. See solver.py.
+export const SUMMON_PRUNE = {on: true};
+
+/** The Summoner's Demon, told one way at a time (A, Weg 1, 21.10.2026):
+ * every way that fits is kept for the report; a telling that failed
+ * before anything from the summoning on was looked at fails for every
+ * way. See `_best_summoned_story` in solver.py. */
+function bestSummonedStory(world, state, outcome) {
+  const options = summonOptions(world, state);
+  if (!options.length) return {cost: null, changes: [], viable: []};
+  let best = {cost: null, changes: [], marks: null};
+  const viable = [];
+  for (const fixed of options) {
+    state._summoned = fixed;
+    const reads = SUMMON_READS.now = {read: false};
+    let got;
+    try {
+      const marks = outcome ? {} : null;
+      got = {...bestStoryTold(world, state, marks), marks};
+    } finally { state._summoned = null; SUMMON_READS.now = null; }
+    viable.push(...got.viable);
+    if (got.cost !== null && (best.cost === null || got.cost > best.cost))
+      best = got;
+    if (got.cost === null && SUMMON_PRUNE.on && !reads.read
+        && fixed.some(c => c.summoned)) break;  // failed before it mattered
+  }
+  if (outcome && best.marks) Object.assign(outcome, best.marks);
+  return {cost: best.cost, changes: best.changes, viable};
 }
 
 /** Lil' Monsta's babysitters, one a night: the stand-ins first, then one

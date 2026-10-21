@@ -597,6 +597,13 @@ def hidden_from(deal, night, heard):
             # the end of the game.
             "alive": night > 1 and before is not None
             and before in deal.alive_at(f"N{night}")}
+    # The Summoner's Demon (21.10.2026): whom it made which, and who
+    # beside a Lord of Typhon was made a Minion.
+    made = getattr(deal, "summoned", None)
+    if made is not None and made[0] == night:
+        out[("summoned", night)] = (made[1], made[2],
+                                    tuple(getattr(deal, "summoned_extra",
+                                                  ())))
     if getattr(deal, "zombuul_up", None) is not None:
         out[("zombuul_up", night)] = deal.zombuul_up
     # Fools whose one free death was gone before tonight.
@@ -862,7 +869,59 @@ def walk(deal, night, hidden):
     lm_slot = getattr(CHARACTERS["LilMonsta"], field, 0)
     state.lm_sitter = lm["before"] if lm else None
     state.lm_silenced = False
+    summon = hidden.get(("summoned", night))
+    summon_slot = getattr(CHARACTERS["Summoner"], field, 0)
     for slot in _turns(night):
+        # The Summoner at 19 (21.10.2026): the player it chose holds the
+        # Demon it chose from here on, and is evil.
+        if summon and slot == summon_slot:
+            seat, demon, extra = summon
+            state.roles[seat] = demon
+            state.sides[seat] = "evil"
+            for other, role in extra:
+                state.roles[other] = role
+                state.sides[other] = "evil"
+            # A poisoning that held its old character only — a Xaan's
+            # night, which poisons Townsfolk — is lifted from here.
+            if seat in stops_being_droisoned:
+                state.droisoned.discard(seat)
+            # A Lleech chooses its host as it is made, poisoned from here
+            # on (as the simulator has it).
+            if demon == "Lleech":
+                host = (hidden.get(("lleech", night)) or {}).get(
+                    seat, (None,))[0]
+                if host in becomes_droisoned:
+                    state.droison(host, slot, "Lleech")
+                    becomes_droisoned.discard(host)
+            # A No Dashii poisons its Townsfolk neighbours from now on.
+            if demon == "NoDashii":
+                n = len(state.roles)
+                near = set()
+                for step in (-1, 1):
+                    for k in range(1, n):
+                        p = (seat + step * k) % n
+                        if CHARACTERS[state.roles[p]].team == "townsfolk":
+                            near.add(p)
+                            break
+                state.droisoned |= {p for p in becomes_droisoned
+                                    if p in near}
+            # A Philosopher made the Demon gives up what it took, and the
+            # one it made drunk for it is sober again.
+            taken = state.gained.pop(seat, None)
+            if taken is not None:
+                for p, held in state.roles.items():
+                    if held == taken and p in stops_being_droisoned:
+                        state.droisoned.discard(p)
+            # And a guard it set earlier tonight as a Monk or an Innkeeper
+            # goes with the character that set it.
+            for target, giver in list(state.guards.items()):
+                if giver == seat:
+                    del state.guards[target]
+                    state.guarded.discard(target)
+            for target, keeper in list(state.safe.items()):
+                if keeper == seat:
+                    del state.safe[target]
+            summon = None
         # Lil' Monsta at 35: the Minions choose, then a player might die
         # — never the babysitter, nobody an Exorcist that named last
         # night's babysitter left awake for (21.10.2026).

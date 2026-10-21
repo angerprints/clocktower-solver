@@ -1076,6 +1076,7 @@ def handmade():
     yield from the_kazali()
     yield from the_al_hadikhia()
     yield from the_lil_monsta()
+    yield from the_summoner()
     yield from stellen_62_63()
 
 
@@ -1657,6 +1658,29 @@ def the_lil_monsta():
 
 # Small and quick to count, none of them sampled.
 PLAYED_LIL_MONSTA = ((9, 7), (12, 7), (19, 7))
+
+
+def the_summoner():
+    """The Summoner (21.10.2026): the boards of tests/test_summoner.py and
+    played games with it dealt."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_summoner import _payloads
+    names = ("third-night", "two-nights", "fortune-teller", "hanged",
+             "clockmaker")
+    for name, payload in zip(names, _payloads(), strict=True):
+        yield {"name": f"x-summoner-{name}", "payload": payload}
+    for seed, n in PLAYED_SUMMONER:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=("Summoner",))
+        yield played(f"x-summoner-played-{seed}-{n}", script, seed, n, 4,
+                     rng=rng)
+
+
+# An Imp on the third night (12), a Pukka on the second (25), a Zombuul
+# (39), and a Summoner dead before its turn (34). None sampled.
+PLAYED_SUMMONER = ((12, 7), (25, 8), (34, 8), (39, 7))
 
 
 def stellen_62_63():

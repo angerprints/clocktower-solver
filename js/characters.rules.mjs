@@ -1165,8 +1165,10 @@ function aLycanthropesPick(world, state, night, seat, name = "Lycanthrope") {
  * Lleech dies — with it, or the night it works again. Nothing stops it. */
 causeRule(function aLleechFollowsItsHost(world, state, night) {
   if (!inBag(state, "Lleech")) return [];
+  // Dealt, or made later: a Summoner's (21.10.2026) is nobody's deal.
   const dealt = world.find("Lleech");
-  if (dealt === null) return [];
+  if (dealt === null && !(world._indexed && world._indexed().held.has("Lleech")))
+    return [];
   const phase = `N${night}`;
   const here = phaseIndex(phase);
   const reach = new Set();

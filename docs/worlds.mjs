@@ -109,7 +109,24 @@ export const babysits = (phase, seat) =>
 export const BABYSAT_READS = {now: null};
 
 export const lilMonstaWorld = world =>
-  !world.roles.some(r => TEAM[r] === "demon");
+  !world.roles.some(r => TEAM[r] === "demon")
+  && !world.roles.includes("Summoner");
+
+/** The player the Summoner made an evil Demon of its choice
+ * (21.10.2026). `Summoned` in Python. */
+export const summoned = (phase, seat, role) =>
+  ({phase, seat, role, side: "evil", summoned: true});
+
+/** No Demon came, and good won there (D and E, Weg 1). A mark that
+ * changes nothing. `NotSummoned` in Python. */
+export const notSummoned = (phase, seat) =>
+  ({phase, seat, role: null, side: null, notSummoned: true});
+
+/** Whether anything from the summoning on was looked at while a story
+ * was told (scoring.mjs bestSummonedStory). See worlds.py. */
+export const SUMMON_READS = {now: null};
+
+export const summonerWorld = world => world.roles.includes("Summoner");
 
 /** A world plus the times a character changed hands.
  *
@@ -139,8 +156,10 @@ export class Timeline {
   _indexed() {
     if (this._index) return this._index;
     const roles = new Map(), sides = new Map(), demons = [], held = new Set();
+    let summonAt = null;
     for (const c of this.changes) {
       const at = phaseIndex(c.phase);
+      if (c.summoned && summonAt === null) summonAt = at;
       if (c.babysits) { demons.push([at, c.seat, c.phase]); continue; }
       if (!sides.has(c.seat)) sides.set(c.seat, []);
       sides.get(c.seat).push([at, c]);
@@ -151,7 +170,14 @@ export class Timeline {
         if (TEAM[c.role] === "demon") demons.push([at, c.seat, null]);
       }
     }
-    return (this._index = {roles, sides, demons, held});
+    return (this._index = {roles, sides, demons, held, summonAt});
+  }
+
+  /** Anything asked from the summoning on depends on it. */
+  _summonRead(phase) {
+    const at = this._indexed().summonAt;
+    if (at !== null && SUMMON_READS.now && phaseIndex(phase) >= at)
+      SUMMON_READS.now.read = true;
   }
 
   // Questions about the whole game go straight through; only questions
@@ -163,6 +189,7 @@ export class Timeline {
   evilPlayers() { return this.world.evilPlayers(); }
 
   roleAt(seat, phase) {
+    this._summonRead(phase);
     let role = this.world.roles[seat];
     const mine = this._indexed().roles.get(seat);
     if (mine) {
@@ -174,6 +201,7 @@ export class Timeline {
 
   alignmentAt(seat, phase) {
     if (LISTENING) noteSideRead(seat, phase);
+    this._summonRead(phase);
     let side = alignment(this.world.roles[seat]);
     const mine = this._indexed().sides.get(seat);
     if (mine) {
@@ -213,6 +241,7 @@ export class Timeline {
    */
   demonAt(phase) {
     let seat = this.world.demonAt(phase);
+    this._summonRead(phase);
     const demons = this._indexed().demons;
     if (demons.length) {
       const here = phaseIndex(phase);

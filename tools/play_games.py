@@ -415,7 +415,8 @@ SINCE_THE_NAMED_GAMES = ("Banshee", "Zealot", "Heretic", "Goblin", "Ojo",
 # mixed script, and every seed a test or the corpus names for what it
 # shows (a Snake Charmer taking the Scarlet Woman's star, a Philosopher's
 # Golem) became some other game. Each gets its own gate instead.
-ONLY_WHEN_ASKED = ("LordOfTyphon", "Kazali", "AlHadikhia", "LilMonsta")
+ONLY_WHEN_ASKED = ("LordOfTyphon", "Kazali", "AlHadikhia", "LilMonsta",
+                   "Summoner")
 
 
 def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):

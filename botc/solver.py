@@ -41,10 +41,10 @@ from . import deaths as death_causes
 from . import impairment
 from .catalogue import CHARACTERS
 from .waking import LEVIATHAN_CHOOSES_FOR
-from .worlds import (BABYSAT_READS, Babysits, Change, Timeline, TurnedEvil,
-                     World,
+from .worlds import (BABYSAT_READS, Babysits, Change, NotSummoned,
+                     SUMMON_READS, Summoned, Timeline, TurnedEvil, World,
                      enumerate_worlds, iter_worlds, lil_monsta_world,
-                     sample_worlds)
+                     sample_worlds, summoner_world)
 
 # Two different limits, and keeping them apart matters.
 #
@@ -265,6 +265,9 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             "the_minions_choose_a_babysitter": 5,
             "a_snake_charmer_takes_the_star": 11,
             "a_pit_hag_makes_somebody_else": 16,
+            # After the Scarlet Woman, before the Lunatic, the Exorcist
+            # and every Demon (21.10.2026).
+            "the_summoner_summons": 19,
             "a_barber_lets_the_demon_swap_two": 40,
             "a_huntsman_finds_the_damsel": 45,
             "a_farmer_hands_it_on": 48,
@@ -396,6 +399,11 @@ def _movers_in(world, state):
     if "Huntsman" in roles and any(isinstance(info, HuntsmanChoice)
                                    for info in state.infos):
         count += 1
+    # The Summoner's Demon, once the board reaches it: a Snake Charmer
+    # that swaps with it later has to see it (21.10.2026).
+    if summoner_world(world) and _in_bag(state, "Summoner") \
+            and phase_index(state.final_phase()) >= phase_index("N2"):
+        count += 1
     for key, needs in (("Barber", barber_died), ("Farmer", at_night),
                        ("FangGu", at_night), ("Ogre", True)):
         on = _barber_on_board(state) if key == "Barber" else _on_board(state,
@@ -488,6 +496,8 @@ def _nights_it_acts(rule, state):
         return {1} | rows("Philosopher", "role")
     if name == "demon_handovers":
         return {k for k, _kind in deaths}
+    if name == "the_summoner_summons":
+        return {2, 3}
     return None
 
 
@@ -1639,6 +1649,144 @@ def the_minions_choose_a_babysitter(world, state):
     return stories
 
 
+# --------------------------------------------------------------------------
+# The Summoner (21.10.2026, claude/beschwoerer-lesarten.md)
+# --------------------------------------------------------------------------
+# No Demon is dealt. On the third night the Summoner makes any player an
+# evil Demon of the script — a Pukka already on the second, their jinx —
+# and until then there is none. Written into the story as one `Summoned`
+# change; who and which are searched (`_best_summoned_story`).
+#
+# A Weg 1: every player with every Demon. B Weg 1: anybody alive,
+# itself and other Minions too; somebody dead only as a Zombuul, which
+# has then died once (their jinx). C Weg 1: every Demon of the script
+# but Lil' Monsta (nobody holds it), Legion and Riot (the solver reasons
+# about neither); a Lord of Typhon beside a Minion, its other neighbour
+# made an evil Minion (their jinx). D and E Weg 1: no Demon, because the
+# Summoner died before its turn or was drunk or poisoned on it, ends the
+# game there — unless a Courtier or a Preacher took its ability, when
+# the Storyteller summons instead (their jinxes).
+
+NOT_SUMMONED = ("LilMonsta", "Legion", "Riot")
+
+
+def _summonable(state):
+    """The Demons the Summoner can make: the script's, less three."""
+    return [k for k in state.script.keys
+            if TEAM.get(k) == "demon" and k not in NOT_SUMMONED]
+
+
+def _neighbours(n, seat):
+    return ((seat - 1) % n, (seat + 1) % n)
+
+
+def _summoned_seats(world, state, night, demon):
+    """Who could have been made this Demon on this night."""
+    n = state.n_players
+    phase = f"N{night}"
+    standing = state.alive_set(phase)
+    seats = [p for p in range(n)
+             if p in standing or demon == "Zombuul"]
+    # The Marionette's jinx: it starts beside the Demon, so the Demon is
+    # made beside it — while one of its neighbours can be.
+    if "Marionette" in world.roles:
+        m = world.roles.index("Marionette")
+        # Back tonight is back after the Summoner's turn: the Professor,
+        # the Al-Hadikhia and the Shabaloth all act later.
+        back = {p for p, at in (state.resurrections or {}).items()
+                if phase in at}
+        seats = [p for p in seats if p in _neighbours(n, m)
+                 and p not in back] or seats
+    return seats
+
+
+def _typhon_neighbours(world, state, night, seat, demon):
+    """What else a summoned Lord of Typhon brings: "they must neighbour a
+    Minion & their other neighbour becomes an evil Minion" (their jinx).
+    One tuple of changes per way; () alone for every other Demon, and
+    nothing at all where a Lord of Typhon cannot sit."""
+    if demon != "LordOfTyphon":
+        return [()]
+    n = state.n_players
+    before = _before(night, f"N{night}")
+    phase = f"N{night}"
+    minion = lambda p: TEAM.get(world.role_at(p, before)) == "minion"
+    held = {world.role_at(p, before) for p in range(n)}
+    spare = [k for k in state.script.keys
+             if TEAM.get(k) == "minion" and k not in held
+             and k != "Summoner"]
+    out = []
+    left, right = _neighbours(n, seat)
+    for mate, other in ((left, right), (right, left)):
+        if mate == seat or not minion(mate):
+            continue
+        if minion(other) or other == seat:
+            if () not in out:
+                out.append(())
+            continue
+        for role in spare:
+            got = (Change(phase, other, role, "evil"),)
+            if got not in out:
+                out.append(got)
+    return out
+
+
+def summon_options(world, state):
+    """Every way the Summoner's ability can have gone, as the changes each
+    writes: a `Summoned` (and what a Lord of Typhon brings), a
+    `NotSummoned` mark where no Demon came and the game ended, or nothing
+    where the board has not reached the summoning yet. [] if none fits."""
+    summoner = world.roles.index("Summoner")
+    final = state.final_phase()
+    reached = lambda night: phase_index(final) >= phase_index(f"N{night}")
+    died = sorted(state.died_at(summoner), key=phase_index)
+    gone = died[0] if died else None
+    over = getattr(state, "game_over", False)
+    standing = lambda night: gone is None \
+        or phase_index(gone) >= phase_index(f"N{night}")
+    out = []
+    for demon in _summonable(state):
+        for night in ((2, 3) if demon == "Pukka" else (3,)):
+            if not reached(night) or not standing(night):
+                continue
+            for seat in _summoned_seats(world, state, night, demon):
+                for extra in _typhon_neighbours(world, state, night, seat,
+                                                demon):
+                    out.append((Summoned(f"N{night}", seat, demon,
+                                         "evil"),) + extra)
+    if standing(3):
+        if not reached(3):
+            out.insert(0, ())             # not yet: nothing to say
+        elif over and phase_index(final) == phase_index("N3"):
+            # Drunk or poisoned on its turn: no Demon, good won at dawn.
+            out.append((NotSummoned("N3", summoner),))
+    elif over and phase_index(final) == phase_index(gone):
+        # Dead before its turn: nothing can come, good won there.
+        out.append((NotSummoned(gone, summoner),))
+    return out
+
+
+@transition_rule
+def the_summoner_summons(world, state):
+    """The night the Summoner made the Demon, as `_best_summoned_story` is
+    trying it; the first way where nobody is asking."""
+    if not _in_bag(state, "Summoner") or not summoner_world(world):
+        return [((), 1.0)]
+    fixed = getattr(state, "_summoned", None)
+    if fixed is None:
+        options = summon_options(world, state)
+        if not options:
+            return []
+        fixed = options[0]
+    return [(tuple(fixed), 1.0)]
+
+
+def summoned_change(world):
+    """The `Summoned` change of this story, or None."""
+    return next((c for c in getattr(world, "changes", ())
+                 if isinstance(c, Summoned)), None)
+
+
 @impairment.source_rule
 def a_swapped_snake_charmer_is_poisoned_for_good(world, state, night):
     """Whoever became the Snake Charmer by the swap, from then on.
@@ -1746,7 +1894,7 @@ def mastermind_marker(phase, seat):
 
 def is_mastermind_marker(change):
     return change.role is None and change.side is None \
-        and not isinstance(change, (Babysits, LilMonstaFell))
+        and not isinstance(change, (Babysits, LilMonstaFell, NotSummoned))
 
 
 class LilMonstaFell(Change):
@@ -1803,14 +1951,21 @@ def demon_lineages(world, state, cap=24):
     if _in_bag(state, "LilMonsta") and lil_monsta_world(world):
         return _the_scarlet_woman_babysits(world, state)
     start = world.demon_at("N1")
+    # The Summoner's Demon starts its line where it was made; a death
+    # before that was no Demon's (21.10.2026).
+    since = None
     if start is None:
-        return [()]
+        summoned = summoned_change(world)
+        if summoned is None:
+            return [()]
+        start, since = summoned.seat, phase_index(summoned.phase)
 
     found = []
 
     def walk(view, holder, so_far, after=-1, held=frozenset()):
         if len(found) >= cap:
             return
+        first = holder == start and since is not None and not so_far
         # A seat that stopped being the Demon before it died hands
         # nothing on. A Snake Charmer swap moves the Demon to the
         # charmer's seat and leaves a *good* Snake Charmer behind — and
@@ -1818,13 +1973,20 @@ def demon_lineages(world, state, cap=24):
         # tracking it as the holder, looked for an heir, found none, and
         # declared the whole world impossible.
         phases = state.died_at(holder)
+        # Made a Zombuul while dead, it "has already died once" (their
+        # jinx): the next death is the real one.
+        spent = False
+        if first:
+            spent = any(phase_index(p) < since for p in phases)
+            phases = tuple(p for p in phases if phase_index(p) >= since)
         # A Zombuul's first death is not one. It registers dead and goes
         # on killing, so the star has not moved and nobody inherits; only
         # the second death is real. Reading the first as final made every
         # board with an executed Zombuul impossible — nobody could take
         # over, so no story fitted. Found with the Mastermind, whose
         # third wiki example is exactly this Zombuul executed twice.
-        if phases and view.role_at(holder, phases[0]) == "Zombuul":
+        if phases and not spent \
+                and view.role_at(holder, phases[0]) == "Zombuul":
             phases = phases[1:]
         # Not yet, on a pass that only looks this far (possible_timelines).
         horizon = getattr(state, "_horizon", None)
@@ -1900,7 +2062,7 @@ def demon_lineages(world, state, cap=24):
             walk(Timeline(world, grown), move.seat, grown,
                  phase_index(phase), held | {holder})
 
-    walk(world, start, ())
+    walk(world, start, (), -1 if since is None else since)
     return found
 
 
@@ -3147,8 +3309,10 @@ def a_lleech_follows_its_host(world, state, night):
     is working again (table ruling, 11.10.2026). Nothing stops it."""
     if not _in_bag(state, "Lleech"):
         return []
+    # Dealt, or made later: a Summoner's (21.10.2026) is nobody's deal.
     dealt = world.find("Lleech")
-    if dealt is None:
+    if dealt is None and "Lleech" not in getattr(world, "_roles_changed_to",
+                                                 ()):
         return []
     phase = f"N{night}"
     here = phase_index(phase)
@@ -4341,6 +4505,24 @@ def _plain_failures(world, state, outcome=None):
                 and world.find_at("ScarletWoman", change.phase) \
                 != change.seat:
             failures[day].add(world.find_at("ScarletWoman", change.phase))
+
+    # The Summoner (21.10.2026): working when it made the Demon — unless a
+    # Courtier or a Preacher took its ability, and the Storyteller made it
+    # instead (their jinxes) — and drunk or poisoned on a turn that made
+    # none (E, Weg 1).
+    if _in_bag(state, "Summoner"):
+        for change in getattr(world, "changes", ()):
+            summoner = world.find("Summoner")
+            if summoner is None:
+                break
+            night = int(change.phase[1:])
+            if isinstance(change, Summoned):
+                if not (_on_board(state, "Courtier")
+                        or _on_board(state, "Preacher")):
+                    working.setdefault(night, set()).add(summoner)
+            elif isinstance(change, NotSummoned) and change.phase == "N3" \
+                    and summoner in state.alive_set("N3"):
+                failures[night].add(summoner)
 
     # Executing the Saint ends the game on the spot — while it is
     # *working*. A poisoned or drunk Saint is executed and the game
@@ -6145,7 +6327,53 @@ def best_story(world, state, outcome=None, viable=None):
 def _best_story(world, state, outcome, viable):
     if _in_bag(state, "LilMonsta") and lil_monsta_world(world):
         return _best_babysat_story(world, state, outcome, viable)
+    if _in_bag(state, "Summoner") and summoner_world(world):
+        return _best_summoned_story(world, state, outcome, viable)
     return _best_story_told(world, state, outcome, viable)
+
+
+# Measured both ways on the gate: a telling that failed without asking
+# about anything from the summoning on fails for every summoning.
+SUMMON_PRUNE = True
+
+
+def _best_summoned_story(world, state, outcome, viable):
+    """The Summoner's Demon, told one way at a time (A, Weg 1, 21.10.2026).
+
+    Each way is a whole story: who it made the Demon and which Demon, or
+    that none came. Every way that fits is kept for the report, because
+    who is the Demon now is the question the table is asking — so this
+    stops early only when nothing is listening for the shares. A telling
+    that failed before anything from the summoning on was looked at fails
+    for every way, and the world is done (`worlds.SUMMON_READS`).
+    """
+    options = summon_options(world, state)
+    if not options:
+        return None, ()
+    best = (None, (), None)
+    for fixed in options:
+        state._summoned = fixed
+        SUMMON_READS[0] = [False]
+        try:
+            marks = {} if outcome is not None else None
+            fits = [] if viable is not None else None
+            cost, changes = _best_story_told(world, state, marks, fits)
+        finally:
+            state._summoned = None
+            read = SUMMON_READS[0][0]
+            SUMMON_READS[0] = None
+        if viable is not None and fits:
+            viable.extend(fits)
+        if cost is not None and (best[0] is None or cost > best[0]):
+            best = (cost, changes, marks)
+            if viable is None and cost >= 1.0:
+                break                     # nothing explains it better
+        if cost is None and SUMMON_PRUNE and not read \
+                and any(isinstance(c, Summoned) for c in fixed):
+            break                         # failed before it mattered
+    if outcome is not None and best[2]:
+        outcome.update(best[2])
+    return best[0], best[1]
 
 
 def _best_babysat_story(world, state, outcome, viable):
