@@ -66,6 +66,8 @@ export const INFO_SOURCES = {
   // beside a Leviathan (its jinxes), so that is when it is offered.
   BountyHunterInfo: "BountyHunter", CultCalled: "CultLeader",
   LeviathanAnnounced: "Leviathan", ExecutionNomination: "Leviathan",
+  // The Al-Hadikhia's three, announced to everybody (21.10.2026).
+  AlHadikhiaChose: "AlHadikhia",
   // The ninth three: kept, not weighed.
   HighPriestessInfo: "HighPriestess", GeneralInfo: "General",
   FishermanAdvice: "Fisherman",
@@ -317,6 +319,7 @@ export function readBoard(payload) {
                          // The table is told, whoever writes it down.
                          "BansheeAnnounced", "FearmongerChose",
                          "VizierAnnounced", "BlindVote", "LeviathanAnnounced",
+                         "AlHadikhiaChose",
                          // Said in daylight, and the dead may speak.
                          "DamselGuess",
                          // Handed a character as they died (Stelle 58, D).

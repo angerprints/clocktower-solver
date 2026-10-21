@@ -189,6 +189,10 @@ def build_info(d):
         return I.LeviathanAnnounced(night, player, trust)
     if kind == "ExecutionNomination":
         return I.ExecutionNomination(night, player, trust)
+    if kind == "AlHadikhiaChose":
+        return I.AlHadikhiaChose(night, player, trust,
+                                 a=_int(d, "a", None), b=_int(d, "b", None),
+                                 c=_int(d, "c", None))
     if kind == "HighPriestessInfo":
         return I.HighPriestessInfo(night, player, trust,
                                    target=_int(d, "target"))
@@ -510,6 +514,7 @@ def run_solve(payload):
                     # The table is told, whoever writes it down.
                     "BansheeAnnounced", "FearmongerChose",
                     "VizierAnnounced", "BlindVote", "LeviathanAnnounced",
+                    "AlHadikhiaChose",
                     # Said in daylight, and the dead may speak.
                     "DamselGuess",
                     # Handed a character as they died: a Farmer's heir
@@ -774,6 +779,8 @@ INFO_SOURCES = {
     # beside a Leviathan (its jinxes), so that is when it is offered.
     "BountyHunterInfo": "BountyHunter", "CultCalled": "CultLeader",
     "LeviathanAnnounced": "Leviathan", "ExecutionNomination": "Leviathan",
+    # The Al-Hadikhia's three, announced to everybody (21.10.2026).
+    "AlHadikhiaChose": "AlHadikhia",
     # The ninth three: kept, not weighed.
     "HighPriestessInfo": "HighPriestess", "GeneralInfo": "General",
     "FishermanAdvice": "Fisherman",

@@ -759,10 +759,11 @@ class ADemonWithNoRuleOfItsOwn(SolverTest):
     def test_the_demons_with_their_own_rule_are_named(self):
         import botc.solver as S
         # The Leviathan, which never kills, and the Yaggababble, which
-        # kills as often as it spoke, since 11.10.2026.
+        # kills as often as it spoke, since 11.10.2026; the Al-Hadikhia,
+        # whose three choose for themselves, since 21.10.2026.
         self.assertEqual(S.KILLS_ITS_OWN_WAY,
                          {"Zombuul", "Pukka", "Shabaloth", "Po",
-                          "Leviathan", "Yaggababble"})
+                          "Leviathan", "Yaggababble", "AlHadikhia"})
 
     def test_and_those_still_use_it(self):
         """The named ones are excluded from the generic rule, so each is

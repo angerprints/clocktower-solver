@@ -108289,6 +108289,1824 @@
    }
   },
   {
+   "name": "x-al-hadikhia-one-dies",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Spy",
+      "events": []
+     },
+     {
+      "claim": "AlHadikhia",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "AlHadikhiaChose",
+      "night": 2,
+      "player": 0,
+      "a": 0,
+      "b": 1,
+      "c": 3
+     }
+    ],
+    "script": {
+     "name": "Al-Hadikhia",
+     "characters": [
+      "alhadikhia",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "recluse",
+      "saint",
+      "butler",
+      "professor",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "AlHadikhia": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-al-hadikhia-all-three",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Spy",
+      "events": []
+     },
+     {
+      "claim": "AlHadikhia",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "AlHadikhiaChose",
+      "night": 2,
+      "player": 0,
+      "a": 0,
+      "b": 1,
+      "c": 3
+     }
+    ],
+    "script": {
+     "name": "Al-Hadikhia",
+     "characters": [
+      "alhadikhia",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "recluse",
+      "saint",
+      "butler",
+      "professor",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "AlHadikhia": 1.0
+      },
+      "1": {
+       "AlHadikhia": 1.0
+      },
+      "3": {
+       "AlHadikhia": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-al-hadikhia-a-soldier",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Spy",
+      "events": []
+     },
+     {
+      "claim": "AlHadikhia",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "AlHadikhiaChose",
+      "night": 2,
+      "player": 0,
+      "a": 0,
+      "b": 2,
+      "c": 3
+     }
+    ],
+    "script": {
+     "name": "Al-Hadikhia",
+     "characters": [
+      "alhadikhia",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "recluse",
+      "saint",
+      "butler",
+      "professor",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-al-hadikhia-twice",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Spy",
+      "events": []
+     },
+     {
+      "claim": "AlHadikhia",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "AlHadikhiaChose",
+      "night": 2,
+      "player": 0,
+      "a": 1,
+      "b": 1,
+      "c": 3
+     }
+    ],
+    "script": {
+     "name": "Al-Hadikhia",
+     "characters": [
+      "alhadikhia",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "recluse",
+      "saint",
+      "butler",
+      "professor",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "AlHadikhia": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-al-hadikhia-one-back",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "X1",
+       "R2"
+      ]
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Spy",
+      "events": []
+     },
+     {
+      "claim": "AlHadikhia",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "AlHadikhiaChose",
+      "night": 2,
+      "player": 0,
+      "a": 0,
+      "b": 1,
+      "c": 3
+     }
+    ],
+    "script": {
+     "name": "Al-Hadikhia",
+     "characters": [
+      "alhadikhia",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "chef",
+      "empath",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "recluse",
+      "saint",
+      "butler",
+      "professor",
+      "imp"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-al-hadikhia-chambermaid",
+   "payload": {
+    "n_players": 7,
+    "days_done": [
+     1,
+     2
+    ],
+    "script": {
+     "name": "Al-Hadikhia, Kammerzofe",
+     "characters": [
+      "alhadikhia",
+      "spy",
+      "chambermaid",
+      "monk",
+      "chef",
+      "empath",
+      "washerwoman",
+      "imp",
+      "poisoner"
+     ]
+    },
+    "infos": [
+     {
+      "type": "AlHadikhiaChose",
+      "night": 2,
+      "player": 0,
+      "a": 1,
+      "b": 2,
+      "c": 3
+     },
+     {
+      "type": "ChambermaidInfo",
+      "night": 2,
+      "player": 0,
+      "a": 1,
+      "b": 6,
+      "count": 1
+     }
+    ],
+    "players": [
+     {
+      "claim": "Chambermaid",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": [
+       "X1",
+       "R2"
+      ]
+     },
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Spy",
+      "events": []
+     },
+     {
+      "claim": "AlHadikhia",
+      "events": []
+     }
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "AlHadikhia": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-al-hadikhia-played-0-8",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Mutant",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Puzzlemaster",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Saint",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 3,
+      "role": "Mutant"
+     },
+     {
+      "type": "EvilTwinPair",
+      "night": 1,
+      "player": 6,
+      "a": 6,
+      "b": 1
+     },
+     {
+      "type": "BountyHunterInfo",
+      "night": 1,
+      "player": 0,
+      "target": 6
+     },
+     {
+      "type": "PrincessNominated",
+      "night": 1,
+      "player": 5,
+      "target": 7
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 2,
+      "player": 4,
+      "a": 0,
+      "b": 3
+     },
+     {
+      "type": "AlHadikhiaChose",
+      "night": 2,
+      "player": 1,
+      "a": 1,
+      "b": 1,
+      "c": 5
+     },
+     {
+      "type": "OracleInfo",
+      "night": 2,
+      "player": 2,
+      "count": 0
+     },
+     {
+      "type": "OracleInfo",
+      "night": 3,
+      "player": 2,
+      "count": 0
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "alhadikhia",
+      "widow",
+      "philosopher",
+      "snakecharmer",
+      "mayor",
+      "courtier",
+      "innkeeper",
+      "juggler",
+      "princess",
+      "mathematician",
+      "exorcist",
+      "oracle",
+      "chambermaid",
+      "farmer",
+      "bountyhunter",
+      "mutant",
+      "tinker",
+      "puzzlemaster",
+      "saint",
+      "xaan",
+      "eviltwin",
+      "organgrinder",
+      "leviathan",
+      "ojo",
+      "pukka"
+     ]
+    },
+    "quiet_nights": [
+     2,
+     3
+    ],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 36,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 56.8551,
+      "demon_pct": 35.7308,
+      "drunk_pct": 0.0,
+      "lying_pct": 73.3423
+     },
+     {
+      "evil_pct": 27.0493,
+      "demon_pct": 18.0329,
+      "drunk_pct": 0.0,
+      "lying_pct": 29.7542
+     },
+     {
+      "evil_pct": 4.3279,
+      "demon_pct": 2.8853,
+      "drunk_pct": 0.0,
+      "lying_pct": 4.7607
+     },
+     {
+      "evil_pct": 25.2151,
+      "demon_pct": 16.3017,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.3557
+     },
+     {
+      "evil_pct": 3.6066,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 4.6885
+     },
+     {
+      "evil_pct": 37.8639,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 37.8639
+     },
+     {
+      "evil_pct": 18.0329,
+      "demon_pct": 9.0164,
+      "drunk_pct": 0.0,
+      "lying_pct": 18.0329
+     },
+     {
+      "evil_pct": 27.0493,
+      "demon_pct": 18.0329,
+      "drunk_pct": 0.0,
+      "lying_pct": 27.0493
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-al-hadikhia-played-2-8",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "King",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Preacher",
+      "events": [
+       "X1",
+       "R2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Choirboy",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Sweetheart",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 2,
+      "target": 7,
+      "swapped": false
+     },
+     {
+      "type": "PixieLearned",
+      "night": 1,
+      "player": 0,
+      "role": "King"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 2,
+      "target": 3,
+      "swapped": false
+     },
+     {
+      "type": "AlHadikhiaChose",
+      "night": 2,
+      "player": 7,
+      "a": 7,
+      "b": 1,
+      "c": 2
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 2,
+      "target": 3,
+      "swapped": false
+     },
+     {
+      "type": "AlHadikhiaChose",
+      "night": 3,
+      "player": 6,
+      "a": 6,
+      "b": 6,
+      "c": 7
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "alhadikhia",
+      "poisoner",
+      "snakecharmer",
+      "philosopher",
+      "savant",
+      "pixie",
+      "alsaahir",
+      "magician",
+      "preacher",
+      "knight",
+      "mathematician",
+      "mayor",
+      "pacifist",
+      "king",
+      "choirboy",
+      "drunk",
+      "golem",
+      "sweetheart",
+      "zealot",
+      "boomdandy",
+      "goblin",
+      "organgrinder",
+      "fanggu",
+      "vortox",
+      "nodashii"
+     ]
+    },
+    "quiet_nights": [
+     3
+    ],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 613,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 6.3485,
+      "demon_pct": 3.7066,
+      "drunk_pct": 0.0,
+      "lying_pct": 71.5556
+     },
+     {
+      "evil_pct": 28.8212,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.9845,
+      "lying_pct": 28.9682
+     },
+     {
+      "evil_pct": 4.3696,
+      "demon_pct": 2.5625,
+      "drunk_pct": 1.4118,
+      "lying_pct": 4.5293
+     },
+     {
+      "evil_pct": 50.4887,
+      "demon_pct": 30.7458,
+      "drunk_pct": 0.9871,
+      "lying_pct": 50.6099
+     },
+     {
+      "evil_pct": 51.1832,
+      "demon_pct": 31.4926,
+      "drunk_pct": 0.528,
+      "lying_pct": 51.2989
+     },
+     {
+      "evil_pct": 51.1832,
+      "demon_pct": 31.4926,
+      "drunk_pct": 0.528,
+      "lying_pct": 51.2989
+     },
+     {
+      "evil_pct": 3.1651,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0008,
+      "lying_pct": 29.1267
+     },
+     {
+      "evil_pct": 4.4403,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 4.4403
+     }
+    ],
+    "blame": {
+     "2": {
+      "7": {
+       "AlHadikhia": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-al-hadikhia-played-12-7",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Nightwatchman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Steward",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Steward",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "sometimes",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "SailorChoice",
+      "night": 1,
+      "player": 2,
+      "target": 5
+     },
+     {
+      "type": "Washerwoman",
+      "night": 1,
+      "player": 6,
+      "a": 1,
+      "b": 5,
+      "role": "Slayer"
+     },
+     {
+      "type": "SeamstressInfo",
+      "night": 1,
+      "player": 4,
+      "a": 1,
+      "b": 5,
+      "same": true
+     },
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 5,
+      "nominator": 6,
+      "triggered": true
+     },
+     {
+      "type": "SailorChoice",
+      "night": 2,
+      "player": 2,
+      "target": 4
+     },
+     {
+      "type": "PitHagChoice",
+      "night": 2,
+      "player": 0,
+      "target": 2,
+      "role": "Steward"
+     },
+     {
+      "type": "AlHadikhiaChose",
+      "night": 2,
+      "player": 1,
+      "a": 1,
+      "b": 1,
+      "c": 1
+     },
+     {
+      "type": "Became",
+      "night": 2,
+      "player": 2,
+      "role": "Steward",
+      "was": "Sailor"
+     },
+     {
+      "type": "DamselGuess",
+      "night": 2,
+      "player": 0,
+      "target": 3
+     },
+     {
+      "type": "AlHadikhiaChose",
+      "night": 3,
+      "player": 5,
+      "a": 5,
+      "b": 0,
+      "c": 4
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "alhadikhia",
+      "widow",
+      "philosopher",
+      "snakecharmer",
+      "virgin",
+      "seamstress",
+      "washerwoman",
+      "savant",
+      "exorcist",
+      "clockmaker",
+      "steward",
+      "sailor",
+      "nightwatchman",
+      "pacifist",
+      "slayer",
+      "damsel",
+      "butler",
+      "mutant",
+      "heretic",
+      "pithag",
+      "devilsadvocate",
+      "cerenovus",
+      "shabaloth",
+      "imp",
+      "ojo"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 55,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 83.1534,
+      "demon_pct": 42.3546,
+      "drunk_pct": 0.0,
+      "lying_pct": 83.1534
+     },
+     {
+      "evil_pct": 0.2245,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.2245
+     },
+     {
+      "evil_pct": 10.76,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.76
+     },
+     {
+      "evil_pct": 87.3172,
+      "demon_pct": 57.6454,
+      "drunk_pct": 0.0,
+      "lying_pct": 87.3172
+     },
+     {
+      "evil_pct": 18.5449,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 14.6407
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "AlHadikhia": 1.0
+      }
+     },
+     "3": {
+      "5": {
+       "AlHadikhia": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-al-hadikhia-played-19-7",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [
+       "X1",
+       "R2",
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Professor",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Princess",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Sage",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "DreamerInfo",
+      "night": 1,
+      "player": 0,
+      "target": 2,
+      "good_role": "Oracle",
+      "evil_role": "Cerenovus"
+     },
+     {
+      "type": "CerenovusMadness",
+      "night": 1,
+      "player": 1,
+      "role": "Sage"
+     },
+     {
+      "type": "AlHadikhiaChose",
+      "night": 2,
+      "player": 0,
+      "a": 0,
+      "b": 3,
+      "c": 4
+     },
+     {
+      "type": "OracleInfo",
+      "night": 2,
+      "player": 1,
+      "count": 0
+     },
+     {
+      "type": "JugglerInfo",
+      "night": 2,
+      "player": 3,
+      "guesses": [
+       {
+        "player": 6,
+        "role": "Sage"
+       },
+       {
+        "player": 1,
+        "role": "Oracle"
+       },
+       {
+        "player": 4,
+        "role": "Philosopher"
+       }
+      ],
+      "count": 2
+     },
+     {
+      "type": "AlHadikhiaChose",
+      "night": 3,
+      "player": 3,
+      "a": 3,
+      "b": 3,
+      "c": 6
+     },
+     {
+      "type": "OracleInfo",
+      "night": 3,
+      "player": 1,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "alhadikhia",
+      "poisoner",
+      "snakecharmer",
+      "philosopher",
+      "juggler",
+      "oracle",
+      "professor",
+      "dreamer",
+      "chambermaid",
+      "virgin",
+      "pacifist",
+      "mayor",
+      "undertaker",
+      "princess",
+      "sage",
+      "moonchild",
+      "goon",
+      "saint",
+      "puzzlemaster",
+      "cerenovus",
+      "spy",
+      "widow",
+      "ojo",
+      "shabaloth",
+      "zombuul"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 48,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 1.6824,
+      "demon_pct": 1.6824,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.6824
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 43.9012,
+      "demon_pct": 43.9012,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.9012
+     },
+     {
+      "evil_pct": 43.9012,
+      "demon_pct": 43.9012,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.9012
+     },
+     {
+      "evil_pct": 10.5152,
+      "demon_pct": 10.5152,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.5152
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "AlHadikhia": 1.0
+      }
+     },
+     "3": {
+      "3": {
+       "AlHadikhia": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "x-stelle-62-63-bounty-hunter-faux-paw-2255",
    "payload": {
     "n_players": 7,

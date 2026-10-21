@@ -22,7 +22,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    PreacherChoice, HuntsmanChoice,
                    PixieLearned, VillageIdiotInfo, LycanthropeChose,
                    LeviathanAnnounced, ExecutionNomination, InnkeeperChoice,
-                   ExorcistChoice, GolemNomination,
+                   ExorcistChoice, GolemNomination, AlHadikhiaChose,
                    acts_as_cult_leader, cult_sides, knows_it_turned_evil,
                    went_on_after, phase_index,
                    begin_reads, end_reads, listen_for_sides, replay_reads,
@@ -1639,6 +1639,8 @@ kills_its_own_way("Zombuul", "Pukka", "Shabaloth", "Po")
 # The eighth five (11.10.2026): one that never kills, and one that kills
 # as often as it said its phrase.
 kills_its_own_way("Leviathan", "Yaggababble")
+# The Al-Hadikhia (21.10.2026): only the three it chose, by their choices.
+kills_its_own_way("AlHadikhia")
 
 
 @death_causes.cause_rule
@@ -2167,6 +2169,53 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
             capacity=1, victim_impaired_at=chose,
             also_impaired=tuple((k, seat) for k in range(chose + 1, night))))
     return out
+
+
+def al_hadikhia_chosen(state, night):
+    """Every seat the Al-Hadikhia's row names for that night, once each."""
+    return sorted({p for info in state.infos
+                   if isinstance(info, AlHadikhiaChose)
+                   and info.night == night for p in info.chosen()})
+
+
+@death_causes.cause_rule
+def an_al_hadikhia_chooses(world, state, night):
+    """The three it chose, and each chose life or death.
+
+    Any of them may die: whoever chose death, or all of them if all chose
+    life. So it fires — at least one of the three is not standing at
+    dawn — unless one of them was a corpse that chose death, which leaves
+    the three short and nobody else need die; or one was kept from dying
+    (Patrick's B, 21.10.2026: a protected player counts as choosing life
+    and stays when the others go — the shields on the Demon's kind do
+    that, and a shield on any one of the three is taken to be enough,
+    which is the permissive side of it); or the Al-Hadikhia itself was
+    drunk or poisoned, and then nothing happened (C).
+
+    Only seats it chose, and only with a row: a night with no row is one
+    on which it chose nobody, and nobody dies of it (A).
+    """
+    if night < 2 or not _in_bag(state, "AlHadikhia"):
+        return []
+    chosen = al_hadikhia_chosen(state, night)
+    if not chosen:
+        return []
+    phase = f"N{night}"
+    seat = holding_now(world, state, "AlHadikhia", phase)
+    if seat is None or world.role_at(seat, phase) != "AlHadikhia" \
+            or seat not in state.alive_set(phase):
+        return []
+    alive = state.alive_set(phase)
+    # A corpse that chose death leaves it nobody to kill — and so does one
+    # that died earlier tonight by another hand, a Gambler's wrong guess
+    # (4-night gate seed 1932, 21.10.2026): dead by its turn.
+    corpse = any(p not in alive or phase in state.died_at(p)
+                 for p in chosen)
+    return [death_causes.Cause(
+        name="AlHadikhia", kind=death_causes.DEMON,
+        seats=frozenset(chosen), capacity=len(chosen), must_fire=True,
+        actor=seat, actor_cost=DEMON_POISONED_PENALTY,
+        excuses=((None, ()),) if corpse else ())]
 
 
 @death_causes.cause_rule
@@ -4060,6 +4109,15 @@ def _plain_failures(world, state, outcome=None):
                     for seat, phases in (state.resurrections or {}).items()
                     for phase in phases if phase[1:].isdigit())
     for night, seat, phase in raises:
+        # A dead player the Al-Hadikhia chose, who chose life: back, and
+        # the Al-Hadikhia was working (21.10.2026).
+        if _in_bag(state, "AlHadikhia") \
+                and seat in al_hadikhia_chosen(state, night):
+            ah = holding_now(world, state, "AlHadikhia", phase)
+            if ah is not None and world.role_at(ah, phase) == "AlHadikhia" \
+                    and ah in state.alive_set(phase):
+                working.setdefault(night, set()).add(ah)
+                continue
         shabaloth = (holding_now(world, state, "Shabaloth", phase)
                      if _in_bag(state, "Shabaloth") else None)
         if shabaloth is not None and night >= 3 \

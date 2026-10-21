@@ -668,6 +668,13 @@ _EXPERIMENTAL = [
     # Outsiders, like the Xaan's. Its jinxes need nothing more: a
     # Marionette already sits beside the Demon, and a Bounty Hunter made
     # a Minion is no Bounty Hunter.
+    # The third (21.10.2026, claude/al-hadikhia-lesarten.md). Each night
+    # but the first it may choose three players, announced to everybody;
+    # each chooses life or death, and if all three live all three die
+    # (info.AlHadikhiaChose, solver.an_al_hadikhia_chooses). A dead one
+    # who chooses life comes back.
+    _c("AlHadikhia", "alhadikhia", "Al-Hadikhia", "demon", {FIRST, EVERY},
+       nights="other", chooses=True),
     _c("Kazali", "kazali", "Kazali", "demon", {FIRST, EVERY},
        nights="every", chooses=True,
        setup=tuple({"townsfolk": -k, "outsider": k} if k else {}
@@ -765,6 +772,9 @@ _NOT_IN_THE_FILE = {
     # Philosopher and the Minion info, sharing slot 1 with the
     # Travellers there; the Demons' place on the others, the Vortox's.
     "kazali": (1, 31),
+    # The Al-Hadikhia (21.10.2026): "... Vigormortis, Ojo, Al-Hadikhia
+    # ..." on the other nights, so the Vigormortis's slot like the Ojo.
+    "alhadikhia": (0, 32),
     # The publisher's other nights run ... Vortox, Lord of Typhon,
     # Vigormortis, Ojo, Al-Hadikhia ... — after the Vigormortis at 32 and
     # before anything the file numbers 33, so it shares the Vigormortis's

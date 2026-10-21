@@ -174,8 +174,11 @@ class Night:
         self.log.append((slot, "died", seat, why))
 
     def _a_tea_lady_holds(self, seat):
+        # Deaths that land together are asked about the table as it stood
+        # before any of them: an Al-Hadikhia's three (21.10.2026).
+        standing = getattr(self, "at_once", None) or self.alive
         for lady in self.roles:
-            if not self.has(lady, "TeaLady") or lady not in self.alive:
+            if not self.has(lady, "TeaLady") or lady not in standing:
                 continue
             if lady in self.droisoned:
                 continue
@@ -185,7 +188,7 @@ class Night:
                     other = (lady + step * gap) % len(self.roles)
                     if other == lady:
                         break
-                    if other in self.alive:
+                    if other in standing:
                         around.append(other)
                         break
             if seat in around and len(around) >= 2 \
@@ -562,6 +565,23 @@ def hidden_from(deal, night, heard):
     back = getattr(deal, "professor_raised", {}).get(night)
     if back is not None:
         out[("professor", night)] = back
+    # Dead players the Al-Hadikhia chose who chose life (21.10.2026):
+    # back at its slot, after every early chooser.
+    raised = {seat for seat, at, by in getattr(deal, "resurrections", ())
+              if by == "AlHadikhia" and at == f"N{night}"}
+    if raised:
+        out[("ah_raised", night)] = raised
+        # Those dead before tonight were not there when it began; one
+        # killed earlier tonight and chosen afterwards was.
+        out[("ah_raised_from_before", night)] = raised & set(
+            getattr(deal, "ah_from_before", {}).get(night, ()))
+    # Whom it chose and what each answered, in turn: as hidden as any
+    # Demon's aim. The walk works out what they did.
+    picks = getattr(deal, "ah_chose", {}).get(night)
+    if picks:
+        out[("ah_picks", night)] = list(picks)
+        out[("ah_answers", night)] = list(
+            getattr(deal, "ah_answers", {}).get(night, ()))
     if getattr(deal, "zombuul_up", None) is not None:
         out[("zombuul_up", night)] = deal.zombuul_up
     # Fools whose one free death was gone before tonight.
@@ -692,7 +712,9 @@ def _note_what_we_were_not_told(state, deal, roles, night, hidden):
         if state.roles.get(seat) != role:
             continue                      # made something else tonight
         if seat in (hidden.get(("regurgitated", night)),
-                    hidden.get(("professor", night))):
+                    hidden.get(("professor", night))) \
+                or seat in (hidden.get(("ah_raised_from_before", night))
+                            or ()):
             continue                      # back tonight, after its turn
         # With one other player left there is nobody to choose: an
         # Innkeeper needs two, an Exorcist somebody it did not name last
@@ -765,6 +787,7 @@ def walk(deal, night, hidden):
     # dead at slot 9 and guarded nobody.
     back_tonight = {hidden.get(("regurgitated", night)),
                     hidden.get(("professor", night))} - {None}
+    back_tonight |= set(hidden.get(("ah_raised_from_before", night)) or ())
     state = Night(roles, sides, set(deal.alive_at(phase)) - back_tonight)
     state.fool_spent = set(hidden.get(("fool_spent", night)) or ())
     state.undead = hidden.get(("zombuul_up", night))
@@ -1384,6 +1407,10 @@ def walk(deal, night, hidden):
                     continue
                 # "Just before waking the Shabaloth": one it chose last
                 # night may be alive again, before it chooses tonight.
+                if role == "AlHadikhia":
+                    _al_hadikhia_takes_its_turn(state, seat, slot, hidden,
+                                                night)
+                    continue
                 back = hidden.get(("regurgitated", night))
                 if role == "Shabaloth" and back is not None \
                         and state.working(seat):
@@ -1999,6 +2026,92 @@ def _readings_that_must_be_droisoned(view, state, night):
     detail.
     """
     return set()
+
+
+def _al_hadikhia_takes_its_turn(state, seat, slot, hidden, night):
+    """Three chosen and announced; each answers life or death in turn,
+    and if all three live, all three die (21.10.2026).
+
+    The answers are handed in like a Demon's aim; what they do is worked
+    out here. A dead one choosing life is back at once; one choosing
+    death dies at once, unless something keeps it alive — and then it
+    counts as having chosen life (Patrick's B). All three standing at the
+    end die together, so a Tea Lady is asked about the table as it stood
+    before any of them went. Drunk or poisoned, it chooses and nothing
+    happens (C); a Goon chosen first makes it so on the spot.
+    """
+    picks = hidden.get(("ah_picks", night))
+    if not picks or seat in state.silenced:
+        return
+    answers = list(hidden.get(("ah_answers", night)) or ())
+    able = state.working(seat)
+    princess = _the_princess_holds(state, hidden, night)
+    back = set()            # dead before tonight, and up again now
+    for target in picks:
+        state.choose(seat, target, slot)
+        _goon_answers(state, seat, target, slot)
+        if not able or seat in state.droisoned:
+            continue
+        if not answers or answers[0][0] != target:
+            state.log.append((slot, "no answer", target, "AlHadikhia"))
+            continue
+        _who, life = answers.pop(0)
+        if life and target not in state.alive:
+            if target not in state.died:
+                back.add(target)
+            else:
+                # Down and up again tonight: nothing the table saw.
+                state.died.discard(target)
+            state.alive.add(target)
+            state.log.append((slot, "raised", target, "AlHadikhia"))
+        elif not life and target in state.alive:
+            if not princess and not _a_guard_holds(state, target, slot,
+                                                   seat, "AlHadikhia"):
+                state.kill(target, slot, "AlHadikhia")
+                if target in state.died and target not in back:
+                    _grandmother_grieves(state, target, slot, hidden, night)
+    if not able or seat in state.droisoned \
+            or not all(p in state.alive for p in picks):
+        _up_and_down_again(state, back)
+        return
+    if princess:
+        state.log.append((slot, "princess", seat, "no kill"))
+        return
+    state.at_once = set(state.alive)
+    try:
+        going = [p for p in dict.fromkeys(picks)
+                 if not _a_guard_holds(state, p, slot, seat, "AlHadikhia")]
+        for p in going:
+            state.kill(p, slot, "AlHadikhia")
+    finally:
+        state.at_once = None
+    for p in going:
+        if p in state.died and p not in back:
+            _grandmother_grieves(state, p, slot, hidden, night)
+    _up_and_down_again(state, back)
+
+
+def _up_and_down_again(state, back):
+    """Dead before tonight, back and down again before dawn: the table saw
+    nothing of it (the simulator's `_nobody_returns_only_to_die`)."""
+    for p in back:
+        if p in state.died and p not in state.alive:
+            state.died.discard(p)
+
+
+def _a_guard_holds(state, target, slot, demon, role):
+    """A Monk's guard or a sober Soldier: the two the Demon's own kill
+    asks about before `kill` asks the rest."""
+    giver = state.guards.get(target)
+    if target in state.guarded and (giver is None or state.working(giver)):
+        state.log.append((slot, "guarded", target, role))
+        state.prevented.add(demon)
+        return True
+    if state.has(target, "Soldier") and state.working(target):
+        state.log.append((slot, "guarded", target, "Soldier"))
+        state.prevented.add(demon)
+        return True
+    return False
 
 
 def _the_princess_holds(state, hidden, night):

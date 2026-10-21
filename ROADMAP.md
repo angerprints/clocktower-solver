@@ -1458,13 +1458,32 @@ Der Bericht steht in `claude/stellen-62-63.md`.
 | Korpus | 646 | 649 |
 | Testsammlung | 1.704 | 1.707 grün, 2 übersprungen |
 
+### Al-Hadikhia, der dritte große Charakter · *erledigt am 21.10.2026*
+
+Der Bericht steht in `claude/al-hadikhia.md`, die Lesarten in `claude/al-hadikhia-lesarten.md`. **Deine Antworten vom 21.10.2026:** A Weg 1, B ein Geschützter zählt als „Leben“ und bleibt, wenn die anderen sterben, C Weg 1, D Weg 2, E verbrauchte Rollen und schädliche Außenseiter wählen meistens Tod.
+
+| | Gebaut |
+|---|---|
+| Al-Hadikhia | Eine Zeile pro Nacht mit den drei Gewählten. Im Solver ein eigener Tod: Einer der drei stirbt oder alle, außer einer war schon tot, war geschützt, oder sie selbst war betrunken oder vergiftet. Wer als Toter Leben wählt, kommt an ihrem Platz in der Nacht zurück (auch für die Kammerzofe). Im Simulator antworten die drei der Reihe nach; sterben alle drei, dann gleichzeitig. Jinxes mit Strippenzieher und Prinzessin gebaut, mit der Scharlachroten Frau nicht (im Simulator wählt sie sich nie selbst). |
+
+| Tor (3.000 Partien je Zeile) | verworfen | wegen ihrer Zeilen |
+|---|---|---|
+| Al-Hadikhia, 4 / 6 Nächte | 13 / 10 | 0 (mit Al-Hadikhia nur Barbier) |
+| mit Mönch, Gastwirt, Teedame, Schläger | 12 | 0; Stellen 66, 67 |
+| mit Strippenzieher, Prinzessin, Scharlachroter Frau | 8 | 0; Stellen 66, 68 |
+| mit Großmutter, Professor, Shabaloth | 6 | 0; Stelle 69 |
+| ohne Pflicht, feste Skripte, Prüfsummen | gleich | – |
+| Über die Seite, 7 bis 9 Spieler | 63 Partien, 0 ohne Welt durch die Al-Hadikhia (eine abgelehnt, weil ein Bastler in Nacht 1 stirbt, wie beim Lord of Typhon); länger als 2 Minuten 1, Median 1 s | |
+| Korpus | 649 → 659, kein altes Brett geändert | |
+| Testsammlung | 1.707 → 1.722 grün, 2 übersprungen | |
+
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026; als Nächstes die Al-Hadikhia, Reihenfolge siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia am 21.10.2026; als Nächstes Lil' Monsta, Reihenfolge siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 127 Einträge. Von den 138 Spielercharakteren der App sind 126 im Katalog (dazu der Wächter, ein Fabled), 12 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen, 2 Dämonen. Davon sind 10 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
+Stand des Katalogs: 128 Einträge. Von den 138 Spielercharakteren der App sind 127 im Katalog (dazu der Wächter, ein Fabled), 11 fehlen: 4 Bürger, 3 Außenseiter, 3 Schergen, 1 Dämon. Davon sind 9 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia (21.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1547,6 +1566,10 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 63 | erledigt | **Gastwirt und Segler im Tor.** *Erledigt am 21.10.2026*: Mathematiker unter dem Vortox behoben, Lesarten J und K gebaut. Übrig nur Barbier (Stelle 4). |
 | 64 | Solver | **Mathematiker neben einem Höfling, der den Philosophen nennt.** Der Solver zählt anders als der Simulator (gemischt mit Mathematiker und Vortox, Seed 2278). Nicht untersucht. |
 | 65 | Solver | **Leviathan, Jäger und Unschuld.** Eine gemischte Partie (Pflicht Jäger, Unschuld, Feenkind, Seed 1988) scheitert schon ohne jede Zeile; die Unschuld wird erst Mathematiker, dann Narr. Nicht untersucht. |
+| 66 | Simulator | **Xaan mit Segler oder Gastwirt.** Ein Segler oder Gastwirt, den der Xaan in seiner Nacht vergiftet, macht im Simulator trotzdem jemanden betrunken. Betrifft jeden Dämon (Tor der Al-Hadikhia, Seeds 243 und 584). |
+| 67 | Solver | **Teedame neben einem, den die Al-Hadikhia kurz zurückholt.** Er kommt zurück, alle drei sterben, und für den Tisch ist nichts passiert; sein kurzes Leben hat aber den Schutz der Teedame gekippt (Seed 968). |
+| 68 | Simulator | **Toter Scherge, den die Al-Hadikhia zurückholt** (Xaan, Witwe): Der Simulator lässt seine Wirkung schon ab Beginn der Nacht gelten (Seeds 1245, 446). |
+| 69 | Solver | **Philosoph mit der Fähigkeit des Professors**, den die Al-Hadikhia zurückholt und der danach selbst jemanden zurückholt (Seed 1869). |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

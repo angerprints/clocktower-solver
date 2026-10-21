@@ -407,7 +407,9 @@ function cameBackTonight(world, state, seat, night) {
   // A Philosopher that took the Professor raises at the Professor's turn
   // too (XNINEB seed 881, 13.10.2026).
   const philosophers = Object.keys(state.philosophies() || {}).map(Number);
-  const raisers = ["Shabaloth", "Professor"]
+  // An Al-Hadikhia's dead who choose life come back at its turn too
+  // (21.10.2026).
+  const raisers = ["Shabaloth", "Professor", "AlHadikhia"]
     .filter(who => world.findAt(who, phase) !== null
             || philosophers.some(p => tookIt(world, state, p, who, phase)))
     .map(who => CHARACTERS[who].other_night || 0);
@@ -515,7 +517,10 @@ export function uncertain(world, state, seat, night) {
     if (night < 3 || !state.aliveSet(phase).has(seat)) return false;
     const raised = raisedOn(state);
     if (raised === null) return true;
-    return holdingNow(world, state, "Shabaloth", `N${raised}`) !== null;
+    // Nor with an Al-Hadikhia about: a dead one it chose may have chosen
+    // life (21.10.2026).
+    return ["Shabaloth", "AlHadikhia"].some(
+      who => holdingNow(world, state, who, `N${raised}`) !== null);
   }
   if (!state.script.keys.includes("Exorcist")
       && !takenByAPhilosopher(state, "Exorcist")) return false;

@@ -2052,6 +2052,50 @@ export const LeviathanAnnounced = define("LeviathanAnnounced", "Leviathan",
     },
   });
 
+/** The three the Al-Hadikhia chose tonight, announced to everybody
+ * (21.10.2026). A fact: an Al-Hadikhia stood to choose — or, the
+ * Mastermind's jinx, one executed yesterday with a living Mastermind.
+ * See info.py. */
+export function alHadikhiaForTheGame(w, s, ah, night) {
+  const day = night - 1;
+  const died = s.diedAt(ah);
+  if (!died.includes(`D${day}`) && !died.includes(`E${day}`)) return false;
+  const mastermind = w.findAt("Mastermind", `D${day}`);
+  return mastermind !== null && mastermind !== undefined
+    && s.aliveSet(`D${day}`).has(mastermind);
+}
+
+export const AlHadikhiaChose = define("AlHadikhiaChose", "AlHadikhia",
+  function (w, s) {
+    if (this.night < 2) return false;
+    const phase = `N${this.night}`;
+    const ah = holdingNow(w, s, "AlHadikhia", phase);
+    if (ah === null || ah === undefined || w.roleAt(ah, phase) !== "AlHadikhia")
+      return false;
+    if (s.aliveSet(phase).has(ah)) return true;
+    return alHadikhiaForTheGame(w, s, ah, this.night);
+  }, {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },
+    chosen() {
+      return [this.a, this.b, this.c]
+        .filter(p => p !== null && p !== undefined && p !== "")
+        .map(Number);
+    },
+  });
+AlHadikhiaChose.isAChoice = true;
+
+/** Every seat the Al-Hadikhia's rows name for that night, once each. */
+export function alHadikhiaChosen(state, night) {
+  const out = new Set();
+  for (const info of state.infos)
+    if (info.type === "AlHadikhiaChose" && info.night === night)
+      for (const p of info.chosen()) out.add(p);
+  return [...out].sort((a, b) => a - b);
+}
+AlHadikhiaChose.prototype.inTheOpen = true;
+
 /** Who nominated the player the town executed today; a fact, and on its
  * own it says nothing (scoring.mjs leviathanDemands). */
 export const ExecutionNomination = define("ExecutionNomination", null,
@@ -2100,7 +2144,7 @@ export const KINDS = {
   OgreChoice, CerenovusMadness,
   PixieLearned, VillageIdiotInfo, LycanthropeChose, HarpyMadness,
   BountyHunterInfo, CultCalled, LeviathanAnnounced, ExecutionNomination,
-  HighPriestessInfo, GeneralInfo, FishermanAdvice,
+  HighPriestessInfo, GeneralInfo, FishermanAdvice, AlHadikhiaChose,
 };
 
 const GENERAL_SAYS = ["good", "evil", "neither"];

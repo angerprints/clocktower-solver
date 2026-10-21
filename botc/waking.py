@@ -557,7 +557,9 @@ def _came_back_tonight(world, state, seat, night):
     "They wake later tonight if they normally would." A Shabaloth
     regurgitates just before its own turn and a Professor raises at its
     own, so whoever came back was dead for every slot before that. An
-    Innkeeper at 9 slept through; a Chambermaid at 70 did not.
+    Innkeeper at 9 slept through; a Chambermaid at 70 did not. An
+    Al-Hadikhia's dead who choose life come back at its turn too
+    (21.10.2026).
 
     Which of the two did it is not written down. Before both, it was
     ASLEEP; after both, it woke as it normally would (None); between
@@ -572,7 +574,7 @@ def _came_back_tonight(world, state, seat, night):
     # turn too (XNINEB seed 881, 13.10.2026).
     from .info import took_it
     raisers = [getattr(CHARACTERS[who], "other_night", 0) or 0
-               for who in ("Shabaloth", "Professor")
+               for who in ("Shabaloth", "Professor", "AlHadikhia")
                if world.find_at(who, phase) is not None
                or any(took_it(world, state, p, who, phase)
                       for p in (state.philosophies() or {}))]
@@ -697,9 +699,11 @@ def uncertain(world, state, seat, night):
         raised = _raised_on(state)
         if raised is None:
             return True
+        # Nor with an Al-Hadikhia about: a dead one it chose may have
+        # chosen life (21.10.2026).
         from .info import holding_now
-        return holding_now(world, state, "Shabaloth", f"N{raised}") \
-            is not None
+        return any(holding_now(world, state, who, f"N{raised}") is not None
+                   for who in ("Shabaloth", "AlHadikhia"))
     from .info import taken_by_a_philosopher, took_it
     if "Exorcist" not in state.script.keys \
             and not taken_by_a_philosopher(state, "Exorcist"):

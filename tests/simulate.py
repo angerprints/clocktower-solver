@@ -28,7 +28,7 @@ from botc.info import (registers_as_role,
                        PixieLearned, VillageIdiotInfo, LycanthropeChose,
                        HarpyMadness,
                        BountyHunterInfo, CultCalled, LeviathanAnnounced,
-                       ExecutionNomination,
+                       ExecutionNomination, AlHadikhiaChose,
                        HighPriestessInfo, GeneralInfo, FishermanAdvice,
                        BalloonistInfo,
                        DreamerInfo,
@@ -764,6 +764,152 @@ def _typhon_seats(roles, believes, rng):
     return [pr[0] for pr in seats], [pr[1] for pr in seats]
 
 
+# Outsiders who hurt the town while they live, and choose death when the
+# Al-Hadikhia asks (Patrick, E, 21.10.2026): as the seat believes it is.
+_BETTER_DEAD = frozenset({"Recluse", "Saint", "Butler", "Mutant", "Goon",
+                          "Damsel", "Politician", "Ogre"})
+
+
+def _al_hadikhia_acts(d, night):
+    """Is the Demon tonight an Al-Hadikhia, standing to choose?"""
+    phase = f"N{night}"
+    demon = d.demon_at(phase)
+    return (demon is not None and d.role_at(demon, phase) == "AlHadikhia"
+            and demon in d.alive_at(phase) and d.deaths.get(demon) is None)
+
+
+def _spent(d, seat, night):
+    """Has this good player used up what its ability does?"""
+    from botc.catalogue import CHARACTERS as _C
+    phase = f"N{night}"
+    role = d.apparent(seat)
+    if _C[role].nights == "first" and night > 1:
+        return True
+    return (seat in d.slayer_spent or seat in d.huntsman_spent
+            or seat in d.professor_chose or seat in d.courtier_chose
+            or seat in getattr(d, "nightwatchman_chose", {}))
+
+
+def _al_hadikhia_answer(d, seat, night, alive, rng):
+    """Life or death, as Patrick's E has it (21.10.2026): evil chooses
+    life; a good player whose ability is spent, or an Outsider that hurts
+    the town while it lives, mostly death; anybody else mostly life."""
+    phase = f"N{night}"
+    if d.side_at(seat, phase) == "evil":
+        return True
+    if _spent(d, seat, night) or d.apparent(seat) in _BETTER_DEAD:
+        return rng.random() >= 0.8
+    return rng.random() < (0.8 if alive else 0.7)
+
+
+def _al_hadikhia_chooses(d, night, rng, heard):
+    """Three players, announced; each chooses life or death in turn, and
+    if all three live all three die (21.10.2026).
+
+    A: the row names them. B: one who cannot die tonight counts as
+    choosing life and stays when the others go. C: drunk or poisoned, it
+    chooses and the names are announced, and nothing happens. D: the same
+    player may come up twice. A dead one who chooses life comes back.
+    Never itself here, though the rules let it.
+    """
+    phase = f"N{night}"
+    ah = d.demon_at(phase)
+    if _exorcised(d, night) or rng.random() < 0.1:
+        return []                         # it chose nobody
+    others = [p for p in range(d.n) if p != ah]
+    dead = [p for p in others if d.deaths.get(p) is not None]
+    living = [p for p in others if d.deaths.get(p) is None]
+    picks = []
+    for _ in range(3):
+        if picks and rng.random() < 0.1:
+            picks.append(rng.choice(picks))
+            continue
+        pool = [p for p in (dead if dead and rng.random() < 0.15
+                            else living) if p not in picks] \
+            or [p for p in others if p not in picks]
+        if not pool:
+            break
+        picks.append(rng.choice(pool))
+    if not picks:
+        return []
+    padded = picks + [None] * (3 - len(picks))
+    heard.append(AlHadikhiaChose(night, picks[0], a=padded[0],
+                                 b=padded[1], c=padded[2]))
+    d.ah_chose = getattr(d, "ah_chose", {})
+    d.ah_chose[night] = list(picks)
+    working = d.working(ah, night)
+    # What each answered, in turn, for the night-walk: the answers are as
+    # hidden as a Demon's aim, and the walk works out what they did.
+    answers = d.ah_answers = getattr(d, "ah_answers", {})
+    answers[night] = []
+    killed = []                           # by it, in the order they went
+
+    def tonight():
+        return {p for p in picks if d.deaths.get(p) == phase}
+
+    # In turn, and each answer lands at once: a dead one choosing life is
+    # standing for the next answer, and one choosing death is down — which
+    # moves a Tea Lady's neighbours for whoever answers after.
+    for p in picks:
+        # A Goon it chose first makes it drunk on the spot, so that choice
+        # already fails and nothing after it happens; the Goon turns even
+        # if it was drunk before (C: drunk, it still chooses).
+        if _the_goon_answers(d, night, ah, p):
+            working = False
+        if not working:
+            continue
+        standing = d.deaths.get(p) is None
+        # One that died earlier tonight chooses death here: back before
+        # dawn, its death and its return would both be unseen, and the
+        # solver does not look for a death nobody saw.
+        if not standing and d.deaths[p] == phase:
+            life = False
+        else:
+            life = _al_hadikhia_answer(d, p, night, standing, rng)
+        answers[night].append((p, life))
+        if life and not standing:
+            d.ah_from_before = getattr(d, "ah_from_before", {})
+            d.ah_from_before.setdefault(night, set()).add(p)
+            d.raise_up(p, phase, "AlHadikhia")
+        elif not life and standing and not _protected(
+                d, night, p, by_exorcist=False, gone=tonight()):
+            d.deaths[p] = phase           # B: kept alive counts as life
+            killed.append(p)
+    if working and all(d.deaths.get(p) is None for p in picks):
+        # All three live, so all three die — at once, so who is kept
+        # alive is asked of the table before any of them goes.
+        going = [p for p in dict.fromkeys(picks)
+                 if not _protected(d, night, p, by_exorcist=False)]
+        for p in going:
+            d.deaths[p] = phase
+            killed.append(p)
+        d.ah_together = getattr(d, "ah_together", set()) | {night}
+    # One dead before tonight, back and down again before dawn, is a night
+    # the table saw nothing of (`_nobody_returns_only_to_die`).
+    back = getattr(d, "ah_from_before", {}).get(night, set())
+    # Only its own: one the Lycanthrope took first is not its kill.
+    return [p for p in dict.fromkeys(killed)
+            if d.deaths.get(p) == phase and p not in back]
+
+
+def _al_hadikhia_decides(d, night, rng, heard):
+    """The Mastermind's jinx: three good players; all choosing life means
+    evil wins, anything else good. The game ends tonight."""
+    phase = f"N{night}"
+    good = [p for p in d.alive_at(phase)
+            if d.side_at(p, phase) == "good" and d.deaths.get(p) is None]
+    picks = rng.sample(good, min(3, len(good))) if good else []
+    padded = picks + [None] * (3 - len(picks))
+    if picks:
+        heard.append(AlHadikhiaChose(night, picks[0], a=padded[0],
+                                     b=padded[1], c=padded[2]))
+    lives = all(_al_hadikhia_answer(d, p, night, True, rng) for p in picks)
+    d.ended_at = phase
+    d.ended_why = "al-hadikhia: evil" if picks and lives \
+        else "al-hadikhia: good"
+    d.game_ends_after = night
+
+
 def _heir(d, phase, rng):
     """Who catches the Demon when it dies at this phase.
 
@@ -909,6 +1055,13 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # takes means the Demon kills nobody tonight (11.10.2026).
         heard += _lycanthrope_hunts(d, night, rng)
 
+        # The Mastermind's jinx: an Al-Hadikhia executed yesterday with a
+        # living Mastermind chooses three good players tonight, and that
+        # decides the game (21.10.2026).
+        if getattr(d, "ah_final_night", None) == night:
+            _al_hadikhia_decides(d, night, rng, heard)
+            break
+
         if night > 1:
             demon = d.demon_at(f"N{night}")
             heir = _heir(d, f"N{night}", rng)
@@ -923,7 +1076,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 d.handovers.append((f"N{night}", heir))
                 d.changes.append((f"N{night}", heir, d.roles[demon]))
             else:
-                aimed = _demon_kills(d, night, rng)
+                # An Al-Hadikhia's three choose for themselves; whoever
+                # dies of it has died to the Demon all the same, and a
+                # Grandmother grieves (21.10.2026).
+                aimed = (_al_hadikhia_chooses(d, night, rng, heard)
+                         if _al_hadikhia_acts(d, night)
+                         else _demon_kills(d, night, rng))
                 # What it *aimed* at, kept for the replay: a Shabaloth
                 # kill sunk into a corpse leaves no body, so reading the
                 # deaths back gives an incomplete assignment.
@@ -3564,6 +3722,10 @@ def _execute(d, day, rng, allow_takeover=False):
             d.zombuul_up = demon          # down on the board, not in fact
         elif extra_day:
             d.game_ends_after = day + 1   # one more day, then it is over
+            # An Al-Hadikhia chooses for the game tonight instead (its
+            # jinx with the Mastermind, 21.10.2026).
+            if d.role_at(demon, phase) == "AlHadikhia":
+                d.ah_final_night = day + 1
         else:
             d.handovers.append((phase, heir))
             d.changes.append((phase, heir, d.roles[victim]))

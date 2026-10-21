@@ -1548,6 +1548,18 @@ export const DATA = {
    "other_night": 31,
    "lines_up": true
   },
+  "AlHadikhia": {
+   "id": "alhadikhia",
+   "name": "Al-Hadikhia",
+   "team": "demon",
+   "wake": [
+    "every",
+    "first"
+   ],
+   "chooses": true,
+   "nights": "other",
+   "other_night": 33
+  },
   "Kazali": {
    "id": "kazali",
    "name": "Kazali",

@@ -23,7 +23,8 @@ import {Timeline, change, turnedEvil} from "./worlds.mjs";
 import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
   from "./characters.rules.mjs";
-import {actsAsCultLeader, besideAlive, cultSides, fallsAs, fauxPawLycanthrope,
+import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, fallsAs,
+        fauxPawLycanthrope,
         holdingNow,
         knowsItTurnedEvil, sideOpen,
         livingNeighbours, takenByAPhilosopher, tookIt, wentOnAfter}
@@ -1414,6 +1415,17 @@ function plainFailures(world, state, outcome = {}) {
     }
   raises.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   for (const [night, seat, phase] of raises) {
+    // A dead player the Al-Hadikhia chose, who chose life (21.10.2026).
+    if (inBag(state, "AlHadikhia")
+        && alHadikhiaChosen(state, night).includes(seat)) {
+      const ah = holdingNow(world, state, "AlHadikhia", phase);
+      if (ah !== null && ah !== undefined
+          && world.roleAt(ah, phase) === "AlHadikhia"
+          && state.aliveSet(phase).has(ah)) {
+        (working[night] = working[night] || new Set()).add(ah);
+        continue;
+      }
+    }
     {
       const shabaloth = inBag(state, "Shabaloth")
         ? holdingNow(world, state, "Shabaloth", phase) : null;

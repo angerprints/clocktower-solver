@@ -1074,6 +1074,7 @@ def handmade():
     yield from stelle_60()
     yield from the_lord_of_typhon()
     yield from the_kazali()
+    yield from the_al_hadikhia()
     yield from stellen_62_63()
 
 
@@ -1610,6 +1611,29 @@ def the_kazali():
 
 
 PLAYED_KAZALI = ((0, 7), (31, 8))
+
+
+def the_al_hadikhia():
+    """The Al-Hadikhia (21.10.2026): the boards of
+    tests/test_al_hadikhia.py and played games with one dealt."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_al_hadikhia import _payloads
+    names = ("one-dies", "all-three", "a-soldier", "twice", "one-back",
+             "chambermaid")
+    for name, payload in zip(names, _payloads()):
+        yield {"name": f"x-al-hadikhia-{name}", "payload": payload}
+    for seed, n in PLAYED_AL_HADIKHIA:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng,
+                                              must_have=("AlHadikhia",))
+        yield played(f"x-al-hadikhia-played-{seed}-{n}", script, seed, n,
+                     3, rng=rng)
+
+
+# Two with a return (2 and 19), two without (0 and 12).
+PLAYED_AL_HADIKHIA = ((0, 8), (2, 8), (12, 7), (19, 7))
 
 
 def stellen_62_63():

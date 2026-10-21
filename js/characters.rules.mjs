@@ -17,8 +17,8 @@ import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
-import {fallsAs, holdingNow, sideOpen, takenByAPhilosopher, tookIt}
-  from "./info.mjs";
+import {alHadikhiaChosen, fallsAs, holdingNow, sideOpen, takenByAPhilosopher,
+        tookIt} from "./info.mjs";
 
 // --------------------------------------------------------------------
 // Constants. Every one is a judgement rather than a fact, which is what
@@ -627,6 +627,8 @@ killsItsOwnWay("Zombuul", "Pukka", "Shabaloth", "Po");
 // The eighth five (11.10.2026): one that never kills, and one that kills
 // as often as it said its phrase.
 killsItsOwnWay("Leviathan", "Yaggababble");
+// The Al-Hadikhia (21.10.2026): only the three it chose, by their choices.
+killsItsOwnWay("AlHadikhia");
 
 /** The one cause Trouble Brewing has.
  *
@@ -762,6 +764,31 @@ causeRule(function aPukkaKillsWhatItPoisoned(world, state, night) {
                         alsoImpaired: also}));
   }
   return out;
+});
+
+/** The three it chose, and each chose life or death. Any of them may
+ * die; it fires unless a chosen corpse chose death, a shield kept one of
+ * them, or it was itself drunk or poisoned (Patrick, A to D,
+ * 21.10.2026). See solver.py. */
+causeRule(function anAlHadikhiaChooses(world, state, night) {
+  if (night < 2 || !inBag(state, "AlHadikhia")) return [];
+  const chosen = alHadikhiaChosen(state, night);
+  if (!chosen.length) return [];
+  const phase = `N${night}`;
+  const seat = holdingNow(world, state, "AlHadikhia", phase);
+  if (seat === null || seat === undefined
+      || world.roleAt(seat, phase) !== "AlHadikhia"
+      || !state.aliveSet(phase).has(seat)) return [];
+  const alive = state.aliveSet(phase);
+  // A corpse that chose death leaves it nobody to kill — and so does one
+  // that died earlier tonight by another hand, a Gambler's wrong guess
+  // (4-night gate seed 1932, 21.10.2026): dead by its turn.
+  const corpse = chosen.some(p => !alive.has(p)
+                             || state.diedAt(p).includes(phase));
+  return [new Cause("AlHadikhia", DEMON, chosen,
+                    {capacity: chosen.length, mustFire: true, actor: seat,
+                     actorCost: PRIORS.DEMON_POISONED_PENALTY,
+                     excuses: corpse ? [[null, []]] : []})];
 });
 
 /** Two a night, and either can be aimed at somebody already dead, so the

@@ -625,14 +625,14 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=aa085bf4b978";
+import * as solver from "./api.mjs?v=4639c1911013";
 
 // The solve runs beside the page, in a worker, so a long board neither
 // freezes the page nor hides that it is busy: it reports how far along it
 // is and can be stopped. Where a browser cannot start a module worker —
 // an old one, or a page opened straight from disk — it runs here as it
 // always did, and the page freezes for the length of it as it always did.
-const WORKER_URL = "./worker.mjs?v=aa085bf4b978";
+const WORKER_URL = "./worker.mjs?v=4639c1911013";
 let WORKER = null, NO_WORKER = false, JOB = null;
 
 function worker(){
@@ -800,6 +800,10 @@ const SCHEMA = {
   CultCalled:          [["joined","players"]],
   LeviathanAnnounced:  [],
   ExecutionNomination: [],
+  // The Al-Hadikhia's three, announced to everybody, in the order chosen;
+  // the same player may come up twice (21.10.2026). Who died and who came
+  // back goes on the seats as usual.
+  AlHadikhiaChose:     [["a","player"],["b","player"],["c","player"]],
   // The ninth three, kept and not weighed: whom the High Priestess was
   // pointed at, which side the General was told is winning, and the
   // advice the Fisherman was given (a day row, once per game).
@@ -870,6 +874,7 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   LycanthropeChose:"Lycanthrope", HarpyMadness:"Harpy",
   BountyHunterInfo:"BountyHunter", CultCalled:"CultLeader",
   LeviathanAnnounced:"Leviathan", ExecutionNomination:"Leviathan",
+  AlHadikhiaChose:"AlHadikhia",
   HighPriestessInfo:"HighPriestess", GeneralInfo:"General",
   FishermanAdvice:"Fisherman",
   GrandmotherInfo:"Grandmother", ChambermaidInfo:"Chambermaid",
@@ -901,6 +906,7 @@ const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
   PsychopathKill:"psychopath", PsychopathRoshambo:"executed",
   WidowKnown:"told player", BoomdandyExploded:"executed",
   CultCalled:"called by", LeviathanAnnounced:"noted by",
+  AlHadikhiaChose:"noted by",
   ExecutionNomination:"nominator" };
 // Rows spoken by somebody the ability was used *on*, not by whoever
 // holds the character. They are never somebody relaying the holder's
@@ -911,7 +917,7 @@ const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
 const WITNESS_ROWS = ["NightwatchmanSeen","BansheeAnnounced","GoblinClaim",
   "DamselGuess","FearmongerChose","VizierAnnounced","BlindVote",
   "PsychopathRoshambo","WidowKnown","BoomdandyExploded",
-  "CultCalled","LeviathanAnnounced","ExecutionNomination"];
+  "CultCalled","LeviathanAnnounced","ExecutionNomination","AlHadikhiaChose"];
 // A few readings are named for the *act* rather than the character,
 // because that is what the table saw: a Slayer shot, a Gambler's guess.
 // Everything else is just the character, and is worked out rather than
@@ -939,6 +945,7 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   LycanthropeChose:"Lycanthrope chose", HarpyMadness:"Harpy madness",
   BountyHunterInfo:"Bounty Hunter", CultCalled:"Cult called",
   LeviathanAnnounced:"Leviathan announced",
+  AlHadikhiaChose:"Al-Hadikhia chose",
   ExecutionNomination:"Nominated the executed",
   HighPriestessInfo:"High Priestess shown", GeneralInfo:"General told",
   FishermanAdvice:"Fisherman advice" };
@@ -1800,6 +1807,10 @@ function describeRow(r){
       return `the table was told a Leviathan is in play`;
     case "ExecutionNomination":
       return `nominated the player who was executed today`;
+    case "AlHadikhiaChose":
+      return `the table was told the Al-Hadikhia chose ${
+        [r.a, r.b, r.c].filter(x => x !== null && x !== undefined && x !== "")
+          .map(who).join(", ")}`;
     case "HighPriestessInfo":
       return `was pointed at ${who(r.target)} — kept, not weighed`;
     case "GeneralInfo":

@@ -3961,6 +3961,67 @@ class CultCalled(Info):
 
 
 @dataclass
+class AlHadikhiaChose(Info):
+    """The three the Al-Hadikhia chose tonight, announced to everybody.
+
+    Patrick, 21.10.2026 (claude/al-hadikhia-lesarten.md):
+
+      A  Written down as a row, because the names are public. Who died
+         and who came back is on the seats as always.
+      B  A player kept from dying tonight counts as choosing life,
+         whatever it chose; if all three lived, the others die and it
+         stays (solver.an_al_hadikhia_chooses, through the shields).
+      C  Drunk or poisoned, it chooses and the names are announced, but
+         nothing happens.
+      D  The same player may be chosen more than once.
+
+    A fact about the night, not a reading: it holds if an Al-Hadikhia
+    stood to choose — or, the Mastermind's jinx, one executed yesterday
+    with a living Mastermind, choosing for the game.
+    """
+
+    a: Optional[int] = None
+    b: Optional[int] = None
+    c: Optional[int] = None
+    source_role = "AlHadikhia"
+    is_a_choice = True
+    in_the_open = True
+
+    def chosen(self):
+        return [p for p in (self.a, self.b, self.c) if p is not None]
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None                       # the Storyteller's announcement
+
+    def holds(self, w, s, rh, seat=None):
+        if self.night < 2:
+            return False
+        phase = f"N{self.night}"
+        ah = holding_now(w, s, "AlHadikhia", phase)
+        if ah is None or w.role_at(ah, phase) != "AlHadikhia":
+            return False
+        if ah in s.alive_set(phase):
+            return True
+        return al_hadikhia_for_the_game(w, s, ah, self.night)
+
+
+def al_hadikhia_for_the_game(w, s, ah, night):
+    """The Mastermind's jinx: executed yesterday with a living Mastermind,
+    it chooses three good players tonight, and that decides the game."""
+    day = night - 1
+    if f"D{day}" not in s.died_at(ah) and f"E{day}" not in s.died_at(ah):
+        return False
+    mastermind = w.find_at("Mastermind", f"D{day}")
+    return mastermind is not None and mastermind in s.alive_set(f"D{day}")
+
+
+@dataclass
 class LeviathanAnnounced(Info):
     """The Storyteller told the table a Leviathan is in play. `night` is
     the day.
