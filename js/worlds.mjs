@@ -135,9 +135,11 @@ export function dealtRoles(world) {
   const roles = world.roles;
   if (roles.includes("Summoner") && roles.includes("Marionette")) {
     const m = roles.indexOf("Marionette");
-    if (world.believes[m]) {
+    const token = world.believes[m];
+    if (token) {
+      // The Lunatic, or the Townsfolk (perhaps the Drunk's). See worlds.py.
       const out = [...roles];
-      out[m] = world.believes[m];
+      out[m] = TEAM[token] === "demon" ? "Lunatic" : token;
       return out;
     }
   }
@@ -320,6 +322,11 @@ function evilOptions(evil, script) {
   for (const key of script.keys)
     if (thinksItIsEvil(key))
       for (const token of believedTokens(key, script)) out.push([key, token]);
+  // A Lunatic beside the Summoner's Demon becomes its Marionette and goes
+  // on thinking it is a Demon (22.10.2026). See worlds.py.
+  if (["Summoner", "Marionette", "Lunatic"].every(k => script.keys.includes(k)))
+    for (const token of believedTokens("Lunatic", script))
+      out.push(["Marionette", token]);
   return out;
 }
 
@@ -616,6 +623,16 @@ function branches(nPlayers, claims, certainties, allowGoodLies, forced,
 /** Does every character sit where the setup says it must? The Marionette
  * neighbours the Demon; the catalogue holds the rule (`beside`). See
  * worlds.py. */
+/** A Marionette that thinks it is a Demon was a Lunatic until the
+ * Summoner's Demon came (22.10.2026): only where a Summoner was dealt. */
+export function believesLegally(roles, believes) {
+  for (let i = 0; i < roles.length; i++)
+    if (roles[i] === "Marionette" && believes[i]
+        && TEAM[believes[i]] === "demon" && !roles.includes("Summoner"))
+      return false;
+  return true;
+}
+
 export function seatedLegally(roles) {
   const n = roles.length;
   // No Demon dealt is Lil' Monsta's bag: a Marionette sits beside the
@@ -696,7 +713,8 @@ export function eachWorld(nPlayers, claims, opts = {}, emit) {
       if (k === order.length) {
         // This bag's characters have to have actually landed.
         for (const need of required) if (!used.has(need)) return;
-        if (!seatedLegally(roles)) return;   // dealt to seats it cannot sit in
+        if (!seatedLegally(roles) || !believesLegally(roles, believes))
+          return;                            // dealt to seats it cannot sit in
         if (emit(new World([...roles], [...believes])) === false) stop = true;
         return;
       }
@@ -829,7 +847,8 @@ export function dive(setup, nPlayers, rng) {
   }
 
   for (const role of required) if (!used.has(role)) return null;
-  if (!seatedLegally(roles)) return null;   // a dead end, like any other
+  if (!seatedLegally(roles) || !believesLegally(roles, believes))
+    return null;                            // a dead end, like any other
   return {world: new World(roles, believes), standsFor};
 }
 

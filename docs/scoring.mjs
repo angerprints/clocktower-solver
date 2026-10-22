@@ -25,7 +25,7 @@ import {BABYSAT_READS, SUMMON_READS, Timeline, babysits, change,
 import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
   from "./characters.rules.mjs";
-import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, fallsAs,
+import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide, fallsAs,
         fauxPawLycanthrope,
         holdingNow,
         knowsItTurnedEvil, sideOpen,
@@ -1263,12 +1263,21 @@ function summonedSeats(world, state, night, demon) {
  * real until the Demon comes (22.10.2026). See solver.py. */
 function marionetteEnters(world, state, made) {
   const m = world.roles.indexOf("Marionette");
-  if (m < 0) return [];
+  if (m < 0) return [[]];
   const token = world.believes[m];
-  if (token === null || token === undefined) return [];
-  const out = [change("N1", m, token, "good")];
-  if (made) out.push(change(made.phase, m, "Marionette", "evil"));
-  return out;
+  if (token === null || token === undefined) return [[]];
+  // The Lunatic, or the Townsfolk, or the Drunk holding it (22.10.2026).
+  // See solver.py.
+  const held = [];
+  if (TEAM[token] === "demon") held.push("Lunatic");
+  else {
+    held.push(token);
+    if (TEAM[token] === "townsfolk" && !world.roles.includes("Drunk")
+        && inBag(state, "Drunk"))
+      held.push("Drunk");
+  }
+  const after = made ? [change(made.phase, m, "Marionette", "evil")] : [];
+  return held.map(role => [change("N1", m, role, "good"), ...after]);
 }
 
 function typhonNeighbours(world, state, night, seat, demon) {
@@ -1325,8 +1334,9 @@ export function summonOptions(world, state) {
   } else if (over && phaseIndex(final) === phaseIndex(gone)) {
     out.push([notSummoned(gone, summoner)]);
   }
-  return out.map(way => [...way, ...marionetteEnters(
-    world, state, way.find(c => c.summoned) || null)]);
+  return out.flatMap(way => marionetteEnters(
+    world, state, way.find(c => c.summoned) || null).map(
+      enters => [...way, ...enters]));
 }
 
 /** The night the Summoner made the Demon, as bestSummonedStory is trying
@@ -2035,9 +2045,13 @@ function plainFailures(world, state, outcome = {}) {
       // a Spy, so that reading is already false and a Vortox may produce
       // it freely. `holds` answers "could this have been said", which is
       // right nearly everywhere and wrong here.
-      const wasTrue = info.isTrue
-        ? info.isTrue(world, state, seat)
-        : info.holds(world, state, null, seat);
+      // True every way an open side could be (Stelle 72).
+      let wasTrue;
+      if (info.isTrue) {
+        wasTrue = true;
+        for (const view of eachRealSide(world, state, `N${info.night}`))
+          if (!info.isTrue(view, state, seat)) { wasTrue = false; break; }
+      } else wasTrue = info.holds(world, state, null, seat);
       if (wasTrue) {
         // Then the Vortox was not working, and nothing else will do:
         // "even if they are drunk or poisoned, it must be false". For

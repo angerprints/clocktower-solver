@@ -167,8 +167,13 @@ sourceRule(function alwaysImpaired(world, state, night) {
   world.believes.forEach((token, seat) => {
     // Until the seat's character changes: a Drunk a Fang Gu jumped into
     // is the Fang Gu and kills like one (07.10.2026).
+    // A Summoner's Marionette-to-be that was the Drunk or the Lunatic until
+    // the Demon came is one all along (22.10.2026).
+    const now = world.roleAt(seat, `N${night}`);
     if (token !== null && token !== undefined
-        && world.roleAt(seat, `N${night}`) === world.roles[seat])
+        && (now === world.roles[seat]
+            || (world.roles[seat] === "Marionette"
+                && (now === "Drunk" || now === "Lunatic"))))
       seats.add(seat);
   });
   if (!seats.size) return [];

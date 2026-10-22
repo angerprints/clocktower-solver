@@ -133,6 +133,32 @@ export function sideOpen(w, s, seat, phase) {
   return !!s && tookIt(w, s, seat, "Goon", phase);
 }
 
+/** The world once for every way the sides nobody follows could really be
+ * at this moment — a Cult Leader's, a Goon's — for "was that reading
+ * true?" under a Vortox: true only if true every way (Stelle 72,
+ * 22.10.2026). See info.py. */
+export function* eachRealSide(w, s, phase) {
+  const open = [];
+  for (let seat = 0; seat < w.roles.length; seat++) {
+    let sides;
+    if (s && cultOnScript(s) && actsAsCultLeader(w, s, seat, phase))
+      sides = [...cultSides(w, s, seat, phase)].sort();
+    else if (s && sideOpen(w, s, seat, phase)) sides = [false, true];
+    else continue;
+    if (sides.length > 1) open.push([seat, sides]);
+  }
+  if (!open.length) { yield w; return; }
+  const combos = open.reduce((acc, [, sides]) =>
+    acc.flatMap(c => sides.map(x => [...c, x])), [[]]);
+  for (const combo of combos) {
+    const fixed = new Map(open.map(([seat], i) => [seat, combo[i]]));
+    const view = Object.create(w);
+    view.evilAt = (seat, ph) => fixed.has(seat) ? fixed.get(seat)
+      : w.evilAt(seat, ph);
+    yield view;
+  }
+}
+
 export function fauxPawLycanthrope(w, s, phase, living = true) {
   const alive = s.aliveSet(phase);
   const who = Object.keys(s.philosophies() || {}).map(Number)

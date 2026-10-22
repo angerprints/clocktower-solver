@@ -105891,81 +105891,81 @@
     "game_over": false
    },
    "expect": {
-    "valid": 582,
+    "valid": 598,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 61.6777,
+      "evil_pct": 61.7667,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 23.3367
+      "lying_pct": 23.515
      },
      {
-      "evil_pct": 0.9225,
+      "evil_pct": 1.3563,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.9225
+      "lying_pct": 1.3563
      },
      {
-      "evil_pct": 50.6654,
+      "evil_pct": 50.6665,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 1.3309
+      "lying_pct": 1.333
      },
      {
-      "evil_pct": 1.6094,
+      "evil_pct": 1.6175,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.7436
+      "lying_pct": 0.7373
      },
      {
-      "evil_pct": 68.8902,
-      "demon_pct": 48.6942,
+      "evil_pct": 68.3223,
+      "demon_pct": 48.296,
       "drunk_pct": 0.0,
-      "lying_pct": 68.8902
+      "lying_pct": 68.3223
      },
      {
-      "evil_pct": 67.3993,
-      "demon_pct": 47.6661,
+      "evil_pct": 67.6623,
+      "demon_pct": 48.0948,
       "drunk_pct": 0.0,
-      "lying_pct": 67.3993
+      "lying_pct": 67.6623
      },
      {
-      "evil_pct": 31.5732,
+      "evil_pct": 31.3078,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 31.5732
+      "lying_pct": 31.3078
      },
      {
-      "evil_pct": 0.3404,
+      "evil_pct": 0.3486,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.3404
+      "lying_pct": 0.3486
      },
      {
-      "evil_pct": 5.4633,
-      "demon_pct": 3.6397,
+      "evil_pct": 5.4173,
+      "demon_pct": 3.6091,
       "drunk_pct": 0.0,
-      "lying_pct": 5.4633
+      "lying_pct": 5.4173
      }
     ],
     "blame": {
      "2": {
       "1": {
-       "Demon": 0.9406,
-       "Assassin": 0.0594
+       "Demon": 0.94,
+       "Assassin": 0.06
       }
      },
      "3": {
       "2": {
-       "Demon": 0.9514,
-       "Assassin": 0.0486
+       "Demon": 0.9518,
+       "Assassin": 0.0482
       }
      },
      "4": {
       "7": {
-       "Demon": 0.9718,
-       "Assassin": 0.0282
+       "Demon": 0.9721,
+       "Assassin": 0.0279
       }
      }
     }
@@ -112433,6 +112433,182 @@
     "blame": {
      "3": {
       "1": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-summoner-marionette-ten",
+   "payload": {
+    "n_players": 10,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": [
+       "N3"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": [
+       "N4"
+      ]
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Slayer",
+      "events": []
+     },
+     {
+      "claim": "Librarian",
+      "events": []
+     },
+     {
+      "claim": "Undertaker",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "Empath",
+      "night": 4,
+      "player": 1,
+      "count": 0
+     }
+    ],
+    "script": {
+     "name": "Beschw\u00f6rer",
+     "characters": [
+      "summoner",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "imp",
+      "nodashii",
+      "vortox",
+      "pukka",
+      "zombuul",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "slayer",
+      "clockmaker",
+      "chambermaid",
+      "undertaker",
+      "snakecharmer",
+      "sailor",
+      "marionette",
+      "drunk",
+      "lunatic",
+      "librarian",
+      "cultleader",
+      "oracle"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 5154,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 23.507,
+      "demon_pct": 8.0995,
+      "drunk_pct": 1.5484,
+      "lying_pct": 21.9367
+     },
+     {
+      "evil_pct": 21.136,
+      "demon_pct": 7.095,
+      "drunk_pct": 2.6886,
+      "lying_pct": 17.7924
+     },
+     {
+      "evil_pct": 21.8344,
+      "demon_pct": 7.5569,
+      "drunk_pct": 0.7239,
+      "lying_pct": 20.9185
+     },
+     {
+      "evil_pct": 3.9086,
+      "demon_pct": 0.3891,
+      "drunk_pct": 0.119,
+      "lying_pct": 3.5046
+     },
+     {
+      "evil_pct": 6.5174,
+      "demon_pct": 0.6979,
+      "drunk_pct": 0.5137,
+      "lying_pct": 5.3129
+     },
+     {
+      "evil_pct": 55.7223,
+      "demon_pct": 18.028,
+      "drunk_pct": 3.8631,
+      "lying_pct": 52.1062
+     },
+     {
+      "evil_pct": 57.7586,
+      "demon_pct": 20.2396,
+      "drunk_pct": 4.5581,
+      "lying_pct": 53.3248
+     },
+     {
+      "evil_pct": 36.5297,
+      "demon_pct": 12.5229,
+      "drunk_pct": 4.1275,
+      "lying_pct": 31.8149
+     },
+     {
+      "evil_pct": 36.552,
+      "demon_pct": 12.9633,
+      "drunk_pct": 2.9873,
+      "lying_pct": 33.0098
+     },
+     {
+      "evil_pct": 35.2744,
+      "demon_pct": 12.4078,
+      "drunk_pct": 2.2654,
+      "lying_pct": 32.5816
+     }
+    ],
+    "blame": {
+     "3": {
+      "3": {
+       "Demon": 1.0
+      }
+     },
+     "4": {
+      "4": {
        "Demon": 1.0
       }
      }

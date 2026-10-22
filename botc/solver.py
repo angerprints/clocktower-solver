@@ -16,6 +16,7 @@ import sys
 from collections import defaultdict
 from itertools import product
 
+from .info import each_real_side
 from .info import (CourtierChoice, GameState, FortuneTeller,
                    AcrobatChoice, GrandmotherInfo, SlayerShot,
                    VirginNomination, BecameInfo, EvilTwinPair,
@@ -1708,15 +1709,24 @@ def _marionette_enters(world, state, made):
     then, really (22.10.2026). The changes that say so, for one way the
     summoning went."""
     if "Marionette" not in world.roles:
-        return ()
+        return [()]
     m = world.roles.index("Marionette")
     token = world.believes[m]
     if token is None:
-        return ()
-    out = (Change("N1", m, token, "good"),)
-    if made is not None:
-        out += (Change(made.phase, m, "Marionette", "evil"),)
-    return out
+        return [()]
+    # Who it was until then (22.10.2026): one that thinks it is a Demon
+    # was the Lunatic; one holding a Townsfolk token that character, or
+    # the Drunk holding it.
+    if TEAM[token] == "demon":
+        held = ["Lunatic"]
+    else:
+        held = [token]
+        if TEAM[token] == "townsfolk" and "Drunk" not in world.roles \
+                and _in_bag(state, "Drunk"):
+            held.append("Drunk")
+    after = (() if made is None
+             else (Change(made.phase, m, "Marionette", "evil"),))
+    return [(Change("N1", m, role, "good"),) + after for role in held]
 
 
 def _typhon_neighbours(world, state, night, seat, demon):
@@ -1782,10 +1792,10 @@ def summon_options(world, state):
     elif over and phase_index(final) == phase_index(gone):
         # Dead before its turn: nothing can come, good won there.
         out.append((NotSummoned(gone, summoner),))
-    return [way + _marionette_enters(
+    return [way + enters for way in out
+            for enters in _marionette_enters(
                 world, state, next((c for c in way
-                                    if isinstance(c, Summoned)), None))
-            for way in out]
+                                    if isinstance(c, Summoned)), None))]
 
 
 @transition_rule
@@ -4927,7 +4937,10 @@ def _plain_failures(world, state, outcome=None):
             # so the Vortox had to be droisoned to explain it, and boards
             # that really happened were priced as though something had
             # gone wrong.
-            was_true = (info.is_true(world, state, seat)
+            # True every way an open side could be (Stelle 72).
+            was_true = (all(info.is_true(view, state, seat)
+                            for view in each_real_side(
+                                world, state, f"N{info.night}"))
                         if hasattr(info, "is_true")
                         else info.holds(world, state, rh_for(info), seat))
             if was_true:

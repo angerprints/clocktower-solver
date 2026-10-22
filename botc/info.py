@@ -1005,6 +1005,51 @@ def evil_options(w, s, seat, phase):
     return (True,)
 
 
+class _SidesFixed:
+    """A world whose open sides are pinned one way: everything as `w` has
+    it, but `evil_at` answers from `fixed` for the seats in it."""
+
+    def __init__(self, w, fixed):
+        self._w, self._fixed = w, fixed
+
+    def __getattr__(self, name):
+        return getattr(self._w, name)
+
+    def evil_at(self, seat, phase):
+        if seat in self._fixed:
+            return self._fixed[seat]
+        return self._w.evil_at(seat, phase)
+
+
+def each_real_side(w, s, phase):
+    """The world once for every way the sides nobody follows could really
+    be at this moment: a Cult Leader's, which the solver leaves open
+    (`cult_sides`), and a Goon's.
+
+    For "was that reading true?" under a Vortox (Stelle 72, 22.10.2026):
+    true only if it is true every way. Asked of the dealt side alone, a
+    Cult Leader that had turned evil was counted good, an Oracle's false
+    number read as true, and the Vortox had to be off.
+    """
+    open_ = []
+    for seat in range(len(w.roles)):
+        if s is not None and _cult_on_script(s) \
+                and acts_as_cult_leader(w, s, seat, phase):
+            sides = tuple(sorted(cult_sides(w, s, seat, phase)))
+        elif s is not None and side_open(w, s, seat, phase):
+            sides = (False, True)
+        else:
+            continue
+        if len(sides) > 1:
+            open_.append((seat, sides))
+    if not open_:
+        yield w
+        return
+    seats = [seat for seat, _ in open_]
+    for combo in product(*(sides for _, sides in open_)):
+        yield _SidesFixed(w, dict(zip(seats, combo)))
+
+
 def _possible_evil_counts(world, players, phase, s=None):
     """All values "number of evil among these players" could take.
 

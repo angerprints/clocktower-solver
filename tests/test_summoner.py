@@ -200,6 +200,62 @@ class TheMarionette(SolverTest):
         self.assertTrue(view.evil_at(5, "D3"))
 
 
+class WhoTheMarionetteWas(SolverTest):
+    """A Drunk or a Lunatic may become the Marionette too (Patrick,
+    22.10.2026)."""
+
+    SCRIPT = scripts.from_ids("Beschwörer+", IDS + ["marionette", "drunk",
+                                                    "lunatic"])
+
+    def held(self, token):
+        roles = list(R)
+        roles[5] = "Marionette"
+        believes = [None] * 7
+        believes[5] = token
+        claims = dict(enumerate(C))
+        st = GameState(n_players=7, script=self.SCRIPT, claims=claims,
+                       infos=[], days_done={1, 2, 3})
+        st._final_phase_held = st.final_phase()
+        out = set()
+        for way in S.summon_options(World(tuple(roles), tuple(believes)),
+                                    st):
+            out |= {c.role for c in way
+                    if type(c).__name__ == "Change" and c.phase == "N1"}
+        return out
+
+    def test_a_townsfolk_token_may_be_the_drunks(self):
+        self.assertEqual(self.held("Soldier"), {"Soldier", "Drunk"})
+
+    def test_a_demon_token_is_the_lunatics(self):
+        self.assertEqual(self.held("Imp"), {"Lunatic"})
+
+    def test_only_with_a_summoner(self):
+        from botc.worlds import believes_legally
+        self.assertTrue(believes_legally(("Summoner", "Marionette"),
+                                         (None, "Imp")))
+        self.assertFalse(believes_legally(("Poisoner", "Marionette"),
+                                          (None, "Imp")))
+        self.assertTrue(believes_legally(("Poisoner", "Marionette"),
+                                         (None, "Soldier")))
+
+
+class Stelle72(SolverTest):
+    """A Cult Leader's side, left open, is asked every way when a Vortox
+    needs a reading to have been false (22.10.2026)."""
+
+    def test_every_way_it_could_be(self):
+        script = scripts.from_ids("Kult", IDS + ["cultleader", "oracle"])
+        roles = ["CultLeader", "Summoner"] + R[1:6]
+        st = GameState(n_players=7, script=script,
+                       claims=dict(enumerate(["CultLeader"] + C[:6])),
+                       infos=[], days_done={1, 2})
+        w = World(tuple(roles), (None,) * 7)
+        views = list(I.each_real_side(w, st, "N2"))
+        self.assertEqual(sorted(v.evil_at(0, "N2") for v in views),
+                         [False, True])
+        self.assertTrue(all(v.evil_at(1, "N2") for v in views))
+
+
 def games(how_many=300, nights=4, must=("Summoner",)):
     import play_games
     import simulate
@@ -276,6 +332,14 @@ def _payloads():
               "b": 6, "yes": True}], {1: ["N3"]}, days=(1, 2, 3),
             roles_claimed=C[:5] + ["Puzzlemaster", "Investigator"],
             ids=IDS + ["marionette", "puzzlemaster"]),
+        # Ten players, a Marionette that may have been the Drunk or the
+        # Lunatic, and a Cult Leader on the script (22.10.2026).
+        pay([{"type": "Empath", "night": 4, "player": 1, "count": 0}],
+            {3: ["N3"], 4: ["N4"]}, days=(1, 2, 3),
+            roles_claimed=C[:6] + ["Soldier", "Slayer", "Librarian",
+                                   "Undertaker"],
+            ids=IDS + ["marionette", "drunk", "lunatic", "librarian",
+                       "cultleader", "oracle"]),
     ]
 
 

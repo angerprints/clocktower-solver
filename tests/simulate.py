@@ -323,7 +323,14 @@ class Deal:
         if seat is None:
             seat = getattr(self, "marionette_slot", None)
         if seat is not None:
-            believes[seat] = self.roles[seat]
+            # A Drunk or a Lunatic made it goes on believing its token
+            # (22.10.2026); anybody else, the character it was dealt —
+            # what it became before the Demon came is the solver's story
+            # to tell (a Damsel the Huntsman found).
+            before = (getattr(self, "marionette_before", None)
+                      if seat == getattr(self, "marionette_made", None)
+                      else None)
+            believes[seat] = before or self.roles[seat]
             roles[seat] = "Marionette"
         return World(tuple(roles), tuple(believes))
 
@@ -349,8 +356,12 @@ class Deal:
         # Made the Marionette when the Summoner's Demon came: from then on
         # it lives by the character it held (22.10.2026).
         if seat == getattr(self, "marionette_made", None):
-            return (self.believes[seat]
-                    if self.role_at(seat, phase) == "Marionette" else None)
+            if self.role_at(seat, phase) == "Marionette":
+                return self.believes[seat]
+            # Before it: the Drunk's or the Lunatic's token, or nothing.
+            if self.role_at(seat, phase) != self.roles[seat]:
+                return None
+            return self.marionette_before
         if self.role_at(seat, phase) != self.roles[seat]:
             return None
         return self.believes[seat]
@@ -3962,11 +3973,12 @@ def _summoner_summons(d, night, rng, heard):
     if any(d.role_at(p, phase) == "PoppyGrower" for p in living):
         pool = list(living)
     # The Marionette's jinx: it enters play beside the Demon, alive or
-    # dead (22.10.2026) — a good neighbour who believes nothing else.
+    # dead (22.10.2026) — a good neighbour, a Drunk or a Lunatic too.
     def puppets(p):
         return [q for q in ((p - 1) % n, (p + 1) % n)
                 if q != p and d.side_at(q, phase) == "good"
-                and d.believes[q] is None]
+                and (d.believes[q] is None
+                     or d.role_at(q, phase) == d.roles[q])]
     if d.marionette_slot is not None:
         pool = [p for p in pool if puppets(p)] or pool
     # The Lord of Typhon's: beside a Minion.
@@ -3984,7 +3996,10 @@ def _summoner_summons(d, night, rng, heard):
     d.summoned = (night, seat, demon)
     if d.marionette_slot is not None and puppets(seat):
         q = rng.choice(puppets(seat))
-        d.believes[q] = d.role_at(q, phase)
+        # A Drunk or a Lunatic keeps the token it lives by (22.10.2026).
+        d.marionette_before = d.believes[q]
+        if d.believes[q] is None:
+            d.believes[q] = d.role_at(q, phase)
         d.changes.append((phase, q, "Marionette"))
         d.side_changes.append((phase, q, "Marionette", "evil"))
         d.marionette_made = q

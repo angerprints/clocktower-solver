@@ -160,9 +160,14 @@ def always_impaired(world, state, night):
     # no longer lives by, it could not have made the kills the board
     # shows, and the true world had no plan at all (07.10.2026).
     phase = f"N{night}"
+    # A Summoner's Marionette-to-be that was the Drunk or the Lunatic
+    # until the Demon came is one all along (22.10.2026).
     seats = frozenset(seat for seat, token in enumerate(world.believes)
                       if token is not None
-                      and world.role_at(seat, phase) == world.roles[seat])
+                      and (world.role_at(seat, phase) == world.roles[seat]
+                           or (world.roles[seat] == "Marionette"
+                               and world.role_at(seat, phase)
+                               in ("Drunk", "Lunatic"))))
     if not seats:
         return []
     return [Source("believer", seats, capacity=len(seats), cost=1.0,

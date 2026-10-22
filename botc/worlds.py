@@ -198,8 +198,13 @@ def dealt_roles(world):
     roles = world.roles
     if "Summoner" in roles and "Marionette" in roles:
         m = roles.index("Marionette")
-        if world.believes[m]:
-            return roles[:m] + (world.believes[m],) + roles[m + 1:]
+        token = world.believes[m]
+        if token:
+            # One thinking it is a Demon was the Lunatic. One holding a
+            # Townsfolk token may have been the Drunk; read as that
+            # Townsfolk here, which only lets more through.
+            held = "Lunatic" if TEAM[token] == "demon" else token
+            return roles[:m] + (held,) + roles[m + 1:]
     return roles
 
 
@@ -474,6 +479,13 @@ def _evil_options(evil, script):
     for key in script.keys:
         if thinks_it_is_evil(key):
             out.extend((key, token) for token in believed_tokens(key, script))
+    # A Lunatic beside the Summoner's Demon becomes its Marionette and goes
+    # on thinking it is a Demon (22.10.2026): a Marionette holding a Demon
+    # token, bluffing like the Lunatic it was. Only with a Summoner dealt
+    # (`believes_legally`).
+    if {"Summoner", "Marionette", "Lunatic"} <= set(script.keys):
+        out.extend(("Marionette", token)
+                   for token in believed_tokens("Lunatic", script))
     return out
 
 
@@ -809,6 +821,16 @@ def in_a_line(roles, lord):
     return False
 
 
+def believes_legally(roles, believes):
+    """A Marionette that thinks it is a Demon was a Lunatic until the
+    Summoner's Demon came (22.10.2026): only where a Summoner was dealt."""
+    for role, token in zip(roles, believes):
+        if role == "Marionette" and token is not None \
+                and TEAM[token] == "demon" and "Summoner" not in roles:
+            return False
+    return True
+
+
 def seated_legally(roles):
     """Does every character sit where the setup says it must?
 
@@ -867,7 +889,8 @@ def iter_worlds(n_players, claims, certainties=None, allow_good_lies=False,
             if k == len(order):
                 if not required <= used:
                     return                # this bag's characters never landed
-                if not seated_legally(roles):
+                if not seated_legally(roles) \
+                        or not believes_legally(roles, believes):
                     return                # dealt to seats it cannot sit in
                 yield World(tuple(roles), tuple(believes))
                 return
@@ -959,7 +982,7 @@ def dive(setup, n_players, rng):
         return None
     # A dead end like any other: counting it as a walk that found nothing
     # keeps the estimate unbiased for the worlds that do sit legally.
-    if not seated_legally(roles):
+    if not seated_legally(roles) or not believes_legally(roles, believes):
         return None
     return World(tuple(roles), tuple(believes)), stands_for
 
