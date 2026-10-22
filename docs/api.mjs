@@ -466,6 +466,10 @@ export function solveBoard(payload, {maxWorlds = EXACT_LIMIT} = {}) {
     reply.blame = result.blame;
   if (result.readings && result.readings.length)
     reply.readings = result.readings;
+  // What the solver does not reckon yet, by its share of the weight: the
+  // page shows no figures then (the Hatter's Stufe 1, 22.10.2026).
+  if (result.unreckoned && Object.keys(result.unreckoned).length)
+    reply.unreckoned = result.unreckoned;
   if (!result.valid) reply.diagnosis = whyNothingFits(state);
   return reply;
 }

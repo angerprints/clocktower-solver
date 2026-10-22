@@ -83,6 +83,17 @@ class TheWholeSolverAgrees(SolverTest):
                         self.assertAlmostEqual(got[key], value,
                                                delta=self.tol)
 
+    def test_what_is_not_reckoned_agrees(self):
+        """The Hatter's first stage (22.10.2026): the same boards say the
+        same thing is not reckoned yet, by the same share."""
+        for case in self.solvable():
+            want = case["expect"].get("unreckoned") or {}
+            with self.subTest(board=case["name"]):
+                mine = self.js[case["name"]].get("unreckoned") or {}
+                self.assertEqual(set(mine), set(want))
+                for why, share in want.items():
+                    self.assertAlmostEqual(mine[why], share, delta=self.tol)
+
     def test_what_killed_each_body_agrees(self):
         for case in self.solvable():
             want = case["expect"].get("blame")

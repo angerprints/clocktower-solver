@@ -53,6 +53,10 @@ function answer(payload) {
       ([night, seats]) => [night, Object.fromEntries(Object.entries(seats).map(
         ([seat, causes]) => [seat, Object.fromEntries(
           Object.entries(causes).map(([c, v]) => [c, round(v)]))]))]));
+  // What the solver does not reckon yet (the Hatter, 22.10.2026).
+  if (got.unreckoned && Object.keys(got.unreckoned).length)
+    out.unreckoned = Object.fromEntries(Object.entries(got.unreckoned)
+      .map(([why, v]) => [why, round(v)]));
   return out;
 }
 

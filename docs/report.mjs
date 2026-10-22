@@ -9,6 +9,7 @@ import {CHARACTERS} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
 import {minionStillActs} from "./impairment.mjs";
 import {TEAM, believesAnother, isEvil, mustHide, show, wakeFits} from "./roles.mjs";
+import {TEA, hatterUnreckoned} from "./scoring.mjs";
 import {bestStory, storyShares, explanationCost, forcedRoles, nightDeaths,
         worldConsistent} from "./scoring.mjs";
 import {PRIORS} from "./priors.mjs";
@@ -390,15 +391,22 @@ export function estimate(state, allowGoodLies = false, dives = 25000,
 
   let total = 0.0, sq = 0.0, legalSum = 0.0, validSum = 0.0, walked = 0;
   const best = [];
+  // The weight of worlds a case not reckoned yet runs through (the
+  // Hatter's Stufe 1). See solver.py.
+  const unreckoned = {};
   const blame = {};
   const told = state.infos.map(() => ({}));
   const perSeat = Array.from({length: n}, () => ({
     evil: 0, demon: 0, drunk: 0, lying: 0, roles: {},
   }));
 
+  TEA.told = 0;
   sampleWorlds(n, state.dealtClaims(), {
     ...searchOptions(state, allowGoodLies), dives, rng,
   }, (world, standsFor) => {
+    // Enough tea parties told: stop walking (V Weg 1). See solver.py.
+    if (TEA.budget !== null && TEA.told > TEA.budget
+        && walked >= TEA.minDives) return false;
     walked += 1;
     progress(walked, dives);
     if (world === null) return;           // a dead end still counts as a walk
@@ -413,6 +421,8 @@ export function estimate(state, allowGoodLies = false, dives = 25000,
     const wt = standsFor * priorWeight(world, state) * cost;
     total += wt;
     sq += wt * wt;
+    const why = hatterUnreckoned(view, state);
+    if (why !== null) unreckoned[why] = (unreckoned[why] || 0) + wt;
     for (const [idx, mark] of Object.entries(outcome))
       told[idx][mark] = (told[idx][mark] || 0) + wt;
 
@@ -454,6 +464,7 @@ export function estimate(state, allowGoodLies = false, dives = 25000,
     rows, samples: best.map(([, w]) => w),
     blame: shareOut(blame), mastermind: [],
     readings: readingsFrom(state, told),
+    unreckoned: unreckonedOut(unreckoned, total),
   };
 }
 
@@ -470,6 +481,9 @@ export function analyze(state, allowGoodLies = false,
   let legal = 0, valid = 0, total = 0.0, truncated = false;
   const best = [];
   const blame = {};
+  const unreckoned = {};
+  TEA.told = 0;
+  let overBudget = false;
 
   const executed = Object.entries(state.executions || {})
     .map(([day, seat]) => [Number(day), seat])
@@ -498,6 +512,13 @@ export function analyze(state, allowGoodLies = false,
       truncated = true;
       return false;
     }
+    // The same once the tea parties, at the rate so far, would take more
+    // stories than a solve may tell (V Weg 1). See solver.py.
+    if (TEA.budget !== null && TEA.told && legal > 50
+        && TEA.told * Math.max(pilot, legal) / legal > TEA.exactBudget) {
+      overBudget = true;
+      return false;
+    }
     const outcome = {};
     const {cost, changes, viable} = bestStory(world, state, outcome);
     if (cost === null) return true;
@@ -506,6 +527,8 @@ export function analyze(state, allowGoodLies = false,
     valid += 1;
     const wt = priorWeight(world, state) * cost;
     total += wt;
+    const why = hatterUnreckoned(view, state);
+    if (why !== null) unreckoned[why] = (unreckoned[why] || 0) + wt;
     for (const [idx, mark] of Object.entries(outcome))
       told[idx][mark] = (told[idx][mark] || 0) + wt;
 
@@ -540,7 +563,8 @@ export function analyze(state, allowGoodLies = false,
     margin: 0.0,
   }));
 
-  if (truncated) return estimate(state, allowGoodLies, dives, keepSamples, rng);
+  if (truncated || overBudget)
+    return estimate(state, allowGoodLies, dives, keepSamples, rng);
 
   const shares = shareOut(blame);
 
@@ -559,8 +583,17 @@ export function analyze(state, allowGoodLies = false,
   return {
     legal, valid, truncated, sampled: false, dives: 0, ess: null,
     rows, samples: best.map(([, w]) => w), blame: shares, mastermind: hints,
-    readings,
+    readings, unreckoned: unreckonedOut(unreckoned, total),
   };
+}
+
+/** {what is not reckoned yet: its share of the weight in per cent}. */
+function unreckonedOut(weights, total) {
+  const out = {};
+  if (total <= 0) return out;
+  for (const [why, value] of Object.entries(weights))
+    if (value > 0) out[why] = share(value, total);
+  return out;
 }
 
 export {show};

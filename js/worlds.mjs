@@ -58,10 +58,17 @@ export class World {
   // one starting assignment, so these ignore the phase — they exist so
   // that every check which cares *when* it is asking says so, and a
   // timeline only has to override these.
-  roleAt(seat, _phase) { return this.roles[seat]; }
-  findAt(role, _phase) { return this.find(role); }
+  roleAt(seat, phase) {
+    if (TEA_READS.now) teaRead(phase);
+    return this.roles[seat];
+  }
+  findAt(role, phase) {
+    if (TEA_READS.now) teaRead(phase);
+    return this.find(role);
+  }
 
-  demonAt(_phase) {
+  demonAt(phase) {
+    if (TEA_READS.now) teaRead(phase);
     for (let i = 0; i < this.roles.length; i++)
       if (TEAM[this.roles[i]] === "demon") return i;
     return null;
@@ -128,6 +135,35 @@ export const SUMMON_READS = {now: null};
 
 export const summonerWorld = world => world.roles.includes("Summoner");
 
+/** A Minion or the Demon that chose a new character when the Hatter
+ * died (22.10.2026). `TeaParty` in Python. */
+export const teaParty = (phase, seat, role, side) =>
+  ({phase, seat, role, side, tea: true});
+
+/** Whether anything from the Hatter's night on was looked at while a
+ * story was told: {at, read}. See worlds.py. */
+export const TEA_READS = {now: null};
+
+/** A phase as a number on one line with the changes: "B" — the board as
+ * a night began, after a tea party at its very start — a little past the
+ * day before it. See worlds.py. */
+export const moment = phase =>
+  phaseIndex(phase) + (phase[0] === "B" ? 0.75 : 0);
+
+/** Where a change stands on that line: a tea party just before the night
+ * it is stamped with. See worlds.py. */
+export const changeAt = c => phaseIndex(c.phase) - (c.tea ? 0.5 : 0);
+
+function teaRead(phase) {
+  if (moment(phase) >= TEA_READS.now.at) TEA_READS.now.read = true;
+}
+
+/** Did this seat take its character at that night's tea party? Then that
+ * night is its first with it (O Weg 1). See worlds.py. */
+export const teaMade = (world, seat, night) =>
+  (world.changes || []).some(c => c.tea && c.seat === seat
+                             && c.phase === `N${night}`);
+
 /** The characters the players really hold when the game starts: the deal,
  * but a Summoner's Marionette holds the good character it believes until
  * the Demon comes (22.10.2026). See worlds.py. */
@@ -162,7 +198,7 @@ export class Timeline {
     this.world = world;
     // In time order, stable: questions take the last change that applies,
     // front to back. See worlds.py.
-    this.changes = changes.map((c, i) => [c, i, phaseIndex(c.phase)])
+    this.changes = changes.map((c, i) => [c, i, changeAt(c)])
       .sort((a, b) => a[2] - b[2] || a[1] - b[1])
       .map(([c]) => c);
     // Indexed by seat on first use, with each moment already a number:
@@ -176,7 +212,7 @@ export class Timeline {
     const roles = new Map(), sides = new Map(), demons = [], held = new Set();
     let summonAt = null;
     for (const c of this.changes) {
-      const at = phaseIndex(c.phase);
+      const at = changeAt(c);
       if (c.summoned && summonAt === null) summonAt = at;
       if (c.babysits) { demons.push([at, c.seat, c.phase]); continue; }
       if (!sides.has(c.seat)) sides.set(c.seat, []);
@@ -208,10 +244,11 @@ export class Timeline {
 
   roleAt(seat, phase) {
     this._summonRead(phase);
+    if (TEA_READS.now) teaRead(phase);
     let role = this.world.roles[seat];
     const mine = this._indexed().roles.get(seat);
     if (mine) {
-      const here = phaseIndex(phase);
+      const here = moment(phase);
       for (const [at, changed] of mine) if (at <= here) role = changed;
     }
     return role;
@@ -223,7 +260,7 @@ export class Timeline {
     let side = alignment(this.world.roles[seat]);
     const mine = this._indexed().sides.get(seat);
     if (mine) {
-      const here = phaseIndex(phase);
+      const here = moment(phase);
       for (const [at, c] of mine) {
         if (at > here) continue;
         // An explicit side wins; otherwise take the new character's.
@@ -236,6 +273,7 @@ export class Timeline {
   evilAt(seat, phase) { return this.alignmentAt(seat, phase) === EVIL; }
 
   findAt(role, phase) {
+    if (TEA_READS.now) teaRead(phase);
     // Nobody dealt it and nobody changed into it: nobody holds it.
     if (!this._indexed().held.has(role) && !this.world.roles.includes(role))
       return null;
@@ -260,9 +298,10 @@ export class Timeline {
   demonAt(phase) {
     let seat = this.world.demonAt(phase);
     this._summonRead(phase);
+    if (TEA_READS.now) teaRead(phase);
     const demons = this._indexed().demons;
     if (demons.length) {
-      const here = phaseIndex(phase);
+      const here = moment(phase);
       let sat = null;
       for (const [at, changed, babysat] of demons)
         if (at <= here) { seat = changed; sat = babysat; }
@@ -906,7 +945,10 @@ export function sampleWorlds(nPlayers, claims, opts = {}, emit) {
   for (let d = 0; d < dives; d++) {
     const setup = setups[rng.below(setups.length)];
     const got = dive(setup, nPlayers, rng);
-    if (got === null) emit(null, 0.0);
-    else emit(got.world, got.standsFor * setups.length);
+    // A caller that has walked enough says so (the tea-party budget,
+    // 22.10.2026).
+    const more = got === null ? emit(null, 0.0)
+      : emit(got.world, got.standsFor * setups.length);
+    if (more === false) return;
   }
 }

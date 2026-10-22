@@ -289,7 +289,11 @@ def _droisoned_as_the_night_began(deal, night):
     phase = f"N{night}"
     changes, deaths = deal.changes, deal.deaths
     poisoned = getattr(deal, "perma_poisoned", set())
-    deal.changes = [c for c in changes if c[0] != phase]
+    # Except a tea party's (22.10.2026): that is the very start of the
+    # night, before anybody acts.
+    tea = getattr(deal, "tea_made", None) or {}
+    deal.changes = [c for c in changes if c[0] != phase
+                    or tea.get((c[1], night)) == c[2]]
     deal.deaths = {p: at for p, at in deaths.items() if at != phase}
     deal.perma_poisoned = {
         p for p in poisoned
@@ -599,6 +603,11 @@ def hidden_from(deal, night, heard):
             and before in deal.alive_at(f"N{night}")}
     # The Summoner's Demon (21.10.2026): whom it made which, and who
     # beside a Lord of Typhon was made a Minion.
+    # The Hatter's tea party (22.10.2026): who chose what tonight.
+    tea = {seat: role for (seat, at), role
+           in (getattr(deal, "tea_made", None) or {}).items() if at == night}
+    if tea:
+        out[("tea", night)] = tea
     made = getattr(deal, "summoned", None)
     if made is not None and made[0] == night:
         out[("summoned", night)] = (made[1], made[2],
@@ -871,7 +880,43 @@ def walk(deal, night, hidden):
     state.lm_silenced = False
     summon = hidden.get(("summoned", night))
     summon_slot = getattr(CHARACTERS["Summoner"], field, 0)
+    tea = hidden.get(("tea", night))
+    tea_slot = getattr(CHARACTERS["Hatter"], field, 0)
     for slot in _turns(night):
+        # The Hatter's tea party at 1, before anybody acts (C, 22.10.2026):
+        # each holds its new character from here, on its own side.
+        if tea and slot == tea_slot:
+            for seat, role in tea.items():
+                # A Marionette that chose a new character is no longer
+                # handed the wrong token (P Weg 2): it works from here.
+                if state.roles[seat] == "Marionette":
+                    state.droisoned.discard(seat)
+                state.roles[seat] = role
+            n = len(state.roles)
+            for seat, role in tea.items():
+                # A poisoning that held its old character only is lifted.
+                if seat in stops_being_droisoned:
+                    state.droisoned.discard(seat)
+                # A Lleech chooses its host as it is made, poisoned from
+                # here on; a No Dashii poisons its Townsfolk neighbours
+                # (as for the Summoner's).
+                if role == "Lleech":
+                    host = (hidden.get(("lleech", night)) or {}).get(
+                        seat, (None,))[0]
+                    if host in becomes_droisoned:
+                        state.droison(host, slot, "Lleech")
+                        becomes_droisoned.discard(host)
+                if role == "NoDashii":
+                    near = set()
+                    for step in (-1, 1):
+                        for k in range(1, n):
+                            p = (seat + step * k) % n
+                            if CHARACTERS[state.roles[p]].team == "townsfolk":
+                                near.add(p)
+                                break
+                    state.droisoned |= {p for p in becomes_droisoned
+                                        if p in near}
+            tea = None
         # The Summoner at 19 (21.10.2026): the player it chose holds the
         # Demon it chose from here on, and is evil.
         if summon and slot == summon_slot:

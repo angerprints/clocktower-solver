@@ -702,6 +702,14 @@ _EXPERIMENTAL = [
     _c("Summoner", "summoner", "Summoner", "minion", {FIRST, SOMETIMES},
        nights="conditional", chooses=True,
        setup=({"demon": -1, "townsfolk": 1},)),
+    # The sixth (22.10.2026, claude/hutmacher-lesarten.md). An Outsider
+    # that never wakes: when it dies with its ability, the Minions and
+    # the Demon may choose new characters of their type — or, by the
+    # optional rule, the Demon and a Minion swap types (B Weg 2, J Weg 1)
+    # — at the start of the night after a death by day (C). The search
+    # over who chose what is `solver._best_tea_story`; a Hatter that died
+    # at night is not reckoned yet (Stufe 1, S Weg 1).
+    _c("Hatter", "hatter", "Hatter", "outsider", {NEVER}),
 ]
 
 
@@ -835,6 +843,11 @@ _NOT_IN_THE_FILE = {
     # Woman (19) and before the Lunatic (20), so it shares her slot.
     # Nothing can step up before there is a Demon to step up from.
     "summoner": (9, 19),
+    # The Hatter (22.10.2026). The evil players choose at the very start
+    # of the night after a death by day, before anybody acts (C, Patrick:
+    # "wenn er am Tag gestorben ist, dann am Anfang der Nacht"). It wakes
+    # nobody for itself; the slot is where the night-walk applies it.
+    "hatter": (0, 1),
 }
 
 

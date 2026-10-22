@@ -1065,6 +1065,13 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.marionette_made = None
     d.summoned = None                   # (night, seat, Demon)
     d.summon_failed = None              # the night it made none
+    # A Hatter on the script, or a Philosopher that may take one: the
+    # tea parties, {(seat, night): what it chose}, and the nights one
+    # followed a death at night, which the solver does not reckon yet
+    # (22.10.2026).
+    d.hatted = "Hatter" in script.keys
+    d.tea_made = {}
+    d.tea_at_night = []
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -1084,6 +1091,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     for night in range(1, nights + 1):
         d.nights_played = night
         living = d.alive_at(f"N{night}")
+        # The Hatter (22.10.2026): the evil players choose at the very
+        # start of the night after it died, before anybody acts (C).
+        if d.hatted:
+            _tea_party(d, night, rng)
         # Lil' Monsta's first babysitter, at 15: before the Poisoner and
         # the Snake Charmer, who may choose it.
         if d.lil_monsta and night == 1:
@@ -3909,6 +3920,122 @@ def simulate(n, rng, nights=1):
 # Lil' Monsta (21.10.2026, claude/lil-monsta-lesarten.md)
 # --------------------------------------------------------------------------
 
+# The Hatter (22.10.2026, claude/hutmacher-lesarten.md). When it dies
+# working, the Minions and the Demon may choose new characters of their
+# type at the start of the next night (C): the Demon in half the games,
+# each Minion in a third (F Weg 1), and a Demon that does swaps types
+# with a Minion a quarter of the time (B Weg 2, J Weg 1, R Weg 1). They
+# go on claiming what they claimed. A death at night is played the same
+# way, at the start of the next night, and marked: the solver does not
+# reckon it yet (Stufe 1).
+
+# Never chosen here, though the solver allows them: characters the
+# simulator plays only as dealt (a Marionette that knows it is one, a
+# Vizier the table must be told of, a second Mezepheles word), and the
+# ones nobody may choose at all.
+NOT_TEA_CHOSEN = ("Legion", "Riot", "LilMonsta", "Marionette", "Vizier",
+                  "Mezepheles")
+
+
+def _hatter_died(d, night):
+    """Seats that died as a working Hatter since the last night began
+    (yesterday or last night), with the moment: [(seat, phase)]."""
+    k = night - 1
+    out = []
+    for seat in range(d.n):
+        for at in d.deaths_of(seat):
+            if at not in (f"N{k}", f"D{k}", f"E{k}"):
+                continue
+            if not _falls_as(d, seat, "Hatter", at):
+                continue
+            if not d.working(seat, k, by_day=at[0] != "N"):
+                continue
+            out.append((seat, at))
+    return out
+
+
+def _tea_spare(d, team, night, held, demon_alive):
+    out = []
+    for key in getattr(d.script, team + "s"):
+        if key in held or key in NOT_TEA_CHOSEN:
+            continue
+        if key == "Leviathan" and night > 5:
+            continue                      # their jinx: not after day 5
+        if key == "Summoner" and night <= 3:
+            continue                      # a second Demon (Stufe 2)
+        out.append(key)
+    return out
+
+
+def _tea_party(d, night, rng):
+    """The evil players choosing, if a Hatter died since last night."""
+    if night < 2:
+        return
+    died = _hatter_died(d, night)
+    if not died:
+        return
+    if any(at[0] == "N" for _seat, at in died):
+        d.tea_at_night.append(night)
+    phase = f"N{night}"
+    before = f"D{night - 1}"
+    living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    held = {d.role_at(p, before) for p in range(d.n)}
+    seats = [p for p in living
+             if TEAM[d.role_at(p, before)] in ("minion", "demon")]
+    demons = [p for p in seats if TEAM[d.role_at(p, before)] == "demon"]
+    minions = [p for p in seats if p not in demons]
+    chosen = {}
+    taken = set()
+
+    def take(seat, role):
+        chosen[seat] = role
+        taken.add(role)
+
+    spare = lambda team: [k for k in _tea_spare(d, team, night, held,
+                                                bool(demons))
+                          if k not in taken]
+    for demon in demons:
+        if rng.random() >= 0.5:
+            continue
+        movable = [m for m in minions
+                   if d.role_at(m, before) != "Summoner"]
+        if movable and rng.random() < 0.25 and spare("demon") \
+                and spare("minion"):
+            other = rng.choice(movable)
+            take(other, rng.choice(spare("demon")))
+            take(demon, rng.choice(spare("minion")))
+        elif spare("demon"):
+            take(demon, rng.choice(spare("demon")))
+    for minion in minions:
+        if minion in chosen or rng.random() >= 1 / 3:
+            continue
+        # A Summoner that has not summoned yet keeps its character.
+        if d.role_at(minion, before) == "Summoner" and night <= 3:
+            continue
+        if spare("minion"):
+            take(minion, rng.choice(spare("minion")))
+    for seat, role in sorted(chosen.items()):
+        side = d.side_at(seat, before)
+        d.changes.append((phase, seat, role))
+        d.side_changes.append((phase, seat, role, side))
+        d.tea_made[(seat, night)] = role
+        if TEAM[role] == "demon":
+            d.handovers.append((phase, seat))
+            # A new instance: it starts afresh (O Weg 1).
+            if role == "FangGu":
+                d.fanggu_jumped = False
+            if role == "Po":
+                d.po_charged = False
+    # A Lleech made tonight chooses its host tonight.
+    if "Lleech" in chosen.values():
+        _lleech_picks_a_host(d, night, rng)
+
+
+def _tea_made(d, seat, night):
+    """Did this seat take its character at tonight's tea party?"""
+    return (seat, night) in getattr(d, "tea_made", {})
+
+
 # The Summoner (21.10.2026, claude/beschwoerer-lesarten.md). Patrick's H:
 # it makes a living good player the Demon — one whose character the
 # table has seen confirmed, if there is one, otherwise any — and the
@@ -4826,7 +4953,9 @@ def _woke_for_own_ability(d, p, night, shown=False):
         return p in d.philosophies
     if when == "conditional":
         return bool(_conditionally_woke(d, p, what, night))
-    if night == 1:
+    # Taken at tonight's tea party, a first-night character has its first
+    # night tonight (O Weg 1, 22.10.2026).
+    if night == 1 or (when == "first" and _tea_made(d, p, night)):
         # A Demon told its Minions is not acting; a Yaggababble shown its
         # phrase is, and its `nights` says so (11.10.2026).
         return when == "every" or ("first" in patterns
@@ -4881,8 +5010,9 @@ def _conditionally_woke(d, seat, role, night):
         return not d.died_on(f"D{day}", f"E{day}")
     if role == "Godfather":
         # Learns the Outsiders on the first night; after that it is woken
-        # only to kill, which is after a day an Outsider died.
-        if night == 1:
+        # only to kill, which is after a day an Outsider died. Taken at
+        # tonight's tea party, tonight is its first (O Weg 1).
+        if night == 1 or _tea_made(d, seat, night):
             return True
         day = night - 1
         return any(TEAM[d.role_at(who, f"D{day}")] == "outsider"
@@ -6328,7 +6458,9 @@ def _for_role(d, seat, role, night, rng):
                           question=f"is seat {who + 1} evil?",
                           answer=is_evil(d.roles[who]))
 
-    if role == "EvilTwin" and night == 1:
+    # Or taken at tonight's tea party: a twin from the other side at once
+    # (M Weg 1, 22.10.2026).
+    if role == "EvilTwin" and (night == 1 or _tea_made(d, seat, night)):
         # It and one good player know each other. Recorded from the evil
         # side, since that is the seat that always knows.
         # Somebody else, and good *now* rather than in the deal.
@@ -6339,12 +6471,13 @@ def _for_role(d, seat, role, night, rng):
         # the timeline; this is the fourth place that has caught me.
         phase = f"N{night}"
         good = [p for p in range(d.n)
-                if p != seat and d.side_at(p, phase) == "good"]
+                if p != seat and d.side_at(p, phase) == "good"
+                and p in d.alive_at(phase) and d.deaths.get(p) is None]
         if not good:
             return None
         other = rng.choice(good)
         d.twins = (seat, other)
-        return EvilTwinPair(1, seat, a=seat, b=other)
+        return EvilTwinPair(night, seat, a=seat, b=other)
 
     # NOTE: the Acrobat is not here. It acts at slot 39, between the
     # Demon and the readings, so its pick is made in `_acrobat_may_fall`

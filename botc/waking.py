@@ -259,7 +259,9 @@ def _godfather(world, state, seat, night):
     kill itself has. The catalogue said "every", so a Chambermaid beside
     a Godfather on a night nothing had happened counted one too many.
     """
-    if night == 1:
+    # Taken at tonight's tea party, tonight is its first (O Weg 1).
+    from .worlds import tea_made
+    if night == 1 or tea_made(world, seat, night):
         return True
     day = f"D{night - 1}"
     return any(day in state.died_at(who)
@@ -531,7 +533,10 @@ def woke_as(world, state, seat, night, role):
         return bool(rule and rule(world, state, seat, night))
     if when == NEVER:
         return False
-    if night == 1:
+    # Taken at tonight's tea party, a first-night character has its first
+    # night tonight (O Weg 1, 22.10.2026).
+    from .worlds import tea_made
+    if night == 1 or (when == FIRST and tea_made(world, seat, night)):
         # "every" means every night including the first, and its wake set
         # does not bother to say so — reading the set alone made every
         # Empath and Poisoner sleep through night one.

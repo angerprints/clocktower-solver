@@ -83,6 +83,12 @@ def agrees(row, answer):
 rows = collections.Counter()
 dealt = collections.Counter()
 lost, lost_to_new = [], []
+# The Hatter (22.10.2026): games with a tea party, games the solver does
+# not reckon yet (its first stage: a claimed Hatter dead at night, or a
+# second Demon through the Summoner), and of the lost games those whose
+# tea party followed a Hatter nobody claimed — the Barber's price (T).
+hatter = collections.Counter()
+unreckoned, lost_hidden = [], []
 walked = collections.Counter()
 walk_bad, read_bad = [], []
 t0 = time.time()
@@ -110,11 +116,30 @@ for seed in range(start, start + N):
             if kind == "KingInfo" and not row.role:
                 kind += ", nothing"
             rows[kind] += 1
-    if cost(heard) is None:
+    skip = False
+    if "Hatter" in NEW:
+        tea = getattr(deal, "tea_made", {})
+        hatter["tea party"] += bool(tea)
+        state = GameState(n_players=n, script=script, claims=claims,
+                          wakes=wakes, infos=list(heard),
+                          votes=dict(deal.votes),
+                          nominations=dict(deal.nominations), **deal.record())
+        why = S.hatter_unreckoned(deal.world(), state)
+        if why is not None:
+            hatter[why] += 1
+            unreckoned.append(seed)
+            skip = True
+    if not skip and cost(heard) is None:
         lost.append(seed)
         if NEW and cost([r for r in heard if not is_new(r)
                          and not touches_new(r, deal)]) is not None:
             lost_to_new.append(seed)
+        if "Hatter" in NEW and getattr(deal, "tea_made", None):
+            said = S.hatter_claimants(state)
+            if not any(seat in said for seat in range(n)
+                       if deal.roles[seat] == "Hatter"
+                       or deal.philosophies.get(seat) == "Hatter"):
+                lost_hidden.append(seed)
 
     # How far the game really got. `game_ends_after` is only set when
     # evil wins; an Alsaahir guessing right ends it too, and this then
@@ -185,4 +210,9 @@ print(f" Auskünfte, Night-Walk gegen Simulator: {len(read_bad)} weichen ab "
       f"{ {k: v for k, v in sorted(walked.items()) if k != 'nights'} } "
       f"{read_bad[:6]}")
 print(f" ausgeteilt: {dict(sorted(dealt.items()))}")
+if "Hatter" in NEW:
+    print(f" Hutmacher: {dict(sorted(hatter.items()))}, nicht gerechnet "
+          f"(weggelassen): {len(unreckoned)} {unreckoned[:20]}")
+    print(f"   verworfen nach einer Teeparty eines nicht behaupteten "
+          f"Hutmachers (gewollt, T): {len(lost_hidden)} {lost_hidden[:20]}")
 print(f" Zeilen: {dict(sorted(rows.items()))}")

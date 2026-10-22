@@ -146,6 +146,18 @@ class PythonStillAgreesWithIt(SolverTest):
                             self.assertAlmostEqual(mine[cause], share,
                                                    delta=self.tol)
 
+    def test_what_is_not_reckoned_agrees_too(self):
+        for case in self.data["cases"]:
+            want = case["expect"].get("unreckoned") or {}
+            if not want:
+                continue
+            with self.subTest(case=case["name"]):
+                got = app.run_solve(json.loads(json.dumps(case["payload"])))
+                mine = got.get("unreckoned") or {}
+                self.assertEqual(set(mine), set(want))
+                for why, share in want.items():
+                    self.assertAlmostEqual(mine[why], share, delta=self.tol)
+
     def test_the_diagnosis_of_a_dead_board_agrees_too(self):
         for case in self.data["cases"]:
             want = case["expect"].get("diagnosis")

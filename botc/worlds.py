@@ -63,14 +63,20 @@ class World:
 
     def role_at(self, seat, phase):
         """The character this seat held at this phase."""
+        if TEA_READS[0] is not None:
+            _tea_read(phase)
         return self.roles[seat]
 
     def find_at(self, role, phase):
         """Which seat held this character at this phase."""
+        if TEA_READS[0] is not None:
+            _tea_read(phase)
         return self.find(role)
 
     def demon_at(self, phase):
         """Which seat held the Demon at this phase."""
+        if TEA_READS[0] is not None:
+            _tea_read(phase)
         for i, r in enumerate(self.roles):
             if TEAM[r] == "demon":
                 return i
@@ -187,6 +193,52 @@ def summoner_world(world):
     return "Summoner" in world.roles
 
 
+class TeaParty(Change):
+    """A Minion or the Demon that chose a new character when the Hatter
+    died (22.10.2026, claude/hutmacher-lesarten.md): of the same type, or
+    under the optional rule the Demon and a Minion swapping types (B Weg 2,
+    J Weg 1). From the start of the night after a death by day (C). Told
+    apart so the search over who chose what can see it was asked about."""
+    __slots__ = ()
+
+
+# Whether anything from the Hatter's night on was looked at while a story
+# was told (solver._best_tea_story): [moment, looked]. A telling where
+# nobody chose anything new, that failed without looking, fails the same
+# for every choice.
+TEA_READS = [None]
+
+
+def tea_made(world, seat, night):
+    """Did this seat take its character at that night's tea party? Then
+    that night is its first with it (O Weg 1, 22.10.2026)."""
+    phase = f"N{night}"
+    return any(isinstance(c, TeaParty) and c.seat == seat
+               and c.phase == phase for c in getattr(world, "changes", ()))
+
+
+def moment(phase):
+    """A phase as a number on one line with the changes: `phase_index`,
+    and "B" — the board as a night began, after a tea party at its very
+    start (22.10.2026) — a little past the day before it. A tea party is
+    stamped on its night and stands a little before it (`_at`)."""
+    here = phase_index(phase)
+    return here + 0.75 if phase[0] == "B" else here
+
+
+def _at(change):
+    """Where a change stands on that line: a tea party just before the
+    night it is stamped with, after the day before."""
+    here = phase_index(change.phase)
+    return here - 0.5 if isinstance(change, TeaParty) else here
+
+
+def _tea_read(phase):
+    reads = TEA_READS[0]
+    if reads is not None and moment(phase) >= reads[0]:
+        reads[1] = True
+
+
 def dealt_roles(world):
     """The characters the players really hold when the game starts.
 
@@ -242,7 +294,7 @@ class Timeline:
         # Gu (29.09.2026). Stable, so changes at one moment keep the order
         # the rules made them in.
         object.__setattr__(self, "changes", tuple(sorted(
-            self.changes, key=lambda c: phase_index(c.phase))))
+            self.changes, key=_at)))
         # Indexed once, by seat, with each moment already turned into a
         # number. Every question below used to walk all the changes and
         # parse every phase again — fourteen million times on one ten-seat
@@ -250,7 +302,7 @@ class Timeline:
         # order; only the walk is shorter.
         roles, sides, demons, held = {}, {}, [], set()
         for change in self.changes:
-            at = phase_index(change.phase)
+            at = _at(change)
             if isinstance(change, Babysits):
                 demons.append((at, change.seat, change.phase))
                 continue
@@ -303,10 +355,12 @@ class Timeline:
     def role_at(self, seat, phase):
         if self._summon_at is not None:
             self._summon_read(phase)
+        if TEA_READS[0] is not None:
+            _tea_read(phase)
         role = self.world.roles[seat]
         mine = self._roles_by_seat.get(seat)
         if mine:
-            here = phase_index(phase)
+            here = moment(phase)
             for at, changed in mine:
                 if at <= here:
                     role = changed
@@ -320,7 +374,7 @@ class Timeline:
         side = alignment(self.world.roles[seat])
         mine = self._sides_by_seat.get(seat)
         if mine:
-            here = phase_index(phase)
+            here = moment(phase)
             for at, change in mine:
                 if at > here:
                     continue
@@ -333,6 +387,8 @@ class Timeline:
         return self.alignment_at(seat, phase) == EVIL
 
     def find_at(self, role, phase):
+        if TEA_READS[0] is not None:
+            _tea_read(phase)
         # Nobody dealt it and nobody changed into it: nobody holds it.
         if role not in self._roles_changed_to and role not in self.world.roles:
             return None
@@ -362,8 +418,10 @@ class Timeline:
         seat = self.world.demon_at(phase)
         if self._summon_at is not None:
             self._summon_read(phase)
+        if TEA_READS[0] is not None:
+            _tea_read(phase)
         if self._demon_changes:
-            here = phase_index(phase)
+            here = moment(phase)
             sat = None
             for at, changed, babysat in self._demon_changes:
                 if at <= here:

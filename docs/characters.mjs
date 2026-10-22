@@ -1643,6 +1643,15 @@ export const DATA = {
    "nights": "conditional",
    "first_night": 9,
    "other_night": 19
+  },
+  "Hatter": {
+   "id": "hatter",
+   "name": "Hatter",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ],
+   "other_night": 1
   }
  },
  "scripts": {

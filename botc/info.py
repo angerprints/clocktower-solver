@@ -1997,7 +1997,7 @@ class SnakeCharmerChoice(Info):
         # night began. A Fang Gu that jumped into that seat later the same
         # night made it the Demon by the end of it, and a charmer that had
         # rightly swapped nothing read as needing an excuse (29.09.2026).
-        acted = f"E{self.night - 1}" if self.night > 1 else phase
+        acted = f"B{self.night - 1}" if self.night > 1 else phase
         return w.demon_at(acted) != self.target
 
 
@@ -2053,9 +2053,17 @@ class EvilTwinPair(Info):
     source_role = "EvilTwin"
 
     def holds(self, w, s, rh, seat=None):
-        first, second = w.role_at(self.a, "N1"), w.role_at(self.b, "N1")
+        # On its first night as the Evil Twin: the first, or the night it
+        # took the character at a tea party, when it gets a twin from the
+        # other side at once (M Weg 1, 22.10.2026).
+        phase = f"N{self.night}"
+        first, second = w.role_at(self.a, phase), w.role_at(self.b, phase)
         if "EvilTwin" not in (first, second):
             return False
+        if self.night > 1:
+            twin = self.a if first == "EvilTwin" else self.b
+            if w.role_at(twin, f"D{self.night - 1}") == "EvilTwin":
+                return False
         # One of each side, which follows from one of them being it — but
         # said outright, because a Pit-Hag could later make the other one
         # evil too and this row is about the first night.
@@ -2893,7 +2901,7 @@ class GamblerGuess(Info):
         # it swapped with the Demon, had guessed wrong and lived
         # (07.10.2026).
         right = registers_as_role(
-            w.role_at(self.target, f"D{self.night - 1}"), self.role)
+            w.role_at(self.target, f"B{self.night - 1}"), self.role)
         if f"N{self.night}" in s.died_at(who):
             # Dead by morning is not the same as guessed wrong. It
             # guesses before the Demon acts, so one that guessed right
@@ -3106,7 +3114,7 @@ class BansheeAnnounced(Info):
 
     def _who(self, w, s):
         phase = f"N{self.night}"
-        began = f"D{self.night - 1}" if self.night > 1 else phase
+        began = f"B{self.night - 1}" if self.night > 1 else phase
         took = s.philosophies() or {}
         out = []
         for seat in range(len(w.roles)):
@@ -3646,8 +3654,9 @@ class PreacherChoice(Info):
 
 
 def _began(night):
-    """The phase just before this night began."""
-    return f"E{night - 1}" if night > 1 else "N0"
+    """The phase just before this night began — after a tea party at its
+    very start (worlds.moment, 22.10.2026)."""
+    return f"B{night - 1}" if night > 1 else "N0"
 
 
 @dataclass

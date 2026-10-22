@@ -1078,6 +1078,7 @@ def handmade():
     yield from the_lil_monsta()
     yield from the_summoner()
     yield from stellen_62_63()
+    yield from the_hatter()
 
 
 def the_eighth_five():
@@ -1683,6 +1684,30 @@ def the_summoner():
 PLAYED_SUMMONER = ((12, 7), (25, 8), (34, 8), (39, 7))
 
 
+def the_hatter():
+    """The Hatter (22.10.2026), its first stage: the boards of
+    tests/test_hatter.py and played games with a tea party."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_hatter import _payloads
+    names = ("hanged", "gambler", "evil-twin", "at-night", "summoner",
+             "two-days")
+    for name, payload in zip(names, _payloads(), strict=True):
+        yield {"name": f"x-hatter-{name}", "payload": payload}
+    for seed, n in PLAYED_HATTER:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=("Hatter",))
+        yield played(f"x-hatter-played-{seed}-{n}", script, seed, n, 4,
+                     rng=rng)
+
+
+# Games with a tea party, each solved in seconds: a claimed Hatter
+# executed (56, 82, 256) and a Hatter nobody claimed (1, 62, 120, 175).
+PLAYED_HATTER = ((1, 8), (56, 8), (62, 9), (82, 9), (120, 7), (175, 7),
+                 (256, 8))
+
+
 def stellen_62_63():
     """Stellen 62 and 63 (20.10.2026): a Bounty Hunter shown the faux
     paw, and a Mathematician's number under a Vortox — played games the
@@ -1831,6 +1856,10 @@ def answer(payload):
                         for night, seats in got["blame"].items()}
     if got.get("diagnosis"):
         out["diagnosis"] = got["diagnosis"]
+    # What the solver does not reckon yet (the Hatter, 22.10.2026).
+    if got.get("unreckoned"):
+        out["unreckoned"] = {why: round(v, PLACES)
+                             for why, v in got["unreckoned"].items()}
     return out
 
 

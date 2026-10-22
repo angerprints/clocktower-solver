@@ -42,8 +42,10 @@ from . import deaths as death_causes
 from . import impairment
 from .catalogue import CHARACTERS
 from .waking import LEVIATHAN_CHOOSES_FOR
+from .worlds import _at as moment_of
 from .worlds import (BABYSAT_READS, Babysits, Change, NotSummoned,
-                     SUMMON_READS, Summoned, Timeline, TurnedEvil, World,
+                     SUMMON_READS, Summoned, TEA_READS, TeaParty,
+                     Timeline, TurnedEvil, World,
                      enumerate_worlds, iter_worlds, lil_monsta_world,
                      dealt_roles, sample_worlds, summoner_world)
 
@@ -269,6 +271,9 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             # After the Scarlet Woman, before the Lunatic, the Exorcist
             # and every Demon (21.10.2026).
             "the_summoner_summons": 19,
+            # At the very start of the night after the Hatter died by day,
+            # before anybody acts (C, 22.10.2026).
+            "a_hatter_s_tea_party": 1,
             "a_barber_lets_the_demon_swap_two": 40,
             "a_huntsman_finds_the_damsel": 45,
             "a_farmer_hands_it_on": 48,
@@ -343,6 +348,9 @@ def possible_timelines(world, state, cap=128):
     # Room for every babysitter story Lil' Monsta offers (21.10.2026).
     if _in_bag(state, "LilMonsta") and lil_monsta_world(world):
         cap = max(cap, LIL_MONSTA_STORIES)
+    # And for every way a tea party went (22.10.2026).
+    if _hatter_on_board(state):
+        cap = max(cap, HATTER_STORIES)
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -406,6 +414,13 @@ def _movers_in(world, state):
     if summoner_world(world) and _in_bag(state, "Summoner") \
             and phase_index(state.final_phase()) >= phase_index("N2"):
         count += 1
+    # A tea party after a death by day. Night by night, always: run once
+    # over the whole game it is asked first and would not see who held
+    # the Demon after a handover the night before (22.10.2026).
+    if _hatter_on_board(state):
+        claimed = hatter_claimants(state)
+        if any(s in claimed and p[0].upper() != "N" for s, p in deaths):
+            count += 2
     for key, needs in (("Barber", barber_died), ("Farmer", at_night),
                        ("FangGu", at_night), ("Ogre", True)):
         on = _barber_on_board(state) if key == "Barber" else _on_board(state,
@@ -500,6 +515,10 @@ def _nights_it_acts(rule, state):
         return {k for k, _kind in deaths}
     if name == "the_summoner_summons":
         return {1, 2, 3}
+    if name == "a_hatter_s_tea_party":
+        claimed = hatter_claimants(state)
+        return {int(p[1:]) + 1 for seat, p in state.death_phases()
+                if p and seat in claimed and p[0].upper() != "N"}
     return None
 
 
@@ -915,7 +934,7 @@ def a_huntsman_finds_the_damsel(world, state):
             continue
         if info._earlier(state):
             continue
-        began = f"E{night - 1}" if night > 1 else "N0"
+        began = f"B{night - 1}" if night > 1 else "N0"
         target = info.target
         # Or a Philosopher that took her (group 6, P, 14.10.2026).
         if world.role_at(target, began) != "Damsel" \
@@ -1817,6 +1836,260 @@ def summoned_change(world):
     """The `Summoned` change of this story, or None."""
     return next((c for c in getattr(world, "changes", ())
                  if isinstance(c, Summoned)), None)
+
+
+# --------------------------------------------------------------------------
+# The Hatter (22.10.2026, claude/hutmacher-lesarten.md)
+# --------------------------------------------------------------------------
+# "If you died today or tonight, the Minion & Demon players may choose
+# new Minion & Demon characters to be." Nobody at the table is told who
+# chose what, so every way is a story (A Weg 1), told like every other:
+# each evil player keeps its character or takes one of its type nobody
+# holds, and under the optional rule (B Weg 2) the Demon and one Minion
+# may swap types — never leaving more or fewer Demons than before (J Weg
+# 1). A death by day: they choose at the very start of the next night,
+# before anybody acts (C). A death at night is not reckoned yet (Stufe 1,
+# S Weg 1): the night would have to be split at the death, and the
+# report says so (`hatter_unreckoned`).
+#
+# Stufe 1 also leaves out what makes two living Demons (K Weg 2, Stufe
+# 2): a Minion choosing the Summoner while a Demon lives and the Summoner
+# could still summon on the third night.
+
+NOT_HATTED = ("Legion", "Riot", "LilMonsta")
+
+# Room for every way a tea party can go, beside everything else.
+HATTER_STORIES = 512
+
+# Set by the tests: switch the prune in `_best_story_told` off and
+# compare.
+TEA_PRUNE = True
+
+# How many stories with a tea party a solve may tell (V Weg 1,
+# 22.10.2026). Each world is told once for every way the evil players can
+# have chosen, twenty to fifty times over, and a board with many worlds
+# took minutes on the page. Past this, `analyze` samples rather than
+# counting, and `estimate` stops walking: the figures carry their margin
+# as any sampled answer does. Boards with no tea party never count.
+TEA_BUDGET = 30_000
+# Counting every world may tell more: a board that would finish counting
+# is quicker counted than sampled.
+TEA_EXACT_BUDGET = 100_000
+# Not fewer walks than this, whatever the budget says.
+TEA_MIN_DIVES = 1_000
+# Stories with a tea party told since the solve began.
+TEA_TOLD = [0]
+
+
+def _hatter_on_board(state):
+    """A Hatter on the script, or a Philosopher that took one."""
+    return _in_bag(state, "Hatter") or taken_by_a_philosopher(state, "Hatter")
+
+
+def hatter_claimants(state):
+    """Seats that said they were the Hatter — as their claim, in a row
+    saying they became it or had been it, or a Philosopher that wrote down
+    taking it.
+
+    **Only their deaths are a tea party** (Patrick, 22.10.2026, T: "auch
+    hier wie beim Barbier, jemand muss schon Hutmacher behaupten, damit
+    der Solver damit rechnet; wenn keiner Hutmacher behauptet, schadet er
+    dem Dorf"). A Hatter hiding behind another claim, whose death let the
+    evil players choose, leaves a board the solver may not explain — the
+    same price as the Barber's (`barber_claimants`)."""
+    out = {seat for seat, role in (state.claims or {}).items()
+           if role == "Hatter"}
+    for info in state.infos:
+        if isinstance(info, BecameInfo) and "Hatter" in (info.role, info.was):
+            out.add(info.player)
+    for who, (taken, _since) in (state.philosophies() or {}).items():
+        if taken == "Hatter":
+            out.add(who)
+    return out
+
+
+def hatter_deaths(world, state):
+    """Every moment a Hatter that said so died as one, ability in hand as
+    far as a Philosopher goes: [(seat, phase)] in time order. A dealt
+    Hatter, one a Pit-Hag made, or a Philosopher that took it (I)."""
+    out = []
+    claimed = hatter_claimants(state)
+    for seat in range(state.n_players):
+        if seat not in claimed:
+            continue
+        for phase in state.died_at(seat):
+            if falls_as(world, state, seat, "Hatter", phase):
+                out.append((seat, phase))
+    out.sort(key=lambda got: phase_index(got[1]))
+    return out
+
+
+def _tea_night(phase):
+    """The night they choose after a death at this moment: the next one
+    after a death by day, None after a death at night (not reckoned)."""
+    if phase[0].upper() in "DEX":
+        return int(phase[1:]) + 1
+    return None
+
+
+def _hatted(state, team, night, held, demon_alive):
+    """The characters of this type somebody may take at that tea party."""
+    out = []
+    for key in state.script.keys:
+        if TEAM.get(key) != team or key in held or key in NOT_HATTED:
+            continue
+        # "The Leviathan cannot enter play after day 5" (their jinx).
+        if key == "Leviathan" and night > 5:
+            continue
+        # A Summoner taken while the third night is still ahead summons a
+        # Demon beside the one in play — two living Demons (Stufe 2).
+        if key == "Summoner" and night <= 3:
+            continue
+        out.append(key)
+    return out
+
+
+def tea_party_choices(view, state, night):
+    """Every way the evil players can have chosen at the start of this
+    night, as the changes each writes. The first is "nobody did"."""
+    n = state.n_players
+    phase = f"N{night}"
+    # The board as the day before ended: the party is the first thing
+    # that happens tonight (`_before` already has it in).
+    before = f"D{night - 1}"
+    alive = state.alive_set(phase)
+    held = {view.role_at(p, before) for p in range(n)}
+    side = lambda p: "evil" if view.evil_at(p, before) else "good"
+    seats = [p for p in range(n) if p in alive
+             and TEAM[view.role_at(p, before)] in ("minion", "demon")]
+    demons = [p for p in seats if TEAM[view.role_at(p, before)] == "demon"]
+    demon_alive = bool(demons)
+    each = {p: _hatted(state, TEAM[view.role_at(p, before)], night, held,
+                       demon_alive) for p in seats}
+    # A Summoner that has not summoned yet keeps its character: leaving
+    # it before the third night means no Demon ever comes, and good has
+    # won — not a choice evil makes.
+    for p in seats:
+        if view.role_at(p, before) == "Summoner" and night <= 3:
+            each[p] = []
+
+    out = []
+
+    def grow(at, so_far, taken):
+        if at == len(seats):
+            out.append(tuple(so_far))
+            return
+        p = seats[at]
+        grow(at + 1, so_far, taken)                   # keeps its own
+        for key in each[p]:
+            if key in taken:
+                continue
+            grow(at + 1, so_far + [TeaParty(phase, p, key, side(p))],
+                 taken | {key})
+
+    grow(0, [], frozenset())
+    # The optional rule: the Demon becomes a Minion and one Minion the
+    # Demon, both characters nobody holds (B Weg 2, J Weg 1). The other
+    # Minions choose as before.
+    spare_demons = [k for k in _hatted(state, "demon", night, held, True)]
+    spare_minions = [k for k in _hatted(state, "minion", night, held, True)
+                     if not (k == "Summoner" and night <= 3)]
+    for demon in demons:
+        for minion in seats:
+            if minion in demons:
+                continue
+            for d_key in spare_demons:
+                for m_key in spare_minions:
+                    swap = [TeaParty(phase, minion, d_key, side(minion)),
+                            TeaParty(phase, demon, m_key, side(demon))]
+                    rest = [p for p in seats if p not in (demon, minion)]
+
+                    def more(at, so_far, taken):
+                        if at == len(rest):
+                            out.append(tuple(sorted(
+                                so_far, key=lambda c: c.seat)))
+                            return
+                        p = rest[at]
+                        more(at + 1, so_far, taken)
+                        for key in each[p]:
+                            if key in taken:
+                                continue
+                            more(at + 1,
+                                 so_far + [TeaParty(phase, p, key, side(p))],
+                                 taken | {key})
+
+                    more(0, swap, frozenset({d_key, m_key}))
+    return out
+
+
+@transition_rule
+def a_hatter_s_tea_party(world, state):
+    """The evil players choosing new characters after a Hatter died by
+    day: every way, "nobody did" first (A Weg 1)."""
+    if not _hatter_on_board(state):
+        return [((), 1.0)]
+    final = phase_index(state.final_phase())
+    stories = [((), 1.0)]
+    for _seat, phase in hatter_deaths(world, state):
+        night = _tea_night(phase)
+        if night is None or final < phase_index(f"N{night}"):
+            continue
+        grown = []
+        for changes, cost in stories:
+            view = Timeline(world, changes) if changes else world
+            for choice in tea_party_choices(view, state, night):
+                grown.append((changes + choice, cost))
+        stories = grown
+    return stories
+
+
+def tea_parties(world):
+    """The `TeaParty` changes of this story, by night: {phase: [...]}."""
+    out = {}
+    for change in getattr(world, "changes", ()):
+        if isinstance(change, TeaParty):
+            out.setdefault(change.phase, []).append(change)
+    return out
+
+
+def hatter_unreckoned(view, state):
+    """What this story leaves out that Stufe 1 does not reckon, or None:
+    a Hatter that died at night ("hatter at night", S Weg 1), or a tea
+    party that could have made a second living Demon through the Summoner
+    ("two demons", K Weg 2)."""
+    if not _hatter_on_board(state):
+        return None
+    final = phase_index(state.final_phase())
+    for _seat, phase in hatter_deaths(view, state):
+        night = _tea_night(phase)
+        if night is None:
+            # Not if the game ended with that death.
+            if getattr(state, "game_over", False) \
+                    and final == phase_index(phase):
+                continue
+            return "hatter at night"
+        if final < phase_index(f"N{night}"):
+            continue
+        before = f"D{night - 1}"
+        alive = state.alive_set(f"N{night}")
+        n = state.n_players
+        # The Demon may have chosen Lil' Monsta (their jinx), which then
+        # comes into play in the middle of the game: not reckoned yet (U
+        # Weg 2, Patrick 22.10.2026).
+        if "LilMonsta" in state.script.keys and any(
+                p in alive and TEAM[view.role_at(p, before)] == "demon"
+                for p in range(n)):
+            return "lil monsta"
+        if night > 3 or "Summoner" not in state.script.keys:
+            continue
+        if any(view.role_at(p, before) == "Summoner" for p in range(n)):
+            continue
+        if any(p in alive and TEAM[view.role_at(p, before)] == "demon"
+               for p in range(n)) and any(
+                   p in alive and TEAM[view.role_at(p, before)] == "minion"
+                   for p in range(n)):
+            return "two demons"
+    return None
 
 
 @impairment.source_rule
@@ -3065,7 +3338,17 @@ def _has_ability(world, state, seat, role, phase):
 
 def _on_board(state, role):
     """On the script, or taken by a Philosopher on this board."""
-    return _in_bag(state, role) or taken_by_a_philosopher(state, role)
+    if _in_bag(state, role):
+        return True
+    # Asked hundreds of thousands of times a solve once a tea party
+    # multiplies the stories (22.10.2026): what the Philosophers took is
+    # read off the board once, as `philosophies` already is.
+    taken = getattr(state, "_taken_cache", None)
+    if taken is None or taken[0] is not state.philosophies():
+        got = state.philosophies() or {}
+        taken = (got, frozenset(role for role, _since in got.values()))
+        state._taken_cache = taken
+    return role in taken[1]
 
 
 def _holders(world, state, role, phase):
@@ -3124,7 +3407,7 @@ def a_gambler_may_lose(world, state, night):
     if not _in_bag(state, "Gambler") or night < 2:
         return []
     phase = f"N{night}"
-    began = f"D{night - 1}"
+    began = f"B{night - 1}"
     # Whoever held it as the night began: it guesses tenth, and a Gambler
     # that guessed wrong and died was then made the Mathematician by a
     # Pit-Hag at sixteen — the night ended with no Gambler on the board
@@ -3208,7 +3491,7 @@ def a_yaggababble_kills_for_each_time(world, state, night):
     # the Demon it inherited from. As for the Exorcist: only a Demon that
     # died *as* one — a Snake Charmer swaps at 11, and the new Yaggababble
     # may well take the old one, a charmer by then.
-    began = world.demon_at(f"D{night - 1}")
+    began = world.demon_at(f"B{night - 1}")
     if began is not None and began != demon \
             and phase in state.died_at(began) \
             and world.role_at(began, phase) == "Yaggababble":
@@ -3607,7 +3890,7 @@ def _an_exorcists_choice(world, state, night, exorcist):
     # the Demon the Exorcist had named, the kill that followed as
     # impossible, and the game was lost (07.10.2026).
     demon = world.demon_at(phase)
-    began = world.demon_at(f"D{night - 1}")
+    began = world.demon_at(f"B{night - 1}")
     # Lil' Monsta's babysitter is chosen at 35, after the Exorcist: it is
     # last night's that the Exorcist can name (F, Weg 1, 21.10.2026).
     if babysitter_at(world, phase) is not None:
@@ -4555,6 +4838,21 @@ def _plain_failures(world, state, outcome=None):
             elif isinstance(change, NotSummoned) and change.phase == "N3" \
                     and summoner in state.alive_set("N3"):
                 failures[night].add(summoner)
+
+    # The Hatter (22.10.2026): whoever chose a new character did so
+    # because a Hatter died working. Nobody choosing asks nothing — they
+    # may always keep what they have.
+    parties = tea_parties(world) if _hatter_on_board(state) else {}
+    if parties:
+        died = hatter_deaths(world, state)
+        for at in parties:
+            night = int(at[1:])
+            why = [(seat, phase) for seat, phase in died
+                   if _tea_night(phase) == night]
+            if not why:
+                return None, None, 1.0, None
+            seat, phase = why[-1]
+            working.setdefault(int(phase[1:]), set()).add(seat)
 
     # Executing the Saint ends the game on the spot — while it is
     # *working*. A poisoned or drunk Saint is executed and the game
@@ -6210,7 +6508,7 @@ def _before(night, phase):
     anything else. A sentinel that only works in the paths that never
     index it is a trap for whoever adds the fourth call site.
     """
-    return f"E{night - 1}" if night > 1 else "N0"
+    return f"B{night - 1}" if night > 1 else "N0"
 
 
 def _the_balloonist_holds_up(world, state):
@@ -6543,14 +6841,51 @@ def _best_story_told(world, state, outcome, viable):
     # Stories that differ only in who turned evil, kept with what was
     # asked while each was explained (`_explain_or_recall`).
     told_before = {}
+    # A tea party (22.10.2026): the stories where nobody chose anything
+    # new go first. One that could not be explained, and never looked at
+    # anything from the earliest party on, cannot be with any choice made
+    # there: the choices change nothing it looked at, and ask one thing
+    # more — a Hatter that was working. `tea` holds those stories.
+    tea = None
+    if TEA_PRUNE and _hatter_on_board(state):
+        parties = [moment_of(c) for got, _w in stories
+                   for c in got if isinstance(c, TeaParty)]
+        if parties:
+            tea = (min(parties), set())
+            stories = sorted(stories, key=lambda got: any(
+                isinstance(c, TeaParty) for c in got[0]))
     for changes, weight in stories:
+        plain = None
+        if tea is not None:
+            rest = tuple(c for c in changes if not isinstance(c, TeaParty))
+            if rest != changes:
+                if rest in tea[1] and not CHECK_RECALLS:
+                    STORIES["skipped"] += 1
+                    continue
+                TEA_TOLD[0] += 1
+            else:
+                plain = rest
         told = [changes]
         at = 0
         while at < len(told):
             changes = told[at]
             at += 1
-            cost, marks, asked = _explain_or_recall(
-                world, changes, state, outcome is not None, told_before)
+            if plain is not None and at == 1:
+                TEA_READS[0] = [tea[0], False]
+                fresh = STORIES["explained"]
+            try:
+                cost, marks, asked = _explain_or_recall(
+                    world, changes, state, outcome is not None, told_before)
+            finally:
+                if plain is not None and at == 1:
+                    looked = TEA_READS[0][1]
+                    TEA_READS[0] = None
+            # Only a story really told here says what it looked at; one
+            # recalled from another (`_explain_or_recall`) does not.
+            if plain is not None and at == 1 and cost is None \
+                    and not looked and (not _LISTENING[0]
+                                        or STORIES["explained"] > fresh):
+                tea[1].add(plain)
             # A story that leaves something to pay for, or does not fit
             # at all, is told again with each player a Mezepheles could
             # have turned (`a_mezepheles_may_have_turned`).
@@ -7640,13 +7975,15 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
     than memory. Past that limit it stops counting and starts looking:
     see `estimate`.
     """
-    if pilot_size(state, allow_good_lies) > max_worlds:
+    pilot = pilot_size(state, allow_good_lies)
+    if pilot > max_worlds:
         return estimate(state, allow_good_lies, dives, keep_samples, rng)
 
     n = state.n_players
     now = _report_phase(state)
     acc = _accumulator(n)
     legal = valid = 0
+    TEA_TOLD[0] = 0
     total = 0.0
     best = []
 
@@ -7663,6 +8000,9 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
     # Worked out in the same pass, because the story that settles a
     # world's cost is the same story that says which rows held.
     told = [defaultdict(float) for _ in state.infos]
+    # The weight of worlds a case not reckoned yet runs through (the
+    # Hatter's Stufe 1): the report says so instead of a figure.
+    unreckoned = defaultdict(float)
 
     for world in iter_worlds(n, state.dealt_claims(),
                              getattr(state, "certainties", None),
@@ -7674,6 +8014,12 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
             # Walking the whole search would take too long. Stop, throw
             # the partial count away — it is the first corner of the tree
             # and nothing like a fair sample — and go looking instead.
+            return estimate(state, allow_good_lies, dives, keep_samples, rng)
+        # The same once the tea parties, at the rate so far, would take
+        # more stories than a solve may tell (V Weg 1).
+        if TEA_BUDGET is not None and TEA_TOLD[0] and legal > 50 \
+                and TEA_TOLD[0] * max(pilot, legal) / legal \
+                > TEA_EXACT_BUDGET:
             return estimate(state, allow_good_lies, dives, keep_samples, rng)
         outcome = {}
         viable = []
@@ -7687,6 +8033,9 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
         for idx, mark in outcome.items():
             told[idx][mark] += wt
         total += wt
+        why = hatter_unreckoned(view, state)
+        if why is not None:
+            unreckoned[why] += wt
         for story, share in _story_shares(world, viable, state):
             _tally(acc, world, story, state, wt * share, n, now)
             for day, seat in executed:
@@ -7737,12 +8086,21 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
     return {"legal": legal, "valid": valid, "truncated": False,
             "sampled": False, "dives": 0, "ess": None,
             "rows": rows, "samples": [w for _wt, w in best],
-            "blame": shares, "mastermind": hints, "readings": readings}
+            "blame": shares, "mastermind": hints, "readings": readings,
+            "unreckoned": _unreckoned(unreckoned, total)}
 
 
 # --------------------------------------------------------------------------
 # When there are too many worlds to count, look at a lot of them instead
 # --------------------------------------------------------------------------
+
+def _unreckoned(weights, total):
+    """{what is not reckoned yet: its share of the weight in per cent}."""
+    if total <= 0:
+        return {}
+    return {why: _share(value, total) for why, value in weights.items()
+            if value > 0}
+
 
 def _accumulator(n):
     return {"evil": [0.0] * n, "demon": [0.0] * n, "drunk": [0.0] * n,
@@ -7843,12 +8201,18 @@ def estimate(state, allow_good_lies=False, dives=25_000, keep_samples=8,
     valid_sum = 0.0
     walked = 0
     best = []
+    unreckoned = defaultdict(float)
+    TEA_TOLD[0] = 0
 
     for world, stands_for in sample_worlds(
             n, state.dealt_claims(), getattr(state, "certainties", None),
             allow_good_lies, forced_roles(state),
             getattr(state, "wakes", None), dives=dives, rng=rng,
             script=state.script, fabled=getattr(state, "fabled", ())):
+        # Enough tea parties told: stop walking (V Weg 1).
+        if TEA_BUDGET is not None and TEA_TOLD[0] > TEA_BUDGET \
+                and walked >= TEA_MIN_DIVES:
+            break
         walked += 1
         if world is None:
             continue                      # a dead end still counts as a walk
@@ -7863,6 +8227,10 @@ def estimate(state, allow_good_lies=False, dives=25_000, keep_samples=8,
         weight = stands_for * prior_weight(world, state) * cost
         total += weight
         sq += weight * weight
+        why = hatter_unreckoned(Timeline(world, changes) if changes
+                                else world, state)
+        if why is not None:
+            unreckoned[why] += weight
         for story, share in _story_shares(world, viable, state):
             _tally(acc, world, story, state, weight * share, n, now)
 
@@ -7884,6 +8252,7 @@ def estimate(state, allow_good_lies=False, dives=25_000, keep_samples=8,
         "ess": ess,
         "rows": _rows(acc, state, total, ess),
         "samples": [w for _wt, w in best],
+        "unreckoned": _unreckoned(unreckoned, total),
     }
 
 

@@ -29,6 +29,7 @@
 
 import {CHARACTERS} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
+import {teaMade} from "./worlds.mjs";
 import {babysitterAt, cultSides, holdingNow, takenByAPhilosopher, tookIt}
   from "./info.mjs";
 
@@ -161,7 +162,8 @@ condition("Professor", (world, state, seat, night) => {
  * only to kill — the same daylight condition the kill itself has.
  */
 condition("Godfather", (world, state, seat, night) => {
-  if (night === 1) return true;
+  // Taken at tonight's tea party, tonight is its first (O Weg 1).
+  if (night === 1 || teaMade(world, seat, night)) return true;
   const day = `D${night - 1}`;
   for (const who of Object.keys(state.deaths || {}))
     if (state.diedAt(+who).includes(day) &&
@@ -371,7 +373,9 @@ export function wokeAs(world, state, seat, night, role) {
     return rule ? !!rule(world, state, seat, night) : false;
   }
   if (when === NEVER) return false;
-  if (night === 1) {
+  // Taken at tonight's tea party, a first-night character has its first
+  // night tonight (O Weg 1, 22.10.2026).
+  if (night === 1 || (when === FIRST && teaMade(world, seat, night))) {
     // "every" includes the first night, and its wake set does not bother
     // to say so.
     if (when === EVERY) return true;

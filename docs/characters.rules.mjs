@@ -127,7 +127,7 @@ const anyDiedAt = (state, phase) =>
   Object.keys(state.deaths || {}).some(who => state.diedAt(who).includes(phase));
 
 /** The board as it stood when this night began — Python's `_before`. */
-const beganAt = night => (night > 1 ? `E${night - 1}` : "N0");
+const beganAt = night => (night > 1 ? `B${night - 1}` : "N0");
 
 /** What a declared choice named on this night, if it was recorded.
  *
@@ -1025,7 +1025,7 @@ causeRule(function aGamblerMayLose(world, state, night) {
   // at sixteen may have made the dead Gambler something else. And
   // everybody who has the ability — a Philosopher that took it stands
   // beside the real one, drunk and harmless (both 07.10.2026).
-  const phase = `N${night}`, began = `D${night - 1}`;
+  const phase = `N${night}`, began = `B${night - 1}`;
   const holders = [];
   for (const at of [began, phase]) {
     const seat = world.findAt("Gambler", at);
@@ -1077,7 +1077,7 @@ causeRule(function aYaggababbleKillsForEachTime(world, state, night) {
   let demon = world.demonAt(phase);
   // Whoever held it when its deaths were counted: one that died tonight
   // as the Yaggababble handed the star on after that.
-  const began = world.demonAt(`D${night - 1}`);
+  const began = world.demonAt(`B${night - 1}`);
   if (began !== null && began !== undefined && began !== demon
       && state.diedAt(began).includes(phase)
       && world.roleAt(began, phase) === "Yaggababble") demon = began;
@@ -1401,7 +1401,7 @@ function anExorcistsChoice(world, state, night, exorcist) {
   // handed the star on after that — a Fang Gu jumping, an Imp killing
   // itself (07.10.2026).
   let demonThen = world.demonAt(`N${night}`);
-  const began = world.demonAt(`D${night - 1}`);
+  const began = world.demonAt(`B${night - 1}`);
   // Lil' Monsta's babysitter is chosen after the Exorcist: it is last
   // night's the Exorcist can name (F, Weg 1, 21.10.2026).
   if (babysitterAt(world, `N${night}`) !== null) demonThen = began;

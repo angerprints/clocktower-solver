@@ -625,6 +625,11 @@ def run_solve(payload):
     if result.get("readings"):
         reply["readings"] = result["readings"]
 
+    # What the solver does not reckon yet, by its share of the weight:
+    # the page shows no figures then (the Hatter's Stufe 1, 22.10.2026).
+    if result.get("unreckoned"):
+        reply["unreckoned"] = result["unreckoned"]
+
     if result.get("blame"):
         reply["blame"] = {str(night): {str(seat): causes
                                        for seat, causes in seats.items()}

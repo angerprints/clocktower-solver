@@ -904,8 +904,15 @@ export const ArtistInfo = define("ArtistInfo", "Artist", () => true,
  */
 export const EvilTwinPair = define("EvilTwinPair", "EvilTwin",
   function (w) {
-    const first = w.roleAt(this.a, "N1"), second = w.roleAt(this.b, "N1");
+    // On its first night as the Evil Twin: the first, or the night it
+    // took the character at a tea party (M Weg 1). See info.py.
+    const phase = `N${this.night}`;
+    const first = w.roleAt(this.a, phase), second = w.roleAt(this.b, phase);
     if (first !== "EvilTwin" && second !== "EvilTwin") return false;
+    if (this.night > 1) {
+      const twin = first === "EvilTwin" ? this.a : this.b;
+      if (w.roleAt(twin, `D${this.night - 1}`) === "EvilTwin") return false;
+    }
     return isEvil(first) !== isEvil(second);
   });
 
@@ -1001,7 +1008,7 @@ export const SnakeCharmerChoice = define("SnakeCharmerChoice", "SnakeCharmer",
     // Nothing happened, so either they were not the Demon or the Snake
     // Charmer was not working — and the second is somebody else's excuse.
     // Not the Demon when it chose, as the night began. See info.py.
-    const acted = this.night > 1 ? `E${this.night - 1}` : phase;
+    const acted = this.night > 1 ? `B${this.night - 1}` : phase;
     return w.demonAt(acted) !== this.target;
   });
 
@@ -1423,7 +1430,7 @@ export const GamblerGuess = define("GamblerGuess", "Gambler",
     // What the seat held when the guess was made: the Gambler is tenth in
     // the night, ahead of everything that moves a character (07.10.2026).
     const right = registersAsRole(
-      w.roleAt(this.target, `D${this.night - 1}`), this.role);
+      w.roleAt(this.target, `B${this.night - 1}`), this.role);
     // Dead by morning is not the same as guessed wrong: it guesses before
     // the Demon acts, so one that guessed right can be killed all the
     // same. What killed it is the night's business — the guess is only
@@ -1594,7 +1601,7 @@ export function wentOnAfter(state, day) {
 /** Every seat that could be the Banshee the table was told died. */
 function bansheesThatFell(row, w, s) {
   const phase = `N${row.night}`;
-  const began = row.night > 1 ? `D${row.night - 1}` : phase;
+  const began = row.night > 1 ? `B${row.night - 1}` : phase;
   const took = s.philosophies() || {};
   const out = [];
   for (let seat = 0; seat < w.roles.length; seat++) {
@@ -1860,7 +1867,7 @@ export const WidowKnown = define("WidowKnown", "Widow",
 
 // The sixth five (10.10.2026). See the same rows in info.py.
 
-const began = night => (night > 1 ? `E${night - 1}` : "N0");
+const began = night => (night > 1 ? `B${night - 1}` : "N0");
 
 function earlierSame(row, s) {
   const mine = s.infos.indexOf(row);

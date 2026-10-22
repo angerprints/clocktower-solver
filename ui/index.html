@@ -2906,6 +2906,26 @@ function num(rec,key,min,max){
   return n;
 }
 
+// Why a board gets no figures yet. Said once per reason, in the page's
+// English.
+function unreckonedText(reasons){
+  const say = {
+    "hatter at night": "A player who claimed the Hatter died at night. "
+      + "The Minions and the Demon may then have chosen new characters "
+      + "in the middle of that night, and the solver does not reckon "
+      + "that yet.",
+    "two demons": "A claimed Hatter died early enough that a Minion could "
+      + "have chosen the Summoner and made a second living Demon on the "
+      + "third night. The solver does not reckon two living Demons yet.",
+    "lil monsta": "A claimed Hatter died with Lil' Monsta on the script, "
+      + "so the Demon may have chosen Lil' Monsta and brought it into play "
+      + "in the middle of the game. The solver does not reckon that yet.",
+  };
+  return "This board cannot be solved yet. " + reasons.map(r =>
+    esc(say[r] || r)).join(" ") + " No figures are shown rather than "
+    + "wrong ones.";
+}
+
 function mastermindNote(){
   const got = RESULT && RESULT.mastermind;
   if(!got || !got.length) return "";
@@ -3071,6 +3091,14 @@ async function doSolve(){
     if(data.error){
       $("#error").innerHTML=`<div class="err">${esc(data.error)}</div>`;
       drawCentre(); return;
+    }
+    // Something on this board the solver does not reckon yet: no figures
+    // rather than wrong ones (the Hatter's first stage, 22.10.2026).
+    const unreckoned = Object.keys(data.unreckoned||{});
+    if(unreckoned.length && data.valid){
+      RESULT=null; viewing=null; dirty=false;
+      $("#error").innerHTML=`<div class="err">${unreckonedText(unreckoned)}</div>`;
+      draw(); save(); return;
     }
 
     const snap={ label:`Night ${currentNight()}`, valid:data.valid, legal:data.legal,
