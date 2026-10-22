@@ -112537,68 +112537,68 @@
     ]
    },
    "expect": {
-    "valid": 5154,
+    "valid": 6658,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 23.507,
-      "demon_pct": 8.0995,
-      "drunk_pct": 1.5484,
-      "lying_pct": 21.9367
+      "evil_pct": 26.4224,
+      "demon_pct": 9.5796,
+      "drunk_pct": 6.0535,
+      "lying_pct": 19.0152
      },
      {
-      "evil_pct": 21.136,
-      "demon_pct": 7.095,
-      "drunk_pct": 2.6886,
-      "lying_pct": 17.7924
+      "evil_pct": 24.6296,
+      "demon_pct": 9.032,
+      "drunk_pct": 6.9314,
+      "lying_pct": 14.7382
      },
      {
-      "evil_pct": 21.8344,
-      "demon_pct": 7.5569,
-      "drunk_pct": 0.7239,
-      "lying_pct": 20.9185
+      "evil_pct": 22.0107,
+      "demon_pct": 8.0638,
+      "drunk_pct": 3.4004,
+      "lying_pct": 18.3093
      },
      {
-      "evil_pct": 3.9086,
-      "demon_pct": 0.3891,
-      "drunk_pct": 0.119,
-      "lying_pct": 3.5046
+      "evil_pct": 3.9991,
+      "demon_pct": 0.4127,
+      "drunk_pct": 1.8489,
+      "lying_pct": 3.7642
      },
      {
-      "evil_pct": 6.5174,
-      "demon_pct": 0.6979,
-      "drunk_pct": 0.5137,
-      "lying_pct": 5.3129
+      "evil_pct": 6.6977,
+      "demon_pct": 0.8425,
+      "drunk_pct": 2.1448,
+      "lying_pct": 5.2511
      },
      {
-      "evil_pct": 55.7223,
-      "demon_pct": 18.028,
-      "drunk_pct": 3.8631,
-      "lying_pct": 52.1062
+      "evil_pct": 50.3199,
+      "demon_pct": 15.0061,
+      "drunk_pct": 11.6749,
+      "lying_pct": 52.8062
      },
      {
-      "evil_pct": 57.7586,
-      "demon_pct": 20.2396,
-      "drunk_pct": 4.5581,
-      "lying_pct": 53.3248
+      "evil_pct": 52.9186,
+      "demon_pct": 18.0678,
+      "drunk_pct": 11.9029,
+      "lying_pct": 53.7187
      },
      {
-      "evil_pct": 36.5297,
-      "demon_pct": 12.5229,
-      "drunk_pct": 4.1275,
-      "lying_pct": 31.8149
+      "evil_pct": 35.3511,
+      "demon_pct": 11.9793,
+      "drunk_pct": 7.4199,
+      "lying_pct": 27.0207
      },
      {
-      "evil_pct": 36.552,
-      "demon_pct": 12.9633,
-      "drunk_pct": 2.9873,
-      "lying_pct": 33.0098
+      "evil_pct": 37.0469,
+      "demon_pct": 13.9221,
+      "drunk_pct": 6.7467,
+      "lying_pct": 27.9156
      },
      {
-      "evil_pct": 35.2744,
-      "demon_pct": 12.4078,
-      "drunk_pct": 2.2654,
-      "lying_pct": 32.5816
+      "evil_pct": 36.0874,
+      "demon_pct": 13.0943,
+      "drunk_pct": 6.5483,
+      "lying_pct": 27.5949
      }
     ],
     "blame": {

@@ -199,3 +199,14 @@ Die Tabellen der Berichte lassen sich daraus ohne neue Rechnung herstellen:
 **Ändert sich der Simulator, ergeben dieselben Seeds andere Partien,** und die
 Rohdaten passen nicht mehr zu neuen Läufen. Dann alles neu messen, nicht
 mischen.
+
+## Werkzeuge für die großen Charaktere (seit 22.10.2026)
+
+| Skript | Wofür |
+|---|---|
+| `tor.py N NÄCHTE START NAME…` | Das Tor: gemischte Partien, die die Charaktere enthalten müssen. Wahre Welt gehalten, Night-Walk, Auskünfte. |
+| `tor_beschwoerer.sh AUSGABE` | Der ganze Torsatz des Beschwörers in einem Lauf (etwa 25 Minuten, im Hintergrund starten). Für den nächsten Charakter kopieren und die Zeilen anpassen. |
+| `seite.py START STOP NÄCHTE NAME,…` | Bretter so gelöst, wie die Seite sie löst (`app.run_solve`): Bretter ohne Welt, Bretter über 120 Sekunden, Median. |
+| `partie.py SEED NAME,… [NÄCHTE]` | Eine Partie des Tors im Einzelnen, mit der kleinsten Menge Zeilen, die die wahre Welt unmöglich macht. |
+| `korpus_vergleich.py ALT NEU` | Welche Bretter des Korpus sich zwischen zwei Ständen geändert haben. |
+| `suite_haelfte.sh AUSGABE test_a test_b …` | Eine Hälfte der Testsammlung, Datei für Datei. Zwei Hälften nebeneinander im Hintergrund. |

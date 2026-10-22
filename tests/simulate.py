@@ -539,7 +539,11 @@ class Deal:
         # A Philosopher that took the Trunkenbold has no ability that
         # works: what it does as the Townsfolk it was shown does nothing
         # (I, 14.10.2026). Not a droisoning the Mathematician counts.
-        if self.philosophies.get(seat) == "Drunk":
+        # Only while it is still the Philosopher: one the Summoner made
+        # the Demon has the Demon's ability (22.10.2026).
+        phase = f"D{night}" if by_day else f"N{night}"
+        if self.philosophies.get(seat) == "Drunk" \
+                and self.role_at(seat, phase) == "Philosopher":
             return False
         return seat not in droisoned_at(self, night, by_day)
 
@@ -746,6 +750,15 @@ def deal(n, rng, script=None, told=None):
         unused = spare[tf:] + [o for o in outsiders
                                if o not in picked_outsiders
                                and not _C[o].believes]
+        # Not one already in the bag: a Damsel a Huntsman brought in was
+        # left out of `picked_outsiders` (22.10.2026). And with a Summoner
+        # the token is a real character until the Demon comes (Stelle 73,
+        # A), so none that would have changed the bag (a Huntsman without
+        # its Damsel, a Choirboy without its King).
+        unused = [r for r in unused if r not in chosen
+                  and not ("Summoner" in picked_minions
+                           and (r in script.setup_modifiers
+                                or _C[r].brings))]
         if unused:
             believes_for["Marionette"] = rng.choice(unused)
 

@@ -613,6 +613,8 @@ def _bags(n_players, script=DEFAULT, fabled=()):
                 grown.append((present, moved))
         bags = grown
 
+    bags += _marionette_to_be(bags, script)
+
     # Whatever the shifts did, the bag still has to seat everybody. A
     # modifier that moves one number without moving another back is a
     # mistake in the catalogue, and it would otherwise show up as a
@@ -638,6 +640,51 @@ def _bags(n_players, script=DEFAULT, fabled=()):
     return out
 
 
+# Stelle 73, A (Patrick, 22.10.2026): with a Summoner nobody is dealt the
+# Marionette. Its Minion's place goes to a good character of either kind,
+# and the Marionette is whoever neighbours the Demon when it comes. A world
+# still seats it where it ends up, believing what that player held until
+# then, so the deal it shows is off by one where those two are of
+# different kinds. These bags carry that, marked with the kind the
+# Marionette's player must have held.
+MARIONETTE_HELD = {"Marionette@outsider": "outsider",
+                   "Marionette@townsfolk": "townsfolk"}
+
+
+def _marionette_to_be(bags, script):
+    """The extra bags for a Summoner's Marionette (Stelle 73, A)."""
+    if "Marionette" not in script.keys:
+        return []
+    out = []
+    for present, counts in bags:
+        if "Summoner" not in present or counts["minion"] < 2:
+            continue
+        # Held an Outsider, its place got a Townsfolk: one Townsfolk more
+        # and one Outsider fewer than the deal shows; and the other way.
+        for held, more, fewer in (("outsider", "townsfolk", "outsider"),
+                                  ("townsfolk", "outsider", "townsfolk")):
+            if counts[fewer] < 1:
+                continue
+            moved = dict(counts)
+            moved[more] += 1
+            moved[fewer] -= 1
+            out.append((present | {"Marionette", f"Marionette@{held}"},
+                        moved))
+    return out
+
+
+def _held_before(token, script):
+    """The kinds a Summoner's Marionette believing this token may have
+    held until the Demon came: that character, the Drunk holding a
+    Townsfolk token, the Lunatic thinking it is a Demon."""
+    team = TEAM[token]
+    if team == "demon":
+        return {"outsider"}
+    if team == "townsfolk" and "Drunk" in script.keys:
+        return {"townsfolk", "outsider"}
+    return {team}
+
+
 def _branches(n_players, claims, certainties, allow_good_lies, forced, wakes,
               script=DEFAULT, fabled=()):
     """One search per possible bag, with the candidates already narrowed."""
@@ -658,13 +705,18 @@ def _branches(n_players, claims, certainties, allow_good_lies, forced, wakes,
             # A character that changes the bag can only be dealt in a bag
             # that was changed by it.
             opts = [o for o in opts if o[0] not in movers or o[0] in present]
+            for mark, held in MARIONETTE_HELD.items():
+                if mark in present:
+                    opts = [o for o in opts if o[0] != "Marionette"
+                            or held in _held_before(o[1], script)]
             cands.append(opts)
 
         # Seats with fewest options first, so the search prunes earlier
         order = sorted(range(n_players), key=lambda i: len(cands[i]))
         # What has to land on a seat: not Lil' Monsta, which changes the
         # bag and is never dealt (21.10.2026).
-        dealt = frozenset(k for k in present if CHARACTERS[k].dealt)
+        dealt = frozenset(k for k in present
+                          if k in CHARACTERS and CHARACTERS[k].dealt)
         out.append((target, cands, order, dealt))
     return out
 
@@ -831,7 +883,7 @@ def believes_legally(roles, believes):
     return True
 
 
-def seated_legally(roles):
+def seated_legally(roles, believes=None):
     """Does every character sit where the setup says it must?
 
     The bag decides *which* characters are dealt; this decides whether
@@ -859,8 +911,13 @@ def seated_legally(roles):
         if CHARACTERS[role].lines_up and not in_a_line(roles, seat):
             return False
         # "[+the King]": a Choirboy dealt means a King dealt (10.10.2026).
+        # A Summoner's Marionette-to-be may hold it until the Demon comes
+        # (Stelle 73, 22.10.2026).
         for other in CHARACTERS[role].brings:
-            if other not in roles:
+            if other not in roles and not (
+                    believes is not None and "Summoner" in roles
+                    and "Marionette" in roles
+                    and believes[roles.index("Marionette")] == other):
                 return False
     return True
 
@@ -889,7 +946,7 @@ def iter_worlds(n_players, claims, certainties=None, allow_good_lies=False,
             if k == len(order):
                 if not required <= used:
                     return                # this bag's characters never landed
-                if not seated_legally(roles) \
+                if not seated_legally(roles, believes) \
                         or not believes_legally(roles, believes):
                     return                # dealt to seats it cannot sit in
                 yield World(tuple(roles), tuple(believes))
@@ -982,7 +1039,8 @@ def dive(setup, n_players, rng):
         return None
     # A dead end like any other: counting it as a walk that found nothing
     # keeps the estimate unbiased for the worlds that do sit legally.
-    if not seated_legally(roles) or not believes_legally(roles, believes):
+    if not seated_legally(roles, believes) \
+            or not believes_legally(roles, believes):
         return None
     return World(tuple(roles), tuple(believes)), stands_for
 

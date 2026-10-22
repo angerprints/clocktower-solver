@@ -1514,14 +1514,15 @@ Der Bericht steht in `claude/beschwoerer.md`, die Lesarten in `claude/beschwoere
 |---|---|---|
 | Beschwörer, 4 / 6 Nächte | 8 / 11, am 22.10. 7 / 10 | 1 / 1 (Stelle 48 e) |
 | mit Marionette, Verrückter, Trunkenbold (22.10.) | 3 | 0 |
+| mit Schlangenbeschwörer, Exorzist, Kammerzofe, nach Stelle 73 | 6 | 1 (Stelle 36); neu ohne Beschwörer Seed 1123 (Stelle 48 d) |
 | mit Schlangenbeschwörer, Exorzist, Kammerzofe | 6, am 22.10. 5 | 1 (Stelle 36) |
 | mit Uhrmacher, Höfling, Prediger, Marionette, Mohnzüchter | 9, am 22.10. 7 | 3 (Stellen 70, 71), am 22.10. 1 (Barbier, Stelle 4) |
 | mit Pukka, Zombuul, Lord of Typhon, No Dashii | 3 | 0 |
 | mit Scharlachroter Frau, Strippenzieher, Dämonenjäger, Professor | 4 | 1 (Stelle 48 b) |
 | ohne Pflicht, feste Skripte, Prüfsummen | gleich | – |
 | Über die Seite, 7 bis 9 Spieler, 4 Nächte | 85 Partien, 0 ohne Welt durch den Beschwörer (eine braucht „gute Spieler dürfen lügen“); in Python 4 länger als 2 Minuten, Median 2 bis 3 s; in JavaScript drei davon 5 bis 16 s, eine 213 s, davon gut ein Viertel in den Welten mit Beschwörer | |
-| Korpus | 668 → 677, am 22.10. 678, dann 679; geändert nur ein Brett durch Stelle 72 (582 → 598 Welten) | |
-| Testsammlung | 1.739 → 1.751, am 22.10. 1.754, dann 1.758 grün, 2 übersprungen | |
+| Korpus | 668 → 677, am 22.10. 678, dann 679; geändert nur ein Brett durch Stelle 72 (582 → 598 Welten) und das neue Zehn-Spieler-Brett durch Stelle 73 (5.154 → 6.658) | |
+| Testsammlung | 1.739 → 1.751, am 22.10. 1.754, 1.758, dann 1.759 grün, 2 übersprungen | |
 
 ### Als Nächstes
 
@@ -1619,7 +1620,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 70 | erledigt | **Höfling und Charakterwechsel.** *Erledigt am 22.10.2026* nach deiner Antwort: Betrunken wird der Charakter, nicht der Spieler. Wird der Spieler ein anderer Charakter oder der Höfling selbst, ist er nüchtern. Der Solver hatte es schon so, der Simulator jetzt auch. |
 | 71 | erledigt | **Gestörter Kultführer.** *Erledigt am 22.10.2026* nach deiner Antwort („dann passiert halt nichts“). Meine Beschreibung vom 21.10. war falsch: Ein Dorftrottel erfuhr die Gesinnung des Kultführers, und der Solver verlangte dafür, dass der Kultführer arbeitet. Jetzt verlangt er nichts mehr, beim Kopfgeldjäger genauso. |
 | 72 | erledigt | **Kultführer unter dem Vortox.** *Erledigt am 22.10.2026.* Unter dem Vortox muss eine Auskunft falsch sein; beim Prüfen „war sie wahr?“ nahm der Solver nur die ausgeteilte Gesinnung des Kultführers, obwohl er offen lässt, ob dieser böse geworden ist (Seed 864, Orakel). Jetzt gilt sie nur als wahr, wenn sie bei jeder offenen Gesinnung stimmt (Kultführer, Schläger). Ein Korpusbrett mit Kultführer, Vortox und Orakel hat dadurch 598 statt 582 Welten. |
-| 73 | Frage an dich | **Aufbau mit Beschwörer und Marionette.** Beim Austeilen ist noch niemand die Marionette; der Spieler auf ihrem Schergen-Platz hält einen guten Charakter. Der Solver zählt den Aufbau aber, als säße die Marionette von Anfang an. Hat der spätere Marionetten-Spieler einen Charakter einer anderen Art (Bürger statt Außenseiter oder umgekehrt), findet die Website die wahre Welt nicht (im Simulator 73 von 175 Partien mit Marionette; nur ab 10 Spielern). Lesarten A bis C in `claude/beschwoerer.md`, Empfehlung A: Der Platz wird ein beliebiger guter Charakter. |
+| 73 | erledigt | **Aufbau mit Beschwörer und Marionette.** *Erledigt am 22.10.2026* nach deiner Antwort A: Der Schergen-Platz der Marionette wird beim Austeilen ein beliebiger guter Charakter. Der Solver zählt dafür zwei Aufbauten mehr (ein Bürger mehr und ein Außenseiter weniger oder umgekehrt, je nachdem, was der Marionetten-Spieler vorher hielt). Die Suche findet die wahre Verteilung jetzt in 219 von 220 Partien mit Beschwörer und Marionette, vorher in 147. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

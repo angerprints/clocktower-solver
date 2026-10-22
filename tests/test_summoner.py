@@ -239,6 +239,40 @@ class WhoTheMarionetteWas(SolverTest):
                                          (None, "Soldier")))
 
 
+class Stelle73(SolverTest):
+    """With a Summoner the Marionette's place in the bag goes to a good
+    character of either kind (Patrick, 22.10.2026, A): a deal may show a
+    Townsfolk more and an Outsider fewer, when the Marionette's player
+    held an Outsider until the Demon came."""
+
+    SCRIPT = scripts.from_ids("Beschwörer M", IDS + ["marionette", "recluse",
+                                                     "saint", "librarian"])
+
+    def test_the_deal_is_found(self):
+        from botc.worlds import iter_worlds
+        # Eleven players: 8 Townsfolk, 1 Outsider, 2 Minions with a
+        # Summoner. The Marionette held the Recluse; the place it left
+        # went to a ninth Townsfolk.
+        roles = ["Chef", "Empath", "FortuneTeller", "Monk", "Washerwoman",
+                 "Investigator", "Soldier", "Slayer", "Librarian",
+                 "Marionette", "Summoner"]
+        believes = [None] * 11
+        believes[9] = "Recluse"
+        claims = {i: (believes[i] or r) for i, r in enumerate(roles)}
+        forced = {i: {r} for i, r in enumerate(roles)}
+        got = [w for w in iter_worlds(11, claims, forced=forced,
+                                      script=self.SCRIPT)
+               if list(w.roles) == roles and w.believes[9] == "Recluse"]
+        self.assertEqual(len(got), 1)
+        # Believing a Townsfolk instead, it held a Townsfolk, and the
+        # place went to an Outsider or a Townsfolk: never a deal with a
+        # Townsfolk more and no Outsider at all.
+        claims[9] = "Undertaker"
+        self.assertEqual([w for w in iter_worlds(11, claims, forced=forced,
+                                                 script=self.SCRIPT)
+                          if list(w.roles) == roles], [])
+
+
 class Stelle72(SolverTest):
     """A Cult Leader's side, left open, is asked every way when a Vortox
     needs a reading to have been false (22.10.2026)."""

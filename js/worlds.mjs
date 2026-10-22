@@ -469,6 +469,7 @@ export function bags(nPlayers, script = DEFAULT, fabled = []) {
     out = grown;
   }
 
+  out = out.concat(marionetteToBe(out, script));
   const room = Object.fromEntries(TEAMS.map(t => [t, script.byTeam(t).length]));
   const seen = new Set(), kept = [];
   for (const [present, counts] of out) {
@@ -589,6 +590,39 @@ function prune(options, count, target, look, order, k, used) {
   return options.filter(([role]) => verdict[TEAM[role]]);
 }
 
+// Stelle 73, A (22.10.2026): a Summoner's Marionette is nobody's at the
+// deal; its Minion's place goes to a good character of either kind. The
+// extra bags, marked with the kind the Marionette's player held. See
+// worlds.py.
+const MARIONETTE_HELD = {"Marionette@outsider": "outsider",
+                         "Marionette@townsfolk": "townsfolk"};
+
+function marionetteToBe(bags, script) {
+  if (!script.keys.includes("Marionette")) return [];
+  const out = [];
+  for (const [present, counts] of bags) {
+    if (!present.has("Summoner") || counts.minion < 2) continue;
+    for (const [held, more, fewer] of [["outsider", "townsfolk", "outsider"],
+                                       ["townsfolk", "outsider", "townsfolk"]]) {
+      if (counts[fewer] < 1) continue;
+      const moved = {...counts};
+      moved[more] += 1;
+      moved[fewer] -= 1;
+      out.push([new Set([...present, "Marionette", `Marionette@${held}`]),
+                moved]);
+    }
+  }
+  return out;
+}
+
+function heldBefore(token, script) {
+  const team = TEAM[token];
+  if (team === "demon") return new Set(["outsider"]);
+  if (team === "townsfolk" && script.keys.includes("Drunk"))
+    return new Set(["townsfolk", "outsider"]);
+  return new Set([team]);
+}
+
 function branches(nPlayers, claims, certainties, allowGoodLies, forced,
                   wakes, script, fabled) {
   if (!SETUP[nPlayers]) throw new Error("Table sizes from 5 to 15 players.");
@@ -604,13 +638,18 @@ function branches(nPlayers, claims, certainties, allowGoodLies, forced,
       // A character that changes the bag can only be dealt in a bag that
       // was changed by it.
       opts = opts.filter(([role]) => !movers[role] || present.has(role));
+      for (const [mark, held] of Object.entries(MARIONETTE_HELD))
+        if (present.has(mark))
+          opts = opts.filter(([role, token]) => role !== "Marionette"
+                             || heldBefore(token, script).has(held));
       cands.push(opts);
     }
     // Seats with fewest options first, so the search prunes earlier.
     const order = [...Array(nPlayers).keys()]
       .sort((a, b) => cands[a].length - cands[b].length);
     // What has to land on a seat: not Lil' Monsta (21.10.2026).
-    const required = new Set([...present].filter(k => CHARACTERS[k].dealt));
+    const required = new Set([...present].filter(
+      k => CHARACTERS[k] && CHARACTERS[k].dealt));
     out.push({target, cands, order, required});
   }
   return out;
@@ -633,7 +672,7 @@ export function believesLegally(roles, believes) {
   return true;
 }
 
-export function seatedLegally(roles) {
+export function seatedLegally(roles, believes = null) {
   const n = roles.length;
   // No Demon dealt is Lil' Monsta's bag: a Marionette sits beside the
   // first babysitter instead (scoring.mjs theMinionsChooseABabysitter).
@@ -644,8 +683,11 @@ export function seatedLegally(roles) {
     if (team && TEAM[roles[(seat + n - 1) % n]] !== team &&
         TEAM[roles[(seat + 1) % n]] !== team) return false;
     // "[+the King]": a Choirboy dealt means a King dealt (10.10.2026).
+    // A Summoner's Marionette-to-be may hold it (Stelle 73). See worlds.py.
     for (const other of CHARACTERS[roles[seat]].brings || [])
-      if (!roles.includes(other)) return false;
+      if (!roles.includes(other) && !(believes && roles.includes("Summoner")
+          && roles.includes("Marionette")
+          && believes[roles.indexOf("Marionette")] === other)) return false;
     if (CHARACTERS[roles[seat]].lines_up && !inALine(roles, seat))
       return false;
   }
@@ -713,7 +755,7 @@ export function eachWorld(nPlayers, claims, opts = {}, emit) {
       if (k === order.length) {
         // This bag's characters have to have actually landed.
         for (const need of required) if (!used.has(need)) return;
-        if (!seatedLegally(roles) || !believesLegally(roles, believes))
+        if (!seatedLegally(roles, believes) || !believesLegally(roles, believes))
           return;                            // dealt to seats it cannot sit in
         if (emit(new World([...roles], [...believes])) === false) stop = true;
         return;
@@ -847,7 +889,7 @@ export function dive(setup, nPlayers, rng) {
   }
 
   for (const role of required) if (!used.has(role)) return null;
-  if (!seatedLegally(roles) || !believesLegally(roles, believes))
+  if (!seatedLegally(roles, believes) || !believesLegally(roles, believes))
     return null;                            // a dead end, like any other
   return {world: new World(roles, believes), standsFor};
 }
