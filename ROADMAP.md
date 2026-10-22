@@ -1524,13 +1524,40 @@ Der Bericht steht in `claude/beschwoerer.md`, die Lesarten in `claude/beschwoere
 | Korpus | 668 → 677, am 22.10. 678, dann 679; geändert nur ein Brett durch Stelle 72 (582 → 598 Welten) und das neue Zehn-Spieler-Brett durch Stelle 73 (5.154 → 6.658) | |
 | Testsammlung | 1.739 → 1.751, am 22.10. 1.754, 1.758, dann 1.759 grün, 2 übersprungen | |
 
+### Der Hutmacher, der sechste große Charakter, Stufe 1 · *erledigt am 23.10.2026*
+
+Der Bericht steht in `claude/hutmacher.md`, die Lesarten und alle deine Antworten in `claude/hutmacher-lesarten.md`. **Deine Antworten vom 22.10.2026:** A, E bis G, J, M bis O, Q, R Weg 1; B Weg 2 (auch die optionale Regel); C: nach einem Tod am Tag am Anfang der Nacht, nach einem Tod in der Nacht direkt danach; D: jede Fähigkeit wirkt sofort, auch der Böse Zwilling bekommt sofort einen Zwilling; H wie beschrieben; I: Philosoph mit der Fähigkeit des Hutmachers gebaut; K und L Weg 2 (zwei lebendige Dämonen, geteilte Nacht); P Weg 2 (die Marionette wählt mit und darf gewählt werden); S Weg 1 (in Stufen); T wie beim Barbier (nur ein behaupteter Hutmacher); U Weg 2 (Lil' Monsta später); V vorläufig Weg 1 (meine Empfehlung, deine Antwort steht aus).
+
+| | Gebaut |
+|---|---|
+| Teeparty | Stirbt ein behaupteter Hutmacher (oder ein Philosoph, der seine Fähigkeit nahm) am Tag mit Fähigkeit, wählen die lebenden Schergen und der Dämon am Anfang der nächsten Nacht neu, vor allen anderen. Der Solver probiert jede Möglichkeit, „niemand wählt“ zuerst: jeder behält seinen Charakter oder nimmt einen desselben Typs, den niemand hält; dazu der Tausch Dämon ↔ Scherge (gleich viele Dämonen). Wer neu wählt, verlangt einen Hutmacher, der beim Sterben arbeitete. |
+| „Wie die Nacht begann“ | Ein eigener Moment nach der Teeparty („B“): Glücksspieler, Exorzist, Yaggababble, Jäger, Schlangenbeschwörer, Grubenweib und Banshee lesen ihn. |
+| Neue Instanz | Witwe vergiftet und wird gemeldet, Böser Zwilling bekommt einen lebenden guten Zwilling, Pate erfährt die Außenseiter (und tötet in derselben Nacht, weil der Hutmacher ein Außenseiter ist), Yaggababble und andere Erste-Nacht-Charaktere wachen auf, ein neuer Lleech wählt einen Wirt. Klammern ändern nichts mehr. |
+| Nicht gerechnet (Stufe 1) | Ein behaupteter Hutmacher stirbt nachts; ein zweiter Dämon über den Beschwörer; Lil' Monsta auf dem Skript. Die Seite zeigt dann „This board cannot be solved yet“ mit dem Grund statt Zahlen. |
+| Rechenzeit | Höchstens 30.000 Geschichten mit Teeparty (100.000 beim vollständigen Zählen), danach schätzt die Seite. Die langsamsten gemessenen Bretter: 235 s → etwa 20 bis 35 s. |
+| Simulator, Night-Walk | Der Simulator spielt die Teeparty (Dämon in der Hälfte, jeder Scherge in einem Drittel, ein Viertel davon als Tausch); nach einem Tod in der Nacht am Anfang der nächsten Nacht, markiert. Der Night-Walk wendet sie an ihrem Platz an. |
+| Nebenbei, im Tor gefunden | Platz für jede Teeparty-Geschichte des Kopfgeldjägers (Seed 54); eine Teeparty macht nur beim Tausch einen anderen Sitz zum Dämon (Seed 852); der Dämon geht beim Tausch an den Schergen, nicht an den letzten Halter (Seed 1511). |
+
+| Tor (3.000 Partien je Zeile) | verworfen | davon verdeckter Hutmacher (T) | sonst | nicht gerechnet |
+|---|---|---|---|---|
+| Hutmacher, 4 Nächte | 21 | 12 | 9, ohne Teeparty, auch ohne Hutmacher-Regeln verloren | 155 (Tod in der Nacht) |
+| Hutmacher, 6 Nächte | 28 | 19 | 9, ohne Teeparty | 161 |
+| + Witwe, Giftmischer, Kammerzofe | 18 | 13 | 5, ohne Teeparty (Stelle 36: Grubenweib und Kammerzofe in derselben Nacht) | 148 |
+| + Leviathan, Beschwörer | 13 | 7 | 6, ohne Teeparty | 113 Nacht, 64 zwei Dämonen |
+| + Böser Zwilling, Pate, Glücksspieler, Philosoph | 25 | 21 | 4, ohne Teeparty | 161 |
+| + Marionette, Verrückte, Trunkenbold, Scharlachrote Frau | 13 | 10 | 3, ohne Teeparty | 138 |
+| + Imp, Poe, No Dashii | 12 | 12 | 0 | 173 |
+| ohne Pflicht, feste Skripte, Prüfsummen | gleich (6; TB, BMR, Oster, XNINEB 0, S&V 15) | | | |
+
+Night-Walk: in keiner Nacht mit Teeparty eine Abweichung; sonst 4 bis 10 je Zeile, wie ohne Hutmacher (7 von 7.811).
+
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; als Nächstes der Hutmacher, Lesarten in `claude/hutmacher-lesarten.md` seit 22.10.2026, Reihenfolge siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 am 23.10.2026; als Nächstes Hutmacher Stufe 2, zwei lebendige Dämonen, erst mit Lesarten, danach Stufe 3, die geteilte Nacht mit der Nachtreihenfolge (Punkt 1b) — oder in umgekehrter Folge, mein Vorschlag vom 22.10.2026; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 130 Einträge. Von den 138 Spielercharakteren der App sind 129 im Katalog (dazu der Wächter, ein Fabled), 9 fehlen: 4 Bürger, 3 Außenseiter, 2 Schergen. Davon sind 7 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia, Lil' Monsta und Beschwörer (21.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
+Stand des Katalogs: 130 Einträge. Von den 138 Spielercharakteren der App sind 129 im Katalog (dazu der Wächter, ein Fabled), 9 fehlen: 4 Bürger, 3 Außenseiter, 2 Schergen. Davon sind 7 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia, Lil' Monsta und Beschwörer (21.10.2026), Hutmacher Stufe 1 (23.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1621,6 +1648,12 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 71 | erledigt | **Gestörter Kultführer.** *Erledigt am 22.10.2026* nach deiner Antwort („dann passiert halt nichts“). Meine Beschreibung vom 21.10. war falsch: Ein Dorftrottel erfuhr die Gesinnung des Kultführers, und der Solver verlangte dafür, dass der Kultführer arbeitet. Jetzt verlangt er nichts mehr, beim Kopfgeldjäger genauso. |
 | 72 | erledigt | **Kultführer unter dem Vortox.** *Erledigt am 22.10.2026.* Unter dem Vortox muss eine Auskunft falsch sein; beim Prüfen „war sie wahr?“ nahm der Solver nur die ausgeteilte Gesinnung des Kultführers, obwohl er offen lässt, ob dieser böse geworden ist (Seed 864, Orakel). Jetzt gilt sie nur als wahr, wenn sie bei jeder offenen Gesinnung stimmt (Kultführer, Schläger). Ein Korpusbrett mit Kultführer, Vortox und Orakel hat dadurch 598 statt 582 Welten. |
 | 73 | erledigt | **Aufbau mit Beschwörer und Marionette.** *Erledigt am 22.10.2026* nach deiner Antwort A: Der Schergen-Platz der Marionette wird beim Austeilen ein beliebiger guter Charakter. Der Solver zählt dafür zwei Aufbauten mehr (ein Bürger mehr und ein Außenseiter weniger oder umgekehrt, je nachdem, was der Marionetten-Spieler vorher hielt). Die Suche findet die wahre Verteilung jetzt in 219 von 220 Partien mit Beschwörer und Marionette, vorher in 147. |
+| 74 | Hutmacher | **Ein behaupteter Hutmacher stirbt in der Nacht** (C, L Weg 2): Die Bösen wählen direkt nach seinem Tod; dafür muss der Solver die Nacht am Tod teilen und braucht die Nachtreihenfolge (Punkt 1b). Bis dahin zeigt die Seite keine Zahlen. Im Tor 113 bis 173 von 3.000 Partien je Zeile. Stufe 3. |
+| 75 | Hutmacher | **Zwei lebendige Dämonen** (K Weg 2): Ein Scherge wählt bei einer Teeparty bis zur 3. Nacht den Beschwörer, solange ein Dämon lebt. Nicht angeboten, die Seite zeigt keine Zahlen. Im Tor 64 von 3.000 (Zeile mit Beschwörer). Stufe 2, erst mit Lesarten. |
+| 76 | Hutmacher | **Lil' Monsta mitten im Spiel** (U Weg 2, Jinx mit dem Hutmacher): Ist Lil' Monsta auf dem Skript und lebt beim neuen Wählen ein Dämon, zeigt die Seite keine Zahlen. |
+| 77 | Hutmacher | **Ein Hutmacher, den niemand behauptet hat** (T, wie beim Barbier, gewollt): Seine Teeparty sucht der Solver nicht; wählten die Bösen neu, kann die wahre Welt fehlen. Im Tor 7 bis 21 von 3.000 je Zeile. |
+| 78 | Werkzeug | **Leviathan, Lil' Monsta und Beschwörer auf einem Skript** verlieren im gemischten Tor 756 von 3.000 Partien, ganz ohne Hutmacher (gefunden 23.10.2026). Nicht untersucht. |
+| 79 | Hutmacher | **Rechenzeit** (V): vorläufig mit Grenze und Schätzen. Genaues Zusammenfassen von Charakteren, die auf einem Brett nichts bewirken können (V Weg 2), wäre die genaue Lösung. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 
