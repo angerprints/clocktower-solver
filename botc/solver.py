@@ -273,7 +273,7 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             "the_summoner_summons": 19,
             # At the very start of the night after the Hatter died by day,
             # before anybody acts (C, 22.10.2026).
-            "a_hatter_s_tea_party": 1,
+            "a_hatters_tea_party": 1,
             "a_barber_lets_the_demon_swap_two": 40,
             "a_huntsman_finds_the_damsel": 45,
             "a_farmer_hands_it_on": 48,
@@ -520,7 +520,7 @@ def _nights_it_acts(rule, state):
         return {k for k, _kind in deaths}
     if name == "the_summoner_summons":
         return {1, 2, 3}
-    if name == "a_hatter_s_tea_party":
+    if name == "a_hatters_tea_party":
         claimed = hatter_claimants(state)
         return {int(p[1:]) + 1 for seat, p in state.death_phases()
                 if p and seat in claimed and p[0].upper() != "N"}
@@ -2028,7 +2028,7 @@ def tea_party_choices(view, state, night):
 
 
 @transition_rule
-def a_hatter_s_tea_party(world, state):
+def a_hatters_tea_party(world, state):
     """The evil players choosing new characters after a Hatter died by
     day: every way, "nobody did" first (A Weg 1)."""
     if not _hatter_on_board(state):
