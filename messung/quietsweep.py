@@ -105,7 +105,7 @@ for seed in range(N):
     cl, wk, _ = C.claims_for(d, rng, script=sc)
     st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
                    votes=dict(d.votes), nominations=dict(d.nominations), **d.record())
-    truth = World(tuple(d.roles), tuple(d.believes))
+    truth = d.world()
     for v in variants:
         VARIANT = v
         if S.explanation_cost(truth, st) is None: bad[v].append(seed)

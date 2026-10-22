@@ -20,7 +20,7 @@ import {LISTENING, beginReads, differOnlyUnasked, endReads, listenForSides,
 import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
 import {BABYSAT_READS, SUMMON_READS, Timeline, babysits, change,
-        lilMonstaWorld, notSummoned, summoned, summonerWorld,
+        dealtRoles, lilMonstaWorld, notSummoned, summoned, summonerWorld,
         turnedEvil} from "./worlds.mjs";
 import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
@@ -142,9 +142,9 @@ export const heirRule = fn => (HEIR_RULES.push(fn), fn);
 export function possibleTimelines(world, state, cap = 128) {
   // One story for each Townsfolk a Bounty Hunter may have brought in
   // evil, beside everything else: room for all of them (11.10.2026).
-  if (inBag(state, "BountyHunter") && world.roles.includes("BountyHunter"))
-    cap *= Math.max(1, world.roles.filter(
-      r => TEAM[r] === "townsfolk").length);
+  const dealt = dealtRoles(world);
+  if (inBag(state, "BountyHunter") && dealt.includes("BountyHunter"))
+    cap *= Math.max(1, dealt.filter(r => TEAM[r] === "townsfolk").length);
   // Room for every babysitter story Lil' Monsta offers (21.10.2026).
   if (inBag(state, "LilMonsta") && lilMonstaWorld(world))
     cap = Math.max(cap, LIL_MONSTA_STORIES);
@@ -320,7 +320,7 @@ function nightsItActs(rule, state) {
       return new Set(state.infos.filter(i => i.type === "HuntsmanChoice")
         .map(i => i.night));
     case "demonHandovers": return new Set(deaths.map(([k]) => k));
-    case "theSummonerSummons": return new Set([2, 3]);
+    case "theSummonerSummons": return new Set([1, 2, 3]);
     default: return null;
   }
 }
@@ -931,10 +931,11 @@ function anOgresSide(world, state, ogre) {
 transitionRule(function aBountyHunterBringsAnEvilTownsfolk(world, state) {
   if (!inBag(state, "BountyHunter")) return [[[], 1.0]];
   const town = [];
-  world.roles.forEach((role, p) => {
+  const dealt = dealtRoles(world);
+  dealt.forEach((role, p) => {
     if (TEAM[role] === "townsfolk") town.push(p);
   });
-  if (world.roles.includes("BountyHunter"))
+  if (dealt.includes("BountyHunter"))
     return town.map(p => [[turnedEvil("N0", p, "bountyhunter")], 1.0]);
   const stories = [[[], 1.0]];
   for (const info of state.infos) {
@@ -1242,19 +1243,32 @@ const neighboursOf = (n, seat) => [(seat - 1 + n) % n, (seat + 1) % n];
 function summonedSeats(world, state, night, demon) {
   const n = state.nPlayers;
   const standing = state.aliveSet(`N${night}`);
+  // Back tonight is back after the Summoner's turn. See solver.py.
+  const back = new Set(Object.entries(state.resurrections || {})
+    .filter(([, at]) => at.includes(`N${night}`)).map(([p]) => Number(p)));
   let seats = [];
   for (let p = 0; p < n; p++)
-    if (standing.has(p) || demon === "Zombuul") seats.push(p);
-  // The Marionette's jinx: the Demon is made beside it.
+    if ((standing.has(p) && !back.has(p)) || demon === "Zombuul")
+      seats.push(p);
+  // The Marionette's jinx: it enters play after the Demon as its
+  // neighbour, alive or dead (22.10.2026). See solver.py.
   if (world.roles.includes("Marionette")) {
     const near = neighboursOf(n, world.roles.indexOf("Marionette"));
-    // Back tonight is back after the Summoner's turn. See solver.py.
-    const back = new Set(Object.entries(state.resurrections || {})
-      .filter(([, at]) => at.includes(`N${night}`)).map(([p]) => Number(p)));
-    const beside = seats.filter(p => near.includes(p) && !back.has(p));
-    if (beside.length) seats = beside;
+    seats = seats.filter(p => near.includes(p));
   }
   return seats;
+}
+
+/** With a Summoner the Marionette holds its believed good character for
+ * real until the Demon comes (22.10.2026). See solver.py. */
+function marionetteEnters(world, state, made) {
+  const m = world.roles.indexOf("Marionette");
+  if (m < 0) return [];
+  const token = world.believes[m];
+  if (token === null || token === undefined) return [];
+  const out = [change("N1", m, token, "good")];
+  if (made) out.push(change(made.phase, m, "Marionette", "evil"));
+  return out;
 }
 
 function typhonNeighbours(world, state, night, seat, demon) {
@@ -1311,7 +1325,8 @@ export function summonOptions(world, state) {
   } else if (over && phaseIndex(final) === phaseIndex(gone)) {
     out.push([notSummoned(gone, summoner)]);
   }
-  return out;
+  return out.map(way => [...way, ...marionetteEnters(
+    world, state, way.find(c => c.summoned) || null)]);
 }
 
 /** The night the Summoner made the Demon, as bestSummonedStory is trying
@@ -2798,9 +2813,11 @@ function explainOnce(world, state, outcome = null) {
   // one uninvolved seat to stand for "somewhere else".
   const asked = new Set();
   for (const [info] of ftInfos) { asked.add(info.a); asked.add(info.b); }
-  const herrings = [...asked].filter(p => !isEvil(world.roles[p]));
+  // Chosen at setup, among the good (22.10.2026). See solver.py.
+  const dealt = dealtRoles(world);
+  const herrings = [...asked].filter(p => !isEvil(dealt[p]));
   for (let p = 0; p < state.nPlayers; p++)
-    if (!asked.has(p) && !isEvil(world.roles[p])) { herrings.push(p); break; }
+    if (!asked.has(p) && !isEvil(dealt[p])) { herrings.push(p); break; }
 
   let best = null, bestMarks = null;
   for (const rh of herrings) {

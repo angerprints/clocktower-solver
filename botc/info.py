@@ -3785,6 +3785,12 @@ class VillageIdiotInfo(Info):
         # the Lycanthrope's doing, and asks the Lycanthrope to be working
         # instead (`solver._plain_failures`).
         phase = f"N{self.night}"
+        # A Cult Leader's side is its own, turned or kept: nothing it has
+        # to work for here — drunk or poisoned it keeps the side it had,
+        # and nothing happens (Stelle 71, Patrick, 22.10.2026).
+        if _cult_on_script(s) and acts_as_cult_leader(w, s, self.target,
+                                                       phase):
+            return ()
         if w.evil_at(self.target, phase) != self.evil \
                 and self.evil in evil_registrations(
                     w.role_at(self.target, phase),
@@ -3944,6 +3950,10 @@ class BountyHunterInfo(Info):
             return ()
         role = w.role_at(self.target, phase)
         if side_open(w, s, self.target, phase):
+            return ()
+        # A Cult Leader's side is its own (Stelle 71, 22.10.2026).
+        if _cult_on_script(s) and acts_as_cult_leader(w, s, self.target,
+                                                       phase):
             return ()
         if True in evil_registrations(role, w.alignment_at(self.target,
                                                             phase)):

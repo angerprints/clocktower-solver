@@ -229,7 +229,7 @@ class OnBadMoonRising(SolverTest):
 
     def test_the_true_world_survives_every_game(self):
         for seed, deal, _heard, state in self.played:
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             with self.subTest(seed=seed, roles=deal.roles):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
 
@@ -250,7 +250,7 @@ class OnBadMoonRising(SolverTest):
                               votes=dict(deal.votes),
                               nominations=dict(deal.nominations),
                               **deal.record())
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             with self.subTest(seed=seed):
                 self.assertTrue(state.quiet_nights)
                 self.assertIsNotNone(S.explanation_cost(truth, state))
@@ -472,7 +472,7 @@ class TwoOnTheBoardAndTheGameGoesOn(SolverTest):
     def test_the_true_world_is_still_there(self):
         for seed in (44, 56, 124):
             deal, state = self.board(seed)
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             with self.subTest(seed=seed):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
 
@@ -497,7 +497,7 @@ class TwoOnTheBoardAndTheGameGoesOn(SolverTest):
             if deal.ended_why != "two alive" or deal.zombuul_up is not None:
                 continue
             asked += 1
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             with self.subTest(seed=seed):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
                 unmarked = dataclasses.replace(state, game_over=False)
@@ -583,7 +583,7 @@ class WhatDidNotHappenIsOnTheRecord(SolverTest):
         for script, seed, deal, state in self.played:
             if script is BMR:
                 continue
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             untold = dataclasses.replace(state, quiet_nights=set(),
                                          days_done=set())
             if S.explanation_cost(truth, untold) is None:
@@ -791,7 +791,7 @@ class OnSectsAndViolets(SolverTest):
         ruling, 29.09.2026) — and a Witch's kill adds no other."""
         lost = 0
         for seed, deal, _heard, state in self.played:
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             if S.explanation_cost(truth, state) is not None:
                 continue
             claimed = S.barber_claimants(state)

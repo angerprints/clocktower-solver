@@ -44,7 +44,7 @@ from .waking import LEVIATHAN_CHOOSES_FOR
 from .worlds import (BABYSAT_READS, Babysits, Change, NotSummoned,
                      SUMMON_READS, Summoned, Timeline, TurnedEvil, World,
                      enumerate_worlds, iter_worlds, lil_monsta_world,
-                     sample_worlds, summoner_world)
+                     dealt_roles, sample_worlds, summoner_world)
 
 # Two different limits, and keeping them apart matters.
 #
@@ -336,8 +336,9 @@ def possible_timelines(world, state, cap=128):
     # multiplied the worlds that was most of the time a solve took.
     # One story for each Townsfolk a Bounty Hunter may have brought in
     # evil, beside everything else: room for all of them (11.10.2026).
-    if _in_bag(state, "BountyHunter") and "BountyHunter" in world.roles:
-        cap *= max(1, sum(1 for r in world.roles if TEAM[r] == "townsfolk"))
+    dealt = dealt_roles(world)
+    if _in_bag(state, "BountyHunter") and "BountyHunter" in dealt:
+        cap *= max(1, sum(1 for r in dealt if TEAM[r] == "townsfolk"))
     # Room for every babysitter story Lil' Monsta offers (21.10.2026).
     if _in_bag(state, "LilMonsta") and lil_monsta_world(world):
         cap = max(cap, LIL_MONSTA_STORIES)
@@ -497,7 +498,7 @@ def _nights_it_acts(rule, state):
     if name == "demon_handovers":
         return {k for k, _kind in deaths}
     if name == "the_summoner_summons":
-        return {2, 3}
+        return {1, 2, 3}
     return None
 
 
@@ -1156,9 +1157,9 @@ def a_bounty_hunter_brings_an_evil_townsfolk(world, state):
     """
     if not _in_bag(state, "BountyHunter"):
         return [((), 1.0)]
-    town = [p for p, role in enumerate(world.roles)
-            if TEAM[role] == "townsfolk"]
-    if "BountyHunter" in world.roles:
+    dealt = dealt_roles(world)
+    town = [p for p, role in enumerate(dealt) if TEAM[role] == "townsfolk"]
+    if "BountyHunter" in dealt:
         return [((TurnedEvil("N0", p, None, "evil"),), 1.0) for p in town]
     stories = [((), 1.0)]
     for info in state.infos:
@@ -1685,19 +1686,37 @@ def _summoned_seats(world, state, night, demon):
     n = state.n_players
     phase = f"N{night}"
     standing = state.alive_set(phase)
+    # Back tonight is back after the Summoner's turn: the Professor, the
+    # Al-Hadikhia and the Shabaloth all act later.
+    back = {p for p, at in (state.resurrections or {}).items()
+            if phase in at}
     seats = [p for p in range(n)
-             if p in standing or demon == "Zombuul"]
-    # The Marionette's jinx: it starts beside the Demon, so the Demon is
-    # made beside it — while one of its neighbours can be.
+             if (p in standing and p not in back) or demon == "Zombuul"]
+    # The Marionette's jinx: it enters play after the Demon, as its
+    # neighbour — whoever that neighbour is, alive or dead (Patrick,
+    # 22.10.2026). The seat that becomes it is the one dealt it here, so
+    # the Demon is made beside that seat.
     if "Marionette" in world.roles:
         m = world.roles.index("Marionette")
-        # Back tonight is back after the Summoner's turn: the Professor,
-        # the Al-Hadikhia and the Shabaloth all act later.
-        back = {p for p, at in (state.resurrections or {}).items()
-                if phase in at}
-        seats = [p for p in seats if p in _neighbours(n, m)
-                 and p not in back] or seats
+        seats = [p for p in seats if p in _neighbours(n, m)]
     return seats
+
+
+def _marionette_enters(world, state, made):
+    """With a Summoner there is no Marionette until the Demon comes: the
+    player who becomes it holds the good character it believes in until
+    then, really (22.10.2026). The changes that say so, for one way the
+    summoning went."""
+    if "Marionette" not in world.roles:
+        return ()
+    m = world.roles.index("Marionette")
+    token = world.believes[m]
+    if token is None:
+        return ()
+    out = (Change("N1", m, token, "good"),)
+    if made is not None:
+        out += (Change(made.phase, m, "Marionette", "evil"),)
+    return out
 
 
 def _typhon_neighbours(world, state, night, seat, demon):
@@ -1763,7 +1782,10 @@ def summon_options(world, state):
     elif over and phase_index(final) == phase_index(gone):
         # Dead before its turn: nothing can come, good won there.
         out.append((NotSummoned(gone, summoner),))
-    return out
+    return [way + _marionette_enters(
+                world, state, next((c for c in way
+                                    if isinstance(c, Summoned)), None))
+            for way in out]
 
 
 @transition_rule
@@ -5851,7 +5873,7 @@ def a_puzzlemaster_keeps_one_drunk(world, state, night):
     # One drunk for the one dealt, and one for each Philosopher that took
     # it by tonight (13.10.2026).
     phase = f"N{night}"
-    many = (1 if "Puzzlemaster" in world.roles else 0) + sum(
+    many = (1 if "Puzzlemaster" in dealt_roles(world) else 0) + sum(
         1 for who in (state.philosophies() or {})
         if took_it(world, state, who, "Puzzlemaster", phase))
     if not many:
@@ -5895,7 +5917,8 @@ def a_village_idiot_is_drunk(world, state, night):
     as with the Puzzlemaster's."""
     if not _in_bag(state, "VillageIdiot"):
         return []
-    idiots = frozenset(p for p, role in enumerate(world.roles)
+    # Dealt, or held by a Summoner's Marionette-to-be (22.10.2026).
+    idiots = frozenset(p for p, role in enumerate(dealt_roles(world))
                        if role == "VillageIdiot")
     if len(idiots) < 2:
         return []
@@ -7036,9 +7059,12 @@ def _explain_once(world, state, outcome=None):
     # Fortune Teller asked about, so those are the only seats worth
     # trying - plus one uninvolved seat to stand for "somewhere else".
     asked = {x for info, *_rest in ft_infos for x in (info.a, info.b)}
-    herrings = [p for p in asked if not is_evil(world.roles[p])]
+    # Chosen at setup, among the good: a Summoner's Marionette-to-be too
+    # (22.10.2026).
+    dealt = dealt_roles(world)
+    herrings = [p for p in asked if not is_evil(dealt[p])]
     for p in range(state.n_players):
-        if p not in asked and not is_evil(world.roles[p]):
+        if p not in asked and not is_evil(dealt[p]):
             herrings.append(p)
             break
 
@@ -7257,7 +7283,7 @@ def prior_weight(world, state):
     # evil player: one Townsfolk's false claim there is that one's, and
     # costs what a bluff costs (11.10.2026).
     evil_townsfolk = (_in_bag(state, "BountyHunter")
-                      and "BountyHunter" in world.roles)
+                      and "BountyHunter" in dealt_roles(world))
 
     for p in range(state.n_players):
         evil = is_evil(world.roles[p])

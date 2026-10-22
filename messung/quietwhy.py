@@ -11,7 +11,7 @@ for seed in range(N):
     n = [7, 8, 9, 10, 11][seed % 5]
     rng = random.Random(seed); d, h = simulate.play(n, rng, nights=nights, script=sc)
     cl, wk, _ = C.claims_for(d, rng, script=sc)
-    rec = d.record(); quiet = set(rec["quiet_nights"]); w = World(tuple(d.roles), tuple(d.believes))
+    rec = d.record(); quiet = set(rec["quiet_nights"]); w = d.world()
     def ok(q, days=None):
         r = dict(rec); r["quiet_nights"] = set(q); r["days_done"] = rec["days_done"] if days is None else days
         st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),

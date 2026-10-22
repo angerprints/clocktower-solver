@@ -519,7 +519,7 @@ class TheSimulatorPlaysThem(SolverTest):
                 if kind == "KingInfo" and not row.role:
                     kind = "KingInfo, nothing"
                 kinds.add(kind)
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             if S.explanation_cost(truth, state) is None:
                 lost.append(seed)
         return kinds, lost

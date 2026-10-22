@@ -847,7 +847,7 @@ class TheWalkRunsOverASolverWorld(SolverTest):
             state = GameState(n_players=9, script=script, claims=claims,
                               wakes=wakes, **deal.record(),
                               infos=list(heard))
-            world = World(tuple(deal.roles), tuple(deal.believes))
+            world = deal.world()
             # A Barber that hid and died: the swap is not looked for (a
             # table ruling, 29.09.2026), so the view the solver would
             # score is knowingly not the game that was played.

@@ -128,6 +128,22 @@ export const SUMMON_READS = {now: null};
 
 export const summonerWorld = world => world.roles.includes("Summoner");
 
+/** The characters the players really hold when the game starts: the deal,
+ * but a Summoner's Marionette holds the good character it believes until
+ * the Demon comes (22.10.2026). See worlds.py. */
+export function dealtRoles(world) {
+  const roles = world.roles;
+  if (roles.includes("Summoner") && roles.includes("Marionette")) {
+    const m = roles.indexOf("Marionette");
+    if (world.believes[m]) {
+      const out = [...roles];
+      out[m] = world.believes[m];
+      return out;
+    }
+  }
+  return roles;
+}
+
 /** A world plus the times a character changed hands.
  *
  * The world underneath is still one starting assignment. What changes

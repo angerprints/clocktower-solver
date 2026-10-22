@@ -159,6 +159,47 @@ class TheChambermaid(SolverTest):
         self.assertLess(cost([slept], roles=roles, claims=claims) or 0, 1.0)
 
 
+class TheMarionette(SolverTest):
+    """Nobody is the Marionette until the Demon comes; then it is a
+    neighbour of the Demon, dead or alive, and the Summoner chose freely
+    (Patrick, 22.10.2026)."""
+
+    def world(self):
+        roles = list(R)
+        roles[5] = "Marionette"            # believes the Soldier
+        believes = [None] * 7
+        believes[5] = "Soldier"
+        return World(tuple(roles), tuple(believes))
+
+    def made(self, **kw):
+        st = GameState(n_players=7, script=SUM, claims=dict(enumerate(C)),
+                       infos=[], days_done={1, 2, 3}, **kw)
+        st._final_phase_held = st.final_phase()
+        out = {}
+        for way in S.summon_options(self.world(), st):
+            made = [c for c in way if type(c).__name__ == "Summoned"]
+            if made:
+                out.setdefault(made[0].seat, way)
+        return out
+
+    def test_beside_whoever_was_made(self):
+        self.assertEqual(set(self.made()), {4, 6})
+
+    def test_dead_or_alive(self):
+        self.assertEqual(set(self.made(executions={1: 5},
+                                       deaths={5: ("D1",)})), {4, 6})
+
+    def test_the_seat_was_good_until_then(self):
+        from botc.worlds import Timeline, dealt_roles
+        self.assertEqual(dealt_roles(self.world())[5], "Soldier")
+        way = self.made()[4]
+        view = Timeline(self.world(), way)
+        self.assertEqual(view.role_at(5, "N2"), "Soldier")
+        self.assertFalse(view.evil_at(5, "N2"))
+        self.assertEqual(view.role_at(5, "D3"), "Marionette")
+        self.assertTrue(view.evil_at(5, "D3"))
+
+
 def games(how_many=300, nights=4, must=("Summoner",)):
     import play_games
     import simulate
@@ -208,12 +249,13 @@ class TheSimulatorPlaysIt(SolverTest):
 
 
 def _payloads():
-    def pay(rows, events, days=(1, 2), roles_claimed=C, over=False):
+    def pay(rows, events, days=(1, 2), roles_claimed=C, over=False,
+            ids=IDS):
         players = [{"claim": c, "events": events.get(i, [])}
                    for i, c in enumerate(roles_claimed)]
         out = {"n_players": len(roles_claimed), "players": players,
                "infos": rows,
-               "script": {"name": SUM.name, "characters": IDS},
+               "script": {"name": SUM.name, "characters": ids},
                "days_done": list(days)}
         if over:
             out["game_over"] = True
@@ -228,6 +270,12 @@ def _payloads():
         pay([], {6: ["X1"]}, days=(1,), over=True),
         pay([{"type": "ClockmakerInfo", "night": 1, "player": 0,
               "count": 0}], {}, roles_claimed=clock),
+        # A Marionette-to-be holding a Puzzlemaster until the Demon comes
+        # (22.10.2026).
+        pay([{"type": "FortuneTeller", "night": 2, "player": 2, "a": 5,
+              "b": 6, "yes": True}], {1: ["N3"]}, days=(1, 2, 3),
+            roles_claimed=C[:5] + ["Puzzlemaster", "Investigator"],
+            ids=IDS + ["marionette", "puzzlemaster"]),
     ]
 
 

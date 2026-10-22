@@ -14,7 +14,7 @@ rng = random.Random(seed); d, h = simulate.play(n, rng, nights=nights, script=sc
 cl, wk, _ = C.claims_for(d, rng, script=sc)
 st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
                votes=dict(d.votes), nominations=dict(d.nominations), **d.record())
-w = World(tuple(d.roles), tuple(d.believes))
+w = d.world()
 print("claims", cl); print("wakes", wk)
 chains = S.possible_timelines(w, st)
 print("chains", len(chains))

@@ -2431,7 +2431,7 @@ class WhatTheBoardAlreadyAsksIsHeardFirst(SolverTest):
                     votes=dict(deal.votes),
                     nominations=dict(deal.nominations), **deal.record())
                 return S.explanation_cost(
-                    World(tuple(deal.roles), tuple(deal.believes)), state)
+                    deal.world(), state)
 
             with_it = price()
             S._the_ones_the_board_allows = \

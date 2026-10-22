@@ -108,7 +108,7 @@ for seed in range(400):
         st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
                        votes=dict(d.votes), nominations=dict(d.nominations), **d.record(told=False),
                        quiet_nights={k for k in (2, 3, 4) if not d.died_on(f"N{k}")})
-        truth = World(tuple(d.roles), tuple(d.believes))
+        truth = d.world()
         t = time.time()
         ok = S.explanation_cost(truth, st)
         r = S.analyze(st, rng=random.Random(1))

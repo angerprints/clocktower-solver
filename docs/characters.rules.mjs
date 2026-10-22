@@ -15,6 +15,7 @@ import {ORGAN_GRINDER_BY_CHOICE, Source, makePoisonerRule, minionStillActs,
         sourceRule, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
+import {dealtRoles} from "./worlds.mjs";
 import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
@@ -1748,7 +1749,7 @@ sourceRule(function aPuzzlemasterKeepsOneDrunk(world, state, night) {
   // One drunk for the one dealt, and one for each Philosopher that took
   // it by tonight (13.10.2026).
   const phase = `N${night}`;
-  const many = (world.roles.includes("Puzzlemaster") ? 1 : 0)
+  const many = (dealtRoles(world).includes("Puzzlemaster") ? 1 : 0)
     + Object.keys(state.philosophies() || {}).map(Number).filter(
       who => tookIt(world, state, who, "Puzzlemaster", phase)).length;
   if (!many) return [];
@@ -1783,7 +1784,8 @@ sourceRule(function aXaanPoisonsTheTown(world, state, night) {
 sourceRule(function aVillageIdiotIsDrunk(world, state, night) {
   if (!inBag(state, "VillageIdiot")) return [];
   const idiots = new Set();
-  world.roles.forEach((role, p) => { if (role === "VillageIdiot") idiots.add(p); });
+  // Dealt, or held by a Summoner's Marionette-to-be (22.10.2026).
+  dealtRoles(world).forEach((role, p) => { if (role === "VillageIdiot") idiots.add(p); });
   if (idiots.size < 2) return [];
   return [new Source("Village Idiot", idiots,
                      {capacity: 1, cost: 1.0, repeatCost: 1.0})];

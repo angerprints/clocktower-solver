@@ -422,7 +422,7 @@ class TheSimulatorPlaysThem(SolverTest):
                 seen[type(row).__name__] = seen.get(type(row).__name__, 0) + 1
             if deal.ended_why == "goblin":
                 seen["won by a Goblin"] = seen.get("won by a Goblin", 0) + 1
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             if S.explanation_cost(truth, state) is None:
                 lost.append(seed)
         return seen, lost

@@ -52,7 +52,7 @@ for seed in range(start, start + N):
     if len(d.courtier_nights) > 1: tags.add("courtier chose again")
     if sum(1 for r in h if type(r).__name__ == "GrandmotherInfo") > 1: tags.add("grandmother shown again")
     for t in tags: stats[t] += 1
-    if S.explanation_cost(World(tuple(d.roles), tuple(d.believes)), st) is None:
+    if S.explanation_cost(d.world(), st) is None:
         bad.append(seed)
         for t in tags or {"(none)"}: badtags[t] += 1
 print(f"{name}: {N} Partien ab {start}, {nights} Nächte, verworfen {len(bad)} {bad[:30]} ({time.time()-t0:.0f} s)")

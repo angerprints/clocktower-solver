@@ -187,6 +187,22 @@ def summoner_world(world):
     return "Summoner" in world.roles
 
 
+def dealt_roles(world):
+    """The characters the players really hold when the game starts.
+
+    The deal itself, but for a Summoner's Marionette: nobody is the
+    Marionette until the Demon comes (Patrick, 22.10.2026), so until then
+    its seat holds the good character it believes — a Bounty Hunter there
+    brings in its evil Townsfolk, a Puzzlemaster keeps somebody drunk, the
+    seat may be the red herring."""
+    roles = world.roles
+    if "Summoner" in roles and "Marionette" in roles:
+        m = roles.index("Marionette")
+        if world.believes[m]:
+            return roles[:m] + (world.believes[m],) + roles[m + 1:]
+    return roles
+
+
 @dataclass(frozen=True)
 class Timeline:
     """A world plus the times a character changed hands.

@@ -13,7 +13,7 @@ for seed in range(N):
     cl, wk, _ = C.claims_for(d, rng, script=sc)
     rec = d.record() if hasattr(d, "record") else {"deaths": dict(d.deaths)}
     st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h), votes=dict(d.votes), nominations=dict(d.nominations), **rec)
-    if S.explanation_cost(World(tuple(d.roles), tuple(d.believes)), st) is not None: continue
+    if S.explanation_cost(d.world(), st) is not None: continue
     claimed = S.barber_claimants(st)
     swaps = getattr(d, "barber_swaps", {})
     hid = [p for p, at in d.deaths.items() if d.role_at(p, at) == "Barber" and p not in claimed]

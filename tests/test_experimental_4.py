@@ -286,7 +286,7 @@ class TheSimulatorPlaysThem(SolverTest):
             for row in heard:
                 seen[type(row).__name__] = seen.get(type(row).__name__, 0) + 1
             ends[deal.ended_why] = ends.get(deal.ended_why, 0) + 1
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             if S.explanation_cost(truth, state) is None:
                 lost.append(seed)
         return seen, lost, ends

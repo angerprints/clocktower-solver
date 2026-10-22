@@ -18,7 +18,7 @@ for seed in range(start, start + N):
     cl, wk, _ = C.claims_for(d, rng, script=sc)
     last = min(nights, d.game_ends_after or nights)
     quiet = {k for k in range(2, last + 1) if not d.died_on(f"N{k}")}
-    w = World(tuple(d.roles), tuple(d.believes))
+    w = d.world()
     def state(**extra):
         return GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
                          votes=dict(d.votes), nominations=dict(d.nominations), **d.record(told=False), **extra)

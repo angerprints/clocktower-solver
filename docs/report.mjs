@@ -16,7 +16,7 @@ import {inBag, madPixie, onBoard} from "./characters.rules.mjs";
 import {actsAsCultLeader, cultSides} from "./info.mjs";
 import {Rng} from "./rng.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {Timeline, eachWorld, sampleWorlds} from "./worlds.mjs";
+import {Timeline, dealtRoles, eachWorld, sampleWorlds} from "./worlds.mjs";
 
 // The tunable priors live in `priors.mjs` and are read from there at the
 // moment they are used, so the guesswork sweep can move one and see what
@@ -113,7 +113,7 @@ export function priorWeight(world, state) {
   // Beside a Bounty Hunter one Townsfolk is evil and bluffs like any evil
   // player: one Townsfolk's false claim there is that one's (11.10.2026).
   let evilTownsfolk = inBag(state, "BountyHunter")
-    && world.roles.includes("BountyHunter");
+    && dealtRoles(world).includes("BountyHunter");
   const reads = state.reads || {};
   const suspects = state.suspects || {};
 

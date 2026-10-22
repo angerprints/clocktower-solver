@@ -1668,7 +1668,7 @@ def the_summoner():
     import play_games
     from test_summoner import _payloads
     names = ("third-night", "two-nights", "fortune-teller", "hanged",
-             "clockmaker")
+             "clockmaker", "marionette")
     for name, payload in zip(names, _payloads(), strict=True):
         yield {"name": f"x-summoner-{name}", "payload": payload}
     for seed, n in PLAYED_SUMMONER:

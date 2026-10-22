@@ -1918,7 +1918,7 @@ class FasterWithoutChangingAnAnswer(SolverTest):
             pass
         finally:
             app.analyze = real
-        truth = World(tuple(deal.roles), tuple(deal.believes))
+        truth = deal.world()
         self.assertIsNotNone(S.explanation_cost(truth, seen["state"]))
 
 

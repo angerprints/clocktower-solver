@@ -165,7 +165,7 @@ class ItIsHarderThanTheHonestTable(SolverTest):
                 continue
             weights = [S.world_weight(w, state) for w in valid]
             total = sum(weights) or 1.0
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             share = sum(x for w, x in zip(valid, weights) if w == truth)
             got.append(share / total)
         return sum(got) / len(got) if got else 0.0
@@ -296,7 +296,7 @@ class RepairingABoardSomebodyLiedTo(SolverTest):
         else:
             self.skipTest("no game with two hiding Outsiders in range")
         _all, valid, _liar = S.solve_or_repair(state)
-        truth = World(tuple(deal.roles), tuple(deal.believes))
+        truth = deal.world()
         # Repair may not even fire: two hidden Outsiders often leave the
         # board with plenty of worlds, just not the right one. Whether it
         # tries is beside the point — the point is that it cannot get
@@ -653,7 +653,7 @@ def a_confidently_wrong_game(among=range(900, 1000)):
         everything, valid = S.solve(state)
         if not valid:
             continue
-        truth = World(tuple(deal.roles), tuple(deal.believes))
+        truth = deal.world()
         if truth in everything:
             continue
         # And one the truth explains at no cost at all: a shot that
@@ -690,7 +690,7 @@ class ABoardCanBeConfidentlyWrong(SolverTest):
         from botc.worlds import World
         _seed, deal, state = a_confidently_wrong_game()
         everything, _valid = S.solve(state)
-        truth = World(tuple(deal.roles), tuple(deal.believes))
+        truth = deal.world()
         self.assertNotIn(truth, everything)
 
     def test_although_it_explains_the_board_perfectly(self):
@@ -700,7 +700,7 @@ class ABoardCanBeConfidentlyWrong(SolverTest):
         from botc.info import GameState
         from botc.worlds import World
         _seed, deal, state = a_confidently_wrong_game()
-        truth = World(tuple(deal.roles), tuple(deal.believes))
+        truth = deal.world()
         self.assertPct(S.explanation_cost(truth, state), 1.0, 1e-9)
 
     def test_and_the_solver_sounds_sure_of_itself(self):
@@ -919,7 +919,7 @@ class SectsAndVioletsPlaysAndSolves(SolverTest):
         import botc.solver as S
         from botc.worlds import World
         for deal, state in self.games():
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             if _a_barber_hid_and_died(deal, state):
                 continue
             with self.subTest(roles=deal.roles):
@@ -1097,7 +1097,7 @@ class TheSimulatorCanMoveCharactersAround(SolverTest):
         import botc.solver as S
         from botc.worlds import World
         for _seed, deal, state in self.played():
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             if _a_barber_hid_and_died(deal, state):
                 continue
             with self.subTest(roles=deal.roles):
@@ -1137,7 +1137,7 @@ class BadMoonRisingAtEveryTableSize(SolverTest):
         import botc.solver as S
         from botc.worlds import World
         for seed, deal, state in self.played():
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             with self.subTest(seed=seed, roles=deal.roles):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
 
@@ -1152,7 +1152,7 @@ class BadMoonRisingAtEveryTableSize(SolverTest):
             if deal.mastermind_day is None:
                 continue
             extra += 1
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             _cost, changes = S.best_story(truth, state)
             followed += any(S.is_mastermind_marker(c) for c in changes)
         self.assertGreater(extra, 3, "hardly any Mastermind day")
@@ -1197,7 +1197,7 @@ class SectsAndVioletsAtEveryTableSize(SolverTest):
         from botc.worlds import World
         given_up = 0
         for seed, deal, state in self.played():
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             if S.explanation_cost(truth, state) is not None:
                 continue
             claimed = S.barber_claimants(state)
@@ -1248,7 +1248,7 @@ class EasterTroublePlaysAndSolves(SolverTest):
         import botc.solver as S
         from botc.worlds import World
         for seed, deal, state in self.played():
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             with self.subTest(seed=seed, roles=deal.roles):
                 self.assertIsNotNone(S.explanation_cost(truth, state))
 
@@ -1262,7 +1262,7 @@ class EasterTroublePlaysAndSolves(SolverTest):
             if not deal.side_changes:
                 continue
             turned += 1
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             _cost, changes = S.best_story(truth, state)
             followed += bool(changes)
         self.assertGreater(turned, 5, "hardly any Ogre turned evil")

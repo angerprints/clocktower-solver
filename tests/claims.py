@@ -298,7 +298,7 @@ def _was_true(deal, row):
     state = GameState(n_players=deal.n, script=getattr(deal, "script", None),
                       claims={}, **deal.record())
     try:
-        return bool(row.holds(World(tuple(deal.roles), tuple(deal.believes)),
+        return bool(row.holds(deal.world(),
                               state, None))
     except Exception:
         return False

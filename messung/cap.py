@@ -11,7 +11,7 @@ for seed in map(int, sys.argv[2:]):
     cl, wk, _ = C.claims_for(d, rng, script=sc)
     st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
                    votes=dict(d.votes), nominations=dict(d.nominations), **d.record())
-    w = World(tuple(d.roles), tuple(d.believes))
+    w = d.world()
     out = []
     for cap in (96, 128, 160, 200, 256, 400):
         S.ACCOUNTS_KEPT = cap

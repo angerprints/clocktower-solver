@@ -1922,8 +1922,11 @@ export const VillageIdiotInfo = define("VillageIdiotInfo", "VillageIdiot",
     isTrue(w) {
       return w.evilAt(this.target, `N${this.night}`) === !!this.evil;
     },
-    leanedOn(w) {
+    leanedOn(w, s) {
       const phase = `N${this.night}`;
+      // A Cult Leader's side is its own (Stelle 71). See info.py.
+      if (s && cultOnScript(s) && actsAsCultLeader(w, s, this.target, phase))
+        return [];
       if (w.evilAt(this.target, phase) !== !!this.evil &&
           evilRegistrations(w.roleAt(this.target, phase),
                             w.alignmentAt(this.target, phase))
@@ -2012,6 +2015,9 @@ export const BountyHunterInfo = define("BountyHunterInfo", "BountyHunter",
       if (w.evilAt(this.target, phase)) return [];
       const role = w.roleAt(this.target, phase);
       if (sideOpen(w, s, this.target, phase)) return [];
+      // A Cult Leader's side is its own (Stelle 71). See info.py.
+      if (cultOnScript(s) && actsAsCultLeader(w, s, this.target, phase))
+        return [];
       return evilRegistrations(role, w.alignmentAt(this.target, phase))
         .includes(true) ? [this.target] : [];
     },

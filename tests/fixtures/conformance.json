@@ -112303,6 +112303,143 @@
    }
   },
   {
+   "name": "x-summoner-marionette",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N3"
+      ]
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Puzzlemaster",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "FortuneTeller",
+      "night": 2,
+      "player": 2,
+      "a": 5,
+      "b": 6,
+      "yes": true
+     }
+    ],
+    "script": {
+     "name": "Beschw\u00f6rer",
+     "characters": [
+      "summoner",
+      "poisoner",
+      "spy",
+      "scarletwoman",
+      "imp",
+      "nodashii",
+      "vortox",
+      "pukka",
+      "zombuul",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "slayer",
+      "clockmaker",
+      "chambermaid",
+      "undertaker",
+      "snakecharmer",
+      "sailor",
+      "marionette",
+      "puzzlemaster"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 157,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 19.3851,
+      "demon_pct": 9.7543,
+      "drunk_pct": 0.0,
+      "lying_pct": 19.2616
+     },
+     {
+      "evil_pct": 1.6669,
+      "demon_pct": 0.2716,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.6051
+     },
+     {
+      "evil_pct": 7.8281,
+      "demon_pct": 3.9758,
+      "drunk_pct": 0.0,
+      "lying_pct": 7.7047
+     },
+     {
+      "evil_pct": 19.3851,
+      "demon_pct": 9.7543,
+      "drunk_pct": 0.0,
+      "lying_pct": 19.2616
+     },
+     {
+      "evil_pct": 25.8057,
+      "demon_pct": 12.9646,
+      "drunk_pct": 3.2103,
+      "lying_pct": 22.4719
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 50.3149,
+      "drunk_pct": 6.4205,
+      "lying_pct": 93.5795
+     },
+     {
+      "evil_pct": 25.8057,
+      "demon_pct": 12.9646,
+      "drunk_pct": 3.2103,
+      "lying_pct": 22.4719
+     }
+    ],
+    "blame": {
+     "3": {
+      "1": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "x-summoner-played-12-7",
    "payload": {
     "n_players": 7,

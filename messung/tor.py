@@ -99,7 +99,7 @@ for seed in range(start, start + N):
                           votes=dict(deal.votes),
                           nominations=dict(deal.nominations), **deal.record())
         return S.explanation_cost(
-            World(tuple(deal.roles), tuple(deal.believes)), state)
+            deal.world(), state)
 
     for role in deal.roles:
         if role in NEW:

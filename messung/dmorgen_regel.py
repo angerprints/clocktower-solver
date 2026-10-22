@@ -83,7 +83,7 @@ for seed in range(first, last):
     standing = len(alive) + (d.zombuul_up is not None and d.zombuul_up not in alive)
     t = time.time()
     NOW = k
-    ok = S.explanation_cost(World(tuple(d.roles), tuple(d.believes)), st) is not None
+    ok = S.explanation_cost(d.world(), st) is not None
     r = S.analyze(st, rng=random.Random(1))
     dt = time.time() - t
     rows = r["rows"] or []

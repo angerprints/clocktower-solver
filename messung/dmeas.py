@@ -23,7 +23,7 @@ for seed in range(first, last):
     kind = d.role_at(demon, end)
     alive = sorted(d.alive_at(end))
     t = time.time()
-    ok = S.explanation_cost(World(tuple(d.roles), tuple(d.believes)), st) is not None
+    ok = S.explanation_cost(d.world(), st) is not None
     r = S.analyze(st, rng=random.Random(1))
     dt = time.time() - t
     rows = r["rows"] or []

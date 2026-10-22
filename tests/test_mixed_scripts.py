@@ -59,7 +59,7 @@ def game(seed, nights=4, must_have=()):
     state = GameState(n_players=n, script=script, claims=claims, wakes=wakes,
                       infos=list(heard), votes=dict(deal.votes),
                       nominations=dict(deal.nominations), **deal.record())
-    world = World(tuple(deal.roles), tuple(deal.believes))
+    world = deal.world()
     return deal, heard, state, world
 
 

@@ -1498,30 +1498,32 @@ Der Bericht steht in `claude/lil-monsta.md`, die Lesarten in `claude/lil-monsta-
 | Korpus | 659 → 668, kein altes Brett geändert | |
 | Testsammlung | 1.722 → 1.739 grün, 2 übersprungen | |
 
-### Der Beschwörer, der fünfte große Charakter · *erledigt am 21.10.2026*
+### Der Beschwörer, der fünfte große Charakter · *erledigt am 21.10.2026, berichtigt am 22.10.2026*
 
 Der Bericht steht in `claude/beschwoerer.md`, die Lesarten in `claude/beschwoerer-lesarten.md`. **Deine Antworten vom 21.10.2026:** A bis E und G Weg 1; F: Der Uhrmacher zählt vom Beschwörer zum nächsten anderen Schergen, ohne einen erfährt er 0; H: Der Simulator macht einen bestätigten guten Spieler zum Dämon, sonst einen zufälligen guten; I einverstanden.
 
 | | Gebaut |
 |---|---|
 | Beschwörer | Kein Dämon beim Aufbau, dafür ein Bürger mehr. Bis Nacht 3 gibt es keinen Dämon. Der Solver probiert in Nacht 3 (die Pukka auch in Nacht 2) jeden Spieler mit jedem Dämon des Skripts außer Lil' Monsta, Legion und Riot und behält jede Möglichkeit, die passt. Stirbt der Beschwörer vorher oder ist er in Nacht 3 gestört (nicht durch Höfling oder Prediger), kommt kein Dämon und Gut gewinnt dort. Jinxes mit Uhrmacher, Höfling, Prediger, Pukka, Zombuul, Marionette, Mohnzüchter und Lord of Typhon gebaut. |
+| Marionette (22.10.2026) | Deine Korrektur: Sie wird erst festgelegt, wenn der Dämon kommt, als sein Nachbar, lebend oder tot. Bis dahin hält ihr Spieler wirklich seinen guten Charakter (Puzzlemeister, Kopfgeldjäger, Dorftrottel und roter Hering der Wahrsagerin zählen ihn so). Der Beschwörer wählt frei. Kommt kein Dämon, gibt es keine Marionette. Python, JavaScript und Simulator. |
+| Stellen 70 und 71 (22.10.2026) | Erledigt nach deinen Antworten: Betrunken wird der Charakter, der Simulator macht es jetzt wie der Solver. Und ein gestörter Kultführer behält seine Gesinnung, ohne dass der Solver verlangt, dass er arbeitet (beim Dorftrottel und Kopfgeldjäger, die sie erfahren). |
 | Nebenbei | Ein Lleech, den niemand ausgeteilt bekam, kann im Solver jetzt mit seinem Wirt sterben. Im Simulator mehrere Fehler behoben (Lleech-Wirt, der zurückgeholt wurde; Lord of Typhon mit Beschwörer; ein Mondkind und ein Glücksspieler-Opfer in der Nacht der Beschwörung). |
 
 | Tor (3.000 Partien je Zeile) | verworfen | mit Beschwörer |
 |---|---|---|
-| Beschwörer, 4 / 6 Nächte | 8 / 11 | 1 / 1 (Stelle 48 e) |
-| mit Schlangenbeschwörer, Exorzist, Kammerzofe | 6 | 1 (Stelle 36) |
-| mit Uhrmacher, Höfling, Prediger, Marionette, Mohnzüchter | 9 | 3 (Stellen 70, 71) |
+| Beschwörer, 4 / 6 Nächte | 8 / 11 | 2 / 2 (Stelle 48 e; seit 22.10. Stelle 72) |
+| mit Schlangenbeschwörer, Exorzist, Kammerzofe | 6, am 22.10. 5 | 1 (Stelle 36) |
+| mit Uhrmacher, Höfling, Prediger, Marionette, Mohnzüchter | 9, am 22.10. 7 | 3 (Stellen 70, 71), am 22.10. 1 (Barbier, Stelle 4) |
 | mit Pukka, Zombuul, Lord of Typhon, No Dashii | 3 | 0 |
 | mit Scharlachroter Frau, Strippenzieher, Dämonenjäger, Professor | 4 | 1 (Stelle 48 b) |
 | ohne Pflicht, feste Skripte, Prüfsummen | gleich | – |
 | Über die Seite, 7 bis 9 Spieler, 4 Nächte | 85 Partien, 0 ohne Welt durch den Beschwörer (eine braucht „gute Spieler dürfen lügen“); in Python 4 länger als 2 Minuten, Median 2 bis 3 s; in JavaScript drei davon 5 bis 16 s, eine 213 s, davon gut ein Viertel in den Welten mit Beschwörer | |
-| Korpus | 668 → 677, kein altes Brett geändert | |
-| Testsammlung | 1.739 → 1.751 grün, 2 übersprungen | |
+| Korpus | 668 → 677, am 22.10. 678, kein altes Brett geändert | |
+| Testsammlung | 1.739 → 1.751, am 22.10. 1.754 grün, 2 übersprungen | |
 
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026; als Nächstes der Hutmacher, Reihenfolge siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; als Nächstes der Hutmacher, Reihenfolge siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1612,8 +1614,9 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 67 | Solver | **Teedame neben einem, den die Al-Hadikhia kurz zurückholt.** Er kommt zurück, alle drei sterben, und für den Tisch ist nichts passiert; sein kurzes Leben hat aber den Schutz der Teedame gekippt (Seed 968). |
 | 68 | Simulator | **Toter Scherge, den die Al-Hadikhia zurückholt** (Xaan, Witwe): Der Simulator lässt seine Wirkung schon ab Beginn der Nacht gelten (Seeds 1245, 446). |
 | 69 | Solver | **Philosoph mit der Fähigkeit des Professors**, den die Al-Hadikhia zurückholt und der danach selbst jemanden zurückholt (Seed 1869). |
-| 70 | Solver | **Höfling und Charakterwechsel.** Der Höfling macht einen Charakter betrunken, und danach wird der Spieler ein anderer Charakter (beschworen, Seed 2285) oder der Höfling selbst wird ein anderer (Grubenweib, Seed 1588). Der Simulator lässt den Spieler betrunken, der Solver hängt die Trunkenheit am Charakter und am Höfling. Die Regel sagt „er ist betrunken“, also der Spieler; der Solver müsste umgebaut werden. Gefunden am Tor des Beschwörers (21.10.2026). |
-| 71 | Simulator | **Kultführer unter dem Xaan.** Der Kultführer ruft seinen Kult an einem Tag, an dem der Xaan alle Bürger vergiftet hat. Der Simulator lässt ihn rufen, der Solver verlangt, dass er arbeitet (Seed 1888). Nicht wegen des Beschwörers. |
+| 70 | erledigt | **Höfling und Charakterwechsel.** *Erledigt am 22.10.2026* nach deiner Antwort: Betrunken wird der Charakter, nicht der Spieler. Wird der Spieler ein anderer Charakter oder der Höfling selbst, ist er nüchtern. Der Solver hatte es schon so, der Simulator jetzt auch. |
+| 71 | erledigt | **Gestörter Kultführer.** *Erledigt am 22.10.2026* nach deiner Antwort („dann passiert halt nichts“). Meine Beschreibung vom 21.10. war falsch: Ein Dorftrottel erfuhr die Gesinnung des Kultführers, und der Solver verlangte dafür, dass der Kultführer arbeitet. Jetzt verlangt er nichts mehr, beim Kopfgeldjäger genauso. |
+| 72 | Solver | **Kultführer unter dem Vortox.** Unter dem Vortox muss die Zahl des Orakels falsch sein. Beim Prüfen „war sie wahr?“ nimmt der Solver nur die ausgeteilte Gesinnung des Kultführers, obwohl er offen lässt, ob dieser böse geworden ist. So verlangt er, dass der Vortox nicht arbeitet (gemischt mit Beschwörer, Seed 864). Gilt für jede Zahl-Auskunft, die Gesinnungen zählt. Nicht gebaut. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

@@ -314,7 +314,18 @@ class Deal:
         return self.game_ends_after if self.ended_at is None else None
 
     def world(self):
-        return World(tuple(self.roles), tuple(self.believes))
+        """The deal as the solver reads it. With a Summoner the Marionette
+        is nobody's until the Demon comes (22.10.2026): the seat that
+        became it — or, if none did, the one that would have — is dealt
+        it there, believing the character it really held until then."""
+        roles, believes = list(self.roles), list(self.believes)
+        seat = getattr(self, "marionette_made", None)
+        if seat is None:
+            seat = getattr(self, "marionette_slot", None)
+        if seat is not None:
+            believes[seat] = self.roles[seat]
+            roles[seat] = "Marionette"
+        return World(tuple(roles), tuple(believes))
 
     def apparent(self, seat):
         """The character this seat believes they are. A Philosopher that
@@ -335,6 +346,11 @@ class Deal:
         """
         if self.believes[seat] is None:
             return None
+        # Made the Marionette when the Summoner's Demon came: from then on
+        # it lives by the character it held (22.10.2026).
+        if seat == getattr(self, "marionette_made", None):
+            return (self.believes[seat]
+                    if self.role_at(seat, phase) == "Marionette" else None)
         if self.role_at(seat, phase) != self.roles[seat]:
             return None
         return self.believes[seat]
@@ -997,6 +1013,15 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     script = script or script_mod.TROUBLE_BREWING
     told = {}
     roles, believes = deal(n, rng, script, told)
+    # With a Summoner the Marionette enters play only after the Demon, as
+    # its neighbour (their jinx, Patrick 22.10.2026): the token it would
+    # believe is a real good character until then, and the seat holding
+    # it is only where it would sit if no Demon ever came.
+    marionette_slot = None
+    if "Summoner" in roles and "Marionette" in roles:
+        marionette_slot = roles.index("Marionette")
+        roles[marionette_slot] = believes[marionette_slot]
+        believes[marionette_slot] = None
     good = [p for p in range(n) if not is_evil(roles[p])]
     # Only when there is a Fortune Teller to have one. The red herring is
     # *that character's* — the Storyteller picks a good player who will
@@ -1012,6 +1037,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         and not any(TEAM[r] == "demon" for r in roles)
     # The Summoner, and what it made when (21.10.2026).
     d.summoner = roles.index("Summoner") if "Summoner" in roles else None
+    d.marionette_slot = marionette_slot
+    d.marionette_made = None
     d.summoned = None                   # (night, seat, Demon)
     d.summon_failed = None              # the night it made none
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
@@ -3934,13 +3961,14 @@ def _summoner_summons(d, night, rng, heard):
     # A living Poppy Grower: the Storyteller picks the player.
     if any(d.role_at(p, phase) == "PoppyGrower" for p in living):
         pool = list(living)
-    # The Marionette's jinx: the Demon starts beside it, while one of its
-    # neighbours can be.
-    if "Marionette" in d.roles:
-        m = d.roles.index("Marionette")
-        near = {(m - 1) % n, (m + 1) % n}
-        pool = [p for p in pool if p in near] \
-            or [p for p in living if p in near] or pool
+    # The Marionette's jinx: it enters play beside the Demon, alive or
+    # dead (22.10.2026) — a good neighbour who believes nothing else.
+    def puppets(p):
+        return [q for q in ((p - 1) % n, (p + 1) % n)
+                if q != p and d.side_at(q, phase) == "good"
+                and d.believes[q] is None]
+    if d.marionette_slot is not None:
+        pool = [p for p in pool if puppets(p)] or pool
     # The Lord of Typhon's: beside a Minion.
     minion = lambda p: TEAM[d.role_at(p, phase)] == "minion"
     if demon == "LordOfTyphon":
@@ -3954,6 +3982,14 @@ def _summoner_summons(d, night, rng, heard):
     d.changes.append((phase, seat, demon))
     d.side_changes.append((phase, seat, demon, "evil"))
     d.summoned = (night, seat, demon)
+    if d.marionette_slot is not None and puppets(seat):
+        q = rng.choice(puppets(seat))
+        d.believes[q] = d.role_at(q, phase)
+        d.changes.append((phase, q, "Marionette"))
+        d.side_changes.append((phase, q, "Marionette", "evil"))
+        d.marionette_made = q
+        d.summoned_extra = tuple(getattr(d, "summoned_extra", ())) \
+            + ((q, "Marionette"),)
     if seat not in living:
         d.zombuul_up = seat               # "has already died once"
     # A Lleech made tonight chooses its host tonight, at its own turn.
@@ -3970,7 +4006,8 @@ def _summoner_summons(d, night, rng, heard):
                 role = rng.choice(spare)
                 d.changes.append((phase, other, role))
                 d.side_changes.append((phase, other, role, "evil"))
-                d.summoned_extra = ((other, role),)
+                d.summoned_extra = tuple(getattr(d, "summoned_extra",
+                                                 ())) + ((other, role),)
 
 
 def _summoner_check(d, night):
@@ -5522,6 +5559,15 @@ def droisoned_at(d, night, by_day=False):
             continue
         died = any(phase_index(f"N{since}") <= phase_index(at)
                    < phase_index(phase) for at in d.deaths_of(courtier))
+        # The character is drunk, not the player: one who has become
+        # somebody else since is sober (Stelle 70, Patrick, 22.10.2026).
+        # And a Courtier that has become somebody else has no ability
+        # left to keep it drunk, as the solver has it.
+        named = d.role_at(holder, f"N{since}")
+        if d.role_at(holder, phase) != named \
+                or d.role_at(courtier, phase) != d.role_at(
+                    courtier, f"N{since}"):
+            continue
         if not died:
             out.add(holder)
 

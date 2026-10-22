@@ -267,7 +267,7 @@ class TheSimulatorPlaysThem(SolverTest):
                               votes=dict(deal.votes),
                               nominations=dict(deal.nominations),
                               **deal.record())
-            truth = World(tuple(deal.roles), tuple(deal.believes))
+            truth = deal.world()
             for key in THIRD:
                 dealt[key] = dealt.get(key, 0) + (key in deal.roles)
             for row in heard:
@@ -313,7 +313,7 @@ class TheSimulatorPlaysThem(SolverTest):
                 state = GameState(n_players=n, script=WRAITH_BMR,
                                   claims={}, infos=list(heard),
                                   **deal.record())
-                world = World(tuple(deal.roles), tuple(deal.believes))
+                world = deal.world()
                 # Drunk or poisoned it sleeps, which the solver leaves to
                 # the plan; here the simulator's droisoning is handed in.
                 stopped = ({wraith} if wraith in simulate.droisoned_at(
