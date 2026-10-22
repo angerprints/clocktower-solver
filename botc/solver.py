@@ -343,14 +343,19 @@ def possible_timelines(world, state, cap=128):
     # One story for each Townsfolk a Bounty Hunter may have brought in
     # evil, beside everything else: room for all of them (11.10.2026).
     dealt = dealt_roles(world)
+    hunted = 1
     if _in_bag(state, "BountyHunter") and "BountyHunter" in dealt:
-        cap *= max(1, sum(1 for r in dealt if TEAM[r] == "townsfolk"))
+        hunted = max(1, sum(1 for r in dealt if TEAM[r] == "townsfolk"))
+        cap *= hunted
     # Room for every babysitter story Lil' Monsta offers (21.10.2026).
     if _in_bag(state, "LilMonsta") and lil_monsta_world(world):
         cap = max(cap, LIL_MONSTA_STORIES)
-    # And for every way a tea party went (22.10.2026).
+    # And for every way a tea party went (22.10.2026) — once for each
+    # Townsfolk a Bounty Hunter may have turned: the parties multiply its
+    # stories, and with room for only one set of them the Townsfolk past
+    # the first few were never told (the gate, seed 54).
     if _hatter_on_board(state):
-        cap = max(cap, HATTER_STORIES)
+        cap = max(cap, HATTER_STORIES * hunted)
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -1859,7 +1864,7 @@ def summoned_change(world):
 NOT_HATTED = ("Legion", "Riot", "LilMonsta")
 
 # Room for every way a tea party can go, beside everything else.
-HATTER_STORIES = 512
+HATTER_STORIES = 1024
 
 # Set by the tests: switch the prune in `_best_story_told` off and
 # compare.
@@ -2308,7 +2313,16 @@ def demon_lineages(world, state, cap=24):
             f"D{horizon}" if horizon is not None else state.final_phase())
         if view.role_at(holder, check) is not None \
                 and TEAM[view.role_at(holder, check)] != "demon":
-            successor = view.demon_at(check)
+            # Where a tea party took the Demon's character, the star went
+            # to the Minion that swapped then — not to whoever holds it at
+            # the end, past a Fang Gu that jumped in between (seed 1511).
+            gave = next((c.phase for c in getattr(view, "changes", ())
+                         if isinstance(c, TeaParty) and c.seat == holder
+                         and TEAM[c.role] != "demon"
+                         and phase_index(c.phase) > after
+                         and phase_index(c.phase) <= phase_index(check)),
+                        None)
+            successor = view.demon_at(gave if gave is not None else check)
             if successor is not None and successor != holder \
                     and successor not in held:
                 walk(view, successor, so_far, after, held | {holder})

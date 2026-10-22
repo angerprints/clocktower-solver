@@ -145,13 +145,17 @@ export function possibleTimelines(world, state, cap = 128) {
   // One story for each Townsfolk a Bounty Hunter may have brought in
   // evil, beside everything else: room for all of them (11.10.2026).
   const dealt = dealtRoles(world);
-  if (inBag(state, "BountyHunter") && dealt.includes("BountyHunter"))
-    cap *= Math.max(1, dealt.filter(r => TEAM[r] === "townsfolk").length);
+  let hunted = 1;
+  if (inBag(state, "BountyHunter") && dealt.includes("BountyHunter")) {
+    hunted = Math.max(1, dealt.filter(r => TEAM[r] === "townsfolk").length);
+    cap *= hunted;
+  }
   // Room for every babysitter story Lil' Monsta offers (21.10.2026).
   if (inBag(state, "LilMonsta") && lilMonstaWorld(world))
     cap = Math.max(cap, LIL_MONSTA_STORIES);
-  // And for every way a tea party went (22.10.2026).
-  if (hatterOnBoard(state)) cap = Math.max(cap, HATTER_STORIES);
+  // And for every way a tea party went (22.10.2026), once for each
+  // Townsfolk a Bounty Hunter may have turned. See solver.py.
+  if (hatterOnBoard(state)) cap = Math.max(cap, HATTER_STORIES * hunted);
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -656,7 +660,13 @@ export function demonLineages(world, state, cap = 24) {
     {
       const was = view.roleAt(holder, check);
       if (was && TEAM[was] !== "demon") {
-        const successor = view.demonAt(check);
+        // Where a tea party took the Demon's character, the star went to
+        // the Minion that swapped then. See solver.py.
+        const gave = (view.changes || []).find(c => c.tea
+          && c.seat === holder && TEAM[c.role] !== "demon"
+          && phaseIndex(c.phase) > after
+          && phaseIndex(c.phase) <= phaseIndex(check));
+        const successor = view.demonAt(gave ? gave.phase : check);
         if (successor !== null && successor !== holder && !held.has(successor)) {
           walk(view, successor, soFar, after, new Set([...held, holder]));
           return;
@@ -1384,7 +1394,7 @@ export function summonedChange(world) {
 // night and a second living Demon are not reckoned yet (Stufe 1).
 // --------------------------------------------------------------------
 const NOT_HATTED = new Set(["Legion", "Riot", "LilMonsta"]);
-export const HATTER_STORIES = 512;
+export const HATTER_STORIES = 1024;
 // How many stories with a tea party a solve may tell, and the fewest
 // walks a sampled one takes whatever that says (V Weg 1). See solver.py.
 export const TEA = {budget: 30000, exactBudget: 100000, minDives: 1000,

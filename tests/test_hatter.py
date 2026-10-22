@@ -302,6 +302,41 @@ class TheSimulator(SolverTest):
         self.assertEqual(lost, [])
 
 
+class FoundAtTheGate(SolverTest):
+    """Games of the gate the first build lost, kept now (22.10.2026)."""
+
+    def keeps(self, must, seed):
+        import claims as Cl
+        import play_games
+        import simulate
+        n = [7, 8, 9, 10, 11][seed % 5]
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=must)
+        deal, heard = simulate.play(n, rng, nights=4, script=script)
+        claims, wakes, _ = Cl.claims_for(deal, rng, script=script)
+        st = GameState(n_players=n, script=script, claims=claims,
+                       wakes=wakes, infos=list(heard), votes=dict(deal.votes),
+                       nominations=dict(deal.nominations), **deal.record())
+        self.assertTrue(deal.tea_made)
+        self.assertIsNotNone(S.explanation_cost(deal.world(), st))
+
+    def test_room_for_every_bounty_hunter_story(self):
+        # A Philosopher's Hatter hanged, the Yaggababble a Vortox: the
+        # tea parties crowded the Bounty Hunter's Townsfolk out.
+        self.keeps(("Hatter", "Marionette", "Lunatic", "Drunk",
+                    "ScarletWoman"), 54)
+
+    def test_a_demon_changed_after_a_jump_it_was_not_shown(self):
+        # A Fang Gu that jumped, then chose the Po: the lineage, asked
+        # without the jump, read the Po as the Demon all along.
+        self.keeps(("Hatter", "Imp", "Po", "NoDashii"), 852)
+
+    def test_the_star_goes_to_the_minion_that_swapped(self):
+        # The optional rule's swap made a Minion the Fang Gu, which jumped
+        # the same night: followed from the end, the jump was skipped.
+        self.keeps(("Hatter", "Imp", "Po", "NoDashii"), 1511)
+
+
 def _payloads():
     def pay(events, rows=(), claims=C, ids=IDS, days=(1, 2)):
         players = [{"claim": c, "events": events.get(i, [])}

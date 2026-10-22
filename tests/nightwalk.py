@@ -906,6 +906,12 @@ def walk(deal, night, hidden):
                     if host in becomes_droisoned:
                         state.droison(host, slot, "Lleech")
                         becomes_droisoned.discard(host)
+                # A Widow made at the party looks and poisons at once (O
+                # Weg 1), as the simulator has it: before anybody acts.
+                if role == "Widow":
+                    target = (hidden.get(("widow", night)) or {}).get(seat)
+                    if target is not None:
+                        state.droison(target, slot, "Widow")
                 if role == "NoDashii":
                     near = set()
                     for step in (-1, 1):

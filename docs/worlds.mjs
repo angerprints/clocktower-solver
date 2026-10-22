@@ -219,9 +219,15 @@ export class Timeline {
       sides.get(c.seat).push([at, c]);
       if (c.role !== null && c.role !== undefined) {
         if (!roles.has(c.seat)) roles.set(c.seat, []);
-        roles.get(c.seat).push([at, c.role]);
+        const mine = roles.get(c.seat);
+        const was = mine.length ? mine[mine.length - 1][1]
+          : this.world.roles[c.seat];
+        mine.push([at, c.role]);
         held.add(c.role);
-        if (TEAM[c.role] === "demon") demons.push([at, c.seat, null]);
+        // A tea party moves the Demon only where a Minion took a Demon
+        // character (the swap). See worlds.py.
+        if (TEAM[c.role] === "demon" && !(c.tea && TEAM[was] !== "minion"))
+          demons.push([at, c.seat, null]);
       }
     }
     return (this._index = {roles, sides, demons, held, summonAt});

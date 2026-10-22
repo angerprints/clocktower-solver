@@ -308,9 +308,19 @@ class Timeline:
                 continue
             sides.setdefault(change.seat, []).append((at, change))
             if change.role is not None:
-                roles.setdefault(change.seat, []).append((at, change.role))
+                mine = roles.setdefault(change.seat, [])
+                was = mine[-1][1] if mine else self.world.roles[change.seat]
+                mine.append((at, change.role))
                 held.add(change.role)
-                if TEAM[change.role] == "demon":
+                # A tea party moves the Demon only where a Minion took a
+                # Demon character (the optional rule's swap). The Demon
+                # taking another Demon is the same holder — and a seat
+                # that was no Minion at all is a story asked about without
+                # the handover that made it the Demon (a Fang Gu's jump),
+                # which the lineage has to be free to find (seed 852).
+                if TEAM[change.role] == "demon" and not (
+                        isinstance(change, TeaParty)
+                        and TEAM.get(was) != "minion"):
                     demons.append((at, change.seat, None))
         object.__setattr__(self, "_roles_by_seat", roles)
         object.__setattr__(self, "_sides_by_seat", sides)

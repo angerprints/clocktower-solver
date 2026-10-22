@@ -12,10 +12,10 @@ mkdir -p "$OUT"
 python3 messung/tor.py 3000 4 0 Hatter > $OUT/tor4.txt 2>&1
 python3 messung/tor.py 3000 6 0 Hatter > $OUT/tor6.txt 2>&1
 python3 messung/tor.py 3000 4 0 Hatter Widow Poisoner Chambermaid > $OUT/torW.txt 2>&1
-python3 messung/tor.py 3000 4 0 Hatter Leviathan LilMonsta Summoner > $OUT/torJ.txt 2>&1
+python3 messung/tor.py 3000 4 0 Hatter Leviathan Summoner > $OUT/torJ.txt 2>&1
 python3 messung/tor.py 3000 4 0 Hatter EvilTwin Godfather Gambler Philosopher > $OUT/torE.txt 2>&1
 python3 messung/tor.py 3000 4 0 Hatter Marionette Lunatic Drunk ScarletWoman > $OUT/torM.txt 2>&1
-python3 messung/tor.py 3000 4 0 Hatter Imp Po NoDashii Vortox Pukka > $OUT/torD.txt 2>&1
+python3 messung/tor.py 3000 4 0 Hatter Imp Po NoDashii > $OUT/torD.txt 2>&1
 python3 messung/tor.py 3000 4 0 > $OUT/tor_none.txt 2>&1
 for sc in TB BMR SV EASTER XNINEB; do python3 messung/sim5.py $sc 3000 4 > $OUT/sim_$sc.txt 2>&1; done
 python3 messung/tbhash.py > $OUT/hash.txt 2>&1
