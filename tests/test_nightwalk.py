@@ -46,12 +46,14 @@ class AKnownNightCanBeReplayed(SolverTest):
                 self.assertEqual(got.died, died)
 
     def test_and_it_knows_who_acted_in_what_order(self):
-        """A Poisoner goes before a Demon, and both before an Acrobat."""
+        """A Poisoner goes before an Acrobat, and both before a Demon —
+        on the publisher's night sheet the Acrobat chooses early
+        (23.10.2026; the older file put it after the Demons)."""
         from botc.catalogue import CHARACTERS
         roles = {0: "Poisoner", 1: "Imp", 2: "Acrobat", 3: "Chef"}
         order = nightwalk.slots(roles, 2)
         self.assertEqual([roles[s] for s in order],
-                         ["Poisoner", "Imp", "Acrobat"])
+                         ["Poisoner", "Acrobat", "Imp"])
         self.assertEqual(roles[order[0]], "Poisoner")
 
 
@@ -142,9 +144,9 @@ class WhatHappenedLaterTonightDoesNotReachBack(unittest.TestCase):
         self.assertEqual(got.died, {1})
 
     def test_a_demon_kills_before_a_barbers_swap_moves_it(self):
-        """The Barber's swap is at 40. After it the old No Dashii is a
-        Clockmaker beside the new one, and poisoned — which says
-        nothing about its kill at 30."""
+        """The Barber's swap comes after the Demons. After it the old No
+        Dashii is a Clockmaker beside the new one, and poisoned — which
+        says nothing about its kill before."""
         deal, hidden, got = self.night(37, 4)
         self.assertIn(6, hidden[("barber", 4)])
         self.assertIn(6, hidden[("standing_later", 4)])
@@ -158,7 +160,9 @@ class WhatHappenedLaterTonightDoesNotReachBack(unittest.TestCase):
         deal, hidden, got = self.night(232, 2)
         self.assertEqual(hidden["gained"], {1: "SnakeCharmer"})
         self.assertEqual(hidden[("snakecharmers", 2)], {1: 7})
-        self.assertIn((11, "swapped", 1, 7), got.log)
+        from botc.catalogue import CHARACTERS
+        self.assertIn((CHARACTERS["SnakeCharmer"].other_night,
+                       "swapped", 1, 7), got.log)
         self.assertEqual(got.died, deal.died_on("N2"))
         self.assertEqual(got.died, {1})
 

@@ -107,8 +107,33 @@ function madnessNights(world, state) {
   return got;
 }
 
+/** Seats whose claim could be honest because they were handed it: a
+ * Farmer that died at night makes a living good player the Farmer, who
+ * then says so truthfully. Only the seat that claims it, only when a seat
+ * claiming the same character died at night, and never an evil seat. See
+ * `_could_have_inherited` in solver.py — missing here until a board of
+ * the corpus showed it (23.10.2026, x-changers-played-76). */
+function couldHaveInherited(world, state) {
+  const handed = new Set(["Farmer"]);
+  const claims = state.claims || {};
+  const diedAtNight = new Set();
+  for (const [seat, at] of Object.entries(state.deaths || {})) {
+    const phases = typeof at === "string" ? [at] : (at || []);
+    if (phases.some(x => x.startsWith("N"))) diedAtNight.add(Number(seat));
+  }
+  const out = new Set();
+  for (const [key, claim] of Object.entries(claims)) {
+    const seat = Number(key);
+    if (!handed.has(claim) || diedAtNight.has(seat)) continue;
+    if (isEvil(world.roles[seat])) continue;
+    if ([...diedAtNight].some(other => claims[other] === claim)) out.add(seat);
+  }
+  return out;
+}
+
 export function priorWeight(world, state) {
   let w = confirmedBoost(world, state);
+  const inherited = couldHaveInherited(world, state);
   let madness = madnessNights(world, state);
   const pixies = onBoard(state, "Pixie");
   // Beside a Bounty Hunter one Townsfolk is evil and bluffs like any evil
@@ -130,7 +155,8 @@ export function priorWeight(world, state) {
     const evil = isEvil(world.roles[p]);
     // A Mutant's cover story is not a choice, so it costs nothing; nor
     // does a Pixie claiming what it was shown, which is its madness.
-    if (isLying(world, state, p) && !mustHide(world.roles[p]) &&
+    if (isLying(world, state, p) && !inherited.has(p)
+        && !mustHide(world.roles[p]) &&
         !(pixies && madPixie(world, state, p))) {
       if (!evil) {
         if (TEAM[world.roles[p]] === "outsider") w *= PRIORS.OUTSIDER_HIDING_PENALTY;

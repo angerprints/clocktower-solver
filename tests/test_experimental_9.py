@@ -102,16 +102,17 @@ class TheyAreInTheCatalogue(SolverTest):
         self.assertEqual(CHARACTERS["General"].nights, "every")
         self.assertEqual(CHARACTERS["Fisherman"].nights, "never")
 
-    def test_the_high_priestess_has_the_generals_slots_by_hand(self):
-        # C: until the whole order is gone through at the end.
-        self.assertEqual((CHARACTERS["General"].first_night,
-                          CHARACTERS["General"].other_night), (50, 69))
-        self.assertEqual((CHARACTERS["HighPriestess"].first_night,
-                          CHARACTERS["HighPriestess"].other_night), (50, 69))
-        # Before the Kammerzofe and the Mathematiker, which count them.
+    def test_the_high_priestess_acts_where_the_publisher_puts_it(self):
+        """Before the General on both nights (the night sheet,
+        23.10.2026) — and so before the Chambermaid and the
+        Mathematician, which count it."""
+        c = CHARACTERS
+        for night in ("first_night", "other_night"):
+            self.assertLess(getattr(c["HighPriestess"], night),
+                            getattr(c["General"], night))
         for counter in ("Chambermaid", "Mathematician"):
-            self.assertLess(CHARACTERS["HighPriestess"].other_night,
-                            CHARACTERS[counter].other_night)
+            self.assertLess(c["HighPriestess"].other_night,
+                            c[counter].other_night)
 
     def test_the_named_games_do_not_draw_them(self):
         import play_games

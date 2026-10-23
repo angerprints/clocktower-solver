@@ -2076,29 +2076,19 @@ def _acrobat_may_fall(d, night, heard, rng):
     neighbours cannot die at all — which by the rules counts as an
     ability *prevented*, and so as one that went wrong.
     """
-    # The pick is made **here**, not read out of `heard`.
-    #
-    # An Acrobat acts at slot 39: after the Demon at 24, before the
-    # readings at 53. Its row used to come from `honest_info`, which runs
-    # later — so this scanned `heard` for a row that did not exist yet
-    # and never killed anybody. Thirty of thirty-eight nights agreed with
-    # the night-walk and the eight that did not were all this.
-    #
-    # Sitting between the two passes is the honest place for it, and the
-    # cost is that it makes its own choice rather than being handed one.
+    # The pick is made at the Acrobat's turn (`early_choices`), which on
+    # the publisher's night sheet is early (23.10.2026). It was made here,
+    # after the kills, at slot 39 of the older file — and so never as the
+    # first to choose a Goon, which the night-walk saw (gate, seed 2276).
     phase = f"N{night}"
     droisoned = droisoned_at(d, night)
+    picks = getattr(d, "acrobat_picks", {})
     for seat in range(d.n):
-        # Or a Philosopher that took it (13.10.2026).
-        if not _acts_as(d, seat, "Acrobat", phase) or night < 2:
+        # Picked at its turn, early in the night (`early_choices`); one
+        # made an Acrobat after that turn did not pick tonight.
+        row = picks.get((night, seat))
+        if row is None:
             continue
-        if seat not in d.alive_at(phase):
-            continue
-        others = [p for p in range(d.n) if p != seat]
-        if not others:
-            continue
-        row = AcrobatChoice(night, seat, target=rng.choice(others))
-        heard.append(row)
         if seat not in d.alive_at(phase):
             continue
         if not d.working(seat, night):
@@ -5321,6 +5311,21 @@ def early_choices(d, night, rng):
                         out.append(made)
     for seat in _in_night_order(d, night):
         role = before[seat]
+        # The Acrobat picks at its own turn: on the publisher's night
+        # sheet that is early, after the Gambler and before the Snake
+        # Charmer and every Demon (23.10.2026). So it can be the first to
+        # choose a Goon. Whether it falls is settled after the kills
+        # (`_acrobat_may_fall`), since "or becomes" reaches to the end.
+        if night > 1 and _acts_as(d, seat, "Acrobat", f"N{night}") \
+                and seat in d.alive_at(f"N{night}"):
+            others = [p for p in range(d.n) if p != seat]
+            if others:
+                row = AcrobatChoice(night, seat, target=rng.choice(others))
+                d.__dict__.setdefault("acrobat_picks", {})[
+                    (night, seat)] = row
+                _the_goon_answers(d, night, seat, row.target)
+                out.append(row)
+            continue
         # A Philosopher that took an early chooser chooses early too. It
         # waited for the late pass, after the kill and the Barber, so one
         # holding the Snake Charmer pointed at a Demon the Barber had only

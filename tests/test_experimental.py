@@ -74,16 +74,15 @@ class TheyAreInTheCatalogue(SolverTest):
                 self.assertEqual(CHARACTERS[key].team, "townsfolk")
                 self.assertTrue(CHARACTERS[key].modelled)
 
-    def test_three_of_them_have_a_slot_the_file_does_not_know(self):
+    def test_three_of_them_act_where_the_publisher_puts_them(self):
         """The publisher's first night runs Seamstress, Steward, Knight,
-        Noble, Balloonist, Shugenja, ..., Nightwatchman. The vendored
-        file has no number for three of those, so each shares the slot
-        of whatever follows it."""
+        Noble, Balloonist, Shugenja, ..., Nightwatchman (the night sheet
+        in `data/nightsheet.json`, 23.10.2026)."""
         first = lambda key: CHARACTERS[key].first_night
-        self.assertEqual(first("Steward"), first("Noble"))
-        self.assertEqual(first("Knight"), first("Noble"))
-        self.assertGreater(first("Shugenja"), first("Balloonist"))
-        self.assertLess(first("Shugenja"), first("Nightwatchman"))
+        order = ["Seamstress", "Steward", "Knight", "Noble", "Balloonist",
+                 "Shugenja", "Nightwatchman"]
+        for a, b in zip(order, order[1:]):
+            self.assertLess(first(a), first(b), (a, b))
         for key in ("Steward", "Knight", "Shugenja"):
             self.assertEqual(CHARACTERS[key].other_night, 0)
 

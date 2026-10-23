@@ -48,13 +48,12 @@ class Character(NamedTuple):
     # Washerwoman acts then and never again, and the Demon learning its
     # Minions has a slot that later nights do not have.
     #
-    # Taken from `data/roles.json` and **not renumbered** — the gaps are
-    # the point. A character added later drops into its true position
-    # without disturbing anything around it.
+    # Ten times the place on the publisher's night sheet
+    # (`data/nightsheet.json`), so the gaps leave room for an exception.
     #
     # This is what makes an Imp starpassing to an Assassin work: the Imp
-    # acts at 24 and the Assassin at 36, so by the time the Assassin's
-    # slot arrives that seat is holding the Imp and the ability is gone.
+    # acts before the Assassin, so by the time the Assassin's slot
+    # arrives that seat is holding the Imp and the ability is gone.
     first_night: int = 0
     other_night: int = 0
     registers: frozenset = frozenset()   # teams it may *also* register as
@@ -746,108 +745,61 @@ CHARACTERS = {k: c._replace(impairs=k in IMPAIRS)
 
 
 def _night_order():
-    """Where each character acts, from `data/roles.json`.
+    """Where each character acts, from `data/nightsheet.json`.
 
-    Read rather than written down here, because it is somebody else's
-    data and hand-copying a hundred and thirty pairs of numbers is a way
-    to introduce errors that nothing would catch.
+    The publisher's night sheet (ThePandemoniumInstitute/botc-release,
+    `resources/data/nightsheet.json`, last changed 05.08.2026): two lists,
+    the first night and the other nights, in the order the Storyteller
+    wakes. Taken as it is (Patrick, 23.10.2026, Hatter stage 3, A Weg 1);
+    before, the slots came from an older file behind botc.app that knew
+    130 characters, and fifteen were entered by hand.
 
-    A character the file does not know keeps zero, which means "does not
-    act" — safe, and visible, since a character that should act and does
-    not will show up the moment a game is played.
+    A character's slot is ten times its place in the list, so there is
+    room for the one exception below without renumbering anything. A
+    character on neither list keeps zero, which means "does not act".
     """
     import json
     import pathlib as _p
-    path = _p.Path(__file__).resolve().parent.parent / "data" / "roles.json"
+    path = (_p.Path(__file__).resolve().parent.parent / "data"
+            / "nightsheet.json")
     if not path.exists():
         return {}
-    out = dict(_NOT_IN_THE_FILE)
-    for entry in json.loads(path.read_text()):
-        got = entry.get("id")
-        if got:
-            out[got] = (int(entry.get("firstNight") or 0),
-                        int(entry.get("otherNight") or 0))
+    sheet = json.loads(path.read_text())
+    out = {}
+    for which, night in enumerate(("firstNight", "otherNight")):
+        for place, got in enumerate(sheet.get(night, ())):
+            slots = list(out.get(got, (0, 0)))
+            slots[which] = 10 * place
+            out[got] = tuple(slots)
+    for got, slots in _NOT_AS_IN_THE_SHEET.items():
+        were = out.get(got, (0, 0))
+        out[got] = tuple(w if s is None else s for w, s in zip(were, slots))
     return out
 
 
-# Characters newer than the vendored file. Checked on 28.09.2026: the
-# upstream file is byte-for-byte the one in data/, and it has no Ogre.
-#
-# The Ogre acts late on the first night, after the Spy (49) and before
-# the General (50) in the official order. There is no whole number in
-# between, so it shares the General's slot — nothing on any script here
-# holds both, and the file wins the moment a refresh brings the real one.
-#
-# The Steward, the Knight and the Shugenja are missing the same way
-# (05.10.2026). In the publisher's current order the first night runs
-# ... Seamstress, Steward, Knight, Noble, Balloonist, Shugenja, Village
-# Idiot, Bounty Hunter, Nightwatchman ... — so the first two belong
-# between 43 and 44 and the third between 45 and 46. They share the slot
-# that follows them, for the Ogre's reason: all three only read, nothing
-# acts between them and their neighbour, and nothing else is renumbered.
-_NOT_IN_THE_FILE = {
-    "ogre": (50, 0),
-    "steward": (44, 0),
-    "knight": (44, 0),
-    "shugenja": (46, 0),
-    # The Organ Grinder is newer than the file too. It reads nothing and
-    # nothing at night reads it, so where it sits changes nothing; it
-    # shares the Fearmonger's slots (10.10.2026). The Vizier needs none:
-    # it never wakes for itself.
-    "organgrinder": (26, 17),
-    # The Lord of Typhon (19.10.2026): other nights between the Vortox
-    # (31) and the Vigormortis (32), so it shares the Vortox's slot. Its
-    # first night is the Storyteller's, not its own.
-    "lordoftyphon": (0, 31),
-    # The Kazali (20.10.2026): first of all on the first night, before the
-    # Philosopher and the Minion info, sharing slot 1 with the
-    # Travellers there; the Demons' place on the others, the Vortox's.
-    "kazali": (1, 31),
-    # Lil' Monsta (21.10.2026) is in the file: 15 on the first night,
-    # before the Poisoner, and 35 on the others — after the Exorcist and
-    # the Demons, before the Fortune Teller.
-    # The Al-Hadikhia (21.10.2026): "... Vigormortis, Ojo, Al-Hadikhia
-    # ..." on the other nights, so the Vigormortis's slot like the Ojo.
-    "alhadikhia": (0, 32),
-    # The publisher's other nights run ... Vortox, Lord of Typhon,
-    # Vigormortis, Ojo, Al-Hadikhia ... — after the Vigormortis at 32 and
-    # before anything the file numbers 33, so it shares the Vigormortis's
-    # slot. Only one of them is the Demon on any night.
-    "ojo": (0, 32),
-    # The seventh five (11.10.2026). The publisher's first night runs
-    # ... Fearmonger, Harpy, Mezepheles ... and its other nights the same,
-    # so the Harpy shares the Mezepheles's slots (27, 18). The Village
-    # Idiot reads after the Shugenja and before the Bounty Hunter on the
-    # first night (46, beside both), and after the Balloonist and before
-    # the King on the others (63, the King's).
-    "harpy": (27, 18),
-    "villageidiot": (46, 63),
-    # The eighth five (11.10.2026). The Yaggababble is newer than the
-    # file. It is shown its phrase on the first night and wakes on no
-    # other; nothing reads its place, so it shares the Mezepheles's first
-    # night (27, the other character shown a word) and the Vigormortis's
-    # other nights (32), where its deaths are counted. Not checked against
-    # the publisher's current order.
-    "yaggababble": (27, 32),
-    # The ninth three (12.10.2026). The High Priestess is newer than the
-    # file. It reads nothing anybody checks, so for now it shares the
-    # General's place (50, 69): before the Kammerzofe and the
-    # Mathematiker, which count it. Not checked against the publisher's
-    # current order — the whole order is to be gone through once at the
-    # end (Patrick, 12.10.2026).
-    "highpriestess": (50, 69),
-    # The Summoner (21.10.2026). The publisher's first night runs ...
-    # Snitch, Lunatic, Summoner, (Demon info), King ... — slot 9, free
-    # between the Lunatic (8) and the King (10). The other nights ...
-    # Scarlet Woman, Summoner, Lunatic, Exorcist ...: after the Scarlet
-    # Woman (19) and before the Lunatic (20), so it shares her slot.
-    # Nothing can step up before there is a Demon to step up from.
-    "summoner": (9, 19),
-    # The Hatter (22.10.2026). The evil players choose at the very start
-    # of the night after a death by day, before anybody acts (C, Patrick:
-    # "wenn er am Tag gestorben ist, dann am Anfang der Nacht"). It wakes
-    # nobody for itself; the slot is where the night-walk applies it.
+# Where this project departs from the sheet, on purpose. None keeps the
+# sheet's slot for that night.
+_NOT_AS_IN_THE_SHEET = {
+    # The Hatter (22.10.2026). The sheet puts it after everybody who kills
+    # (... Assassin, Godfather, Gossip, Hatter, Barber ...). Patrick's
+    # answer C stands (23.10.2026, B Weg 1): after a death by day the evil
+    # players choose at the very start of the night, before anybody acts —
+    # slot 1, before the first character on the sheet at 10. After a death
+    # at night they choose straight after it, wherever that is.
     "hatter": (0, 1),
+    # Woken by the sheet for a Storyteller's step — a marker moved, an
+    # announcement, eyes that may open — that this project reckons without
+    # a slot. Nothing at night reads where they sit.
+    "wraith": (0, 0),
+    "xaan": (0, 0),
+    "princess": (0, 0),
+    "banshee": (0, 0),
+    "riot": (0, 0),
+    "vizier": (0, 0),
+    # The Lord of Typhon's first night is the Storyteller's — seating the
+    # evil players in a line — not a wake of its own (19.10.2026). Its
+    # other nights are the sheet's.
+    "lordoftyphon": (0, None),
 }
 
 

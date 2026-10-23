@@ -74,9 +74,18 @@ class TheyAreInTheCatalogue(SolverTest):
         for key in EIGHTH:
             self.assertTrue(CHARACTERS[key].modelled)
 
-    def test_the_yaggababbles_slots_are_written_by_hand(self):
-        self.assertEqual((CHARACTERS["Yaggababble"].first_night,
-                          CHARACTERS["Yaggababble"].other_night), (27, 32))
+    def test_the_yaggababble_acts_where_the_publisher_puts_it(self):
+        """Early on the first night, shown its phrase before the Minions
+        learn each other; on the others after Lil' Monsta and before the
+        Kazali (the night sheet, 23.10.2026)."""
+        c = CHARACTERS
+        self.assertLess(c["Yaggababble"].first_night, c["Snitch"].first_night)
+        self.assertLess(c["Philosopher"].first_night,
+                        c["Yaggababble"].first_night)
+        self.assertLess(c["LilMonsta"].other_night,
+                        c["Yaggababble"].other_night)
+        self.assertLess(c["Yaggababble"].other_night,
+                        c["Kazali"].other_night)
 
     def test_the_two_demons_kill_their_own_way(self):
         self.assertLessEqual({"Leviathan", "Yaggababble"},

@@ -882,7 +882,22 @@ def walk(deal, night, hidden):
     summon_slot = getattr(CHARACTERS["Summoner"], field, 0)
     tea = hidden.get(("tea", night))
     tea_slot = getattr(CHARACTERS["Hatter"], field, 0)
+    acrobats = []
+    acrobats_fall = getattr(CHARACTERS["Gossip"], field, 0)
+
+    def _acrobat_falls_now(slot):
+        only = hidden.get(("preached_only", night)) or set()
+        for seat, target in acrobats:
+            # Still working by then: an Acrobat poisoned after its pick
+            # (a Pukka's choice) has no ability left to fell it.
+            if seat in state.alive and state.working(seat) \
+                    and target in state.droisoned and target not in only:
+                state.kill(seat, slot, "Acrobat")
+        acrobats.clear()
+
     for slot in _turns(night):
+        if acrobats and slot > acrobats_fall:
+            _acrobat_falls_now(slot)
         # The Hatter's tea party at 1, before anybody acts (C, 22.10.2026):
         # each holds its new character from here, on its own side.
         if tea and slot == tea_slot:
@@ -1204,10 +1219,13 @@ def walk(deal, night, hidden):
 
             elif role == "Acrobat":
                 # Picks somebody and dies if they are — or **become** —
-                # droisoned tonight. Acts at 39, after the Poisoner at 7 and
-                # every Demon, which is what makes "or become" more than a
-                # turn of phrase: the walk has already seen everything that
-                # could have touched the pick.
+                # droisoned tonight. On the publisher's night sheet it
+                # picks early, after the Poisoner and before every Demon
+                # (23.10.2026; the older file had it after them, at 39).
+                # So the pick is made here and the fall is settled later,
+                # once everything that could droison the pick has acted —
+                # after the Gossip, where the simulator settles it too
+                # (`_acrobat_falls_now`).
                 #
                 # This is the character the whole night order was built for.
                 # It could not be modelled in the three-pass design at all —
@@ -1225,9 +1243,7 @@ def walk(deal, night, hidden):
                     continue
                 state.choose(seat, target, slot)
                 _goon_answers(state, seat, target, slot)
-                only = hidden.get(("preached_only", night)) or set()
-                if target in state.droisoned and target not in only:
-                    state.kill(seat, slot, "Acrobat")
+                acrobats.append((seat, target))
 
             elif role == "Gossip":
                 # Said something in public yesterday, and if it was true a
@@ -1644,6 +1660,10 @@ def walk(deal, night, hidden):
                         continue
                     state.kill(target, slot, role)
                     _grandmother_grieves(state, target, slot, hidden, night)
+
+    # An Acrobat's pick still unsettled when the night ran out of slots.
+    if acrobats:
+        _acrobat_falls_now(10_000)
 
     # A Lleech whose host died tonight dies with it; one whose host went
     # while it was not working dies tonight if it is now (11.10.2026).

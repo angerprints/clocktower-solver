@@ -90,11 +90,11 @@ class TheyAreInTheCatalogue(SolverTest):
         self.assertEqual(CHARACTERS["Ojo"].nights, "other")
 
     def test_the_ojo_acts_where_the_publisher_puts_it(self):
-        """After the Vigormortis and before anything the vendored file
-        numbers later — the Assassin is next."""
+        """... Vortox, Lord of Typhon, Vigormortis, Ojo, Al-Hadikhia ...
+        on the publisher's night sheet."""
         ojo = CHARACTERS["Ojo"].other_night
-        self.assertEqual(ojo, CHARACTERS["Vigormortis"].other_night)
-        self.assertGreater(ojo, CHARACTERS["Vortox"].other_night)
+        self.assertGreater(ojo, CHARACTERS["Vigormortis"].other_night)
+        self.assertLess(ojo, CHARACTERS["AlHadikhia"].other_night)
         self.assertLess(ojo, CHARACTERS["Assassin"].other_night)
         self.assertEqual(CHARACTERS["Ojo"].first_night, 0)
 

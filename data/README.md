@@ -1,42 +1,38 @@
 # Vendored data
 
-## `roles.json`
+## `nightsheet.json`
 
-The official character data, taken from the townsquare repository that
-backs botc.app:
+The publisher's night sheet, from the official release repository:
 
-    https://raw.githubusercontent.com/bra1n/townsquare/develop/src/roles.json
+    https://github.com/ThePandemoniumInstitute/botc-release
+    resources/data/nightsheet.json   (last changed 05.08.2026)
+
+Two lists, `firstNight` and `otherNight`, each the order in which the
+Storyteller wakes characters, with the steps `dusk`, `minioninfo`,
+`demoninfo` and `dawn` among them: the 120 characters that wake at
+night. The publisher's list of characters beside it, `roles.json` in
+the same folder, has 181.
 
 Kept here rather than fetched, so the project does not depend on a
 network call that could fail or quietly drift.
 
 **What it is used for**: the night order, and nothing else.
+`botc/catalogue.py` turns each place into a slot, ten times the place in
+the list, and `tools/gen_characters.py` carries the slots into
+JavaScript. The few places where this project departs from the sheet on
+purpose are listed in `_NOT_AS_IN_THE_SHEET` in `botc/catalogue.py`, each
+with its reason (the Hatter after Patrick's answer C, and the characters
+the sheet wakes only for a Storyteller's step).
 
-**It is not a source for what a character does.** The ability text here
-goes stale, and for experimental characters it is stale *now* — the
-Balloonist reads "learn 1 player of each character type, until there are
-no more types to learn", which is a previous version. The current card is
-"each night, you learn a player of a different character type than last
-night", a different mechanic entirely.
+Taken as it is on Patrick's decision of 23.10.2026 (Hatter stage 3,
+A Weg 1). Until then the slots came from the older `roles.json` of the
+townsquare repository, which knew 130 characters; fifteen newer ones had
+been entered by hand.
 
-Taking the text from here would have built the wrong character. The wiki
-is the source for what a character does:
+**It is not a source for what a character does.** The wiki is:
 
-    https://wiki.bloodontheclocktower.com/Experimental
+    https://wiki.bloodontheclocktower.com/
 
-The night order numbers are presumably current, since the app runs from
-this file — but the wiki does not print slot numbers, so that cannot be
-checked against anything. Treat the ordering as the app's behaviour
-rather than as verified fact. Every entry
-carries `firstNight` and `otherNight` — the slot a character acts in, or
-zero for a night it does not act. Those two numbers are what
-`tools/gen_characters.py` reads.
-
-The rest of the file (ability text, reminder tokens, images) is ignored:
-this project derives what characters *do* from the rules rather than from
-a description, and that is deliberate.
-
-**Refreshing it**: fetch the file again and re-run
-`python tools/gen_characters.py`. Anything new appears with its true slot
-and needs no renumbering, because the original numbers are kept rather
-than being compressed into a rank.
+**Refreshing it**: fetch the file again, re-run
+`python tools/gen_characters.py`, and run the gate and the corpus to see
+what the change moves.

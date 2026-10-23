@@ -91,11 +91,23 @@ class TheyAreInTheCatalogue(SolverTest):
         for key in SEVENTH:
             self.assertTrue(CHARACTERS[key].modelled)
 
-    def test_the_two_slots_written_by_hand(self):
-        self.assertEqual((CHARACTERS["Harpy"].first_night,
-                          CHARACTERS["Harpy"].other_night), (27, 18))
-        self.assertEqual((CHARACTERS["VillageIdiot"].first_night,
-                          CHARACTERS["VillageIdiot"].other_night), (46, 63))
+    def test_the_two_act_where_the_publisher_puts_them(self):
+        """Fearmonger, Harpy, Mezepheles on both nights; the Village Idiot
+        after the Shugenja on the first night and after the Balloonist on
+        the others (the night sheet, 23.10.2026)."""
+        c = CHARACTERS
+        for night in ("first_night", "other_night"):
+            self.assertLess(getattr(c["Fearmonger"], night),
+                            getattr(c["Harpy"], night))
+            self.assertLess(getattr(c["Harpy"], night),
+                            getattr(c["Mezepheles"], night))
+        self.assertLess(c["Shugenja"].first_night,
+                        c["VillageIdiot"].first_night)
+        self.assertLess(c["VillageIdiot"].first_night,
+                        c["BountyHunter"].first_night)
+        self.assertLess(c["Balloonist"].other_night,
+                        c["VillageIdiot"].other_night)
+        self.assertLess(c["VillageIdiot"].other_night, c["King"].other_night)
 
     def test_only_the_village_idiot_comes_more_than_once(self):
         self.assertEqual({k for k, c in CHARACTERS.items() if c.copies > 1},
