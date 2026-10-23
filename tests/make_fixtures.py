@@ -1692,7 +1692,7 @@ def the_hatter():
     import play_games
     from test_hatter import _payloads
     names = ("hanged", "gambler", "evil-twin", "at-night", "summoner",
-             "two-days")
+             "two-days", "at-night-assassin")
     for name, payload in zip(names, _payloads(), strict=True):
         yield {"name": f"x-hatter-{name}", "payload": payload}
     for seed, n in PLAYED_HATTER:
@@ -1703,9 +1703,11 @@ def the_hatter():
 
 
 # Games with a tea party, each solved in seconds: a claimed Hatter
-# executed (56, 82, 256) and a Hatter nobody claimed (1, 62, 120, 175).
+# executed (56, 82, 256) and a Hatter nobody claimed (1, 62, 120, 175);
+# and a claimed Hatter dead at night, the party straight after the Demons'
+# turn (176, 195; Hatter stage 3c, 23.10.2026).
 PLAYED_HATTER = ((1, 8), (56, 8), (62, 9), (82, 9), (120, 7), (175, 7),
-                 (256, 8))
+                 (256, 8), (176, 8), (195, 7))
 
 
 def stellen_62_63():

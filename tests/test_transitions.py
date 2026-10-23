@@ -101,7 +101,11 @@ class AnUnknownCharacter(SolverTest):
         it is an evil Demon, and no longer ambiguous.
         """
         plain = self.world()
-        turned = Timeline(plain, (Change("N2", 1, "Imp", EVIL),))
+        # Made at the Imp's turn, before the Empath reads (Hatter stage 3b:
+        # a change without a slot is the end of the night, after her).
+        from botc.catalogue import CHARACTERS
+        turned = Timeline(plain, (Change("N2", 1, "Imp", EVIL,
+                                         CHARACTERS["Imp"].other_night),))
         state = game(7, claims=CLAIMS, deaths={2: "N2"})
 
         before = Empath(1, 0, count=0).holds(plain, state, None, 0)

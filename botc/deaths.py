@@ -191,10 +191,25 @@ def shields_on(world, state, night, seat, kind):
     return out
 
 
+# The slot each cause reads the board at (Hatter stage 3b, 23.10.2026),
+# by rule name; filled in by the solver. A Demon's kill is read once every
+# Demon has had its turn and before the Assassin's: a Barber's swap later
+# that night does not move the Demon that killed (open item 36, the gate's
+# seed 247). A cause not named reads the whole night, as all did before.
+CAUSE_TURNS = {}
+
+
 def causes_on(world, state, night):
+    from .worlds import reading_at
     out = []
+    phase = f"N{night}"
     for rule in CAUSE_RULES:
-        out.extend(rule(world, state, night))
+        slot = CAUSE_TURNS.get(rule.__name__)
+        if slot:
+            with reading_at(phase, slot, slot):
+                out.extend(rule(world, state, night))
+        else:
+            out.extend(rule(world, state, night))
     return out
 
 

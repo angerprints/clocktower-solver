@@ -1072,6 +1072,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.hatted = "Hatter" in script.keys
     d.tea_made = {}
     d.tea_at_night = []
+    # After a death at night the party is straight after it (C; Hatter
+    # stage 3c, 23.10.2026): {night: the slot}, for the night-walk; and the
+    # deaths already partied for.
+    d.tea_slot = {}
+    d.tea_done = set()
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -1184,6 +1189,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # The Lycanthrope at 22, before every Demon: a good player it
         # takes means the Demon kills nobody tonight (11.10.2026).
         heard += _lycanthrope_hunts(d, night, rng)
+        if d.hatted:
+            _tea_after_a_death_tonight(d, night, rng, "Lycanthrope")
 
         # The Mastermind's jinx: an Al-Hadikhia executed yesterday with a
         # living Mastermind chooses three good players tonight, and that
@@ -1263,6 +1270,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                             and d.working(victim, night):
                         heard.append(BansheeAnnounced(night, victim))
 
+        # A Hatter the Demons killed: the evil players choose now, after
+        # every Demon's turn — so a Demon that killed tonight does not
+        # kill again (D Weg 1).
+        if d.hatted:
+            _tea_after_a_death_tonight(d, night, rng, None)
+
         # Board-changing steps run **before** the readings, because by
         # slot they happen before every character that reads.
         #
@@ -1302,8 +1315,14 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # The three that kill besides the Demon, in the order they
             # act: Assassin 36, Godfather 37, Gossip 38.
             _assassin_strikes(d, night, rng)
+            if d.hatted:
+                _tea_after_a_death_tonight(d, night, rng, "Assassin")
             _godfather_kills(d, night, rng)
+            if d.hatted:
+                _tea_after_a_death_tonight(d, night, rng, "Godfather")
             _gossip_comes_true(d, night, rng)
+            if d.hatted:
+                _tea_after_a_death_tonight(d, night, rng, "Gossip")
             # A Professor raises a dead Townsfolk, once. At 43: after
             # every Demon, before the Tinker and the Moonchild.
             #
@@ -1312,6 +1331,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             if not _evil_has_won(d, f"N{night}"):
                 _professor_raises(d, night, rng)
             _moonchild_takes_one(d, night, heard, rng)
+            if d.hatted:
+                _tea_after_a_death_tonight(d, night, rng, "Moonchild")
             _tinker_may_go(d, night, rng)
 
             _acrobat_may_fall(d, night, heard, rng)
@@ -3928,13 +3949,14 @@ NOT_TEA_CHOSEN = ("Legion", "Riot", "LilMonsta", "Marionette", "Vizier",
 
 
 def _hatter_died(d, night):
-    """Seats that died as a working Hatter since the last night began
-    (yesterday or last night), with the moment: [(seat, phase)]."""
+    """Seats that died as a working Hatter yesterday, with the moment:
+    [(seat, phase)]. One that died at night has had its party already,
+    straight after its death (`_tea_after_a_death_tonight`)."""
     k = night - 1
     out = []
     for seat in range(d.n):
         for at in d.deaths_of(seat):
-            if at not in (f"N{k}", f"D{k}", f"E{k}"):
+            if at not in (f"D{k}", f"E{k}"):
                 continue
             if not _falls_as(d, seat, "Hatter", at):
                 continue
@@ -3957,17 +3979,43 @@ def _tea_spare(d, team, night, held, demon_alive):
     return out
 
 
-def _tea_party(d, night, rng):
-    """The evil players choosing, if a Hatter died since last night."""
-    if night < 2:
+def _tea_after_a_death_tonight(d, night, rng, killer):
+    """A Hatter that died tonight, working, and not partied for yet: the
+    evil players choose straight after (C; Hatter stage 3c, 23.10.2026),
+    at the slot after the killer's turn — the Demons' together when
+    `killer` is None — as the solver offers it (`solver.tea_slots`)."""
+    from botc.catalogue import slot_of
+    from botc.solver import _DEMONS_DONE
+    if night < 2 or _evil_has_won(d, f"N{night}"):
         return
-    died = _hatter_died(d, night)
+    phase = f"N{night}"
+    died = []
+    for seat in range(d.n):
+        if (seat, night) in d.tea_done or d.deaths.get(seat) != phase:
+            continue
+        if _falls_as(d, seat, "Hatter", phase) and d.working(seat, night):
+            died.append(seat)
+            d.tea_done.add((seat, night))
     if not died:
         return
-    if any(at[0] == "N" for _seat, at in died):
-        d.tea_at_night.append(night)
+    turn = _DEMONS_DONE if killer is None else slot_of(killer, night)
+    d.tea_slot[night] = turn + 1
+    _tea_party(d, night, rng, at_night=True)
+
+
+def _tea_party(d, night, rng, at_night=False):
+    """The evil players choosing, if a Hatter died yesterday — or, with
+    `at_night`, just now."""
+    if night < 2:
+        return
+    if not at_night:
+        died = _hatter_died(d, night)
+        if not died:
+            return
     phase = f"N{night}"
-    before = f"D{night - 1}"
+    # The board as the day before ended; after a death at night, as it
+    # stands now.
+    before = f"D{night - 1}" if not at_night else phase
     living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
     held = {d.role_at(p, before) for p in range(d.n)}
     seats = [p for p in living
@@ -4019,6 +4067,13 @@ def _tea_party(d, night, rng):
     # A Lleech made tonight chooses its host tonight.
     if "Lleech" in chosen.values():
         _lleech_picks_a_host(d, night, rng)
+    # After a death at night the Widow's turn is long past, but what it
+    # does on its first night it does at once (C Weg 1 with D, Hatter
+    # stage 3): it looks, poisons, and a good player is told.
+    if at_night:
+        for seat, role in sorted(chosen.items()):
+            if role == "Widow":
+                _for_role(d, seat, "Widow", night, rng)
 
 
 def _tea_made(d, seat, night):

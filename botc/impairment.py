@@ -107,6 +107,19 @@ def sources_on(world, state, night):
     answer each time, and on a busy Sects & Violets board a sixth of the
     solve went on working it out again.
     """
+    # Always of the whole night, whoever's turn is asking (Hatter stage
+    # 3b, 23.10.2026): the impairment plan settles whole nights, and the
+    # answer is kept for every asker. A Demon's kill, read at the Demons'
+    # turn, once left a No Dashii's neighbours from before a Barber's swap
+    # in here for the plan to find (SV, seed 722).
+    from .worlds import READ_AT
+    if READ_AT[0] is not None:
+        was = READ_AT[0]
+        READ_AT[0] = None
+        try:
+            return sources_on(world, state, night)
+        finally:
+            READ_AT[0] = was
     # Good for this state in this epoch only — see `solver.best_story`.
     epoch = getattr(state, "_epoch", None)
     memo = getattr(world, "_sources_memo", None)
@@ -128,6 +141,7 @@ def sources_on(world, state, night):
         try:
             for rule in SOURCE_RULES:
                 got.extend(rule(world, state, night))
+            got.extend(_before_a_party(world, state, night, got))
         finally:
             reads = end_reads()
         memo[2][key] = (got, reads)
@@ -136,6 +150,56 @@ def sources_on(world, state, night):
         if reads:
             replay_reads(reads)
     return list(got)
+
+
+# Each source at its own turn of the night, for a night a tea party split
+# (Hatter stage 3c, 23.10.2026): by rule name, the character whose turn it
+# is. The plan settles whole nights, so a source asked only at the end of
+# such a night loses what the old character did before the party — a
+# Vigormortis's dead Minion poisoning a Snake Charmer at its turn, before
+# the Demon chose the Leviathan (gate, seeds 1242 and 2897). Asked at its
+# turn as well, it is kept; a new one after the party is offered too.
+# Permissive both ways: the true world is never lost, though a world may
+# keep a poisoning the night did not have room for.
+SOURCE_TURNS = {"poisoner": "Poisoner",
+                "a_no_dashii_poisons_its_townsfolk_neighbours": "NoDashii",
+                "a_vigormortis_poisons_beside_its_dead_minions":
+                    "Vigormortis",
+                "a_philosopher_drunks_whoever_had_it": "Philosopher",
+                "a_pukka_poisons_whoever_it_will_kill": "Pukka",
+                "a_sailor_drunks_one_of_two": "Sailor",
+                "a_courtier_names_a_character": "Courtier",
+                "an_organ_grinder_may_drink": "OrganGrinder",
+                "a_widow_poisons_one": "Widow",
+                "a_preacher_silences_its_minions": "Preacher",
+                "a_lleech_poisons_its_host": "Lleech",
+                "an_innkeeper_drunks_one_of_the_two_it_guards": "Innkeeper"}
+
+
+def _before_a_party(world, state, night, got):
+    """The sources only a turn before a tea party in the night saw."""
+    from .catalogue import slot_of
+    from .worlds import TeaParty, reading_at
+    phase = f"N{night}"
+    if not any(isinstance(c, TeaParty) and c.phase == phase
+               and c.slot is not None
+               for c in getattr(world, "changes", ())):
+        return []
+    have = {(s.name, frozenset(s.seats), s.capacity, s.actor) for s in got}
+    out = []
+    for rule in SOURCE_RULES:
+        key = SOURCE_TURNS.get(rule.__name__)
+        slot = slot_of(key, night) if key else None
+        if slot is None:
+            continue
+        with reading_at(phase, slot, slot):
+            for source in rule(world, state, night):
+                mark = (source.name, frozenset(source.seats),
+                        source.capacity, source.actor)
+                if mark not in have:
+                    have.add(mark)
+                    out.append(source)
+    return out
 
 
 def _alive_through(world, state, seat, night):

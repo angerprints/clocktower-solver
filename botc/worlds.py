@@ -129,6 +129,12 @@ class Change(NamedTuple):
     seat: int
     role: str = None
     side: str = None
+    # Where in its night it happened (Hatter stage 3b, 23.10.2026): the
+    # slot of the character that made it, from the publisher's night sheet
+    # (`catalogue.slot_of`). None is the end of the night, as every change
+    # was before — and as one still is that no character's turn made.
+    # SETUP_SLOT is before anybody acts.
+    slot: int = None
 
 
 class TurnedEvil(Change):
@@ -217,20 +223,77 @@ def tea_made(world, seat, night):
                and c.phase == phase for c in getattr(world, "changes", ()))
 
 
+# A change made before anybody acts that night: a Marionette's real
+# character until a Summoner's Demon comes, a babysitter from the moment
+# after the last one fell.
+SETUP_SLOT = -1
+
+# Whose turn of the night is reading the board, while one is
+# (Hatter stage 3b, 23.10.2026; E Weg 1): (phase, first-night slot,
+# other-nights slot). With a phase, only that night is read at the slot —
+# a row of night three asking about night two asks about all of night
+# two. Without one (None), every night is read at the slot — a rule
+# asking what its character did on each night of the game.
+#
+# Read **at the end of** that slot: the reader sees what it did itself
+# (a Pit-Hag's row sees the seat it changed) and everything before it,
+# nothing after. Before, every reader saw the whole night (open item 36:
+# a Snake Charmer that chose early read as whatever the Pit-Hag made it
+# later).
+READ_AT = [None]
+
+
+def _within(here, slot, offset):
+    """A moment inside a night: past the board as it began ("B", +0.75
+    from the day before) and before the night as a whole."""
+    return here - 0.25 + (slot + offset) / 4000
+
+
 def moment(phase):
     """A phase as a number on one line with the changes: `phase_index`,
     and "B" — the board as a night began, after a tea party at its very
     start (22.10.2026) — a little past the day before it. A tea party is
-    stamped on its night and stands a little before it (`_at`)."""
+    stamped on its night and stands a little before it (`_at`). And a
+    night read by one character's turn (`READ_AT`) stands at that turn."""
     here = phase_index(phase)
-    return here + 0.75 if phase[0] == "B" else here
+    if phase[0] == "B":
+        return here + 0.75
+    at = READ_AT[0]
+    if at is not None and phase[0] == "N" and (at[0] is None
+                                               or at[0] == phase):
+        slot = at[1] if phase == "N1" else at[2]
+        if slot:
+            return _within(here, slot, 0.75)
+    return here
 
 
 def _at(change):
     """Where a change stands on that line: a tea party just before the
-    night it is stamped with, after the day before."""
+    night it is stamped with, after the day before; a change made at a
+    slot of its night just after that slot (`Change.slot`)."""
     here = phase_index(change.phase)
+    if change.slot is not None and change.phase[0] == "N":
+        return _within(here, change.slot, 0.5)
     return here - 0.5 if isinstance(change, TeaParty) else here
+
+
+class reading_at:
+    """`with reading_at(phase, first, other):` — see `READ_AT`."""
+
+    __slots__ = ("got", "was")
+
+    def __init__(self, phase, first, other):
+        self.got = (phase, first, other) if (first or other) else None
+
+    def __enter__(self):
+        self.was = READ_AT[0]
+        if self.got is not None:
+            READ_AT[0] = self.got
+        return self
+
+    def __exit__(self, *_exc):
+        READ_AT[0] = self.was
+        return False
 
 
 def _tea_read(phase):
@@ -1164,3 +1227,70 @@ def enumerate_worlds(n_players, claims, certainties=None,
         if len(out) >= max_worlds:
             break
     return out
+
+
+# ----------------------------------------------------------------------
+# Every row read at its character's turn (Hatter stage 3b, 23.10.2026)
+# ----------------------------------------------------------------------
+# A row is what one character's turn produced: the Empath's count at the
+# Empath's slot, the Snake Charmer's choice at the Snake Charmer's. While
+# the row is judged, its own night is read at that slot (`READ_AT`), so a
+# change later the same night — a Pit-Hag's, a Barber's swap — no longer
+# reaches back into it (open item 36, E Weg 1). A row whose character
+# does not wake that night reads the whole night, as every row did before.
+#
+# Done once here for every kind of row rather than in each `holds`: the
+# rows ask the board through `role_at`, `alignment_at`, `demon_at` and
+# `find_at` with their night's phase, and seventy-six of them doing it by
+# hand is seventy-six places to forget.
+
+_ROW_METHODS = ("holds", "is_true", "is_true_with", "leaned_on", "hard",
+                "weighed", "must_have_failed", "instead")
+
+
+def _row_slot(row):
+    role = getattr(row, "source_role", None)
+    night = getattr(row, "night", None)
+    if role is None or not isinstance(night, int):
+        return None
+    first = CHARACTERS[role].first_night if role in CHARACTERS else 0
+    other = CHARACTERS[role].other_night if role in CHARACTERS else 0
+    slot = first if night == 1 else other
+    return (f"N{night}", first, other) if slot else None
+
+
+def _at_its_turn(fn):
+    def at_its_turn(self, *args, **kwargs):
+        got = _row_slot(self)
+        if got is None:
+            return fn(self, *args, **kwargs)
+        was = READ_AT[0]
+        READ_AT[0] = got
+        try:
+            return fn(self, *args, **kwargs)
+        finally:
+            READ_AT[0] = was
+    at_its_turn.__name__ = fn.__name__
+    at_its_turn.__doc__ = fn.__doc__
+    at_its_turn.__wrapped__ = fn
+    return at_its_turn
+
+
+def _read_rows_at_their_turn():
+    from . import info as _info
+    seen = set()
+    todo = [_info.Info]
+    while todo:
+        cls = todo.pop()
+        if cls in seen:
+            continue
+        seen.add(cls)
+        todo.extend(cls.__subclasses__())
+        for name in _ROW_METHODS:
+            fn = cls.__dict__.get(name)
+            if fn is not None and callable(fn) \
+                    and not hasattr(fn, "__wrapped__"):
+                setattr(cls, name, _at_its_turn(fn))
+
+
+_read_rows_at_their_turn()

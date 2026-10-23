@@ -20,7 +20,8 @@ Patrick's answers (claude/hutmacher-lesarten.md):
   I  A Philosopher that took the Hatter is built.
   J  Weg 1: as many Demons after as before (a swap).
   K  Weg 2: two living Demons through the Summoner (a later stage).
-  L  Weg 2: the night split at a death at night (a later stage).
+  L  Weg 2: the night split at a death at night (stage 3c, 23.10.2026,
+     tests/test_split_night.py).
   M–O, Q, R  Weg 1; P Weg 2: the Marionette chooses and may be chosen.
   S  Weg 1: in stages; what this one does not reckon, the page says so.
   T  As for the Barber: only a Hatter somebody claimed starts a party.
@@ -211,16 +212,17 @@ class TheHatterWorking(SolverTest):
 
 
 class NotReckonedYet(SolverTest):
-    """S Weg 1, K, L and U: no figures, and the reason."""
+    """S Weg 1, K and U: no figures, and the reason. (L, a Hatter dead at
+    night, is reckoned since stage 3c.)"""
 
     def unreckoned(self, script=HAT, **kw):
         st = state(script=script, **kw)
         return S.analyze(st)["unreckoned"]
 
-    def test_a_claimed_hatter_dead_at_night(self):
+    def test_a_claimed_hatter_dead_at_night_is_reckoned_since_stage_3(self):
+        """L Weg 2, built in stage 3c (23.10.2026)."""
         got = self.unreckoned(deaths={5: ("N2",)}, days=(1, 2))
-        self.assertIn("hatter at night", got)
-        self.assertGreater(got["hatter at night"], 0)
+        self.assertNotIn("hatter at night", got)
 
     def test_a_hanged_hatter_is_reckoned(self):
         self.assertEqual(self.unreckoned(**HANGED), {})
@@ -357,6 +359,9 @@ def _payloads():
         pay({5: ["N2"]}),
         pay({5: ["X1"], 1: ["N2"]}, ids=IDS + ["summoner"]),
         pay({5: ["X1"], 1: ["N2"], 3: ["N3"]}, days=(1, 2, 3)),
+        # Dead at night beside an Assassin: a party after the Demons' turn
+        # and one after the Assassin's (stage 3c, 23.10.2026).
+        pay({5: ["N2"], 1: ["N3"]}, ids=IDS + ["assassin"], days=(1, 2, 3)),
     ]
 
 

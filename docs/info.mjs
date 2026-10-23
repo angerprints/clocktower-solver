@@ -15,7 +15,7 @@ import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./
 import {ORGAN_GRINDER_BY_CHOICE, killedByAVigormortis, minionStillActs, sourcesOn}
   from "./impairment.mjs";
 import {LISTENING, noteSideRead, phaseIndex} from "./phases.mjs";
-import {Timeline} from "./worlds.mjs";
+import {Timeline, readingAt} from "./worlds.mjs";
 import {possibleCounts, reallyLiving, theDeadOutnumberOrEqual, wokenWraiths}
   from "./waking.mjs";
 import {OTHER, shieldsOn} from "./deaths.mjs";
@@ -376,6 +376,26 @@ class Info {
   holds() { throw new Error("not implemented"); }
 }
 
+// Every row read at its character's turn (Hatter stage 3b, 23.10.2026):
+// while a row is judged, its own night is read at that character's slot,
+// so a change later that night no longer reaches back into it. A row
+// whose character does not wake that night reads the whole night. See
+// `_read_rows_at_their_turn` in worlds.py.
+const ROW_METHODS = ["holds", "isTrue", "isTrueWith", "leanedOn", "hard",
+                     "weighed", "mustHaveFailed", "instead"];
+
+function atItsTurn(fn) {
+  return function atItsTurnOf(...args) {
+    const role = this.constructor.sourceRole;
+    const c = role ? CHARACTERS[role] : null;
+    if (!c || !Number.isInteger(this.night)) return fn.apply(this, args);
+    const first = c.first_night || 0, other = c.other_night || 0;
+    if (!(this.night === 1 ? first : other)) return fn.apply(this, args);
+    return readingAt(`N${this.night}`, first, other,
+                     () => fn.apply(this, args));
+  };
+}
+
 const define = (name, sourceRole, holds, extra = {}) => {
   const cls = class extends Info {};
   Object.defineProperty(cls, "name", {value: name});
@@ -383,6 +403,10 @@ const define = (name, sourceRole, holds, extra = {}) => {
   cls.prototype.type = name;
   cls.prototype.holds = holds;
   Object.assign(cls.prototype, extra);
+  for (const method of ROW_METHODS)
+    if (Object.prototype.hasOwnProperty.call(cls.prototype, method)
+        && typeof cls.prototype[method] === "function")
+      cls.prototype[method] = atItsTurn(cls.prototype[method]);
   return cls;
 };
 
@@ -644,7 +668,7 @@ export const TownCrierInfo = define("TownCrierInfo", "TownCrier",
  * one did. Right for legality, wrong for truth, and a Vortox needs
  * truth: a reading made false by registration is already false.
  */
-TownCrierInfo.prototype.isTrue = function (w, s) {
+TownCrierInfo.prototype.isTrue = atItsTurn(function (w, s) {
   const day = this.night - 1;
   if (day < 1) return false;
   const phase = `D${day}`;
@@ -652,7 +676,7 @@ TownCrierInfo.prototype.isTrue = function (w, s) {
   const who = !raw ? [] : (raw.has ? [...raw] : raw);
   const really = who.some(x => TEAM[w.roleAt(x, phase)] === "minion");
   return this.nominated ? really : !really;
-};
+});
 
 /** How many of the dead are evil.
  *
@@ -1385,11 +1409,11 @@ export const DreamerInfo = define("DreamerInfo", "Dreamer",
  * false and a Vortox may produce it. `holds` answers "could this have
  * been said"; this answers "was it so".
  */
-DreamerInfo.prototype.isTrue = function (w) {
+DreamerInfo.prototype.isTrue = atItsTurn(function (w) {
   const actual = w.roleAt(this.target, `N${this.night}`);
   return isReallyRole(actual, this.good_role) ||
          isReallyRole(actual, this.evil_role);
-};
+});
 
 // --- Bad Moon Rising ---------------------------------------------------
 

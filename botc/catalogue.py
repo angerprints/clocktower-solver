@@ -826,3 +826,13 @@ def lookup(name):
         if wanted in (normalise(character.key), normalise(character.name)):
             return character
     return None
+
+
+def slot_of(key, night):
+    """Where this character acts on that night, or None if it does not
+    wake then. The first night has an order of its own."""
+    character = CHARACTERS.get(key)
+    if character is None:
+        return None
+    got = character.first_night if night == 1 else character.other_night
+    return got or None

@@ -27,7 +27,8 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    ExorcistChoice, GolemNomination, AlHadikhiaChose,
                    LilMonstaBabysat, SageInfo, SavantInfo, KnightInfo,
                    ClockmakerInfo, FlowergirlInfo, SnakeCharmerChoice,
-                   PuzzlemasterGuess, babysitter_at,
+                   PuzzlemasterGuess, PitHagChoice, MoonchildChoice,
+                   babysitter_at,
                    acts_as_cult_leader, cult_sides, knows_it_turned_evil,
                    went_on_after, phase_index,
                    begin_reads, end_reads, listen_for_sides, replay_reads,
@@ -40,9 +41,10 @@ from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     is_evil, must_hide, show, wake_fits)
 from . import deaths as death_causes
 from . import impairment
-from .catalogue import CHARACTERS
+from .catalogue import CHARACTERS, slot_of
 from .waking import LEVIATHAN_CHOOSES_FOR
 from .worlds import _at as moment_of
+from .worlds import READ_AT, SETUP_SLOT, _row_slot, reading_at
 from .worlds import (BABYSAT_READS, Babysits, Change, NotSummoned,
                      SUMMON_READS, Summoned, TEA_READS, TeaParty,
                      Timeline, TurnedEvil, World,
@@ -274,6 +276,10 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             # At the very start of the night after the Hatter died by day,
             # before anybody acts (C, 22.10.2026).
             "a_hatters_tea_party": 1,
+            # After a death at night, straight after it (C; Hatter stage
+            # 3c, 23.10.2026): after the Summoner, before the Barber,
+            # whose swap comes later in the night.
+            "a_hatters_tea_party_at_night": 30,
             "a_barber_lets_the_demon_swap_two": 40,
             "a_huntsman_finds_the_damsel": 45,
             "a_farmer_hands_it_on": 48,
@@ -281,6 +287,86 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             # Empath or Noble on night one still sees the Ogre as good.
             "an_ogre_picks_a_side": 60,
             "demon_handovers": 99}      # a death, so after everything
+
+
+# Whose turn each rule is (Hatter stage 3b, 23.10.2026): the rule reads
+# every night at that character's slot, and every change it makes on a
+# night is stamped with the slot (`Change.slot`), so a reader earlier that
+# night does not see it and one later does. The Bounty Hunter's Townsfolk
+# was evil from the start, or from a Philosopher's turn; the babysitter is
+# chosen at Lil' Monsta's turn. The tea party after a death by day is at
+# the very start (C), the Demon's handovers at the turn of the Demon that
+# fell (`demon_lineages`), the Ogre's turn by day.
+_TURN_OF = {"a_snake_charmer_takes_the_star": "SnakeCharmer",
+            "a_pit_hag_makes_somebody_else": "PitHag",
+            "a_pit_hag_nobody_wrote_down": "PitHag",
+            "the_summoner_summons": "Summoner",
+            "a_barber_lets_the_demon_swap_two": "Barber",
+            "a_huntsman_finds_the_damsel": "Huntsman",
+            "a_farmer_hands_it_on": "Farmer",
+            "the_minions_choose_a_babysitter": "LilMonsta",
+            "a_bounty_hunter_brings_an_evil_townsfolk": "Philosopher"}
+
+
+def _turn(rule):
+    """`reading_at` for a rule's character, every night."""
+    key = _TURN_OF.get(rule.__name__)
+    if key is None:
+        return reading_at(None, 0, 0)
+    return reading_at(None, slot_of(key, 1) or 0, slot_of(key, 2) or 0)
+
+
+def _turn_of(key, night):
+    """`reading_at` this character's turn of that night."""
+    return reading_at(f"N{night}", slot_of(key, 1) or 0,
+                      slot_of(key, night) or 0)
+
+
+def stamped(changes, key):
+    """These changes, each made at this character's turn of its night —
+    unless it already says where it happened."""
+    out = []
+    for c in changes:
+        if c.slot is None and c.phase[:1] == "N" and key is not None:
+            slot = slot_of(key, int(c.phase[1:]))
+            if slot is not None:
+                c = c._replace(slot=slot)
+        out.append(c)
+    return tuple(out)
+
+
+def _offers(rule, view, state):
+    """What a rule offers, asked at its turn and stamped with it."""
+    key = _TURN_OF.get(rule.__name__)
+    with _turn(rule):
+        return [(stamped(extra, key), cost)
+                for extra, cost in rule(view, state)]
+
+
+# Where each cause of a night death reads the board (deaths.CAUSE_TURNS).
+# The Demons wake together on the sheet, from the Legion to the Kazali,
+# all before the Assassin; the Leviathan's place after dawn is no kill.
+_DEMONS_DONE = max(c.other_night for c in CHARACTERS.values()
+                   if c.team == "demon"
+                   and c.other_night < CHARACTERS["Assassin"].other_night) + 5
+death_causes.CAUSE_TURNS.update({
+    "the_demon_kills": _DEMONS_DONE,
+    "a_zombuul_kills_on_a_quiet_day": _DEMONS_DONE,
+    "a_pukka_kills_what_it_poisoned": _DEMONS_DONE,
+    "an_al_hadikhia_chooses": _DEMONS_DONE,
+    "a_lil_monsta_may_kill": _DEMONS_DONE,
+    "a_shabaloth_kills_twice": _DEMONS_DONE,
+    "a_po_kills_none_or_three": _DEMONS_DONE,
+    "a_yaggababble_kills_for_each_time": _DEMONS_DONE,
+    "a_lleech_follows_its_host": _DEMONS_DONE,
+    "a_pit_hag_making_a_demon_makes_deaths_arbitrary":
+        CHARACTERS["PitHag"].other_night,
+    "a_gossip_may_kill": CHARACTERS["Gossip"].other_night,
+    "a_godfather_answers_an_outsider": CHARACTERS["Godfather"].other_night,
+    "an_assassin_kills_through_anything": CHARACTERS["Assassin"].other_night,
+    "a_gambler_may_lose": CHARACTERS["Gambler"].other_night,
+    "a_lycanthrope_may_kill": CHARACTERS["Lycanthrope"].other_night,
+})
 
 
 def transition_rule(fn):
@@ -355,7 +441,14 @@ def possible_timelines(world, state, cap=128):
     # stories, and with room for only one set of them the Townsfolk past
     # the first few were never told (the gate, seed 54).
     if _hatter_on_board(state):
-        cap = max(cap, HATTER_STORIES * hunted)
+        # Once more for each slot a party at night may stand at (stage 3c):
+        # each is a story of every way they chose.
+        died = hatter_deaths(world, state)
+        slots = max([len(tea_slots(state, int(p[1:]), s))
+                     for s, p in died if p[0].upper() == "N"] or [1])
+        # And for each party past the first: a Hatter raised and killed
+        # again, the parties multiply (gate, seed 1509).
+        cap = max(cap, HATTER_STORIES * hunted * slots * max(1, len(died)))
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -424,7 +517,7 @@ def _movers_in(world, state):
     # the Demon after a handover the night before (22.10.2026).
     if _hatter_on_board(state):
         claimed = hatter_claimants(state)
-        if any(s in claimed and p[0].upper() != "N" for s, p in deaths):
+        if any(s in claimed for s, p in deaths):
             count += 2
     for key, needs in (("Barber", barber_died), ("Farmer", at_night),
                        ("FangGu", at_night), ("Ogre", True)):
@@ -448,7 +541,7 @@ def _all_nights_at_once(world, state, cap):
         for changes, weight in stories:
             if not _LISTENING[0]:         # nobody turns evil that way here
                 view = Timeline(world, changes) if changes else world
-                for extra, cost in rule(view, state):
+                for extra, cost in _offers(rule, view, state):
                     grown.append((changes + tuple(extra), weight * cost))
                     if len(grown) >= cap:
                         break
@@ -467,7 +560,7 @@ def _all_nights_at_once(world, state, cap):
                 begin_reads()
                 try:
                     offers = [(tuple(extra), cost)
-                              for extra, cost in rule(view, state)]
+                              for extra, cost in _offers(rule, view, state)]
                 finally:
                     reads = end_reads()
                 before.append((flips, reads, offers))
@@ -524,6 +617,10 @@ def _nights_it_acts(rule, state):
         claimed = hatter_claimants(state)
         return {int(p[1:]) + 1 for seat, p in state.death_phases()
                 if p and seat in claimed and p[0].upper() != "N"}
+    if name == "a_hatters_tea_party_at_night":
+        claimed = hatter_claimants(state)
+        return {int(p[1:]) for seat, p in state.death_phases()
+                if p and seat in claimed and p[0].upper() == "N"}
     return None
 
 
@@ -566,7 +663,7 @@ def _night_by_night(world, state, cap, last, stories):
                 others = tuple(c for c in changes if c not in mine)
                 view = Timeline(world, others) if others else world
                 fitted = False
-                for extra, cost in rule(view, state):
+                for extra, cost in _offers(rule, view, state):
                     upto = tuple(c for c in extra
                                  if int(c.phase[1:]) <= night)
                     # What this rule already settled for earlier nights
@@ -824,7 +921,11 @@ def _barber_share(world, changes, state):
                  if not isinstance(c, (DemonMinionSwap, OtherSwap)))
     view = Timeline(world, rest) if rest else world
     counts = {}
-    for extra, _cost in a_barber_lets_the_demon_swap_two(view, state):
+    # Asked as the stories were told, at the Barber's turn (Hatter stage
+    # 3b): the rule keeps its offers per board, and an answer worked out
+    # for the whole night was otherwise handed to the turn, or back.
+    for extra, _cost in _offers(a_barber_lets_the_demon_swap_two, view,
+                                state):
         if extra:
             ours = isinstance(extra[0], DemonMinionSwap)
             got = counts.setdefault(extra[0].phase, [0, 0])
@@ -1343,7 +1444,10 @@ def a_mezepheles_may_have_turned(world, state):
             if side_open(world, state, seat, phase) \
                     and not acts_as_cult_leader(world, state, seat, phase):
                 continue                  # a Goon's side nobody follows
-            stories.append((MezephelesTurn(phase, seat, None, "evil"),))
+            # At the Mezepheles's turn of that night (Hatter stage 3b):
+            # a reader earlier in the night still sees the seat good.
+            stories.append((MezephelesTurn(phase, seat, None, "evil",
+                                           slot_of("Mezepheles", night)),))
     return stories
 
 
@@ -1750,7 +1854,8 @@ def _marionette_enters(world, state, made):
             held.append("Drunk")
     after = (() if made is None
              else (Change(made.phase, m, "Marionette", "evil"),))
-    return [(Change("N1", m, role, "good"),) + after for role in held]
+    return [(Change("N1", m, role, "good", SETUP_SLOT),) + after
+            for role in held]
 
 
 def _typhon_neighbours(world, state, night, seat, demon):
@@ -1853,13 +1958,14 @@ def summoned_change(world):
 # holds, and under the optional rule (B Weg 2) the Demon and one Minion
 # may swap types — never leaving more or fewer Demons than before (J Weg
 # 1). A death by day: they choose at the very start of the next night,
-# before anybody acts (C). A death at night is not reckoned yet (Stufe 1,
-# S Weg 1): the night would have to be split at the death, and the
-# report says so (`hatter_unreckoned`).
+# before anybody acts (C). A death at night: straight after it, at the
+# slot after the turn of whoever may have killed it (stage 3c,
+# 23.10.2026, `tea_slots`) — the night read in its order, stage 3b.
 #
-# Stufe 1 also leaves out what makes two living Demons (K Weg 2, Stufe
-# 2): a Minion choosing the Summoner while a Demon lives and the Summoner
-# could still summon on the third night.
+# Not reckoned yet, and the report says so (`hatter_unreckoned`): what
+# makes two living Demons (K Weg 2, stage 2) — a Minion choosing the
+# Summoner while a Demon lives and the Summoner could still summon on the
+# third night — and Lil' Monsta taken in the middle of the game (U).
 
 NOT_HATTED = ("Legion", "Riot", "LilMonsta")
 
@@ -1931,10 +2037,61 @@ def hatter_deaths(world, state):
 
 def _tea_night(phase):
     """The night they choose after a death at this moment: the next one
-    after a death by day, None after a death at night (not reckoned)."""
+    after a death by day, the same night after a death at night (C;
+    Hatter stage 3c, 23.10.2026)."""
     if phase[0].upper() in "DEX":
         return int(phase[1:]) + 1
-    return None
+    return int(phase[1:])
+
+
+# Who may have killed a Hatter at night, and where the party is then: the
+# slot after their turn (C, "directly after his death"). The table sees
+# only that the Hatter died in the night, so every killer on the board is
+# a story of its own. The Demons are taken together — they wake one after
+# another and the last of them before the Assassin is the Demons' turn
+# (`_DEMONS_DONE`) — and since the party comes after their turn, a Demon
+# that killed tonight does not kill again (D Weg 1), and a Minion that
+# takes the Demon in the swap kills from the next night.
+_TEA_KILLERS = ("Lycanthrope", "PitHag", "Assassin", "Godfather",
+                "Gossip", "Moonchild")
+
+
+def tea_slots(state, night, seat=None):
+    """The slots a tea party may stand at after the Hatter in this seat
+    died that night, one for each killer that could have done it — as far
+    as the board says: a Lycanthrope that named somebody else, a Pit-Hag
+    that made no Demon, a Godfather with no Outsider dead that day, a
+    Moonchild that pointed elsewhere did not. Fewer slots, fewer stories
+    to tell; each slot is a story of every way they chose (A Weg 1)."""
+    out = [_DEMONS_DONE + 1]
+    rows = lambda kind: [i for i in state.infos if isinstance(i, kind)
+                         and i.night == night]
+    for key in _TEA_KILLERS:
+        slot = slot_of(key, night)
+        if slot is None or not _on_board(state, key):
+            continue
+        if seat is not None:
+            if key == "Lycanthrope":
+                said = rows(LycanthropeChose)
+                if said and all(i.target != seat for i in said):
+                    continue
+            if key == "PitHag":
+                said = rows(PitHagChoice)
+                if said and not any(TEAM.get(getattr(i, "role", None))
+                                    == "demon" for i in said):
+                    continue
+            if key == "Godfather":
+                day = f"D{night - 1}"
+                if not any(day in state.died_at(p) or f"E{night - 1}"
+                           in state.died_at(p)
+                           for p in range(state.n_players)):
+                    continue
+            if key == "Moonchild":
+                if not any(isinstance(i, MoonchildChoice)
+                           and i.target == seat for i in state.infos):
+                    continue
+        out.append(slot + 1)
+    return sorted(set(out))
 
 
 def _hatted(state, team, night, held, demon_alive):
@@ -1954,14 +2111,23 @@ def _hatted(state, team, night, held, demon_alive):
     return out
 
 
-def tea_party_choices(view, state, night):
+def tea_party_choices(view, state, night, slot=None):
     """Every way the evil players can have chosen at the start of this
-    night, as the changes each writes. The first is "nobody did"."""
+    night — or at this slot of it, after a Hatter died that night — as the
+    changes each writes. The first is "nobody did"."""
+    if slot is not None:
+        with reading_at(f"N{night}", slot, slot):
+            return _tea_party_choices(view, state, night, slot)
+    return _tea_party_choices(view, state, night, None)
+
+
+def _tea_party_choices(view, state, night, slot):
     n = state.n_players
     phase = f"N{night}"
     # The board as the day before ended: the party is the first thing
-    # that happens tonight (`_before` already has it in).
-    before = f"D{night - 1}"
+    # that happens tonight (`_before` already has it in). After a death
+    # at night, the board at the party's slot (read there by the caller).
+    before = f"D{night - 1}" if slot is None else phase
     alive = state.alive_set(phase)
     held = {view.role_at(p, before) for p in range(n)}
     side = lambda p: "evil" if view.evil_at(p, before) else "good"
@@ -1989,7 +2155,7 @@ def tea_party_choices(view, state, night):
         for key in each[p]:
             if key in taken:
                 continue
-            grow(at + 1, so_far + [TeaParty(phase, p, key, side(p))],
+            grow(at + 1, so_far + [TeaParty(phase, p, key, side(p), slot)],
                  taken | {key})
 
     grow(0, [], frozenset())
@@ -2005,8 +2171,9 @@ def tea_party_choices(view, state, night):
                 continue
             for d_key in spare_demons:
                 for m_key in spare_minions:
-                    swap = [TeaParty(phase, minion, d_key, side(minion)),
-                            TeaParty(phase, demon, m_key, side(demon))]
+                    swap = [TeaParty(phase, minion, d_key, side(minion),
+                                     slot),
+                            TeaParty(phase, demon, m_key, side(demon), slot)]
                     rest = [p for p in seats if p not in (demon, minion)]
 
                     def more(at, so_far, taken):
@@ -2020,32 +2187,55 @@ def tea_party_choices(view, state, night):
                             if key in taken:
                                 continue
                             more(at + 1,
-                                 so_far + [TeaParty(phase, p, key, side(p))],
+                                 so_far + [TeaParty(phase, p, key, side(p),
+                                                    slot)],
                                  taken | {key})
 
                     more(0, swap, frozenset({d_key, m_key}))
     return out
 
 
+def _tea_stories(world, state, at_night):
+    if not _hatter_on_board(state):
+        return [((), 1.0)]
+    final = phase_index(state.final_phase())
+    over = getattr(state, "game_over", False)
+    stories = [((), 1.0)]
+    for _seat, phase in hatter_deaths(world, state):
+        night = _tea_night(phase)
+        if (phase[0].upper() == "N") != at_night \
+                or final < phase_index(f"N{night}"):
+            continue
+        # Not if the game ended with that death: nobody chooses after.
+        if at_night and over and final == phase_index(phase):
+            continue
+        slots = tea_slots(state, night, _seat) if at_night else [None]
+        grown = []
+        for changes, cost in stories:
+            view = Timeline(world, changes) if changes else world
+            for slot in slots:
+                for choice in tea_party_choices(view, state, night, slot):
+                    # "Nobody chose" is one story, whichever the slot.
+                    if not choice and slot != slots[0]:
+                        continue
+                    grown.append((changes + choice, cost))
+        stories = grown
+    return stories
+
+
 @transition_rule
 def a_hatters_tea_party(world, state):
     """The evil players choosing new characters after a Hatter died by
     day: every way, "nobody did" first (A Weg 1)."""
-    if not _hatter_on_board(state):
-        return [((), 1.0)]
-    final = phase_index(state.final_phase())
-    stories = [((), 1.0)]
-    for _seat, phase in hatter_deaths(world, state):
-        night = _tea_night(phase)
-        if night is None or final < phase_index(f"N{night}"):
-            continue
-        grown = []
-        for changes, cost in stories:
-            view = Timeline(world, changes) if changes else world
-            for choice in tea_party_choices(view, state, night):
-                grown.append((changes + choice, cost))
-        stories = grown
-    return stories
+    return _tea_stories(world, state, at_night=False)
+
+
+@transition_rule
+def a_hatters_tea_party_at_night(world, state):
+    """And after a Hatter died at night, straight after its death (C;
+    Hatter stage 3c, 23.10.2026): at the slot after each killer's turn
+    that could have done it (`tea_slots`)."""
+    return _tea_stories(world, state, at_night=True)
 
 
 def tea_parties(world):
@@ -2058,24 +2248,29 @@ def tea_parties(world):
 
 
 def hatter_unreckoned(view, state):
-    """What this story leaves out that Stufe 1 does not reckon, or None:
-    a Hatter that died at night ("hatter at night", S Weg 1), or a tea
-    party that could have made a second living Demon through the Summoner
-    ("two demons", K Weg 2)."""
+    """What this story leaves out that the solver does not reckon yet, or
+    None: a tea party that could have made a second living Demon through
+    the Summoner ("two demons", K Weg 2, Hatter stage 2), or Lil' Monsta
+    taken in the middle of the game ("lil monsta", U Weg 2). A Hatter
+    dead at night ("hatter at night") is reckoned since stage 3c
+    (23.10.2026)."""
     if not _hatter_on_board(state):
         return None
     final = phase_index(state.final_phase())
     for _seat, phase in hatter_deaths(view, state):
         night = _tea_night(phase)
-        if night is None:
-            # Not if the game ended with that death.
-            if getattr(state, "game_over", False) \
-                    and final == phase_index(phase):
-                continue
-            return "hatter at night"
+        at_night = phase[0].upper() == "N"
+        # A Hatter dead at night is reckoned since stage 3c (23.10.2026).
+        # Not if the game ended with that death.
+        if at_night and getattr(state, "game_over", False) \
+                and final == phase_index(phase):
+            continue
         if final < phase_index(f"N{night}"):
             continue
-        before = f"D{night - 1}"
+        # The board as the party's night began (after a death at night,
+        # the night it died in).
+        before = f"D{night - 1}" if not at_night else (
+            f"B{night - 1}" if night > 1 else "N1")
         alive = state.alive_set(f"N{night}")
         n = state.n_players
         # The Demon may have chosen Lil' Monsta (their jinx), which then
@@ -2235,7 +2430,7 @@ def _the_scarlet_woman_babysits(world, state):
                                                and phase_index(gone) >= final)
            for gone in state.died_at(scarlet)):
         return []
-    return [(Babysits(after, scarlet),)]
+    return [(Babysits(after, scarlet, slot=SETUP_SLOT),)]
 
 
 def demon_lineages(world, state, cap=24):
@@ -2350,7 +2545,12 @@ def demon_lineages(world, state, cap=24):
         character = view.role_at(holder, phase)
         moves = []
         for rule in HEIR_RULES:
-            moves.extend(rule(view, state, phase, character))
+            # At the turn of the Demon that fell (Hatter stage 3b): a
+            # starpass at the Imp's, a jump at the Fang Gu's. A Demon that
+            # fell to somebody else's kill hands on at its own turn too —
+            # the night says only that it died.
+            moves.extend(stamped(rule(view, state, phase, character),
+                                 character))
 
         # A Mastermind buys one more day after the Demon is executed.
         # Nobody inherits — there simply is no Demon after this — so the
@@ -4976,24 +5176,32 @@ def _plain_failures(world, state, outcome=None):
         # the Al-Hadikhia was working (21.10.2026).
         if _in_bag(state, "AlHadikhia") \
                 and seat in al_hadikhia_chosen(state, night):
-            ah = holding_now(world, state, "AlHadikhia", phase)
-            if ah is not None and world.role_at(ah, phase) == "AlHadikhia" \
-                    and ah in state.alive_set(phase):
+            # Asked at its turn (Hatter stage 3c): a party later that
+            # night may have made it something else.
+            with _turn_of("AlHadikhia", night):
+                ah = holding_now(world, state, "AlHadikhia", phase)
+                held = ah is not None \
+                    and world.role_at(ah, phase) == "AlHadikhia"
+            if held and ah in state.alive_set(phase):
                 working.setdefault(night, set()).add(ah)
                 continue
-        shabaloth = (holding_now(world, state, "Shabaloth", phase)
-                     if _in_bag(state, "Shabaloth") else None)
+        # At its turn: a Shabaloth that regurgitated and then chose
+        # another Demon at a party later that night (gate, seed 2897).
+        with _turn_of("Shabaloth", night):
+            shabaloth = (holding_now(world, state, "Shabaloth", phase)
+                         if _in_bag(state, "Shabaloth") else None)
         if shabaloth is not None and night >= 3 \
                 and shabaloth in state.alive_set(phase):
             continue                  # it could have; nothing demanded
         # The holder, or a Philosopher that took it — the one that
         # drunk the holder ahead of it (13.10.2026).
         back = _returned_at(state, phase)
-        prof = next((who for who in sorted(state.philosophies() or {})
-                     if who in state.alive_set(phase) and who != seat
-                     and who not in back
-                     and took_it(world, state, who, "Professor", phase)),
-                    world.find_at("Professor", phase))
+        with _turn_of("Professor", night):
+            prof = next((who for who in sorted(state.philosophies() or {})
+                         if who in state.alive_set(phase) and who != seat
+                         and who not in back
+                         and took_it(world, state, who, "Professor", phase)),
+                        world.find_at("Professor", phase))
         if prof is None or not _on_board(state, "Professor"):
             return None, None, 1.0, None
         if prof not in state.alive_set(phase) or night < 2:
@@ -5048,340 +5256,348 @@ def _plain_failures(world, state, outcome=None):
             working.setdefault(night, set()).add(mez)
 
     spent = _spent_nominations(state)
-    for idx, (info, src) in enumerate(zip(state.infos, _source_seats(state))):
-        if idx in spent:
-            outcome[idx] = SPENT
-            continue                      # the Virgin was already used up
-        # Shown Lil' Monsta: true of whoever babysat that night, and made
-        # up by anybody else (21.10.2026, C, Weg 1).
-        if isinstance(info, LilMonstaBabysat):
-            if info.holds(world, state, None):
+    # Each row read at its character's turn of its night, attribution
+    # included (Hatter stage 3b, E Weg 1): who held the character when
+    # it acted, and whether it worked then. See `worlds._row_slot`.
+    was_reading = READ_AT[0]
+    try:
+        for idx, (info, src) in enumerate(zip(state.infos, _source_seats(state))):
+            READ_AT[0] = _row_slot(info) or was_reading
+            if idx in spent:
+                outcome[idx] = SPENT
+                continue                      # the Virgin was already used up
+            # Shown Lil' Monsta: true of whoever babysat that night, and made
+            # up by anybody else (21.10.2026, C, Weg 1).
+            if isinstance(info, LilMonstaBabysat):
+                if info.holds(world, state, None):
+                    outcome[idx] = HELD
+                else:
+                    invented *= invention_cost(info)
+                    outcome[idx] = INVENTED
+                continue
+            if info.hard():
+                if not info.holds(world, state, None):
+                    return None, None, 1.0, None   # this cannot have happened
                 outcome[idx] = HELD
+                # A fact can lean on somebody too: a Banshee announced was a
+                # Banshee whose ability worked that night.
+                for who in info.leaned_on(world, state):
+                    working.setdefault(info.night, set()).add(who)
+                continue
+
+            # Something that happened in front of everybody and is judged by
+            # what the day did with it — a claim to be the Goblin, and the
+            # town executing the claimant. Nobody is its source, so there is
+            # nobody to have invented it: either the world has nothing to
+            # explain, or somebody's ability has to have been off.
+            if getattr(info, "event", False):
+                failed = info.must_have_failed(world, state)
+                for who in failed:
+                    failures[info.night].add(who)
+                outcome[idx] = EXCUSED if failed else HELD
+                continue
+
+            role = info.source_role
+            phase = f"N{info.night}"
+            seat = src
+            if seat is None:
+                # Who *acted*, not who holds the character now.
+                #
+                # A Snake Charmer swap is dated at the night, so asking here
+                # finds the seat the character ended up at rather than the
+                # seat that spoke — and the row then reads as invented. Look
+                # at the board as it stood when the night began, and fall
+                # back to now for a character that arrived tonight.
+                began = _before(info.night, phase)
+                seat = world.find_at(role, began)
+                if seat is None:
+                    seat = world.find_at(role, phase)
+                # Nobody holds it, and the one who said it believes it does:
+                # a Drunk with that token. Its own row, made up — not the
+                # reading of a Philosopher that took the character, which
+                # then had to have been off on a night nothing could reach it
+                # (13.10.2026, a mixed game with a Philosopher-Knight).
+                if seat is None and isinstance(info.player, int) \
+                        and 0 <= info.player < len(world.believes) \
+                        and world.believes[info.player] == role:
+                    seat = info.player
+                if seat is None:
+                    # Held now, or a Philosopher working it.
+                    seat = _whoever_works(world, state, role, phase)
+                if seat is None:
+                    seat = next((i for i, b in enumerate(world.believes)
+                                 if b == role), None)
+
+            # A Philosopher works two abilities at once, so a seat holding
+            # one may be the source of the other's readings from the night it
+            # took them.
+            gained = None
+            took = state.philosophies().get(seat)
+            if took is not None:
+                taken, since = took
+                gained = (taken, since, phase_index(phase) >= phase_index(since))
+            # A Vortox in play makes every Townsfolk ability yield something
+            # false. Alive, because a dead Demon does nothing; and its own
+            # droisoning is left to the plan below rather than decided here,
+            # the same way poison always has been.
+            vortox = holding_now(world, state, "Vortox", phase)
+            vortoxed = vortox is not None and vortox in state.alive_set(phase)
+            # Asked of the moment it *acted*. A Snake Charmer swap is dated
+            # at the night, so at `phase` the charmer no longer holds the
+            # character — and its own row was charged as invented, which put
+            # a world where the swap really happened at 0.4 against 1.0 for
+            # one where it could not. Exactly backwards, and the reason the
+            # swap used to be dated a phase late.
+            acted = _before(info.night, phase)
+            # Held then, **or taken by a Philosopher then** — a Philosopher
+            # that took the Snake Charmer and swapped is the Demon by `phase`,
+            # and its own row read as invented (29.09.2026).
+            if seat is not None and world.role_at(seat, phase) != role \
+                    and _has_ability(world, state, seat, role, acted):
+                held = ability_state(world, seat, role, acted, gained, vortoxed)
             else:
+                held = (ABSENT if seat is None
+                        else ability_state(world, seat, role, phase, gained,
+                                           vortoxed))
+            # A Pixie mad about this character: made up until its holder
+            # dies, at no cost, and its own from the night after (11.10.2026).
+            if held is ABSENT and seat is not None \
+                    and (world.role_at(seat, phase) == "Pixie"
+                         or took_it(world, state, seat, "Pixie", phase)) \
+                    and _on_board(state, "Pixie"):
+                got = _pixie_gain(world, state, seat)
+                if got is not None and got[0] == role:
+                    if got[1] is not None and info.night >= got[1]:
+                        held = (INVERTED if vortoxed
+                                and TEAM[role] == "townsfolk" else GENUINE)
+                    else:
+                        held = ARBITRARY
+            # A row told to somebody *other* than the holder — the player a
+            # Nightwatchman chose saying they were woken. A Drunk holding the
+            # token has no ability, so the Storyteller wakes nobody for it:
+            # there is no made-up answer for anybody else to have heard.
+            witnessed = getattr(info, "witnessed", False)
+            if witnessed and held is ARBITRARY:
+                held = ABSENT
+            if held is ABSENT:
+                invented *= invention_cost(info)   # no such source in this world
+                outcome[idx] = INVENTED
+                continue
+            if held is ARBITRARY:
+                outcome[idx] = MADE_UP        # the Drunk's answer was made up
+                continue
+            if seat != info.player and world.evil_at(info.player, phase):
+                invented *= invention_cost(info)   # an evil messenger is none
+                outcome[idx] = INVENTED
+                continue
+
+            # A seat that was turned evil and knows it — the Bounty Hunter's
+            # evil Townsfolk, a Mezepheles's catch — still has its ability
+            # and is told the truth, and says what suits it. What holds is
+            # taken as said; what does not was made up, at the price of any
+            # made-up reading (11.10.2026).
+            if knows_it_turned_evil(world, seat, phase):
+                if isinstance(info, FortuneTeller) or held is INVERTED \
+                        or info.holds(world, state, None, seat):
+                    outcome[idx] = HELD
+                else:
+                    invented *= invention_cost(info)
+                    outcome[idx] = INVENTED
+                continue
+
+            # A Vortox falsifies information, not choices. Nobody told a
+            # Philosopher what it took or a Courtier which character to name,
+            # so there is nothing about those rows for a Vortox to make
+            # false — and treating them as readings made every board with a
+            # Philosopher on it impossible.
+            #
+            # What follows from the choice is a different matter: a
+            # Philosopher that took the Town Crier gets that ability and
+            # *that* reading is inverted, a Gambler that guesses wrong still
+            # dies, a Snake Charmer that chose the Vortox still swaps.
+            # One question, asked in one place: does a Vortox reach this row?
+            # A shot or a Virgin's nomination is not information either, but
+            # what the town watched is still checked like any act: a missed
+            # shot at the Demon under a Vortox wants the Slayer off (Stelle
+            # 59, 14.10.2026).
+            if held is INVERTED and not info.is_information(state) \
+                    and getattr(info, "in_the_open", False):
+                held = GENUINE
+            if held is INVERTED and not info.is_information(state):
+                outcome[idx] = HELD
+                continue
+
+            if held is INVERTED and isinstance(info, FortuneTeller):
+                # Whether it came out false depends on the red herring, like
+                # everything else about a Fortune Teller. Chosen with the
+                # herring in the pair, the true answer is yes and a Vortox
+                # makes it no — and a no on two players of whom neither is
+                # the Demon was read here as true, with no herring to say
+                # otherwise, so the Vortox had to be off and the true world
+                # of nine mixed games in three thousand was thrown out
+                # (07.10.2026). Settled with the herring, below.
+                ft_infos.append((info, seat, idx, vortox))
+                continue
+
+            if held is INVERTED:
+                # It had to come out false. A reading that is *true* means
+                # the Vortox itself was not working that night, which the
+                # plan can pay for like any other droisoning.
+                #
+                # A false one is left alone rather than charged for, and that
+                # is an approximation worth naming: on a night where some
+                # readings are true and others false, this takes the Vortox
+                # as droisoned and does not additionally charge the false
+                # ones for needing their own excuse. Permissive, which is the
+                # direction to err in — it keeps worlds that happened rather
+                # than ruling them out.
+                # Truth, not legality. Misregistration is the mechanic that
+                # lets a Storyteller give false information *legally* — a Spy
+                # shown as the Slayer is still a Spy, so that reading is
+                # already false and a Vortox may produce it freely.
+                #
+                # `holds` answers "could this have been said", which is right
+                # nearly everywhere and wrong here. Rows that can misregister
+                # carry `is_true` for exactly this question, and asking the
+                # wrong one made a legal misregistered reading look true —
+                # so the Vortox had to be droisoned to explain it, and boards
+                # that really happened were priced as though something had
+                # gone wrong.
+                # True every way an open side could be (Stelle 72).
+                was_true = (all(info.is_true(view, state, seat)
+                                for view in each_real_side(
+                                    world, state, f"N{info.night}"))
+                            if hasattr(info, "is_true")
+                            else info.holds(world, state, rh_for(info), seat))
+                if was_true:
+                    # Then the Vortox was not working, and nothing else will
+                    # do. "Even if they are drunk or poisoned, it must be
+                    # false" — the card's own clarification.
+                    #
+                    # For three days this also accepted the seat itself being
+                    # droisoned, on the reasoning that a droisoned Townsfolk
+                    # is told anything and anything includes the truth. Under
+                    # a Vortox it does not, and the simulator that produced
+                    # such a board was making the same mistake (corrected
+                    # 02.10.2026, reading the script against the wiki).
+                    #
+                    # The Mathematician is left with both ways out. Its number
+                    # is checked against a range rather than a value, so a
+                    # false one can sit inside what this would call true.
+                    if type(info).__name__ == "MathematicianInfo":
+                        got = vortox_or.setdefault(info.night, (vortox, set()))
+                        got[1].add(seat)
+                    else:
+                        failures[info.night].add(vortox)
+                    outcome[idx] = EXCUSED
+                else:
+                    outcome[idx] = HELD
+                continue
+
+            # The Lycanthrope's faux paw registers evil while it works, and
+            # whether it worked is the plan's (11.10.2026). A row that asked
+            # about the faux paw is tried both ways: holding only with it
+            # evil asks the Lycanthrope to be working; holding only with it
+            # as it is asks the Lycanthrope off — or the row's own source.
+            ok = faux_need = None
+            if not isinstance(info, FortuneTeller) \
+                    and _faux_paw(state) is not None:
+                state._faux_mode, state._faux_hit = "on", False
+                ok = info.holds(world, state, None, seat)
+                if state._faux_hit:
+                    state._faux_mode = "off"
+                    ok_off = info.holds(world, state, None, seat)
+                    state._faux_mode = "on"
+                    lyc = faux_paw_lycanthrope(world, state, phase,
+                                               living=False)
+                    if ok and not ok_off:
+                        faux_need = ("working", lyc)
+                    elif ok_off and not ok:
+                        faux_need = ("impaired", lyc)
+                state._faux_hit = False
+            if ok is None and not isinstance(info, FortuneTeller):
+                ok = info.holds(world, state, None, seat)
+            # Or it holds with a Philosopher that took the Recluse read as the
+            # Recluse: then that Philosopher was working (group 6, N).
+            recluse_need = None
+            if ok is False and not isinstance(info, FortuneTeller):
+                for who in _philosopher_recluses(world, state, phase):
+                    if info.holds(_AsRecluse(world, who), state, None, seat):
+                        recluse_need = who
+                        break
+            # That, or its own source was off: either explains it.
+            if recluse_need is not None and not witnessed:
+                either.append((info.night, frozenset({seat}), frozenset(),
+                               frozenset({recluse_need})))
+                outcome[idx] = EXCUSED
+                continue
+            if recluse_need is not None:
+                ok = True
+
+            if faux_need is not None and faux_need[0] == "impaired" \
+                    and not witnessed:
+                either.append((info.night, frozenset({seat}),
+                               frozenset({faux_need[1]}), frozenset()))
+                outcome[idx] = EXCUSED
+                continue
+
+            if isinstance(info, FortuneTeller):
+                # Whether it held depends on where the red herring was, which
+                # is settled later. Left open until then.
+                ft_infos.append((info, seat, idx, None))
+            elif witnessed and not ok:
+                # Nothing excuses it. A droisoned source does not tell the
+                # other player something false — it tells them nothing, they
+                # are never woken. So the words did not come from the game.
                 invented *= invention_cost(info)
                 outcome[idx] = INVENTED
-            continue
-        if info.hard():
-            if not info.holds(world, state, None):
-                return None, None, 1.0, None   # this cannot have happened
-            outcome[idx] = HELD
-            # A fact can lean on somebody too: a Banshee announced was a
-            # Banshee whose ability worked that night.
-            for who in info.leaned_on(world, state):
-                working.setdefault(info.night, set()).add(who)
-            continue
-
-        # Something that happened in front of everybody and is judged by
-        # what the day did with it — a claim to be the Goblin, and the
-        # town executing the claimant. Nobody is its source, so there is
-        # nobody to have invented it: either the world has nothing to
-        # explain, or somebody's ability has to have been off.
-        if getattr(info, "event", False):
-            failed = info.must_have_failed(world, state)
-            for who in failed:
-                failures[info.night].add(who)
-            outcome[idx] = EXCUSED if failed else HELD
-            continue
-
-        role = info.source_role
-        phase = f"N{info.night}"
-        seat = src
-        if seat is None:
-            # Who *acted*, not who holds the character now.
-            #
-            # A Snake Charmer swap is dated at the night, so asking here
-            # finds the seat the character ended up at rather than the
-            # seat that spoke — and the row then reads as invented. Look
-            # at the board as it stood when the night began, and fall
-            # back to now for a character that arrived tonight.
-            began = _before(info.night, phase)
-            seat = world.find_at(role, began)
-            if seat is None:
-                seat = world.find_at(role, phase)
-            # Nobody holds it, and the one who said it believes it does:
-            # a Drunk with that token. Its own row, made up — not the
-            # reading of a Philosopher that took the character, which
-            # then had to have been off on a night nothing could reach it
-            # (13.10.2026, a mixed game with a Philosopher-Knight).
-            if seat is None and isinstance(info.player, int) \
-                    and 0 <= info.player < len(world.believes) \
-                    and world.believes[info.player] == role:
-                seat = info.player
-            if seat is None:
-                # Held now, or a Philosopher working it.
-                seat = _whoever_works(world, state, role, phase)
-            if seat is None:
-                seat = next((i for i, b in enumerate(world.believes)
-                             if b == role), None)
-
-        # A Philosopher works two abilities at once, so a seat holding
-        # one may be the source of the other's readings from the night it
-        # took them.
-        gained = None
-        took = state.philosophies().get(seat)
-        if took is not None:
-            taken, since = took
-            gained = (taken, since, phase_index(phase) >= phase_index(since))
-        # A Vortox in play makes every Townsfolk ability yield something
-        # false. Alive, because a dead Demon does nothing; and its own
-        # droisoning is left to the plan below rather than decided here,
-        # the same way poison always has been.
-        vortox = holding_now(world, state, "Vortox", phase)
-        vortoxed = vortox is not None and vortox in state.alive_set(phase)
-        # Asked of the moment it *acted*. A Snake Charmer swap is dated
-        # at the night, so at `phase` the charmer no longer holds the
-        # character — and its own row was charged as invented, which put
-        # a world where the swap really happened at 0.4 against 1.0 for
-        # one where it could not. Exactly backwards, and the reason the
-        # swap used to be dated a phase late.
-        acted = _before(info.night, phase)
-        # Held then, **or taken by a Philosopher then** — a Philosopher
-        # that took the Snake Charmer and swapped is the Demon by `phase`,
-        # and its own row read as invented (29.09.2026).
-        if seat is not None and world.role_at(seat, phase) != role \
-                and _has_ability(world, state, seat, role, acted):
-            held = ability_state(world, seat, role, acted, gained, vortoxed)
-        else:
-            held = (ABSENT if seat is None
-                    else ability_state(world, seat, role, phase, gained,
-                                       vortoxed))
-        # A Pixie mad about this character: made up until its holder
-        # dies, at no cost, and its own from the night after (11.10.2026).
-        if held is ABSENT and seat is not None \
-                and (world.role_at(seat, phase) == "Pixie"
-                     or took_it(world, state, seat, "Pixie", phase)) \
-                and _on_board(state, "Pixie"):
-            got = _pixie_gain(world, state, seat)
-            if got is not None and got[0] == role:
-                if got[1] is not None and info.night >= got[1]:
-                    held = (INVERTED if vortoxed
-                            and TEAM[role] == "townsfolk" else GENUINE)
-                else:
-                    held = ARBITRARY
-        # A row told to somebody *other* than the holder — the player a
-        # Nightwatchman chose saying they were woken. A Drunk holding the
-        # token has no ability, so the Storyteller wakes nobody for it:
-        # there is no made-up answer for anybody else to have heard.
-        witnessed = getattr(info, "witnessed", False)
-        if witnessed and held is ARBITRARY:
-            held = ABSENT
-        if held is ABSENT:
-            invented *= invention_cost(info)   # no such source in this world
-            outcome[idx] = INVENTED
-            continue
-        if held is ARBITRARY:
-            outcome[idx] = MADE_UP        # the Drunk's answer was made up
-            continue
-        if seat != info.player and world.evil_at(info.player, phase):
-            invented *= invention_cost(info)   # an evil messenger is none
-            outcome[idx] = INVENTED
-            continue
-
-        # A seat that was turned evil and knows it — the Bounty Hunter's
-        # evil Townsfolk, a Mezepheles's catch — still has its ability
-        # and is told the truth, and says what suits it. What holds is
-        # taken as said; what does not was made up, at the price of any
-        # made-up reading (11.10.2026).
-        if knows_it_turned_evil(world, seat, phase):
-            if isinstance(info, FortuneTeller) or held is INVERTED \
-                    or info.holds(world, state, None, seat):
-                outcome[idx] = HELD
-            else:
-                invented *= invention_cost(info)
-                outcome[idx] = INVENTED
-            continue
-
-        # A Vortox falsifies information, not choices. Nobody told a
-        # Philosopher what it took or a Courtier which character to name,
-        # so there is nothing about those rows for a Vortox to make
-        # false — and treating them as readings made every board with a
-        # Philosopher on it impossible.
-        #
-        # What follows from the choice is a different matter: a
-        # Philosopher that took the Town Crier gets that ability and
-        # *that* reading is inverted, a Gambler that guesses wrong still
-        # dies, a Snake Charmer that chose the Vortox still swaps.
-        # One question, asked in one place: does a Vortox reach this row?
-        # A shot or a Virgin's nomination is not information either, but
-        # what the town watched is still checked like any act: a missed
-        # shot at the Demon under a Vortox wants the Slayer off (Stelle
-        # 59, 14.10.2026).
-        if held is INVERTED and not info.is_information(state) \
-                and getattr(info, "in_the_open", False):
-            held = GENUINE
-        if held is INVERTED and not info.is_information(state):
-            outcome[idx] = HELD
-            continue
-
-        if held is INVERTED and isinstance(info, FortuneTeller):
-            # Whether it came out false depends on the red herring, like
-            # everything else about a Fortune Teller. Chosen with the
-            # herring in the pair, the true answer is yes and a Vortox
-            # makes it no — and a no on two players of whom neither is
-            # the Demon was read here as true, with no herring to say
-            # otherwise, so the Vortox had to be off and the true world
-            # of nine mixed games in three thousand was thrown out
-            # (07.10.2026). Settled with the herring, below.
-            ft_infos.append((info, seat, idx, vortox))
-            continue
-
-        if held is INVERTED:
-            # It had to come out false. A reading that is *true* means
-            # the Vortox itself was not working that night, which the
-            # plan can pay for like any other droisoning.
-            #
-            # A false one is left alone rather than charged for, and that
-            # is an approximation worth naming: on a night where some
-            # readings are true and others false, this takes the Vortox
-            # as droisoned and does not additionally charge the false
-            # ones for needing their own excuse. Permissive, which is the
-            # direction to err in — it keeps worlds that happened rather
-            # than ruling them out.
-            # Truth, not legality. Misregistration is the mechanic that
-            # lets a Storyteller give false information *legally* — a Spy
-            # shown as the Slayer is still a Spy, so that reading is
-            # already false and a Vortox may produce it freely.
-            #
-            # `holds` answers "could this have been said", which is right
-            # nearly everywhere and wrong here. Rows that can misregister
-            # carry `is_true` for exactly this question, and asking the
-            # wrong one made a legal misregistered reading look true —
-            # so the Vortox had to be droisoned to explain it, and boards
-            # that really happened were priced as though something had
-            # gone wrong.
-            # True every way an open side could be (Stelle 72).
-            was_true = (all(info.is_true(view, state, seat)
-                            for view in each_real_side(
-                                world, state, f"N{info.night}"))
-                        if hasattr(info, "is_true")
-                        else info.holds(world, state, rh_for(info), seat))
-            if was_true:
-                # Then the Vortox was not working, and nothing else will
-                # do. "Even if they are drunk or poisoned, it must be
-                # false" — the card's own clarification.
-                #
-                # For three days this also accepted the seat itself being
-                # droisoned, on the reasoning that a droisoned Townsfolk
-                # is told anything and anything includes the truth. Under
-                # a Vortox it does not, and the simulator that produced
-                # such a board was making the same mistake (corrected
-                # 02.10.2026, reading the script against the wiki).
-                #
-                # The Mathematician is left with both ways out. Its number
-                # is checked against a range rather than a value, so a
-                # false one can sit inside what this would call true.
-                if type(info).__name__ == "MathematicianInfo":
-                    got = vortox_or.setdefault(info.night, (vortox, set()))
-                    got[1].add(seat)
-                else:
-                    failures[info.night].add(vortox)
+            elif not ok:
+                # Poison has to land on whoever the information came from -
+                # poisoning the messenger changes nothing.
+                failures[info.night].add(seat)
                 outcome[idx] = EXCUSED
             else:
                 outcome[idx] = HELD
-            continue
-
-        # The Lycanthrope's faux paw registers evil while it works, and
-        # whether it worked is the plan's (11.10.2026). A row that asked
-        # about the faux paw is tried both ways: holding only with it
-        # evil asks the Lycanthrope to be working; holding only with it
-        # as it is asks the Lycanthrope off — or the row's own source.
-        ok = faux_need = None
-        if not isinstance(info, FortuneTeller) \
-                and _faux_paw(state) is not None:
-            state._faux_mode, state._faux_hit = "on", False
-            ok = info.holds(world, state, None, seat)
-            if state._faux_hit:
-                state._faux_mode = "off"
-                ok_off = info.holds(world, state, None, seat)
-                state._faux_mode = "on"
-                lyc = faux_paw_lycanthrope(world, state, phase,
-                                           living=False)
-                if ok and not ok_off:
-                    faux_need = ("working", lyc)
-                elif ok_off and not ok:
-                    faux_need = ("impaired", lyc)
-            state._faux_hit = False
-        if ok is None and not isinstance(info, FortuneTeller):
-            ok = info.holds(world, state, None, seat)
-        # Or it holds with a Philosopher that took the Recluse read as the
-        # Recluse: then that Philosopher was working (group 6, N).
-        recluse_need = None
-        if ok is False and not isinstance(info, FortuneTeller):
-            for who in _philosopher_recluses(world, state, phase):
-                if info.holds(_AsRecluse(world, who), state, None, seat):
-                    recluse_need = who
-                    break
-        # That, or its own source was off: either explains it.
-        if recluse_need is not None and not witnessed:
-            either.append((info.night, frozenset({seat}), frozenset(),
-                           frozenset({recluse_need})))
-            outcome[idx] = EXCUSED
-            continue
-        if recluse_need is not None:
-            ok = True
-
-        if faux_need is not None and faux_need[0] == "impaired" \
-                and not witnessed:
-            either.append((info.night, frozenset({seat}),
-                           frozenset({faux_need[1]}), frozenset()))
-            outcome[idx] = EXCUSED
-            continue
-
-        if isinstance(info, FortuneTeller):
-            # Whether it held depends on where the red herring was, which
-            # is settled later. Left open until then.
-            ft_infos.append((info, seat, idx, None))
-        elif witnessed and not ok:
-            # Nothing excuses it. A droisoned source does not tell the
-            # other player something false — it tells them nothing, they
-            # are never woken. So the words did not come from the game.
-            invented *= invention_cost(info)
-            outcome[idx] = INVENTED
-        elif not ok:
-            # Poison has to land on whoever the information came from -
-            # poisoning the messenger changes nothing.
-            failures[info.night].add(seat)
-            outcome[idx] = EXCUSED
-        else:
-            outcome[idx] = HELD
-            if faux_need is not None and witnessed:
-                working.setdefault(info.night, set()).add(faux_need[1])
-            elif faux_need is not None:
-                # Held only with the faux paw reading evil, so the
-                # Lycanthrope worked — or it did not, the reading was
-                # false, and its source was droisoned. One choice a night
-                # covers every such row: with the Lycanthrope off, all of
-                # their sources are (open item 57, 12.10.2026: a Xaan
-                # poisoned the Lycanthrope and the Noble alike, and only
-                # the first was asked).
-                faux_working.setdefault((info.night, faux_need[1]),
-                                        set()).add(seat)
-            # **A droisoned character cannot misregister.** A Storyteller
-            # chooses freely what a droisoned *information* role yields,
-            # because the information is arbitrary — but registration is
-            # a plain ability, and a plain ability simply does not
-            # function. A poisoned Recluse is a Recluse and shows as one.
-            #
-            # Whether a seat was droisoned is not known here: it is
-            # *chosen*, by the impairment plan, which settles afterwards.
-            # So a row that held only by somebody misregistering says so,
-            # and that seat is forbidden from being droisoned that night.
-            # The plan already understood "must not be impaired"; this is
-            # the first caller to use it for registration.
-            for who in info.leaned_on(world, state, seat):
-                working.setdefault(info.night, set()).add(who)
-            if recluse_need is not None:
-                working.setdefault(info.night, set()).add(recluse_need)
-            # And one that held only if somebody else was impaired or
-            # working: a Chambermaid's count that turns on a Wraith, which
-            # a drunk one does not wake (table ruling, 08.10.2026). Its
-            # own source being off explains it just as well.
-            instead = getattr(info, "instead", None)
-            needs = instead(world, state, seat) if instead else None
-            if needs is not None:
-                either.append((info.night, frozenset({seat})) + tuple(needs))
-                if needs[0]:
-                    outcome[idx] = EXCUSED
+                if faux_need is not None and witnessed:
+                    working.setdefault(info.night, set()).add(faux_need[1])
+                elif faux_need is not None:
+                    # Held only with the faux paw reading evil, so the
+                    # Lycanthrope worked — or it did not, the reading was
+                    # false, and its source was droisoned. One choice a night
+                    # covers every such row: with the Lycanthrope off, all of
+                    # their sources are (open item 57, 12.10.2026: a Xaan
+                    # poisoned the Lycanthrope and the Noble alike, and only
+                    # the first was asked).
+                    faux_working.setdefault((info.night, faux_need[1]),
+                                            set()).add(seat)
+                # **A droisoned character cannot misregister.** A Storyteller
+                # chooses freely what a droisoned *information* role yields,
+                # because the information is arbitrary — but registration is
+                # a plain ability, and a plain ability simply does not
+                # function. A poisoned Recluse is a Recluse and shows as one.
+                #
+                # Whether a seat was droisoned is not known here: it is
+                # *chosen*, by the impairment plan, which settles afterwards.
+                # So a row that held only by somebody misregistering says so,
+                # and that seat is forbidden from being droisoned that night.
+                # The plan already understood "must not be impaired"; this is
+                # the first caller to use it for registration.
+                for who in info.leaned_on(world, state, seat):
+                    working.setdefault(info.night, set()).add(who)
+                if recluse_need is not None:
+                    working.setdefault(info.night, set()).add(recluse_need)
+                # And one that held only if somebody else was impaired or
+                # working: a Chambermaid's count that turns on a Wraith, which
+                # a drunk one does not wake (table ruling, 08.10.2026). Its
+                # own source being off explains it just as well.
+                instead = getattr(info, "instead", None)
+                needs = instead(world, state, seat) if instead else None
+                if needs is not None:
+                    either.append((info.night, frozenset({seat})) + tuple(needs))
+                    if needs[0]:
+                        outcome[idx] = EXCUSED
+    finally:
+        READ_AT[0] = was_reading
 
     for (night, lyc), sources in sorted(faux_working.items()):
         either.append((night, frozenset(sources), frozenset(),

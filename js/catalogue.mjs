@@ -52,3 +52,11 @@ export function lookup(name) {
     if (normalise(c.key) === wanted || normalise(c.name) === wanted) return c;
   return null;
 }
+
+/** Where this character acts on that night, or null if it does not wake
+ * then. The first night has an order of its own. See catalogue.py. */
+export function slotOf(key, night) {
+  const c = CHARACTERS[key];
+  if (!c) return null;
+  return (night === 1 ? c.first_night : c.other_night) || null;
+}

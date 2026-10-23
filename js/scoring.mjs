@@ -10,7 +10,7 @@
 // killed each body — each is posited only when something on the board
 // would otherwise be false, and priced by how lucky it had to be.
 
-import {CHARACTERS} from "./catalogue.mjs";
+import {CHARACTERS, slotOf} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
 import {RESTING, minionStillActs, planNightResting, silencedOut, sourcesOn}
   from "./impairment.mjs";
@@ -19,6 +19,7 @@ import {LISTENING, beginReads, differOnlyUnasked, endReads, listenForSides,
         phaseIndex, replayReads} from "./phases.mjs";
 import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
+import {SETUP_SLOT, readingAt} from "./worlds.mjs";
 import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
         summonerWorld, teaParty, turnedEvil} from "./worlds.mjs";
@@ -116,6 +117,9 @@ const ACTS_AT = {
   theSummonerSummons: 19,
   // At the very start of the night after the Hatter died by day (C).
   aHattersTeaParty: 1,
+  // After a death at night, straight after it (C; Hatter stage 3c):
+  // after the Summoner, before the Barber. See solver.py.
+  aHattersTeaPartyAtNight: 30,
   aBarberLetsTheDemonSwapTwo: 40,
   aHuntsmanFindsTheDamsel: 45,
   aFarmerHandsItOn: 48,
@@ -131,6 +135,86 @@ export const transitionRule = fn => (
 
 export const HEIR_RULES = [];
 export const heirRule = fn => (HEIR_RULES.push(fn), fn);
+
+// Whose turn each rule is (Hatter stage 3b, 23.10.2026): the rule reads
+// every night at that character's slot, and every change it makes on a
+// night is stamped with it. See `_TURN_OF` in solver.py.
+const TURN_OF = {
+  aSnakeCharmerTakesTheStar: "SnakeCharmer",
+  aPitHagMakesSomebodyElse: "PitHag",
+  aPitHagNobodyWroteDown: "PitHag",
+  theSummonerSummons: "Summoner",
+  aBarberLetsTheDemonSwapTwo: "Barber",
+  aHuntsmanFindsTheDamsel: "Huntsman",
+  aFarmerHandsItOn: "Farmer",
+  theMinionsChooseABabysitter: "LilMonsta",
+  aBountyHunterBringsAnEvilTownsfolk: "Philosopher",
+};
+
+// One stamped copy per change: a rule's memo hands back the same change
+// objects, and the night passes key changes by object.
+const STAMPED = new WeakMap();
+
+/** These changes, each made at this character's turn of its night —
+ * unless it already says where it happened. See solver.py `stamped`. */
+export function stamped(changes, key) {
+  if (!key) return changes;
+  let any = false;
+  const out = changes.map(c => {
+    if ((c.slot !== null && c.slot !== undefined) || c.phase[0] !== "N")
+      return c;
+    let got = STAMPED.get(c);
+    if (got === undefined) {
+      const slot = slotOf(key, parseInt(c.phase.slice(1), 10));
+      // Every property kept, the hidden ones too: a Barber's swap says
+      // which kind it is in one that is not enumerable (`barberOffers`),
+      // and a spread copy lost it — the shares of a world's Barber stories
+      // then came out unlike Python's (test_mixed_scripts).
+      if (slot === null) got = c;
+      else {
+        got = Object.create(Object.getPrototypeOf(c),
+                            Object.getOwnPropertyDescriptors(c));
+        got.slot = slot;
+      }
+      STAMPED.set(c, got);
+    }
+    if (got !== c) any = true;
+    return got;
+  });
+  return any ? out : changes;
+}
+
+/** Run `fn` with the board read at this row's turn (`rowTurn`). */
+function atRowTurn(info, fn) {
+  const got = rowTurn(info);
+  return got ? readingAt(got.phase, got.first, got.other, fn) : fn();
+}
+
+/** A row's turn: {phase, first, other}, or null for the whole night. See
+ * worlds.py `_row_slot`. */
+export function rowTurn(info) {
+  const role = info.constructor.sourceRole ?? info.sourceRole;
+  const c = role ? CHARACTERS[role] : null;
+  if (!c || !Number.isInteger(info.night)) return null;
+  const first = c.first_night || 0, other = c.other_night || 0;
+  if (!(info.night === 1 ? first : other)) return null;
+  return {phase: `N${info.night}`, first, other};
+}
+
+/** Run `fn` reading the board at this character's turn of that night. */
+function turnOf(key, night, fn) {
+  return readingAt(`N${night}`, slotOf(key, 1) || 0, slotOf(key, night) || 0,
+                   fn);
+}
+
+/** What a rule offers, asked at its turn and stamped with it. */
+function offersOf(rule, view, state) {
+  const key = TURN_OF[rule.name];
+  if (!key) return rule(view, state);
+  return readingAt(null, slotOf(key, 1) || 0, slotOf(key, 2) || 0,
+    () => [...rule(view, state)].map(([extra, cost]) =>
+      [stamped(extra, key), cost]));
+}
 
 /** Every account of who was what, and when.
  *
@@ -155,7 +239,15 @@ export function possibleTimelines(world, state, cap = 128) {
     cap = Math.max(cap, LIL_MONSTA_STORIES);
   // And for every way a tea party went (22.10.2026), once for each
   // Townsfolk a Bounty Hunter may have turned. See solver.py.
-  if (hatterOnBoard(state)) cap = Math.max(cap, HATTER_STORIES * hunted);
+  if (hatterOnBoard(state)) {
+    // Once more for each slot a party at night may stand at. See solver.py.
+    let slots = 1;
+    const died = hatterDeaths(world, state);
+    for (const [s, p] of died)
+      if (p[0].toUpperCase() === "N")
+        slots = Math.max(slots, teaSlots(state, parseInt(p.slice(1), 10), s).length);
+    cap = Math.max(cap, HATTER_STORIES * hunted * slots * Math.max(1, died.length));
+  }
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -208,8 +300,7 @@ function moversIn(world, state) {
   // A claimed Hatter dead by day: night by night, always (22.10.2026).
   if (hatterOnBoard(state)) {
     const hatters = hatterClaimants(state);
-    if (deaths.some(([s, p]) => hatters.has(Number(s))
-                    && p[0].toUpperCase() !== "N")) count += 2;
+    if (deaths.some(([s]) => hatters.has(Number(s)))) count += 2;
   }
   for (const [key, needs] of [["Barber", barberDied], ["Farmer", atNight],
                               ["FangGu", atNight], ["Ogre", true]])
@@ -233,7 +324,7 @@ function allNightsAtOnce(world, state, cap) {
     for (const [changes, weight] of stories) {
       if (!LISTENING) {                   // nobody turns evil that way here
         const view = changes.length ? new Timeline(world, changes) : world;
-        for (const [extra, cost] of rule(view, state)) {
+        for (const [extra, cost] of offersOf(rule, view, state)) {
           grown.push([[...changes, ...extra], weight * cost]);
           if (grown.length >= cap) break outer;
         }
@@ -249,7 +340,7 @@ function allNightsAtOnce(world, state, cap) {
         const view = changes.length ? new Timeline(world, changes) : world;
         beginReads();
         let reads;
-        try { offers = [...rule(view, state)]; } finally { reads = endReads(); }
+        try { offers = [...offersOf(rule, view, state)]; } finally { reads = endReads(); }
         before.push([flips, reads, offers]);
       }
       for (const [extra, cost] of offers) {
@@ -286,12 +377,16 @@ function whoTurned(changes) {
 // Worked out once per change: the night passes ask for the same keys and
 // moments of the same few changes hundreds of times per world.
 const KEYS = new WeakMap(), MOMENTS = new WeakMap();
+// With the slot (Hatter stage 3b): two changes alike but for where in the
+// night they happened are two changes, as Python's tuples are.
 const sameChange = (a, b) => a === b || (a.phase === b.phase &&
   a.seat === b.seat && (a.role ?? null) === (b.role ?? null) &&
-  (a.side ?? null) === (b.side ?? null));
+  (a.side ?? null) === (b.side ?? null) &&
+  (a.slot ?? null) === (b.slot ?? null));
 const changeKey = c => {
   let k = KEYS.get(c);
-  if (k === undefined) KEYS.set(c, k = `${c.phase}|${c.seat}|${c.role}|${c.side}`);
+  if (k === undefined)
+    KEYS.set(c, k = `${c.phase}|${c.seat}|${c.role}|${c.side}|${c.slot ?? null}`);
   return k;
 };
 const momentOf = c => {
@@ -344,6 +439,15 @@ function nightsItActs(rule, state) {
             if (p[0].toUpperCase() !== "N") out.add(parseInt(p.slice(1), 10) + 1);
       return out;
     }
+    case "aHattersTeaPartyAtNight": {
+      const hatters = hatterClaimants(state);
+      const out = new Set();
+      for (const [seat, phases] of Object.entries(state.deaths || {}))
+        if (hatters.has(Number(seat)))
+          for (const p of phases)
+            if (p[0].toUpperCase() === "N") out.add(parseInt(p.slice(1), 10));
+      return out;
+    }
     default: return null;
   }
 }
@@ -385,7 +489,7 @@ function nightByNight(world, state, cap, last) {
         const earlier = mine.filter(c => nightOf(c) < night);
         const view = others.length ? new Timeline(world, others) : world;
         let fitted = false;
-        for (const [extra, cost] of rule(view, state)) {
+        for (const [extra, cost] of offersOf(rule, view, state)) {
           // What this rule settled for earlier nights has to stand. Asked
           // first and without building keys: on the last pass a Barber
           // offers every pair again to each of its fifty-odd stories, and
@@ -606,7 +710,7 @@ function theScarletWomanBabysits(world, state) {
   const final = phaseIndex(state.finalPhase());
   if (state.diedAt(scarlet).some(gone => phaseIndex(gone) >= index
       && !(state.gameOver && phaseIndex(gone) >= final))) return [];
-  return [[babysits(after, scarlet)]];
+  return [[{...babysits(after, scarlet), slot: SETUP_SLOT}]];
 }
 
 export function demonLineages(world, state, cap = 24) {
@@ -690,8 +794,9 @@ export function demonLineages(world, state, cap = 24) {
     }
     const character = view.roleAt(holder, phase);
     const moves = [];
+    // At the turn of the Demon that fell (Hatter stage 3b). See solver.py.
     for (const rule of HEIR_RULES)
-      moves.push(...rule(view, state, phase, character));
+      moves.push(...stamped(rule(view, state, phase, character), character));
 
     // A Mastermind buys one more day after the Demon is executed. Nobody
     // inherits — there simply is no Demon after this — so the lineage
@@ -1083,7 +1188,9 @@ export function aMezephelesMayHaveTurned(world, state) {
       if (seat === mez || world.evilAt(seat, phase)) continue;
       if (sideOpen(world, state, seat, phase)
           && !actsAsCultLeader(world, state, seat, phase)) continue;
-      stories.push([turnedEvil(phase, seat, "mezepheles")]);
+      // At the Mezepheles's turn of that night (Hatter stage 3b).
+      stories.push([{...turnedEvil(phase, seat, "mezepheles"),
+                     slot: slotOf("Mezepheles", night)}]);
     }
   }
   return stories;
@@ -1306,7 +1413,7 @@ function marionetteEnters(world, state, made) {
       held.push("Drunk");
   }
   const after = made ? [change(made.phase, m, "Marionette", "evil")] : [];
-  return held.map(role => [change("N1", m, role, "good"), ...after]);
+  return held.map(role => [change("N1", m, role, "good", SETUP_SLOT), ...after]);
 }
 
 function typhonNeighbours(world, state, night, seat, demon) {
@@ -1432,7 +1539,50 @@ export function hatterDeaths(world, state) {
 }
 
 const teaNight = phase => ("DEX".includes(phase[0].toUpperCase())
-  ? parseInt(phase.slice(1), 10) + 1 : null);
+  ? parseInt(phase.slice(1), 10) + 1 : parseInt(phase.slice(1), 10));
+
+// Who may have killed a Hatter at night, and the slot after their turn:
+// the Demons together, then each killer on the board. See solver.py
+// `tea_slots`.
+const TEA_KILLERS = ["Lycanthrope", "PitHag", "Assassin", "Godfather",
+                     "Gossip", "Moonchild"];
+const DEMONS_DONE = Math.max(...Object.values(CHARACTERS)
+  .filter(c => c.team === "demon"
+          && (c.other_night || 0) < CHARACTERS.Assassin.other_night)
+  .map(c => c.other_night || 0)) + 5;
+
+export function teaSlots(state, night, seat = null) {
+  const out = new Set([DEMONS_DONE + 1]);
+  const rows = type => state.infos.filter(i => i.type === type
+                                          && i.night === night);
+  for (const key of TEA_KILLERS) {
+    const slot = slotOf(key, night);
+    if (slot === null || !onBoard(state, key)) continue;
+    if (seat !== null) {
+      // As far as the board says, that killer did not. See solver.py.
+      if (key === "Lycanthrope") {
+        const said = rows("LycanthropeChose");
+        if (said.length && said.every(i => i.target !== seat)) continue;
+      }
+      if (key === "PitHag") {
+        const said = rows("PitHagChoice");
+        if (said.length && !said.some(i => TEAM[i.role] === "demon")) continue;
+      }
+      if (key === "Godfather") {
+        let any = false;
+        for (let p = 0; p < state.nPlayers; p++)
+          if (state.diedAt(p).includes(`D${night - 1}`)
+              || state.diedAt(p).includes(`E${night - 1}`)) any = true;
+        if (!any) continue;
+      }
+      if (key === "Moonchild"
+          && !state.infos.some(i => i.type === "MoonchildChoice"
+                               && i.target === seat)) continue;
+    }
+    out.add(slot + 1);
+  }
+  return [...out].sort((a, b) => a - b);
+}
 
 function hatted(state, team, night, held, demonAlive) {
   const out = [];
@@ -1447,10 +1597,22 @@ function hatted(state, team, night, held, demonAlive) {
 
 /** Every way the evil players can have chosen at the start of this
  * night; the first is "nobody did". See solver.py. */
-export function teaPartyChoices(view, state, night) {
+export function teaPartyChoices(view, state, night, slot = null) {
+  if (slot !== null)
+    return readingAt(`N${night}`, slot, slot,
+                     () => teaPartyChoicesAt(view, state, night, slot));
+  return teaPartyChoicesAt(view, state, night, null);
+}
+
+function teaPartyChoicesAt(view, state, night, slot) {
   const n = state.nPlayers;
   const phase = `N${night}`;
-  const before = `D${night - 1}`;
+  const before = slot === null ? `D${night - 1}` : phase;
+  const made = (p, key) => {
+    const c = teaParty(phase, p, key, side(p));
+    if (slot !== null) c.slot = slot;
+    return c;
+  };
   const alive = state.aliveSet(phase);
   const held = new Set();
   for (let p = 0; p < n; p++) held.add(view.roleAt(p, before));
@@ -1475,7 +1637,7 @@ export function teaPartyChoices(view, state, night) {
     grow(list, at + 1, soFar, taken);
     for (const key of each.get(p)) {
       if (taken.has(key)) continue;
-      grow(list, at + 1, [...soFar, teaParty(phase, p, key, side(p))],
+      grow(list, at + 1, [...soFar, made(p, key)],
            new Set([...taken, key]));
     }
   };
@@ -1490,8 +1652,7 @@ export function teaPartyChoices(view, state, night) {
       if (demons.includes(minion)) continue;
       for (const dKey of spareDemons)
         for (const mKey of spareMinions) {
-          const swap = [teaParty(phase, minion, dKey, side(minion)),
-                        teaParty(phase, demon, mKey, side(demon))];
+          const swap = [made(minion, dKey), made(demon, mKey)];
           const rest = seats.filter(p => p !== demon && p !== minion);
           grow(rest, 0, swap, new Set([dKey, mKey]));
         }
@@ -1499,22 +1660,40 @@ export function teaPartyChoices(view, state, night) {
   return out;
 }
 
-transitionRule(function aHattersTeaParty(world, state) {
+function teaStories(world, state, atNight) {
   if (!hatterOnBoard(state)) return [[[], 1.0]];
   const final = phaseIndex(state.finalPhase());
   let stories = [[[], 1.0]];
-  for (const [, phase] of hatterDeaths(world, state)) {
+  for (const [hatter, phase] of hatterDeaths(world, state)) {
     const night = teaNight(phase);
-    if (night === null || final < phaseIndex(`N${night}`)) continue;
+    if ((phase[0].toUpperCase() === "N") !== atNight
+        || final < phaseIndex(`N${night}`)) continue;
+    // Not if the game ended with that death.
+    if (atNight && state.gameOver && final === phaseIndex(phase)) continue;
+    const slots = atNight ? teaSlots(state, night, hatter) : [null];
     const grown = [];
     for (const [changes, cost] of stories) {
       const view = changes.length ? new Timeline(world, changes) : world;
-      for (const choice of teaPartyChoices(view, state, night))
-        grown.push([[...changes, ...choice], cost]);
+      for (const slot of slots)
+        for (const choice of teaPartyChoices(view, state, night, slot)) {
+          // "Nobody chose" is one story, whichever the slot.
+          if (!choice.length && slot !== slots[0]) continue;
+          grown.push([[...changes, ...choice], cost]);
+        }
     }
     stories = grown;
   }
   return stories;
+}
+
+transitionRule(function aHattersTeaParty(world, state) {
+  return teaStories(world, state, false);
+});
+
+// After a Hatter died at night, straight after its death (C; Hatter
+// stage 3c). See solver.py.
+transitionRule(function aHattersTeaPartyAtNight(world, state) {
+  return teaStories(world, state, true);
 });
 
 /** The tea-party changes of this story, by night. */
@@ -1528,19 +1707,20 @@ export function teaParties(world) {
   return out;
 }
 
-/** What this story leaves out that Stufe 1 does not reckon, or null:
- * "hatter at night" or "two demons". See solver.py. */
+/** What this story leaves out that the solver does not reckon yet, or
+ * null: "two demons" or "lil monsta" ("hatter at night" is reckoned since
+ * stage 3c). See solver.py. */
 export function hatterUnreckoned(view, state) {
   if (!hatterOnBoard(state)) return null;
   const final = phaseIndex(state.finalPhase());
   for (const [, phase] of hatterDeaths(view, state)) {
     const night = teaNight(phase);
-    if (night === null) {
-      if (state.gameOver && final === phaseIndex(phase)) continue;
-      return "hatter at night";
-    }
+    const atNight = phase[0].toUpperCase() === "N";
+    // A Hatter dead at night is reckoned since stage 3c.
+    if (atNight && state.gameOver && final === phaseIndex(phase)) continue;
     if (final < phaseIndex(`N${night}`)) continue;
-    const before = `D${night - 1}`;
+    const before = !atNight ? `D${night - 1}`
+      : (night > 1 ? `B${night - 1}` : "N1");
     const alive = state.aliveSet(`N${night}`);
     const n = state.nPlayers;
     // The Demon may have chosen Lil' Monsta (their jinx): not reckoned
@@ -2035,26 +2215,33 @@ function plainFailures(world, state, outcome = {}) {
     // A dead player the Al-Hadikhia chose, who chose life (21.10.2026).
     if (inBag(state, "AlHadikhia")
         && alHadikhiaChosen(state, night).includes(seat)) {
-      const ah = holdingNow(world, state, "AlHadikhia", phase);
-      if (ah !== null && ah !== undefined
-          && world.roleAt(ah, phase) === "AlHadikhia"
-          && state.aliveSet(phase).has(ah)) {
+      // Asked at its turn (Hatter stage 3c). See solver.py.
+      const [ah, held] = turnOf("AlHadikhia", night, () => {
+        const got = holdingNow(world, state, "AlHadikhia", phase);
+        return [got, got !== null && got !== undefined
+                     && world.roleAt(got, phase) === "AlHadikhia"];
+      });
+      if (held && state.aliveSet(phase).has(ah)) {
         (working[night] = working[night] || new Set()).add(ah);
         continue;
       }
     }
     {
       const shabaloth = inBag(state, "Shabaloth")
-        ? holdingNow(world, state, "Shabaloth", phase) : null;
+        ? turnOf("Shabaloth", night,
+                 () => holdingNow(world, state, "Shabaloth", phase)) : null;
       if (shabaloth !== null && night >= 3 &&
           state.aliveSet(phase).has(shabaloth)) continue;
       // The holder, or a Philosopher that took it, ahead (13.10.2026).
-      let prof = world.findAt("Professor", phase);
       const back = returnedAtPhase(state, phase);
-      for (const who of Object.keys(state.philosophies() || {}).map(Number)
-             .sort((a, b) => b - a))
-        if (state.aliveSet(phase).has(who) && who !== seat && !back.has(who)
-            && tookIt(world, state, who, "Professor", phase)) prof = who;
+      const prof = turnOf("Professor", night, () => {
+        let got = world.findAt("Professor", phase);
+        for (const who of Object.keys(state.philosophies() || {}).map(Number)
+               .sort((a, b) => b - a))
+          if (state.aliveSet(phase).has(who) && who !== seat && !back.has(who)
+              && tookIt(world, state, who, "Professor", phase)) got = who;
+        return got;
+      });
       if (prof === null || !onBoard(state, "Professor")) return null;
       if (!state.aliveSet(phase).has(prof) || night < 2) return null;
       const raised = world.roleAt(seat, phase);
@@ -2104,7 +2291,9 @@ function plainFailures(world, state, outcome = {}) {
 
   const spent = spentNominations(state);
   const seats = sourceSeats(state);
-  state.infos.forEach((info, idx) => {
+  // Each row read at its character's turn of its night, attribution
+  // included (Hatter stage 3b, E Weg 1). See solver.py.
+  state.infos.forEach((info, idx) => atRowTurn(info, () => {
     // Once a hard fact did not hold nothing further is judged, as in
     // Python, which returns on the spot: the rows after it would only
     // ask about sides nobody needs any more (`explainOrRecall`).
@@ -2381,7 +2570,7 @@ function plainFailures(world, state, outcome = {}) {
         if (needs[0].length) outcome[idx] = EXCUSED;
       }
     }
-  });
+  }));
   if (impossible) return null;            // a hard fact did not hold
 
   // In the order Python sorts its (night, Lycanthrope) keys.
@@ -3454,7 +3643,8 @@ function barberShare(world, changes, state) {
   const rest = changes.filter(c => !c.barber);
   const view = rest.length ? new Timeline(world, rest) : world;
   const counts = new Map();
-  for (const [extra] of barberRule(view, state)) {
+  // Asked at the Barber's turn, as the stories were told. See solver.py.
+  for (const [extra] of offersOf(barberRule, view, state)) {
     if (!extra.length) continue;
     const got = counts.get(extra[0].phase) || [0, 0];
     got[extra[0].barber === "ours" ? 0 : 1] += 1;

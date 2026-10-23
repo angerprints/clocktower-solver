@@ -9,7 +9,7 @@
 // Adding a character is an entry in the catalogue and a rule here.
 
 import {CHARACTERS} from "./catalogue.mjs";
-import {DEMON, OTHER, PICKED, Cause, causeRule, immunityRule, implication,
+import {CAUSE_TURNS, DEMON, OTHER, PICKED, Cause, causeRule, immunityRule, implication,
         implicationRule, shield} from "./deaths.mjs";
 import {ORGAN_GRINDER_BY_CHOICE, Source, makePoisonerRule, minionStillActs,
         sourceRule, sourcesOn} from "./impairment.mjs";
@@ -1907,3 +1907,29 @@ function anInnkeepersDrunk(world, state, night, seat, by) {
                      {capacity: 1, cost: 0.5, repeatCost: 0.5,
                       actor: seat})];
 }
+
+
+// Where each cause of a night death reads the board (Hatter stage 3b,
+// 23.10.2026): a Demon's kill once every Demon has had its turn and
+// before the Assassin's. See solver.py `_DEMONS_DONE`.
+const DEMONS_DONE = Math.max(...Object.values(CHARACTERS)
+  .filter(c => c.team === "demon"
+          && (c.other_night || 0) < CHARACTERS.Assassin.other_night)
+  .map(c => c.other_night || 0)) + 5;
+Object.assign(CAUSE_TURNS, {
+  theDemonKills: DEMONS_DONE,
+  aZombuulKillsOnAQuietDay: DEMONS_DONE,
+  aPukkaKillsWhatItPoisoned: DEMONS_DONE,
+  anAlHadikhiaChooses: DEMONS_DONE,
+  aLilMonstaMayKill: DEMONS_DONE,
+  aShabalothKillsTwice: DEMONS_DONE,
+  aPoKillsNoneOrThree: DEMONS_DONE,
+  aYaggababbleKillsForEachTime: DEMONS_DONE,
+  aLleechFollowsItsHost: DEMONS_DONE,
+  aPitHagMakingADemonMakesDeathsArbitrary: CHARACTERS.PitHag.other_night,
+  aGossipMayKill: CHARACTERS.Gossip.other_night,
+  aGodfatherAnswersAnOutsider: CHARACTERS.Godfather.other_night,
+  anAssassinKillsThroughAnything: CHARACTERS.Assassin.other_night,
+  aGamblerMayLose: CHARACTERS.Gambler.other_night,
+  aLycanthropeMayKill: CHARACTERS.Lycanthrope.other_night,
+});

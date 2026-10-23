@@ -95,8 +95,26 @@ export class World {
  * new character normally sits on, which covers a Minion catching the
  * star. Both together cover a Pit-Hag rewriting somebody.
  */
-export const change = (phase, seat, role = null, side = null) =>
-  ({phase, seat, role, side});
+export const change = (phase, seat, role = null, side = null, slot = null) =>
+  ({phase, seat, role, side, slot});
+
+/** A change made before anybody acts that night. See worlds.py. */
+export const SETUP_SLOT = -1;
+
+/** Whose turn of the night is reading the board, while one is (Hatter
+ * stage 3b, 23.10.2026): {phase, first, other}, phase null for every
+ * night. Read at the end of that slot. See worlds.py `READ_AT`. */
+export const READ_AT = {now: null};
+
+const within = (here, slot, offset) => here - 0.25 + (slot + offset) / 4000;
+
+/** Run `fn` with the board read at that turn. See worlds.py. */
+export function readingAt(phase, first, other, fn) {
+  if (!first && !other) return fn();
+  const was = READ_AT.now;
+  READ_AT.now = {phase, first, other};
+  try { return fn(); } finally { READ_AT.now = was; }
+}
 
 /** A seat turned evil that knows it and keeps its character: the Bounty
  * Hunter's evil Townsfolk ("bountyhunter"), whoever a Mezepheles turned
@@ -147,12 +165,27 @@ export const TEA_READS = {now: null};
 /** A phase as a number on one line with the changes: "B" — the board as
  * a night began, after a tea party at its very start — a little past the
  * day before it. See worlds.py. */
-export const moment = phase =>
-  phaseIndex(phase) + (phase[0] === "B" ? 0.75 : 0);
+export function moment(phase) {
+  const here = phaseIndex(phase);
+  if (phase[0] === "B") return here + 0.75;
+  const at = READ_AT.now;
+  if (at !== null && phase[0] === "N"
+      && (at.phase === null || at.phase === phase)) {
+    const slot = phase === "N1" ? at.first : at.other;
+    if (slot) return within(here, slot, 0.75);
+  }
+  return here;
+}
 
 /** Where a change stands on that line: a tea party just before the night
- * it is stamped with. See worlds.py. */
-export const changeAt = c => phaseIndex(c.phase) - (c.tea ? 0.5 : 0);
+ * it is stamped with; a change made at a slot of its night just after
+ * that slot. See worlds.py. */
+export function changeAt(c) {
+  const here = phaseIndex(c.phase);
+  if (c.slot !== null && c.slot !== undefined && c.phase[0] === "N")
+    return within(here, c.slot, 0.5);
+  return here - (c.tea ? 0.5 : 0);
+}
 
 function teaRead(phase) {
   if (moment(phase) >= TEA_READS.now.at) TEA_READS.now.read = true;

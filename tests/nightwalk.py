@@ -608,6 +608,9 @@ def hidden_from(deal, night, heard):
            in (getattr(deal, "tea_made", None) or {}).items() if at == night}
     if tea:
         out[("tea", night)] = tea
+        slot = (getattr(deal, "tea_slot", None) or {}).get(night)
+        if slot is not None:
+            out[("tea_slot", night)] = slot
     made = getattr(deal, "summoned", None)
     if made is not None and made[0] == night:
         out[("summoned", night)] = (made[1], made[2],
@@ -881,7 +884,11 @@ def walk(deal, night, hidden):
     summon = hidden.get(("summoned", night))
     summon_slot = getattr(CHARACTERS["Summoner"], field, 0)
     tea = hidden.get(("tea", night))
-    tea_slot = getattr(CHARACTERS["Hatter"], field, 0)
+    # At the very start after a death by day; straight after the death
+    # after one at night, at the slot the simulator wrote down (C; Hatter
+    # stage 3c, 23.10.2026).
+    tea_slot = hidden.get(("tea_slot", night)) \
+        or getattr(CHARACTERS["Hatter"], field, 0)
     acrobats = []
     acrobats_fall = getattr(CHARACTERS["Gossip"], field, 0)
 
@@ -900,7 +907,7 @@ def walk(deal, night, hidden):
             _acrobat_falls_now(slot)
         # The Hatter's tea party at 1, before anybody acts (C, 22.10.2026):
         # each holds its new character from here, on its own side.
-        if tea and slot == tea_slot:
+        if tea and slot >= tea_slot:
             for seat, role in tea.items():
                 # A Marionette that chose a new character is no longer
                 # handed the wrong token (P Weg 2): it works from here.

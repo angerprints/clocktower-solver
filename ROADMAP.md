@@ -1551,9 +1551,33 @@ Der Bericht steht in `claude/hutmacher.md`, die Lesarten und alle deine Antworte
 
 Night-Walk: in keiner Nacht mit Teeparty eine Abweichung; sonst 4 bis 10 je Zeile, wie ohne Hutmacher (7 von 7.811).
 
+### Der Hutmacher, Stufe 3: die Nacht in ihrer Reihenfolge · *erledigt am 23.10.2026*
+
+Der Bericht steht in `claude/hutmacher-stufe-3.md`, die Lesarten und deine Antworten in `claude/hutmacher-stufe-3-lesarten.md`. **Deine Antworten vom 23.10.2026:** A bis E jeweils Weg 1. V Weg 1 (Rechenzeit mit Grenze); Stufe 3 vor Stufe 2.
+
+| | Gebaut |
+|---|---|
+| 3a Nachtreihenfolge (Punkt 1b) | Das Nachtblatt des Herausgebers (`data/nightsheet.json`, 05.08.2026, 120 Charaktere, die nachts aufwachen), ein Platz ist zehnmal die Stelle. Ausnahmen: Hutmacher (C), Geist, Xaan, Prinzessin, Banshee, Riot, Wesir (Schritte des Erzählers), erste Nacht des Lord of Typhon. Die Akrobatin wählt jetzt früh; Night-Walk und Simulator entscheiden ihren Sturz nach dem Schwätzer. |
+| 3b Geteilte Nacht (Stelle 36) | Jede Änderung trägt den Platz ihres Machers (`Change.slot`), jede Zeile, jede Regel und jede Todesursache liest an ihrem Platz (`worlds.READ_AT`). Gift und Trunkenheit plant der Solver weiter für ganze Nächte. |
+| 3c Hutmacher in der Nacht (Stelle 74) | Die Bösen wählen direkt nach dem Tod, am Platz nach jedem möglichen Mörder. Ein Dämon tötet einmal pro Nacht (D); ein neuer Charakter, dessen Platz vorbei ist, handelt ab der nächsten Nacht (C). Simulator und Night-Walk spielen es genauso. |
+| Rechenzeit | 20 gespielte Bretter mit Teeparty in der Nacht: 19 in 1 bis 49 s, eines etwa 150 s (Barbier und Hutmacher in derselben Nacht, geschätzt). Stelle 79. |
+| Korpus | 695 Bretter (3 neu), 10 geändert: 3 mit Barbier-Tausch nach dem Kill (der Dämon von vor dem Tausch), 2 Hutmacher nachts, 5 um höchstens 0,1 Punkte. |
+| Nebenbei | JavaScript: Der Farmer-Erbe zahlte für „Farmer“ den Preis einer Lüge (Korpus). Gift-Plan las die Quellen am Platz des ersten Fragers (Seed 722). Gift vor einer Teeparty (1242), Erwecker an ihrem Platz (2897), Platz für zwei Teepartys (1509). |
+
+| Tor (3.000 Partien je Zeile) | verworfen | davon verdeckter Hutmacher (T) | sonst | nicht gerechnet |
+|---|---|---|---|---|
+| Hutmacher, 4 Nächte | 26 | 16 | 10 (eine neu sichtbar, 841) | 0 |
+| Hutmacher, 6 Nächte | 40 | 30 | 10 (841) | 0 |
+| + Witwe, Giftmischer, Kammerzofe | 21 | 16 | 5 | 0 |
+| + Leviathan, Beschwörer | 14 | 9 | 5 | 110 (zwei Dämonen, Stufe 2) |
+| + Böser Zwilling, Pate, Glücksspieler, Philosoph | 22 | 18 | 4 | 0 |
+| + Marionette, Verrückte, Trunkenbold, Scharlachrote Frau | 13 | 11 | 2 | 0 |
+| + Imp, Poe, No Dashii | 20 | 19 | 1 (2939, neu sichtbar) | 0 |
+| ohne Pflicht; feste Skripte | 5; TB, BMR, Oster, XNINEB 0, S&V 14 (Seed 1457 gerettet), Prüfsummen gleich | | | |
+
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 am 23.10.2026; als Nächstes Hutmacher Stufe 3, die geteilte Nacht mit der Nachtreihenfolge (Punkt 1b), Lesarten in `claude/hutmacher-stufe-3-lesarten.md`, danach Stufe 2, zwei lebendige Dämonen, erst mit Lesarten (deine Entscheidung vom 23.10.2026: Stufe 3 vor Stufe 2); Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 und Stufe 3 (die Nacht in ihrer Reihenfolge, mit Punkt 1b) am 23.10.2026; als Nächstes Hutmacher Stufe 2, zwei lebendige Dämonen, erst mit Lesarten; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1561,10 +1585,10 @@ Stand des Katalogs: 130 Einträge. Von den 138 Spielercharakteren der App sind 1
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
-**1b · Die Nachtreihenfolge erneuern, ganz am Ende und gemeinsam** (deine Entscheidung vom 12.10.2026; vorher zurückgestellt, Entscheidung E). Die Datei im Repo kennt 130 Charaktere, die aktuelle des Herausgebers 181. Von Hand eingetragen sind bisher die Plätze von Oger, Gutsverwalter, Ritter, Shugenja, Drehorgelspieler, Harpyie, Dorftrottel, Yaggababble und Hohepriesterin; die Hohepriesterin teilt sich vorläufig den Platz des Generals.
+**1b · Die Nachtreihenfolge erneuern** · *erledigt am 23.10.2026* mit Hutmacher Stufe 3 (vorgezogen, A Weg 1): das Nachtblatt des Herausgebers, wie es ist. Nichts mehr von Hand eingetragen außer den bewussten Ausnahmen in `_NOT_AS_IN_THE_SHEET`.
 
 **2 · Zwei kleine Stellen in Sects & Violets,** die nebenher gehen:
-- Wer früh in der Nacht handelt und in derselben Nacht vom Grubenweib verwandelt wird (offene Stelle 36).
+- Wer früh in der Nacht handelt und in derselben Nacht vom Grubenweib verwandelt wird (offene Stelle 36): gebaut mit Hutmacher Stufe 3; offen bleiben die Stellen 80 und 81.
 - Der Simulator spielt die **Hinrichtung wegen Besessenheit** (Cerenovus) nicht.
 
 **3 · Strenge Lesart für stille Nächte** (zurückgestellt): zwei Erklärungen für zwei Shabaloth-Kills, das Ziel der Pukka schützt sich nicht selbst. Im Versuch verlor sie 11 von 60.000 Partien, die der Solver hält.
@@ -1610,7 +1634,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 29 | Korpus | **`sv-played-1063` heißt „zwei Tausche hintereinander“ und enthält nur noch einen.** Der Seed ergab schon vor dem 04.10.2026 eine andere Partie als bei seiner Auswahl. Seed 183 hätte zwei. |
 | 30 | Simulator gegen Night-Walk | *Erledigt am 05.10.2026:* Die 60 abweichenden Nächte in Sects & Violets waren zwei Lücken des Night-Walk, beide repariert. Jetzt 0 von 16.641. |
 | 35 | Simulator | *Erledigt am 05.10.2026:* Die Reihenfolge der Nacht liest den aktuellen Charakter, nicht den ausgeteilten. |
-| 36 | Sects & Violets | **Wer früh in der Nacht handelt und in derselben Nacht verwandelt wird:** Ein Schlangenbeschwörer wählt an Platz 11, das Grubenweib macht ihn an Platz 16 zu etwas anderem. Der Solver rechnet in ganzen Nächten und verwirft die Wahl. 1 von 6.000 Partien (Seed 1078, 4 Nächte). Gefunden am 05.10.2026, nicht gebaut. Am 08.10.2026 dieselbe Klasse in einer gemischten Partie: Ein Glücksspieler wählt den Schläger und wird betrunken, später in derselben Nacht springt ein Fang Gu in den Schläger. Der Solver sieht ab dem Sprung keinen Schläger mehr und hält den Glücksspieler für nüchtern, der Mathematiker zählt ihn aber (Tor, Seed 55). Am Tor von Batch 8 dieselbe Klasse dreimal: ein Schlangenbeschwörer tauscht, und der Barbier-Tausch folgt in derselben Nacht (Seed 1450, wahre Welt verloren); und im Night-Walk ein Mönch, der schützt und in derselben Nacht vom Grubenweib verwandelt wird (Seeds 1499 und 2295): Der Night-Walk hält den Schutz, der Simulator nicht. Am Tor von Lil' Monsta (21.10.2026) zweimal mit der Kammerzofe: Sie zählt im Simulator nach dem Charakter am Ende der Nacht und lässt einen Segler weg, den das Grubenweib danach zum Philosophen machte (Seed 73, 6 Nächte), und einen Schlangenbeschwörer, der mit einem guten Babysitter tauschte (Seed 2934). |
+| 36 | Sects & Violets | **Wer früh in der Nacht handelt und in derselben Nacht verwandelt wird:** Ein Schlangenbeschwörer wählt an Platz 11, das Grubenweib macht ihn an Platz 16 zu etwas anderem. Der Solver rechnet in ganzen Nächten und verwirft die Wahl. 1 von 6.000 Partien (Seed 1078, 4 Nächte). Gefunden am 05.10.2026, nicht gebaut. Am 08.10.2026 dieselbe Klasse in einer gemischten Partie: Ein Glücksspieler wählt den Schläger und wird betrunken, später in derselben Nacht springt ein Fang Gu in den Schläger. Der Solver sieht ab dem Sprung keinen Schläger mehr und hält den Glücksspieler für nüchtern, der Mathematiker zählt ihn aber (Tor, Seed 55). Am Tor von Batch 8 dieselbe Klasse dreimal: ein Schlangenbeschwörer tauscht, und der Barbier-Tausch folgt in derselben Nacht (Seed 1450, wahre Welt verloren); und im Night-Walk ein Mönch, der schützt und in derselben Nacht vom Grubenweib verwandelt wird (Seeds 1499 und 2295): Der Night-Walk hält den Schutz, der Simulator nicht. Am Tor von Lil' Monsta (21.10.2026) zweimal mit der Kammerzofe: Sie zählt im Simulator nach dem Charakter am Ende der Nacht und lässt einen Segler weg, den das Grubenweib danach zum Philosophen machte (Seed 73, 6 Nächte), und einen Schlangenbeschwörer, der mit einem guten Babysitter tauschte (Seed 2934). **Gebaut am 23.10.2026 mit Hutmacher Stufe 3** (die Nacht in ihrer Reihenfolge, E Weg 1): Jede Wahl und jede Auskunft gehört zum Stand an ihrem Platz; im Tor ist keine verlorene Partie dieser Klasse übrig, Sects & Violets Seed 1457 gerettet. Offen: Stellen 80 und 81. |
 | 37 | Gemischte Skripte | *Erledigt am 07.10.2026:* Der Solver verlor in 3,2 % der gemischten Partien die wahre Welt (96 von 3.000), jetzt in 0,4 % (11 von 3.000). Der Rest steht in den Stellen 4, 6, 36, 41 und 42. |
 | 38 | Solver | *Erledigt am 07.10.2026:* Vortox und Registrieren. Deine Entscheidung: Die Wirklichkeit zählt, auch bei der Adligen. Gebaut für Koch, Empath, Orakel, Schneiderin, Wahrsagerin, Jongleur, Großmutter und Adlige. |
 | 39 | Werkzeug | **Die Nachtreihenfolge im Repo ist veraltet** (130 von 181 Charakteren). Für Gutsverwalter, Ritter und Shugenja sind die Plätze von Hand eingetragen. |
@@ -1648,12 +1672,15 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 71 | erledigt | **Gestörter Kultführer.** *Erledigt am 22.10.2026* nach deiner Antwort („dann passiert halt nichts“). Meine Beschreibung vom 21.10. war falsch: Ein Dorftrottel erfuhr die Gesinnung des Kultführers, und der Solver verlangte dafür, dass der Kultführer arbeitet. Jetzt verlangt er nichts mehr, beim Kopfgeldjäger genauso. |
 | 72 | erledigt | **Kultführer unter dem Vortox.** *Erledigt am 22.10.2026.* Unter dem Vortox muss eine Auskunft falsch sein; beim Prüfen „war sie wahr?“ nahm der Solver nur die ausgeteilte Gesinnung des Kultführers, obwohl er offen lässt, ob dieser böse geworden ist (Seed 864, Orakel). Jetzt gilt sie nur als wahr, wenn sie bei jeder offenen Gesinnung stimmt (Kultführer, Schläger). Ein Korpusbrett mit Kultführer, Vortox und Orakel hat dadurch 598 statt 582 Welten. |
 | 73 | erledigt | **Aufbau mit Beschwörer und Marionette.** *Erledigt am 22.10.2026* nach deiner Antwort A: Der Schergen-Platz der Marionette wird beim Austeilen ein beliebiger guter Charakter. Der Solver zählt dafür zwei Aufbauten mehr (ein Bürger mehr und ein Außenseiter weniger oder umgekehrt, je nachdem, was der Marionetten-Spieler vorher hielt). Die Suche findet die wahre Verteilung jetzt in 219 von 220 Partien mit Beschwörer und Marionette, vorher in 147. |
-| 74 | Hutmacher | **Ein behaupteter Hutmacher stirbt in der Nacht** (C, L Weg 2): Die Bösen wählen direkt nach seinem Tod; dafür muss der Solver die Nacht am Tod teilen und braucht die Nachtreihenfolge (Punkt 1b). Bis dahin zeigt die Seite keine Zahlen. Im Tor 113 bis 173 von 3.000 Partien je Zeile. Stufe 3. |
+| 74 | Hutmacher | ~~**Ein behaupteter Hutmacher stirbt in der Nacht**~~ · *erledigt am 23.10.2026* (Stufe 3): Die Bösen wählen direkt nach dem Tod, am Platz nach jedem möglichen Mörder. |
 | 75 | Hutmacher | **Zwei lebendige Dämonen** (K Weg 2): Ein Scherge wählt bei einer Teeparty bis zur 3. Nacht den Beschwörer, solange ein Dämon lebt. Nicht angeboten, die Seite zeigt keine Zahlen. Im Tor 64 von 3.000 (Zeile mit Beschwörer). Stufe 2, erst mit Lesarten. |
 | 76 | Hutmacher | **Lil' Monsta mitten im Spiel** (U Weg 2, Jinx mit dem Hutmacher): Ist Lil' Monsta auf dem Skript und lebt beim neuen Wählen ein Dämon, zeigt die Seite keine Zahlen. |
 | 77 | Hutmacher | **Ein Hutmacher, den niemand behauptet hat** (T, wie beim Barbier, gewollt): Seine Teeparty sucht der Solver nicht; wählten die Bösen neu, kann die wahre Welt fehlen. Im Tor 7 bis 21 von 3.000 je Zeile. |
 | 78 | Werkzeug | **Leviathan, Lil' Monsta und Beschwörer auf einem Skript** verlieren im gemischten Tor 756 von 3.000 Partien, ganz ohne Hutmacher (gefunden 23.10.2026). Nicht untersucht. |
 | 79 | Hutmacher | **Rechenzeit** (V Weg 1, deine Entscheidung vom 23.10.2026): mit Grenze und Schätzen. Genaues Zusammenfassen von Charakteren, die auf einem Brett nichts bewirken können (V Weg 2), wäre die genaue Lösung. |
+| 80 | Nacht | **Gift, das mitten in der Nacht anfängt oder endet.** Der Plan für Gift und Trunkenheit kennt nur ganze Nächte. In einer Nacht mit Teeparty zählt jede Quelle an ihrem Platz und am Ende (großzügig); sonst am Ende. Ein Giftmischer, der den Stern fängt, vergiftet in dieser Nacht niemanden, obwohl er es vorher tat. Gefunden am 23.10.2026 (Stufe 3). |
+| 81 | Nacht | **Regelfrage: Hält der Schutz eines Mönchs, den das Grubenweib später in der Nacht verwandelt?** Simulator nein, Night-Walk ja (Seed 2295). Nach deiner Antwort E zum Hutmacher endet, was der alte Charakter tat. |
+| 82 | Tor | **Zwei Fehlerarten, sichtbar geworden mit Stufe 3:** ein Minnesänger, der am Tag einer Scherge-Hinrichtung stirbt (wer zuerst? Seed 841), und eine Schneiderin unter dem Vortox (Seed 2939). Beide Partien waren vorher ungerechnet. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

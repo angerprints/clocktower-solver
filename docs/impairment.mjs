@@ -19,6 +19,8 @@
  * a Storyteller treats it as a price the town pays rather than a weapon
  * to point at evil.
  */
+import {READ_AT, readingAt} from "./worlds.mjs";
+import {slotOf} from "./catalogue.mjs";
 import {LISTENING, beginReads, endReads, phaseIndex, replayReads}
   from "./phases.mjs";
 
@@ -119,6 +121,13 @@ export function sourceRule(fn) {
 /** Everything that could impair somebody on this night of this world.
  * Kept on the view it was asked of — see impairment.py. */
 export function sourcesOn(world, state, night) {
+  // Always of the whole night, whoever's turn is asking (Hatter stage
+  // 3b). See impairment.py.
+  if (READ_AT.now !== null) {
+    const was = READ_AT.now;
+    READ_AT.now = null;
+    try { return sourcesOn(world, state, night); } finally { READ_AT.now = was; }
+  }
   let memo = world._sourcesMemo;
   if (!memo || memo.state !== state || memo.epoch !== state._epoch) {
     memo = {state, epoch: state._epoch, nights: new Map()};
@@ -134,6 +143,7 @@ export function sourcesOn(world, state, night) {
   if (!kept && !LISTENING) {
     const got = [];
     for (const rule of SOURCE_RULES) got.push(...rule(world, state, night));
+    got.push(...beforeAParty(world, state, night, got));
     memo.nights.set(key, kept = [got, null]);
   } else if (!kept) {
     // With whose side the rules asked about, for the next story that is
@@ -142,12 +152,56 @@ export function sourcesOn(world, state, night) {
     beginReads();
     try {
       for (const rule of SOURCE_RULES) got.push(...rule(world, state, night));
+      got.push(...beforeAParty(world, state, night, got));
     } finally {
       kept = [got, endReads()];
     }
     memo.nights.set(key, kept);
   } else if (kept[1]) replayReads(kept[1]);
   return kept[0].slice();
+}
+
+// Each source at its own turn of a night a tea party split (Hatter stage
+// 3c): by rule name, the character whose turn it is. See impairment.py
+// `SOURCE_TURNS`.
+const SOURCE_TURNS = {
+  poisoner: "Poisoner",
+  aNoDashiiPoisonsItsTownsfolkNeighbours: "NoDashii",
+  aVigormortisPoisonsBesideItsDeadMinions: "Vigormortis",
+  aPhilosopherDrunksWhoeverHadIt: "Philosopher",
+  aPukkaPoisonsWhoeverItWillKill: "Pukka",
+  aSailorDrunksOneOfTwo: "Sailor",
+  aCourtierNamesACharacter: "Courtier",
+  anOrganGrinderMayDrink: "OrganGrinder",
+  aWidowPoisonsOne: "Widow",
+  aPreacherSilencesItsMinions: "Preacher",
+  aLleechPoisonsItsHost: "Lleech",
+  anInnkeeperDrunksOneOfTheTwoItGuards: "Innkeeper",
+};
+
+const sourceMark = s =>
+  `${s.name}|${[...s.seats].sort((a, b) => a - b).join(",")}|${s.capacity}|${s.actor}`;
+
+/** The sources only a turn before a tea party in the night saw. See
+ * impairment.py `_before_a_party`. */
+function beforeAParty(world, state, night, got) {
+  const phase = `N${night}`;
+  if (!(world.changes || []).some(c => c.tea && c.phase === phase
+                                   && c.slot !== null && c.slot !== undefined))
+    return [];
+  const have = new Set(got.map(sourceMark));
+  const out = [];
+  for (const rule of SOURCE_RULES) {
+    const key = SOURCE_TURNS[rule.name];
+    const slot = key ? slotOf(key, night) : null;
+    if (slot === null) continue;
+    for (const source of readingAt(phase, slot, slot,
+                                   () => rule(world, state, night))) {
+      const mark = sourceMark(source);
+      if (!have.has(mark)) { have.add(mark); out.push(source); }
+    }
+  }
+  return out;
 }
 
 export const aliveThrough = (world, state, seat, night) =>

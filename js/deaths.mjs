@@ -12,6 +12,8 @@
 // Grandmother's grief and a Gambler's bad guess are stopped by one and
 // not the other.
 
+import {readingAt} from "./worlds.mjs";
+
 export const DEMON = "demon";     // the Demon's own kill
 export const OTHER = "other";     // anything else that kills at night
 // A Moonchild's pick, written down: the one death that names its victim in
@@ -111,9 +113,19 @@ export const causeRule = fn => (CAUSE_RULES.push(fn), fn);
 export const immunityRule = fn => (IMMUNITY_RULES.push(fn), fn);
 export const implicationRule = fn => (IMPLICATION_RULES.push(fn), fn);
 
+// The slot each cause reads the board at (Hatter stage 3b, 23.10.2026),
+// by rule name; filled in by characters.rules.mjs. See deaths.py.
+export const CAUSE_TURNS = {};
+
 export function causesOn(world, state, night) {
   const out = [];
-  for (const rule of CAUSE_RULES) out.push(...rule(world, state, night));
+  const phase = `N${night}`;
+  for (const rule of CAUSE_RULES) {
+    const slot = CAUSE_TURNS[rule.name];
+    if (slot) out.push(...readingAt(phase, slot, slot,
+                                    () => rule(world, state, night)));
+    else out.push(...rule(world, state, night));
+  }
   return out;
 }
 
