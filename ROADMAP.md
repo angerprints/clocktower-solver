@@ -1553,7 +1553,7 @@ Night-Walk: in keiner Nacht mit Teeparty eine Abweichung; sonst 4 bis 10 je Zeil
 
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 am 23.10.2026; als Nächstes Hutmacher Stufe 2, zwei lebendige Dämonen, erst mit Lesarten, danach Stufe 3, die geteilte Nacht mit der Nachtreihenfolge (Punkt 1b) — oder in umgekehrter Folge, mein Vorschlag vom 22.10.2026; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 am 23.10.2026; als Nächstes Hutmacher Stufe 3, die geteilte Nacht mit der Nachtreihenfolge (Punkt 1b), Lesarten in `claude/hutmacher-stufe-3-lesarten.md`, danach Stufe 2, zwei lebendige Dämonen, erst mit Lesarten (deine Entscheidung vom 23.10.2026: Stufe 3 vor Stufe 2); Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1653,7 +1653,7 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 76 | Hutmacher | **Lil' Monsta mitten im Spiel** (U Weg 2, Jinx mit dem Hutmacher): Ist Lil' Monsta auf dem Skript und lebt beim neuen Wählen ein Dämon, zeigt die Seite keine Zahlen. |
 | 77 | Hutmacher | **Ein Hutmacher, den niemand behauptet hat** (T, wie beim Barbier, gewollt): Seine Teeparty sucht der Solver nicht; wählten die Bösen neu, kann die wahre Welt fehlen. Im Tor 7 bis 21 von 3.000 je Zeile. |
 | 78 | Werkzeug | **Leviathan, Lil' Monsta und Beschwörer auf einem Skript** verlieren im gemischten Tor 756 von 3.000 Partien, ganz ohne Hutmacher (gefunden 23.10.2026). Nicht untersucht. |
-| 79 | Hutmacher | **Rechenzeit** (V): vorläufig mit Grenze und Schätzen. Genaues Zusammenfassen von Charakteren, die auf einem Brett nichts bewirken können (V Weg 2), wäre die genaue Lösung. |
+| 79 | Hutmacher | **Rechenzeit** (V Weg 1, deine Entscheidung vom 23.10.2026): mit Grenze und Schätzen. Genaues Zusammenfassen von Charakteren, die auf einem Brett nichts bewirken können (V Weg 2), wäre die genaue Lösung. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 
