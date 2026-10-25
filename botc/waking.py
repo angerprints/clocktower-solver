@@ -69,12 +69,12 @@ def _scarlet_woman(world, state, seat, night):
     The first night she is woken to be shown the Demon, which is not her
     own ability and does not count.
     """
-    demon = world.demon_at(f"N{night}")
     # Babysitting Lil' Monsta is no waking of her own (G, Weg 1).
     from .info import babysitter_at
     if babysitter_at(world, f"N{night}") == seat:
         return False
-    return demon == seat and world.demon_at("N1") != seat
+    return seat in world.demons_at(f"N{night}") \
+        and world.demon_at("N1") != seat
 
 
 @condition("Summoner")
@@ -738,7 +738,7 @@ def uncertain(world, state, seat, night):
     if "Exorcist" not in state.script.keys \
             and not taken_by_a_philosopher(state, "Exorcist"):
         return False
-    if world.demon_at(phase) != seat:
+    if seat not in world.demons_at(phase):
         return False
     # A babysitter wakes as whatever it holds; an Exorcist sends no
     # Minion to bed (21.10.2026).

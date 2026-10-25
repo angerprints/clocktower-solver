@@ -82,6 +82,12 @@ class World:
                 return i
         return None
 
+    def demons_at(self, phase):
+        """Every seat that is a Demon at this phase: one, or none before a
+        Summoner made one. Two only in a story (`Timeline.demons_at`)."""
+        seat = self.demon_at(phase)
+        return () if seat is None else (seat,)
+
     def team_at(self, seat, phase):
         return TEAM[self.role_at(seat, phase)]
 
@@ -176,6 +182,14 @@ class Summoned(Change):
     all. A character change like any other — the old one is gone — told
     apart so the search over who and which can see it was asked about.
     """
+    __slots__ = ()
+
+
+class HandedOn(Change):
+    """Which Demon a handover took the star from, where two Demons live
+    (Hatter stage 2, 25.10.2026): a mark on the seat that fell, at the
+    moment of the move it stands beside. Changes nothing. With one Demon
+    there is nothing to tell apart and nobody writes one."""
     __slots__ = ()
 
 
@@ -364,10 +378,14 @@ class Timeline:
         # board — when most seats never change at all. Same answers, same
         # order; only the walk is shorter.
         roles, sides, demons, held = {}, {}, [], set()
+        handed = {}
         for change in self.changes:
             at = _at(change)
             if isinstance(change, Babysits):
-                demons.append((at, change.seat, change.phase))
+                demons.append((at, change.seat, change.phase, False))
+                continue
+            if isinstance(change, HandedOn):
+                handed.setdefault(at, set()).add(change.seat)
                 continue
             sides.setdefault(change.seat, []).append((at, change))
             if change.role is not None:
@@ -384,20 +402,66 @@ class Timeline:
                 if TEAM[change.role] == "demon" and not (
                         isinstance(change, TeaParty)
                         and TEAM.get(was) != "minion"):
-                    demons.append((at, change.seat, None))
+                    demons.append((at, change.seat, None,
+                                   isinstance(change, Summoned)))
         object.__setattr__(self, "_roles_by_seat", roles)
         object.__setattr__(self, "_sides_by_seat", sides)
-        object.__setattr__(self, "_demon_changes", demons)
         object.__setattr__(self, "_roles_changed_to", held)
+        object.__setattr__(self, "_demon_changes",
+                           self._demon_steps(demons, handed))
         # A story with Lil' Monsta in it: somebody babysits. Only then is
         # a Demon holding no Demon character a babysitter — not where a
         # Pit-Hag made the Demon something else (21.10.2026).
         object.__setattr__(self, "lil_monsta", any(
-            babysat is not None for _at, _seat, babysat in demons))
+            babysat is not None for _at, _seat, babysat, _s in demons))
         # Where a Summoner made the Demon, if it did in this story.
         object.__setattr__(self, "_summon_at", next(
             (phase_index(c.phase) for c in self.changes
              if isinstance(c, Summoned)), None))
+
+    def _demon_steps(self, demons, handed):
+        """Who the Demons are after each change that moves one:
+        [(moment, seats, babysat)], the seats in the order their lines
+        began.
+
+        Two Demons live only after a Summoner made one beside the Demon in
+        play (Hatter stage 2, 25.10.2026, A Weg 1). Every other change
+        that makes somebody the Demon takes over one line: the line of the
+        seat marked as having handed it on (`HandedOn`), else the Demon
+        that no longer holds a Demon character by then (a Snake Charmer's
+        swap, a tea party's), else the first. With one Demon this is
+        exactly "the last to have become one", as before."""
+        if not demons:
+            return []
+        start = self.world.demon_at("N1")
+        line = () if start is None else (start,)
+        out = []
+        for at, seat, babysat, summoned in demons:
+            if seat in line:
+                pass
+            elif summoned and len(line) == 1:
+                line = line + (seat,)
+            elif len(line) <= 1:
+                line = (seat,)
+            else:
+                marked = handed.get(at, ())
+                which = next((i for i, d in enumerate(line) if d in marked),
+                             None)
+                if which is None:
+                    which = next(
+                        (i for i, d in enumerate(line)
+                         if TEAM[self._role_by(d, at)] != "demon"), 0)
+                line = line[:which] + (seat,) + line[which + 1:]
+            out.append((at, line, babysat))
+        return out
+
+    def _role_by(self, seat, at):
+        """The character a seat holds at this point on the line."""
+        role = self.world.roles[seat]
+        for when, changed in self._roles_by_seat.get(seat, ()):
+            if when <= at:
+                role = changed
+        return role
 
     # Questions about the whole game go straight through: who was dealt
     # what, who claimed what. Only questions about a moment consult the
@@ -488,21 +552,30 @@ class Timeline:
         demon role in it. That only failed while the swap was copying the
         wrong character; the tracking was never the fault.
         """
+        seats = self.demons_at(phase)
+        return seats[0] if seats else None
+
+    def demons_at(self, phase):
+        """Every seat that is a Demon now, in the order their lines began:
+        the one dealt (or the Summoner's) first, a second only after a
+        Summoner made one beside it (Hatter stage 2, 25.10.2026).
+        `demon_at` is the first of them."""
         seat = self.world.demon_at(phase)
         if self._summon_at is not None:
             self._summon_read(phase)
         if TEA_READS[0] is not None:
             _tea_read(phase)
+        seats = () if seat is None else (seat,)
         if self._demon_changes:
             here = moment(phase)
             sat = None
             for at, changed, babysat in self._demon_changes:
                 if at <= here:
-                    seat, sat = changed, babysat
+                    seats, sat = changed, babysat
             reads = BABYSAT_READS[0]
             if sat is not None and reads is not None:
                 reads.add(sat)
-        return seat
+        return seats
 
     def team_at(self, seat, phase):
         return TEAM[self.role_at(seat, phase)]

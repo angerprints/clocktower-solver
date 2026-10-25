@@ -74,6 +74,13 @@ export class World {
     return null;
   }
 
+  /** Every seat that is a Demon at this phase: one, or none before a
+   * Summoner made one. Two only in a story. See worlds.py. */
+  demonsAt(phase) {
+    const seat = this.demonAt(phase);
+    return seat === null ? [] : [seat];
+  }
+
   teamAt(seat, phase) { return TEAM[this.roleAt(seat, phase)]; }
   alignmentAt(seat, phase) {
     if (LISTENING) noteSideRead(seat, phase);
@@ -141,6 +148,12 @@ export const lilMonstaWorld = world =>
  * (21.10.2026). `Summoned` in Python. */
 export const summoned = (phase, seat, role) =>
   ({phase, seat, role, side: "evil", summoned: true});
+
+/** Which Demon a handover took the star from, where two Demons live
+ * (Hatter stage 2, 25.10.2026): a mark that changes nothing. `HandedOn` in
+ * Python. */
+export const handedOn = (phase, seat, slot = null) =>
+  ({phase, seat, role: null, side: null, slot, handedOn: true});
 
 /** No Demon came, and good won there (D and E, Weg 1). A mark that
  * changes nothing. `NotSummoned` in Python. */
@@ -243,11 +256,17 @@ export class Timeline {
   _indexed() {
     if (this._index) return this._index;
     const roles = new Map(), sides = new Map(), demons = [], held = new Set();
+    const handed = new Map();
     let summonAt = null;
     for (const c of this.changes) {
       const at = changeAt(c);
       if (c.summoned && summonAt === null) summonAt = at;
-      if (c.babysits) { demons.push([at, c.seat, c.phase]); continue; }
+      if (c.babysits) { demons.push([at, c.seat, c.phase, false]); continue; }
+      if (c.handedOn) {
+        if (!handed.has(at)) handed.set(at, new Set());
+        handed.get(at).add(c.seat);
+        continue;
+      }
       if (!sides.has(c.seat)) sides.set(c.seat, []);
       sides.get(c.seat).push([at, c]);
       if (c.role !== null && c.role !== undefined) {
@@ -260,10 +279,49 @@ export class Timeline {
         // A tea party moves the Demon only where a Minion took a Demon
         // character (the swap). See worlds.py.
         if (TEAM[c.role] === "demon" && !(c.tea && TEAM[was] !== "minion"))
-          demons.push([at, c.seat, null]);
+          demons.push([at, c.seat, null, !!c.summoned]);
       }
     }
-    return (this._index = {roles, sides, demons, held, summonAt});
+    this._index = {roles, sides, demons, held, summonAt};
+    this._index.steps = this._demonSteps(demons, handed);
+    return this._index;
+  }
+
+  /** Who the Demons are after each change that moves one: [[moment,
+   * seats, babysat]], the seats in the order their lines began. Two only
+   * after a Summoner made one beside the Demon in play (Hatter stage 2,
+   * 25.10.2026). See worlds.py. */
+  _demonSteps(demons, handed) {
+    if (!demons.length) return [];
+    const start = this.world.demonAt("N1");
+    let line = start === null ? [] : [start];
+    const out = [];
+    for (const [at, seat, babysat, summoned] of demons) {
+      if (line.includes(seat)) {
+        // the same holder
+      } else if (summoned && line.length === 1) {
+        line = [...line, seat];
+      } else if (line.length <= 1) {
+        line = [seat];
+      } else {
+        const marked = handed.get(at) || new Set();
+        let which = line.findIndex(d => marked.has(d));
+        if (which < 0)
+          which = line.findIndex(d => TEAM[this._roleBy(d, at)] !== "demon");
+        if (which < 0) which = 0;
+        line = line.map((d, i) => i === which ? seat : d);
+      }
+      out.push([at, line, babysat]);
+    }
+    return out;
+  }
+
+  /** The character a seat holds at this point on the line. */
+  _roleBy(seat, at) {
+    let role = this.world.roles[seat];
+    for (const [when, changed] of this._index.roles.get(seat) || [])
+      if (when <= at) role = changed;
+    return role;
   }
 
   /** Anything asked from the summoning on depends on it. */
@@ -335,19 +393,28 @@ export class Timeline {
    * the tracking was never the fault.
    */
   demonAt(phase) {
-    let seat = this.world.demonAt(phase);
+    const seats = this.demonsAt(phase);
+    return seats.length ? seats[0] : null;
+  }
+
+  /** Every seat that is a Demon now, in the order their lines began; a
+   * second only after a Summoner made one beside the first (Hatter stage
+   * 2, 25.10.2026). See worlds.py. */
+  demonsAt(phase) {
+    const seat = this.world.demonAt(phase);
     this._summonRead(phase);
     if (TEA_READS.now) teaRead(phase);
-    const demons = this._indexed().demons;
-    if (demons.length) {
+    let seats = seat === null ? [] : [seat];
+    const steps = this._indexed().steps;
+    if (steps.length) {
       const here = moment(phase);
       let sat = null;
-      for (const [at, changed, babysat] of demons)
-        if (at <= here) { seat = changed; sat = babysat; }
+      for (const [at, changed, babysat] of steps)
+        if (at <= here) { seats = changed; sat = babysat; }
       // Which nights' babysitters were looked at (bestBabysatStory).
       if (sat !== null && BABYSAT_READS.now) BABYSAT_READS.now.add(sat);
     }
-    return seat;
+    return seats;
   }
 
   teamAt(seat, phase) { return TEAM[this.roleAt(seat, phase)]; }

@@ -11,7 +11,8 @@
 // would otherwise be false, and priced by how lucky it had to be.
 
 import {CHARACTERS, slotOf} from "./catalogue.mjs";
-import {explainNight} from "./deaths.mjs";
+import {CAUSE_TURNS, Cause, OTHER, causeRule, explainNight}
+  from "./deaths.mjs";
 import {RESTING, minionStillActs, planNightResting, silencedOut, sourcesOn}
   from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
@@ -21,9 +22,10 @@ import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
 import {SETUP_SLOT, readingAt} from "./worlds.mjs";
 import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
+        handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
         summonerWorld, teaParty, turnedEvil} from "./worlds.mjs";
-import {aLeviathanIsToldOf, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
+import {aLeviathanIsToldOf, demonHolding, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
   from "./characters.rules.mjs";
 import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide, fallsAs,
@@ -115,6 +117,9 @@ const ACTS_AT = {
   // After the Scarlet Woman, before the Lunatic, the Exorcist and every
   // Demon (21.10.2026).
   theSummonerSummons: 19,
+  // And one a Minion became at a tea party (Hatter stage 2): the same
+  // turn.
+  aHattedSummonerSummons: 19,
   // At the very start of the night after the Hatter died by day (C).
   aHattersTeaParty: 1,
   // After a death at night, straight after it (C; Hatter stage 3c):
@@ -144,6 +149,7 @@ const TURN_OF = {
   aPitHagMakesSomebodyElse: "PitHag",
   aPitHagNobodyWroteDown: "PitHag",
   theSummonerSummons: "Summoner",
+  aHattedSummonerSummons: "Summoner",
   aBarberLetsTheDemonSwapTwo: "Barber",
   aHuntsmanFindsTheDamsel: "Huntsman",
   aFarmerHandsItOn: "Farmer",
@@ -247,6 +253,11 @@ export function possibleTimelines(world, state, cap = 128) {
       if (p[0].toUpperCase() === "N")
         slots = Math.max(slots, teaSlots(state, parseInt(p.slice(1), 10), s).length);
     cap = Math.max(cap, HATTER_STORIES * hunted * slots * Math.max(1, died.length));
+    // And for every way a Summoner chosen at a party before its third
+    // night may have summoned (Hatter stage 2). See solver.py.
+    if (state.script.keys.includes("Summoner") && died.length === 1
+        && teaNight(died[0][1]) <= 3)
+      cap *= 1 + summonable(state).length * state.nPlayers;
   }
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
@@ -429,7 +440,8 @@ function nightsItActs(rule, state) {
       return new Set(state.infos.filter(i => i.type === "HuntsmanChoice")
         .map(i => i.night));
     case "demonHandovers": return new Set(deaths.map(([k]) => k));
-    case "theSummonerSummons": return new Set([1, 2, 3]);
+    case "theSummonerSummons":
+    case "aHattedSummonerSummons": return new Set([1, 2, 3]);
     case "aHattersTeaParty": {
       const hatters = hatterClaimants(state);
       const out = new Set();
@@ -576,7 +588,7 @@ function barberOffers(world, state) {
     const night = "NDEX".indexOf(phase[0].toUpperCase()) > 0
       ? `N${day + 1}` : `N${day}`;
     if (phaseIndex(night) > phaseIndex(state.finalPhase())) continue;
-    const demon = world.demonAt(night);
+    const demons = world.demonsAt(night);
     for (let first = 0; first < state.nPlayers; first++)
       for (let second = first + 1; second < state.nPlayers; second++) {
         const a = world.roleAt(first, night), b = world.roleAt(second, night);
@@ -586,8 +598,8 @@ function barberOffers(world, state) {
         const sideB = world.evilAt(second, night) ? "evil" : "good";
         // The Demon with one of its own Minions costs a world nothing;
         // any other pair is priced as a deliberate play (table habit).
-        const ours = (first === demon && TEAM[b] === "minion") ||
-                     (second === demon && TEAM[a] === "minion");
+        const ours = (demons.includes(first) && TEAM[b] === "minion") ||
+                     (demons.includes(second) && TEAM[a] === "minion");
         const pair = [change(night, first, b, sideA),
                       change(night, second, a, sideB)];
         for (const c of pair)
@@ -684,7 +696,7 @@ export const mastermindMarker = (phase, seat) => change(phase, seat, null, null)
 export const isMastermindMarker = c =>
   (c.role === null || c.role === undefined) &&
   (c.side === null || c.side === undefined) && !c.babysits && !c.fell
-  && !c.notSummoned;
+  && !c.notSummoned && !c.handedOn;
 
 /** Every way the Demon could have changed hands in this world.
  *
@@ -728,9 +740,48 @@ export function demonLineages(world, state, cap = 24) {
     since = phaseIndex(made.phase);
   }
 
+  // A second living Demon a Summoner made (Hatter stage 2, 25.10.2026):
+  // each line walked on its own, the second on top of the first. See
+  // solver.py.
+  const beside = summonedBeside(world);
+  if (!beside)
+    return demonLine(world, state, world, start, since, 0, null, cap)
+      .map(([line]) => line);
+  const out = [];
+  for (const [first, ends] of demonLine(world, state, world, start, since,
+                                        0, beside, cap)) {
+    const view = first.length ? new Timeline(world, first) : world;
+    for (const [second, more] of demonLine(world, state, view, beside.seat,
+                                           phaseIndex(beside.phase), 1,
+                                           beside, cap)) {
+      const story = [...first, ...second];
+      if (aDemonLeft(story.length ? new Timeline(world, story) : world,
+                     state, [...ends, ...more]))
+        out.push(story);
+      if (out.length >= cap) return out;
+    }
+  }
+  return out;
+}
+
+/** Every Demon that fell with nobody to take over, while the game went
+ * on, left another standing (Hatter stage 2). See solver.py. */
+function aDemonLeft(view, state, ends) {
+  for (const [holder, phase] of ends) {
+    const here = phaseIndex(phase);
+    if (!view.demonsAt(phase).some(d => d !== holder
+        && !state.diedAt(d).some(p => phaseIndex(p) <= here)))
+      return false;
+  }
+  return true;
+}
+
+/** One Demon's line: [changes, ends] for each way. See solver.py. */
+function demonLine(world, state, base, start, since, line, beside, cap) {
   const found = [];
 
-  const walk = (view, holder, soFar, after = -1, held = new Set()) => {
+  const walk = (view, holder, soFar, after = -1, held = new Set(),
+                ends = []) => {
     if (found.length >= cap) return;
     const first = holder === start && since !== null && !soFar.length;
     // The first time they went down. A Demon raised afterwards is
@@ -770,12 +821,13 @@ export function demonLineages(world, state, cap = 24) {
           && c.seat === holder && TEAM[c.role] !== "demon"
           && phaseIndex(c.phase) > after
           && phaseIndex(c.phase) <= phaseIndex(check));
-        const successor = view.demonAt(gave ? gave.phase : check);
+        const now = view.demonsAt(gave ? gave.phase : check);
+        const successor = now.length > line ? now[line] : null;
         if (successor !== null && successor !== holder && !held.has(successor)) {
-          walk(view, successor, soFar, after, new Set([...held, holder]));
+          walk(view, successor, soFar, after, new Set([...held, holder]), ends);
           return;
         }
-        found.push(soFar);
+        found.push([soFar, ends]);
         return;
       }
     }
@@ -785,11 +837,11 @@ export function demonLineages(world, state, cap = 24) {
     // round for ever. The same phase is fine: a Shabaloth kills twice, so
     // the Demon and its heir can fall together.
     if (phase !== null && (phaseIndex(phase) < after || held.has(holder))) {
-      found.push(soFar);
+      found.push([soFar, ends]);
       return;
     }
     if (phase === null) {
-      found.push(soFar);                  // they held it to the end
+      found.push([soFar, ends]);          // they held it to the end
       return;
     }
     const character = view.roleAt(holder, phase);
@@ -802,23 +854,31 @@ export function demonLineages(world, state, cap = 24) {
     // inherits — there simply is no Demon after this — so the lineage
     // ends here rather than continuing.
     if (mastermindDay(view, state, phase, holder))
-      found.push([...soFar, mastermindMarker(phase, holder)]);
+      found.push([[...soFar, mastermindMarker(phase, holder)], ends]);
 
     // No offers at all, and no Mastermind, means good won right there —
     // a story when the board says the game is over and this was its last
     // moment (10.10.2026). See solver.py.
     if (state.gameOver
         && phaseIndex(phase) >= phaseIndex(state.finalPhase()))
-      found.push(soFar);
+      found.push([soFar, ends]);
+    // Beside a second Demon made by then the line may simply end — not
+    // where the Scarlet Woman steps up (D Weg 1). See solver.py.
+    else if (beside && phaseIndex(beside.phase) <= phaseIndex(phase)
+             && !moves.some(m => m.seat !== null
+                            && view.roleAt(m.seat, phase) === "ScarletWoman"))
+      found.push([soFar, [...ends, [holder, phase]]]);
     for (const move of moves) {
       if (move.seat === null) continue;
-      const grown = [...soFar, move];
-      walk(new Timeline(world, grown), move.seat, grown,
-           phaseIndex(phase), new Set([...held, holder]));
+      const mark = beside ? [handedOn(move.phase, holder, move.slot ?? null)]
+        : [];
+      const grown = [...soFar, ...mark, move];
+      walk(new Timeline(base, grown), move.seat, grown,
+           phaseIndex(phase), new Set([...held, holder]), ends);
     }
   };
 
-  walk(world, start, [], since === null ? -1 : since);
+  walk(base, start, [], since === null ? -1 : since);
   return found;
 }
 
@@ -1158,9 +1218,7 @@ function seatsTheBoardLooksAt(world, state) {
  * night. See solver.py. */
 function actedBeforeTheDemonOnly(world, state, night) {
   const phase = `N${night}`;
-  const demon = world.demonAt(phase);
-  if (demon !== null && demon !== undefined
-      && world.roleAt(demon, phase) === "Pukka") return true;
+  if (demonHolding(world, phase, "Pukka") !== null) return true;
   for (let p = 0; p < state.nPlayers; p++)
     if (state.diedAt(p).includes(phase)
         && fallsAs(world, state, p, "Sweetheart", phase)) return true;
@@ -1589,7 +1647,8 @@ function hatted(state, team, night, held, demonAlive) {
   for (const key of state.script.keys) {
     if (TEAM[key] !== team || held.has(key) || NOT_HATTED.has(key)) continue;
     if (key === "Leviathan" && night > 5) continue;
-    if (key === "Summoner" && night <= 3) continue;
+    // A Summoner taken before its third night summons beside the Demon:
+    // reckoned since stage 2 (aHattedSummonerSummons).
     out.push(key);
   }
   return out;
@@ -1645,8 +1704,7 @@ function teaPartyChoicesAt(view, state, night, slot) {
   // The optional rule: the Demon and one Minion swap types (B Weg 2,
   // J Weg 1).
   const spareDemons = hatted(state, "demon", night, held, true);
-  const spareMinions = hatted(state, "minion", night, held, true)
-    .filter(k => !(k === "Summoner" && night <= 3));
+  const spareMinions = hatted(state, "minion", night, held, true);
   for (const demon of demons)
     for (const minion of seats) {
       if (demons.includes(minion)) continue;
@@ -1731,17 +1789,91 @@ export function hatterUnreckoned(view, state) {
         if (alive.has(p) && TEAM[view.roleAt(p, before)] === "demon") demonAlive = true;
       if (demonAlive) return "lil monsta";
     }
-    if (night > 3 || !state.script.keys.includes("Summoner")) continue;
-    let summoner = false, demon = false, minion = false;
-    for (let p = 0; p < n; p++) {
-      const role = view.roleAt(p, before);
-      if (role === "Summoner") summoner = true;
-      if (alive.has(p) && TEAM[role] === "demon") demon = true;
-      if (alive.has(p) && TEAM[role] === "minion") minion = true;
-    }
-    if (!summoner && demon && minion) return "two demons";
   }
   return null;
+}
+
+// --------------------------------------------------------------------
+// Two living Demons (Hatter stage 2, 25.10.2026). See solver.py.
+// --------------------------------------------------------------------
+
+/** The tea-party changes that made somebody the Summoner. */
+export const hattedSummoners = view =>
+  (view.changes || []).filter(c => c.tea && c.role === "Summoner");
+
+/** Could a Summoner chosen at this tea party act on this night? */
+function summonsOn(c, night) {
+  const at = parseInt(c.phase.slice(1), 10);
+  if (night !== at) return night > at;
+  return c.slot === null || c.slot === undefined
+    || c.slot < slotOf("Summoner", night);
+}
+
+/** Every way a Summoner chosen at a tea party summoned: "nobody" first.
+ * See solver.py. */
+const hattedSummonerRule = transitionRule(
+  function aHattedSummonerSummons(world, state) {
+    const tea = hattedSummoners(world);
+    if (!tea.length) return [[[], 1.0]];
+    const final = phaseIndex(state.finalPhase());
+    const n = state.nPlayers;
+    const out = [[[], 1.0]];
+    for (const c of tea) {
+      const seat = c.seat;
+      for (const night of [2, 3]) {
+        const phase = `N${night}`;
+        if (final < phaseIndex(phase) || !summonsOn(c, night)) continue;
+        if (!state.aliveSet(phase).has(seat)
+            || world.roleAt(seat, phase) !== "Summoner") continue;
+        const held = new Set();
+        for (let p = 0; p < n; p++) held.add(world.roleAt(p, phase));
+        for (const demon of summonable(state)) {
+          if (held.has(demon) || (night === 2 && demon !== "Pukka")) continue;
+          for (const target of summonedSeats(world, state, night, demon))
+            for (const extra of typhonNeighbours(world, state, night, target,
+                                                 demon))
+              out.push([[summoned(phase, target, demon), ...extra], 1.0]);
+        }
+      }
+    }
+    return out;
+  });
+
+/** The summoning that made a second living Demon in this story, or null.
+ * See solver.py. */
+export function summonedBeside(view) {
+  for (const c of view.changes || [])
+    if (c.summoned && view.demonsAt(c.phase).length > 1) return c;
+  return null;
+}
+
+/** "If the Summoner creates a second living Demon, deaths tonight are
+ * arbitrary" (their jinx, C Weg 1). See solver.py. */
+causeRule(function aSecondDemonMakesDeathsArbitrary(world, state, night) {
+  const made = summonedBeside(world);
+  if (!made || made.phase !== `N${night}`) return [];
+  return [new Cause("Summoner", OTHER, allSeatsOf(state),
+                    {capacity: state.nPlayers, cost: 1.0,
+                     unstoppable: true})];
+});
+CAUSE_TURNS.aSecondDemonMakesDeathsArbitrary =
+  CHARACTERS.Summoner.other_night;
+
+const allSeatsOf = state => {
+  const out = new Set();
+  for (let p = 0; p < state.nPlayers; p++) out.add(p);
+  return out;
+};
+
+/** One over the number of ways the tea party's Summoner could have
+ * summoned, for a story where it did; 1 otherwise. See solver.py. */
+function summonShare(world, changes, state) {
+  if (!changes.some(c => c.summoned)) return 1.0;
+  const tea = changes.filter(c => c.tea);
+  if (!tea.some(c => c.role === "Summoner")) return 1.0;
+  const ways = offersOf(hattedSummonerRule, new Timeline(world, tea),
+                        state).length - 1;
+  return ways > 0 ? 1.0 / ways : 1.0;
 }
 
 transitionRule(function theMinionsChooseABabysitter(world, state) {
@@ -1793,7 +1925,10 @@ transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
     // Philosopher — else whoever works it. See solver.py.
     const charmer = hasAbility(world, state, info.player, "SnakeCharmer", began)
       ? info.player : whoeverWorks(world, state, "SnakeCharmer", began);
-    let demon = world.demonAt(began);
+    // The one it chose, of two living Demons (Hatter stage 2).
+    const demons = world.demonsAt(began);
+    let demon = demons.includes(info.target) ? info.target
+      : (demons.length ? demons[0] : null);
     // Lil' Monsta's first babysitter is chosen at 15, before the charmer
     // at 20 (E, Weg 1, 21.10.2026).
     if (demon === null && info.night === 1) demon = babysitterAt(world, phase);
@@ -2112,6 +2247,28 @@ function plainFailures(world, state, outcome = {}) {
           fail(night, summoner);
         }
       }
+  }
+
+  // A Summoner chosen at a tea party (Hatter stage 2): working when it
+  // made a Demon, drunk or poisoned on a third night it reached holding
+  // it, alive, with none made. See solver.py.
+  if (inBag(state, "Summoner") && hatterOnBoard(state)) {
+    const made = (world.changes || []).find(c => c.summoned) || null;
+    const final = phaseIndex(state.finalPhase());
+    for (const c of hattedSummoners(world)) {
+      const seat = c.seat;
+      if (made) {
+        if (!(onBoard(state, "Courtier") || onBoard(state, "Preacher"))) {
+          const night = parseInt(made.phase.slice(1), 10);
+          (working[night] = working[night] || new Set()).add(seat);
+        }
+      } else if (final >= phaseIndex("D3") && summonsOn(c, 3)
+                 && state.aliveSet("N3").has(seat)
+                 && !state.diedAt(seat).includes("N3")
+                 && world.roleAt(seat, "N3") === "Summoner") {
+        fail(3, seat);
+      }
+    }
   }
 
   // The Hatter (22.10.2026): whoever chose a new character did so
@@ -2583,10 +2740,8 @@ function plainFailures(world, state, outcome = {}) {
 
 /** The living Demon at this moment, if it is a Yaggababble. */
 function yaggababbleAt(world, state, phase) {
-  const demon = world.demonAt(phase);
-  if (demon === null || demon === undefined
-      || world.roleAt(demon, phase) !== "Yaggababble"
-      || !state.aliveSet(phase).has(demon)) return null;
+  const demon = demonHolding(world, phase, "Yaggababble");
+  if (demon === null || !state.aliveSet(phase).has(demon)) return null;
   return demon;
 }
 
@@ -3047,13 +3202,14 @@ function theGameWentOn(world, state) {
   if (!inBag(state, "Zombuul")) return true;
   for (const phase of momentsWithTwoLeft(state)) {
     const board = state.aliveSet(phase);
-    const demon = world.demonAt(phase);
-    if (demon === null) continue;
-    if (board.has(demon)) return false;   // it would have won there and then
-    if (world.roleAt(demon, phase) === "Zombuul" && board.size < 2 &&
-        state.diedAt(demon)
-          .filter(p => phaseIndex(p) < phaseIndex(phase)).length < 2)
-      return false;                       // it and one other: won as well
+    // Either of two living Demons wins there (Hatter stage 2).
+    for (const demon of world.demonsAt(phase)) {
+      if (board.has(demon)) return false; // it would have won there and then
+      if (world.roleAt(demon, phase) === "Zombuul" && board.size < 2 &&
+          state.diedAt(demon)
+            .filter(p => phaseIndex(p) < phaseIndex(phase)).length < 2)
+        return false;                     // it and one other: won as well
+    }
   }
   return true;
 }
@@ -3628,6 +3784,12 @@ export function storyShares(world, viable, state = null) {
       barberClaimants(state).size)
     viable = viable.map(([cost, changes]) =>
       [cost * barberShare(world, changes, state), changes]);
+  // A Summoner chosen at a tea party is one choice, however many ways it
+  // then summoned (Hatter stage 2). See solver.py.
+  if (state && viable.length > 1 && hatterOnBoard(state)
+      && state.script.keys.includes("Summoner"))
+    viable = viable.map(([cost, changes]) =>
+      [cost * summonShare(world, changes, state), changes]);
   const total = viable.reduce((sum, [cost]) => sum + cost, 0);
   if (total <= 0) return [];
   return viable.map(([cost, changes]) =>

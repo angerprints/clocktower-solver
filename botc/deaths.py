@@ -207,9 +207,21 @@ def causes_on(world, state, night):
         slot = CAUSE_TURNS.get(rule.__name__)
         if slot:
             with reading_at(phase, slot, slot):
-                out.extend(rule(world, state, night))
+                got = rule(world, state, night)
         else:
-            out.extend(rule(world, state, night))
+            got = rule(world, state, night)
+        # Two living Demons (Hatter stage 2, 25.10.2026): each kills once,
+        # by its own rule, so a name another rule already used is another
+        # Demon's kill and is counted apart.
+        names = {c.name for c in out}
+        clash = {c.name for c in got if c.kind == DEMON} & names
+        for name in clash:
+            k = 2
+            while f"{name} {k}" in names:
+                k += 1
+            got = [c._replace(name=f"{name} {k}") if c.name == name else c
+                   for c in got]
+        out.extend(got)
     return out
 
 

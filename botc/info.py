@@ -847,9 +847,10 @@ def holding_now(w, s, role, phase):
     So a Po, a Pukka or a Vortox the Scarlet Woman inherited never acted:
     the rules asked the corpse (found 14.10.2026, Stelle 59, once a
     Slayer's shot handed a Po on in daylight)."""
-    demon = w.demon_at(phase)
-    if demon is not None and w.role_at(demon, phase) == role:
-        return demon
+    # Either of two living Demons (Hatter stage 2, 25.10.2026).
+    for demon in w.demons_at(phase):
+        if w.role_at(demon, phase) == role:
+            return demon
     alive = s.alive_set(phase)
     first = None
     for seat in range(len(w.roles)):
@@ -1401,10 +1402,12 @@ class FlowergirlInfo(Info):
         if not self.weighed(s):
             return True
         phase = f"D{day}"
-        demon = w.demon_at(phase)
-        if demon is None:
+        demons = w.demons_at(phase)
+        if not demons:
             return not self.voted     # no Demon, so it voted for nothing
-        return (demon in (s.votes or {}).get(day, ())) == self.voted
+        # Either of two living Demons (Hatter stage 2, B Weg 1).
+        voted = (s.votes or {}).get(day, ())
+        return any(d in voted for d in demons) == self.voted
 
 
 @dataclass
@@ -1640,8 +1643,7 @@ def savant_truths(says, w, phase, real=False, s=None):
         return out if kind == "in_play" else {not v for v in out}
     if kind == "demon_among":
         seats = {int(x) for x in says.get("seats") or ()}
-        demon = w.demon_at(phase)
-        out = {demon in seats}
+        out = {any(d in seats for d in w.demons_at(phase))}
         if not real and any(
                 "demon" in CHARACTERS[w.role_at(p, phase)].registers
                 for p in seats):
@@ -1998,7 +2000,7 @@ class SnakeCharmerChoice(Info):
         # night made it the Demon by the end of it, and a charmer that had
         # rightly swapped nothing read as needing an excuse (29.09.2026).
         acted = f"B{self.night - 1}" if self.night > 1 else phase
-        return w.demon_at(acted) != self.target
+        return self.target not in w.demons_at(acted)
 
 
 @dataclass
@@ -2090,8 +2092,9 @@ class SageInfo(Info):
 
     def holds(self, w, s, rh, seat=None):
         phase = f"N{self.night}"
-        demon = w.demon_at(phase)
-        return demon is not None and demon in (self.a, self.b)
+        # Of two living Demons the one that killed; which, the board does
+        # not say, so either (Hatter stage 2, generous).
+        return any(d in (self.a, self.b) for d in w.demons_at(phase))
 
 
 @dataclass
@@ -3419,17 +3422,17 @@ class ChoirboyInfo(Info):
         phase = f"N{self.night}"
         if not self._kings(w, s):
             return False
-        if self.target == w.demon_at(phase):
+        if self.target in w.demons_at(phase):
             return True
         return w.role_at(self.target, phase) == "Recluse"
 
     def is_true(self, w, s, seat=None):
         return bool(self._kings(w, s)) \
-            and self.target == w.demon_at(f"N{self.night}")
+            and self.target in w.demons_at(f"N{self.night}")
 
     def leaned_on(self, w, s, seat=None):
         phase = f"N{self.night}"
-        if self.target != w.demon_at(phase) \
+        if self.target not in w.demons_at(phase) \
                 and w.role_at(self.target, phase) == "Recluse":
             return (self.target,)
         return ()
@@ -3729,7 +3732,7 @@ class PuzzlemasterGuess(Info):
         Puzzlemaster itself was off (the solver tries both, `_explain`)."""
         if self._earlier(s):
             return None
-        if self.shown != w.demon_at(f"D{self.night}"):
+        if self.shown not in w.demons_at(f"D{self.night}"):
             return None
         return frozenset({self.guess}), frozenset()
 
@@ -3766,10 +3769,10 @@ class BoomdandyExploded(Info):
             return False
         if self.pointed < 0:
             return True
-        demon = w.demon_at(phase)
-        return not (demon is not None and demon not in (self.player,
-                                                        self.pointed)
-                    and phase in s.died_at(demon))
+        # Every living Demon among the three left (Hatter stage 2).
+        return not any(demon not in (self.player, self.pointed)
+                       and phase in s.died_at(demon)
+                       for demon in w.demons_at(phase))
 
     def leaned_on(self, w, s, seat=None):
         return (self.player,)

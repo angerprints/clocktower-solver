@@ -122,9 +122,23 @@ export function causesOn(world, state, night) {
   const phase = `N${night}`;
   for (const rule of CAUSE_RULES) {
     const slot = CAUSE_TURNS[rule.name];
-    if (slot) out.push(...readingAt(phase, slot, slot,
-                                    () => rule(world, state, night)));
-    else out.push(...rule(world, state, night));
+    let got = slot ? readingAt(phase, slot, slot,
+                               () => rule(world, state, night))
+      : rule(world, state, night);
+    // Two living Demons (Hatter stage 2): a name another rule already
+    // used for a Demon's kill is another Demon's, counted apart. See
+    // deaths.py.
+    const names = new Set(out.map(c => c.name));
+    const clash = new Set(got.filter(c => c.kind === DEMON && names.has(c.name))
+      .map(c => c.name));
+    for (const name of clash) {
+      let k = 2;
+      while (names.has(`${name} ${k}`)) k++;
+      got = got.map(c => c.name !== name ? c
+        : Object.assign(Object.create(Object.getPrototypeOf(c)), c,
+                        {name: `${name} ${k}`}));
+    }
+    out.push(...got);
   }
   return out;
 }

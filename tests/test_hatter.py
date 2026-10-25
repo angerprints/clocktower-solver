@@ -227,9 +227,11 @@ class NotReckonedYet(SolverTest):
     def test_a_hanged_hatter_is_reckoned(self):
         self.assertEqual(self.unreckoned(**HANGED), {})
 
-    def test_a_second_demon_through_the_summoner(self):
+    def test_a_second_demon_through_the_summoner_is_reckoned(self):
+        """K Weg 2, built in stage 2 (25.10.2026)."""
         script = scripts.from_ids("Hutmacher S", IDS + ["summoner"])
-        self.assertIn("two demons", self.unreckoned(script=script, **HANGED))
+        self.assertEqual(self.unreckoned(script=script, days=(1, 2, 3),
+                                         **HANGED), {})
 
     def test_lil_monsta_on_the_script(self):
         script = scripts.from_ids("Hutmacher M", IDS + ["lilmonsta"])
@@ -304,6 +306,55 @@ class TheSimulator(SolverTest):
         self.assertEqual(lost, [])
 
 
+class TwoLivingDemons(SolverTest):
+    """Stage 2 (25.10.2026): a Minion chose the Summoner at a tea party and
+    summoned a second living Demon on the third night. Played games: the
+    true world is kept, the night-walk agrees, and nothing is left
+    unreckoned."""
+
+    SEEDS = (48, 116, 157, 407, 466, 702)
+
+    def test_played(self):
+        import claims as Cl
+        import nightwalk
+        import play_games
+        import simulate
+        lost, walked, left = [], [], []
+        for seed in self.SEEDS:
+            rng = random.Random(seed)
+            script = play_games.an_awkward_script(
+                rng, must_have=("Hatter", "Summoner"))
+            n = [7, 8, 9, 10, 11][seed % 5]
+            deal, heard = simulate.play(n, rng, nights=4, script=script)
+            self.assertTrue(deal.line2, seed)
+            claims, wakes, _ = Cl.claims_for(deal, rng, script=script)
+            st = GameState(n_players=n, script=script, claims=claims,
+                           wakes=wakes, infos=list(heard),
+                           votes=dict(deal.votes),
+                           nominations=dict(deal.nominations),
+                           **deal.record())
+            if S.hatter_unreckoned(deal.world(), st) is not None:
+                left.append(seed)
+            for night in range(2, deal.nights_played + 1):
+                got = nightwalk.walk(deal, night,
+                                     nightwalk.hidden_from(deal, night, heard))
+                if got.died != deal.died_on(f"N{night}") or got.untold:
+                    walked.append((seed, night))
+            if S.explanation_cost(deal.world(), st) is None:
+                lost.append(seed)
+        self.assertEqual((lost, walked, left), ([], [], []))
+
+    def test_two_demons_at_once(self):
+        """The board's Demons: both, from the summoning on."""
+        from botc.worlds import Summoned, TeaParty, Timeline, World
+        w = World(list(R), list(R))
+        t = Timeline(w, (TeaParty("N2", 1, "Summoner", "evil"),
+                         Summoned("N3", 0, "Po", "evil")))
+        self.assertEqual(t.demons_at("D2"), (7,))
+        self.assertEqual(t.demons_at("D3"), (7, 0))
+        self.assertEqual(t.demon_at("D3"), 7)
+
+
 class FoundAtTheGate(SolverTest):
     """Games of the gate the first build lost, kept now (22.10.2026)."""
 
@@ -362,6 +413,12 @@ def _payloads():
         # Dead at night beside an Assassin: a party after the Demons' turn
         # and one after the Assassin's (stage 3c, 23.10.2026).
         pay({5: ["N2"], 1: ["N3"]}, ids=IDS + ["assassin"], days=(1, 2, 3)),
+        # A Summoner chosen at the party summons a second living Demon on
+        # the third night (stage 2, 25.10.2026): deaths that night are
+        # arbitrary, and each Demon kills on the fourth.
+        pay({5: ["X1"], 1: ["N2"]}, ids=IDS + ["summoner"], days=(1, 2, 3)),
+        pay({5: ["X1"], 1: ["N2"], 2: ["N3"], 3: ["N3"], 4: ["N4"],
+             0: ["N4"]}, ids=IDS + ["summoner"], days=(1, 2, 3)),
     ]
 
 
