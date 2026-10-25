@@ -4414,6 +4414,8 @@ def _second_demon_kills(d, night, rng, heard):
         if not hasattr(d, "demon_aimed2"):
             d.demon_aimed2 = {}
         d.demon_aimed2[night] = d.demon_aimed.get(night)
+        d.demon2_seat = getattr(d, "demon2_seat", {})
+        d.demon2_seat[night] = seat
         if first is None:
             d.demon_aimed.pop(night, None)
         else:

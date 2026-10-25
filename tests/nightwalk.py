@@ -618,8 +618,9 @@ def hidden_from(deal, night, heard):
     # (Hatter stage 2, 25.10.2026), whose kill is its own.
     made = getattr(deal, "summoned", None) \
         or getattr(deal, "tea_summoned", None)
-    second = deal.second_demon(phase) if getattr(deal, "line2", None) \
-        else None
+    # The seat that acted as it tonight — a Scarlet Woman that took over
+    # later in the night is not it.
+    second = (getattr(deal, "demon2_seat", None) or {}).get(night)
     if second is not None:
         out[("second_demon", night)] = second
         aim = (getattr(deal, "demon_aimed2", None) or {}).get(night)

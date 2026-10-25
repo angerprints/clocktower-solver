@@ -1692,13 +1692,22 @@ def the_hatter():
     import play_games
     from test_hatter import _payloads
     names = ("hanged", "gambler", "evil-twin", "at-night", "summoner",
-             "two-days", "at-night-assassin")
+             "two-days", "at-night-assassin", "summoner-third-night",
+             "two-demons-deaths")
     for name, payload in zip(names, _payloads(), strict=True):
         yield {"name": f"x-hatter-{name}", "payload": payload}
     for seed, n in PLAYED_HATTER:
         rng = random.Random(seed)
         script = play_games.an_awkward_script(rng, must_have=("Hatter",))
         yield played(f"x-hatter-played-{seed}-{n}", script, seed, n, 4,
+                     rng=rng)
+    # A Summoner chosen at the party, and a second living Demon (stage 2,
+    # 25.10.2026).
+    for seed, n in PLAYED_TWO_DEMONS:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(
+            rng, must_have=("Hatter", "Summoner"))
+        yield played(f"x-hatter-two-demons-{seed}-{n}", script, seed, n, 4,
                      rng=rng)
 
 
@@ -1708,6 +1717,10 @@ def the_hatter():
 # turn (176, 195; Hatter stage 3c, 23.10.2026).
 PLAYED_HATTER = ((1, 8), (56, 8), (62, 9), (82, 9), (120, 7), (175, 7),
                  (256, 8), (176, 8), (195, 7))
+
+# Games where a Minion chose the Summoner at a tea party and it summoned a
+# second living Demon on the third night (Hatter stage 2, 25.10.2026).
+PLAYED_TWO_DEMONS = ((48, 10), (116, 8), (157, 9), (407, 9))
 
 
 def stellen_62_63():
