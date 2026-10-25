@@ -84,6 +84,8 @@ export class World {
   teamAt(seat, phase) { return TEAM[this.roleAt(seat, phase)]; }
   alignmentAt(seat, phase) {
     if (LISTENING) noteSideRead(seat, phase);
+    // Sides too, for a Summoner's Demon (Hatter stage 2). See worlds.py.
+    if (TEA_READS.now && TEA_READS.now.sides) teaRead(phase);
     return alignment(this.roles[seat]);
   }
   evilAt(seat, phase) { return this.alignmentAt(seat, phase) === EVIL; }
@@ -354,6 +356,7 @@ export class Timeline {
   alignmentAt(seat, phase) {
     if (LISTENING) noteSideRead(seat, phase);
     this._summonRead(phase);
+    if (TEA_READS.now && TEA_READS.now.sides) teaRead(phase);
     let side = alignment(this.world.roles[seat]);
     const mine = this._indexed().sides.get(seat);
     if (mine) {

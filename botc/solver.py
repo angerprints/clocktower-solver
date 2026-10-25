@@ -1992,6 +1992,8 @@ HATTER_STORIES = 1024
 # Set by the tests: switch the prune in `_best_story_told` off and
 # compare.
 TEA_PRUNE = True
+# And the one over a tea party's Summoner (stage 2, 25.10.2026).
+SUMMON_TEA_PRUNE = True
 
 # How many stories with a tea party a solve may tell (V Weg 1,
 # 22.10.2026). Each world is told once for every way the evil players can
@@ -7259,16 +7261,39 @@ def _best_story_told(world, state, outcome, viable):
                    for c in got if isinstance(c, TeaParty)]
         if parties:
             tea = (min(parties), set())
-            stories = sorted(stories, key=lambda got: any(
-                isinstance(c, TeaParty) for c in got[0]))
+    # And a Summoner chosen at a party (Hatter stage 2, 25.10.2026): the
+    # stories where it summoned nobody go before those where it did. One
+    # that could not be explained without looking at anything — sides too
+    # — from the earliest summoning on cannot be with any summoning that
+    # shares what came before: that changes nothing it looked at.
+    summ = None
+    if SUMMON_TEA_PRUNE and tea is not None \
+            and "Summoner" in state.script.keys:
+        made = [moment_of(c) for got, _w in stories
+                for c in got if isinstance(c, Summoned)]
+        if made:
+            summ = (min(made), set())
+    if tea is not None:
+        def _order(got):
+            party = any(isinstance(c, TeaParty) for c in got[0])
+            return (party, party and any(isinstance(c, Summoned)
+                                         for c in got[0]))
+        stories = sorted(stories, key=_order)
     for changes, weight in stories:
         plain = None
+        before = None
         if tea is not None:
             rest = tuple(c for c in changes if not isinstance(c, TeaParty))
             if rest != changes:
                 if rest in tea[1] and not CHECK_RECALLS:
                     STORIES["skipped"] += 1
                     continue
+                if summ is not None:
+                    before = tuple(c for c in changes
+                                   if moment_of(c) < summ[0])
+                    if before in summ[1] and not CHECK_RECALLS:
+                        STORIES["skipped"] += 1
+                        continue
                 TEA_TOLD[0] += 1
             else:
                 plain = rest
@@ -7277,22 +7302,27 @@ def _best_story_told(world, state, outcome, viable):
         while at < len(told):
             changes = told[at]
             at += 1
-            if plain is not None and at == 1:
-                TEA_READS[0] = [tea[0], False]
+            watch = at == 1 and (plain is not None or before is not None)
+            if watch:
+                TEA_READS[0] = ([tea[0], False] if plain is not None
+                                else [summ[0], False, "sides"])
                 fresh = STORIES["explained"]
             try:
                 cost, marks, asked = _explain_or_recall(
                     world, changes, state, outcome is not None, told_before)
             finally:
-                if plain is not None and at == 1:
+                if watch:
                     looked = TEA_READS[0][1]
                     TEA_READS[0] = None
             # Only a story really told here says what it looked at; one
             # recalled from another (`_explain_or_recall`) does not.
-            if plain is not None and at == 1 and cost is None \
+            if watch and cost is None \
                     and not looked and (not _LISTENING[0]
                                         or STORIES["explained"] > fresh):
-                tea[1].add(plain)
+                if plain is not None:
+                    tea[1].add(plain)
+                else:
+                    summ[1].add(before)
             # A story that leaves something to pay for, or does not fit
             # at all, is told again with each player a Mezepheles could
             # have turned (`a_mezepheles_may_have_turned`).

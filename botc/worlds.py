@@ -101,6 +101,8 @@ class World:
         """
         if _READS:
             note_side_read(seat, phase)
+        if TEA_READS[0] is not None and len(TEA_READS[0]) > 2:
+            _tea_read(phase)
         return alignment(self.roles[seat])
 
     def evil_at(self, seat, phase):
@@ -225,7 +227,9 @@ class TeaParty(Change):
 # Whether anything from the Hatter's night on was looked at while a story
 # was told (solver._best_tea_story): [moment, looked]. A telling where
 # nobody chose anything new, that failed without looking, fails the same
-# for every choice.
+# for every choice. A third element asks for sides as well: a Summoner's
+# Demon turns its player evil (Hatter stage 2, 25.10.2026), where a tea
+# party keeps everybody's side.
 TEA_READS = [None]
 
 
@@ -508,6 +512,8 @@ class Timeline:
             note_side_read(seat, phase)
         if self._summon_at is not None:
             self._summon_read(phase)
+        if TEA_READS[0] is not None and len(TEA_READS[0]) > 2:
+            _tea_read(phase)
         side = alignment(self.world.roles[seat])
         mine = self._sides_by_seat.get(seat)
         if mine:

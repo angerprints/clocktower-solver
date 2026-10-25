@@ -1568,6 +1568,8 @@ export const TEA = {budget: 30000, exactBudget: 100000, minDives: 1000,
                     told: 0};
 // Set by the tests: the prune in bestStoryTold off. See solver.py.
 export const TEA_PRUNE = {on: true};
+// And the one over a tea party's Summoner (stage 2). See solver.py.
+export const SUMMON_TEA_PRUNE = {on: true};
 
 export const hatterOnBoard = state =>
   inBag(state, "Hatter") || takenByAPhilosopher(state, "Hatter");
@@ -3688,32 +3690,59 @@ function bestStoryTold(world, state, outcome) {
         if (c.tea && (at === null || changeAt(c) < at)) at = changeAt(c);
     if (at !== null) {
       tea = {at, failed: new Set()};
-      order = [...stories.filter(([got]) => !got.some(c => c.tea)),
-               ...stories.filter(([got]) => got.some(c => c.tea))];
+      const has = (got, f) => got.some(f);
+      // No party first, then a party with no summoning (stage 2).
+      order = [...stories.filter(([got]) => !has(got, c => c.tea)),
+               ...stories.filter(([got]) => has(got, c => c.tea)
+                                 && !has(got, c => c.summoned)),
+               ...stories.filter(([got]) => has(got, c => c.tea)
+                                 && has(got, c => c.summoned))];
     }
   }
+  // And a Summoner chosen at a party (Hatter stage 2): one that could not
+  // be explained without looking at anything — sides too — from the
+  // earliest summoning on takes every summoning sharing what came before
+  // with it. See solver.py.
+  let summ = null;
+  if (SUMMON_TEA_PRUNE.on && tea && state.script.keys.includes("Summoner")) {
+    let at = null;
+    for (const [got] of stories)
+      for (const c of got)
+        if (c.summoned && (at === null || changeAt(c) < at)) at = changeAt(c);
+    if (at !== null) summ = {at, failed: new Set()};
+  }
   for (const [first, weight] of order) {
-    let plain = null;
+    let plain = null, before = null;
     if (tea) {
       const rest = first.filter(c => !c.tea);
       const key = rest.map(changeKey).join(";");
       if (rest.length !== first.length) {
         if (tea.failed.has(key)) { STORIES.skipped += 1; continue; }
+        if (summ) {
+          before = first.filter(c => changeAt(c) < summ.at)
+            .map(changeKey).join(";");
+          if (summ.failed.has(before)) { STORIES.skipped += 1; continue; }
+        }
         TEA.told += 1;
       } else {
         plain = key;
       }
     }
+    const watching = () => (plain !== null
+      ? {at: tea.at, read: false} : {at: summ.at, read: false, sides: true});
+    const fail = () => (plain !== null ? tea.failed.add(plain)
+      : summ.failed.add(before));
     if (!LISTENING) {                     // nobody turns evil that way here
       const view = first.length ? new Timeline(world, first) : world;
       const marks = outcome ? {} : null;
-      if (plain !== null) TEA_READS.now = {at: tea.at, read: false};
+      const watch = plain !== null || before !== null;
+      if (watch) TEA_READS.now = watching();
       let cost;
       try {
         cost = explainOne(view, state, marks);
       } finally {
-        if (plain !== null) {
-          if (cost === null && !TEA_READS.now.read) tea.failed.add(plain);
+        if (watch) {
+          if (cost === null && !TEA_READS.now.read) fail();
           TEA_READS.now = null;
         }
       }
@@ -3728,9 +3757,9 @@ function bestStoryTold(world, state, outcome) {
     const told = [first];
     for (let at = 0; at < told.length;) {
       const changes = told[at++];
-      const watch = plain !== null && at === 1;
+      const watch = (plain !== null || before !== null) && at === 1;
       const fresh = STORIES.explained;
-      if (watch) TEA_READS.now = {at: tea.at, read: false};
+      if (watch) TEA_READS.now = watching();
       let cost, marks, asked;
       try {
         [cost, marks, asked] = explainOrRecall(
@@ -3739,7 +3768,7 @@ function bestStoryTold(world, state, outcome) {
         if (watch) {
           // Only a story really told here says what it looked at.
           if (cost === null && !TEA_READS.now.read
-              && STORIES.explained > fresh) tea.failed.add(plain);
+              && STORIES.explained > fresh) fail();
           TEA_READS.now = null;
         }
       }
