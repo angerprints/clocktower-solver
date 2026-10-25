@@ -1825,8 +1825,10 @@ def _neighbours(n, seat):
     return ((seat - 1) % n, (seat + 1) % n)
 
 
-def _summoned_seats(world, state, night, demon):
-    """Who could have been made this Demon on this night."""
+def _summoned_seats(world, state, night, demon, puppet=True):
+    """Who could have been made this Demon on this night. `puppet`: the
+    Marionette's jinx applies — not to a Summoner chosen at a tea party,
+    where the Marionette is in play already (Hatter stage 2)."""
     n = state.n_players
     phase = f"N{night}"
     standing = state.alive_set(phase)
@@ -1840,7 +1842,7 @@ def _summoned_seats(world, state, night, demon):
     # neighbour — whoever that neighbour is, alive or dead (Patrick,
     # 22.10.2026). The seat that becomes it is the one dealt it here, so
     # the Demon is made beside that seat.
-    if "Marionette" in world.roles:
+    if puppet and "Marionette" in world.roles:
         m = world.roles.index("Marionette")
         seats = [p for p in seats if p in _neighbours(n, m)]
     return seats
@@ -2315,7 +2317,8 @@ def a_hatted_summoner_summons(world, state):
             for demon in _summonable(state):
                 if demon in held or (night == 2 and demon != "Pukka"):
                     continue
-                for target in _summoned_seats(world, state, night, demon):
+                for target in _summoned_seats(world, state, night, demon,
+                                              puppet=False):
                     for extra in _typhon_neighbours(world, state, night,
                                                     target, demon):
                         out.append(((Summoned(phase, target, demon, "evil"),)

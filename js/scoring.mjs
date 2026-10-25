@@ -1434,7 +1434,7 @@ const summonable = state => state.script.keys.filter(
 
 const neighboursOf = (n, seat) => [(seat - 1 + n) % n, (seat + 1) % n];
 
-function summonedSeats(world, state, night, demon) {
+function summonedSeats(world, state, night, demon, puppet = true) {
   const n = state.nPlayers;
   const standing = state.aliveSet(`N${night}`);
   // Back tonight is back after the Summoner's turn. See solver.py.
@@ -1446,7 +1446,9 @@ function summonedSeats(world, state, night, demon) {
       seats.push(p);
   // The Marionette's jinx: it enters play after the Demon as its
   // neighbour, alive or dead (22.10.2026). See solver.py.
-  if (world.roles.includes("Marionette")) {
+  // Not for a Summoner chosen at a tea party: the Marionette is in play
+  // already (Hatter stage 2).
+  if (puppet && world.roles.includes("Marionette")) {
     const near = neighboursOf(n, world.roles.indexOf("Marionette"));
     seats = seats.filter(p => near.includes(p));
   }
@@ -1829,7 +1831,8 @@ const hattedSummonerRule = transitionRule(
         for (let p = 0; p < n; p++) held.add(world.roleAt(p, phase));
         for (const demon of summonable(state)) {
           if (held.has(demon) || (night === 2 && demon !== "Pukka")) continue;
-          for (const target of summonedSeats(world, state, night, demon))
+          for (const target of summonedSeats(world, state, night, demon,
+                                             false))
             for (const extra of typhonNeighbours(world, state, night, target,
                                                  demon))
               out.push([[summoned(phase, target, demon), ...extra], 1.0]);
