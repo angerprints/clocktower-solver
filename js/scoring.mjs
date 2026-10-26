@@ -2055,19 +2055,22 @@ export function boffinMayGive(view, state, phase) {
   return out;
 }
 
-/** What a Boffin row says was given by that night, or null. */
-function boffinNamed(state, night) {
+/** What a Boffin row says it gave, for a moment of that night, or null:
+ * a first-night row is about the Demon dealt, a later row about the
+ * Demon made that night (seed 683). See solver.py. */
+function boffinNamed(state, night, setup) {
   let named = null;
   for (const info of boffinRows(state))
-    if (info.night <= night) named = boffinGiven(info, state);
+    if (info.night === night && (night > 1 || setup))
+      named = boffinGiven(info, state);
   return named;
 }
 
 /** Every ability the Boffin may have given this seat at that moment, as
  * [[mark], cost] — "nothing the town sees" first. */
-export function boffinOffers(view, state, phase, seat, slot) {
+export function boffinOffers(view, state, phase, seat, slot, setup = false) {
   const may = boffinMayGive(view, state, phase);
-  const named = boffinNamed(state, parseInt(phase.slice(1), 10));
+  const named = boffinNamed(state, parseInt(phase.slice(1), 10), setup);
   if (named !== null) {
     if (!may.includes(named)) return [];
     const gift = BOFFIN_SEEN.has(named) ? named : BOFFIN_UNSEEN;
@@ -2126,7 +2129,7 @@ function boffinStories(world, state, setup) {
     const grown = [];
     for (const [changes, cost] of stories) {
       const view = changes.length ? new Timeline(world, changes) : world;
-      let offers = boffinOffers(view, state, phase, seat, slot);
+      let offers = boffinOffers(view, state, phase, seat, slot, setup);
       if (beside !== null) {
         // The Storyteller decides (D Weg 2): the first keeps it, or the
         // second gets one and the first's ends.

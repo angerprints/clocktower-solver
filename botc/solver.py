@@ -2709,21 +2709,25 @@ def boffin_may_give(view, state, phase):
     return out
 
 
-def _boffin_named(state, night):
-    """What a Boffin row says was given by that night, or None. The
-    latest row up to it."""
+def _boffin_named(state, night, setup):
+    """What a Boffin row says it gave, for a moment of that night, or
+    None. A row of the first night names what the Demon dealt was given —
+    the Boffin wakes at 12, before anything that night could make another
+    Demon; a row of a later night names what the Demon made that night was
+    given (26.10.2026, seed 683: a Snake Charmer's swap on the first night
+    is not what the first night's row is about)."""
     named = None
     for info in boffin_rows(state):
-        if info.night <= night:
+        if info.night == night and (night > 1 or setup):
             named = info.given(state)
     return named
 
 
-def boffin_offers(view, state, phase, seat, slot):
+def boffin_offers(view, state, phase, seat, slot, setup=False):
     """Every ability the Boffin may have given this seat at that moment,
     as ((mark,), cost) — "nothing the town sees" first."""
     may = boffin_may_give(view, state, phase)
-    named = _boffin_named(state, int(phase[1:]))
+    named = _boffin_named(state, int(phase[1:]), setup)
     if named is not None:
         if named not in may:
             return []
@@ -2803,7 +2807,7 @@ def _boffin_stories(world, state, setup):
         grown = []
         for changes, cost in stories:
             view = Timeline(world, changes) if changes else world
-            offers = boffin_offers(view, state, phase, seat, slot)
+            offers = boffin_offers(view, state, phase, seat, slot, setup)
             if beside is not None:
                 # The Storyteller decides (D Weg 2): the first keeps it,
                 # or the second gets one and the first's ends.
