@@ -9,7 +9,7 @@ import {CHARACTERS} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
 import {minionStillActs} from "./impairment.mjs";
 import {TEAM, believesAnother, isEvil, mustHide, show, wakeFits} from "./roles.mjs";
-import {TEA, hatterUnreckoned} from "./scoring.mjs";
+import {SUMMON_SAMPLE, TEA, hatterUnreckoned} from "./scoring.mjs";
 import {bestStory, storyShares, explanationCost, forcedRoles, nightDeaths,
         worldConsistent} from "./scoring.mjs";
 import {PRIORS} from "./priors.mjs";
@@ -411,6 +411,17 @@ function progress(done, total) {
 
 export function estimate(state, allowGoodLies = false, dives = 25000,
                          keepSamples = 8, rng = null) {
+  // Each world tells only a spread of a tea party's Summoner's ways (Hatter
+  // stage 2, Weg 2). See solver.py.
+  SUMMON_SAMPLE.k = SUMMON_SAMPLE.size;
+  try {
+    return estimateWorlds(state, allowGoodLies, dives, keepSamples, rng);
+  } finally {
+    SUMMON_SAMPLE.k = null;
+  }
+}
+
+function estimateWorlds(state, allowGoodLies, dives, keepSamples, rng) {
   const n = state.nPlayers;
   const now = reportPhase(state);
   rng = rng || new Rng((Math.random() * 2 ** 32) >>> 0);

@@ -2092,8 +2092,8 @@ class SageInfo(Info):
 
     def holds(self, w, s, rh, seat=None):
         phase = f"N{self.night}"
-        # Of two living Demons the one that killed; which, the board does
-        # not say, so either (Hatter stage 2, generous).
+        # Of two living Demons the one that killed — which one, the death
+        # account settles (`solver.the_killer_of_two_was_named`).
         return any(d in (self.a, self.b) for d in w.demons_at(phase))
 
 

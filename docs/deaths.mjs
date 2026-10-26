@@ -34,7 +34,7 @@ export class Cause {
     capacity = 1, cost = 1.0, mustFire = false, unstoppable = false,
     victimImpairedAt = null, alsoImpaired = [], actor = null,
     actorCost = 1.0, actorKillsWorking = true, excuses = [],
-    quietsDemon = false,
+    quietsDemon = false, demon = null,
   } = {}) {
     this.name = name;
     this.kind = kind;
@@ -74,6 +74,9 @@ export class Cause {
     // A kill by this one means the Demon kills nobody tonight: the
     // Lycanthrope's (11.10.2026). See deaths.py.
     this.quietsDemon = quietsDemon;
+    // Which Demon's kill this is, where two live (Hatter stage 2). See
+    // deaths.py.
+    this.demon = demon;
   }
 }
 
@@ -89,8 +92,9 @@ export class Cause {
  * been impaired. A Monk picks one player a night, so a death only ever
  * means it guarded somebody else — it implies nothing about the victim.
  */
-export const shield = (by, {needs = null, cost = 1.0, chosen = false} = {}) =>
-  ({by, needs, cost, chosen});
+export const shield = (by, {needs = null, cost = 1.0, chosen = false,
+                            against = null, barsOnly = false} = {}) =>
+  ({by, needs, cost, chosen, against, barsOnly});
 
 /** A death that follows from another one.
  *
@@ -144,12 +148,17 @@ export function causesOn(world, state, night) {
 }
 
 /** Every reason this seat could have survived that kind of death. */
-export function shieldsOn(world, state, night, seat, kind) {
-  const out = [];
+export function shieldsOn(world, state, night, seat, kind, cause = null) {
+  let out = [];
   for (const rule of IMMUNITY_RULES) {
     const got = rule(world, state, night, seat, kind);
     if (got && got.length) out.push(...got);
   }
+  // A shield against one Demon only holds against that Demon's kill
+  // (Hatter stage 2). See deaths.py.
+  if (out.some(s => s.against))
+    out = out.filter(s => !s.against
+                     || (cause !== null && s.against.has(cause.demon)));
   return out;
 }
 
@@ -235,7 +244,8 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
         // have stopped this at all — in which case no shield has anything
         // to answer for, including the one saying you cannot kill a
         // corpse, which still holds because a corpse is not a kill.
-        const blocked = shieldsOn(world, state, night, victim, cause.kind)
+        const blocked = shieldsOn(world, state, night, victim, cause.kind,
+                                  cause)
           .filter(s => !s.chosen && (!cause.unstoppable || s.needs === null));
         if (blocked.some(s => s.needs === null)) continue;
 
@@ -393,7 +403,9 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
                     impaired: new Set([...acc.impaired, cause.actor])});
       }
       for (const target of [...cause.seats].sort((a, b) => a - b)) {
-        for (const s of shieldsOn(world, state, night, target, cause.kind)) {
+        for (const s of shieldsOn(world, state, night, target, cause.kind,
+                                  cause)) {
+          if (s.barsOnly) continue;
           if (s.needs !== null && acc.impaired.has(s.needs)) continue;
           grown.push({
             cost: acc.cost * s.cost,
@@ -420,7 +432,9 @@ function accountFor(world, state, night, causes, directly, followed, blame) {
           continue;
         }
         for (const target of [...seats].sort((a, b) => a - b)) {
-          for (const s of shieldsOn(world, state, night, target, cause.kind)) {
+          for (const s of shieldsOn(world, state, night, target, cause.kind,
+                                    cause)) {
+            if (s.barsOnly) continue;
             if (s.needs !== null && acc.impaired.has(s.needs)) continue;
             grown.push({
               cost: acc.cost * s.cost,

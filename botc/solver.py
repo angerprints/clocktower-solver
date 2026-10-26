@@ -2295,6 +2295,33 @@ def _summons_on(change, night):
         or change.slot < slot_of("Summoner", night)
 
 
+# While a solve estimates (Hatter stage 2, Patrick 26.10.2026, Weg 2): how
+# many of a tea party's Summoner's ways each world tells, or None for all.
+# A fixed spread across them, the same on every pass over the world and in
+# both languages, so the stories of one world agree with each other.
+SUMMON_SAMPLE = [None]
+SUMMON_SAMPLE_SIZE = 8
+
+
+def _stable(text):
+    """A number from a string, the same in Python and JavaScript."""
+    got = 0
+    for i, ch in enumerate(text):
+        got = (got + (i + 1) * ord(ch)) % 2147483647
+    return got
+
+
+def _sampled_ways(world, change, ways):
+    """Every way, or while estimating a fixed spread of k of them."""
+    k = SUMMON_SAMPLE[0]
+    if k is None or len(ways) <= k:
+        return ways
+    step = -(-len(ways) // k)
+    offset = _stable("|".join(world.roles)
+                     + f"|{change.seat}|{change.phase}") % step
+    return ways[offset::step]
+
+
 @transition_rule
 def a_hatted_summoner_summons(world, state):
     """Every way a Summoner chosen at a tea party summoned: "nobody" first
@@ -2308,6 +2335,7 @@ def a_hatted_summoner_summons(world, state):
     out = [((), 1.0)]
     for change in tea:
         seat = change.seat
+        ways = []
         for night in (2, 3):
             phase = f"N{night}"
             if final < phase_index(phase) or not _summons_on(change, night):
@@ -2323,8 +2351,9 @@ def a_hatted_summoner_summons(world, state):
                                               puppet=False):
                     for extra in _typhon_neighbours(world, state, night,
                                                     target, demon):
-                        out.append(((Summoned(phase, target, demon, "evil"),)
-                                    + extra, 1.0))
+                        ways.append(((Summoned(phase, target, demon, "evil"),)
+                                     + extra, 1.0))
+        out.extend(_sampled_ways(world, change, ways))
     return out
 
 
@@ -2573,6 +2602,19 @@ def demon_lineages(world, state, cap=24):
     return out
 
 
+def _scarlet_woman_stays(view, state, phase, fallen):
+    """Would a Scarlet Woman stepping up for this Demon make two living
+    Demons, with a Fang Gu or an Al-Hadikhia in play? Then she stays the
+    Scarlet Woman (their jinxes)."""
+    here = phase_index(phase)
+    if not any(view.role_at(p, phase) in ("FangGu", "AlHadikhia")
+               for p in range(state.n_players)):
+        return False
+    return any(d != fallen and not any(phase_index(p) <= here
+                                       for p in state.died_at(d))
+               for d in view.demons_at(phase))
+
+
 def _a_demon_left(view, state, ends):
     """Every Demon that fell with nobody to take over, while the game went
     on, left another standing (Hatter stage 2, 25.10.2026)."""
@@ -2677,6 +2719,14 @@ def _demon_line(world, state, base, start, since, line, beside, cap):
             # the night says only that it died.
             moves.extend(stamped(rule(view, state, phase, character),
                                  character))
+        # "If there would be two living Demons, one of which was the
+        # Scarlet Woman, the Scarlet Woman remains the Scarlet Woman" —
+        # with a Fang Gu or an Al-Hadikhia in play (their jinxes; Hatter
+        # stage 2, Patrick 26.10.2026).
+        if beside is not None and _scarlet_woman_stays(view, state, phase,
+                                                       holder):
+            moves = [m for m in moves if m.seat is None
+                     or view.role_at(m.seat, phase) != "ScarletWoman"]
 
         # A Mastermind buys one more day after the Demon is executed.
         # Nobody inherits — there simply is no Demon after this — so the
@@ -2758,6 +2808,7 @@ def the_demon_kills(world, state, night):
     out = []
     for i, demon in enumerate(world.demons_at(f"N{night}")):
         for cause in _the_demon_kills(world, state, night, demon):
+            cause = cause._replace(demon=demon)
             out.append(cause if i == 0
                        else cause._replace(name=f"Demon {i + 1}"))
     return out
@@ -3227,7 +3278,7 @@ def a_zombuul_kills_on_a_quiet_day(world, state, night):
            for who in (state.deaths or {})):
         return []                         # somebody went in daylight
     return [death_causes.Cause(
-        name="Demon", kind=death_causes.DEMON,
+        name="Demon", kind=death_causes.DEMON, demon=seat,
         seats=frozenset(range(state.n_players)), capacity=1, must_fire=True,
         actor=seat if _could_be_stopped(world, state, seat, night) else None,
         actor_kills_working=False)]
@@ -3276,7 +3327,7 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
             break
         excuses.append((frozenset(state.alive_set(f"N{chose}")), demands))
     out = [death_causes.Cause(
-        name="Demon", kind=death_causes.DEMON,
+        name="Demon", kind=death_causes.DEMON, demon=seat,
         seats=frozenset(state.alive_set(f"N{night - 1}")),
         capacity=1, must_fire=True, victim_impaired_at=night - 1,
         actor=seat if _could_be_stopped(world, state, seat, night) else None,
@@ -3300,7 +3351,7 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
                for k in range(chose, night)):
             break
         out.append(death_causes.Cause(
-            name="Demon", kind=death_causes.DEMON,
+            name="Demon", kind=death_causes.DEMON, demon=seat,
             seats=frozenset(state.alive_set(f"N{chose}")),
             capacity=1, victim_impaired_at=chose,
             also_impaired=tuple((k, seat) for k in range(chose + 1, night))))
@@ -3348,7 +3399,7 @@ def an_al_hadikhia_chooses(world, state, night):
     corpse = any(p not in alive or phase in state.died_at(p)
                  for p in chosen)
     return [death_causes.Cause(
-        name="AlHadikhia", kind=death_causes.DEMON,
+        name="AlHadikhia", kind=death_causes.DEMON, demon=seat,
         seats=frozenset(chosen), capacity=len(chosen), must_fire=True,
         actor=seat, actor_cost=DEMON_POISONED_PENALTY,
         excuses=((None, ()),) if corpse else ())]
@@ -3375,7 +3426,7 @@ def a_lil_monsta_may_kill(world, state, night):
            for at in state.died_at(sitter)):
         return []
     return [death_causes.Cause(
-        name="LilMonsta", kind=death_causes.DEMON,
+        name="LilMonsta", kind=death_causes.DEMON, demon=sitter,
         seats=frozenset(p for p in range(state.n_players) if p != sitter),
         capacity=1, must_fire=False)]
 
@@ -3394,7 +3445,7 @@ def a_shabaloth_kills_twice(world, state, night):
     if seat is None or seat not in state.alive_set(phase):
         return []
     return [death_causes.Cause(
-        name="Demon", kind=death_causes.DEMON,
+        name="Demon", kind=death_causes.DEMON, demon=seat,
         seats=frozenset(range(state.n_players)), capacity=2, must_fire=True,
         actor=seat if _could_be_stopped(world, state, seat, night) else None,
         actor_kills_working=False)]
@@ -3440,7 +3491,7 @@ def a_po_kills_none_or_three(world, state, night):
     # nobody, and the first night is not a choice — so its first kill is
     # always a single one.
     return [death_causes.Cause(
-        name="Demon", kind=death_causes.DEMON,
+        name="Demon", kind=death_causes.DEMON, demon=seat,
         seats=frozenset(range(state.n_players)),
         capacity=1 if night == 2 else 3, must_fire=False)]
 
@@ -3875,10 +3926,12 @@ def a_yaggababble_kills_for_each_time(world, state, night):
     actor = None if _a_sweetheart_died(world, state, night) else demon
     return [
         death_causes.Cause(
-            name="Demon", kind=death_causes.DEMON, seats=reach, capacity=1,
+            name="Demon", kind=death_causes.DEMON, demon=demon, seats=reach,
+            capacity=1,
             must_fire=True, actor=actor, excuses=_NOTHING_DUE),
         death_causes.Cause(
-            name="Yaggababble, again", kind=death_causes.DEMON, seats=reach,
+            name="Yaggababble, again", kind=death_causes.DEMON, demon=demon,
+            seats=reach,
             capacity=max(1, len(reach) - 1),
             cost=YAGGABABBLE_AGAIN_PENALTY, must_fire=True, actor=actor,
             excuses=_NOTHING_DUE)]
@@ -3929,7 +3982,8 @@ def a_leviathan_fells_a_banshee(world, state, night):
         return []
     actor = None if _a_sweetheart_died(world, state, night) else lev
     return [death_causes.Cause(
-        name="Demon", kind=death_causes.DEMON, seats=reach, capacity=1,
+        name="Demon", kind=death_causes.DEMON, demon=lev, seats=reach,
+        capacity=1,
         must_fire=True, actor=actor, excuses=_NOTHING_DUE)]
 
 
@@ -4203,28 +4257,49 @@ def an_exorcist_sends_the_demon_to_bed(world, state, night, seat, kind):
 
     Aimed rather than always on: it says nothing about a seat that did
     die, only that it could have been the reason one did not.
+
+    Of two living Demons only the one chosen stays asleep; the other kills
+    as ever (Hatter stage 2, Patrick 26.10.2026). Each Demon is then asked
+    on its own, and the shield holds against that Demon's kill only.
     """
     if not _on_board(state, "Exorcist"):
         return []
     if kind != death_causes.DEMON or night < 2:
         return []
     phase = f"N{night}"
+    demons = world.demons_at(phase)
+    if len(demons) < 2:
+        return _exorcist_shields(world, state, night, None)
+    out = []
+    for demon in demons:
+        out.extend(s._replace(against=frozenset({demon}))
+                   for s in _exorcist_shields(world, state, night, demon))
+    return out
+
+
+def _exorcist_shields(world, state, night, only):
+    """Every Exorcist's shield against the Demon — or against this one of
+    two (`only`)."""
+    phase = f"N{night}"
     # Beside a Pukka what counts is last night's choice (below), so the
     # Exorcists of last night.
-    pukka = _demon_holding(world, phase, "Pukka") is not None
+    pukka = (_demon_holding(world, phase, "Pukka") is not None
+             if only is None else world.role_at(only, phase) == "Pukka")
     when = f"N{night - 1}" if pukka else phase
     return [shield
             for exorcist in _holders(world, state, "Exorcist", when)
             for shield in _an_exorcists_choice(world, state, night,
-                                               exorcist)]
+                                               exorcist, only, pukka)]
 
 
-def _an_exorcists_choice(world, state, night, exorcist):
-    """One Exorcist's shield — the holder's or a Philosopher's (13.10.2026)."""
+def _an_exorcists_choice(world, state, night, exorcist, only=None,
+                         pukka=None):
+    """One Exorcist's shield — the holder's or a Philosopher's (13.10.2026)
+    — against the Demon, or against `only` of two."""
     phase = f"N{night}"
-    # Of two living Demons, naming either stops the Demons' kills here: a
-    # shield does not know whose kill it meets (Hatter stage 2, generous).
-    if _demon_holding(world, phase, "Pukka") is not None:
+    if pukka is None:
+        pukka = _demon_holding(world, phase, "Pukka") is not None
+    if pukka:
         # A Pukka is the exception, because what dies tonight was chosen
         # last night. Naming it stops it *choosing* — so yesterday's
         # victim still dies, and the quiet night is the one after, when
@@ -4238,8 +4313,8 @@ def _an_exorcists_choice(world, state, night, exorcist):
         if night < 3 or exorcist not in state.alive_set(before):
             return []
         picked = _chosen(state, "Exorcist", night - 1, by=exorcist)
-        if picked is not None and not any(
-                d in picked for d in world.demons_at(before)):
+        targets = world.demons_at(before) if only is None else (only,)
+        if picked is not None and not any(d in picked for d in targets):
             return []
         # It had to be working *then*, which is not tonight's question.
         return [death_causes.Shield("Exorcist", chosen=True)]
@@ -4261,9 +4336,12 @@ def _an_exorcists_choice(world, state, night, exorcist):
     named = set()
     nows, befores = world.demons_at(phase), world.demons_at(f"B{night - 1}")
     sitter = babysitter_at(world, phase) is not None
-    # Line by line, where two Demons live (Hatter stage 2, 25.10.2026).
+    # Line by line, where two Demons live (Hatter stage 2, 25.10.2026):
+    # only the line of the Demon asked about.
     for i in range(max(len(nows), len(befores), 1)):
         demon = nows[i] if i < len(nows) else None
+        if only is not None and demon != only:
+            continue
         began = befores[i] if i < len(befores) else None
         # Lil' Monsta's babysitter is chosen at 35, after the Exorcist: it
         # is last night's that the Exorcist can name (F, Weg 1,
@@ -4333,6 +4411,38 @@ def a_choirboys_king_fell_to_the_demon(world, state, night, seat, kind):
                                  phase):
             out.append(death_causes.Shield("Choirboy", needs=info.player))
     return out[:1]
+
+
+@death_causes.immunity_rule
+def the_killer_of_two_was_named(world, state, night, seat, kind):
+    """Of two living Demons, the one that killed is the one a Sage is
+    shown among its two and a Choirboy is shown (Hatter stage 2, Patrick
+    26.10.2026): the other Demon's kill cannot have taken this seat while
+    the reading was genuine. A bar, never a reason a kill came to
+    nothing."""
+    if kind != death_causes.DEMON or night < 2:
+        return []
+    if not (_on_board(state, "Sage") or _on_board(state, "Choirboy")):
+        return []
+    phase = f"N{night}"
+    demons = world.demons_at(phase)
+    if len(demons) < 2:
+        return []
+    for info in state.infos:
+        if info.night != night:
+            continue
+        if isinstance(info, SageInfo) and info.player == seat:
+            named, needs = (info.a, info.b), seat
+        elif isinstance(info, ChoirboyInfo) \
+                and _has_ability(world, state, seat, "King", phase):
+            named, needs = (info.target,), info.player
+        else:
+            continue
+        others = frozenset(d for d in demons if d not in named)
+        if others:
+            return [death_causes.Shield("named", needs=needs, against=others,
+                                        bars_only=True)]
+    return []
 
 
 @death_causes.immunity_rule
@@ -7601,14 +7711,17 @@ def _the_game_went_on(world, state):
         return True
     for phase in _moments_with_two_left(state):
         board = state.alive_set(phase)
-        # Either of two living Demons wins there (Hatter stage 2).
-        for demon in world.demons_at(phase):
-            if demon in board:
-                return False              # it would have won there and then
-            if world.role_at(demon, phase) == "Zombuul" \
-                    and _zombuul_still_going(world, state, demon, phase) \
-                    and len(board) < 2:
-                return False              # it and one other: won as well
+        # A Zombuul on the board as dead stands all the same; of two
+        # living Demons either wins (Hatter stage 2): count who really
+        # stands, and evil has won if two or fewer do with a Demon among
+        # them.
+        demons = world.demons_at(phase)
+        up = [d for d in demons if d not in board
+              and world.role_at(d, phase) == "Zombuul"
+              and _zombuul_still_going(world, state, d, phase)]
+        if (up or any(d in board for d in demons)) \
+                and len(board) + len(up) <= 2:
+            return False                  # it would have won there and then
     return True
 
 
@@ -8647,6 +8760,14 @@ def estimate(state, allow_good_lies=False, dives=25_000, keep_samples=8,
     an estimate of the real distribution rather than of whichever corner
     of the search the walk happened to like.
     """
+    SUMMON_SAMPLE[0] = SUMMON_SAMPLE_SIZE
+    try:
+        return _estimate(state, allow_good_lies, dives, keep_samples, rng)
+    finally:
+        SUMMON_SAMPLE[0] = None
+
+
+def _estimate(state, allow_good_lies, dives, keep_samples, rng):
     n = state.n_players
     now = _report_phase(state)
     rng = rng or random.Random()

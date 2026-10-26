@@ -691,7 +691,7 @@ function demonKillsAs(world, state, night, demon) {
     if (state.diedAt(p).includes(`N${night}`) &&
         fallsAs(world, state, p, "Sweetheart", `N${night}`)) reachable = false;
   return [new Cause("Demon", DEMON, allSeats(state),
-                    {capacity: 1, mustFire: true,
+                    {demon, capacity: 1, mustFire: true,
                      actor: reachable ? demon : null,
                      actorCost: PRIORS.DEMON_POISONED_PENALTY})];
 }
@@ -731,7 +731,7 @@ causeRule(function aZombuulKillsOnAQuietDay(world, state, night) {
   if (seat === null || !zombuulStillGoing(world, state, seat, phase)) return [];
   if (anyDiedAt(state, `D${night - 1}`)) return [];   // somebody went by day
   return [new Cause("Demon", DEMON, allSeats(state),
-                    {capacity: 1, mustFire: true,
+                    {demon: seat, capacity: 1, mustFire: true,
                      actor: couldBeStopped(world, state, seat, night) ? seat : null,
                      actorKillsWorking: false})];
 });
@@ -767,7 +767,7 @@ causeRule(function aPukkaKillsWhatItPoisoned(world, state, night) {
     excuses.push([state.aliveSet(`N${chose}`), demands]);
   }
   const out = [new Cause("Demon", DEMON, state.aliveSet(`N${night - 1}`),
-                         {capacity: 1, mustFire: true,
+                         {demon: seat, capacity: 1, mustFire: true,
                           victimImpairedAt: night - 1,
                           actor: couldBeStopped(world, state, seat, night)
                             ? seat : null,
@@ -789,7 +789,7 @@ causeRule(function aPukkaKillsWhatItPoisoned(world, state, night) {
     const also = [];
     for (let k = chose + 1; k < night; k++) also.push([k, seat]);
     out.push(new Cause("Demon", DEMON, state.aliveSet(`N${chose}`),
-                       {capacity: 1, victimImpairedAt: chose,
+                       {demon: seat, capacity: 1, victimImpairedAt: chose,
                         alsoImpaired: also}));
   }
   return out;
@@ -815,7 +815,8 @@ causeRule(function anAlHadikhiaChooses(world, state, night) {
   const corpse = chosen.some(p => !alive.has(p)
                              || state.diedAt(p).includes(phase));
   return [new Cause("AlHadikhia", DEMON, chosen,
-                    {capacity: chosen.length, mustFire: true, actor: seat,
+                    {demon: seat, capacity: chosen.length, mustFire: true,
+                     actor: seat,
                      actorCost: PRIORS.DEMON_POISONED_PENALTY,
                      excuses: corpse ? [[null, []]] : []})];
 });
@@ -833,7 +834,7 @@ causeRule(function aLilMonstaMayKill(world, state, night) {
   const seats = [];
   for (let p = 0; p < state.nPlayers; p++) if (p !== sitter) seats.push(p);
   return [new Cause("LilMonsta", DEMON, seats,
-                    {capacity: 1, mustFire: false})];
+                    {demon: sitter, capacity: 1, mustFire: false})];
 });
 
 /** Two a night, and either can be aimed at somebody already dead, so the
@@ -843,7 +844,7 @@ causeRule(function aShabalothKillsTwice(world, state, night) {
   const seat = acting(world, state, "Shabaloth", night);
   if (seat === null) return [];
   return [new Cause("Demon", DEMON, allSeats(state),
-                    {capacity: 2, mustFire: true,
+                    {demon: seat, capacity: 2, mustFire: true,
                      actor: couldBeStopped(world, state, seat, night) ? seat : null,
                      actorKillsWorking: false})];
 });
@@ -855,7 +856,8 @@ causeRule(function aShabalothKillsTwice(world, state, night) {
  * which errs towards keeping worlds rather than throwing them away. */
 causeRule(function aPoKillsNoneOrThree(world, state, night) {
   if (!inBag(state, "Po") || night < 2) return [];
-  if (acting(world, state, "Po", night) === null) return [];
+  const seat = acting(world, state, "Po", night);
+  if (seat === null) return [];
   // A Po charges by taking **nobody**, and then takes three.
   //
   // This asked whether *anybody* died last night, which is a different
@@ -871,7 +873,8 @@ causeRule(function aPoKillsNoneOrThree(world, state, night) {
   // Except on the second night: three is for the night after it chose
   // nobody, and the first night is not a choice.
   return [new Cause("Demon", DEMON, allSeats(state),
-                    {capacity: night === 2 ? 1 : 3, mustFire: false})];
+                    {demon: seat, capacity: night === 2 ? 1 : 3,
+                     mustFire: false})];
 });
 
 /** A Demon was created, so tonight's deaths are the Storyteller's.
@@ -1108,9 +1111,10 @@ causeRule(function aYaggababbleKillsForEachTime(world, state, night) {
   const actor = aSweetheartDied(world, state, night) ? null : demon;
   return [
     new Cause("Demon", DEMON, reach,
-              {capacity: 1, mustFire: true, actor, excuses: NOTHING_DUE}),
+              {demon, capacity: 1, mustFire: true, actor,
+               excuses: NOTHING_DUE}),
     new Cause("Yaggababble, again", DEMON, reach,
-              {capacity: Math.max(1, reach.size - 1),
+              {demon, capacity: Math.max(1, reach.size - 1),
                cost: PRIORS.YAGGABABBLE_AGAIN_PENALTY, mustFire: true,
                actor, excuses: NOTHING_DUE})];
 });
@@ -1147,7 +1151,7 @@ causeRule(function aLeviathanFellsABanshee(world, state, night) {
   if (!reach.size) return [];
   const actor = aSweetheartDied(world, state, night) ? null : lev;
   return [new Cause("Demon", DEMON, reach,
-                    {capacity: 1, mustFire: true, actor,
+                    {demon: lev, capacity: 1, mustFire: true, actor,
                      excuses: NOTHING_DUE})];
 });
 
@@ -1383,19 +1387,29 @@ function anInnkeepersPair(world, state, night, seat, keeper) {
 immunityRule(function anExorcistSendsTheDemonToBed(
     world, state, night, seat, kind) {
   if (!onBoard(state, "Exorcist") || kind !== DEMON || night < 2) return [];
-  // Beside a Pukka what counts is last night's choice, so the Exorcists of
-  // last night (13.10.2026). See solver.py.
-  const pukka = demonHolding(world, `N${night}`, "Pukka") !== null;
-  const when = pukka ? `N${night - 1}` : `N${night}`;
-  return holders(world, state, "Exorcist", when).flatMap(
-    exorcist => anExorcistsChoice(world, state, night, exorcist));
+  // Of two living Demons only the one chosen stays asleep (Hatter stage
+  // 2, Patrick 26.10.2026): each asked on its own. See solver.py.
+  const demons = world.demonsAt(`N${night}`);
+  if (demons.length < 2) return exorcistShields(world, state, night, null);
+  return demons.flatMap(demon => exorcistShields(world, state, night, demon)
+    .map(s => ({...s, against: new Set([demon])})));
 });
 
+/** Every Exorcist's shield against the Demon, or against `only` of two. */
+function exorcistShields(world, state, night, only) {
+  // Beside a Pukka what counts is last night's choice, so the Exorcists of
+  // last night (13.10.2026). See solver.py.
+  const pukka = only === null
+    ? demonHolding(world, `N${night}`, "Pukka") !== null
+    : world.roleAt(only, `N${night}`) === "Pukka";
+  const when = pukka ? `N${night - 1}` : `N${night}`;
+  return holders(world, state, "Exorcist", when).flatMap(
+    exorcist => anExorcistsChoice(world, state, night, exorcist, only, pukka));
+}
+
 /** One Exorcist's shield — the holder's or a Philosopher's. */
-function anExorcistsChoice(world, state, night, exorcist) {
-  // Of two living Demons, naming either stops the Demons' kills here
-  // (Hatter stage 2, generous). See solver.py.
-  if (demonHolding(world, `N${night}`, "Pukka") !== null) {
+function anExorcistsChoice(world, state, night, exorcist, only, pukka) {
+  if (pukka) {
     // A Pukka is the exception: what dies tonight was chosen last night.
     // Naming it stops it *choosing*, so yesterday's victim still dies and
     // the quiet night is the one after (the flowchart; 02.10.2026).
@@ -1403,8 +1417,8 @@ function anExorcistsChoice(world, state, night, exorcist) {
         || !state.aliveSet(`N${night - 1}`).has(exorcist) ? null : exorcist;
     if (then === null) return [];
     const before = chosen(state, "Exorcist", night - 1, ["target"], then);
-    if (before !== null
-        && !world.demonsAt(`N${night - 1}`).some(d => before.has(d)))
+    const targets = only === null ? world.demonsAt(`N${night - 1}`) : [only];
+    if (before !== null && !targets.some(d => before.has(d)))
       return [];
     // It had to be working *then*, which is not tonight's question.
     return [shield("Exorcist", {chosen: true})];
@@ -1420,9 +1434,11 @@ function anExorcistsChoice(world, state, night, exorcist) {
   const befores = world.demonsAt(`B${night - 1}`);
   const sitter = babysitterAt(world, `N${night}`) !== null;
   const namedNow = new Set();
-  // Line by line, where two Demons live (Hatter stage 2). See solver.py.
+  // Line by line, where two Demons live; only the line asked about
+  // (Hatter stage 2). See solver.py.
   for (let i = 0; i < Math.max(nows.length, befores.length, 1); i++) {
     let demonThen = i < nows.length ? nows[i] : null;
+    if (only !== null && demonThen !== only) continue;
     const began = i < befores.length ? befores[i] : null;
     // Lil' Monsta's babysitter is chosen after the Exorcist: it is last
     // night's the Exorcist can name (F, Weg 1, 21.10.2026).
@@ -1467,6 +1483,33 @@ immunityRule(function aChoirboysKingFellToTheDemon(
     if (info.type === "ChoirboyInfo" && info.night === night
         && hasAbility(world, state, info.player, "Choirboy", phase))
       return [shield("Choirboy", {needs: info.player})];
+  return [];
+});
+
+/** Of two living Demons, the one that killed is the one a Sage is shown
+ * among its two and a Choirboy is shown (Hatter stage 2, Patrick
+ * 26.10.2026): a bar, never a reason a kill came to nothing. See
+ * solver.py. */
+immunityRule(function theKillerOfTwoWasNamed(world, state, night, seat, kind) {
+  if (kind !== DEMON || night < 2) return [];
+  if (!(onBoard(state, "Sage") || onBoard(state, "Choirboy"))) return [];
+  const phase = `N${night}`;
+  const demons = world.demonsAt(phase);
+  if (demons.length < 2) return [];
+  for (const info of state.infos) {
+    if (info.night !== night) continue;
+    let named, needs;
+    if (info.type === "SageInfo" && info.player === seat) {
+      named = [info.a, info.b]; needs = seat;
+    } else if (info.type === "ChoirboyInfo"
+               && hasAbility(world, state, seat, "King", phase)) {
+      named = [info.target]; needs = info.player;
+    } else continue;
+    const others = demons.filter(d => !named.includes(d));
+    if (others.length)
+      return [shield("named", {needs, against: new Set(others),
+                               barsOnly: true})];
+  }
   return [];
 });
 

@@ -2694,7 +2694,8 @@ def _slayer_shoots(d, day, rng, heard):
         if TEAM[held] == "demon":
             heir = _heir(d, phase, rng)
             if heir is not None and d.roles[heir] == "ScarletWoman" \
-                    and len(d.alive_at(phase)) >= 5:
+                    and len(d.alive_at(phase)) >= 5 \
+                    and not _sw_stays_by_jinx(d, phase, target):
                 d.deaths[target] = phase
                 d.handovers.append((phase, heir))
                 d.changes.append((phase, heir, held))
@@ -3896,7 +3897,8 @@ def _execute(d, day, rng, allow_takeover=False):
     heir = _heir(d, phase, rng)
     takeover = (allow_takeover and heir is not None
                 and d.roles[heir] == "ScarletWoman"
-                and len(d.alive_at(phase)) >= 5)
+                and len(d.alive_at(phase)) >= 5
+                and not _sw_stays_by_jinx(d, phase, demon))
     # Two more ways the Demon can go up without the game ending there.
     #
     # A Zombuul survives its first death: it is recorded dead and goes on.
@@ -4306,6 +4308,16 @@ def _summoner_summons(d, night, rng, heard):
                                                  ())) + ((other, role),)
 
 
+def _the_killer(d, night, victim):
+    """The Demon whose kill took this seat tonight: the second, where two
+    live and it was the second's aim (Hatter stage 2), else the first."""
+    if getattr(d, "line2", None) and victim is not None \
+            and victim in ((getattr(d, "demon_aimed2", None) or {})
+                           .get(night) or ()):
+        return d.demon2_seat.get(night)
+    return d.demon_at(f"N{night}")
+
+
 def _demon_holding(d, phase, role):
     """The Demon at this phase that holds this character — either of two
     (Hatter stage 2) — or None."""
@@ -4402,6 +4414,19 @@ def _second_demon_kills(d, night, rng, heard):
     seat = d.second_demon(phase)
     if seat is None or d.deaths.get(seat) is not None:
         return []
+    # A Demon a Snake Charmer swapped with earlier tonight is poisoned from
+    # then on — "& is then poisoned" — and a Summoner that made it a Demon
+    # again later tonight changes nothing about the player (the night-walk
+    # has it so).
+    if seat in d.perma_poisoned and any(
+            at == phase and who == seat and role == "SnakeCharmer"
+            for at, who, role in d.changes):
+        if not hasattr(d, "demon_aimed2"):
+            d.demon_aimed2 = {}
+        d.demon_aimed2[night] = []
+        d.demon2_seat = getattr(d, "demon2_seat", {})
+        d.demon2_seat[night] = seat
+        return []
     first = d.demon_aimed.get(night)
     d._as_demon = seat
     try:
@@ -4449,6 +4474,19 @@ def _another_demon_stands(d, phase, fallen):
                for p in d.demons_at(phase))
 
 
+def _sw_stays_by_jinx(d, phase, fallen):
+    """"If there would be two living Demons, one of which was the Scarlet
+    Woman, the Scarlet Woman remains the Scarlet Woman instead": the
+    jinxes with the Fang Gu and the Al-Hadikhia (Hatter stage 2, Patrick
+    26.10.2026, Weg 2)."""
+    if not getattr(d, "line2", None):
+        return False
+    if not any(d.role_at(p, phase) in ("FangGu", "AlHadikhia")
+               for p in range(d.n)):
+        return False
+    return _another_demon_stands(d, phase, fallen)
+
+
 def _demons_fall(d, phase):
     """Where two Demons live (Hatter stage 2): each that died here with
     nobody taking over is taken by the Scarlet Woman when her condition
@@ -4461,7 +4499,8 @@ def _demons_fall(d, phase):
         sw = next((p for p in d.alive_at(phase)
                    if d.role_at(p, phase) == "ScarletWoman" and p != first),
                   None)
-        if sw is not None and len(d.alive_at(phase)) >= 5:
+        if sw is not None and len(d.alive_at(phase)) >= 5 \
+                and not _sw_stays_by_jinx(d, phase, first):
             d.handovers.append((phase, sw))
             d.changes.append((phase, sw, d.role_at(first, phase)))
     _second_line_falls(d, phase)
@@ -4479,7 +4518,8 @@ def _second_line_falls(d, phase):
     sw = next((p for p in d.alive_at(phase)
                if d.role_at(p, phase) == "ScarletWoman" and p != seat),
               None)
-    if sw is not None and len(d.alive_at(phase)) >= 5:
+    if sw is not None and len(d.alive_at(phase)) >= 5 \
+            and not _sw_stays_by_jinx(d, phase, seat):
         d.line2.append((phase, sw))
         d.changes.append((phase, sw, d.role_at(seat, phase)))
         return False
@@ -7080,8 +7120,9 @@ def _for_role(d, seat, role, night, rng):
                 and not (night in getattr(d, "lyc_quiet", ())
                          and seat not in d.demon_killed.get(night, ())))):
         # Killed by the Demon, it learns two players and one is the
-        # killer — the *specific* Demon, so no misregistration here.
-        demon = d.demon_at(f"N{night}")
+        # killer — the *specific* Demon, so no misregistration here. Of
+        # two, the one that killed it (Hatter stage 2).
+        demon = _the_killer(d, night, seat)
         if demon is None:
             return None
         others = [p for p in range(d.n) if p not in (seat, demon)]
@@ -7216,7 +7257,10 @@ def _for_role(d, seat, role, night, rng):
         # the King (10.10.2026).
         if not _a_king_fell(d, night) or d.deaths.get(seat) is not None:
             return None
-        demon = d.demon_at(f"N{night}")
+        phase = f"N{night}"
+        king = next((p for p in d.demon_killed.get(night, ())
+                     if _acts_as(d, p, "King", phase)), None)
+        demon = _the_killer(d, night, king)
         if demon is None:
             return None
         return ChoirboyInfo(night, seat, target=demon)
