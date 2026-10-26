@@ -1957,3 +1957,28 @@ Object.assign(CAUSE_TURNS, {
   aGamblerMayLose: CHARACTERS.Gambler.other_night,
   aLycanthropeMayKill: CHARACTERS.Lycanthrope.other_night,
 });
+
+// --------------------------------------------------------------------
+// Two living Demons (Hatter stage 2, 25.10.2026). Last of the causes,
+// as in Python.
+// --------------------------------------------------------------------
+
+/** The summoning that made a second living Demon in this story, or null.
+ * See solver.py. */
+export function summonedBeside(view) {
+  for (const c of view.changes || [])
+    if (c.summoned && view.demonsAt(c.phase).length > 1) return c;
+  return null;
+}
+
+/** "If the Summoner creates a second living Demon, deaths tonight are
+ * arbitrary" (their jinx, C Weg 1). See solver.py. */
+causeRule(function aSecondDemonMakesDeathsArbitrary(world, state, night) {
+  const made = summonedBeside(world);
+  if (!made || made.phase !== `N${night}`) return [];
+  return [new Cause("Summoner", OTHER, allSeats(state),
+                    {capacity: state.nPlayers, cost: 1.0,
+                     unstoppable: true})];
+});
+CAUSE_TURNS.aSecondDemonMakesDeathsArbitrary =
+  CHARACTERS.Summoner.other_night;
