@@ -1897,7 +1897,8 @@ export function engineerOptions(view, state, info) {
     if (NOT_ENGINEERED.has(key) || demons.length !== 1) return [];
     const seat = demons[0];
     if (roles[seat] === key || TEAM[roles[seat]] !== "demon") return [];
-    // A Zombuul that has died once: not reckoned. See solver.py.
+    // A Zombuul that has died once stays what it is (Stelle 86). See
+    // solver.py.
     if (!state.aliveSet(phase).has(seat)) return [];
     return [[engineered(phase, seat, key, side[seat])]];
   }
@@ -1996,15 +1997,9 @@ export function engineerUnreckoned(view, state) {
     const chosen = engineerChosen(info, state);
     if (TEAM[chosen[0]] !== "demon") continue;
     if (NOT_ENGINEERED.has(chosen[0])) return "engineer";
-    const phase = `N${info.night}`;
-    const [demons, held] = turnOf("Engineer", info.night, () => {
-      const got = [...view.demonsAt(phase)];
-      return [got, got.length ? view.roleAt(got[0], phase) : null];
-    });
-    if (demons.length > 1) return "engineer";
-    // A Zombuul that has died once made another Demon. See solver.py.
-    if (demons.length && !state.aliveSet(phase).has(demons[0])
-        && held !== chosen[0]) return "engineer";
+    if (turnOf("Engineer", info.night,
+               () => view.demonsAt(`N${info.night}`).length) > 1)
+      return "engineer";
   }
   return null;
 }

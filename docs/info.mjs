@@ -1373,8 +1373,12 @@ export const ClockmakerInfo = define("ClockmakerInfo", "Clockmaker",
     // 21.10.2026). See info.py.
     let summoner = null;
     if ((demon === null || demon === undefined)
-        && w.roles.includes("Summoner"))
+        && w.roles.includes("Summoner")) {
       summoner = demon = w.findAt("Summoner", phase);
+      // An Engineer took its character first: whatever the Storyteller
+      // says (26.10.2026). See info.py.
+      if (demon === null || demon === undefined) return true;
+    }
     if (demon === null || demon === undefined) return false;
     const n = w.roles.length;
     let nearest = null;
