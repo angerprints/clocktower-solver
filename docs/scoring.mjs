@@ -11,8 +11,7 @@
 // would otherwise be false, and priced by how lucky it had to be.
 
 import {CHARACTERS, slotOf} from "./catalogue.mjs";
-import {CAUSE_TURNS, Cause, OTHER, causeRule, explainNight}
-  from "./deaths.mjs";
+import {explainNight} from "./deaths.mjs";
 import {RESTING, minionStillActs, planNightResting, silencedOut, sourcesOn}
   from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
@@ -25,7 +24,7 @@ import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
         summonerWorld, teaParty, turnedEvil} from "./worlds.mjs";
-import {aLeviathanIsToldOf, demonHolding, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
+import {aLeviathanIsToldOf, demonHolding, summonedBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
   from "./characters.rules.mjs";
 import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide, fallsAs,
@@ -1843,32 +1842,6 @@ const hattedSummonerRule = transitionRule(
     }
     return out;
   });
-
-/** The summoning that made a second living Demon in this story, or null.
- * See solver.py. */
-export function summonedBeside(view) {
-  for (const c of view.changes || [])
-    if (c.summoned && view.demonsAt(c.phase).length > 1) return c;
-  return null;
-}
-
-/** "If the Summoner creates a second living Demon, deaths tonight are
- * arbitrary" (their jinx, C Weg 1). See solver.py. */
-causeRule(function aSecondDemonMakesDeathsArbitrary(world, state, night) {
-  const made = summonedBeside(world);
-  if (!made || made.phase !== `N${night}`) return [];
-  return [new Cause("Summoner", OTHER, allSeatsOf(state),
-                    {capacity: state.nPlayers, cost: 1.0,
-                     unstoppable: true})];
-});
-CAUSE_TURNS.aSecondDemonMakesDeathsArbitrary =
-  CHARACTERS.Summoner.other_night;
-
-const allSeatsOf = state => {
-  const out = new Set();
-  for (let p = 0; p < state.nPlayers; p++) out.add(p);
-  return out;
-};
 
 /** One over the number of ways the tea party's Summoner could have
  * summoned, for a story where it did; 1 otherwise. See solver.py. */
