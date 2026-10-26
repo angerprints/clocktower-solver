@@ -551,6 +551,14 @@ _EXPERIMENTAL = [
     _c("Huntsman", "huntsman", "Huntsman", "townsfolk",
        {FIRST, EVERY, SOMETIMES}, nights="conditional", chooses=True,
        setup=({"townsfolk": -1, "outsider": 1}, {}), brings=("Damsel",)),
+    # Once a game, at night, it chooses which Minions or which Demon are in
+    # play (26.10.2026, claude/ingenieur-lesarten.md). Only its row counts
+    # (info.EngineerChoice, A Weg 1); every way the Storyteller may have
+    # handed out what it chose is a story (solver.an_engineer_rebuilds_the_
+    # evil, B and D Weg 1). Woken every night until then, like the
+    # Huntsman.
+    _c("Engineer", "engineer", "Engineer", "townsfolk",
+       {FIRST, EVERY, SOMETIMES}, nights="conditional", chooses=True),
     # One player is drunk all game, even after it dies; it may guess once
     # who, and learns the Demon or somebody who is not
     # (info.PuzzlemasterGuess, solver.a_puzzlemaster_keeps_one_drunk).

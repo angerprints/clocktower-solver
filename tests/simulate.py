@@ -24,6 +24,7 @@ from botc.info import (registers_as_role,
                        PsychopathKill, PsychopathRoshambo, WidowKnown,
                        SlayerShot, VirginNomination,
                        PreacherChoice, HuntsmanChoice, PuzzlemasterGuess,
+                       EngineerChoice,
                        BoomdandyExploded, BecameInfo,
                        PixieLearned, VillageIdiotInfo, LycanthropeChose,
                        HarpyMadness,
@@ -910,6 +911,7 @@ def _spent(d, seat, night):
     if _C[role].nights == "first" and night > 1:
         return True
     return (seat in d.slayer_spent or seat in d.huntsman_spent
+            or seat in getattr(d, "engineer_spent", ())
             or seat in d.professor_chose or seat in d.courtier_chose
             or seat in getattr(d, "nightwatchman_chose", {}))
 
@@ -1114,6 +1116,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     # deaths already partied for.
     d.tea_slot = {}
     d.tea_done = set()
+    # The Engineer (26.10.2026): seats that chose, and the night a living
+    # Summoner's character went to the Storyteller (their jinx).
+    d.engineer_spent = set()
+    d.engineer_night = {}               # Engineer seat -> the night it chose
+    d.summoner_engineered = None
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -1141,6 +1148,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # the Snake Charmer, who may choose it.
         if d.lil_monsta and night == 1:
             _minions_choose(d, 1, rng, heard)
+        # The Engineer, after the Sailor and before the Preacher, the
+        # Poisoner and every Demon (26.10.2026).
+        heard += _engineer_builds(d, night, rng)
         # The Preacher acts before every Minion (14, then 6), so a Minion
         # it chooses has no ability from tonight (10.10.2026).
         heard += _preacher_preaches(d, night, rng)
@@ -4173,6 +4183,96 @@ def _tea_party(d, night, rng, at_night=False):
                 _for_role(d, seat, "Widow", night, rng)
 
 
+# The Engineer (26.10.2026, claude/ingenieur-lesarten.md). It may choose
+# on any night (H): a third of the nights it still can. Minions as many as
+# are in play, now and then one fewer or one more, or a Demon. What it
+# leaves unreckoned (Lil' Monsta, Legion, Riot, a Demon beside a second)
+# it does not choose.
+
+def _engineer_builds(d, night, rng):
+    """Once a game it chooses which Minions or which Demon are in play.
+    Working, each changed evil player is woken and told; drunk or
+    poisoned, nothing happens and it is spent."""
+    from botc.catalogue import slot_of
+    if "Engineer" not in d.script.keys:
+        return []
+    phase = f"N{night}"
+    out = []
+    for seat in d.alive_at(phase):
+        if d.deaths.get(seat) is not None or seat in d.engineer_spent \
+                or not (_acting_as(d, seat, "Engineer", phase)
+                        or _took(d, seat, "Engineer", phase)):
+            continue
+        if rng.random() >= 1 / 3:
+            continue                      # shakes its head tonight
+        roles = [d.role_at(p, phase) for p in range(d.n)]
+        minions = [p for p in range(d.n) if TEAM[roles[p]] == "minion"]
+        demons = [p for p in range(d.n) if TEAM[roles[p]] == "demon"]
+        spare_demons = [k for k in d.script.demons
+                        if k not in ("LilMonsta", "Legion", "Riot")]
+        marionette = any(d.believes[p] is not None for p in minions)
+        # Not a Zombuul that has died once: it stays what it is in the
+        # solver (Stelle 86, to be asked), and the Storyteller here would
+        # have to decide the same.
+        up = any(p not in d.alive_at(phase) for p in demons)
+        pick_demon = spare_demons and not d.line2 and not up and (
+            marionette or not minions or rng.random() < 0.4)
+        if pick_demon:
+            chosen = [rng.choice(spare_demons)]
+        elif minions and not marionette:
+            k = len(minions)
+            if k > 1 and rng.random() < 0.15:
+                k -= 1
+            elif rng.random() < 0.15:
+                k += 1
+            k = min(k, len(d.script.minions))
+            chosen = rng.sample(list(d.script.minions), k)
+        else:
+            continue
+        d.engineer_spent.add(seat)
+        d.engineer_night[seat] = night
+        out.append(EngineerChoice(night, seat, roles=tuple(chosen)))
+        if not _acts_as(d, seat, "Engineer", phase) \
+                or not d.working(seat, night):
+            continue
+        made = {}
+        if pick_demon:
+            if len(demons) == 1 and roles[demons[0]] != chosen[0]:
+                made[demons[0]] = chosen[0]
+        else:
+            held = set(roles)
+            spare = [k for k in chosen if k not in held]
+            free = [p for p in minions if roles[p] not in chosen]
+            k = min(len(spare), len(free))
+            for p, role in zip(rng.sample(free, k), rng.sample(spare, k)):
+                made[p] = role
+        if not made:
+            continue
+        slot = slot_of("Engineer", night)
+        for p, role in sorted(made.items()):
+            # A living Summoner that has not summoned yet: the Storyteller
+            # has its ability now (their jinx).
+            if roles[p] == "Summoner" and d.summoner == p \
+                    and d.summoned is None and night <= 3 \
+                    and p in d.alive_at(phase) and d.deaths.get(p) is None:
+                d.summoner_engineered = night
+            d.changes.append((phase, p, role))
+            d.side_changes.append((phase, p, role, d.side_at(p, phase)))
+            d.tea_made[(p, night)] = role
+            d.tea_slot[night] = slot
+            if role == "Summoner" and night <= 3 and demons:
+                d.tea_summoner = (p, night, slot)
+            if TEAM[role] == "demon":
+                _hand_on(d, phase, p, p)
+                if role == "FangGu":
+                    d.fanggu_jumped = False
+                if role == "Po":
+                    d.po_charged = False
+        if "Lleech" in made.values():
+            _lleech_picks_a_host(d, night, rng)
+    return out
+
+
 def _tea_made(d, seat, night):
     """Did this seat take its character at tonight's tea party?"""
     return (seat, night) in getattr(d, "tea_made", {})
@@ -4226,7 +4326,12 @@ def _summoner_summons(d, night, rng, heard):
         return
     s = d.summoner
     phase = f"N{night}"
-    if s not in d.alive_at(phase) or d.deaths.get(s) is not None:
+    # An Engineer took the living Summoner's character: the Storyteller
+    # has its ability, and summons whatever became of that player (their
+    # jinx, 26.10.2026).
+    storyteller = d.summoner_engineered is not None
+    if not storyteller and (s not in d.alive_at(phase)
+                            or d.deaths.get(s) is not None):
         return
     if getattr(d, "summon_pick", None) is None:
         allowed = [k for k in d.script.demons
@@ -4237,7 +4342,7 @@ def _summoner_summons(d, night, rng, heard):
         return
     if night == 2 and not (demon == "Pukka" and rng.random() < 0.75):
         return
-    if not _summoner_has_it(d, night):
+    if not storyteller and not _summoner_has_it(d, night):
         if night == 3:
             d.summon_failed = 3           # no Demon: good wins at dawn
         return
@@ -4536,7 +4641,9 @@ def _summoner_check(d, night):
         d.ended_at, d.ended_why = f"N{d.summon_failed}", "summoner"
         return True
     gone = d.deaths.get(s)
-    if gone is None:
+    # An Engineer took its character while it lived: the Storyteller
+    # summons, whatever became of that player (their jinx, 26.10.2026).
+    if gone is None or d.summoner_engineered is not None:
         return False
     d.ended_at, d.ended_why = gone, "summoner"
     return True
@@ -5442,6 +5549,10 @@ def _conditionally_woke(d, seat, role, night):
     if role == "Huntsman":
         # Every night until it chooses, that night included (10.10.2026).
         spent = d.huntsman_night.get(seat)
+        return spent is None or spent >= night
+    if role == "Engineer":
+        # The same for the Engineer (26.10.2026).
+        spent = d.engineer_night.get(seat)
         return spent is None or spent >= night
     if role == "Choirboy":
         # Woken on the night the Demon killed the King, if alive to wake.

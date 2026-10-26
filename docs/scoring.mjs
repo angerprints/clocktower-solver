@@ -23,7 +23,7 @@ import {SETUP_SLOT, readingAt} from "./worlds.mjs";
 import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
-        summonerWorld, teaParty, turnedEvil} from "./worlds.mjs";
+        summonerWorld, teaParty, turnedEvil, engineered} from "./worlds.mjs";
 import {aLeviathanIsToldOf, demonHolding, summonedBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
   from "./characters.rules.mjs";
@@ -32,7 +32,7 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         holdingNow,
         knowsItTurnedEvil, sideOpen,
         livingNeighbours, takenByAPhilosopher, tookIt, wentOnAfter,
-        babysitterAt}
+        babysitterAt, engineerChosen}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -113,6 +113,9 @@ const ACTS_AT = {
   theMinionsChooseABabysitter: 5,
   aSnakeCharmerTakesTheStar: 11,
   aPitHagMakesSomebodyElse: 16,
+  // The Engineer (26.10.2026): after the Sailor, before the Preacher, the
+  // Poisoner, the Snake Charmer and every Demon. See solver.py.
+  anEngineerRebuildsTheEvil: 8,
   // After the Scarlet Woman, before the Lunatic, the Exorcist and every
   // Demon (21.10.2026).
   theSummonerSummons: 19,
@@ -151,6 +154,7 @@ const TURN_OF = {
   aHattedSummonerSummons: "Summoner",
   aBarberLetsTheDemonSwapTwo: "Barber",
   aHuntsmanFindsTheDamsel: "Huntsman",
+  anEngineerRebuildsTheEvil: "Engineer",
   aFarmerHandsItOn: "Farmer",
   theMinionsChooseABabysitter: "LilMonsta",
   aBountyHunterBringsAnEvilTownsfolk: "Philosopher",
@@ -258,6 +262,13 @@ export function possibleTimelines(world, state, cap = 128) {
         && teaNight(died[0][1]) <= 3)
       cap *= 1 + summonable(state).length * state.nPlayers;
   }
+  // And for every way the Engineer's choice went (26.10.2026), and a
+  // Summoner it chose summoning beside the Demon. See solver.py.
+  if (engineerOnBoard(state)) {
+    cap = Math.max(cap, cap * (1 + Math.floor(ENGINEER_STORIES / 8)));
+    if (state.script.keys.includes("Summoner"))
+      cap *= 1 + summonable(state).length * state.nPlayers;
+  }
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -312,6 +323,8 @@ function moversIn(world, state) {
     const hatters = hatterClaimants(state);
     if (deaths.some(([s]) => hatters.has(Number(s)))) count += 2;
   }
+  // The Engineer's choice: night by night, always (26.10.2026).
+  if (engineerOnBoard(state)) count += 2;
   for (const [key, needs] of [["Barber", barberDied], ["Farmer", atNight],
                               ["FangGu", atNight], ["Ogre", true]])
     if (needs && roles.has(key)
@@ -439,6 +452,8 @@ function nightsItActs(rule, state) {
       return new Set(state.infos.filter(i => i.type === "HuntsmanChoice")
         .map(i => i.night));
     case "demonHandovers": return new Set(deaths.map(([k]) => k));
+    case "anEngineerRebuildsTheEvil":
+      return new Set(engineerRows(state).map(i => i.night));
     case "theSummonerSummons":
     case "aHattedSummonerSummons": return new Set([1, 2, 3]);
     case "aHattersTeaParty": {
@@ -1532,10 +1547,13 @@ export function summonOptions(world, state) {
   const over = !!state.gameOver;
   const standing = night => gone === null
     || phaseIndex(gone) >= phaseIndex(`N${night}`);
+  // An Engineer that may have taken its character: the Storyteller
+  // summons then (their jinx, 26.10.2026). See solver.py.
+  const jinxed = engineerOnBoard(state) && engineerMayTakeTheSummoner(state);
   const out = [];
   for (const demon of summonable(state))
     for (const night of (demon === "Pukka" ? [2, 3] : [3])) {
-      if (!reached(night) || !standing(night)) continue;
+      if (!reached(night) || !(standing(night) || jinxed)) continue;
       for (const seat of summonedSeats(world, state, night, demon))
         for (const extra of typhonNeighbours(world, state, night, seat, demon))
           out.push([summoned(`N${night}`, seat, demon), ...extra]);
@@ -1779,7 +1797,7 @@ transitionRule(function aHattersTeaPartyAtNight(world, state) {
 export function teaParties(world) {
   const out = new Map();
   for (const c of world.changes || [])
-    if (c.tea) {
+    if (c.tea && !c.engineered) {
       if (!out.has(c.phase)) out.set(c.phase, []);
       out.get(c.phase).push(c);
     }
@@ -1790,7 +1808,7 @@ export function teaParties(world) {
  * null: "two demons" or "lil monsta" ("hatter at night" is reckoned since
  * stage 3c). See solver.py. */
 export function hatterUnreckoned(view, state) {
-  if (!hatterOnBoard(state)) return null;
+  if (!hatterOnBoard(state)) return engineerUnreckoned(view, state);
   const final = phaseIndex(state.finalPhase());
   for (const [, phase] of hatterDeaths(view, state)) {
     const night = teaNight(phase);
@@ -1810,6 +1828,183 @@ export function hatterUnreckoned(view, state) {
         if (alive.has(p) && TEAM[view.roleAt(p, before)] === "demon") demonAlive = true;
       if (demonAlive) return "lil monsta";
     }
+  }
+  return engineerUnreckoned(view, state);
+}
+
+// --------------------------------------------------------------------
+// The Engineer (26.10.2026, claude/ingenieur-lesarten.md). See solver.py.
+// --------------------------------------------------------------------
+
+const NOT_ENGINEERED = new Set(["LilMonsta", "Legion", "Riot"]);
+
+// Room for every way the Engineer's choice went, beside everything else.
+export const ENGINEER_STORIES = 512;
+
+/** The Engineer rows that could have done anything: the first each seat
+ * wrote, with a choice an Engineer can make. */
+export function engineerRows(state) {
+  if (state._engineerCache && state._engineerCache[0] === state.infos
+      && state._engineerCache[1] === state.infos.length)
+    return state._engineerCache[2];
+  const out = [];
+  state.infos.forEach((info, idx) => {
+    if (info.type !== "EngineerChoice") return;
+    if (state.infos.some((o, j) => j < idx && o.type === "EngineerChoice"
+                         && o.player === info.player
+                         && o.night <= info.night)) return;
+    if (engineerChosen(info, state) === null) return;
+    out.push(info);
+  });
+  state._engineerCache = [state.infos, state.infos.length, out];
+  return out;
+}
+
+const engineerOnBoard = state =>
+  onBoard(state, "Engineer") && engineerRows(state).length > 0;
+
+/** A Hatter, or an Engineer that chose. */
+export const teaOnBoard = state => hatterOnBoard(state) || engineerOnBoard(state);
+
+/** Could this seat have used the Engineer's ability that night: alive and
+ * holding it, at its turn? */
+function engineerWorks(view, state, info) {
+  const phase = `N${info.night}`;
+  if (phaseIndex(state.finalPhase()) < phaseIndex(phase)) return false;
+  if (!state.aliveSet(phase).has(info.player)) return false;
+  return turnOf("Engineer", info.night,
+                () => hasAbility(view, state, info.player, "Engineer", phase));
+}
+
+/** Every way a working Engineer's choice changed somebody; [] where it
+ * changes nobody, or the solver does not reckon it. */
+export function engineerOptions(view, state, info) {
+  const chosen = engineerChosen(info, state);
+  if (chosen === null) return [];
+  const night = info.night;
+  const phase = `N${night}`;
+  const n = state.nPlayers;
+  const [roles, side, demons] = turnOf("Engineer", night, () => {
+    const r = [], sd = [];
+    for (let p = 0; p < n; p++) {
+      r.push(view.roleAt(p, phase));
+      sd.push(view.evilAt(p, phase) ? "evil" : "good");
+    }
+    return [r, sd, [...view.demonsAt(phase)]];
+  });
+  if (TEAM[chosen[0]] === "demon") {
+    const key = chosen[0];
+    if (NOT_ENGINEERED.has(key) || demons.length !== 1) return [];
+    const seat = demons[0];
+    if (roles[seat] === key || TEAM[roles[seat]] !== "demon") return [];
+    // A Zombuul that has died once: not reckoned. See solver.py.
+    if (!state.aliveSet(phase).has(seat)) return [];
+    return [[engineered(phase, seat, key, side[seat])]];
+  }
+  const seats = [];
+  for (let p = 0; p < n; p++) if (TEAM[roles[p]] === "minion") seats.push(p);
+  const held = new Set(roles);
+  const spare = chosen.filter(k => !held.has(k));
+  const free = seats.filter(p => !chosen.includes(roles[p]));
+  const k = Math.min(spare.length, free.length);
+  if (!k) return [];
+  const out = [];
+  // Every k seats of the free ones, in order, each with every ordered
+  // pick of k spare characters — as itertools does in Python.
+  const combos = [];
+  const pick = (from, got) => {
+    if (got.length === k) { combos.push(got); return; }
+    for (let i = from; i < free.length; i++) pick(i + 1, [...got, free[i]]);
+  };
+  pick(0, []);
+  const perms = [];
+  const arrange = (got, used) => {
+    if (got.length === k) { perms.push(got); return; }
+    for (let i = 0; i < spare.length; i++)
+      if (!used.has(i)) arrange([...got, spare[i]], new Set([...used, i]));
+  };
+  arrange([], new Set());
+  for (const who of combos)
+    for (const what of perms) {
+      out.push(who.map((p, i) => engineered(phase, p, what[i], side[p])));
+      if (out.length >= ENGINEER_STORIES) return out;
+    }
+  return out;
+}
+
+/** Every way the Engineer's choice went: "nothing changed" first. */
+transitionRule(function anEngineerRebuildsTheEvil(world, state) {
+  if (!engineerOnBoard(state)) return [[[], 1.0]];
+  let stories = [[[], 1.0]];
+  for (const info of engineerRows(state)) {
+    const grown = [];
+    for (const [changes, cost] of stories) {
+      grown.push([changes, cost]);
+      const view = changes.length ? new Timeline(world, changes) : world;
+      if (!engineerWorks(view, state, info)) continue;
+      for (const way of engineerOptions(view, state, info))
+        grown.push([[...changes, ...way], cost]);
+    }
+    stories = grown;
+  }
+  return stories;
+});
+
+const engineeredIn = view => (view.changes || []).filter(c => c.engineered);
+
+/** What the Engineer's rows ask of the plan: {night: Set of seats} not
+ * working, where its choice would have changed somebody and did not. A
+ * change asks nothing, as the Huntsman's does. See solver.py. */
+function engineerFailed(world, state) {
+  const failures = {};
+  const made = new Set(engineeredIn(world).map(c => c.phase));
+  for (const info of engineerRows(state)) {
+    if (!engineerWorks(world, state, info)) continue;
+    const night = info.night;
+    if (!made.has(`N${night}`) && engineerOptions(world, state, info).length)
+      (failures[night] = failures[night] || new Set()).add(info.player);
+  }
+  return failures;
+}
+
+/** The night an Engineer's change took a living Summoner's character
+ * before it summoned, or null (their jinx). */
+function summonerEngineeredAway(world, state) {
+  for (const c of engineeredIn(world)) {
+    const night = parseInt(c.phase.slice(1), 10);
+    if (night > 3 || c.role === "Summoner") continue;
+    if (world.roleAt(c.seat, night > 1 ? `B${night - 1}` : "N0") === "Summoner"
+        && state.aliveSet(c.phase).has(c.seat)) return night;
+  }
+  return null;
+}
+
+function engineerMayTakeTheSummoner(state) {
+  return onBoard(state, "Engineer") && engineerRows(state).some(info => {
+    const chosen = engineerChosen(info, state);
+    return info.night <= 3 && TEAM[chosen[0]] === "minion"
+      && !chosen.includes("Summoner");
+  });
+}
+
+/** What the Engineer's row leaves out that the solver does not reckon,
+ * or null (G Weg 1). */
+export function engineerUnreckoned(view, state) {
+  if (!engineerOnBoard(state)) return null;
+  for (const info of engineerRows(state)) {
+    if (!engineerWorks(view, state, info)) continue;
+    const chosen = engineerChosen(info, state);
+    if (TEAM[chosen[0]] !== "demon") continue;
+    if (NOT_ENGINEERED.has(chosen[0])) return "engineer";
+    const phase = `N${info.night}`;
+    const [demons, held] = turnOf("Engineer", info.night, () => {
+      const got = [...view.demonsAt(phase)];
+      return [got, got.length ? view.roleAt(got[0], phase) : null];
+    });
+    if (demons.length > 1) return "engineer";
+    // A Zombuul that has died once made another Demon. See solver.py.
+    if (demons.length && !state.aliveSet(phase).has(demons[0])
+        && held !== chosen[0]) return "engineer";
   }
   return null;
 }
@@ -1970,7 +2165,12 @@ transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
        // so on a night with a Pit-Hag the charmer was handed the
        // Pit-Hag's gift instead of the Demon's character and the Demon
        // vanished from the board.
-       change(after, charmer, world.roleAt(demon, began), sides[0]),
+       // Unless an Engineer made it another Demon earlier that night
+       // (26.10.2026). See solver.py.
+       change(after, charmer,
+              ((world.changes || []).filter(c => c.engineered
+                && c.seat === demon && c.phase === after).pop() || {}).role
+                ?? world.roleAt(demon, began), sides[0]),
        change(after, demon, "SnakeCharmer", sides[1])],
       cost]);
   }
@@ -2256,11 +2456,29 @@ function plainFailures(world, state, outcome = {}) {
   // poisoned on a turn that made none (E, Weg 1). See solver.py.
   if (inBag(state, "Summoner")) {
     const summoner = world.find("Summoner");
+    // An Engineer that took a living Summoner's character left its
+    // ability to the Storyteller (their jinx, 26.10.2026). See solver.py.
+    const away = engineerOnBoard(state) ? summonerEngineeredAway(world, state)
+      : null;
+    const jinxed = away === null && engineerOnBoard(state)
+      && engineerMayTakeTheSummoner(state);
+    // Asked as a question about the board from its night on. See
+    // solver.py.
+    if (engineerOnBoard(state) && summoner !== null && summoner !== undefined
+        && engineerMayTakeTheSummoner(state)) world.roleAt(summoner, "N3");
     if (summoner !== null && summoner !== undefined)
       for (const c of world.changes || []) {
         const night = parseInt(c.phase.slice(1), 10);
+        if (c.notSummoned && away !== null) return null;
+        if (c.summoned && jinxed) {
+          const gone = [...state.diedAt(summoner)]
+            .sort((a, b) => phaseIndex(a) - phaseIndex(b));
+          if (gone.length && phaseIndex(gone[0]) < phaseIndex(c.phase))
+            return null;
+        }
         if (c.summoned) {
-          if (!(onBoard(state, "Courtier") || onBoard(state, "Preacher")))
+          if (away === null
+              && !(onBoard(state, "Courtier") || onBoard(state, "Preacher")))
             (working[night] = working[night] || new Set()).add(summoner);
         } else if (c.notSummoned && c.phase === "N3"
                    && state.aliveSet("N3").has(summoner)) {
@@ -2272,7 +2490,7 @@ function plainFailures(world, state, outcome = {}) {
   // A Summoner chosen at a tea party (Hatter stage 2): working when it
   // made a Demon, drunk or poisoned on a third night it reached holding
   // it, alive, with none made. See solver.py.
-  if (inBag(state, "Summoner") && hatterOnBoard(state)) {
+  if (inBag(state, "Summoner") && teaOnBoard(state)) {
     const made = (world.changes || []).find(c => c.summoned) || null;
     const final = phaseIndex(state.finalPhase());
     for (const c of hattedSummoners(world)) {
@@ -2289,6 +2507,13 @@ function plainFailures(world, state, outcome = {}) {
         fail(3, seat);
       }
     }
+  }
+
+  // The Engineer (26.10.2026): drunk or poisoned where its choice would
+  // have changed somebody and did not.
+  if (engineerOnBoard(state)) {
+    for (const [night, seats] of Object.entries(engineerFailed(world, state)))
+      for (const seat of seats) fail(Number(night), seat);
   }
 
   // The Hatter (22.10.2026): whoever chose a new character did so
@@ -3700,7 +3925,7 @@ function bestStoryTold(world, state, outcome) {
   // anything from the earliest party on takes every choice made there
   // with it. See solver.py.
   let tea = null, order = stories;
-  if (TEA_PRUNE.on && hatterOnBoard(state)) {
+  if (TEA_PRUNE.on && teaOnBoard(state)) {
     let at = null;
     for (const [got] of stories)
       for (const c of got)
@@ -3835,7 +4060,7 @@ export function storyShares(world, viable, state = null) {
       [cost * barberShare(world, changes, state), changes]);
   // A Summoner chosen at a tea party is one choice, however many ways it
   // then summoned (Hatter stage 2). See solver.py.
-  if (state && viable.length > 1 && hatterOnBoard(state)
+  if (state && viable.length > 1 && teaOnBoard(state)
       && state.script.keys.includes("Summoner"))
     viable = viable.map(([cost, changes]) =>
       [cost * summonShare(world, changes, state), changes]);

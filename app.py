@@ -156,6 +156,10 @@ def build_info(d):
     if kind == "HuntsmanChoice":
         return I.HuntsmanChoice(night, player, trust,
                                 target=_int(d, "target"))
+    if kind == "EngineerChoice":
+        return I.EngineerChoice(night, player, trust,
+                                roles=tuple(str(x)
+                                            for x in d.get("roles") or ()))
     if kind == "PuzzlemasterGuess":
         return I.PuzzlemasterGuess(night, player, trust,
                                    guess=_int(d, "guess"),
@@ -778,6 +782,7 @@ INFO_SOURCES = {
     "GolemNomination": "Golem", "PsychopathKill": "Psychopath",
     "PsychopathRoshambo": "Psychopath", "WidowKnown": "Widow",
     "PreacherChoice": "Preacher", "HuntsmanChoice": "Huntsman",
+    "EngineerChoice": "Engineer",
     "PuzzlemasterGuess": "Puzzlemaster",
     "BoomdandyExploded": "Boomdandy",
     "PixieLearned": "Pixie", "VillageIdiotInfo": "VillageIdiot",

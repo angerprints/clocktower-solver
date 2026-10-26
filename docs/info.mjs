@@ -1920,6 +1920,24 @@ export const HuntsmanChoice = define("HuntsmanChoice", "Huntsman",
   });
 HuntsmanChoice.isAChoice = true;
 
+/** What the Engineer chose, once a game: Minions of the script, or one
+ * Demon (26.10.2026). What follows is anEngineerRebuildsTheEvil's and the
+ * plan's (engineerFailed). See info.py. */
+export const engineerChosen = (row, s) => {
+  const got = [...new Set(row.roles || [])];
+  if (!got.length || got.some(k => !s.script.keys.includes(k))) return null;
+  const teams = new Set(got.map(k => TEAM[k]));
+  if (teams.size === 1 && teams.has("minion")) return got;
+  if (teams.size === 1 && teams.has("demon") && got.length === 1) return got;
+  return null;
+};
+export const EngineerChoice = define("EngineerChoice", "Engineer",
+  function (w, s) {
+    if (earlierSame(this, s)) return true;   // spent already
+    return engineerChosen(this, s) !== null;
+  });
+EngineerChoice.isAChoice = true;
+
 /** The Puzzlemaster's one guess, and whom it was then shown. Shown the
  * Demon: the guess was the drunk player, or it was off itself. */
 export const PuzzlemasterGuess = define("PuzzlemasterGuess", "Puzzlemaster",
@@ -2245,8 +2263,8 @@ export const KINDS = {
   DamselGuess, FearmongerChose, VizierAnnounced, BlindVote,
   ChoirboyInfo, PrincessNominated, GolemNomination, PsychopathKill,
   PsychopathRoshambo, WidowKnown,
-  PreacherChoice, HuntsmanChoice, PuzzlemasterGuess, BoomdandyExploded,
-  MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
+  PreacherChoice, HuntsmanChoice, EngineerChoice, PuzzlemasterGuess,
+  BoomdandyExploded, MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
   PixieLearned, VillageIdiotInfo, LycanthropeChose, HarpyMadness,
   BountyHunterInfo, CultCalled, LeviathanAnnounced, ExecutionNomination,

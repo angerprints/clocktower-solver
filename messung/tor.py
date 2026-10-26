@@ -117,9 +117,16 @@ for seed in range(start, start + N):
                 kind += ", nothing"
             rows[kind] += 1
     skip = False
-    if "Hatter" in NEW:
+    # The Engineer (26.10.2026): games where it chose, and where its
+    # choice changed somebody.
+    if "Engineer" in NEW:
+        chose = any(type(r).__name__ == "EngineerChoice" for r in heard)
+        hatter["engineer chose"] += chose
+        hatter["engineer changed"] += chose and bool(
+            getattr(deal, "tea_made", {}))
+    if "Hatter" in NEW or "Engineer" in NEW:
         tea = getattr(deal, "tea_made", {})
-        hatter["tea party"] += bool(tea)
+        hatter["tea party"] += bool(tea) and "Hatter" in NEW
         state = GameState(n_players=n, script=script, claims=claims,
                           wakes=wakes, infos=list(heard),
                           votes=dict(deal.votes),
@@ -210,8 +217,8 @@ print(f" Auskünfte, Night-Walk gegen Simulator: {len(read_bad)} weichen ab "
       f"{ {k: v for k, v in sorted(walked.items()) if k != 'nights'} } "
       f"{read_bad[:6]}")
 print(f" ausgeteilt: {dict(sorted(dealt.items()))}")
-if "Hatter" in NEW:
-    print(f" Hutmacher: {dict(sorted(hatter.items()))}, nicht gerechnet "
+if "Hatter" in NEW or "Engineer" in NEW:
+    print(f" Hutmacher/Ingenieur: {dict(sorted(hatter.items()))}, nicht gerechnet "
           f"(weggelassen): {len(unreckoned)} {unreckoned[:20]}")
     print(f"   verworfen nach einer Teeparty eines nicht behaupteten "
           f"Hutmachers (gewollt, T): {len(lost_hidden)} {lost_hidden[:20]}")
