@@ -2808,7 +2808,7 @@ def _boffin_stories(world, state, setup):
                 # The Storyteller decides (D Weg 2): the first keeps it,
                 # or the second gets one and the first's ends.
                 grown.append((changes, cost))
-                end = boffin_gift_change(phase, beside, None, slot)
+                end = boffin_gift_change(phase, beside, "", slot)
                 offers = [(way + (end,), c) for way, c in offers]
             for way, c in offers:
                 grown.append((changes + way, cost * c))
@@ -2974,7 +2974,7 @@ def mastermind_marker(phase, seat):
 def is_mastermind_marker(change):
     return change.role is None and change.side is None \
         and not isinstance(change, (Babysits, LilMonstaFell, NotSummoned,
-                                    HandedOn))
+                                    HandedOn, BoffinGift))
 
 
 class LilMonstaFell(Change):

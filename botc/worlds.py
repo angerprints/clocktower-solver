@@ -247,7 +247,7 @@ class BoffinGift(Change):
 
     The ability is `gift` (kept in the `side` field, which a mark has no
     use for): a character key, `BOFFIN_UNSEEN` for any of those that
-    change nothing the town sees (A Weg 3), or None where the seat has
+    change nothing the town sees (A Weg 3), or "" where the seat has
     none from here on — the Storyteller gave it to a second Demon instead
     (D Weg 2). Whether it works then is the Boffin's: alive, holding its
     character, and sober (`info.boffin_gift`)."""
