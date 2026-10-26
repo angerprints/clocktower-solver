@@ -3222,14 +3222,16 @@ function theGameWentOn(world, state) {
   if (!inBag(state, "Zombuul")) return true;
   for (const phase of momentsWithTwoLeft(state)) {
     const board = state.aliveSet(phase);
-    // Either of two living Demons wins there (Hatter stage 2).
-    for (const demon of world.demonsAt(phase)) {
-      if (board.has(demon)) return false; // it would have won there and then
-      if (world.roleAt(demon, phase) === "Zombuul" && board.size < 2 &&
-          state.diedAt(demon)
-            .filter(p => phaseIndex(p) < phaseIndex(phase)).length < 2)
-        return false;                     // it and one other: won as well
-    }
+    // A Zombuul on the board as dead stands all the same; of two living
+    // Demons either wins (Hatter stage 2). See solver.py.
+    const demons = world.demonsAt(phase);
+    const up = demons.filter(d => !board.has(d)
+      && world.roleAt(d, phase) === "Zombuul"
+      && state.diedAt(d).filter(p => phaseIndex(p) < phaseIndex(phase))
+        .length < 2);
+    if ((up.length || demons.some(d => board.has(d)))
+        && board.size + up.length <= 2)
+      return false;                       // it would have won there and then
   }
   return true;
 }

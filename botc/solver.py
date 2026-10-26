@@ -7711,14 +7711,17 @@ def _the_game_went_on(world, state):
         return True
     for phase in _moments_with_two_left(state):
         board = state.alive_set(phase)
-        # Either of two living Demons wins there (Hatter stage 2).
-        for demon in world.demons_at(phase):
-            if demon in board:
-                return False              # it would have won there and then
-            if world.role_at(demon, phase) == "Zombuul" \
-                    and _zombuul_still_going(world, state, demon, phase) \
-                    and len(board) < 2:
-                return False              # it and one other: won as well
+        # A Zombuul on the board as dead stands all the same; of two
+        # living Demons either wins (Hatter stage 2): count who really
+        # stands, and evil has won if two or fewer do with a Demon among
+        # them.
+        demons = world.demons_at(phase)
+        up = [d for d in demons if d not in board
+              and world.role_at(d, phase) == "Zombuul"
+              and _zombuul_still_going(world, state, d, phase)]
+        if (up or any(d in board for d in demons)) \
+                and len(board) + len(up) <= 2:
+            return False                  # it would have won there and then
     return True
 
 

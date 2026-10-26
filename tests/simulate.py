@@ -4414,6 +4414,19 @@ def _second_demon_kills(d, night, rng, heard):
     seat = d.second_demon(phase)
     if seat is None or d.deaths.get(seat) is not None:
         return []
+    # A Demon a Snake Charmer swapped with earlier tonight is poisoned from
+    # then on — "& is then poisoned" — and a Summoner that made it a Demon
+    # again later tonight changes nothing about the player (the night-walk
+    # has it so).
+    if seat in d.perma_poisoned and any(
+            at == phase and who == seat and role == "SnakeCharmer"
+            for at, who, role in d.changes):
+        if not hasattr(d, "demon_aimed2"):
+            d.demon_aimed2 = {}
+        d.demon_aimed2[night] = []
+        d.demon2_seat = getattr(d, "demon2_seat", {})
+        d.demon2_seat[night] = seat
+        return []
     first = d.demon_aimed.get(night)
     d._as_demon = seat
     try:
