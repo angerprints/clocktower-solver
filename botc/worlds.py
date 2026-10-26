@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 from .catalogue import CHARACTERS
-from .info import _READS, note_side_read, phase_index
+from .info import BOFFIN_UNSEEN, _READS, note_side_read, phase_index
 from .roles import (EVIL, TEAM, SETUP, alignment, believed_tokens,
                     believes_another, is_evil, knows_what_it_is,
                     must_hide, thinks_it_is_evil, wake_fits)
@@ -90,6 +90,10 @@ class World:
 
     def team_at(self, seat, phase):
         return TEAM[self.role_at(seat, phase)]
+
+    def gift_at(self, seat, phase):
+        """No story, no Boffin ability (`Timeline.gift_at`)."""
+        return None
 
     def alignment_at(self, seat, phase):
         """Which side this seat was on at this phase.
@@ -232,6 +236,31 @@ class Engineered(TeaParty):
     Demon lives summoning beside it (F Weg 1). Told apart because no
     Hatter's death asks for it."""
     __slots__ = ()
+
+
+class BoffinGift(Change):
+    """Which good character's ability the Demon on this seat has from this
+    moment on, through the Boffin (26.10.2026, claude/laborratte-
+    lesarten.md). A mark: it changes nothing about the seat, so the
+    character is not in `role` — a Pit-Hag's or a Snake Charmer's change
+    is read off `role`, and the two must never be taken for each other.
+
+    The ability is `gift` (kept in the `side` field, which a mark has no
+    use for): a character key, `BOFFIN_UNSEEN` for any of those that
+    change nothing the town sees (A Weg 3), or None where the seat has
+    none from here on — the Storyteller gave it to a second Demon instead
+    (D Weg 2). Whether it works then is the Boffin's: alive, holding its
+    character, and sober (`info.boffin_gift`)."""
+    __slots__ = ()
+
+    @property
+    def gift(self):
+        return self.side
+
+
+def boffin_gift_change(phase, seat, gift, slot=None):
+    """A `BoffinGift` mark: this seat's Boffin ability from that moment."""
+    return BoffinGift(phase, seat, None, gift, slot)
 
 
 # Whether anything from the Hatter's night on was looked at while a story
@@ -392,9 +421,12 @@ class Timeline:
         # board — when most seats never change at all. Same answers, same
         # order; only the walk is shorter.
         roles, sides, demons, held = {}, {}, [], set()
-        handed = {}
+        handed, gifts = {}, {}
         for change in self.changes:
             at = _at(change)
+            if isinstance(change, BoffinGift):
+                gifts.setdefault(change.seat, []).append((at, change.gift))
+                continue
             if isinstance(change, Babysits):
                 demons.append((at, change.seat, change.phase, False))
                 continue
@@ -420,6 +452,7 @@ class Timeline:
                                    isinstance(change, Summoned)))
         object.__setattr__(self, "_roles_by_seat", roles)
         object.__setattr__(self, "_sides_by_seat", sides)
+        object.__setattr__(self, "_gifts_by_seat", gifts)
         object.__setattr__(self, "_roles_changed_to", held)
         object.__setattr__(self, "_demon_changes",
                            self._demon_steps(demons, handed))
@@ -595,6 +628,19 @@ class Timeline:
 
     def team_at(self, seat, phase):
         return TEAM[self.role_at(seat, phase)]
+
+    def gift_at(self, seat, phase):
+        """The Boffin ability marked on this seat at this moment, or None
+        (`BoffinGift`). Whether it works is `info.boffin_gift`'s."""
+        mine = self._gifts_by_seat.get(seat)
+        if not mine:
+            return None
+        here = moment(phase)
+        got = None
+        for at, gift in mine:
+            if at <= here:
+                got = gift
+        return got
 
 
 def _anything(script):

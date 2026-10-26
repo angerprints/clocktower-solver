@@ -717,6 +717,14 @@ _EXPERIMENTAL = [
     # over who chose what is `solver._best_tea_story`; a Hatter that died
     # at night is not reckoned yet (Stufe 1, S Weg 1).
     _c("Hatter", "hatter", "Hatter", "outsider", {NEVER}),
+    # The eighth (26.10.2026, claude/laborratte-lesarten.md). While it
+    # lives, the Demon also has the ability of a good character of the
+    # script that is not in play (B Weg 1). Which one is a story
+    # (solver.a_boffin_gives_the_demon, worlds.BoffinGift): every one that
+    # changes what the town sees on its own, the rest together as one
+    # (A Weg 3). Its sobriety is the Boffin's, not the Demon's. Woken on
+    # the first night only, with the Demon.
+    _c("Boffin", "boffin", "Boffin", "minion", {FIRST}, nights="first"),
 ]
 
 
@@ -744,6 +752,8 @@ IMPAIRS = frozenset({
     # Experimental: poisoned, drunk or without an ability, by these.
     "Widow", "Preacher", "Puzzlemaster", "Xaan",
     "VillageIdiot", "Lleech",
+    # Through the Demon: a Sailor's, a Courtier's, a Minstrel's ability.
+    "Boffin",
 })
 
 CHARACTERS = {c.key: c for c in _TB + _SV + _UNMODELLED + _FABLED

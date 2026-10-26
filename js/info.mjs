@@ -1942,6 +1942,21 @@ export const EngineerChoice = define("EngineerChoice", "Engineer",
   });
 EngineerChoice.isAChoice = true;
 
+/** Which good character's ability the Boffin gave the Demon, said by the
+ * Boffin (26.10.2026): a good character of the script, none of the four
+ * its jinxes forbid. What follows is aBoffinGivesTheDemon's. See info.py. */
+export const BOFFIN_NEVER_GIVES = new Set(["Drunk", "Heretic", "Ogre",
+                                           "Politician"]);
+export const boffinGiven = (row, s) => {
+  const key = row.role || "";
+  if (!s.script.keys.includes(key)) return null;
+  if (TEAM[key] !== "townsfolk" && TEAM[key] !== "outsider") return null;
+  if (BOFFIN_NEVER_GIVES.has(key)) return null;
+  return key;
+};
+export const BoffinGave = define("BoffinGave", "Boffin",
+  function (w, s) { return boffinGiven(this, s) !== null; });
+
 /** The Puzzlemaster's one guess, and whom it was then shown. Shown the
  * Demon: the guess was the drunk player, or it was off itself. */
 export const PuzzlemasterGuess = define("PuzzlemasterGuess", "Puzzlemaster",
@@ -2267,7 +2282,7 @@ export const KINDS = {
   DamselGuess, FearmongerChose, VizierAnnounced, BlindVote,
   ChoirboyInfo, PrincessNominated, GolemNomination, PsychopathKill,
   PsychopathRoshambo, WidowKnown,
-  PreacherChoice, HuntsmanChoice, EngineerChoice, PuzzlemasterGuess,
+  PreacherChoice, HuntsmanChoice, EngineerChoice, BoffinGave, PuzzlemasterGuess,
   BoomdandyExploded, MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
   PixieLearned, VillageIdiotInfo, LycanthropeChose, HarpyMadness,

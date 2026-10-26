@@ -576,7 +576,17 @@ def woke(world, state, seat, night):
         return False
     if _came_back_tonight(world, state, seat, night) == ASLEEP:
         return False
-    return woke_as(world, state, seat, night, role)
+    if woke_as(world, state, seat, night, role):
+        return True
+    # A Demon the Boffin gave an ability wakes for it as that character
+    # would — but not on the first night, where it is woken to be told
+    # rather than to act (F Weg 1, 26.10.2026).
+    if night >= 2 and "Boffin" in state.script.keys:
+        from .info import boffin_gift
+        gift = boffin_gift(world, state, seat, phase)
+        if gift is not None and not CHARACTERS[gift].believes:
+            return woke_as(world, state, seat, night, gift)
+    return False
 
 
 ASLEEP, OPEN = "asleep", "open"

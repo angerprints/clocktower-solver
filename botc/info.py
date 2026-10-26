@@ -787,7 +787,10 @@ def side_open(w, s, seat, phase):
     that took the Goon (table ruling G, 13.10.2026: the side changes)."""
     if CHARACTERS[w.role_at(seat, phase)].alignment_open:
         return True
-    return s is not None and took_it(w, s, seat, "Goon", phase)
+    # Not a Demon the Boffin gave it: it cannot turn good by it (their
+    # jinx, 26.10.2026).
+    return s is not None and took_it(w, s, seat, "Goon", phase) \
+        and boffin_gift(w, s, seat, phase) != "Goon"
 
 
 def faux_paw_lycanthrope(w, s, phase, living=True):
@@ -806,15 +809,83 @@ def faux_paw_lycanthrope(w, s, phase, living=True):
 
 
 def took_it(w, s, seat, role, phase):
-    """Is this seat a Philosopher that took that character by then?
+    """Is this seat a Philosopher that took that character by then — or a
+    Demon the Boffin gave its ability (`boffin_gift`, 26.10.2026)?
 
     "A Philosopher is that character, ability-wise" (table ruling): its
     ability goes with it to the end, death-triggered ones included —
     the Sweetheart's and the Barber's (way 1, 13.10.2026)."""
     taken = (s.philosophies() or {}).get(seat)
-    return bool(taken and taken[0] == role
-                and w.role_at(seat, phase) == "Philosopher"
-                and phase_index(phase) >= phase_index(taken[1]))
+    if taken and taken[0] == role \
+            and w.role_at(seat, phase) == "Philosopher" \
+            and phase_index(phase) >= phase_index(taken[1]):
+        return True
+    return role is not None and boffin_gift(w, s, seat, phase) == role
+
+
+# --------------------------------------------------------------------------
+# The Boffin (26.10.2026, claude/laborratte-lesarten.md)
+# --------------------------------------------------------------------------
+# Every ability the Boffin may have given that changes nothing the town
+# sees, as one story (A Weg 3).
+BOFFIN_UNSEEN = "*"
+
+# "The Demon (even if drunk or poisoned) has a not-in-play good
+# character's ability. You both know which." Which one is a story
+# (`worlds.BoffinGift`, solver.a_boffin_gives_the_demon). The Demon has
+# it while the Boffin lives; whether it works is the Boffin's sobriety,
+# never the Demon's own — and an ability that would make its holder
+# drunk (the Sailor's) makes the Boffin's copy drunk, which is the same
+# as making the Boffin drunk, since it has no other ability.
+
+def boffin_seat(w, s, phase):
+    """The living seat holding the Boffin then, or None."""
+    if "Boffin" not in s.script.keys:
+        return None
+    alive = s.alive_set(phase)
+    for seat in range(len(w.roles)):
+        if seat in alive and w.role_at(seat, phase) == "Boffin":
+            return seat
+    return None
+
+
+def boffin_gift(w, s, seat, phase):
+    """The good character whose ability this seat has through the Boffin
+    at that moment, or None: marked on it in this story, the seat holding
+    a Demon character then (a dead Demon keeps what works in death), and a
+    Boffin alive. The story where it changes nothing the town sees
+    (`BOFFIN_UNSEEN`) answers None to everything."""
+    if "Boffin" not in s.script.keys:
+        return None
+    got = w.gift_at(seat, phase)
+    if not got or got == BOFFIN_UNSEEN:
+        return None
+    if TEAM.get(w.role_at(seat, phase)) != "demon":
+        return None
+    if boffin_seat(w, s, phase) is None:
+        return None
+    return got
+
+
+def boffin_holders(w, s, role, phase):
+    """Every seat with that ability through the Boffin at that moment."""
+    marked = getattr(w, "_gifts_by_seat", None)
+    if not marked or role is None:
+        return []
+    return [seat for seat in sorted(marked)
+            if boffin_gift(w, s, seat, phase) == role]
+
+
+def sober_seat(w, s, seat, role, phase):
+    """Whose sobriety this seat's ability as that character rests on: its
+    own, or the Boffin's where the Boffin gave it (26.10.2026)."""
+    if role is None or "Boffin" not in s.script.keys \
+            or w.role_at(seat, phase) == role:
+        return seat
+    if boffin_gift(w, s, seat, phase) == role:
+        got = boffin_seat(w, s, phase)
+        return seat if got is None else got
+    return seat
 
 
 def drunk_by_its_philosopher(w, s, seat, role, phase):
@@ -3136,6 +3207,10 @@ class BansheeAnnounced(Info):
                     and "Philosopher" in held
                     and phase_index(phase) >= phase_index(gained[1])):
                 out.append(seat)
+            # Or a Demon the Boffin gave it, an Imp that killed itself
+            # (26.10.2026).
+            elif boffin_gift(w, s, seat, began) == "Banshee":
+                out.append(seat)
         return tuple(out)
 
     def holds(self, w, s, rh, seat=None):
@@ -3751,6 +3826,38 @@ class EngineerChoice(Info):
         if self._earlier(s):
             return True                   # spent already: nothing happens
         return self.chosen(s) is not None
+
+
+@dataclass
+class BoffinGave(Info):
+    """Which good character's ability the Boffin gave the Demon, said by
+    the Boffin (26.10.2026, claude/laborratte-lesarten.md) — from an evil
+    player's notes, or told after the game.
+
+    Without one, every ability the Boffin could have given is a story of
+    its own (A Weg 3, `solver.a_boffin_gives_the_demon`); with one, only
+    the named one, for the Demon of that night. A good character of the
+    script (B Weg 1), and none of the four their jinxes forbid.
+    """
+
+    role: str = ""
+    source_role = "Boffin"
+
+    def given(self, s):
+        """The character named, or None where no Boffin could give it."""
+        key = self.role or ""
+        if key not in s.script.keys or TEAM.get(key) not in (
+                "townsfolk", "outsider") or key in BOFFIN_NEVER_GIVES:
+            return None
+        return key
+
+    def holds(self, w, s, rh, seat=None):
+        return self.given(s) is not None
+
+
+# Their jinxes (26.10.2026): the Demon cannot have the Drunk's, the
+# Heretic's, the Ogre's or the Politician's ability.
+BOFFIN_NEVER_GIVES = frozenset({"Drunk", "Heretic", "Ogre", "Politician"})
 
 
 @dataclass
