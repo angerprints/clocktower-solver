@@ -1809,9 +1809,12 @@ def _moonchild_takes_one(d, night, heard, rng):
         target = rng.choice(others)
         heard.append(MoonchildChoice(night, seat, target=target))
         d.moonchild_picked[night] = target
-        if not d.working(seat, night):
+        if not d.working(_sober(d, seat, "Moonchild", f"N{night}"), night):
             continue
-        if d.side_at(target, f"D{day}") != "good":
+        # Good at its turn tonight, as the solver reads it: a Snake
+        # Charmer that swapped with the Demon tonight is evil by then
+        # (gate, seed 1650 of the Boffin's line LN, 26.10.2026).
+        if d.side_at(target, phase) != "good":
             continue
         # Made the Demon tonight, before the Moonchild's turn: evil by
         # then (21.10.2026).
@@ -2323,7 +2326,7 @@ def _farmer_hands_it_on(d, night, rng):
                if _acts_as(d, p, "Farmer", phase)
                and d.deaths.get(p) == phase]
     for seat in holders:
-        if not d.working(seat, night):
+        if not d.working(_sober(d, seat, "Farmer", phase), night):
             continue                      # droisoned: it does not function
         def good_enough(p):
             role = d.role_at(p, phase)
@@ -2799,7 +2802,8 @@ def _virgin_answers(d, day, who, nominee, rng):
     d.virgin_spent.add(nominee)
     held = d.role_at(who, phase)
     townsfolk = TEAM[held] == "townsfolk" or held == "Spy"
-    triggered = townsfolk and d.working(nominee, day, by_day=True)
+    triggered = townsfolk and d.working(_sober(d, nominee, "Virgin", phase),
+                                        day, by_day=True)
     return VirginNomination(day, nominee, nominator=who, triggered=triggered)
 
 
@@ -2808,7 +2812,9 @@ def _golem_strikes(d, golem, nominee, day, rng):
     Once a game, drunk or not; a Recluse may register as the Demon."""
     phase = f"D{day}"
     d.golem_spent.add(golem)
-    if not d.working(golem, day, by_day=True):
+    # A Demon the Boffin gave it: the Boffin's sobriety (26.10.2026,
+    # seed 2097).
+    if not d.working(_sober(d, golem, "Golem", phase), day, by_day=True):
         return False
     held = d.role_at(nominee, phase)
     if TEAM[held] == "demon" or _babysits(d, nominee, phase):
@@ -5403,7 +5409,23 @@ ON_DEATH = frozenset({"Ravenkeeper", "Sage", "Klutz"})
 
 def _woke_for_own_ability(d, p, night, shown=False):
     """Did this seat wake tonight for its own ability — what a Chambermaid
-    counts.
+    counts. A Demon the Boffin gave an ability also wakes, from the second
+    night on, whenever that character would (F Weg 1, 26.10.2026)."""
+    if _woke_itself(d, p, night, shown):
+        return True
+    if night < 2:
+        return False
+    from botc.catalogue import CHARACTERS
+    gift = _gift(d, p, f"N{night}")
+    if gift is None or CHARACTERS[gift].believes:
+        return False
+    return _woke_itself(d, p, night, shown, as_role=gift)
+
+
+def _woke_itself(d, p, night, shown=False, as_role=None):
+    """Did this seat wake tonight for its own ability — what a Chambermaid
+    counts. `as_role` asks about a character it holds the ability of
+    without being it (the Boffin's gift).
 
     `shown` also says yes for a seat woken to be *shown* something, a Spy
     its grimoire or an Evil Twin its twin. That is still somebody evil
@@ -5418,7 +5440,7 @@ def _woke_for_own_ability(d, p, night, shown=False):
     # or a Pit-Hag had moved was counted on the schedule of a
     # character it no longer was (tenth place the deal has been
     # mistaken for the timeline, 07.10.2026).
-    what = d.token(p, f"N{night}") or d.role_at(p, f"N{night}")
+    what = as_role or d.token(p, f"N{night}") or d.role_at(p, f"N{night}")
     # A Philosopher that has taken an ability wakes when that
     # character would — settled at the table, and what the night
     # order above has done since 29.09. Here it fell through to
@@ -5436,7 +5458,7 @@ def _woke_for_own_ability(d, p, night, shown=False):
     # A Lunatic lives the night of the Demon it thinks it is —
     # here always the real one — and choosing who it thinks it
     # kills counts (table ruling, 02.10.2026).
-    if d.role_at(p, f"N{night}") == "Lunatic":
+    if as_role is None and d.role_at(p, f"N{night}") == "Lunatic":
         real = d.demon_at(f"N{night}")
         what = (d.role_at(real, f"N{night}") if real is not None
                 else "Lunatic")
