@@ -116172,9 +116172,6 @@
        "Demon": 1.0
       }
      }
-    },
-    "unreckoned": {
-     "two demons": 100.0
     }
    }
   },
@@ -116452,6 +116449,302 @@
       "5": {
        "Demon": 0.95,
        "Assassin": 0.05
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-hatter-summoner-third-night",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Hatter",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Hutmacher",
+     "characters": [
+      "hatter",
+      "poisoner",
+      "spy",
+      "baron",
+      "eviltwin",
+      "imp",
+      "po",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "gambler",
+      "saint",
+      "summoner"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 252,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 35.3522,
+      "demon_pct": 19.5958,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 1.9608,
+      "demon_pct": 0.0135,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.9608
+     },
+     {
+      "evil_pct": 35.3522,
+      "demon_pct": 19.5958,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 35.3522,
+      "demon_pct": 19.5958,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 35.3522,
+      "demon_pct": 19.5958,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 35.3522,
+      "demon_pct": 19.5958,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     },
+     {
+      "evil_pct": 35.3522,
+      "demon_pct": 19.5958,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.0065
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-hatter-two-demons-deaths",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": [
+       "N4"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": [
+       "N3"
+      ]
+     },
+     {
+      "claim": "Monk",
+      "events": [
+       "N3"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": [
+       "N4"
+      ]
+     },
+     {
+      "claim": "Hatter",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Hutmacher",
+     "characters": [
+      "hatter",
+      "poisoner",
+      "spy",
+      "baron",
+      "eviltwin",
+      "imp",
+      "po",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "gambler",
+      "saint",
+      "summoner"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 228,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 24.0988,
+      "demon_pct": 12.3059,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.1565
+     },
+     {
+      "evil_pct": 5.102,
+      "demon_pct": 0.0333,
+      "drunk_pct": 0.0,
+      "lying_pct": 5.102
+     },
+     {
+      "evil_pct": 15.8091,
+      "demon_pct": 3.7262,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.9977
+     },
+     {
+      "evil_pct": 15.8091,
+      "demon_pct": 3.7262,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.9977
+     },
+     {
+      "evil_pct": 24.0988,
+      "demon_pct": 12.3059,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.1565
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 76.075,
+      "demon_pct": 56.0309,
+      "drunk_pct": 0.0,
+      "lying_pct": 70.2948
+     },
+     {
+      "evil_pct": 76.075,
+      "demon_pct": 56.0309,
+      "drunk_pct": 0.0,
+      "lying_pct": 70.2948
+     }
+    ],
+    "blame": {
+     "4": {
+      "0": {
+       "Demon": 0.9208,
+       "Demon 2": 0.0792
+      },
+      "4": {
+       "Demon": 0.9208,
+       "Demon 2": 0.0792
+      }
+     },
+     "2": {
+      "1": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "2": {
+       "Demon": 0.8807,
+       "Demon 2": 0.0546,
+       "Summoner": 0.0646
+      },
+      "3": {
+       "Demon": 0.8807,
+       "Summoner": 0.0646,
+       "Demon 2": 0.0546
       }
      }
     }
@@ -118858,6 +119151,500 @@
       "0": {
        "Demon": 0.9299,
        "Yaggababble, again": 0.0701
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-hatter-two-demons-7050-7",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "Acrobat",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Magician",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Innkeeper",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Butler"
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 2,
+      "player": 6,
+      "a": 2,
+      "b": 3
+     },
+     {
+      "type": "Acrobat",
+      "night": 2,
+      "player": 0,
+      "target": 1
+     },
+     {
+      "type": "InnkeeperChoice",
+      "night": 3,
+      "player": 6,
+      "a": 1,
+      "b": 4
+     },
+     {
+      "type": "Acrobat",
+      "night": 3,
+      "player": 0,
+      "target": 1
+     },
+     {
+      "type": "DamselGuess",
+      "night": 3,
+      "player": 4,
+      "target": 1
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "hatter",
+      "summoner",
+      "marionette",
+      "snakecharmer",
+      "philosopher",
+      "alsaahir",
+      "magician",
+      "virgin",
+      "sage",
+      "noble",
+      "pacifist",
+      "acrobat",
+      "innkeeper",
+      "king",
+      "oracle",
+      "huntsman",
+      "butler",
+      "barber",
+      "damsel",
+      "devilsadvocate",
+      "godfather",
+      "zombuul",
+      "po",
+      "shabaloth",
+      "leviathan"
+     ]
+    },
+    "quiet_nights": [
+     2
+    ],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 196,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.4529,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.1595,
+      "lying_pct": 0.2934
+     },
+     {
+      "evil_pct": 34.904,
+      "demon_pct": 19.5417,
+      "drunk_pct": 0.0,
+      "lying_pct": 33.5666
+     },
+     {
+      "evil_pct": 15.1815,
+      "demon_pct": 0.0,
+      "drunk_pct": 7.9735,
+      "lying_pct": 7.208
+     },
+     {
+      "evil_pct": 88.0797,
+      "demon_pct": 44.1722,
+      "drunk_pct": 18.4985,
+      "lying_pct": 69.0411
+     },
+     {
+      "evil_pct": 58.0271,
+      "demon_pct": 36.2861,
+      "drunk_pct": 6.3788,
+      "lying_pct": 50.3109
+     },
+     {
+      "evil_pct": 1.5947,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.5947
+     },
+     {
+      "evil_pct": 0.1654,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.1654
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Demon": 0.5023,
+       "Acrobat": 0.4977
+      },
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-hatter-two-demons-4500-7",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "TeaLady",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Steward",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Hatter",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Sweetheart",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 4,
+      "role": "Sage"
+     },
+     {
+      "type": "Empath",
+      "night": 1,
+      "player": 5,
+      "count": 0
+     },
+     {
+      "type": "ClockmakerInfo",
+      "night": 1,
+      "player": 6,
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "hatter",
+      "summoner",
+      "xaan",
+      "philosopher",
+      "snakecharmer",
+      "farmer",
+      "empath",
+      "innkeeper",
+      "steward",
+      "oracle",
+      "mathematician",
+      "clockmaker",
+      "king",
+      "sage",
+      "poppygrower",
+      "tealady",
+      "politician",
+      "heretic",
+      "sweetheart",
+      "assassin",
+      "eviltwin",
+      "vortox",
+      "po",
+      "imp",
+      "fanggu"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 56,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 64.9066,
+      "demon_pct": 46.8712,
+      "drunk_pct": 0.0,
+      "lying_pct": 64.2857
+     },
+     {
+      "evil_pct": 64.9066,
+      "demon_pct": 46.8712,
+      "drunk_pct": 0.0,
+      "lying_pct": 64.2857
+     },
+     {
+      "evil_pct": 3.2967,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 3.2967
+     },
+     {
+      "evil_pct": 13.2997,
+      "demon_pct": 3.4196,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.989
+     },
+     {
+      "evil_pct": 15.5117,
+      "demon_pct": 11.3653,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.1868
+     },
+     {
+      "evil_pct": 17.5824,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 17.5824
+     },
+     {
+      "evil_pct": 26.3736,
+      "demon_pct": 0.6086,
+      "drunk_pct": 0.0,
+      "lying_pct": 26.3736
+     }
+    ],
+    "blame": {
+     "2": {
+      "2": {
+       "Demon": 0.9945,
+       "Assassin": 0.0055
+      }
+     },
+     "3": {
+      "3": {
+       "Demon": 0.9978,
+       "Assassin": 0.0022
       }
      }
     }
