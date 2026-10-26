@@ -1079,6 +1079,7 @@ def handmade():
     yield from the_summoner()
     yield from stellen_62_63()
     yield from the_hatter()
+    yield from the_engineer()
 
 
 def the_eighth_five():
@@ -1709,6 +1710,30 @@ def the_hatter():
             rng, must_have=("Hatter", "Summoner"))
         yield played(f"x-hatter-two-demons-{seed}-{n}", script, seed, n, 4,
                      rng=rng)
+
+
+def the_engineer():
+    """The Engineer (26.10.2026): the boards of tests/test_engineer.py and
+    played games where it chose."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_engineer import _payloads
+    names = ("baron", "po", "two-minions", "summoner", "three-minions",
+             "lil-monsta", "poisoner")
+    for name, payload in zip(names, _payloads(), strict=True):
+        yield {"name": f"x-engineer-{name}", "payload": payload}
+    for seed, n in PLAYED_ENGINEER:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=("Engineer",))
+        yield played(f"x-engineer-played-{seed}-{n}", script, seed, n, 4,
+                     rng=rng)
+
+
+# Games where the Engineer chose, each solved in seconds: a Widow on the
+# first night (0), Goblin and Assassin on the second (6), the Pit-Hag (15)
+# and a Lleech for the Demon (17).
+PLAYED_ENGINEER = ((0, 7), (6, 8), (15, 8), (17, 9))
 
 
 # Games with a tea party, each solved in seconds: a claimed Hatter
