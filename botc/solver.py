@@ -45,7 +45,7 @@ from .catalogue import CHARACTERS, slot_of
 from .waking import LEVIATHAN_CHOOSES_FOR
 from .worlds import _at as moment_of
 from .worlds import READ_AT, SETUP_SLOT, _row_slot, reading_at
-from .worlds import (BABYSAT_READS, Babysits, Change, NotSummoned,
+from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
                      SUMMON_READS, Summoned, TEA_READS, TeaParty,
                      Timeline, TurnedEvil, World,
                      enumerate_worlds, iter_worlds, lil_monsta_world,
@@ -273,6 +273,9 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             # After the Scarlet Woman, before the Lunatic, the Exorcist
             # and every Demon (21.10.2026).
             "the_summoner_summons": 19,
+            # And one a Minion became at a tea party (Hatter stage 2,
+            # 25.10.2026): at the same turn.
+            "a_hatted_summoner_summons": 19,
             # At the very start of the night after the Hatter died by day,
             # before anybody acts (C, 22.10.2026).
             "a_hatters_tea_party": 1,
@@ -301,6 +304,7 @@ _TURN_OF = {"a_snake_charmer_takes_the_star": "SnakeCharmer",
             "a_pit_hag_makes_somebody_else": "PitHag",
             "a_pit_hag_nobody_wrote_down": "PitHag",
             "the_summoner_summons": "Summoner",
+            "a_hatted_summoner_summons": "Summoner",
             "a_barber_lets_the_demon_swap_two": "Barber",
             "a_huntsman_finds_the_damsel": "Huntsman",
             "a_farmer_hands_it_on": "Farmer",
@@ -361,6 +365,8 @@ death_causes.CAUSE_TURNS.update({
     "a_lleech_follows_its_host": _DEMONS_DONE,
     "a_pit_hag_making_a_demon_makes_deaths_arbitrary":
         CHARACTERS["PitHag"].other_night,
+    "a_second_demon_makes_deaths_arbitrary":
+        CHARACTERS["Summoner"].other_night,
     "a_gossip_may_kill": CHARACTERS["Gossip"].other_night,
     "a_godfather_answers_an_outsider": CHARACTERS["Godfather"].other_night,
     "an_assassin_kills_through_anything": CHARACTERS["Assassin"].other_night,
@@ -449,6 +455,13 @@ def possible_timelines(world, state, cap=128):
         # And for each party past the first: a Hatter raised and killed
         # again, the parties multiply (gate, seed 1509).
         cap = max(cap, HATTER_STORIES * hunted * slots * max(1, len(died)))
+        # And for every way a Summoner chosen at a party before its third
+        # night may have summoned (Hatter stage 2, 25.10.2026) — after one
+        # party only: two already fill the room they have, and more would
+        # take minutes.
+        if "Summoner" in state.script.keys and len(died) == 1 \
+                and _tea_night(died[0][1]) <= 3:
+            cap *= 1 + len(_summonable(state)) * state.n_players
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -611,7 +624,7 @@ def _nights_it_acts(rule, state):
         return {1} | rows("Philosopher", "role")
     if name == "demon_handovers":
         return {k for k, _kind in deaths}
-    if name == "the_summoner_summons":
+    if name in ("the_summoner_summons", "a_hatted_summoner_summons"):
         return {1, 2, 3}
     if name == "a_hatters_tea_party":
         claimed = hatter_claimants(state)
@@ -863,7 +876,7 @@ def _barber_offers(world, state):
             continue                      # the game had already finished
         view = world
         seats = range(state.n_players)
-        demon = view.demon_at(night)
+        demons = view.demons_at(night)
         for first in seats:
             for second in seats:
                 if second <= first:
@@ -875,8 +888,8 @@ def _barber_offers(world, state):
                 # at this table and costs a world nothing; any other pair
                 # is a deliberate play priced as one (table habit,
                 # 30.09.2026). `_barber_share` splits the credit inside.
-                ours = ((first == demon and TEAM[b] == "minion")
-                        or (second == demon and TEAM[a] == "minion"))
+                ours = ((first in demons and TEAM[b] == "minion")
+                        or (second in demons and TEAM[a] == "minion"))
                 kind = DemonMinionSwap if ours else OtherSwap
                 # Sides written out, not left to the new character: a
                 # Change with no side takes the character's, so a swapped
@@ -1393,8 +1406,7 @@ def _acted_before_the_demon_only(world, state, night):
     Harpy and the Widow.
     """
     phase = f"N{night}"
-    demon = world.demon_at(phase)
-    if demon is not None and world.role_at(demon, phase) == "Pukka":
+    if _demon_holding(world, phase, "Pukka") is not None:
         return True
     return any(phase in state.died_at(p)
                and falls_as(world, state, p, "Sweetheart", phase)
@@ -1506,7 +1518,10 @@ def a_snake_charmer_takes_the_star(world, state):
                    if _has_ability(world, state, info.player,
                                    "SnakeCharmer", before)
                    else _whoever_works(world, state, "SnakeCharmer", before))
-        demon = world.demon_at(before)
+        # The one it chose, of two living Demons (Hatter stage 2, B Weg 1).
+        demons = world.demons_at(before)
+        demon = (info.target if info.target in demons
+                 else (demons[0] if demons else None))
         # Lil' Monsta's first babysitter is chosen at 15, before the
         # charmer's turn at 20 (E, Weg 1, 21.10.2026).
         if demon is None and info.night == 1:
@@ -1810,8 +1825,10 @@ def _neighbours(n, seat):
     return ((seat - 1) % n, (seat + 1) % n)
 
 
-def _summoned_seats(world, state, night, demon):
-    """Who could have been made this Demon on this night."""
+def _summoned_seats(world, state, night, demon, puppet=True):
+    """Who could have been made this Demon on this night. `puppet`: the
+    Marionette's jinx applies — not to a Summoner chosen at a tea party,
+    where the Marionette is in play already (Hatter stage 2)."""
     n = state.n_players
     phase = f"N{night}"
     standing = state.alive_set(phase)
@@ -1825,7 +1842,7 @@ def _summoned_seats(world, state, night, demon):
     # neighbour — whoever that neighbour is, alive or dead (Patrick,
     # 22.10.2026). The seat that becomes it is the one dealt it here, so
     # the Demon is made beside that seat.
-    if "Marionette" in world.roles:
+    if puppet and "Marionette" in world.roles:
         m = world.roles.index("Marionette")
         seats = [p for p in seats if p in _neighbours(n, m)]
     return seats
@@ -1962,10 +1979,10 @@ def summoned_change(world):
 # slot after the turn of whoever may have killed it (stage 3c,
 # 23.10.2026, `tea_slots`) — the night read in its order, stage 3b.
 #
-# Not reckoned yet, and the report says so (`hatter_unreckoned`): what
-# makes two living Demons (K Weg 2, stage 2) — a Minion choosing the
-# Summoner while a Demon lives and the Summoner could still summon on the
-# third night — and Lil' Monsta taken in the middle of the game (U).
+# Not reckoned yet, and the report says so (`hatter_unreckoned`): Lil'
+# Monsta taken in the middle of the game (U). A Minion choosing the
+# Summoner while a Demon lives makes two living Demons, reckoned since
+# stage 2 (25.10.2026, below).
 
 NOT_HATTED = ("Legion", "Riot", "LilMonsta")
 
@@ -1975,6 +1992,8 @@ HATTER_STORIES = 1024
 # Set by the tests: switch the prune in `_best_story_told` off and
 # compare.
 TEA_PRUNE = True
+# And the one over a tea party's Summoner (stage 2, 25.10.2026).
+SUMMON_TEA_PRUNE = True
 
 # How many stories with a tea party a solve may tell (V Weg 1,
 # 22.10.2026). Each world is told once for every way the evil players can
@@ -2104,9 +2123,8 @@ def _hatted(state, team, night, held, demon_alive):
         if key == "Leviathan" and night > 5:
             continue
         # A Summoner taken while the third night is still ahead summons a
-        # Demon beside the one in play — two living Demons (Stufe 2).
-        if key == "Summoner" and night <= 3:
-            continue
+        # Demon beside the one in play: two living Demons, reckoned since
+        # stage 2 (25.10.2026, `a_hatted_summoner_summons`).
         out.append(key)
     return out
 
@@ -2163,8 +2181,7 @@ def _tea_party_choices(view, state, night, slot):
     # Demon, both characters nobody holds (B Weg 2, J Weg 1). The other
     # Minions choose as before.
     spare_demons = [k for k in _hatted(state, "demon", night, held, True)]
-    spare_minions = [k for k in _hatted(state, "minion", night, held, True)
-                     if not (k == "Summoner" and night <= 3)]
+    spare_minions = _hatted(state, "minion", night, held, True)
     for demon in demons:
         for minion in seats:
             if minion in demons:
@@ -2247,13 +2264,88 @@ def tea_parties(world):
     return out
 
 
+# --------------------------------------------------------------------------
+# Two living Demons (Hatter stage 2, 25.10.2026, claude/hutmacher-stufe-2-
+# lesarten.md)
+# --------------------------------------------------------------------------
+# A Minion that chose the Summoner at a tea party while a Demon lives
+# summons on the third night — a Pukka on the second (their jinx) — if it
+# still holds it at its turn: any living player, itself and the Demon too,
+# into any Demon of the script nobody holds (E Weg 1). Choosing the Demon
+# makes it that Demon, and there is still one; anybody else is a second
+# living Demon. That night the deaths are arbitrary (their jinx, C Weg 1),
+# and from the next each Demon kills by its own ability. Every reading
+# that asks for "the Demon" means either (B Weg 1); good wins only once
+# both are dead. Taken at a tea party after its turn that night, it does
+# nothing (stage 3, C Weg 1).
+
+
+def hatted_summoners(view):
+    """The tea-party changes that made somebody the Summoner."""
+    return [c for c in getattr(view, "changes", ())
+            if isinstance(c, TeaParty) and c.role == "Summoner"]
+
+
+def _summons_on(change, night):
+    """Could a Summoner chosen at this tea party act on this night?"""
+    at = int(change.phase[1:])
+    if night != at:
+        return night > at
+    return change.slot is None \
+        or change.slot < slot_of("Summoner", night)
+
+
+@transition_rule
+def a_hatted_summoner_summons(world, state):
+    """Every way a Summoner chosen at a tea party summoned: "nobody" first
+    (it died first, was drunk or poisoned, or the board has not reached its
+    night), then each night it could, each player, each free Demon."""
+    tea = hatted_summoners(world)
+    if not tea:
+        return [((), 1.0)]
+    final = phase_index(state.final_phase())
+    n = state.n_players
+    out = [((), 1.0)]
+    for change in tea:
+        seat = change.seat
+        for night in (2, 3):
+            phase = f"N{night}"
+            if final < phase_index(phase) or not _summons_on(change, night):
+                continue
+            if seat not in state.alive_set(phase) \
+                    or world.role_at(seat, phase) != "Summoner":
+                continue
+            held = {world.role_at(p, phase) for p in range(n)}
+            for demon in _summonable(state):
+                if demon in held or (night == 2 and demon != "Pukka"):
+                    continue
+                for target in _summoned_seats(world, state, night, demon,
+                                              puppet=False):
+                    for extra in _typhon_neighbours(world, state, night,
+                                                    target, demon):
+                        out.append(((Summoned(phase, target, demon, "evil"),)
+                                    + extra, 1.0))
+    return out
+
+
+def summoned_beside(view):
+    """The `Summoned` change that made a second living Demon in this
+    story, or None: one made where a Demon already was, on another
+    seat."""
+    for change in getattr(view, "changes", ()):
+        if not isinstance(change, Summoned):
+            continue
+        if len(view.demons_at(change.phase)) > 1:
+            return change
+    return None
+
+
 def hatter_unreckoned(view, state):
     """What this story leaves out that the solver does not reckon yet, or
-    None: a tea party that could have made a second living Demon through
-    the Summoner ("two demons", K Weg 2, Hatter stage 2), or Lil' Monsta
-    taken in the middle of the game ("lil monsta", U Weg 2). A Hatter
-    dead at night ("hatter at night") is reckoned since stage 3c
-    (23.10.2026)."""
+    None: Lil' Monsta taken in the middle of the game ("lil monsta", U Weg
+    2). A Hatter dead at night ("hatter at night") is reckoned since stage
+    3c (23.10.2026), two living Demons through the Summoner ("two demons")
+    since stage 2 (25.10.2026)."""
     if not _hatter_on_board(state):
         return None
     final = phase_index(state.final_phase())
@@ -2280,15 +2372,6 @@ def hatter_unreckoned(view, state):
                 p in alive and TEAM[view.role_at(p, before)] == "demon"
                 for p in range(n)):
             return "lil monsta"
-        if night > 3 or "Summoner" not in state.script.keys:
-            continue
-        if any(view.role_at(p, before) == "Summoner" for p in range(n)):
-            continue
-        if any(p in alive and TEAM[view.role_at(p, before)] == "demon"
-               for p in range(n)) and any(
-                   p in alive and TEAM[view.role_at(p, before)] == "minion"
-                   for p in range(n)):
-            return "two demons"
     return None
 
 
@@ -2399,7 +2482,8 @@ def mastermind_marker(phase, seat):
 
 def is_mastermind_marker(change):
     return change.role is None and change.side is None \
-        and not isinstance(change, (Babysits, LilMonstaFell, NotSummoned))
+        and not isinstance(change, (Babysits, LilMonstaFell, NotSummoned,
+                                    HandedOn))
 
 
 class LilMonstaFell(Change):
@@ -2465,9 +2549,50 @@ def demon_lineages(world, state, cap=24):
             return [()]
         start, since = summoned.seat, phase_index(summoned.phase)
 
+    # A second living Demon a Summoner made (Hatter stage 2, 25.10.2026):
+    # each line is walked on its own, the second on top of the first, and
+    # a line may end with its Demon dead while the other goes on — which
+    # the story has to bear out once both are in (`_a_demon_left`).
+    beside = summoned_beside(world)
+    if beside is None:
+        return [line for line, _ends in _demon_line(
+            world, state, world, start, since, 0, None, cap)]
+    out = []
+    for first, ends in _demon_line(world, state, world, start, since, 0,
+                                   beside, cap):
+        view = Timeline(world, first) if first else world
+        for second, more in _demon_line(world, state, view, beside.seat,
+                                        phase_index(beside.phase), 1,
+                                        beside, cap):
+            story = first + second
+            if _a_demon_left(Timeline(world, story) if story else world,
+                             state, ends + more):
+                out.append(story)
+            if len(out) >= cap:
+                return out
+    return out
+
+
+def _a_demon_left(view, state, ends):
+    """Every Demon that fell with nobody to take over, while the game went
+    on, left another standing (Hatter stage 2, 25.10.2026)."""
+    for holder, phase in ends:
+        here = phase_index(phase)
+        if not any(d != holder and not any(phase_index(p) <= here
+                                           for p in state.died_at(d))
+                   for d in view.demons_at(phase)):
+            return False
+    return True
+
+
+def _demon_line(world, state, base, start, since, line, beside, cap):
+    """One Demon's line: every way it changed hands, as (changes, ends) —
+    `ends` the deaths it ended with while another Demon stood. `line` is
+    its place among the Demons (`Timeline.demons_at`); `beside` the
+    summoning that made a second one, or None."""
     found = []
 
-    def walk(view, holder, so_far, after=-1, held=frozenset()):
+    def walk(view, holder, so_far, after=-1, held=frozenset(), ends=()):
         if len(found) >= cap:
             return
         first = holder == start and since is not None and not so_far
@@ -2517,12 +2642,13 @@ def demon_lineages(world, state, cap=24):
                          and phase_index(c.phase) > after
                          and phase_index(c.phase) <= phase_index(check)),
                         None)
-            successor = view.demon_at(gave if gave is not None else check)
+            now = view.demons_at(gave if gave is not None else check)
+            successor = now[line] if len(now) > line else None
             if successor is not None and successor != holder \
                     and successor not in held:
-                walk(view, successor, so_far, after, held | {holder})
+                walk(view, successor, so_far, after, held | {holder}, ends)
                 return
-            found.append(so_far)
+            found.append((so_far, ends))
             return
         # A handover has to happen *later* than the one before it, and no
         # seat can hold the star twice. Both were true by construction
@@ -2537,10 +2663,10 @@ def demon_lineages(world, state, cap=24):
         # added worlds to two Bad Moon Rising boards.
         if phase is not None and (phase_index(phase) < after
                                   or holder in held):
-            found.append(so_far)
+            found.append((so_far, ends))
             return
         if phase is None:
-            found.append(so_far)          # they held it to the end
+            found.append((so_far, ends))  # they held it to the end
             return
         character = view.role_at(holder, phase)
         moves = []
@@ -2558,7 +2684,8 @@ def demon_lineages(world, state, cap=24):
         # follow have no Demon kill to explain. Marked, so the plan can be
         # told what that day needs.
         if _mastermind_day(view, state, phase, holder):
-            found.append(so_far + (mastermind_marker(phase, holder),))
+            found.append((so_far + (mastermind_marker(phase, holder),),
+                          ends))
 
         # No offers at all, and no Mastermind, means good won right there
         # and there is no story to tell about what came after.
@@ -2573,15 +2700,26 @@ def demon_lineages(world, state, cap=24):
         # her five — when the explosion had already taken them.
         if getattr(state, "game_over", False) \
                 and phase_index(phase) >= phase_index(state.final_phase()):
-            found.append(so_far)
+            found.append((so_far, ends))
+        # Beside a second Demon made by then, the line may simply end: the
+        # other goes on, and good has not won (B Weg 1). Not where the
+        # Scarlet Woman steps up — she does whenever she can (D Weg 1).
+        elif beside is not None \
+                and phase_index(beside.phase) <= phase_index(phase) \
+                and not any(view.role_at(m.seat, phase) == "ScarletWoman"
+                            for m in moves if m.seat is not None):
+            found.append((so_far, ends + ((holder, phase),)))
         for move in moves:
             if move.seat is None:
                 continue
-            grown = so_far + (move,)
-            walk(Timeline(world, grown), move.seat, grown,
-                 phase_index(phase), held | {holder})
+            # Which Demon this was, where two live (`Timeline.demons_at`).
+            mark = (() if beside is None
+                    else (HandedOn(move.phase, holder, slot=move.slot),))
+            grown = so_far + mark + (move,)
+            walk(Timeline(base, grown), move.seat, grown,
+                 phase_index(phase), held | {holder}, ends)
 
-    walk(world, start, (), -1 if since is None else since)
+    walk(base, start, (), -1 if since is None else since)
     return found
 
 
@@ -2615,9 +2753,26 @@ def the_demon_kills(world, state, night):
     """
     if night < 2:
         return []                         # nobody dies on the first night
-    demon = world.demon_at(f"N{night}")
-    if demon is None:
-        return []
+    # Each living Demon kills once, by its own ability (Hatter stage 2,
+    # C Weg 1): one cause each, named apart so each has its own one.
+    out = []
+    for i, demon in enumerate(world.demons_at(f"N{night}")):
+        for cause in _the_demon_kills(world, state, night, demon):
+            out.append(cause if i == 0
+                       else cause._replace(name=f"Demon {i + 1}"))
+    return out
+
+
+def _demon_holding(world, phase, role, at=None):
+    """The Demon at this moment that holds this character (read at `at`,
+    if given), or None — either of two (Hatter stage 2, B Weg 1)."""
+    for demon in world.demons_at(phase):
+        if world.role_at(demon, at or phase) == role:
+            return demon
+    return None
+
+
+def _the_demon_kills(world, state, night, demon):
     # Each Demon that kills differently has its own rule below, and says
     # so by registering its name. Everything else kills the ordinary way.
     #
@@ -3698,19 +3853,18 @@ def a_yaggababble_kills_for_each_time(world, state, night):
     if not _in_bag(state, "Yaggababble") or night < 2:
         return []
     phase = f"N{night}"
-    demon = world.demon_at(phase)
+    demon = _demon_holding(world, phase, "Yaggababble")
     # Whoever held it when its deaths were counted. One that died tonight
     # handed the star on *after* that — to a Scarlet Woman — and the
     # night is one moment here, so the heir would read as having killed
     # the Demon it inherited from. As for the Exorcist: only a Demon that
     # died *as* one — a Snake Charmer swaps at 11, and the new Yaggababble
     # may well take the old one, a charmer by then.
-    began = world.demon_at(f"B{night - 1}")
+    began = _demon_holding(world, f"B{night - 1}", "Yaggababble", phase)
     if began is not None and began != demon \
-            and phase in state.died_at(began) \
-            and world.role_at(began, phase) == "Yaggababble":
+            and phase in state.died_at(began):
         demon = began
-    elif demon is None or world.role_at(demon, phase) != "Yaggababble":
+    elif demon is None:
         return []
     if demon not in state.alive_set(phase):
         return []
@@ -3765,7 +3919,7 @@ def a_leviathan_fells_a_banshee(world, state, night):
         return []
     phase = f"N{night}"
     lev = _leviathan_at(world, state, phase)
-    if lev is None or world.demon_at(phase) != lev:
+    if lev is None or lev not in world.demons_at(phase):
         return []
     reach = frozenset(
         p for p in state.alive_set(phase)
@@ -4057,8 +4211,7 @@ def an_exorcist_sends_the_demon_to_bed(world, state, night, seat, kind):
     phase = f"N{night}"
     # Beside a Pukka what counts is last night's choice (below), so the
     # Exorcists of last night.
-    demon = world.demon_at(phase)
-    pukka = demon is not None and world.role_at(demon, phase) == "Pukka"
+    pukka = _demon_holding(world, phase, "Pukka") is not None
     when = f"N{night - 1}" if pukka else phase
     return [shield
             for exorcist in _holders(world, state, "Exorcist", when)
@@ -4069,8 +4222,9 @@ def an_exorcist_sends_the_demon_to_bed(world, state, night, seat, kind):
 def _an_exorcists_choice(world, state, night, exorcist):
     """One Exorcist's shield — the holder's or a Philosopher's (13.10.2026)."""
     phase = f"N{night}"
-    demon = world.demon_at(phase)
-    if demon is not None and world.role_at(demon, phase) == "Pukka":
+    # Of two living Demons, naming either stops the Demons' kills here: a
+    # shield does not know whose kill it meets (Hatter stage 2, generous).
+    if _demon_holding(world, phase, "Pukka") is not None:
         # A Pukka is the exception, because what dies tonight was chosen
         # last night. Naming it stops it *choosing* — so yesterday's
         # victim still dies, and the quiet night is the one after, when
@@ -4084,7 +4238,8 @@ def _an_exorcists_choice(world, state, night, exorcist):
         if night < 3 or exorcist not in state.alive_set(before):
             return []
         picked = _chosen(state, "Exorcist", night - 1, by=exorcist)
-        if picked is not None and world.demon_at(before) not in picked:
+        if picked is not None and not any(
+                d in picked for d in world.demons_at(before)):
             return []
         # It had to be working *then*, which is not tonight's question.
         return [death_causes.Shield("Exorcist", chosen=True)]
@@ -4103,20 +4258,28 @@ def _an_exorcists_choice(world, state, night, exorcist):
     # here, so the Outsider the Fang Gu was about to jump into read as
     # the Demon the Exorcist had named, the kill that followed as
     # impossible, and the game was lost (07.10.2026).
-    demon = world.demon_at(phase)
-    began = world.demon_at(f"B{night - 1}")
-    # Lil' Monsta's babysitter is chosen at 35, after the Exorcist: it is
-    # last night's that the Exorcist can name (F, Weg 1, 21.10.2026).
-    if babysitter_at(world, phase) is not None:
-        demon = began
-    # Only a Demon that died *as* one. A Snake Charmer swaps at 11, ahead
-    # of the Exorcist, and the new Demon may then kill the old — which
-    # is a charmer by now, and was already one when the Exorcist chose.
-    if began is not None and began != demon \
-            and phase in state.died_at(began) \
-            and TEAM[world.role_at(began, phase)] == "demon":
-        demon = began
-    if picked is not None and demon not in picked:
+    named = set()
+    nows, befores = world.demons_at(phase), world.demons_at(f"B{night - 1}")
+    sitter = babysitter_at(world, phase) is not None
+    # Line by line, where two Demons live (Hatter stage 2, 25.10.2026).
+    for i in range(max(len(nows), len(befores), 1)):
+        demon = nows[i] if i < len(nows) else None
+        began = befores[i] if i < len(befores) else None
+        # Lil' Monsta's babysitter is chosen at 35, after the Exorcist: it
+        # is last night's that the Exorcist can name (F, Weg 1,
+        # 21.10.2026).
+        if sitter:
+            demon = began
+        # Only a Demon that died *as* one. A Snake Charmer swaps at 11,
+        # ahead of the Exorcist, and the new Demon may then kill the old —
+        # which is a charmer by now, and was already one when the
+        # Exorcist chose.
+        if began is not None and began != demon \
+                and phase in state.died_at(began) \
+                and TEAM[world.role_at(began, phase)] == "demon":
+            demon = began
+        named.add(demon)
+    if picked is not None and not named & set(picked):
         return []
     # And it cuts the other way. Named and written down, the Demon does
     # not act tonight — so a Demon kill on that night says the Exorcist
@@ -4361,7 +4524,7 @@ def mastermind_days(state, allow_good_lies=False, max_worlds=200_000):
         weight = prior_weight(world, state) * cost
         total += weight
         for day, seat in executed:
-            if view.demon_at(f"D{day}") == seat:
+            if seat in view.demons_at(f"D{day}"):
                 was_demon[seat] += weight
     if total <= 0:
         return []
@@ -5053,6 +5216,25 @@ def _plain_failures(world, state, outcome=None):
                     and summoner in state.alive_set("N3"):
                 failures[night].add(summoner)
 
+    # A Summoner chosen at a tea party (Hatter stage 2, 25.10.2026): working
+    # when it made a Demon, and drunk or poisoned on a third night it
+    # reached holding it, alive, with none made.
+    if _in_bag(state, "Summoner") and _hatter_on_board(state):
+        made = next((c for c in getattr(world, "changes", ())
+                     if isinstance(c, Summoned)), None)
+        final = phase_index(state.final_phase())
+        for change in hatted_summoners(world):
+            seat = change.seat
+            if made is not None:
+                if not (_on_board(state, "Courtier")
+                        or _on_board(state, "Preacher")):
+                    working.setdefault(int(made.phase[1:]), set()).add(seat)
+            elif final >= phase_index("D3") and _summons_on(change, 3) \
+                    and seat in state.alive_set("N3") \
+                    and "N3" not in state.died_at(seat) \
+                    and world.role_at(seat, "N3") == "Summoner":
+                failures[3].add(seat)
+
     # The Hatter (22.10.2026): whoever chose a new character did so
     # because a Hatter died working. Nobody choosing asks nothing — they
     # may always keep what they have.
@@ -5607,9 +5789,8 @@ def _plain_failures(world, state, outcome=None):
 
 def _yaggababble_at(world, state, phase):
     """The living Demon at this moment, if it is a Yaggababble."""
-    demon = world.demon_at(phase)
-    if demon is None or world.role_at(demon, phase) != "Yaggababble" \
-            or demon not in state.alive_set(phase):
+    demon = _demon_holding(world, phase, "Yaggababble")
+    if demon is None or demon not in state.alive_set(phase):
         return None
     return demon
 
@@ -5874,8 +6055,7 @@ def killed_by_a_vigormortis(world, state, who, phase):
     first = min(gone, key=phase_index)
     if first[0].upper() != "N":
         return False
-    killer = world.demon_at(first)
-    if killer is None or world.role_at(killer, first) != "Vigormortis":
+    if _demon_holding(world, first, "Vigormortis") is None:
         return False
     now = holding_now(world, state, "Vigormortis", phase)
     return now is not None and now in state.alive_set(phase)
@@ -5927,8 +6107,7 @@ def a_vigormortis_poisons_beside_its_dead_minions(world, state, night):
         first = min(gone, key=phase_index)
         if first[0].upper() != "N":
             continue
-        killer = world.demon_at(first)
-        if killer is None or world.role_at(killer, first) != "Vigormortis":
+        if _demon_holding(world, first, "Vigormortis") is None:
             continue
         beside = _nearest_townsfolk(world, state, who, phase,
                                     state.n_players)
@@ -7082,16 +7261,39 @@ def _best_story_told(world, state, outcome, viable):
                    for c in got if isinstance(c, TeaParty)]
         if parties:
             tea = (min(parties), set())
-            stories = sorted(stories, key=lambda got: any(
-                isinstance(c, TeaParty) for c in got[0]))
+    # And a Summoner chosen at a party (Hatter stage 2, 25.10.2026): the
+    # stories where it summoned nobody go before those where it did. One
+    # that could not be explained without looking at anything — sides too
+    # — from the earliest summoning on cannot be with any summoning that
+    # shares what came before: that changes nothing it looked at.
+    summ = None
+    if SUMMON_TEA_PRUNE and tea is not None \
+            and "Summoner" in state.script.keys:
+        made = [moment_of(c) for got, _w in stories
+                for c in got if isinstance(c, Summoned)]
+        if made:
+            summ = (min(made), set())
+    if tea is not None:
+        def _order(got):
+            party = any(isinstance(c, TeaParty) for c in got[0])
+            return (party, party and any(isinstance(c, Summoned)
+                                         for c in got[0]))
+        stories = sorted(stories, key=_order)
     for changes, weight in stories:
         plain = None
+        before = None
         if tea is not None:
             rest = tuple(c for c in changes if not isinstance(c, TeaParty))
             if rest != changes:
                 if rest in tea[1] and not CHECK_RECALLS:
                     STORIES["skipped"] += 1
                     continue
+                if summ is not None:
+                    before = tuple(c for c in changes
+                                   if moment_of(c) < summ[0])
+                    if before in summ[1] and not CHECK_RECALLS:
+                        STORIES["skipped"] += 1
+                        continue
                 TEA_TOLD[0] += 1
             else:
                 plain = rest
@@ -7100,22 +7302,27 @@ def _best_story_told(world, state, outcome, viable):
         while at < len(told):
             changes = told[at]
             at += 1
-            if plain is not None and at == 1:
-                TEA_READS[0] = [tea[0], False]
+            watch = at == 1 and (plain is not None or before is not None)
+            if watch:
+                TEA_READS[0] = ([tea[0], False] if plain is not None
+                                else [summ[0], False, "sides"])
                 fresh = STORIES["explained"]
             try:
                 cost, marks, asked = _explain_or_recall(
                     world, changes, state, outcome is not None, told_before)
             finally:
-                if plain is not None and at == 1:
+                if watch:
                     looked = TEA_READS[0][1]
                     TEA_READS[0] = None
             # Only a story really told here says what it looked at; one
             # recalled from another (`_explain_or_recall`) does not.
-            if plain is not None and at == 1 and cost is None \
+            if watch and cost is None \
                     and not looked and (not _LISTENING[0]
                                         or STORIES["explained"] > fresh):
-                tea[1].add(plain)
+                if plain is not None:
+                    tea[1].add(plain)
+                else:
+                    summ[1].add(before)
             # A story that leaves something to pay for, or does not fit
             # at all, is told again with each player a Mezepheles could
             # have turned (`a_mezepheles_may_have_turned`).
@@ -7292,11 +7499,31 @@ def _story_shares(world, viable, state=None):
             and barber_claimants(state):
         viable = [(cost * _barber_share(world, changes, state), changes)
                   for cost, changes in viable]
+    # A Summoner chosen at a tea party is one choice, however many ways it
+    # then summoned: each way gets its share of that one (Hatter stage 2,
+    # 25.10.2026), as a random pick of player and Demon would.
+    if state is not None and len(viable) > 1 and _hatter_on_board(state) \
+            and "Summoner" in state.script.keys:
+        viable = [(cost * _summon_share(world, changes, state), changes)
+                  for cost, changes in viable]
     total = sum(cost for cost, _changes in viable)
     if total <= 0:
         return []
     return [(Timeline(world, changes) if changes else world, cost / total)
             for cost, changes in viable]
+
+
+def _summon_share(world, changes, state):
+    """One over the number of ways the tea party's Summoner could have
+    summoned, for a story where it did; 1 otherwise."""
+    if not any(isinstance(c, Summoned) for c in changes):
+        return 1.0
+    tea = tuple(c for c in changes if isinstance(c, TeaParty))
+    if not any(c.role == "Summoner" for c in tea):
+        return 1.0
+    ways = len(_offers(a_hatted_summoner_summons, Timeline(world, tea),
+                       state)) - 1
+    return 1.0 / ways if ways > 0 else 1.0
 
 
 def explanation_cost(world, state):
@@ -7374,15 +7601,14 @@ def _the_game_went_on(world, state):
         return True
     for phase in _moments_with_two_left(state):
         board = state.alive_set(phase)
-        demon = world.demon_at(phase)
-        if demon is None:
-            continue
-        if demon in board:
-            return False                  # it would have won there and then
-        if world.role_at(demon, phase) == "Zombuul" \
-                and _zombuul_still_going(world, state, demon, phase) \
-                and len(board) < 2:
-            return False                  # it and one other: won as well
+        # Either of two living Demons wins there (Hatter stage 2).
+        for demon in world.demons_at(phase):
+            if demon in board:
+                return False              # it would have won there and then
+            if world.role_at(demon, phase) == "Zombuul" \
+                    and _zombuul_still_going(world, state, demon, phase) \
+                    and len(board) < 2:
+                return False              # it and one other: won as well
     return True
 
 
@@ -8269,7 +8495,7 @@ def analyze(state, allow_good_lies=False, max_worlds=EXACT_LIMIT,
         for story, share in _story_shares(world, viable, state):
             _tally(acc, world, story, state, wt * share, n, now)
             for day, seat in executed:
-                if story.demon_at(f"D{day}") == seat:
+                if seat in story.demons_at(f"D{day}"):
                     hanged[seat] += wt * share
         # Blame is a share rather than a count, so a spread of worlds
         # settles it as well as all of them — and working it out for
@@ -8345,7 +8571,7 @@ def _tally(acc, world, view, state, weight, n, phase):
     "who is the Demon" is who holds it now, not who was dealt it. Lying
     is read from the deal, since a claim is about the whole game.
     """
-    demon = view.demon_at(phase)
+    demons = view.demons_at(phase)
     for p in range(n):
         role = view.role_at(p, phase)
         acc["roles"][p][role] += weight
@@ -8358,7 +8584,7 @@ def _tally(acc, world, view, state, weight, n, phase):
                 acc["evil"][p] += weight / len(sides)
         elif view.evil_at(p, phase):
             acc["evil"][p] += weight
-        if p == demon:
+        if p in demons:
             acc["demon"][p] += weight
         if believes_another(role):
             acc["drunk"][p] += weight
@@ -8712,3 +8938,16 @@ def diagnose(state, allow_good_lies=False, ceiling=120_000):
                              "label": f"the quiet night {night}"})
 
     return {"culprits": culprits, "complete": complete}
+
+
+# Last of the causes, as in the JavaScript (Hatter stage 2, 25.10.2026).
+@death_causes.cause_rule
+def a_second_demon_makes_deaths_arbitrary(world, state, night):
+    """"If the Summoner creates a second living Demon, deaths tonight are
+    arbitrary" (their jinx, C Weg 1): the same shape as the Pit-Hag's."""
+    made = summoned_beside(world)
+    if made is None or made.phase != f"N{night}":
+        return []
+    return [death_causes.Cause(
+        "Summoner", death_causes.OTHER, frozenset(range(state.n_players)),
+        capacity=state.n_players, cost=1.0, unstoppable=True)]

@@ -277,6 +277,9 @@ class AsBoard:
     def demon_at(self, phase):
         return self.world.demon_at(phase)
 
+    def demons_at(self, phase):
+        return self.world.demons_at(phase)
+
 
 def _droisoned_as_the_night_began(deal, night):
     """`droisoned_at`, asked of the board before tonight had happened.
@@ -611,7 +614,18 @@ def hidden_from(deal, night, heard):
         slot = (getattr(deal, "tea_slot", None) or {}).get(night)
         if slot is not None:
             out[("tea_slot", night)] = slot
-    made = getattr(deal, "summoned", None)
+    # Or the one a Summoner chosen at a tea party made beside the Demon
+    # (Hatter stage 2, 25.10.2026), whose kill is its own.
+    made = getattr(deal, "summoned", None) \
+        or getattr(deal, "tea_summoned", None)
+    # The seat that acted as it tonight — a Scarlet Woman that took over
+    # later in the night is not it.
+    second = (getattr(deal, "demon2_seat", None) or {}).get(night)
+    if second is not None:
+        out[("second_demon", night)] = second
+        aim = (getattr(deal, "demon_aimed2", None) or {}).get(night)
+        if aim is not None:
+            out[("demon2", night)] = aim
     if made is not None and made[0] == night:
         out[("summoned", night)] = (made[1], made[2],
                                     tuple(getattr(deal, "summoned_extra",
@@ -1592,6 +1606,10 @@ def walk(deal, night, hidden):
                     state.alive.add(back)
                     state.log.append((slot, "raised", back, "Shabaloth"))
                 aimed = hidden.get(("demon", night))
+                # The second of two Demons has an aim of its own (Hatter
+                # stage 2).
+                if seat == hidden.get(("second_demon", night)):
+                    aimed = hidden.get(("demon2", night))
                 # A Yaggababble chooses nobody: the Storyteller takes a
                 # player for each time it said its phrase, so no Goon
                 # answers. A Leviathan kills nobody at all, and points at

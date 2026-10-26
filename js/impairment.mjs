@@ -28,9 +28,9 @@ import {LISTENING, beginReads, endReads, phaseIndex, replayReads}
  * a living holder, else the first. A copy of info.mjs's `holdingNow`,
  * kept here so this module imports nothing above it (Stelle 59). */
 function holdingNow(w, s, role, phase) {
-  const demon = w.demonAt(phase);
-  if (demon !== null && demon !== undefined && w.roleAt(demon, phase) === role)
-    return demon;
+  // Either of two living Demons (Hatter stage 2).
+  for (const demon of w.demonsAt(phase))
+    if (w.roleAt(demon, phase) === role) return demon;
   const alive = s.aliveSet(phase);
   let first = null;
   for (let seat = 0; seat < w.roles.length; seat++)
@@ -52,9 +52,8 @@ export function killedByAVigormortis(world, state, who, phase) {
   if (!gone.length) return false;
   const first = gone.reduce((a, b) => phaseIndex(a) <= phaseIndex(b) ? a : b);
   if (first[0].toUpperCase() !== "N") return false;
-  const killer = world.demonAt(first);
-  if (killer === null || killer === undefined ||
-      world.roleAt(killer, first) !== "Vigormortis") return false;
+  if (!world.demonsAt(first).some(
+      d => world.roleAt(d, first) === "Vigormortis")) return false;
   const now = holdingNow(world, state, "Vigormortis", phase);
   return now !== null && state.aliveSet(phase).has(now);
 }

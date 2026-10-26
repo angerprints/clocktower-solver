@@ -59,7 +59,7 @@ condition("Undertaker", (world, state, seat, night) =>
  */
 // Babysitting Lil' Monsta is no waking of her own (G, Weg 1).
 condition("ScarletWoman", (world, state, seat, night) =>
-  world.demonAt(`N${night}`) === seat && world.demonAt("N1") !== seat
+  world.demonsAt(`N${night}`).includes(seat) && world.demonAt("N1") !== seat
   && babysitterAt(world, `N${night}`) !== seat);
 
 /** Shown its bluffs on the first night, its own ability (G, Weg 1,
@@ -544,7 +544,7 @@ export function uncertain(world, state, seat, night) {
   }
   if (!state.script.keys.includes("Exorcist")
       && !takenByAPhilosopher(state, "Exorcist")) return false;
-  if (world.demonAt(phase) !== seat) return false;
+  if (!world.demonsAt(phase).includes(seat)) return false;
   // A babysitter wakes as whatever it holds (21.10.2026).
   if (babysitterAt(world, phase) === seat) return false;
   // A Demon that does not wake at night has nothing for an Exorcist to

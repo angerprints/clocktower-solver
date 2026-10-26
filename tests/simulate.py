@@ -240,16 +240,26 @@ class Deal:
 
     def demon_at(self, phase):
         """The seat holding the Demon at this phase."""
-        from botc.info import phase_index
-        here = phase_index(phase)
         # Whichever Demon holds it *at this phase*, not whichever was
         # dealt one. Two bugs have lived here: the name was hardcoded to
         # "Imp", so every Bad Moon Rising and Sects & Violets game
         # reported no Demon at all; and it read the deal rather than the
         # changes, so a Demon that swapped away with a Snake Charmer went
         # on killing from a seat that was no longer the Demon.
+        if getattr(self, "_as_demon", None) is not None:
+            return self._as_demon
+        return self._first_demon(phase)
+
+    def _first_demon(self, phase):
+        """The first line's Demon, whoever is being asked as it."""
+        from botc.info import phase_index
+        here = phase_index(phase)
+        # A second Demon a Summoner made is not the first one's line
+        # (Hatter stage 2, 25.10.2026): `demons_at` has it.
+        second = {seat for _at, seat in getattr(self, "line2", ())}
         seat = next((i for i in range(len(self.roles))
-                     if TEAM[self.role_at(i, phase)] == "demon"), None)
+                     if TEAM[self.role_at(i, phase)] == "demon"
+                     and i not in second), None)
         # Lil' Monsta's babysitter: chosen at its place in the night, so
         # whatever reads before that tonight still sees last night's.
         if seat is None and self.babysat:
@@ -261,6 +271,28 @@ class Deal:
             if phase_index(when) <= here:
                 seat = heir
         return seat
+
+    def demons_at(self, phase):
+        """Every Demon at this phase: the first line's, and a second one a
+        Summoner made at a tea party, once it is made (Hatter stage 2,
+        25.10.2026)."""
+        from botc.info import phase_index
+        first = self._first_demon(phase)
+        out = [first] if first is not None else []
+        here = phase_index(phase)
+        holder = None
+        for when, seat in getattr(self, "line2", ()):
+            if phase_index(when) <= here:
+                holder = seat
+        if holder is not None and holder not in out:
+            out.append(holder)
+        return out
+
+    def second_demon(self, phase):
+        """The second line's Demon at this phase, or None."""
+        got = self.demons_at(phase)
+        return got[1] if len(got) > 1 and getattr(self, "line2", ()) \
+            else None
 
     def role_at(self, seat, phase):
         """The character this seat held at this phase.
@@ -1064,6 +1096,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.marionette_slot = marionette_slot
     d.marionette_made = None
     d.summoned = None                   # (night, seat, Demon)
+    # A Summoner a Minion chose at a tea party (Hatter stage 2,
+    # 25.10.2026): (seat, night, slot or None), and the second Demon's
+    # line once it summoned beside the first — [(phase, seat)].
+    d.tea_summoner = None
+    d.line2 = []
     d.summon_failed = None              # the night it made none
     # A Hatter on the script, or a Philosopher that may take one: the
     # tea parties, {(seat, night): what it chose}, and the nights one
@@ -1177,6 +1214,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # Lunatic, the Exorcist and every Demon (21.10.2026).
         if d.summoner is not None:
             _summoner_summons(d, night, rng, heard)
+        # And one a Minion chose at a tea party (Hatter stage 2).
+        if d.tea_summoner is not None:
+            _hatted_summoner_summons(d, night, rng, heard)
 
         # A Pukka poisons on the *first* night and kills from the
         # second, so it is the one Demon that acts before anybody else
@@ -1216,11 +1256,37 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 # An Al-Hadikhia's three choose for themselves; whoever
                 # dies of it has died to the Demon all the same, and a
                 # Grandmother grieves (21.10.2026).
-                aimed = (_al_hadikhia_chooses(d, night, rng, heard)
-                         if _al_hadikhia_acts(d, night)
-                         else _lil_monsta_night(d, night, rng, heard)
-                         if d.lil_monsta
-                         else _demon_kills(d, night, rng))
+                def first_kills():
+                    if not _first_demon_stands(d, f"N{night}"):
+                        return []
+                    return list(
+                        _al_hadikhia_chooses(d, night, rng, heard)
+                        if _al_hadikhia_acts(d, night)
+                        else _lil_monsta_night(d, night, rng, heard)
+                        if d.lil_monsta
+                        else _demon_kills(d, night, rng))
+                # A second Demon a Summoner made kills too, by its own
+                # ability (Hatter stage 2, C and F Weg 1) — each at its own
+                # place in the night, and one the other took first does
+                # not.
+                second = d.second_demon(f"N{night}") if d.line2 else None
+                if second is None:
+                    aimed = first_kills()
+                elif _second_goes_first(d, night):
+                    later = _second_demon_kills(d, night, rng, heard)
+                    # Dead before the other acts: a guard it set lapses.
+                    for v in later:
+                        d.deaths[v] = f"N{night}"
+                    aimed = later + [v for v in (
+                        first_kills() if demon not in later else [])
+                        if v not in later]
+                else:
+                    aimed = first_kills()
+                    for v in aimed:
+                        d.deaths[v] = f"N{night}"
+                    aimed = aimed + [v for v in (
+                        _second_demon_kills(d, night, rng, heard)
+                        if second not in aimed else []) if v not in aimed]
                 # What it *aimed* at, kept for the replay: a Shabaloth
                 # kill sunk into a corpse leaves no body, so reading the
                 # deaths back gives an incomplete assignment.
@@ -1366,6 +1432,13 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             d.game_ends_after = night
             break
 
+        # Two Demons, and one or both fell tonight: the Scarlet Woman, or
+        # that line ends — and the game, if none stands (Hatter stage 2).
+        if d.line2 and _demons_fall(d, f"N{night}"):
+            d.ended_at, d.ended_why = f"N{night}", "demons dead"
+            d.game_ends_after = night
+            break
+
         _nobody_returns_only_to_die(d, night)
 
         # The Cult Leader takes a living neighbour's side at 48, then 66:
@@ -1479,6 +1552,13 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             if _lleech_follows(d, f"D{night}", night, rng, by_day=True,
                                hanged=executed):
                 d.ended_at, d.ended_why = f"E{night}", "lleech"
+                d.game_ends_after = night
+                break
+            # Two Demons, and one fell today, in daylight or on the gallows
+            # (Hatter stage 2).
+            if d.line2 and (_demons_fall(d, f"D{night}")
+                            or _demons_fall(d, f"E{night}")):
+                d.ended_at, d.ended_why = f"E{night}", "demons dead"
                 d.game_ends_after = night
                 break
             # Roshambo on the gallows: only ever a working Psychopath.
@@ -1624,16 +1704,17 @@ def _evil_has_won(d, phase):
         return False
     standing = [p for p in range(d.n)
                 if d.deaths.get(p) is None or p == d.zombuul_up]
-    return len(standing) <= 2 and d.demon_at(phase) in standing
+    return len(standing) <= 2 and any(p in standing
+                                      for p in d.demons_at(phase))
 
 
 def _a_vortox_takes_the_day(d, day):
     """Is the Demon a Vortox today, with its ability working?"""
     phase = f"E{day}"
-    seat = d.demon_at(phase)
-    return (seat is not None and d.role_at(seat, phase) == "Vortox"
-            and d.deaths.get(seat) is None
-            and d.working(seat, day, by_day=True))
+    return any(d.role_at(seat, phase) == "Vortox"
+               and d.deaths.get(seat) is None
+               and d.working(seat, day, by_day=True)
+               for seat in d.demons_at(phase))
 
 
 def _ogre_picks(d, heard, rng):
@@ -2021,14 +2102,12 @@ def _a_vigormortis_killed(d, seat, phase):
         return False
     if TEAM[d.role_at(seat, phase)] != "minion":
         return False
-    killer = d.demon_at(gone)
-    if killer is None or d.role_at(killer, gone) != "Vigormortis":
+    if _demon_holding(d, gone, "Vigormortis") is None:
         return False
     if seat not in d.demon_killed.get(int(gone[1:]), ()):
         return False
-    now = d.demon_at(phase)
-    return now is not None and now in d.alive_at(phase) \
-        and d.role_at(now, phase) == "Vigormortis"
+    now = _demon_holding(d, phase, "Vigormortis")
+    return now is not None and now in d.alive_at(phase)
 
 
 def _devils_advocate_picks(d, night, rng):
@@ -2378,6 +2457,11 @@ def _barber_swap(d, night, rng):
         return []
     phase = f"N{night}"
     demon = d.demon_at(phase)
+    # "Not another Demon": the second one is left where it is (Hatter
+    # stage 2).
+    living = [p for p in living if p != d.second_demon(phase)]
+    if len(living) < 2:
+        return []
     minions = [p for p in living if TEAM[d.role_at(p, phase)] == "minion"]
     if demon in living and minions and rng.random() < 0.5:
         a, b = demon, rng.choice(minions)
@@ -2604,6 +2688,9 @@ def _slayer_shoots(d, day, rng, heard):
         if _babysits(d, target, phase):
             d.deaths[target] = phase
             return _lil_monsta_check(d, phase)
+        if d.line2 and target == d.second_demon(phase):
+            d.deaths[target] = phase
+            return _second_line_falls(d, phase)
         if TEAM[held] == "demon":
             heir = _heir(d, phase, rng)
             if heir is not None and d.roles[heir] == "ScarletWoman" \
@@ -2613,7 +2700,8 @@ def _slayer_shoots(d, day, rng, heard):
                 d.changes.append((phase, heir, held))
                 return False
             d.deaths[target] = phase
-            return True                   # good has won
+            # Good has won — unless a second Demon stands (Hatter stage 2).
+            return not _another_demon_stands(d, phase, target)
         d.deaths[target] = phase
         return False
     return False
@@ -3133,7 +3221,8 @@ def _lleech_follows(d, phase, night, rng, by_day=False, hanged=None):
         at = f"D{night}" if by_day else f"N{night}"
         was_demon = d.demon_at(at) == lleech
         d.deaths[lleech] = at
-        if not was_demon:
+        # Beside a second Demon, `_demons_fall` settles it (Hatter stage 2).
+        if not was_demon or d.line2:
             continue
         sw = next((p for p in d.alive_at(at)
                    if d.role_at(p, at) == "ScarletWoman"
@@ -3376,9 +3465,8 @@ def _mezepheles_turns(d, night, rng):
 
 def _living_leviathan(d, phase):
     """The seat holding the Leviathan now, standing and the Demon."""
-    seat = d.demon_at(phase)
-    if seat is None or d.role_at(seat, phase) != "Leviathan" \
-            or d.deaths.get(seat) is not None:
+    seat = _demon_holding(d, phase, "Leviathan")
+    if seat is None or d.deaths.get(seat) is not None:
         return None
     return seat
 
@@ -3458,9 +3546,8 @@ def _yaggababble_speaks(d, day, rng):
     if "Yaggababble" not in d.script.keys:
         return
     phase = f"D{day}"
-    demon = d.demon_at(phase)
-    if demon is None or d.role_at(demon, phase) != "Yaggababble" \
-            or d.deaths.get(demon) is not None:
+    demon = _demon_holding(d, phase, "Yaggababble")
+    if demon is None or d.deaths.get(demon) is not None:
         return
     roll = rng.random()
     d.yag_said[day] = (0 if roll < 0.2 else 1 if roll < 0.75
@@ -3562,7 +3649,8 @@ def _hold_a_day(d, day, rng):
     drops = None
     if "Yaggababble" in d.script.keys and d.yag_said.get(day) \
             and rng.random() < 0.06:
-        yagga = d.demon_at(phase)
+        yagga = _demon_holding(d, phase, "Yaggababble") \
+            or d.demon_at(phase)
         if yagga is not None and d.working(yagga, day, by_day=True):
             pool = [p for p in nominators if p not in (yagga, cursed)]
             drops = rng.choice(pool) if pool else None
@@ -3973,8 +4061,6 @@ def _tea_spare(d, team, night, held, demon_alive):
             continue
         if key == "Leviathan" and night > 5:
             continue                      # their jinx: not after day 5
-        if key == "Summoner" and night <= 3:
-            continue                      # a second Demon (Stufe 2)
         out.append(key)
     return out
 
@@ -4052,13 +4138,22 @@ def _tea_party(d, night, rng, at_night=False):
             continue
         if spare("minion"):
             take(minion, rng.choice(spare("minion")))
+    # Who swapped with whom, for whose line the star stays on.
+    gave = {}
+    for seat, role in chosen.items():
+        if TEAM[role] == "minion" and seat in demons:
+            gave["minion"] = seat
     for seat, role in sorted(chosen.items()):
         side = d.side_at(seat, before)
         d.changes.append((phase, seat, role))
         d.side_changes.append((phase, seat, role, side))
         d.tea_made[(seat, night)] = role
+        if role == "Summoner" and night <= 3:
+            d.tea_summoner = (seat, night,
+                              d.tea_slot.get(night) if at_night else None)
         if TEAM[role] == "demon":
-            d.handovers.append((phase, seat))
+            old = seat if seat in demons else gave.get("minion", seat)
+            _hand_on(d, phase, old, seat)
             # A new instance: it starts afresh (O Weg 1).
             if role == "FangGu":
                 d.fanggu_jumped = False
@@ -4109,10 +4204,11 @@ def _confirmed(d, seat, heard, phase):
     return False
 
 
-def _summoner_has_it(d, night):
+def _summoner_has_it(d, night, seat=None):
     """Is the Summoner's ability worked tonight — by itself, or by the
-    Storyteller where a Courtier or a Preacher took it (their jinxes)?"""
-    s = d.summoner
+    Storyteller where a Courtier or a Preacher took it (their jinxes)?
+    `seat` for one a Minion chose at a tea party (Hatter stage 2)."""
+    s = d.summoner if seat is None else seat
     if d.working(s, night):
         return True
     courtier = any(holder == s and n <= night <= n + 2
@@ -4208,6 +4304,186 @@ def _summoner_summons(d, night, rng, heard):
                 d.side_changes.append((phase, other, role, "evil"))
                 d.summoned_extra = tuple(getattr(d, "summoned_extra",
                                                  ())) + ((other, role),)
+
+
+def _demon_holding(d, phase, role):
+    """The Demon at this phase that holds this character — either of two
+    (Hatter stage 2) — or None."""
+    for seat in d.demons_at(phase):
+        if d.role_at(seat, phase) == role:
+            return seat
+    return None
+
+
+def _hand_on(d, phase, old, heir):
+    """The star moves from `old` to `heir`, on whichever line `old` is
+    (Hatter stage 2, 25.10.2026)."""
+    if d.line2 and old == d.second_demon(phase):
+        d.line2.append((phase, heir))
+    else:
+        d.handovers.append((phase, heir))
+
+
+def _hatted_summoner_summons(d, night, rng, heard):
+    """A Summoner chosen at a tea party summons as the dealt one does —
+    on the third night, a Pukka mostly on the second — beside the Demon in
+    play: a second living Demon (Hatter stage 2, F Weg 1). Chosen after
+    its turn that night, it does nothing (stage 3, C Weg 1)."""
+    from botc.catalogue import slot_of
+    if d.tea_summoner is None or d.line2 or night not in (2, 3):
+        return
+    seat, at, slot = d.tea_summoner
+    if night < at or (night == at and slot is not None
+                      and slot > slot_of("Summoner", night)):
+        return
+    phase = f"N{night}"
+    if seat not in d.alive_at(phase) or d.deaths.get(seat) is not None \
+            or d.role_at(seat, phase) != "Summoner":
+        return
+    held = {d.role_at(p, phase) for p in range(d.n)}
+    allowed = [k for k in d.script.demons
+               if k not in ("LilMonsta", "Legion", "Riot") and k not in held]
+    if not allowed:
+        return
+    if getattr(d, "tea_summon_pick", None) not in allowed:
+        d.tea_summon_pick = rng.choice(allowed)
+    demon = d.tea_summon_pick
+    if night == 2 and not (demon == "Pukka" and rng.random() < 0.75):
+        return
+    if not _summoner_has_it(d, night, seat):
+        return                            # drunk or poisoned: none comes
+    n = d.n
+    living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    pool = [p for p in living if d.side_at(p, phase) == "good"]
+    minion = lambda p: TEAM[d.role_at(p, phase)] == "minion"
+    if demon == "LordOfTyphon":
+        pool = [p for p in pool
+                if any(minion(q) for q in ((p - 1) % n, (p + 1) % n))]
+    # The Marionette's jinx is about it entering play; here it is in play
+    # already, beside the first Demon, and the second may sit anywhere.
+    if not pool:
+        return
+    confirmed = [p for p in pool if _confirmed(d, p, heard, phase)]
+    target = rng.choice(confirmed or pool)
+    d.changes.append((phase, target, demon))
+    d.side_changes.append((phase, target, demon, "evil"))
+    d.line2 = [(phase, target)]
+    d.tea_summoned = (night, target, demon)
+    # A new instance starts afresh.
+    if demon == "FangGu":
+        d.fanggu_jumped = False
+    if demon == "Po":
+        d.po_charged = False
+    if demon == "Lleech":
+        d._as_demon = target
+        try:
+            _lleech_picks_a_host(d, night, rng)
+        finally:
+            d._as_demon = None
+    if demon == "LordOfTyphon":
+        left, right = (target - 1) % n, (target + 1) % n
+        other = right if minion(left) else left
+        if not minion(other) and other != target:
+            held = {d.role_at(p, phase) for p in range(n)}
+            spare = [k for k in d.script.minions
+                     if k not in held and k != "Summoner"]
+            if spare:
+                role = rng.choice(spare)
+                d.changes.append((phase, other, role))
+                d.side_changes.append((phase, other, role, "evil"))
+                d.summoned_extra = tuple(getattr(d, "summoned_extra",
+                                                 ())) + ((other, role),)
+
+
+def _second_demon_kills(d, night, rng, heard):
+    """The second Demon's kill, by its own ability (C Weg 1; on the night
+    it was made too, F Weg 1): the first's machinery, asked as it."""
+    phase = f"N{night}"
+    seat = d.second_demon(phase)
+    if seat is None or d.deaths.get(seat) is not None:
+        return []
+    first = d.demon_aimed.get(night)
+    d._as_demon = seat
+    try:
+        if _al_hadikhia_acts(d, night):
+            return list(_al_hadikhia_chooses(d, night, rng, heard))
+        return list(_demon_kills(d, night, rng))
+    finally:
+        d._as_demon = None
+        # Kept apart, for the night-walk to hand to the second Demon.
+        if not hasattr(d, "demon_aimed2"):
+            d.demon_aimed2 = {}
+        d.demon_aimed2[night] = d.demon_aimed.get(night)
+        d.demon2_seat = getattr(d, "demon2_seat", {})
+        d.demon2_seat[night] = seat
+        if first is None:
+            d.demon_aimed.pop(night, None)
+        else:
+            d.demon_aimed[night] = first
+
+
+def _second_goes_first(d, night):
+    """Does the second Demon's place in the night come before the
+    first's?"""
+    from botc.catalogue import slot_of
+    phase = f"N{night}"
+    first, second = d.demon_at(phase), d.second_demon(phase)
+    a = slot_of(d.role_at(first, phase), night) if first is not None else None
+    b = slot_of(d.role_at(second, phase), night)
+    return a is not None and b is not None and b < a
+
+
+def _first_demon_stands(d, phase):
+    """Does the first line's Demon still act — alive, or no second Demon
+    to carry on without it?"""
+    if not d.line2:
+        return True
+    first = d.demon_at(phase)
+    return first is not None and (d.deaths.get(first) is None
+                                  or first == d.zombuul_up)
+
+
+def _another_demon_stands(d, phase, fallen):
+    """Is a Demon other than `fallen` still standing?"""
+    return any(p != fallen and (d.deaths.get(p) is None or p == d.zombuul_up)
+               for p in d.demons_at(phase))
+
+
+def _demons_fall(d, phase):
+    """Where two Demons live (Hatter stage 2): each that died here with
+    nobody taking over is taken by the Scarlet Woman when her condition
+    holds (D Weg 1), else its line ends. True when no Demon stands — good
+    has won."""
+    first = d.demon_at(phase)
+    if first is not None and d.deaths.get(first) == phase \
+            and first != d.zombuul_up \
+            and not any(at == phase for at, _seat in d.handovers):
+        sw = next((p for p in d.alive_at(phase)
+                   if d.role_at(p, phase) == "ScarletWoman" and p != first),
+                  None)
+        if sw is not None and len(d.alive_at(phase)) >= 5:
+            d.handovers.append((phase, sw))
+            d.changes.append((phase, sw, d.role_at(first, phase)))
+    _second_line_falls(d, phase)
+    return not any(d.deaths.get(p) is None or p == d.zombuul_up
+                   for p in d.demons_at(phase))
+
+
+def _second_line_falls(d, phase):
+    """The second Demon died here: the Scarlet Woman takes it when her
+    condition holds (D Weg 1), else the line ends — good wins only if the
+    first is gone too. True when the game is over."""
+    seat = d.second_demon(phase)
+    if seat is None or d.deaths.get(seat) != phase:
+        return False
+    sw = next((p for p in d.alive_at(phase)
+               if d.role_at(p, phase) == "ScarletWoman" and p != seat),
+              None)
+    if sw is not None and len(d.alive_at(phase)) >= 5:
+        d.line2.append((phase, sw))
+        d.changes.append((phase, sw, d.role_at(seat, phase)))
+        return False
+    return not _another_demon_stands(d, phase, seat)
 
 
 def _summoner_check(d, night):
@@ -4435,10 +4711,10 @@ def _living_beside(d, seat, phase, gone=()):
 def _live_pukka(d, night):
     """The seat holding the Pukka tonight, if it is alive."""
     phase = f"N{night}"
-    demon = d.demon_at(phase)
+    demon = _demon_holding(d, phase, "Pukka")
     if demon is None or demon not in d.alive_at(phase):
         return None
-    return demon if d.role_at(demon, phase) == "Pukka" else None
+    return demon
 
 
 def _pukka_token_carries(d, night):
@@ -4506,6 +4782,11 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
     it stood at nightfall, and the night-walk, which goes in order, said
     otherwise (03.10.2026).
     """
+    # Beside a second Demon (Hatter stage 2), whoever the other already
+    # took tonight guards nobody either.
+    if getattr(d, "line2", None):
+        gone = tuple(gone) + tuple(p for p, at in d.deaths.items()
+                                   if at == f"N{night}")
     phase = f"N{night}"
     # A Princess's day stops the Demon whatever it aims at, the poison of
     # a Pukka's coming due included (10.10.2026). Asked first, so nothing
@@ -4803,7 +5084,7 @@ def _demon_kills(d, night, rng):
             d.fanggu_jumped = True
             d.fanggu_jump = (night, got)      # for the night-walk to replay
             d.deaths[demon] = phase
-            d.handovers.append((phase, got))
+            _hand_on(d, phase, demon, got)
             d.changes.append((phase, got, "FangGu"))
             d.side_changes.append((phase, got, "FangGu", "evil"))
             return []
@@ -5737,9 +6018,8 @@ def droisoned_at(d, night, by_day=False):
                 if not gone or gone[0] != "N":
                     continue
                 k = int(gone[1:])
-                killer = d.demon_at(gone)
-                if other not in d.demon_killed.get(k, ()) or killer is None \
-                        or d.role_at(killer, gone) != "Vigormortis":
+                if other not in d.demon_killed.get(k, ()) \
+                        or _demon_holding(d, gone, "Vigormortis") is None:
                     continue
                 # The poison triggers and registers on the night the
                 # Vigormortis killed, not the night after. Settled by
@@ -5878,10 +6158,10 @@ def _droisoned_without_preaching(d, night):
 def _vortox_working(d, night):
     """Is a Vortox in play, alive, and not droisoned itself?"""
     phase = f"N{night}"
-    seat = d.demon_at(phase)
-    if seat is None or d.role_at(seat, f"N{night}") != "Vortox":
-        return False
-    return seat in d.alive_at(phase) and d.working(seat, night)
+    # Either of two Demons (Hatter stage 2).
+    return any(d.role_at(seat, phase) == "Vortox"
+               and seat in d.alive_at(phase) and d.working(seat, night)
+               for seat in d.demons_at(phase))
 
 
 def _make_false(d, info, night, rng):
@@ -6395,7 +6675,9 @@ def _for_role(d, seat, role, night, rng):
         # the simulator never produced.
         recluse = [p for p in (a, b)
                    if d.role_at(p, f"N{night}") == "Recluse"]
+        # Either of two Demons (Hatter stage 2, B Weg 1).
         yes = (demon in (a, b) or d.red_herring in (a, b)
+               or any(p in (a, b) for p in d.demons_at(f"N{night}"))
                or (bool(recluse) and rng.random() < 0.35))
         return FortuneTeller(night, seat, a=a, b=b, yes=yes)
 
@@ -6559,6 +6841,9 @@ def _for_role(d, seat, role, night, rng):
             return None
         target = rng.choice(others)
         demon = d.demon_at(phase)
+        # Either of two Demons: the one it chose (Hatter stage 2).
+        if target in d.demons_at(phase):
+            demon = target
         # `working` is the one place that answers this, and this asked
         # its own narrower question instead — the Poisoner and the
         # perma-poisoned, and nothing else.
@@ -6606,7 +6891,7 @@ def _for_role(d, seat, role, night, rng):
             # last, so after a Fang Gu jump its handover outranked the
             # swap and the new Snake Charmer went on killing — the charmer
             # it had swapped with, once (29.09.2026).
-            d.handovers.append((after, seat))
+            _hand_on(d, after, demon, seat)
             d.side_changes.append((after, seat, became, "evil"))
             d.side_changes.append((after, demon, "SnakeCharmer", "good"))
             # The new Snake Charmer — the old Demon — is poisoned from
@@ -6663,6 +6948,8 @@ def _for_role(d, seat, role, night, rng):
         # jumped left its old seat looking like anybody, and the Pit-Hag
         # unmade the Demon it acts before (29.09.2026).
         demons = {d.demon_at(phase), d.demon_at(f"E{night - 1}")}
+        # And a second Demon (Hatter stage 2).
+        demons |= set(d.demons_at(phase)) | set(d.demons_at(f"E{night - 1}"))
         choosable = [p for p in living if p not in demons] or living
         target = rng.choice(choosable)
         if target in demons:
@@ -7285,7 +7572,7 @@ def _savant_statement(d, seat, phase, truth, rng):
         else:
             seats = sorted(rng.sample(range(d.n), 3))
             says = {"kind": kind, "seats": seats}
-            real = d.demon_at(phase) in seats
+            real = any(p in seats for p in d.demons_at(phase))
         if real == truth:
             return says, f"{kind} {says}"
     return None

@@ -246,9 +246,7 @@ sourceRule(function aVigormortisPoisonsBesideItsDeadMinions(world, state, night)
     if (phaseIndex(first) > phaseIndex(phase)) continue;
     // Only a Minion it killed: at night, with a Vigormortis as the Demon.
     if (first[0].toUpperCase() !== "N") continue;
-    const killer = world.demonAt(first);
-    if (killer === null || world.roleAt(killer, first) !== "Vigormortis")
-      continue;
+    if (demonHolding(world, first, "Vigormortis") === null) continue;
     const beside = nearestTownsfolk(world, state, who, phase);
     if (beside.size)
       out.push(new Source("Vigormortis", beside,
@@ -645,9 +643,30 @@ killsItsOwnWay("AlHadikhia");
  * bluffing protection buys itself a quiet night. */
 causeRule(function theDemonKills(world, state, night) {
   if (night < 2) return [];              // nobody dies on the first night
+  // Each living Demon kills once, by its own ability (Hatter stage 2, C
+  // Weg 1): one cause each, named apart. See solver.py.
+  const out = [];
+  world.demonsAt(`N${night}`).forEach((demon, i) => {
+    for (const cause of demonKillsAs(world, state, night, demon))
+      out.push(i === 0 ? cause : renamed(cause, `Demon ${i + 1}`));
+  });
+  return out;
+});
+
+/** A cause under another name, otherwise the same. */
+export const renamed = (cause, name) =>
+  Object.assign(Object.create(Object.getPrototypeOf(cause)), cause, {name});
+
+/** The Demon at this moment that holds this character (read at `at`, if
+ * given), or null — either of two (Hatter stage 2). See solver.py. */
+export function demonHolding(world, phase, role, at = null) {
+  for (const demon of world.demonsAt(phase))
+    if (world.roleAt(demon, at || phase) === role) return demon;
+  return null;
+}
+
+function demonKillsAs(world, state, night, demon) {
   const phase = `N${night}`;
-  const demon = world.demonAt(phase);
-  if (demon === null) return [];
   // Each Demon that kills differently has its own rule below.
   // Each Demon that kills differently has its own rule below, and says
   // so by registering its name. Everything else kills the ordinary way.
@@ -675,7 +694,7 @@ causeRule(function theDemonKills(world, state, night) {
                     {capacity: 1, mustFire: true,
                      actor: reachable ? demon : null,
                      actorCost: PRIORS.DEMON_POISONED_PENALTY})];
-});
+}
 
 /** Could anything have made this seat drunk or poisoned that night?
  *
@@ -1074,15 +1093,13 @@ const NOTHING_DUE = [[null, []]];
 causeRule(function aYaggababbleKillsForEachTime(world, state, night) {
   if (!inBag(state, "Yaggababble") || night < 2) return [];
   const phase = `N${night}`;
-  let demon = world.demonAt(phase);
+  let demon = demonHolding(world, phase, "Yaggababble");
   // Whoever held it when its deaths were counted: one that died tonight
   // as the Yaggababble handed the star on after that.
-  const began = world.demonAt(`B${night - 1}`);
-  if (began !== null && began !== undefined && began !== demon
-      && state.diedAt(began).includes(phase)
-      && world.roleAt(began, phase) === "Yaggababble") demon = began;
-  else if (demon === null || demon === undefined
-           || world.roleAt(demon, phase) !== "Yaggababble") return [];
+  const began = demonHolding(world, `B${night - 1}`, "Yaggababble", phase);
+  if (began !== null && began !== demon
+      && state.diedAt(began).includes(phase)) demon = began;
+  else if (demon === null) return [];
   if (!state.aliveSet(phase).has(demon)) return [];
   const reach = new Set(
     [...state.aliveSet(phase)].filter(p => p !== demon));
@@ -1122,7 +1139,7 @@ causeRule(function aLeviathanFellsABanshee(world, state, night) {
     return [];
   const phase = `N${night}`;
   const lev = leviathanAt(world, state, phase);
-  if (lev === null || world.demonAt(phase) !== lev) return [];
+  if (lev === null || !world.demonsAt(phase).includes(lev)) return [];
   const reach = new Set(
     [...state.aliveSet(phase)].filter(p => p !== lev
       && holdsAbility(world, state, p, "Banshee", phase)
@@ -1368,9 +1385,7 @@ immunityRule(function anExorcistSendsTheDemonToBed(
   if (!onBoard(state, "Exorcist") || kind !== DEMON || night < 2) return [];
   // Beside a Pukka what counts is last night's choice, so the Exorcists of
   // last night (13.10.2026). See solver.py.
-  const demon = world.demonAt(`N${night}`);
-  const pukka = demon !== null && demon !== undefined &&
-    world.roleAt(demon, `N${night}`) === "Pukka";
+  const pukka = demonHolding(world, `N${night}`, "Pukka") !== null;
   const when = pukka ? `N${night - 1}` : `N${night}`;
   return holders(world, state, "Exorcist", when).flatMap(
     exorcist => anExorcistsChoice(world, state, night, exorcist));
@@ -1378,9 +1393,9 @@ immunityRule(function anExorcistSendsTheDemonToBed(
 
 /** One Exorcist's shield — the holder's or a Philosopher's. */
 function anExorcistsChoice(world, state, night, exorcist) {
-  const demon = world.demonAt(`N${night}`);
-  if (demon !== null && demon !== undefined &&
-      world.roleAt(demon, `N${night}`) === "Pukka") {
+  // Of two living Demons, naming either stops the Demons' kills here
+  // (Hatter stage 2, generous). See solver.py.
+  if (demonHolding(world, `N${night}`, "Pukka") !== null) {
     // A Pukka is the exception: what dies tonight was chosen last night.
     // Naming it stops it *choosing*, so yesterday's victim still dies and
     // the quiet night is the one after (the flowchart; 02.10.2026).
@@ -1388,7 +1403,8 @@ function anExorcistsChoice(world, state, night, exorcist) {
         || !state.aliveSet(`N${night - 1}`).has(exorcist) ? null : exorcist;
     if (then === null) return [];
     const before = chosen(state, "Exorcist", night - 1, ["target"], then);
-    if (before !== null && !before.has(world.demonAt(`N${night - 1}`)))
+    if (before !== null
+        && !world.demonsAt(`N${night - 1}`).some(d => before.has(d)))
       return [];
     // It had to be working *then*, which is not tonight's question.
     return [shield("Exorcist", {chosen: true})];
@@ -1400,18 +1416,26 @@ function anExorcistsChoice(world, state, night, exorcist) {
   // The Demon as the Exorcist's turn came, at 21. One that died tonight
   // handed the star on after that — a Fang Gu jumping, an Imp killing
   // itself (07.10.2026).
-  let demonThen = world.demonAt(`N${night}`);
-  const began = world.demonAt(`B${night - 1}`);
-  // Lil' Monsta's babysitter is chosen after the Exorcist: it is last
-  // night's the Exorcist can name (F, Weg 1, 21.10.2026).
-  if (babysitterAt(world, `N${night}`) !== null) demonThen = began;
-  // Only a Demon that died *as* one: a Snake Charmer swaps at 11, ahead
-  // of the Exorcist, and the new Demon may then kill the old.
-  if (began !== null && began !== demonThen
-      && state.diedAt(began).includes(`N${night}`)
-      && CHARACTERS[world.roleAt(began, `N${night}`)].team === "demon")
-    demonThen = began;
-  if (named !== null && !named.has(demonThen)) return [];
+  const nows = world.demonsAt(`N${night}`);
+  const befores = world.demonsAt(`B${night - 1}`);
+  const sitter = babysitterAt(world, `N${night}`) !== null;
+  const namedNow = new Set();
+  // Line by line, where two Demons live (Hatter stage 2). See solver.py.
+  for (let i = 0; i < Math.max(nows.length, befores.length, 1); i++) {
+    let demonThen = i < nows.length ? nows[i] : null;
+    const began = i < befores.length ? befores[i] : null;
+    // Lil' Monsta's babysitter is chosen after the Exorcist: it is last
+    // night's the Exorcist can name (F, Weg 1, 21.10.2026).
+    if (sitter) demonThen = began;
+    // Only a Demon that died *as* one: a Snake Charmer swaps at 11, ahead
+    // of the Exorcist, and the new Demon may then kill the old.
+    if (began !== null && began !== demonThen
+        && state.diedAt(began).includes(`N${night}`)
+        && CHARACTERS[world.roleAt(began, `N${night}`)].team === "demon")
+      demonThen = began;
+    namedNow.add(demonThen);
+  }
+  if (named !== null && ![...namedNow].some(d => named.has(d))) return [];
   // And it cuts the other way. Named and written down, the Demon does not
   // act tonight — so a Demon kill on that night says the Exorcist was not
   // working, or that this seat is not the Demon.
@@ -1933,3 +1957,28 @@ Object.assign(CAUSE_TURNS, {
   aGamblerMayLose: CHARACTERS.Gambler.other_night,
   aLycanthropeMayKill: CHARACTERS.Lycanthrope.other_night,
 });
+
+// --------------------------------------------------------------------
+// Two living Demons (Hatter stage 2, 25.10.2026). Last of the causes,
+// as in Python.
+// --------------------------------------------------------------------
+
+/** The summoning that made a second living Demon in this story, or null.
+ * See solver.py. */
+export function summonedBeside(view) {
+  for (const c of view.changes || [])
+    if (c.summoned && view.demonsAt(c.phase).length > 1) return c;
+  return null;
+}
+
+/** "If the Summoner creates a second living Demon, deaths tonight are
+ * arbitrary" (their jinx, C Weg 1). See solver.py. */
+causeRule(function aSecondDemonMakesDeathsArbitrary(world, state, night) {
+  const made = summonedBeside(world);
+  if (!made || made.phase !== `N${night}`) return [];
+  return [new Cause("Summoner", OTHER, allSeats(state),
+                    {capacity: state.nPlayers, cost: 1.0,
+                     unstoppable: true})];
+});
+CAUSE_TURNS.aSecondDemonMakesDeathsArbitrary =
+  CHARACTERS.Summoner.other_night;
