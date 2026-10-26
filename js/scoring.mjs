@@ -763,6 +763,18 @@ export function demonLineages(world, state, cap = 24) {
   return out;
 }
 
+/** Would a Scarlet Woman stepping up for this Demon make two living
+ * Demons, with a Fang Gu or an Al-Hadikhia in play? See solver.py. */
+function scarletWomanStays(view, state, phase, fallen) {
+  const here = phaseIndex(phase);
+  let jinxed = false;
+  for (let p = 0; p < state.nPlayers; p++)
+    if (["FangGu", "AlHadikhia"].includes(view.roleAt(p, phase))) jinxed = true;
+  if (!jinxed) return false;
+  return view.demonsAt(phase).some(d => d !== fallen
+    && !state.diedAt(d).some(p => phaseIndex(p) <= here));
+}
+
 /** Every Demon that fell with nobody to take over, while the game went
  * on, left another standing (Hatter stage 2). See solver.py. */
 function aDemonLeft(view, state, ends) {
@@ -844,10 +856,16 @@ function demonLine(world, state, base, start, since, line, beside, cap) {
       return;
     }
     const character = view.roleAt(holder, phase);
-    const moves = [];
+    let moves = [];
     // At the turn of the Demon that fell (Hatter stage 3b). See solver.py.
     for (const rule of HEIR_RULES)
       moves.push(...stamped(rule(view, state, phase, character), character));
+    // The Scarlet Woman stays herself where two Demons would live, with a
+    // Fang Gu or an Al-Hadikhia in play (their jinxes; Hatter stage 2).
+    // See solver.py.
+    if (beside && scarletWomanStays(view, state, phase, holder))
+      moves = moves.filter(m => m.seat === null
+                           || view.roleAt(m.seat, phase) !== "ScarletWoman");
 
     // A Mastermind buys one more day after the Demon is executed. Nobody
     // inherits — there simply is no Demon after this — so the lineage
@@ -1823,6 +1841,7 @@ const hattedSummonerRule = transitionRule(
     const out = [[[], 1.0]];
     for (const c of tea) {
       const seat = c.seat;
+      const ways = [];
       for (const night of [2, 3]) {
         const phase = `N${night}`;
         if (final < phaseIndex(phase) || !summonsOn(c, night)) continue;
@@ -1836,12 +1855,35 @@ const hattedSummonerRule = transitionRule(
                                              false))
             for (const extra of typhonNeighbours(world, state, night, target,
                                                  demon))
-              out.push([[summoned(phase, target, demon), ...extra], 1.0]);
+              ways.push([[summoned(phase, target, demon), ...extra], 1.0]);
         }
       }
+      out.push(...sampledWays(world, c, ways));
     }
     return out;
   });
+
+// While a solve estimates (Hatter stage 2, Weg 2): how many of a tea
+// party's Summoner's ways each world tells, or null for all. See
+// solver.py.
+export const SUMMON_SAMPLE = {k: null, size: 8};
+
+/** A number from a string, the same in Python and JavaScript. */
+function stable(text) {
+  let got = 0;
+  for (let i = 0; i < text.length; i++)
+    got = (got + (i + 1) * text.charCodeAt(i)) % 2147483647;
+  return got;
+}
+
+/** Every way, or while estimating a fixed spread of k of them. */
+function sampledWays(world, c, ways) {
+  const k = SUMMON_SAMPLE.k;
+  if (k === null || ways.length <= k) return ways;
+  const step = Math.ceil(ways.length / k);
+  const offset = stable(`${world.roles.join("|")}|${c.seat}|${c.phase}`) % step;
+  return ways.filter((_w, i) => i >= offset && (i - offset) % step === 0);
+}
 
 /** One over the number of ways the tea party's Summoner could have
  * summoned, for a story where it did; 1 otherwise. See solver.py. */

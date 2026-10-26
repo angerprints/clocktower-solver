@@ -92,6 +92,9 @@ class Cause(NamedTuple):
     # Lycanthrope's: "If good, they die & the Demon doesn't kill tonight"
     # (11.10.2026). Only when it did kill, and then it was working.
     quiets_demon: bool = False
+    # Which Demon's kill this is, where two live (Hatter stage 2,
+    # 26.10.2026): a shield may hold against one of them only.
+    demon: int = None
 
 
 CAUSE_RULES = []
@@ -179,15 +182,26 @@ class Shield(NamedTuple):
     # only ever means it guarded somebody else — it implies nothing about
     # the victim, and must not be read as though it did.
     chosen: bool = False
+    # The Demons it holds against, or None for any (Hatter stage 2,
+    # 26.10.2026): an Exorcist keeps only the Demon it chose asleep.
+    against: frozenset = None
+    # Only a bar on who may have killed this seat, never the reason a
+    # kill aimed here came to nothing: a Sage's pair names its killer.
+    bars_only: bool = False
 
 
-def shields_on(world, state, night, seat, kind):
-    """Every reason this seat could have survived that kind of death."""
+def shields_on(world, state, night, seat, kind, cause=None):
+    """Every reason this seat could have survived that kind of death —
+    from this cause, if given: a shield against one Demon only holds
+    against that Demon's kill."""
     out = []
     for rule in IMMUNITY_RULES:
         got = rule(world, state, night, seat, kind)
         if got:
             out.extend(got)
+    if any(s.against is not None for s in out):
+        out = [s for s in out if s.against is None
+               or (cause is not None and cause.demon in s.against)]
     return out
 
 
@@ -299,7 +313,7 @@ def _account_for(world, state, night, causes, directly, followed,
                 # corpse, which still holds because a corpse is not a
                 # kill.
                 blocked = [s for s in shields_on(world, state, night, victim,
-                                                 cause.kind)
+                                                 cause.kind, cause)
                            if not s.chosen
                            and (not cause.unstoppable or s.needs is None)]
                 if any(shield.needs is None for shield in blocked):
@@ -441,7 +455,9 @@ def _account_for(world, state, night, causes, directly, followed,
                               used, before))
             for target in sorted(cause.seats):
                 for shield in shields_on(world, state, night, target,
-                                         cause.kind):
+                                         cause.kind, cause):
+                    if shield.bars_only:
+                        continue
                     if shield.needs is not None and shield.needs in impaired:
                         continue          # it was impaired, so it held nothing
                     grown.append((
@@ -462,7 +478,9 @@ def _account_for(world, state, night, causes, directly, followed,
                     continue
                 for target in sorted(seats):
                     for shield in shields_on(world, state, night, target,
-                                             cause.kind):
+                                             cause.kind, cause):
+                        if shield.bars_only:
+                            continue
                         if shield.needs is not None \
                                 and shield.needs in impaired:
                             continue

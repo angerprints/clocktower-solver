@@ -103,6 +103,24 @@ class Night:
             self.roles.get(seat) == "Philosopher"
             and self.gained.get(seat) == role)
 
+    def lets_go(self, seat, slot):
+        """This seat became somebody else in the middle of the night: what
+        it did earlier tonight as its old character ends — a guard it set,
+        a pair it kept safe, somebody it made drunk (Stelle 81, Patrick
+        26.10.2026: "ein Mönch, der später geändert wird, beschützt
+        niemanden mehr", and so for every character)."""
+        for target, giver in list(self.guards.items()):
+            if giver == seat:
+                del self.guards[target]
+                self.guarded.discard(target)
+        for target, keeper in list(self.safe.items()):
+            if keeper == seat:
+                del self.safe[target]
+        target = self.made_drunk.pop(seat, None)
+        if target is not None:
+            self.droisoned.discard(target)
+            self.log.append((slot, "sober", target, "changed"))
+
     def droison(self, seat, slot, why, by=None):
         # A Sailor or an Innkeeper droisoned after making somebody drunk
         # tonight: that drunkenness ends with it. The simulator has it so,
@@ -927,6 +945,7 @@ def walk(deal, night, hidden):
                 # handed the wrong token (P Weg 2): it works from here.
                 if state.roles[seat] == "Marionette":
                     state.droisoned.discard(seat)
+                state.lets_go(seat, slot)
                 state.roles[seat] = role
             n = len(state.roles)
             for seat, role in tea.items():
@@ -963,9 +982,11 @@ def walk(deal, night, hidden):
         # Demon it chose from here on, and is evil.
         if summon and slot == summon_slot:
             seat, demon, extra = summon
+            state.lets_go(seat, slot)
             state.roles[seat] = demon
             state.sides[seat] = "evil"
             for other, role in extra:
+                state.lets_go(other, slot)
                 state.roles[other] = role
                 state.sides[other] = "evil"
             # A poisoning that held its old character only — a Xaan's
@@ -999,15 +1020,8 @@ def walk(deal, night, hidden):
                 for p, held in state.roles.items():
                     if held == taken and p in stops_being_droisoned:
                         state.droisoned.discard(p)
-            # And a guard it set earlier tonight as a Monk or an Innkeeper
-            # goes with the character that set it.
-            for target, giver in list(state.guards.items()):
-                if giver == seat:
-                    del state.guards[target]
-                    state.guarded.discard(target)
-            for target, keeper in list(state.safe.items()):
-                if keeper == seat:
-                    del state.safe[target]
+            # A guard it set earlier tonight as a Monk or an Innkeeper
+            # went with the character that set it (`lets_go`, above).
             summon = None
         # Lil' Monsta at 35: the Minions choose, then a player might die
         # — never the babysitter, nobody an Exorcist that named last
@@ -1478,6 +1492,7 @@ def walk(deal, night, hidden):
                 _goon_answers(state, seat, target, slot)
                 if state.working(seat):
                     was = state.roles.get(target)
+                    state.lets_go(target, slot)
                     state.roles[target] = became   # the side does not move
                     state.log.append((slot, "made", target, became))
                     # A Goon made just now has not been chosen by anybody:
@@ -1565,6 +1580,8 @@ def walk(deal, night, hidden):
                 if swap is None:
                     continue
                 a, b = swap
+                state.lets_go(a, slot)
+                state.lets_go(b, slot)
                 state.roles[a], state.roles[b] = state.roles[b], state.roles[a]
                 state.log.append((slot, "swapped", a, b))
 

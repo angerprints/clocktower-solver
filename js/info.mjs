@@ -1058,7 +1058,8 @@ export const PhilosopherChoice = define("PhilosopherChoice", "Philosopher",
  */
 export const SageInfo = define("SageInfo", "Sage",
   function (w) {
-    // Of two living Demons, either (Hatter stage 2, generous).
+    // Of two living Demons the one that killed — which one, the death
+    // account settles (theKillerOfTwoWasNamed). See info.py.
     return w.demonsAt(`N${this.night}`).some(
       d => d === this.a || d === this.b);
   });
