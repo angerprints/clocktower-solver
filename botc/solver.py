@@ -300,10 +300,9 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             "demon_handovers": 99,      # a death, so after everything
             # The Boffin gives the Demon an ability at the setup — first,
             # so every rule after it sees it (a Demon's Farmer dying at
-            # night) — and again to every new Demon, last, so it sees
-            # every Demon the other rules made (26.10.2026).
-            "a_boffin_gives_the_demon": -1,
-            "a_boffin_gives_a_new_demon": 100}
+            # night). What it gives a new Demon is told with each story
+            # (`boffin_new_demon_stories`, 26.10.2026).
+            "a_boffin_gives_the_demon": -1}
 
 
 # Whose turn each rule is (Hatter stage 3b, 23.10.2026): the rule reads
@@ -487,7 +486,7 @@ def possible_timelines(world, state, cap=128):
     # a new Demon (26.10.2026).
     if _boffin_on_board(state):
         seen = sum(1 for k in state.script.keys if k in BOFFIN_SEEN)
-        cap *= 2 * (2 + seen)
+        cap *= 1 + seen
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -562,10 +561,6 @@ def _movers_in(world, state):
     # (26.10.2026).
     if _engineer_on_board(state):
         count += 2
-    # A Boffin dealt: a new Demon's ability is given last, and a rule that
-    # acts on a later night has to see it (26.10.2026).
-    if _boffin_on_board(state) and "Boffin" in world.roles:
-        count += 1
     for key, needs in (("Barber", barber_died), ("Farmer", at_night),
                        ("FangGu", at_night), ("Ogre", True)):
         on = _barber_on_board(state) if key == "Barber" else _on_board(state,
@@ -2668,11 +2663,6 @@ BOFFIN_SEEN = frozenset({
     "Puzzlemaster",
 })
 
-# Room for every ability, at every moment it is given, beside everything
-# else.
-BOFFIN_STORIES = 48
-
-
 def _boffin_on_board(state):
     """A Boffin on the script."""
     return "Boffin" in state.script.keys
@@ -2788,37 +2778,59 @@ def a_boffin_gives_the_demon(world, state):
     return _boffin_stories(world, state, True)
 
 
-@transition_rule
-def a_boffin_gives_a_new_demon(world, state):
+def boffin_new_demon_stories(world, state):
     """Every ability the Boffin may have given each new Demon (C Weg 1),
     a second living one (D Weg 2), or the Demon when somebody became the
-    Boffin (I Weg 1)."""
+    Boffin (I Weg 1): [(changes, cost)]. Not a transition rule: told for
+    each story as it is explained (`_best_story_told`), so the stories do
+    not multiply by it."""
     return _boffin_stories(world, state, False)
 
 
 def _boffin_stories(world, state, setup):
+    """Every ability the Boffin may have given, at each moment it gives one,
+    as [(changes, cost)].
+
+    At the setup that is every one. For new Demons it is the story where
+    each got "nothing the town sees" (or what it is first offered), and
+    each story where exactly one of them got something else (26.10.2026):
+    beside a tea party, an Engineer and a Summoner there were four such
+    moments in one story and four thousand ways (gate, seed 444). Two new
+    Demons in one game both using what they were given is left out."""
     if not _boffin_on_board(state):
         return [((), 1.0)]
-    stories = [((), 1.0)]
+    moments = []
     for phase, slot, seat, beside in _boffin_moments(world, state, setup):
         if boffin_seat(world, state, phase) is None \
                 and phase != "N1":
             continue                      # nobody to give it
-        grown = []
-        for changes, cost in stories:
-            view = Timeline(world, changes) if changes else world
-            offers = boffin_offers(view, state, phase, seat, slot, setup)
-            if beside is not None:
-                # The Storyteller decides (D Weg 2): the first keeps it,
-                # or the second gets one and the first's ends.
-                grown.append((changes, cost))
-                end = boffin_gift_change(phase, beside, "", slot)
-                offers = [(way + (end,), c) for way, c in offers]
-            for way, c in offers:
-                grown.append((changes + way, cost * c))
-                if len(grown) >= BOFFIN_STORIES * 64:
-                    break
-        stories = grown
+        offers = boffin_offers(world, state, phase, seat, slot, setup)
+        if beside is not None:
+            # The Storyteller decides (D Weg 2): the first keeps it, or the
+            # second gets one and the first's ends.
+            end = boffin_gift_change(phase, beside, "", slot)
+            offers = [((), 1.0)] + [(way + (end,), c) for way, c in offers]
+        if not offers:
+            return []                     # a row names what it cannot be
+        moments.append(offers)
+    if not moments:
+        return [((), 1.0)]
+    if setup:
+        stories = [((), 1.0)]
+        for offers in moments:
+            stories = [(changes + way, cost * c)
+                       for changes, cost in stories for way, c in offers]
+        return stories
+    first = tuple(c for offers in moments for c in offers[0][0])
+    base = 1.0
+    for offers in moments:
+        base *= offers[0][1]
+    stories = [(first, base)]
+    for i, offers in enumerate(moments):
+        for way, c in offers[1:]:
+            changes = tuple(ch for j, other in enumerate(moments)
+                            for ch in (way if j == i else other[0][0]))
+            stories.append((changes, base / offers[0][1] * c))
     return stories
 
 
@@ -7966,10 +7978,21 @@ def _best_story_told(world, state, outcome, viable):
                 TEA_TOLD[0] += 1
             else:
                 plain = rest
-        told = [changes]
+        told = [(changes, weight)]
+        # What the Boffin gave each new Demon in this story (C, D and I),
+        # told here one at a time rather than as stories of their own:
+        # beside a tea party, an Engineer and a Summoner they multiplied
+        # the stories past what memory holds (gate, 26.10.2026, seed 444).
+        if _boffin_on_board(state):
+            view = Timeline(world, changes) if changes else world
+            ways = boffin_new_demon_stories(view, state)
+            if not ways:
+                continue                  # nothing it could have given
+            if ways != [((), 1.0)]:
+                told = [(changes + extra, weight * c) for extra, c in ways]
         at = 0
         while at < len(told):
-            changes = told[at]
+            changes, weight = told[at]
             at += 1
             watch = at == 1 and (plain is not None or before is not None)
             if watch:
@@ -8007,7 +8030,7 @@ def _best_story_told(world, state, outcome, viable):
                             >> (phase_index(turn[0].phase) + 2)):
                         STORIES["skipped"] += 1
                         continue
-                    told.append(changes + turn)
+                    told.append((changes + turn, weight))
             if cost is None:
                 continue
             cost *= weight

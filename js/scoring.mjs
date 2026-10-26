@@ -135,10 +135,8 @@ const ACTS_AT = {
   anOgrePicksASide: 60,                  // late on night one
   demonHandovers: 99,                    // a death, so after everything
   // The Boffin gives the Demon an ability at the setup — first, so every
-  // rule after it sees it — and again to every new Demon, last
-  // (26.10.2026). See solver.py.
+  // rule after it sees it (26.10.2026). See solver.py.
   aBoffinGivesTheDemon: -1,
-  aBoffinGivesANewDemon: 100,
 };
 
 export const transitionRule = fn => (
@@ -276,11 +274,11 @@ export function possibleTimelines(world, state, cap = 128) {
     if (state.script.keys.includes("Summoner"))
       cap *= 1 + summonable(state).length * state.nPlayers;
   }
-  // And for every ability the Boffin may have given, at the setup and to a
-  // new Demon (26.10.2026). See solver.py.
+  // And for every ability the Boffin may have given at the setup
+  // (26.10.2026). See solver.py.
   if (boffinOnBoard(state)) {
     const seen = state.script.keys.filter(k => BOFFIN_SEEN.has(k)).length;
-    cap *= 2 * (2 + seen);
+    cap *= 1 + seen;
   }
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
@@ -338,9 +336,6 @@ function moversIn(world, state) {
   }
   // The Engineer's choice: night by night, always (26.10.2026).
   if (engineerOnBoard(state)) count += 2;
-  // A Boffin dealt: a new Demon's ability is given last, and a rule that
-  // acts on a later night has to see it (26.10.2026).
-  if (boffinOnBoard(state) && world.roles.includes("Boffin")) count += 1;
   for (const [key, needs] of [["Barber", barberDied], ["Farmer", atNight],
                               ["FangGu", atNight], ["Ogre", true]])
     if (needs && roles.has(key)
@@ -2024,9 +2019,6 @@ export const BOFFIN_SEEN = new Set([
   "Puzzlemaster",
 ]);
 
-// Room for every ability, at every moment it is given.
-export const BOFFIN_STORIES = 48;
-
 const boffinOnBoard = state => state.script.keys.includes("Boffin");
 
 /** The Boffin rows that name something it could give. */
@@ -2121,29 +2113,42 @@ function boffinMoments(view, state, setup) {
   return out;
 }
 
+/** Every ability the Boffin may have given, at each moment it gives one:
+ * every one at the setup; for new Demons the story where each got its
+ * first offer and each where exactly one got something else (seed 444).
+ * See solver.py `_boffin_stories`. */
 function boffinStories(world, state, setup) {
   if (!boffinOnBoard(state)) return [[[], 1.0]];
-  let stories = [[[], 1.0]];
+  const moments = [];
   for (const [phase, slot, seat, beside] of boffinMoments(world, state, setup)) {
     if (boffinSeat(world, state, phase) === null && phase !== "N1") continue;
-    const grown = [];
-    for (const [changes, cost] of stories) {
-      const view = changes.length ? new Timeline(world, changes) : world;
-      let offers = boffinOffers(view, state, phase, seat, slot, setup);
-      if (beside !== null) {
-        // The Storyteller decides (D Weg 2): the first keeps it, or the
-        // second gets one and the first's ends.
-        grown.push([changes, cost]);
-        const end = boffinGift(phase, beside, "", slot);
-        offers = offers.map(([way, c]) => [[...way, end], c]);
-      }
-      for (const [way, c] of offers) {
-        grown.push([[...changes, ...way], cost * c]);
-        if (grown.length >= BOFFIN_STORIES * 64) break;
-      }
+    let offers = boffinOffers(world, state, phase, seat, slot, setup);
+    if (beside !== null) {
+      // The Storyteller decides (D Weg 2): the first keeps it, or the
+      // second gets one and the first's ends.
+      const end = boffinGift(phase, beside, "", slot);
+      offers = [[[], 1.0], ...offers.map(([way, c]) => [[...way, end], c])];
     }
-    stories = grown;
+    if (!offers.length) return [];        // a row names what it cannot be
+    moments.push(offers);
   }
+  if (!moments.length) return [[[], 1.0]];
+  if (setup) {
+    let stories = [[[], 1.0]];
+    for (const offers of moments)
+      stories = stories.flatMap(([changes, cost]) =>
+        offers.map(([way, c]) => [[...changes, ...way], cost * c]));
+    return stories;
+  }
+  const first = moments.flatMap(offers => offers[0][0]);
+  let base = 1.0;
+  for (const offers of moments) base *= offers[0][1];
+  const stories = [[first, base]];
+  moments.forEach((offers, i) => {
+    for (const [way, c] of offers.slice(1))
+      stories.push([moments.flatMap((other, j) => j === i ? way : other[0][0]),
+                    base / offers[0][1] * c]);
+  });
   return stories;
 }
 
@@ -2151,9 +2156,12 @@ transitionRule(function aBoffinGivesTheDemon(world, state) {
   return boffinStories(world, state, true);
 });
 
-transitionRule(function aBoffinGivesANewDemon(world, state) {
+/** Every ability the Boffin may have given each new Demon (C, D, I): told
+ * for each story as it is explained, not a transition rule. See solver.py
+ * `boffin_new_demon_stories`. */
+export function boffinNewDemonStories(world, state) {
   return boffinStories(world, state, false);
-});
+}
 
 /** What the Boffin leaves out that the solver does not reckon, or null:
  * Lil' Monsta, whose babysitter changes every night. */
@@ -4169,31 +4177,44 @@ function bestStoryTold(world, state, outcome) {
       ? {at: tea.at, read: false} : {at: summ.at, read: false, sides: true});
     const fail = () => (plain !== null ? tea.failed.add(plain)
       : summ.failed.add(before));
-    if (!LISTENING) {                     // nobody turns evil that way here
+    // What the Boffin gave each new Demon in this story, told here one at
+    // a time rather than as stories of their own (seed 444). See
+    // solver.py `_best_story_told`.
+    let ways = [[first, weight]];
+    if (boffinOnBoard(state)) {
       const view = first.length ? new Timeline(world, first) : world;
-      const marks = outcome ? {} : null;
-      const watch = plain !== null || before !== null;
-      if (watch) TEA_READS.now = watching();
-      let cost;
-      try {
-        cost = explainOne(view, state, marks);
-      } finally {
-        if (watch) {
-          if (cost === null && !TEA_READS.now.read) fail();
-          TEA_READS.now = null;
+      const got = boffinNewDemonStories(view, state);
+      if (!got.length) continue;          // nothing it could have given
+      if (!(got.length === 1 && !got[0][0].length && got[0][1] === 1.0))
+        ways = got.map(([extra, c]) => [[...first, ...extra], weight * c]);
+    }
+    if (!LISTENING) {                     // nobody turns evil that way here
+      ways.forEach(([story, w], i) => {
+        const view = story.length ? new Timeline(world, story) : world;
+        const marks = outcome ? {} : null;
+        const watch = (plain !== null || before !== null) && i === 0;
+        if (watch) TEA_READS.now = watching();
+        let cost;
+        try {
+          cost = explainOne(view, state, marks);
+        } finally {
+          if (watch) {
+            if (cost === null && !TEA_READS.now.read) fail();
+            TEA_READS.now = null;
+          }
         }
-      }
-      if (cost === null) continue;
-      const got = cost * weight;
-      viable.push([got, first]);
-      if (best === null || got > best) {
-        best = got; bestChanges = first; bestMarks = marks;
-      }
+        if (cost === null) return;
+        const got = cost * w;
+        viable.push([got, story]);
+        if (best === null || got > best) {
+          best = got; bestChanges = story; bestMarks = marks;
+        }
+      });
       continue;
     }
-    const told = [first];
+    const told = ways;
     for (let at = 0; at < told.length;) {
-      const changes = told[at++];
+      const [changes, weight] = told[at++];
       const watch = (plain !== null || before !== null) && at === 1;
       const fresh = STORIES.explained;
       if (watch) TEA_READS.now = watching();
@@ -4227,7 +4248,7 @@ function bestStoryTold(world, state, outcome) {
               continue;
             }
           }
-          told.push([...changes, ...turn]);
+          told.push([[...changes, ...turn], weight]);
         }
       }
       if (cost === null) continue;
