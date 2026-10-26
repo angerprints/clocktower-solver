@@ -625,14 +625,14 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=98cabc728b43";
+import * as solver from "./api.mjs?v=efa8bc6c7e5a";
 
 // The solve runs beside the page, in a worker, so a long board neither
 // freezes the page nor hides that it is busy: it reports how far along it
 // is and can be stopped. Where a browser cannot start a module worker —
 // an old one, or a page opened straight from disk — it runs here as it
 // always did, and the page freezes for the length of it as it always did.
-const WORKER_URL = "./worker.mjs?v=98cabc728b43";
+const WORKER_URL = "./worker.mjs?v=efa8bc6c7e5a";
 let WORKER = null, NO_WORKER = false, JOB = null;
 
 function worker(){
@@ -784,6 +784,8 @@ const SCHEMA = {
   HuntsmanChoice:     [["target","player"]],
   // Minions of the script, or one Demon (26.10.2026).
   EngineerChoice:     [["roles","roles:evil"]],
+  // A good character of the script that is not in play (26.10.2026).
+  BoffinGave:         [["role","role:good"]],
   PuzzlemasterGuess:  [["guess","player"],["shown","player"]],
   BoomdandyExploded:  [["pointed","playerOrNone"]],
   // The seventh five. The Pixie says which Townsfolk it was shown; a
@@ -872,7 +874,7 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   GolemNomination:"Golem", PsychopathKill:"Psychopath",
   PsychopathRoshambo:"Psychopath", WidowKnown:"Widow",
   PreacherChoice:"Preacher", HuntsmanChoice:"Huntsman",
-  EngineerChoice:"Engineer",
+  EngineerChoice:"Engineer", BoffinGave:"Boffin",
   PuzzlemasterGuess:"Puzzlemaster", BoomdandyExploded:"Boomdandy",
   PixieLearned:"Pixie", VillageIdiotInfo:"VillageIdiot",
   LycanthropeChose:"Lycanthrope", HarpyMadness:"Harpy",
@@ -945,7 +947,7 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   GolemNomination:"Golem nomination", PsychopathKill:"Psychopath kill",
   PsychopathRoshambo:"Roshambo at the execution", WidowKnown:"Widow known",
   PreacherChoice:"Preacher chose", HuntsmanChoice:"Huntsman chose",
-  EngineerChoice:"Engineer chose",
+  EngineerChoice:"Engineer chose", BoffinGave:"Boffin gave the Demon",
   PuzzlemasterGuess:"Puzzlemaster guess", BoomdandyExploded:"Boomdandy exploded",
   PixieLearned:"Pixie shown", VillageIdiotInfo:"Village Idiot",
   LycanthropeChose:"Lycanthrope chose", HarpyMadness:"Harpy madness",
@@ -1793,6 +1795,9 @@ function describeRow(r){
         ? `chose ${(r.roles || []).map(role).join(", ")} to be in play, `
           + `once a game`
         : `chose, once a game — tick the characters`;
+    case "BoffinGave":
+      return r.role ? `gave the Demon the ${role(r.role)}'s ability`
+                    : `gave the Demon an ability — pick the character`;
     case "PuzzlemasterGuess":
       return `guessed ${who(r.guess)} is the drunk one, and was shown ${
         who(r.shown)} as the Demon`;

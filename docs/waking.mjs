@@ -30,7 +30,7 @@
 import {CHARACTERS} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {teaMade} from "./worlds.mjs";
-import {babysitterAt, cultSides, holdingNow, takenByAPhilosopher, tookIt}
+import {babysitterAt, boffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt}
   from "./info.mjs";
 
 export const NEVER = "never";
@@ -407,7 +407,15 @@ export function woke(world, state, seat, night) {
   const role = world.roleAt(seat, phase);
   if (!state.aliveSet(phase).has(seat) && role !== "Ravenkeeper") return false;
   if (cameBackTonight(world, state, seat, night) === ASLEEP) return false;
-  return wokeAs(world, state, seat, night, role);
+  if (wokeAs(world, state, seat, night, role)) return true;
+  // A Demon the Boffin gave an ability wakes for it as that character
+  // would — not on the first night (F Weg 1, 26.10.2026). See waking.py.
+  if (night >= 2 && state.script.keys.includes("Boffin")) {
+    const gift = boffinGiftOf(world, state, seat, phase);
+    if (gift !== null && !CHARACTERS[gift].believes)
+      return wokeAs(world, state, seat, night, gift);
+  }
+  return false;
 }
 
 const ASLEEP = "asleep", OPEN = "open";
