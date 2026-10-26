@@ -2749,6 +2749,12 @@ class ClockmakerInfo(Info):
         summoner = None
         if demon is None and "Summoner" in w.roles:
             summoner = demon = w.find_at("Summoner", phase)
+            # An Engineer took its character before the Clockmaker's turn:
+            # no Demon and no Summoner, and the Storyteller holds its
+            # ability (their jinx). Whatever the Storyteller says
+            # (26.10.2026).
+            if demon is None:
+                return True
         if demon is None:
             return False
         n = len(w.roles)
