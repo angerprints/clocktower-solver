@@ -120,6 +120,15 @@ class Night:
         if target is not None:
             self.droisoned.discard(target)
             self.log.append((slot, "sober", target, "changed"))
+        # And one it chose tonight that was handed in as drunk from the
+        # start but sober by the end: a Sailor's or an Innkeeper's drunk
+        # the record keeps for the whole night (`hidden_from`).
+        for entry in self.log:
+            if len(entry) >= 4 and entry[1] == "chose" and entry[2] == seat \
+                    and entry[3] in getattr(self, "lifted", ()) \
+                    and entry[3] in self.droisoned:
+                self.droisoned.discard(entry[3])
+                self.log.append((slot, "sober", entry[3], "changed"))
 
     def droison(self, seat, slot, why, by=None):
         # A Sailor or an Innkeeper droisoned after making somebody drunk
@@ -895,6 +904,7 @@ def walk(deal, night, hidden):
     # after it — so that is where the board is brought up to date.
     becomes_droisoned = set(hidden.get(("standing_later", night)) or ())
     stops_being_droisoned = set(hidden.get(("standing_lifted", night)) or ())
+    state.lifted = stops_being_droisoned
     last_cause = getattr(CHARACTERS["Sweetheart"], field, 0)
     charmer_slot = getattr(CHARACTERS["SnakeCharmer"], field, 0)
     # The same for a Philosopher that took the Nightwatchman: it points
