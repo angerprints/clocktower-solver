@@ -117820,7 +117820,7 @@
      },
      {
       "evil_pct": 11.3342,
-      "demon_pct": 5.4133,
+      "demon_pct": 5.4506,
       "drunk_pct": 0.0,
       "lying_pct": 98.0932
      },
@@ -117838,25 +117838,25 @@
      },
      {
       "evil_pct": 48.3538,
-      "demon_pct": 31.9732,
+      "demon_pct": 31.9694,
       "drunk_pct": 0.0,
       "lying_pct": 50.1787
      },
      {
       "evil_pct": 36.2745,
-      "demon_pct": 16.1579,
+      "demon_pct": 15.981,
       "drunk_pct": 0.0,
       "lying_pct": 36.6672
      },
      {
       "evil_pct": 37.3217,
-      "demon_pct": 20.9183,
+      "demon_pct": 20.9181,
       "drunk_pct": 0.0,
       "lying_pct": 37.3217
      },
      {
       "evil_pct": 43.0292,
-      "demon_pct": 25.5374,
+      "demon_pct": 25.6809,
       "drunk_pct": 0.0,
       "lying_pct": 44.8541
      },
@@ -118302,26 +118302,26 @@
     "game_over": true
    },
    "expect": {
-    "valid": 155,
+    "valid": 154,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 32.4689,
+      "evil_pct": 31.8491,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 32.4689
+      "lying_pct": 31.8491
      },
      {
-      "evil_pct": 41.8546,
-      "demon_pct": 23.6647,
+      "evil_pct": 42.2387,
+      "demon_pct": 23.8819,
       "drunk_pct": 0.0,
-      "lying_pct": 41.8546
+      "lying_pct": 42.2387
      },
      {
-      "evil_pct": 1.4552,
+      "evil_pct": 1.4685,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 1.4552
+      "lying_pct": 1.4685
      },
      {
       "evil_pct": 0.0,
@@ -118330,35 +118330,35 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 38.5804,
-      "demon_pct": 20.3905,
+      "evil_pct": 38.9345,
+      "demon_pct": 20.5777,
       "drunk_pct": 0.0,
-      "lying_pct": 38.5804
+      "lying_pct": 38.9345
      },
      {
-      "evil_pct": 85.0486,
-      "demon_pct": 55.9448,
+      "evil_pct": 84.9114,
+      "demon_pct": 55.5405,
       "drunk_pct": 0.0,
-      "lying_pct": 85.0486
+      "lying_pct": 84.9114
      },
      {
-      "evil_pct": 0.5923,
+      "evil_pct": 0.5977,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.5923
+      "lying_pct": 0.5977
      }
     ],
     "blame": {
      "2": {
       "3": {
-       "Demon": 0.9409,
-       "Yaggababble, again": 0.0591
+       "Demon": 0.9404,
+       "Yaggababble, again": 0.0596
       }
      },
      "3": {
       "6": {
-       "Demon": 0.9409,
-       "Yaggababble, again": 0.0591
+       "Demon": 0.9404,
+       "Yaggababble, again": 0.0596
       }
      }
     }
@@ -119100,57 +119100,57 @@
     "game_over": false
    },
    "expect": {
-    "valid": 50,
+    "valid": 49,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 0.293,
+      "evil_pct": 0.3512,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.293
+      "lying_pct": 0.3512
      },
      {
-      "evil_pct": 53.2529,
-      "demon_pct": 38.7489,
+      "evil_pct": 58.6726,
+      "demon_pct": 41.8058,
       "drunk_pct": 0.0,
-      "lying_pct": 53.2529
+      "lying_pct": 58.6726
      },
      {
-      "evil_pct": 54.9613,
-      "demon_pct": 40.7273,
+      "evil_pct": 55.1758,
+      "demon_pct": 38.4893,
       "drunk_pct": 0.0,
-      "lying_pct": 54.9613
+      "lying_pct": 55.1758
      },
      {
-      "evil_pct": 0.3787,
-      "demon_pct": 0.2456,
+      "evil_pct": 0.4118,
+      "demon_pct": 0.2563,
       "drunk_pct": 0.0,
-      "lying_pct": 0.3787
+      "lying_pct": 0.4118
      },
      {
-      "evil_pct": 41.9876,
+      "evil_pct": 41.1443,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 41.9876
+      "lying_pct": 41.1443
      },
      {
-      "evil_pct": 47.875,
-      "demon_pct": 20.2783,
+      "evil_pct": 43.06,
+      "demon_pct": 19.4486,
       "drunk_pct": 0.0,
-      "lying_pct": 47.875
+      "lying_pct": 43.06
      },
      {
-      "evil_pct": 1.2516,
+      "evil_pct": 1.1842,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 1.2516
+      "lying_pct": 1.1842
      }
     ],
     "blame": {
      "2": {
       "0": {
-       "Demon": 0.9299,
-       "Yaggababble, again": 0.0701
+       "Demon": 0.916,
+       "Yaggababble, again": 0.084
       }
      }
     }
@@ -119648,6 +119648,2068 @@
       }
      }
     }
+   }
+  },
+  {
+   "name": "x-engineer-baron",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "claim": "Engineer",
+      "events": []
+     },
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "EngineerChoice",
+      "night": 2,
+      "player": 0,
+      "roles": [
+       "Baron"
+      ]
+     }
+    ],
+    "script": {
+     "name": "Ingenieur",
+     "characters": [
+      "engineer",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "saint",
+      "spy",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "po",
+      "summoner",
+      "lilmonsta"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 199,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 16.5166,
+      "demon_pct": 9.9689,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.5166
+     },
+     {
+      "evil_pct": 1.7843,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.7843
+     },
+     {
+      "evil_pct": 36.3398,
+      "demon_pct": 21.2801,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 36.3398,
+      "demon_pct": 19.6431,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 36.3398,
+      "demon_pct": 18.0062,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 36.3398,
+      "demon_pct": 16.3693,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 36.3398,
+      "demon_pct": 14.7324,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.7991,
+       "LilMonsta": 0.2009
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-engineer-po",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "claim": "Engineer",
+      "events": []
+     },
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "EngineerChoice",
+      "night": 2,
+      "player": 0,
+      "roles": [
+       "Po"
+      ]
+     }
+    ],
+    "script": {
+     "name": "Ingenieur",
+     "characters": [
+      "engineer",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "saint",
+      "spy",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "po",
+      "summoner",
+      "lilmonsta"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 199,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 16.5166,
+      "demon_pct": 9.9689,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.5166
+     },
+     {
+      "evil_pct": 1.7843,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.7843
+     },
+     {
+      "evil_pct": 36.3398,
+      "demon_pct": 21.2801,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 36.3398,
+      "demon_pct": 19.6431,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 36.3398,
+      "demon_pct": 18.0062,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 36.3398,
+      "demon_pct": 16.3693,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 36.3398,
+      "demon_pct": 14.7324,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.7991,
+       "LilMonsta": 0.2009
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-engineer-two-minions",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "claim": "Engineer",
+      "events": []
+     },
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N3"
+      ]
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "EngineerChoice",
+      "night": 2,
+      "player": 0,
+      "roles": [
+       "Baron",
+       "ScarletWoman"
+      ]
+     }
+    ],
+    "script": {
+     "name": "Ingenieur",
+     "characters": [
+      "engineer",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "saint",
+      "spy",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "po",
+      "summoner",
+      "lilmonsta"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 200,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 20.0363,
+      "demon_pct": 12.2956,
+      "drunk_pct": 0.0,
+      "lying_pct": 20.0363
+     },
+     {
+      "evil_pct": 2.6529,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.6529
+     },
+     {
+      "evil_pct": 5.2938,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 5.2938
+     },
+     {
+      "evil_pct": 43.0042,
+      "demon_pct": 25.5603,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.0042
+     },
+     {
+      "evil_pct": 43.0042,
+      "demon_pct": 23.1375,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.0042
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 43.0042,
+      "demon_pct": 20.7147,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.0042
+     },
+     {
+      "evil_pct": 43.0042,
+      "demon_pct": 18.2919,
+      "drunk_pct": 0.0,
+      "lying_pct": 43.0042
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.7998,
+       "LilMonsta": 0.2002
+      }
+     },
+     "3": {
+      "2": {
+       "Demon": 0.7998,
+       "LilMonsta": 0.2002
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-engineer-summoner",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "claim": "Engineer",
+      "events": []
+     },
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "EngineerChoice",
+      "night": 1,
+      "player": 0,
+      "roles": [
+       "Summoner"
+      ]
+     }
+    ],
+    "script": {
+     "name": "Ingenieur",
+     "characters": [
+      "engineer",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "saint",
+      "spy",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "po",
+      "summoner",
+      "lilmonsta"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 199,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 28.2382,
+      "demon_pct": 21.6905,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.5166
+     },
+     {
+      "evil_pct": 1.7843,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.7843
+     },
+     {
+      "evil_pct": 43.3786,
+      "demon_pct": 30.1896,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 43.3786,
+      "demon_pct": 28.7866,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 43.3786,
+      "demon_pct": 27.3835,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 11.7216,
+      "demon_pct": 11.7216,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 43.3786,
+      "demon_pct": 25.9804,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     },
+     {
+      "evil_pct": 43.3786,
+      "demon_pct": 24.5773,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3398
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.7991,
+       "LilMonsta": 0.2009
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-engineer-three-minions",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "claim": "Engineer",
+      "events": []
+     },
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": [
+       "X1"
+      ]
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "EngineerChoice",
+      "night": 2,
+      "player": 0,
+      "roles": [
+       "Spy",
+       "Baron",
+       "Summoner"
+      ]
+     }
+    ],
+    "script": {
+     "name": "Ingenieur",
+     "characters": [
+      "engineer",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "saint",
+      "spy",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "po",
+      "summoner",
+      "lilmonsta"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 183,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 17.1383,
+      "demon_pct": 10.6237,
+      "drunk_pct": 0.0,
+      "lying_pct": 17.1383
+     },
+     {
+      "evil_pct": 1.6625,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.6625
+     },
+     {
+      "evil_pct": 37.4956,
+      "demon_pct": 24.9971,
+      "drunk_pct": 0.0,
+      "lying_pct": 37.4956
+     },
+     {
+      "evil_pct": 37.4956,
+      "demon_pct": 23.2284,
+      "drunk_pct": 0.0,
+      "lying_pct": 37.4956
+     },
+     {
+      "evil_pct": 31.2168,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 31.2168
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 37.4956,
+      "demon_pct": 21.4597,
+      "drunk_pct": 0.0,
+      "lying_pct": 37.4956
+     },
+     {
+      "evil_pct": 37.4956,
+      "demon_pct": 19.6911,
+      "drunk_pct": 0.0,
+      "lying_pct": 37.4956
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.783,
+       "LilMonsta": 0.217
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-engineer-lil-monsta",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "claim": "Engineer",
+      "events": []
+     },
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "EngineerChoice",
+      "night": 2,
+      "player": 0,
+      "roles": [
+       "LilMonsta"
+      ]
+     }
+    ],
+    "script": {
+     "name": "Ingenieur",
+     "characters": [
+      "engineer",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "saint",
+      "spy",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "po",
+      "summoner",
+      "lilmonsta"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 204,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 16.4829,
+      "demon_pct": 9.9485,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.4829
+     },
+     {
+      "evil_pct": 1.9848,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.9848
+     },
+     {
+      "evil_pct": 36.3065,
+      "demon_pct": 21.2775,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3065
+     },
+     {
+      "evil_pct": 36.3065,
+      "demon_pct": 19.6439,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3065
+     },
+     {
+      "evil_pct": 36.3065,
+      "demon_pct": 18.0103,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3065
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 36.3065,
+      "demon_pct": 16.3767,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3065
+     },
+     {
+      "evil_pct": 36.3065,
+      "demon_pct": 14.7431,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3065
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.7996,
+       "LilMonsta": 0.2004
+      }
+     }
+    },
+    "unreckoned": {
+     "engineer": 83.5171
+    }
+   }
+  },
+  {
+   "name": "x-engineer-poisoner",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "claim": "Engineer",
+      "events": []
+     },
+     {
+      "claim": "Chef",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "Monk",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Soldier",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "EngineerChoice",
+      "night": 2,
+      "player": 0,
+      "roles": [
+       "Baron"
+      ]
+     }
+    ],
+    "script": {
+     "name": "Ingenieur",
+     "characters": [
+      "engineer",
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "saint",
+      "spy",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "po",
+      "summoner",
+      "lilmonsta",
+      "poisoner"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 361,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 16.5038,
+      "demon_pct": 11.051,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.5038
+     },
+     {
+      "evil_pct": 1.8494,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.8494
+     },
+     {
+      "evil_pct": 36.3293,
+      "demon_pct": 23.2426,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3293
+     },
+     {
+      "evil_pct": 36.3293,
+      "demon_pct": 20.5162,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3293
+     },
+     {
+      "evil_pct": 36.3293,
+      "demon_pct": 17.7898,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3293
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 36.3293,
+      "demon_pct": 15.0634,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3293
+     },
+     {
+      "evil_pct": 36.3293,
+      "demon_pct": 12.337,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.3293
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 0.6655,
+       "LilMonsta": 0.3345
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-engineer-played-0-7",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Engineer",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Princess",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Snitch",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Farmer",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "EngineerChoice",
+      "night": 1,
+      "player": 1,
+      "roles": [
+       "Widow"
+      ]
+     },
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 2,
+      "role": "SnakeCharmer"
+     },
+     {
+      "type": "WidowKnown",
+      "night": 1,
+      "player": 2
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 2,
+      "player": 0,
+      "target": 2
+     },
+     {
+      "type": "JugglerInfo",
+      "night": 2,
+      "player": 6,
+      "guesses": [
+       {
+        "player": 2,
+        "role": "Courtier"
+       },
+       {
+        "player": 4,
+        "role": "Juggler"
+       },
+       {
+        "player": 1,
+        "role": "Engineer"
+       },
+       {
+        "player": 5,
+        "role": "Farmer"
+       },
+       {
+        "player": 3,
+        "role": "Vortox"
+       }
+      ],
+      "count": 1
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "engineer",
+      "widow",
+      "philosopher",
+      "snakecharmer",
+      "mayor",
+      "courtier",
+      "innkeeper",
+      "juggler",
+      "princess",
+      "mathematician",
+      "exorcist",
+      "oracle",
+      "chambermaid",
+      "farmer",
+      "snitch",
+      "mutant",
+      "tinker",
+      "golem",
+      "baron",
+      "xaan",
+      "eviltwin",
+      "vortox",
+      "leviathan",
+      "ojo",
+      "pukka"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 2030,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.3215,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 4.8977
+     },
+     {
+      "evil_pct": 7.6647,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.3756
+     },
+     {
+      "evil_pct": 25.9656,
+      "demon_pct": 11.2851,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.1081
+     },
+     {
+      "evil_pct": 61.7814,
+      "demon_pct": 44.3575,
+      "drunk_pct": 0.0,
+      "lying_pct": 71.1765
+     },
+     {
+      "evil_pct": 39.3178,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 39.3178
+     },
+     {
+      "evil_pct": 61.7814,
+      "demon_pct": 44.3575,
+      "drunk_pct": 0.0,
+      "lying_pct": 71.1765
+     },
+     {
+      "evil_pct": 3.1677,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.0473
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-engineer-played-6-8",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "PoppyGrower",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Lunatic",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Engineer",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Knight",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Goon",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Engineer"
+     },
+     {
+      "type": "FearmongerChose",
+      "night": 1,
+      "player": 0
+     },
+     {
+      "type": "KnightInfo",
+      "night": 1,
+      "player": 5,
+      "a": 3,
+      "b": 4
+     },
+     {
+      "type": "VirginNomination",
+      "night": 1,
+      "player": 6,
+      "nominator": 1,
+      "triggered": false
+     },
+     {
+      "type": "EngineerChoice",
+      "night": 2,
+      "player": 4,
+      "roles": [
+       "Goblin",
+       "Assassin"
+      ]
+     },
+     {
+      "type": "FearmongerChose",
+      "night": 2,
+      "player": 0
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 2,
+      "player": 7,
+      "target": 0
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 3,
+      "player": 7,
+      "target": 5
+     },
+     {
+      "type": "ExorcistChoice",
+      "night": 4,
+      "player": 7,
+      "target": 1
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "engineer",
+      "xaan",
+      "snakecharmer",
+      "philosopher",
+      "poppygrower",
+      "mayor",
+      "investigator",
+      "washerwoman",
+      "virgin",
+      "knight",
+      "chambermaid",
+      "exorcist",
+      "cultleader",
+      "magician",
+      "lunatic",
+      "moonchild",
+      "butler",
+      "goon",
+      "fearmonger",
+      "assassin",
+      "goblin",
+      "vortox",
+      "yaggababble",
+      "lleech",
+      "zombuul"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 24,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 90.8163,
+      "demon_pct": 50.0,
+      "drunk_pct": 2.381,
+      "lying_pct": 93.1973
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 18.3673,
+      "demon_pct": 0.0,
+      "drunk_pct": 81.6327,
+      "lying_pct": 18.3673
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 90.8163,
+      "demon_pct": 50.0,
+      "drunk_pct": 2.381,
+      "lying_pct": 93.1973
+     }
+    ],
+    "blame": {
+     "2": {
+      "0": {
+       "Demon": 0.9849,
+       "Yaggababble, again": 0.0151
+      }
+     },
+     "3": {
+      "3": {
+       "Demon": 0.9849,
+       "Yaggababble, again": 0.0151
+      }
+     },
+     "4": {
+      "5": {
+       "Demon": 0.9849,
+       "Yaggababble, again": 0.0151
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-engineer-played-15-8",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "BountyHunter",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Lunatic",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Librarian",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Savant",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "EngineerChoice",
+      "night": 1,
+      "player": 4,
+      "roles": [
+       "PitHag"
+      ]
+     },
+     {
+      "type": "Chef",
+      "night": 1,
+      "player": 6,
+      "count": 1
+     },
+     {
+      "type": "ShugenjaInfo",
+      "night": 1,
+      "player": 2,
+      "clockwise": false
+     },
+     {
+      "type": "GoblinClaim",
+      "night": 1,
+      "player": 5
+     },
+     {
+      "type": "GoblinClaim",
+      "night": 2,
+      "player": 2
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "engineer",
+      "pithag",
+      "snakecharmer",
+      "philosopher",
+      "alsaahir",
+      "soldier",
+      "librarian",
+      "chef",
+      "preacher",
+      "shugenja",
+      "virgin",
+      "nightwatchman",
+      "savant",
+      "bountyhunter",
+      "saint",
+      "moonchild",
+      "heretic",
+      "lunatic",
+      "eviltwin",
+      "goblin",
+      "marionette",
+      "shabaloth",
+      "yaggababble",
+      "fanggu",
+      "lleech"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 458,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 30.0431,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.1092,
+      "lying_pct": 0.1092
+     },
+     {
+      "evil_pct": 19.0006,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.2184,
+      "lying_pct": 1.3538
+     },
+     {
+      "evil_pct": 52.749,
+      "demon_pct": 0.0,
+      "drunk_pct": 3.5053,
+      "lying_pct": 50.3276
+     },
+     {
+      "evil_pct": 8.6656,
+      "demon_pct": 4.193,
+      "drunk_pct": 91.3344,
+      "lying_pct": 8.1456
+     },
+     {
+      "evil_pct": 23.7949,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.5823,
+      "lying_pct": 1.3102
+     },
+     {
+      "evil_pct": 52.857,
+      "demon_pct": 0.0,
+      "drunk_pct": 3.5053,
+      "lying_pct": 50.4003
+     },
+     {
+      "evil_pct": 37.2566,
+      "demon_pct": 18.7012,
+      "drunk_pct": 0.0655,
+      "lying_pct": 19.2035
+     },
+     {
+      "evil_pct": 77.9246,
+      "demon_pct": 77.1058,
+      "drunk_pct": 0.1638,
+      "lying_pct": 76.2296
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Demon": 0.9183,
+       "Yaggababble, again": 0.0817
+      }
+     },
+     "2": {
+      "1": {
+       "Demon": 0.9183,
+       "Yaggababble, again": 0.0817
+      }
+     },
+     "4": {
+      "3": {
+       "Demon": 0.9183,
+       "Yaggababble, again": 0.0817
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-engineer-played-17-9",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Engineer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Dreamer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "sometimes",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Zealot",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Choirboy",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Butler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Pixie",
+      "events": [
+       "D1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "EngineerChoice",
+      "night": 1,
+      "player": 4,
+      "roles": [
+       "Lleech"
+      ]
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 1,
+      "target": 6,
+      "swapped": false
+     },
+     {
+      "type": "DreamerInfo",
+      "night": 1,
+      "player": 2,
+      "target": 6,
+      "good_role": "Gambler",
+      "evil_role": "Xaan"
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "engineer",
+      "xaan",
+      "philosopher",
+      "snakecharmer",
+      "savant",
+      "dreamer",
+      "balloonist",
+      "choirboy",
+      "king",
+      "pixie",
+      "gambler",
+      "knight",
+      "clockmaker",
+      "monk",
+      "butler",
+      "klutz",
+      "ogre",
+      "zealot",
+      "eviltwin",
+      "vizier",
+      "cerenovus",
+      "lleech",
+      "yaggababble",
+      "vigormortis",
+      "pukka"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 1480,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 16.7641,
+      "demon_pct": 8.7021,
+      "drunk_pct": 0.0,
+      "lying_pct": 19.514
+     },
+     {
+      "evil_pct": 15.5449,
+      "demon_pct": 7.8104,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.1447
+     },
+     {
+      "evil_pct": 16.1752,
+      "demon_pct": 8.411,
+      "drunk_pct": 0.0,
+      "lying_pct": 16.8428
+     },
+     {
+      "evil_pct": 7.8083,
+      "demon_pct": 3.9027,
+      "drunk_pct": 0.0,
+      "lying_pct": 6.9211
+     },
+     {
+      "evil_pct": 9.268,
+      "demon_pct": 4.8574,
+      "drunk_pct": 0.0,
+      "lying_pct": 9.268
+     },
+     {
+      "evil_pct": 62.6164,
+      "demon_pct": 32.9428,
+      "drunk_pct": 0.0,
+      "lying_pct": 63.4044
+     },
+     {
+      "evil_pct": 14.4194,
+      "demon_pct": 2.9854,
+      "drunk_pct": 0.0,
+      "lying_pct": 14.6285
+     },
+     {
+      "evil_pct": 20.6167,
+      "demon_pct": 10.1569,
+      "drunk_pct": 0.0,
+      "lying_pct": 20.6167
+     },
+     {
+      "evil_pct": 36.787,
+      "demon_pct": 20.2312,
+      "drunk_pct": 0.0,
+      "lying_pct": 36.787
+     }
+    ]
    }
   },
   {
