@@ -21,7 +21,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    AcrobatChoice, GrandmotherInfo, SlayerShot,
                    VirginNomination, BecameInfo, EvilTwinPair,
                    ChoirboyInfo, PrincessNominated,
-                   PreacherChoice, HuntsmanChoice,
+                   PreacherChoice, HuntsmanChoice, EngineerChoice,
                    PixieLearned, VillageIdiotInfo, LycanthropeChose,
                    LeviathanAnnounced, ExecutionNomination, InnkeeperChoice,
                    ExorcistChoice, GolemNomination, AlHadikhiaChose,
@@ -45,6 +45,7 @@ from .catalogue import CHARACTERS, slot_of
 from .waking import LEVIATHAN_CHOOSES_FOR
 from .worlds import _at as moment_of
 from .worlds import READ_AT, SETUP_SLOT, _row_slot, reading_at
+from .worlds import Engineered
 from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
                      SUMMON_READS, Summoned, TEA_READS, TeaParty,
                      Timeline, TurnedEvil, World,
@@ -270,6 +271,11 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             "the_minions_choose_a_babysitter": 5,
             "a_snake_charmer_takes_the_star": 11,
             "a_pit_hag_makes_somebody_else": 16,
+            # The Engineer (26.10.2026): after the Sailor, before the
+            # Preacher, the Poisoner, the Snake Charmer and every Demon —
+            # on the first night after the Summoner, which does nothing
+            # then.
+            "an_engineer_rebuilds_the_evil": 8,
             # After the Scarlet Woman, before the Lunatic, the Exorcist
             # and every Demon (21.10.2026).
             "the_summoner_summons": 19,
@@ -307,6 +313,7 @@ _TURN_OF = {"a_snake_charmer_takes_the_star": "SnakeCharmer",
             "a_hatted_summoner_summons": "Summoner",
             "a_barber_lets_the_demon_swap_two": "Barber",
             "a_huntsman_finds_the_damsel": "Huntsman",
+            "an_engineer_rebuilds_the_evil": "Engineer",
             "a_farmer_hands_it_on": "Farmer",
             "the_minions_choose_a_babysitter": "LilMonsta",
             "a_bounty_hunter_brings_an_evil_townsfolk": "Philosopher"}
@@ -462,6 +469,12 @@ def possible_timelines(world, state, cap=128):
         if "Summoner" in state.script.keys and len(died) == 1 \
                 and _tea_night(died[0][1]) <= 3:
             cap *= 1 + len(_summonable(state)) * state.n_players
+    # And for every way the Engineer's choice went (26.10.2026), and a
+    # Summoner it chose summoning beside the Demon.
+    if _engineer_on_board(state):
+        cap = max(cap, cap * (1 + ENGINEER_STORIES // 8))
+        if "Summoner" in state.script.keys:
+            cap *= 1 + len(_summonable(state)) * state.n_players
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -532,6 +545,10 @@ def _movers_in(world, state):
         claimed = hatter_claimants(state)
         if any(s in claimed for s, p in deaths):
             count += 2
+    # The Engineer's choice: night by night, always, for the same reason
+    # (26.10.2026).
+    if _engineer_on_board(state):
+        count += 2
     for key, needs in (("Barber", barber_died), ("Farmer", at_night),
                        ("FangGu", at_night), ("Ogre", True)):
         on = _barber_on_board(state) if key == "Barber" else _on_board(state,
@@ -626,6 +643,8 @@ def _nights_it_acts(rule, state):
         return {k for k, _kind in deaths}
     if name in ("the_summoner_summons", "a_hatted_summoner_summons"):
         return {1, 2, 3}
+    if name == "an_engineer_rebuilds_the_evil":
+        return {info.night for info in engineer_rows(state)}
     if name == "a_hatters_tea_party":
         claimed = hatter_claimants(state)
         return {int(p[1:]) + 1 for seat, p in state.death_phases()
@@ -1570,8 +1589,15 @@ def a_snake_charmer_takes_the_star(world, state):
         #
         # `before` was already being computed to find *who* the Demon is,
         # and correctly. It simply was not used for *what* to copy.
-        stories = [(changes + (Change(after, charmer,
-                                      world.role_at(demon, before), sides[0]),
+        # Unless an Engineer made it another Demon earlier that night, at
+        # its turn before the charmer's (26.10.2026): that one is handed
+        # over.
+        held = world.role_at(demon, before)
+        for c in getattr(world, "changes", ()):
+            if isinstance(c, Engineered) and c.seat == demon \
+                    and c.phase == after:
+                held = c.role
+        stories = [(changes + (Change(after, charmer, held, sides[0]),
                                Change(after, demon, "SnakeCharmer",
                                       sides[1])),
                     cost)
@@ -1919,10 +1945,16 @@ def summon_options(world, state):
     over = getattr(state, "game_over", False)
     standing = lambda night: gone is None \
         or phase_index(gone) >= phase_index(f"N{night}")
+    # An Engineer that may have taken its character: the Storyteller
+    # summons then, alive or dead as the player is (their jinx,
+    # 26.10.2026). Offered beside the Summoner's own; the plan keeps the
+    # one the story fits.
+    jinxed = _engineer_on_board(state) \
+        and _engineer_may_take_the_summoner(state)
     out = []
     for demon in _summonable(state):
         for night in ((2, 3) if demon == "Pukka" else (3,)):
-            if not reached(night) or not standing(night):
+            if not reached(night) or not (standing(night) or jinxed):
                 continue
             for seat in _summoned_seats(world, state, night, demon):
                 for extra in _typhon_neighbours(world, state, night, seat,
@@ -2256,10 +2288,12 @@ def a_hatters_tea_party_at_night(world, state):
 
 
 def tea_parties(world):
-    """The `TeaParty` changes of this story, by night: {phase: [...]}."""
+    """The `TeaParty` changes of this story, by night: {phase: [...]} —
+    the Hatter's, not the Engineer's."""
     out = {}
     for change in getattr(world, "changes", ()):
-        if isinstance(change, TeaParty):
+        if isinstance(change, TeaParty) \
+                and not isinstance(change, Engineered):
             out.setdefault(change.phase, []).append(change)
     return out
 
@@ -2369,14 +2403,221 @@ def summoned_beside(view):
     return None
 
 
+# --------------------------------------------------------------------------
+# The Engineer (26.10.2026, claude/ingenieur-lesarten.md)
+# --------------------------------------------------------------------------
+# "Once per game, at night, choose which Minions or which Demon is in
+# play." Reckoned only from its row (A Weg 1): without one nothing
+# happened, as with the Barber and the Hatter. At its turn — after the
+# Sailor, before the Preacher, the Poisoner and every Demon — whoever
+# already holds a chosen character keeps it, and the others are handed
+# out to the other Minions: every way is a story, each as likely (B Weg
+# 1). Fewer chosen than Minions without one: that many change and the
+# rest stay; more: every choice of the right number (D Weg 1). A Demon
+# chosen makes the Demon it. Drunk or poisoned, nothing changes and the
+# choice is spent (C Weg 1).
+#
+# The changes are tea-party changes (`worlds.Engineered`): the side kept,
+# the night its first with the new character, so a later turn acts that
+# night and what acts "at the start" acts at once (E Weg 1); a Summoner
+# chosen while a Demon lives summons beside it on the third night (F
+# Weg 1). A living Summoner it removes leaves its ability to the
+# Storyteller, who summons all the same (their jinx, F Weg 1).
+#
+# Not reckoned, and the report says so (`engineer_unreckoned`, G Weg 1):
+# Lil' Monsta, Legion or Riot chosen as the Demon, and a Demon chosen
+# while two live.
+
+NOT_ENGINEERED = ("LilMonsta", "Legion", "Riot")
+
+# Room for every way the Engineer's choice went, beside everything else.
+ENGINEER_STORIES = 512
+
+
+def engineer_rows(state):
+    """The Engineer rows that could have done anything: the first each
+    seat wrote, with a choice an Engineer can make."""
+    got = getattr(state, "_engineer_cache", None)
+    if got is not None and got[0] is state.infos \
+            and got[1] == len(state.infos):
+        return got[2]
+    out = [i for i in state.infos if isinstance(i, EngineerChoice)
+           and not i._earlier(state) and i.chosen(state) is not None]
+    state._engineer_cache = (state.infos, len(state.infos), out)
+    return out
+
+
+def _engineer_on_board(state):
+    """An Engineer on the script, or taken by a Philosopher, with a row."""
+    return _on_board(state, "Engineer") and bool(engineer_rows(state))
+
+
+def _tea_on_board(state):
+    """A Hatter, or an Engineer that chose: somebody may change character
+    in the middle of the game the tea-party way."""
+    return _hatter_on_board(state) or _engineer_on_board(state)
+
+
+def _engineer_works(view, state, info):
+    """Could this seat have used the Engineer's ability that night: alive
+    and holding it, at its turn? Whether it was drunk or poisoned is the
+    plan's (`engineer_failed`)."""
+    phase = f"N{info.night}"
+    if phase_index(state.final_phase()) < phase_index(phase):
+        return False
+    if info.player not in state.alive_set(phase):
+        return False
+    with _turn_of("Engineer", info.night):
+        return _has_ability(view, state, info.player, "Engineer", phase)
+
+
+def engineer_options(view, state, info):
+    """Every way a working Engineer's choice changed somebody, as the
+    changes each writes; [] where it changes nobody, or the solver does not
+    reckon it (`engineer_unreckoned`)."""
+    chosen = info.chosen(state)
+    if chosen is None:
+        return []
+    night = info.night
+    phase = f"N{night}"
+    n = state.n_players
+    with _turn_of("Engineer", night):
+        roles = [view.role_at(p, phase) for p in range(n)]
+        side = {p: "evil" if view.evil_at(p, phase) else "good"
+                for p in range(n)}
+        demons = list(view.demons_at(phase))
+    if TEAM[chosen[0]] == "demon":
+        key = chosen[0]
+        if key in NOT_ENGINEERED or len(demons) != 1:
+            return []
+        seat = demons[0]
+        if roles[seat] == key or TEAM.get(roles[seat]) != "demon":
+            return []
+        # A Zombuul that has died once, alive but dead to the board, stays
+        # what it is (Stelle 86, 26.10.2026: to be asked). Not "not
+        # reckoned": every world where an executed player was the Zombuul
+        # would leave the whole board without figures.
+        if seat not in state.alive_set(phase):
+            return []
+        return [(Engineered(phase, seat, key, side[seat]),)]
+    seats = [p for p in range(n) if TEAM.get(roles[p]) == "minion"]
+    held = set(roles)
+    spare = [k for k in chosen if k not in held]
+    free = [p for p in seats if roles[p] not in chosen]
+    k = min(len(spare), len(free))
+    if not k:
+        return []
+    out = []
+    for who in itertools.combinations(free, k):
+        for what in itertools.permutations(spare, k):
+            out.append(tuple(Engineered(phase, p, r, side[p])
+                             for p, r in zip(who, what)))
+            if len(out) >= ENGINEER_STORIES:
+                return out
+    return out
+
+
+@transition_rule
+def an_engineer_rebuilds_the_evil(world, state):
+    """Every way the Engineer's choice went: "nothing changed" first (it
+    was drunk or poisoned, or is no Engineer at all), then each way the
+    Storyteller may have handed it out (B and D Weg 1)."""
+    if not _engineer_on_board(state):
+        return [((), 1.0)]
+    stories = [((), 1.0)]
+    for info in engineer_rows(state):
+        grown = []
+        for changes, cost in stories:
+            grown.append((changes, cost))
+            view = Timeline(world, changes) if changes else world
+            if not _engineer_works(view, state, info):
+                continue
+            for way in engineer_options(view, state, info):
+                grown.append((changes + way, cost))
+        stories = grown
+    return stories
+
+
+def engineered(view):
+    """The Engineer's changes in this story."""
+    return [c for c in getattr(view, "changes", ())
+            if isinstance(c, Engineered)]
+
+
+def engineer_failed(world, state):
+    """What the Engineer's rows ask of the plan: {night: seats not
+    working} for a working Engineer whose choice would have changed
+    somebody and did not (C Weg 1).
+
+    A choice that changed somebody asks nothing, as the Huntsman's does:
+    the plan settles whole nights, and a poison that reaches the Engineer
+    later the same night — a Pukka's, a No Dashii it has just made —
+    would otherwise read as one it carried at its turn, and the true
+    story was lost (simulator, 26.10.2026)."""
+    failures = {}
+    made = {c.phase for c in engineered(world)}
+    for info in engineer_rows(state):
+        if not _engineer_works(world, state, info):
+            continue
+        night = info.night
+        if f"N{night}" not in made and engineer_options(world, state, info):
+            failures.setdefault(night, set()).add(info.player)
+    return failures
+
+
+def _summoner_engineered_away(world, state):
+    """The night an Engineer's change took a living Summoner's character
+    before it summoned, or None. The Storyteller then has its ability
+    (their jinx, F Weg 1)."""
+    for c in engineered(world):
+        night = int(c.phase[1:])
+        if night > 3 or c.role == "Summoner":
+            continue
+        if world.role_at(c.seat, f"B{night - 1}" if night > 1 else "N0") \
+                == "Summoner" and c.seat in state.alive_set(c.phase):
+            return night
+    return None
+
+
+def _engineer_may_take_the_summoner(state):
+    """Could an Engineer's row have taken the Summoner's character before
+    it summoned? Then the Storyteller may have summoned where the
+    Summoner could not."""
+    return _on_board(state, "Engineer") and any(
+        info.night <= 3 and TEAM[info.chosen(state)[0]] == "minion"
+        and "Summoner" not in info.chosen(state)
+        for info in engineer_rows(state))
+
+
+def engineer_unreckoned(view, state):
+    """What the Engineer's row leaves out that the solver does not reckon,
+    or None: Lil' Monsta, Legion or Riot chosen as the Demon, or a Demon
+    chosen while two live (G Weg 1)."""
+    if not _engineer_on_board(state):
+        return None
+    for info in engineer_rows(state):
+        if not _engineer_works(view, state, info):
+            continue
+        chosen = info.chosen(state)
+        if TEAM[chosen[0]] != "demon":
+            continue
+        if chosen[0] in NOT_ENGINEERED:
+            return "engineer"
+        with _turn_of("Engineer", info.night):
+            if len(view.demons_at(f"N{info.night}")) > 1:
+                return "engineer"
+    return None
+
+
 def hatter_unreckoned(view, state):
     """What this story leaves out that the solver does not reckon yet, or
     None: Lil' Monsta taken in the middle of the game ("lil monsta", U Weg
     2). A Hatter dead at night ("hatter at night") is reckoned since stage
     3c (23.10.2026), two living Demons through the Summoner ("two demons")
-    since stage 2 (25.10.2026)."""
+    since stage 2 (25.10.2026). And what the Engineer leaves out
+    (`engineer_unreckoned`, 26.10.2026)."""
     if not _hatter_on_board(state):
-        return None
+        return engineer_unreckoned(view, state)
     final = phase_index(state.final_phase())
     for _seat, phase in hatter_deaths(view, state):
         night = _tea_night(phase)
@@ -2401,7 +2642,7 @@ def hatter_unreckoned(view, state):
                 p in alive and TEAM[view.role_at(p, before)] == "demon"
                 for p in range(n)):
             return "lil monsta"
-    return None
+    return engineer_unreckoned(view, state)
 
 
 @impairment.source_rule
@@ -3298,6 +3539,12 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
     phase = f"N{night}"
     seat = holding_now(world, state, "Pukka", phase)
     if seat is None or seat not in state.alive_set(phase):
+        return []
+    # Made the Pukka tonight — by an Engineer, or at a tea party — it only
+    # poisons, as on a first night: nothing it chose is due yet
+    # (26.10.2026).
+    from .worlds import tea_made
+    if tea_made(world, seat, night):
         return []
     # Three ways a Pukka's night passes without a body besides "the one
     # it poisoned could not die".
@@ -5313,14 +5560,35 @@ def _plain_failures(world, state, outcome=None):
     # instead (their jinxes) — and drunk or poisoned on a turn that made
     # none (E, Weg 1).
     if _in_bag(state, "Summoner"):
+        # An Engineer that took a living Summoner's character left its
+        # ability to the Storyteller (their jinx, 26.10.2026, F Weg 1):
+        # then the Demon comes whatever became of that player.
+        away = (_summoner_engineered_away(world, state)
+                if _engineer_on_board(state) else None)
+        jinxed = away is None and _engineer_on_board(state) \
+            and _engineer_may_take_the_summoner(state)
+        # Whether the Engineer took it is a question about the board from
+        # its night on: asked as one, so a telling that fails here is not
+        # taken for one that fails with any choice (`_best_story_told`).
+        if _engineer_on_board(state) and world.find("Summoner") is not None \
+                and _engineer_may_take_the_summoner(state):
+            world.role_at(world.find("Summoner"), "N3")
         for change in getattr(world, "changes", ()):
             summoner = world.find("Summoner")
             if summoner is None:
                 break
             night = int(change.phase[1:])
+            if isinstance(change, NotSummoned) and away is not None:
+                return None, None, 1.0, None
+            if isinstance(change, Summoned) and jinxed:
+                # Offered for the Storyteller's summoning: the Summoner's
+                # own needs it alive on its turn.
+                gone = sorted(state.died_at(summoner), key=phase_index)
+                if gone and phase_index(gone[0]) < phase_index(change.phase):
+                    return None, None, 1.0, None
             if isinstance(change, Summoned):
-                if not (_on_board(state, "Courtier")
-                        or _on_board(state, "Preacher")):
+                if away is None and not (_on_board(state, "Courtier")
+                                         or _on_board(state, "Preacher")):
                     working.setdefault(night, set()).add(summoner)
             elif isinstance(change, NotSummoned) and change.phase == "N3" \
                     and summoner in state.alive_set("N3"):
@@ -5329,7 +5597,7 @@ def _plain_failures(world, state, outcome=None):
     # A Summoner chosen at a tea party (Hatter stage 2, 25.10.2026): working
     # when it made a Demon, and drunk or poisoned on a third night it
     # reached holding it, alive, with none made.
-    if _in_bag(state, "Summoner") and _hatter_on_board(state):
+    if _in_bag(state, "Summoner") and _tea_on_board(state):
         made = next((c for c in getattr(world, "changes", ())
                      if isinstance(c, Summoned)), None)
         final = phase_index(state.final_phase())
@@ -5348,6 +5616,12 @@ def _plain_failures(world, state, outcome=None):
     # The Hatter (22.10.2026): whoever chose a new character did so
     # because a Hatter died working. Nobody choosing asks nothing — they
     # may always keep what they have.
+    # The Engineer (26.10.2026): drunk or poisoned where its choice would
+    # have changed somebody and did not.
+    if _engineer_on_board(state):
+        for night, seats in engineer_failed(world, state).items():
+            failures[night].update(seats)
+
     parties = tea_parties(world) if _hatter_on_board(state) else {}
     if parties:
         died = hatter_deaths(world, state)
@@ -7366,7 +7640,7 @@ def _best_story_told(world, state, outcome, viable):
     # there: the choices change nothing it looked at, and ask one thing
     # more — a Hatter that was working. `tea` holds those stories.
     tea = None
-    if TEA_PRUNE and _hatter_on_board(state):
+    if TEA_PRUNE and _tea_on_board(state):
         parties = [moment_of(c) for got, _w in stories
                    for c in got if isinstance(c, TeaParty)]
         if parties:
@@ -7612,7 +7886,7 @@ def _story_shares(world, viable, state=None):
     # A Summoner chosen at a tea party is one choice, however many ways it
     # then summoned: each way gets its share of that one (Hatter stage 2,
     # 25.10.2026), as a random pick of player and Demon would.
-    if state is not None and len(viable) > 1 and _hatter_on_board(state) \
+    if state is not None and len(viable) > 1 and _tea_on_board(state) \
             and "Summoner" in state.script.keys:
         viable = [(cost * _summon_share(world, changes, state), changes)
                   for cost, changes in viable]

@@ -224,6 +224,16 @@ class TeaParty(Change):
     __slots__ = ()
 
 
+class Engineered(TeaParty):
+    """A Minion or the Demon the Engineer made something else (26.10.2026,
+    claude/ingenieur-lesarten.md), at the Engineer's turn. A tea party in
+    all but its cause: a character of the same type, the side kept, its
+    first night with it that night (E Weg 1), a Summoner chosen while a
+    Demon lives summoning beside it (F Weg 1). Told apart because no
+    Hatter's death asks for it."""
+    __slots__ = ()
+
+
 # Whether anything from the Hatter's night on was looked at while a story
 # was told (solver._best_tea_story): [moment, looked]. A telling where
 # nobody chose anything new, that failed without looking, fails the same

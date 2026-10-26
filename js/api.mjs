@@ -59,6 +59,7 @@ export const INFO_SOURCES = {
   GolemNomination: "Golem", PsychopathKill: "Psychopath",
   PsychopathRoshambo: "Psychopath", WidowKnown: "Widow",
   PreacherChoice: "Preacher", HuntsmanChoice: "Huntsman",
+  EngineerChoice: "Engineer",
   PuzzlemasterGuess: "Puzzlemaster", BoomdandyExploded: "Boomdandy",
   PixieLearned: "Pixie", VillageIdiotInfo: "VillageIdiot",
   LycanthropeChose: "Lycanthrope", HarpyMadness: "Harpy",

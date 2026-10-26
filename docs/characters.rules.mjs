@@ -15,7 +15,7 @@ import {ORGAN_GRINDER_BY_CHOICE, Source, makePoisonerRule, minionStillActs,
         sourceRule, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {dealtRoles} from "./worlds.mjs";
+import {dealtRoles, teaMade} from "./worlds.mjs";
 import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
@@ -745,6 +745,8 @@ causeRule(function aPukkaKillsWhatItPoisoned(world, state, night) {
   if (!inBag(state, "Pukka") || night < 2) return [];
   const seat = acting(world, state, "Pukka", night);
   if (seat === null) return [];
+  // Made the Pukka tonight, it only poisons (26.10.2026). See solver.py.
+  if (teaMade(world, seat, night)) return [];
   // Three ways a Pukka's night passes without a body besides "the one
   // it poisoned could not die". Drunk or poisoned tonight: no attack,
   // and that is the actor. Or it was last night: it poisoned nobody

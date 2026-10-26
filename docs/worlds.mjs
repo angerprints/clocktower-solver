@@ -173,6 +173,11 @@ export const summonerWorld = world => world.roles.includes("Summoner");
 export const teaParty = (phase, seat, role, side) =>
   ({phase, seat, role, side, tea: true});
 
+/** A Minion or the Demon the Engineer made something else (26.10.2026):
+ * a tea party in all but its cause. `Engineered` in Python. */
+export const engineered = (phase, seat, role, side) =>
+  ({phase, seat, role, side, tea: true, engineered: true});
+
 /** Whether anything from the Hatter's night on was looked at while a
  * story was told: {at, read}. See worlds.py. */
 export const TEA_READS = {now: null};

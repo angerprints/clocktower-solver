@@ -1264,6 +1264,20 @@ export const DATA = {
     "Damsel"
    ]
   },
+  "Engineer": {
+   "id": "engineer",
+   "name": "Engineer",
+   "team": "townsfolk",
+   "wake": [
+    "every",
+    "first",
+    "sometimes"
+   ],
+   "chooses": true,
+   "nights": "conditional",
+   "first_night": 270,
+   "other_night": 130
+  },
   "Puzzlemaster": {
    "id": "puzzlemaster",
    "name": "Puzzlemaster",

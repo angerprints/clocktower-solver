@@ -2749,6 +2749,12 @@ class ClockmakerInfo(Info):
         summoner = None
         if demon is None and "Summoner" in w.roles:
             summoner = demon = w.find_at("Summoner", phase)
+            # An Engineer took its character before the Clockmaker's turn:
+            # no Demon and no Summoner, and the Storyteller holds its
+            # ability (their jinx). Whatever the Storyteller says
+            # (26.10.2026).
+            if demon is None:
+                return True
         if demon is None:
             return False
         n = len(w.roles)
@@ -3695,6 +3701,56 @@ class HuntsmanChoice(Info):
         if not has_it(w, s, self.target, "Damsel", _began(self.night)):
             return True
         return not has_it(w, s, self.target, "Damsel", f"D{self.night}")
+
+
+@dataclass
+class EngineerChoice(Info):
+    """What the Engineer chose, once a game, said by the Engineer
+    (26.10.2026, claude/ingenieur-lesarten.md).
+
+    "Once per game, at night, choose which Minions or which Demon is in
+    play." Either Minions of the script, or one Demon of the script — not
+    both. Whoever already holds a chosen character keeps it; the rest are
+    handed out to the other Minions, every way a story of its own (B and
+    D Weg 1, `solver.an_engineer_rebuilds_the_evil`). A Demon chosen
+    turns the Demon into it. Drunk or poisoned, nothing happens, and the
+    choice is spent (C Weg 1) — asked by the impairment plan, where a
+    working Engineer had to change something (`solver.engineer_failed`).
+    """
+
+    is_a_choice = True
+
+    roles: tuple = ()
+    source_role = "Engineer"
+
+    def _earlier(self, s):
+        for info in s.infos:
+            if info is self:
+                return False
+            if isinstance(info, EngineerChoice) \
+                    and info.player == self.player \
+                    and info.night <= self.night:
+                return True
+        return False
+
+    def chosen(self, s):
+        """The characters it chose, each once, or None where no Engineer
+        could have chosen them: off the script, Minions mixed with a
+        Demon, or more than one Demon."""
+        got = tuple(dict.fromkeys(self.roles or ()))
+        if not got or any(k not in s.script.keys for k in got):
+            return None
+        teams = {TEAM.get(k) for k in got}
+        if teams == {"minion"}:
+            return got
+        if teams == {"demon"} and len(got) == 1:
+            return got
+        return None
+
+    def holds(self, w, s, rh, seat=None):
+        if self._earlier(s):
+            return True                   # spent already: nothing happens
+        return self.chosen(s) is not None
 
 
 @dataclass

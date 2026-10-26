@@ -217,6 +217,12 @@ condition("Huntsman", (world, state, seat, night) => {
   return spent === null || night <= spent;
 });
 
+/** The same for the Engineer, once a game (26.10.2026). */
+condition("Engineer", (world, state, seat, night) => {
+  const spent = choseOn(state, seat, "Engineer");
+  return spent === null || night <= spent;
+});
+
 /** Who is alive when the King counts, which is late in the night.
  *
  * After tonight's deaths, and by what is so rather than by what the
@@ -517,10 +523,10 @@ export function uncertain(world, state, seat, night) {
     return !state.infos.some(
       info => info.sourceRole === "Assassin" && info.player === seat);
   }
-  if (acting === "Huntsman") {
+  if (acting === "Huntsman" || acting === "Engineer") {
     // As the Nightwatchman. See waking.py.
     if (night < 2 || !state.aliveSet(phase).has(seat)) return false;
-    return choseOn(state, seat, "Huntsman") === null;
+    return choseOn(state, seat, acting) === null;
   }
   if (acting === "Nightwatchman") {
     // The first night is certain. After that it may have chosen and
