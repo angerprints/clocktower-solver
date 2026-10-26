@@ -299,7 +299,7 @@ function reportPhase(state) {
  * the deal, since a claim is about the whole game.
  */
 function tallySeats(perSeat, world, view, state, wt, now) {
-  const demon = view.demonAt(now);
+  const demons = view.demonsAt(now);
   for (let p = 0; p < perSeat.length; p++) {
     const seat = perSeat[p];
     const role = view.roleAt(p, now);
@@ -310,7 +310,7 @@ function tallySeats(perSeat, world, view, state, wt, now) {
       const sides = cultSides(view, state, p, now);
       if (sides.has(true)) seat.evil += wt / sides.size;
     } else if (view.evilAt(p, now)) seat.evil += wt;
-    if (p === demon) seat.demon += wt;
+    if (demons.includes(p)) seat.demon += wt;
     if (believesAnother(role)) seat.drunk += wt;
     if (isLying(world, state, p)) seat.lying += wt;
   }
@@ -561,7 +561,8 @@ export function analyze(state, allowGoodLies = false,
     for (const [story, part] of storyShares(world, viable, state)) {
       tallySeats(perSeat, world, story, state, wt * part, now);
       for (const [day, seat] of executed)
-        if (story.demonAt(`D${day}`) === seat) hanged[seat] += wt * part;
+        if (story.demonsAt(`D${day}`).includes(seat))
+          hanged[seat] += wt * part;
     }
     // Blame follows the best story, like the readings' outcomes above.
     tallyBlame(blame, view, state, wt);

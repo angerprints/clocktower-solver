@@ -201,9 +201,9 @@ export function fallsAs(w, s, seat, role, phase) {
  * Scarlet Woman still holds its character on its corpse, and the rules
  * asked the corpse (Stelle 59, 14.10.2026). See info.py. */
 export function holdingNow(w, s, role, phase) {
-  const demon = w.demonAt(phase);
-  if (demon !== null && demon !== undefined && w.roleAt(demon, phase) === role)
-    return demon;
+  // Either of two living Demons (Hatter stage 2).
+  for (const demon of w.demonsAt(phase))
+    if (w.roleAt(demon, phase) === role) return demon;
   const alive = s.aliveSet(phase);
   let first = null;
   for (let seat = 0; seat < w.roles.length; seat++)
@@ -629,10 +629,12 @@ export const FlowergirlInfo = define("FlowergirlInfo", "Flowergirl",
     const day = this.night - 1;
     if (day < 1) return false;         // there was no day before the first
     if (!this.weighed(s)) return true;
-    const demon = w.demonAt(`D${day}`);
-    if (demon === null) return !this.voted;
+    const demons = w.demonsAt(`D${day}`);
+    if (!demons.length) return !this.voted;
+    // Either of two living Demons (Hatter stage 2, B Weg 1).
     const who = (s.votes || {})[day];
-    const voted = !!who && (who.has ? who.has(demon) : who.includes(demon));
+    const voted = !!who && demons.some(
+      d => (who.has ? who.has(d) : who.includes(d)));
     return voted === !!this.voted;
   }, {
     // A day voted with eyes closed left no votes on the board: nothing to
@@ -829,7 +831,7 @@ export function savantTruths(says, w, phase, real = false, s = null) {
     }
     case "demon_among": {
       const seats = new Set(says.seats);
-      const out = set([seats.has(w.demonAt(phase))]);
+      const out = set([w.demonsAt(phase).some(d => seats.has(d))]);
       if (!real && [...seats].some(
             p => CHARACTERS[w.roleAt(p, phase)].registers.includes("demon")))
         out.add(true);
@@ -1033,7 +1035,7 @@ export const SnakeCharmerChoice = define("SnakeCharmerChoice", "SnakeCharmer",
     // Charmer was not working — and the second is somebody else's excuse.
     // Not the Demon when it chose, as the night began. See info.py.
     const acted = this.night > 1 ? `B${this.night - 1}` : phase;
-    return w.demonAt(acted) !== this.target;
+    return !w.demonsAt(acted).includes(this.target);
   });
 
 /** The night a Philosopher took somebody else's ability.
@@ -1056,8 +1058,9 @@ export const PhilosopherChoice = define("PhilosopherChoice", "Philosopher",
  */
 export const SageInfo = define("SageInfo", "Sage",
   function (w) {
-    const demon = w.demonAt(`N${this.night}`);
-    return demon !== null && (demon === this.a || demon === this.b);
+    // Of two living Demons, either (Hatter stage 2, generous).
+    return w.demonsAt(`N${this.night}`).some(
+      d => d === this.a || d === this.b);
   });
 
 /** Who the Klutz pointed at on dying.
@@ -1784,16 +1787,16 @@ export const ChoirboyInfo = define("ChoirboyInfo", "Choirboy",
   function (w, s) {
     const phase = `N${this.night}`;
     if (!kingsFallen(this, w, s).length) return false;
-    if (this.target === w.demonAt(phase)) return true;
+    if (w.demonsAt(phase).includes(this.target)) return true;
     return w.roleAt(this.target, phase) === "Recluse";
   }, {
     isTrue(w, s) {
       return kingsFallen(this, w, s).length > 0
-        && this.target === w.demonAt(`N${this.night}`);
+        && w.demonsAt(`N${this.night}`).includes(this.target);
     },
     leanedOn(w) {
       const phase = `N${this.night}`;
-      return this.target !== w.demonAt(phase)
+      return !w.demonsAt(phase).includes(this.target)
         && w.roleAt(this.target, phase) === "Recluse" ? [this.target] : [];
     },
   });
@@ -1922,7 +1925,7 @@ export const PuzzlemasterGuess = define("PuzzlemasterGuess", "Puzzlemaster",
   () => true, {
     instead(w, s) {
       if (earlierSame(this, s)) return null;
-      if (this.shown !== w.demonAt(`D${this.night}`)) return null;
+      if (!w.demonsAt(`D${this.night}`).includes(this.shown)) return null;
       return [[this.guess], []];
     },
   });
@@ -1936,9 +1939,9 @@ export const BoomdandyExploded = define("BoomdandyExploded", "Boomdandy",
         || w.roleAt(this.player, phase) !== "Boomdandy") return false;
     const pointed = typeof this.pointed === "number" ? this.pointed : -1;
     if (pointed < 0) return true;
-    const demon = w.demonAt(phase);
-    return !(demon !== null && demon !== this.player && demon !== pointed
-             && s.diedAt(demon).includes(phase));
+    // Every living Demon among the three left (Hatter stage 2).
+    return !w.demonsAt(phase).some(demon => demon !== this.player
+      && demon !== pointed && s.diedAt(demon).includes(phase));
   }, {
     hard() { return true; },
     isInformation() { return false; },
