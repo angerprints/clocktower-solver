@@ -47,7 +47,7 @@ from .waking import LEVIATHAN_CHOOSES_FOR
 from .worlds import _at as moment_of
 from .worlds import READ_AT, SETUP_SLOT, _row_slot, reading_at
 from .worlds import Engineered
-from .worlds import BOFFIN_UNSEEN, BoffinGift, boffin_gift_change
+from .worlds import BOFFIN_UNSEEN, BoffinGift, boffin_gift_change, bracket_gifts
 from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
                      SUMMON_READS, Summoned, TEA_READS, TeaParty,
                      Timeline, TurnedEvil, World,
@@ -1334,6 +1334,12 @@ def a_bounty_hunter_brings_an_evil_townsfolk(world, state):
     dealt = dealt_roles(world)
     town = [p for p, role in enumerate(dealt) if TEAM[role] == "townsfolk"]
     if "BountyHunter" in dealt:
+        return [((TurnedEvil("N0", p, None, "evil"),), 1.0) for p in town]
+    # A Demon the Boffin gave it at the setup: its bracket holds in that
+    # story (E Weg 1, stage 2, 27.10.2026).
+    demon = world.demon_at("N1")
+    if demon is not None and boffin_gift(world, state, demon,
+                                         "N1") == "BountyHunter":
         return [((TurnedEvil("N0", p, None, "evil"),), 1.0) for p in town]
     stories = [((), 1.0)]
     for info in state.infos:
@@ -2671,6 +2677,8 @@ BOFFIN_SEEN = frozenset({
     # Stage 2 (N and H, Patrick 26./27.10.2026): what a Demon would use
     # for evil, and what he asked for.
     "Engineer", "Nightwatchman", "Pixie", "Professor", "Huntsman",
+    # Its bracket turns a Townsfolk evil (E Weg 1).
+    "BountyHunter",
 })
 
 # Told only where a Boffin row names them (L Weg 1, Patrick 27.10.2026):
@@ -2702,10 +2710,12 @@ def boffin_rows(state):
     return out
 
 
-def boffin_may_give(view, state, phase):
+def boffin_may_give(view, state, phase, setup=False):
     """Every good character the Boffin could give at that moment: on the
     script, nobody holding it (alive or dead), none their jinxes forbid,
-    a Village Idiot only while one of its tokens is spare (B Weg 1)."""
+    a Village Idiot only while one of its tokens is spare (B Weg 1). At
+    the setup its bracket holds (E Weg 1): what it brings is in play — a
+    King for the Choirboy, the Damsel for the Huntsman."""
     n = state.n_players
     held = [view.role_at(p, phase) for p in range(n)]
     out = []
@@ -2716,6 +2726,9 @@ def boffin_may_give(view, state, phase):
             continue
         count = held.count(key)
         if count and count >= CHARACTERS[key].copies:
+            continue
+        if setup and any(other not in held
+                         for other in CHARACTERS[key].brings):
             continue
         out.append(key)
     return out
@@ -2738,8 +2751,19 @@ def _boffin_named(state, night, setup):
 def boffin_offers(view, state, phase, seat, slot, setup=False):
     """Every ability the Boffin may have given this seat at that moment,
     as ((mark,), cost) — "nothing the town sees" first."""
-    may = boffin_may_give(view, state, phase)
+    may = boffin_may_give(view, state, phase, setup)
     named = _boffin_named(state, int(phase[1:]), setup)
+    # A deal only a gift's bracket explains has that gift (E Weg 1).
+    forced = None
+    if setup:
+        base = view.world if isinstance(view, Timeline) else view
+        forced = bracket_gifts(base.roles, state.script,
+                               getattr(state, "fabled", ()) or ())
+    if forced is not None:
+        unseen = max(1, len([k for k in may if k not in BOFFIN_SEEN]))
+        return [((boffin_gift_change(phase, seat, k, slot),),
+                 1.0 if named == k else 1.0 / unseen)
+                for k in may if k in forced and named in (None, k)]
     if named is not None:
         if named not in may:
             return []

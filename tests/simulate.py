@@ -1133,10 +1133,14 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         from botc.catalogue import CHARACTERS as _C
         demon = next((p for p in range(n) if TEAM[roles[p]] == "demon"), None)
         if demon is not None:
+            # Its bracket holds at the setup (E Weg 1, stage 2): what it
+            # brings is dealt — a King for a Choirboy, the Damsel for a
+            # Huntsman.
             pool = [k for k in script.keys
                     if TEAM[k] in ("townsfolk", "outsider")
                     and k not in BOFFIN_NEVER_GIVES
-                    and roles.count(k) < _C[k].copies]
+                    and roles.count(k) < _C[k].copies
+                    and all(other in roles for other in _C[k].brings)]
             if pool:
                 d.boffin_gift = (demon, rng.choice(pool))
                 d.boffin_row = rng.random() < 0.5
@@ -3363,6 +3367,17 @@ def _the_eighth_five_set_up(d, rng):
     character, not a Drunk's token of it — one Townsfolk is evil from the
     start. Any of them, now and then the Bounty Hunter itself (table
     ruling, 11.10.2026, way 2 of C)."""
+    gift = getattr(d, "boffin_gift", None)
+    if gift is not None and gift[1] == "BountyHunter" \
+            and "BountyHunter" not in d.roles:
+        # The Demon the Boffin gave it: its bracket holds (E Weg 1, stage
+        # 2, 27.10.2026). Any Townsfolk.
+        town = [p for p in range(d.n) if TEAM[d.roles[p]] == "townsfolk"]
+        if town:
+            pick = rng.choice(town)
+            d.bh_evil = pick
+            d.side_changes.append(("N1", pick, d.roles[pick], "evil"))
+        return
     if "BountyHunter" not in d.roles:
         return
     hunter = d.roles.index("BountyHunter")

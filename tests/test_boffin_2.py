@@ -25,7 +25,8 @@ from botc.info import GameState                   # noqa: E402
 from botc.worlds import (BOFFIN_UNSEEN, BoffinGift, Timeline, World,  # noqa
                          boffin_gift_change)
 
-IDS = ["chef", "empath", "fortuneteller", "washerwoman", "professor",
+IDS = ["chef", "empath", "fortuneteller", "washerwoman", "investigator",
+       "professor",
        "huntsman", "engineer", "nightwatchman", "pixie", "philosopher",
        "balloonist", "choirboy", "king", "bountyhunter", "villageidiot",
        "saint", "damsel", "recluse", "barber", "hatter", "atheist",
@@ -33,9 +34,9 @@ IDS = ["chef", "empath", "fortuneteller", "washerwoman", "professor",
 SC = scripts.from_ids("Laborratte 2", IDS)
 
 #    0       1         2                3              4        5         6
-R = ["Chef", "Empath", "FortuneTeller", "Washerwoman", "Saint", "Boffin",
-     "Imp"]
-C = ["Chef", "Empath", "FortuneTeller", "Washerwoman", "Saint",
+R = ["Chef", "Empath", "FortuneTeller", "Washerwoman", "Investigator",
+     "Boffin", "Imp"]
+C = ["Chef", "Empath", "FortuneTeller", "Washerwoman", "Investigator",
      "Professor", "King"]
 
 
@@ -60,9 +61,12 @@ class TheNewStories(SolverTest):
 
     def test_stage_two_abilities_are_stories(self):
         got = seen_gifts()
-        for key in ("Professor", "Huntsman", "Engineer", "Nightwatchman",
-                    "Pixie"):
+        for key in ("Professor", "Engineer", "Nightwatchman", "Pixie",
+                    "BountyHunter"):
             self.assertIn(key, got)
+        # The Huntsman brings the Damsel (E Weg 1): only beside her.
+        self.assertNotIn("Huntsman", got)
+        self.assertIn("Huntsman", seen_gifts(R[:4] + ["Damsel"] + R[5:]))
         # Restrictions and knowledge stay "nothing the town sees" (O, Q).
         for key in ("Chef", "Recluse", "Damsel", "Atheist", "King"):
             self.assertNotIn(key, got)
@@ -72,6 +76,40 @@ class TheNewStories(SolverTest):
         st = state()
         self.assertEqual(I.BoffinGave(1, 5, role="Atheist").given(st),
                          "Atheist")
+
+
+class TheBrackets(SolverTest):
+    """E Weg 1: a gift's bracket holds exactly where the Demon has it."""
+
+    def test_an_outsider_only_the_balloonist_explains(self):
+        # Seven players deal no Outsider; the Saint is one. Only a
+        # Balloonist's "[+1 Outsider]" holds that, so the Demon has it.
+        roles = R[:4] + ["Saint"] + R[5:]
+        self.assertEqual(seen_gifts(roles), {"Balloonist"})
+        # A row naming something else cannot be.
+        st = state([I.BoffinGave(1, 5, role="Professor")])
+        self.assertEqual(S.possible_timelines(world(roles), st), [])
+
+    def test_the_choirboy_needs_the_king(self):
+        st = state()
+        self.assertNotIn("Choirboy", S.boffin_may_give(world(), st, "N1",
+                                                       setup=True))
+        roles = R[:4] + ["King"] + R[5:]
+        self.assertIn("Choirboy", S.boffin_may_give(world(roles), st, "N1",
+                                                    setup=True))
+        # Later, for a new Demon, no bracket.
+        self.assertIn("Choirboy", S.boffin_may_give(world(), st, "N3"))
+
+    def test_a_bounty_hunter_gift_turns_a_townsfolk(self):
+        turned = set()
+        for changes, _w in S.possible_timelines(world(), state()):
+            gift = next((c.gift for c in changes
+                         if isinstance(c, BoffinGift)), None)
+            evil = {c.seat for c in changes
+                    if type(c).__name__ == "TurnedEvil"}
+            self.assertEqual(bool(evil), gift == "BountyHunter")
+            turned |= evil
+        self.assertEqual(turned, {0, 1, 2, 3, 4})
 
 
 class WhatTheyDo(SolverTest):
@@ -116,7 +154,7 @@ class WhatTheyDo(SolverTest):
 # The Empath's seat holds the Professor here, so the Boffin may give the
 # Empath.
 R_NO_EMPATH = ["Chef", "Professor", "FortuneTeller", "Washerwoman",
-               "Saint", "Boffin", "Imp"]
+               "Investigator", "Boffin", "Imp"]
 
 
 class ItsReadings(SolverTest):
