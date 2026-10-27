@@ -1384,11 +1384,14 @@ def walk(deal, night, hidden):
                 # it is handed in whether or not it did anything.
                 if seat in state.droisoned:
                     continue
-                # Good at its turn tonight, as the solver and the simulator
-                # read it: a Snake Charmer that swapped with the Demon
-                # tonight, or a seat the Mezepheles turned, is evil by then
-                # (26.10.2026). Was "good when it was chosen", in daylight.
-                if state.sides.get(target) == "good" \
+                # Good *when it was chosen*, which was in daylight: a
+                # Goon the Demon has turned since still dies of it. Not a
+                # seat made a Demon tonight before its turn — a Snake
+                # Charmer's swap — which is evil by then, as in the
+                # simulator (27.10.2026).
+                if state.sides_at_dusk.get(target) == "good" \
+                        and TEAM.get(state.roles.get(target, ""), "") \
+                        != "demon" \
                         and target in state.alive:
                     state.kill(target, slot, "Moonchild")
 

@@ -1811,10 +1811,15 @@ def _moonchild_takes_one(d, night, heard, rng):
         d.moonchild_picked[night] = target
         if not d.working(_sober(d, seat, "Moonchild", f"N{night}"), night):
             continue
-        # Good at its turn tonight, as the solver reads it: a Snake
-        # Charmer that swapped with the Demon tonight is evil by then
-        # (gate, seed 1650 of the Boffin's line LN, 26.10.2026).
-        if d.side_at(target, phase) != "good":
+        if d.side_at(target, f"D{day}") != "good":
+            continue
+        # Made a Demon tonight, before the Moonchild's turn: evil by then.
+        # A Snake Charmer that swapped with the Demon tonight, as with the
+        # Summoner's Demon below (gate, seed 1650 of the Boffin's line LN,
+        # 27.10.2026). A Goon or a seat the Mezepheles turned tonight
+        # still dies of it, as before.
+        if TEAM[d.role_at(target, phase)] == "demon" \
+                and TEAM[d.role_at(target, f"D{day}")] != "demon":
             continue
         # Made the Demon tonight, before the Moonchild's turn: evil by
         # then (21.10.2026).
