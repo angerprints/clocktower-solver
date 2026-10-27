@@ -1784,10 +1784,11 @@ BOFFIN_2_LINES = {
     "e": ("Boffin", "Balloonist", "Huntsman", "Damsel", "Choirboy",
           "BountyHunter"),
 }
-# A Nightwatchman (a 4), a Professor (a 37), an Engineer (a 54), a Bounty
-# Hunter (e 4) and a Philosopher that took the Zealot (e 47).
-PLAYED_BOFFIN_2 = (("a", 4, 11), ("a", 37, 9), ("a", 54, 11), ("e", 4, 11),
-                   ("e", 47, 9))
+# Each solved in seconds: a Pixie (a 5), an Engineer (a 65), a
+# Nightwatchman (e 145), a Philosopher that took the Savant (e 156) and a
+# Bounty Hunter (e 340).
+PLAYED_BOFFIN_2 = (("a", 5, 7), ("a", 65, 7), ("e", 145, 7), ("e", 156, 8),
+                   ("e", 340, 7))
 
 
 # Games where the Engineer chose, each solved in seconds: a Widow on the
