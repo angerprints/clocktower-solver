@@ -1129,6 +1129,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     # town sees".
     d.boffin_gift = None
     d.boffin_row = False
+    d.boffin_took = None
     if "Boffin" in roles:
         from botc.catalogue import CHARACTERS as _C
         demon = next((p for p in range(n) if TEAM[roles[p]] == "demon"), None)
@@ -1144,6 +1145,19 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             if pool:
                 d.boffin_gift = (demon, rng.choice(pool))
                 d.boffin_row = rng.random() < 0.5
+                # Only with its row (R Weg 1, stage 2): the Barber, the
+                # Hatter, and the Philosopher's choice, which it writes
+                # down itself on the first night.
+                if d.boffin_gift[1] in ("Barber", "Hatter", "Philosopher"):
+                    d.boffin_row = True
+                if d.boffin_gift[1] == "Philosopher":
+                    took = rng.choice([k for k in script.keys
+                                       if TEAM[k] in ("townsfolk", "outsider")
+                                       and k != "Philosopher"
+                                       and k not in BOFFIN_NEVER_GIVES])
+                    from botc.info import boffin_philosophy
+                    d.boffin_gift = (demon, boffin_philosophy(took, "N1"))
+                    d.boffin_took = took
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -1872,7 +1886,7 @@ def _the_goon_answers(d, night, chooser, target):
     # A Demon the Boffin gave it does not turn good by it (their jinx,
     # 26.10.2026).
     if d.side_at(target, phase) != side \
-            and _gift(d, target, phase) != "Goon":
+            and not _gifted(d, target, "Goon", phase):
         d.side_changes.append((phase, target, "Goon", side))
     return True
 
@@ -2101,7 +2115,7 @@ def _tinker_may_go(d, night, rng):
             continue
         # Not a Demon the Boffin gave it: the Storyteller does not end the
         # game that way here (26.10.2026).
-        if _gift(d, seat, phase) == "Tinker":
+        if _gifted(d, seat, "Tinker", phase):
             continue
         if seat not in d.alive_at(phase):
             continue
@@ -2386,7 +2400,15 @@ def _took(d, seat, role, phase):
     if d.role_at(seat, phase) == "Philosopher" \
             and (getattr(d, "philosophies", None) or {}).get(seat) == role:
         return True
-    return role is not None and _gift(d, seat, phase) == role
+    return _gifted(d, seat, role, phase)
+
+
+def _gifted(d, seat, role, phase):
+    """Has this seat that ability through the Boffin then — the gift, or
+    what a Philosopher's ability it was given took (stage 2)?"""
+    from botc.info import boffin_abilities
+    return role is not None and role in boffin_abilities(
+        _gift(d, seat, phase), phase)
 
 
 def _boffin_at(d, phase):
@@ -2402,9 +2424,12 @@ def _gift(d, seat, phase):
     Boffin alive (26.10.2026). Only one the solver reckons so far (stage
     1, `solver.BOFFIN_SEEN`): the others it tells as "nothing the town
     sees", so here they do nothing."""
-    from botc.solver import BOFFIN_SEEN
+    from botc.solver import BOFFIN_SEEN, BOFFIN_ROW_ONLY
     got = getattr(d, "boffin_gift", None)
-    if got is None or got[0] != seat or got[1] not in BOFFIN_SEEN:
+    if got is None or got[0] != seat:
+        return None
+    base = got[1].split(">")[0]
+    if base not in BOFFIN_SEEN and base not in BOFFIN_ROW_ONLY:
         return None
     if d.role_at(seat, phase) != d.roles[seat]:
         return None
@@ -2416,7 +2441,7 @@ def _gift(d, seat, phase):
 def _sober(d, seat, role, phase):
     """Whose sobriety this seat's ability as that character rests on: the
     Boffin's for a Demon it gave the ability, else its own."""
-    if d.role_at(seat, phase) != role and _gift(d, seat, phase) == role:
+    if d.role_at(seat, phase) != role and _gifted(d, seat, role, phase):
         boffin = _boffin_at(d, phase)
         return seat if boffin is None else boffin
     return seat
@@ -5436,10 +5461,11 @@ def _woke_for_own_ability(d, p, night, shown=False):
     if night < 2:
         return False
     from botc.catalogue import CHARACTERS
-    gift = _gift(d, p, f"N{night}")
-    if gift is None or CHARACTERS[gift].believes:
-        return False
-    return _woke_itself(d, p, night, shown, as_role=gift)
+    from botc.info import boffin_abilities
+    return any(got in CHARACTERS and not CHARACTERS[got].believes
+               and _woke_itself(d, p, night, shown, as_role=got)
+               for got in boffin_abilities(_gift(d, p, f"N{night}"),
+                                           f"N{night}"))
 
 
 def _woke_itself(d, p, night, shown=False, as_role=None):
@@ -5867,6 +5893,11 @@ def early_choices(d, night, rng):
     # and names nobody. It chose in the late pass, so the Courtier's
     # drunkenness still landed (13.10.2026, the gate of group 1).
     if night == 1:
+        # A Demon given the Philosopher's ability writes down its choice
+        # (R Weg 1, stage 2, 27.10.2026).
+        took = getattr(d, "boffin_took", None)
+        if took is not None:
+            out.append(PhilosopherChoice(1, d.boffin_gift[0], role=took))
         for seat in _in_night_order(d, night):
             if before[seat] == "Philosopher" and seat not in d.philosophies \
                     and seat in d.alive_at(f"N{night}"):
@@ -5918,7 +5949,7 @@ def early_choices(d, night, rng):
         # Not a Demon the Boffin gave it: an evil player does not risk
         # its Demon on it (26.10.2026).
         if night > 1 and _acts_as(d, seat, "Acrobat", f"N{night}") \
-                and _gift(d, seat, f"N{night}") != "Acrobat" \
+                and not _gifted(d, seat, "Acrobat", f"N{night}") \
                 and seat in d.alive_at(f"N{night}"):
             others = [p for p in range(d.n) if p != seat]
             if others:
@@ -6218,6 +6249,15 @@ def droisoned_at(d, night, by_day=False):
         for other in range(d.n):
             if other != seat and d.role_at(other, phase) == took:
                 out.add(other)
+    # And a Demon the Boffin gave the Philosopher's ability (stage 2,
+    # 27.10.2026), while it has it.
+    gift = getattr(d, "boffin_gift", None)
+    if gift is not None and gift[1].startswith("Philosopher>"):
+        took = gift[1].split(">")[1]
+        if _gifted(d, gift[0], took, phase):
+            for other in range(d.n):
+                if other != gift[0] and d.role_at(other, phase) == took:
+                    out.add(other)
 
     # A Minstrel silences the whole table for the night after a Minion is
     # executed. Never modelled here, and the Acrobat is what exposed it —
@@ -6733,7 +6773,7 @@ def _for_role(d, seat, role, night, rng):
         got = getattr(d, "boffin_gift", None)
         if got is None or not getattr(d, "boffin_row", False):
             return None
-        return BoffinGave(1, seat, role=got[1])
+        return BoffinGave(1, seat, role=got[1].split(">")[0])
 
     if role == "Pixie" and night == 1:
         # One Townsfolk in play; a Drunk holding its token is shown one
