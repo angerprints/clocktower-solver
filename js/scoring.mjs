@@ -2034,6 +2034,12 @@ export const BOFFIN_SEEN = new Set([
   "BountyHunter", "Philosopher",
 ]);
 
+/** Named by a Boffin row, still "nothing the town sees" (O, P, Q). */
+export const BOFFIN_NAMED_UNSEEN = new Set([
+  "Butler", "Recluse", "Magician", "PoppyGrower", "Snitch", "Lunatic",
+  "CultLeader", "Alsaahir", "Mutant", "Damsel", "Atheist",
+]);
+
 /** Told only where a Boffin row names them (L Weg 1). See solver.py. */
 export const BOFFIN_ROW_ONLY = new Set(["Barber", "Hatter"]);
 
@@ -2102,10 +2108,12 @@ export function boffinOffers(view, state, phase, seat, slot, setup = false) {
   }
   if (named !== null) {
     if (!may.includes(named)) return [];
-    // Named, it is that ability, whatever it is (G Weg 1, stage 2).
+    // Named, it is that ability (G Weg 1, stage 2) — except those that
+    // stay "nothing the town sees" whatever (O, P, Q). See solver.py.
     if (named === "Philosopher")
       return philosopherChoices(view, state, phase, seat, slot, 1.0);
-    return [[[boffinGift(phase, seat, named, slot)], 1.0]];
+    const gift = BOFFIN_NAMED_UNSEEN.has(named) ? BOFFIN_UNSEEN : named;
+    return [[[boffinGift(phase, seat, gift, slot)], 1.0]];
   }
   const seen = sampledGifts(view, phase, seat,
                            may.filter(k => BOFFIN_SEEN.has(k)));

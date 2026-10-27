@@ -2424,12 +2424,18 @@ def _gift(d, seat, phase):
     Boffin alive (26.10.2026). Only one the solver reckons so far (stage
     1, `solver.BOFFIN_SEEN`): the others it tells as "nothing the town
     sees", so here they do nothing."""
-    from botc.solver import BOFFIN_SEEN, BOFFIN_ROW_ONLY
+    from botc.solver import (BOFFIN_NAMED_UNSEEN, BOFFIN_ROW_ONLY,
+                             BOFFIN_SEEN)
     got = getattr(d, "boffin_gift", None)
     if got is None or got[0] != seat:
         return None
     base = got[1].split(">")[0]
-    if base not in BOFFIN_SEEN and base not in BOFFIN_ROW_ONLY:
+    # Named by its row, it is that ability for the solver too (G Weg 1,
+    # stage 2), unless it stays "nothing the town sees" (O, P, Q).
+    named = getattr(d, "boffin_row", False) \
+        and base not in BOFFIN_NAMED_UNSEEN
+    if base not in BOFFIN_SEEN and base not in BOFFIN_ROW_ONLY \
+            and not named:
         return None
     if d.role_at(seat, phase) != d.roles[seat]:
         return None
@@ -2450,9 +2456,16 @@ def _sober(d, seat, role, phase):
 def _drunk_by_its_philosopher(d, seat, role, phase):
     """Was the real holder drunk then, because a living Philosopher had
     taken its character? Alive at a phase includes dying at it."""
-    return any(p != seat and _took(d, p, role, phase)
-               and p in d.alive_at(phase)
-               for p in (getattr(d, "philosophies", None) or {}))
+    if any(p != seat and _took(d, p, role, phase)
+           and p in d.alive_at(phase)
+           for p in (getattr(d, "philosophies", None) or {})):
+        return True
+    # Or a Demon the Boffin gave the Philosopher's ability, that took it
+    # (stage 2, 27.10.2026).
+    gift = getattr(d, "boffin_gift", None)
+    return gift is not None and gift[0] != seat \
+        and gift[1].startswith("Philosopher>") \
+        and _gifted(d, gift[0], role, phase)
 
 
 def _falls_as(d, seat, role, phase):

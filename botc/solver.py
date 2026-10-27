@@ -2685,33 +2685,13 @@ BOFFIN_SEEN = frozenset({
     "Philosopher",
 })
 
-@impairment.source_rule
-def a_boffin_philosopher_drunks_whoever_had_it(world, state, night):
-    """A Demon given the Philosopher's ability drunks whoever holds what it
-    took, while it has it — through the Boffin, so it rests while the
-    Boffin is drunk or poisoned (H Weg 2, stage 2, 27.10.2026)."""
-    if not _boffin_on_board(state):
-        return []
-    marked = getattr(world, "_gifts_by_seat", None)
-    if not marked:
-        return []
-    phase = f"N{night}"
-    out = []
-    for seat in sorted(marked):
-        got = boffin_gift(world, state, seat, phase)
-        if not got or not got.startswith("Philosopher>"):
-            continue
-        abilities = boffin_abilities(got, phase)
-        if len(abilities) < 2 or abilities[1] in ("", BOFFIN_UNSEEN):
-            continue
-        had = frozenset(p for p in range(state.n_players)
-                        if p != seat and world.role_at(p, phase)
-                        == abilities[1])
-        if had:
-            out.append(impairment.Source(
-                "Philosopher", had, capacity=len(had), cost=1.0,
-                repeat_cost=1.0, actor=boffin_seat(world, state, phase)))
-    return out
+# Named by a Boffin row, still "nothing the town sees" (O, P and Q Weg 1,
+# Patrick 27.10.2026): abilities that only hold the Demon back, tell it
+# nothing it can use, or would only lose evil the game.
+BOFFIN_NAMED_UNSEEN = frozenset({
+    "Butler", "Recluse", "Magician", "PoppyGrower", "Snitch", "Lunatic",
+    "CultLeader", "Alsaahir", "Mutant", "Damsel", "Atheist",
+})
 
 
 # Told only where a Boffin row names them (L Weg 1, Patrick 27.10.2026):
@@ -2800,11 +2780,13 @@ def boffin_offers(view, state, phase, seat, slot, setup=False):
     if named is not None:
         if named not in may:
             return []
-        # Named, it is that ability, whatever it is: its readings are
-        # weighed as its own (G Weg 1, stage 2, 27.10.2026).
+        # Named, it is that ability: its readings are weighed as its own
+        # (G Weg 1, stage 2, 27.10.2026) — except those that stay "nothing
+        # the town sees" whatever (O, P and Q).
         if named == "Philosopher":
             return _philosopher_choices(view, state, phase, seat, slot, 1.0)
-        return [((boffin_gift_change(phase, seat, named, slot),), 1.0)]
+        gift = BOFFIN_UNSEEN if named in BOFFIN_NAMED_UNSEEN else named
+        return [((boffin_gift_change(phase, seat, gift, slot),), 1.0)]
     seen = _sampled_gifts(view, phase, seat,
                           [k for k in may if k in BOFFIN_SEEN])
     # A reading of a good character on this seat makes that character a
@@ -7004,6 +6986,35 @@ def a_philosopher_drunks_whoever_had_it(world, state, night):
         out.append(impairment.Source("Philosopher", had,
                                      capacity=len(had), cost=free,
                                      repeat_cost=free, actor=who))
+    return out
+
+
+@impairment.source_rule
+def a_boffin_philosopher_drunks_whoever_had_it(world, state, night):
+    """A Demon given the Philosopher's ability drunks whoever holds what it
+    took, while it has it — through the Boffin, so it rests while the
+    Boffin is drunk or poisoned (H Weg 2, stage 2, 27.10.2026)."""
+    if not _boffin_on_board(state):
+        return []
+    marked = getattr(world, "_gifts_by_seat", None)
+    if not marked:
+        return []
+    phase = f"N{night}"
+    out = []
+    for seat in sorted(marked):
+        got = boffin_gift(world, state, seat, phase)
+        if not got or not got.startswith("Philosopher>"):
+            continue
+        abilities = boffin_abilities(got, phase)
+        if len(abilities) < 2 or abilities[1] in ("", BOFFIN_UNSEEN):
+            continue
+        had = frozenset(p for p in range(state.n_players)
+                        if p != seat and world.role_at(p, phase)
+                        == abilities[1])
+        if had:
+            out.append(impairment.Source(
+                "Philosopher", had, capacity=len(had), cost=1.0,
+                repeat_cost=1.0, actor=boffin_seat(world, state, phase)))
     return out
 
 
