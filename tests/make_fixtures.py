@@ -1081,6 +1081,7 @@ def handmade():
     yield from the_hatter()
     yield from the_engineer()
     yield from the_boffin()
+    yield from the_boffin_2()
 
 
 def the_eighth_five():
@@ -1753,6 +1754,40 @@ def the_boffin():
 # solved in seconds: the Saint (25) and the Gambler (31) with the Boffin's
 # row, the Klutz (41), the Banshee with its row (78), the Acrobat (108).
 PLAYED_BOFFIN = ((25, 7), (31, 8), (41, 8), (78, 10), (108, 10))
+
+
+def the_boffin_2():
+    """The Boffin, stage 2 (27.10.2026): the boards of
+    tests/test_boffin_2.py and played games where the Demon had an ability
+    stage 2 reckons."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_boffin_2 import _payloads
+    names = ("plain", "professor", "nightwatchman", "engineer",
+             "row-philosopher", "philosopher-chose", "row-empath",
+             "reading-empath", "balloonist")
+    for name, payload in zip(names, _payloads(), strict=True):
+        yield {"name": f"x-boffin2-{name}", "payload": payload}
+    for line, seed, n in PLAYED_BOFFIN_2:
+        must = BOFFIN_2_LINES[line]
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=must)
+        yield played(f"x-boffin2-played-{line}-{seed}-{n}", script, seed, n,
+                     4, rng=rng)
+
+
+# The two gate lines of stage 2 the played boards come from.
+BOFFIN_2_LINES = {
+    "a": ("Boffin", "Professor", "Engineer", "Nightwatchman", "Pixie",
+          "Philosopher"),
+    "e": ("Boffin", "Balloonist", "Huntsman", "Damsel", "Choirboy",
+          "BountyHunter"),
+}
+# A Nightwatchman (a 4), a Professor (a 37), an Engineer (a 54), a Bounty
+# Hunter (e 4) and a Philosopher that took the Zealot (e 47).
+PLAYED_BOFFIN_2 = (("a", 4, 11), ("a", 37, 9), ("a", 54, 11), ("e", 4, 11),
+                   ("e", 47, 9))
 
 
 # Games where the Engineer chose, each solved in seconds: a Widow on the
