@@ -51,6 +51,7 @@ class Night:
         # The Boffin's (26.10.2026): the Demon's seat -> the good ability
         # it has tonight, and the Boffin whose sobriety it rests on.
         self.boffin = {}
+        self.boffin_has = {}
         self.boffin_seat = None
         self.silenced = set()               # Demons that cannot kill
         self.spared = set()                 # safe from execution tomorrow
@@ -106,13 +107,14 @@ class Night:
         return self.roles.get(seat) == role or (
             self.roles.get(seat) == "Philosopher"
             and self.gained.get(seat) == role) or (
-            self.boffin.get(seat) == role
+            role in self.boffin_has.get(seat, ())
             and self.roles.get(seat) != "Philosopher")
 
     def sober_of(self, seat, role):
         """Whose sobriety this seat's ability as that character rests on:
         the Boffin's for a Demon it gave it, else its own."""
-        if self.roles.get(seat) != role and self.boffin.get(seat) == role \
+        if self.roles.get(seat) != role \
+                and role in self.boffin_has.get(seat, ()) \
                 and self.boffin_seat is not None:
             return self.boffin_seat
         return seat
@@ -127,6 +129,7 @@ class Night:
         or the Boffin's own (C and I Weg 1, 27.10.2026)."""
         if seat in self.boffin or seat == self.boffin_seat:
             self.boffin.clear()
+            self.boffin_has.clear()
 
     def lets_go(self, seat, slot):
         """This seat became somebody else in the middle of the night: what
@@ -936,7 +939,15 @@ def walk(deal, night, hidden):
     # through `hidden`, like every other thing it does not derive.
     state.gained.update(hidden.get("gained") or {})
     # And what the Boffin gave the Demon, tonight (26.10.2026).
-    state.boffin = dict(hidden.get(("boffin", night)) or {})
+    # A Philosopher's ability given (stage 2): it has both, and acts as
+    # what it took at that character's turn.
+    from botc.info import boffin_abilities
+    given = dict(hidden.get(("boffin", night)) or {})
+    state.boffin_has = {seat: set(boffin_abilities(got, f"N{night}"))
+                        for seat, got in given.items()}
+    state.boffin = {seat: boffin_abilities(got, f"N{night}")[-1]
+                    for seat, got in given.items()
+                    if boffin_abilities(got, f"N{night}")}
     state.boffin_seat = hidden.get(("boffin_seat", night))
 
     state.night = night
