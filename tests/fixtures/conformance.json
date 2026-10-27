@@ -121713,6 +121713,2181 @@
    }
   },
   {
+   "name": "x-boffin-nothing",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Undertaker",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Laborratte",
+     "characters": [
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "fool",
+      "virgin",
+      "saint",
+      "recluse",
+      "sailor",
+      "tealady",
+      "innkeeper",
+      "goon",
+      "drunk",
+      "boffin",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "poisoner"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 156,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 29.4872,
+      "demon_pct": 14.7436,
+      "drunk_pct": 12.8205,
+      "lying_pct": 29.4872
+     },
+     {
+      "evil_pct": 29.4872,
+      "demon_pct": 14.7436,
+      "drunk_pct": 12.8205,
+      "lying_pct": 29.4872
+     },
+     {
+      "evil_pct": 29.4872,
+      "demon_pct": 14.7436,
+      "drunk_pct": 12.8205,
+      "lying_pct": 29.4872
+     },
+     {
+      "evil_pct": 29.4872,
+      "demon_pct": 14.7436,
+      "drunk_pct": 12.8205,
+      "lying_pct": 29.4872
+     },
+     {
+      "evil_pct": 23.0769,
+      "demon_pct": 11.5385,
+      "drunk_pct": 0.0,
+      "lying_pct": 23.0769
+     },
+     {
+      "evil_pct": 29.4872,
+      "demon_pct": 14.7436,
+      "drunk_pct": 12.8205,
+      "lying_pct": 29.4872
+     },
+     {
+      "evil_pct": 29.4872,
+      "demon_pct": 14.7436,
+      "drunk_pct": 12.8205,
+      "lying_pct": 29.4872
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-boffin-imp-walks",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Undertaker",
+      "events": [
+       "S1"
+      ]
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Laborratte",
+     "characters": [
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "fool",
+      "virgin",
+      "saint",
+      "recluse",
+      "sailor",
+      "tealady",
+      "innkeeper",
+      "goon",
+      "drunk",
+      "boffin",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "poisoner"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 2,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 50.0,
+      "demon_pct": 50.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 50.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 50.0,
+      "demon_pct": 50.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 50.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-boffin-imp-walks-night",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Undertaker",
+      "events": [
+       "S1"
+      ]
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Laborratte",
+     "characters": [
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "fool",
+      "virgin",
+      "saint",
+      "recluse",
+      "sailor",
+      "tealady",
+      "innkeeper",
+      "goon",
+      "drunk",
+      "boffin",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "poisoner"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-boffin-row-fool",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": []
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Undertaker",
+      "events": [
+       "S1"
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "BoffinGave",
+      "night": 1,
+      "player": 5,
+      "role": "Fool"
+     }
+    ],
+    "script": {
+     "name": "Laborratte",
+     "characters": [
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "fool",
+      "virgin",
+      "saint",
+      "recluse",
+      "sailor",
+      "tealady",
+      "innkeeper",
+      "goon",
+      "drunk",
+      "boffin",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "poisoner"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 1,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-boffin-starpass",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": [
+       "X2"
+      ]
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Undertaker",
+      "events": []
+     }
+    ],
+    "infos": [],
+    "script": {
+     "name": "Laborratte",
+     "characters": [
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "fool",
+      "virgin",
+      "saint",
+      "recluse",
+      "sailor",
+      "tealady",
+      "innkeeper",
+      "goon",
+      "drunk",
+      "boffin",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "poisoner"
+     ]
+    },
+    "days_done": [
+     1,
+     2,
+     3
+    ]
+   },
+   "expect": {
+    "valid": 130,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 36.6347,
+      "demon_pct": 20.6603,
+      "drunk_pct": 9.9042,
+      "lying_pct": 36.6347
+     },
+     {
+      "evil_pct": 2.0234,
+      "demon_pct": 0.0,
+      "drunk_pct": 17.0394,
+      "lying_pct": 2.0234
+     },
+     {
+      "evil_pct": 21.2993,
+      "demon_pct": 0.0,
+      "drunk_pct": 13.2055,
+      "lying_pct": 21.2993
+     },
+     {
+      "evil_pct": 36.6347,
+      "demon_pct": 20.6603,
+      "drunk_pct": 9.9042,
+      "lying_pct": 36.6347
+     },
+     {
+      "evil_pct": 30.1384,
+      "demon_pct": 17.3589,
+      "drunk_pct": 0.0,
+      "lying_pct": 30.1384
+     },
+     {
+      "evil_pct": 36.6347,
+      "demon_pct": 20.6603,
+      "drunk_pct": 9.9042,
+      "lying_pct": 36.6347
+     },
+     {
+      "evil_pct": 36.6347,
+      "demon_pct": 20.6603,
+      "drunk_pct": 9.9042,
+      "lying_pct": 36.6347
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-boffin-row-sailor",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "claim": "Chef",
+      "events": []
+     },
+     {
+      "claim": "Empath",
+      "events": [
+       "N2"
+      ]
+     },
+     {
+      "claim": "FortuneTeller",
+      "events": []
+     },
+     {
+      "claim": "Washerwoman",
+      "events": []
+     },
+     {
+      "claim": "Saint",
+      "events": []
+     },
+     {
+      "claim": "Investigator",
+      "events": []
+     },
+     {
+      "claim": "Undertaker",
+      "events": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "BoffinGave",
+      "night": 1,
+      "player": 5,
+      "role": "Sailor"
+     }
+    ],
+    "script": {
+     "name": "Laborratte",
+     "characters": [
+      "chef",
+      "empath",
+      "fortuneteller",
+      "monk",
+      "washerwoman",
+      "investigator",
+      "soldier",
+      "undertaker",
+      "fool",
+      "virgin",
+      "saint",
+      "recluse",
+      "sailor",
+      "tealady",
+      "innkeeper",
+      "goon",
+      "drunk",
+      "boffin",
+      "baron",
+      "scarletwoman",
+      "imp",
+      "poisoner"
+     ]
+    },
+    "days_done": [
+     1,
+     2
+    ]
+   },
+   "expect": {
+    "valid": 156,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 32.8702,
+      "demon_pct": 16.5939,
+      "drunk_pct": 9.8452,
+      "lying_pct": 32.8702
+     },
+     {
+      "evil_pct": 1.9452,
+      "demon_pct": 0.0,
+      "drunk_pct": 15.8793,
+      "lying_pct": 1.9452
+     },
+     {
+      "evil_pct": 32.8702,
+      "demon_pct": 16.5939,
+      "drunk_pct": 9.8452,
+      "lying_pct": 32.8702
+     },
+     {
+      "evil_pct": 32.8702,
+      "demon_pct": 16.5939,
+      "drunk_pct": 9.8452,
+      "lying_pct": 32.8702
+     },
+     {
+      "evil_pct": 34.8948,
+      "demon_pct": 18.2215,
+      "drunk_pct": 0.0,
+      "lying_pct": 34.8948
+     },
+     {
+      "evil_pct": 31.6792,
+      "demon_pct": 15.4029,
+      "drunk_pct": 9.8452,
+      "lying_pct": 31.6792
+     },
+     {
+      "evil_pct": 32.8702,
+      "demon_pct": 16.5939,
+      "drunk_pct": 9.8452,
+      "lying_pct": 32.8702
+     }
+    ],
+    "blame": {
+     "2": {
+      "1": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-boffin-played-25-7",
+   "payload": {
+    "n_players": 7,
+    "players": [
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Noble",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "PoppyGrower",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Fool",
+      "events": [
+       "S3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 2,
+      "target": 5,
+      "swapped": false
+     },
+     {
+      "type": "BoffinGave",
+      "night": 1,
+      "player": 4,
+      "role": "Saint"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 2,
+      "target": 3,
+      "swapped": true
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 3,
+      "player": 3,
+      "target": 5,
+      "swapped": false
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "boffin",
+      "widow",
+      "snakecharmer",
+      "philosopher",
+      "lycanthrope",
+      "mathematician",
+      "fool",
+      "exorcist",
+      "investigator",
+      "poppygrower",
+      "mayor",
+      "pixie",
+      "bountyhunter",
+      "minstrel",
+      "noble",
+      "saint",
+      "golem",
+      "puzzlemaster",
+      "barber",
+      "vizier",
+      "xaan",
+      "fanggu",
+      "pukka",
+      "vortox",
+      "yaggababble"
+     ]
+    },
+    "quiet_nights": [
+     4
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 309,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 47.4577,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 77.3946
+     },
+     {
+      "evil_pct": 15.8207,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 15.8828
+     },
+     {
+      "evil_pct": 53.096,
+      "demon_pct": 41.6783,
+      "drunk_pct": 0.0,
+      "lying_pct": 70.6663
+     },
+     {
+      "evil_pct": 2.7741,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 51.9779
+     },
+     {
+      "evil_pct": 0.9668,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.0289
+     },
+     {
+      "evil_pct": 77.6581,
+      "demon_pct": 58.3217,
+      "drunk_pct": 0.0,
+      "lying_pct": 77.7202
+     },
+     {
+      "evil_pct": 2.2266,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.2266
+     }
+    ],
+    "blame": {
+     "3": {
+      "3": {
+       "Demon": 0.9353,
+       "Yaggababble, again": 0.0647
+      }
+     },
+     "2": {
+      "4": {
+       "Demon": 0.9353,
+       "Yaggababble, again": 0.0647
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-boffin-played-31-8",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Shugenja",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Damsel",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Ravenkeeper",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Mutant",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 2,
+      "target": 6,
+      "swapped": false
+     },
+     {
+      "type": "BoffinGave",
+      "night": 1,
+      "player": 7,
+      "role": "Gambler"
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 2,
+      "target": 1,
+      "swapped": false
+     },
+     {
+      "type": "VirginNomination",
+      "night": 2,
+      "player": 1,
+      "nominator": 2,
+      "triggered": true
+     },
+     {
+      "type": "Ravenkeeper",
+      "night": 3,
+      "player": 6,
+      "target": 5,
+      "role": "Huntsman"
+     },
+     {
+      "type": "KingInfo",
+      "night": 3,
+      "player": 4,
+      "role": "Vigormortis"
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "boffin",
+      "poisoner",
+      "philosopher",
+      "snakecharmer",
+      "poppygrower",
+      "juggler",
+      "virgin",
+      "shugenja",
+      "investigator",
+      "ravenkeeper",
+      "monk",
+      "gambler",
+      "slayer",
+      "king",
+      "huntsman",
+      "mutant",
+      "drunk",
+      "golem",
+      "damsel",
+      "eviltwin",
+      "psychopath",
+      "leviathan",
+      "nodashii",
+      "vortox",
+      "vigormortis"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 8,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 4.7619,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 4.7619
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 95.2381,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 95.2381
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     }
+    ],
+    "blame": {
+     "4": {
+      "1": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "6": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-boffin-played-41-8",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "Klutz",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Lycanthrope",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Lycanthrope",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Heretic",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Alsaahir",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Clockmaker",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "every",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 7,
+      "role": "Klutz"
+     },
+     {
+      "type": "ClockmakerInfo",
+      "night": 1,
+      "player": 5,
+      "count": 2
+     },
+     {
+      "type": "DreamerInfo",
+      "night": 1,
+      "player": 6,
+      "target": 7,
+      "good_role": "Philosopher",
+      "evil_role": "Boffin"
+     },
+     {
+      "type": "Alsaahir",
+      "night": 1,
+      "player": 4,
+      "demons": [
+       2
+      ],
+      "minions": [
+       0
+      ],
+      "won": true
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "boffin",
+      "widow",
+      "philosopher",
+      "snakecharmer",
+      "alsaahir",
+      "seamstress",
+      "minstrel",
+      "nightwatchman",
+      "dreamer",
+      "gossip",
+      "clockmaker",
+      "bountyhunter",
+      "banshee",
+      "poppygrower",
+      "lycanthrope",
+      "butler",
+      "klutz",
+      "puzzlemaster",
+      "heretic",
+      "godfather",
+      "cerenovus",
+      "pukka",
+      "po",
+      "lleech",
+      "ojo"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 40,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 100.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ]
+   }
+  },
+  {
+   "name": "x-boffin-played-78-10",
+   "payload": {
+    "n_players": 10,
+    "players": [
+     {
+      "name": "",
+      "claim": "Virgin",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Barber",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       1
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Princess",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Lycanthrope",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Investigator",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Butler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Magician",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Banshee",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Juggler",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "BoffinGave",
+      "night": 1,
+      "player": 6,
+      "role": "Banshee"
+     },
+     {
+      "type": "Investigator",
+      "night": 1,
+      "player": 5,
+      "a": 6,
+      "b": 8,
+      "role": "Boffin"
+     },
+     {
+      "type": "StewardInfo",
+      "night": 1,
+      "player": 0,
+      "target": 3
+     },
+     {
+      "type": "Noble",
+      "night": 1,
+      "player": 4,
+      "a": 1,
+      "b": 7,
+      "c": 2
+     },
+     {
+      "type": "LeviathanAnnounced",
+      "night": 1,
+      "player": 8
+     },
+     {
+      "type": "PitHagChoice",
+      "night": 2,
+      "player": 1,
+      "target": 0,
+      "role": "Virgin"
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 2,
+      "player": 3,
+      "target": 7
+     },
+     {
+      "type": "Became",
+      "night": 2,
+      "player": 0,
+      "role": "Virgin",
+      "was": "Steward"
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 3,
+      "player": 3,
+      "target": 8
+     },
+     {
+      "type": "LycanthropeChose",
+      "night": 4,
+      "player": 3,
+      "target": 6
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "boffin",
+      "pithag",
+      "snakecharmer",
+      "philosopher",
+      "knight",
+      "banshee",
+      "lycanthrope",
+      "mayor",
+      "magician",
+      "noble",
+      "investigator",
+      "steward",
+      "virgin",
+      "princess",
+      "juggler",
+      "barber",
+      "politician",
+      "ogre",
+      "butler",
+      "mastermind",
+      "devilsadvocate",
+      "fanggu",
+      "vigormortis",
+      "yaggababble",
+      "leviathan"
+     ]
+    },
+    "quiet_nights": [
+     3,
+     4
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 30,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 35.9833,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 26.7782,
+      "demon_pct": 10.0418,
+      "drunk_pct": 0.0,
+      "lying_pct": 26.7782
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 22.5941,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 73.2218,
+      "demon_pct": 31.3808,
+      "drunk_pct": 0.0,
+      "lying_pct": 73.2218
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     }
+    ],
+    "blame": {
+     "2": {
+      "7": {
+       "Lycanthrope": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-boffin-played-108-10",
+   "payload": {
+    "n_players": 10,
+    "players": [
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "VillageIdiot",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Puzzlemaster",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "VillageIdiot",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Banshee",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Acrobat",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mathematician",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "VillageIdiot",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 1,
+      "player": 2,
+      "target": 4,
+      "swapped": false
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 1,
+      "player": 8,
+      "a": 1,
+      "b": 2,
+      "yes": true
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 1,
+      "player": 1,
+      "target": 0,
+      "evil": true
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 1,
+      "player": 5,
+      "target": 2,
+      "evil": false
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 1,
+      "player": 9,
+      "target": 2,
+      "evil": false
+     },
+     {
+      "type": "SnakeCharmerChoice",
+      "night": 2,
+      "player": 2,
+      "target": 3,
+      "swapped": true
+     },
+     {
+      "type": "FortuneTeller",
+      "night": 2,
+      "player": 8,
+      "a": 4,
+      "b": 1,
+      "yes": true
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 2,
+      "player": 1,
+      "target": 0,
+      "evil": true
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 2,
+      "player": 5,
+      "target": 6,
+      "evil": true
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 2,
+      "player": 9,
+      "target": 6,
+      "evil": false
+     },
+     {
+      "type": "PuzzlemasterGuess",
+      "night": 2,
+      "player": 4,
+      "guess": 6,
+      "shown": 2
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 3,
+      "player": 1,
+      "target": 6,
+      "evil": false
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 3,
+      "player": 9,
+      "target": 1,
+      "evil": false
+     },
+     {
+      "type": "VillageIdiotInfo",
+      "night": 4,
+      "player": 9,
+      "target": 0,
+      "evil": true
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "boffin",
+      "pithag",
+      "snakecharmer",
+      "philosopher",
+      "banshee",
+      "clockmaker",
+      "seamstress",
+      "acrobat",
+      "fortuneteller",
+      "mathematician",
+      "farmer",
+      "balloonist",
+      "villageidiot",
+      "king",
+      "flowergirl",
+      "barber",
+      "saint",
+      "puzzlemaster",
+      "recluse",
+      "psychopath",
+      "wraith",
+      "zombuul",
+      "vortox",
+      "fanggu",
+      "vigormortis"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 414,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 98.8843,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 98.8843
+     },
+     {
+      "evil_pct": 0.3235,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.3235
+     },
+     {
+      "evil_pct": 92.4169,
+      "demon_pct": 68.8544,
+      "drunk_pct": 0.0,
+      "lying_pct": 74.0617
+     },
+     {
+      "evil_pct": 8.225,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 26.5801
+     },
+     {
+      "evil_pct": 5.9823,
+      "demon_pct": 2.6838,
+      "drunk_pct": 0.0,
+      "lying_pct": 5.23
+     },
+     {
+      "evil_pct": 0.5392,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.5392
+     },
+     {
+      "evil_pct": 28.0817,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 28.0817
+     },
+     {
+      "evil_pct": 56.1635,
+      "demon_pct": 28.0817,
+      "drunk_pct": 0.0,
+      "lying_pct": 56.1635
+     },
+     {
+      "evil_pct": 9.5402,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 9.5402
+     },
+     {
+      "evil_pct": 0.5957,
+      "demon_pct": 0.38,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.5957
+     }
+    ],
+    "blame": {
+     "4": {
+      "1": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "3": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "5": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "random-00",
    "payload": {
     "n_players": 9,

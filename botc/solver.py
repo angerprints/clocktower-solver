@@ -33,7 +33,8 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    went_on_after, phase_index,
                    begin_reads, end_reads, listen_for_sides, replay_reads,
                    _LISTENING, falls_as, holding_now, taken_by_a_philosopher,
-                   took_it,
+                   took_it, BoffinGave, BOFFIN_NEVER_GIVES, boffin_gift,
+                   boffin_holders, boffin_seat, sober_seat,
                    faux_paw_lycanthrope, side_open)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
@@ -46,6 +47,7 @@ from .waking import LEVIATHAN_CHOOSES_FOR
 from .worlds import _at as moment_of
 from .worlds import READ_AT, SETUP_SLOT, _row_slot, reading_at
 from .worlds import Engineered
+from .worlds import BOFFIN_UNSEEN, BoffinGift, boffin_gift_change
 from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
                      SUMMON_READS, Summoned, TEA_READS, TeaParty,
                      Timeline, TurnedEvil, World,
@@ -295,7 +297,12 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             # Late on the first night, after every information role: an
             # Empath or Noble on night one still sees the Ogre as good.
             "an_ogre_picks_a_side": 60,
-            "demon_handovers": 99}      # a death, so after everything
+            "demon_handovers": 99,      # a death, so after everything
+            # The Boffin gives the Demon an ability at the setup — first,
+            # so every rule after it sees it (a Demon's Farmer dying at
+            # night). What it gives a new Demon is told with each story
+            # (`boffin_new_demon_stories`, 26.10.2026).
+            "a_boffin_gives_the_demon": -1}
 
 
 # Whose turn each rule is (Hatter stage 3b, 23.10.2026): the rule reads
@@ -475,6 +482,11 @@ def possible_timelines(world, state, cap=128):
         cap = max(cap, cap * (1 + ENGINEER_STORIES // 8))
         if "Summoner" in state.script.keys:
             cap *= 1 + len(_summonable(state)) * state.n_players
+    # And for every ability the Boffin may have given, at the setup and to
+    # a new Demon (26.10.2026).
+    if _boffin_on_board(state):
+        seen = sum(1 for k in state.script.keys if k in BOFFIN_SEEN)
+        cap *= 1 + seen
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -2609,6 +2621,230 @@ def engineer_unreckoned(view, state):
     return None
 
 
+# --------------------------------------------------------------------------
+# The Boffin (26.10.2026, claude/laborratte-lesarten.md)
+# --------------------------------------------------------------------------
+# "The Demon (even if drunk or poisoned) has a not-in-play good
+# character's ability. You both know which." Which one is a story
+# (`worlds.BoffinGift`), told at each moment the Boffin gives one:
+#
+# * when the game is set up, to the Demon dealt;
+# * when somebody becomes a Demon character — a handover, a Snake
+#   Charmer's swap, a Pit-Hag's Demon, a tea party, the Engineer, the
+#   Summoner — a new one, which may differ (C Weg 1);
+# * when somebody becomes the Boffin while a Demon lives (I Weg 1);
+# * when a second living Demon comes, the Storyteller decides: the first
+#   keeps it, or the second gets one and the first's ends (D Weg 2).
+#
+# What it may give: a good character of the script nobody holds then,
+# none of the four their jinxes forbid, a Village Idiot only while a
+# token is spare (B Weg 1). Each that changes what the town sees is a
+# story of its own; the others are one story together, "nothing anybody
+# sees" (A Weg 3). A world weighs what its best story costs, and the
+# shares go by cost: so that story costs 1 and each of the others one
+# over how many it holds — the shares then go as a random pick would.
+# A Boffin row (`BoffinGave`) names it, and only that one is told.
+#
+# Whether the ability works is the Boffin's: alive, holding its
+# character, sober (`info.boffin_gift`, `info.sober_seat`).
+
+# The abilities reckoned so far, each a story of its own (stage 1,
+# 26.10.2026). The rest change nothing the town sees, or are reckoned in
+# stage 2 and until then go with them.
+BOFFIN_SEEN = frozenset({
+    # Who dies, and who does not.
+    "Fool", "Sailor", "TeaLady", "Soldier", "Monk", "Innkeeper", "Mayor",
+    "Pacifist", "Princess", "Tinker", "Gambler", "Acrobat", "Grandmother",
+    "Moonchild", "Gossip", "Lycanthrope", "Golem", "Banshee", "Farmer",
+    # Executions, votes and the end of the game.
+    "Virgin", "Saint", "Klutz", "Zealot",
+    # Who is drunk or poisoned.
+    "Sweetheart", "Courtier", "Minstrel", "Preacher", "Goon",
+    "Puzzlemaster",
+})
+
+def _boffin_on_board(state):
+    """A Boffin on the script."""
+    return "Boffin" in state.script.keys
+
+
+def boffin_rows(state):
+    """The Boffin rows that name something it could give."""
+    got = getattr(state, "_boffin_rows_cache", None)
+    if got is not None and got[0] is state.infos \
+            and got[1] == len(state.infos):
+        return got[2]
+    out = [i for i in state.infos if isinstance(i, BoffinGave)
+           and i.given(state) is not None]
+    state._boffin_rows_cache = (state.infos, len(state.infos), out)
+    return out
+
+
+def boffin_may_give(view, state, phase):
+    """Every good character the Boffin could give at that moment: on the
+    script, nobody holding it (alive or dead), none their jinxes forbid,
+    a Village Idiot only while one of its tokens is spare (B Weg 1)."""
+    n = state.n_players
+    held = [view.role_at(p, phase) for p in range(n)]
+    out = []
+    for key in state.script.keys:
+        if TEAM.get(key) not in ("townsfolk", "outsider"):
+            continue
+        if key in BOFFIN_NEVER_GIVES:
+            continue
+        count = held.count(key)
+        if count and count >= CHARACTERS[key].copies:
+            continue
+        out.append(key)
+    return out
+
+
+def _boffin_named(state, night, setup):
+    """What a Boffin row says it gave, for a moment of that night, or
+    None. A row of the first night names what the Demon dealt was given —
+    the Boffin wakes at 12, before anything that night could make another
+    Demon; a row of a later night names what the Demon made that night was
+    given (26.10.2026, seed 683: a Snake Charmer's swap on the first night
+    is not what the first night's row is about)."""
+    named = None
+    for info in boffin_rows(state):
+        if info.night == night and (night > 1 or setup):
+            named = info.given(state)
+    return named
+
+
+def boffin_offers(view, state, phase, seat, slot, setup=False):
+    """Every ability the Boffin may have given this seat at that moment,
+    as ((mark,), cost) — "nothing the town sees" first."""
+    may = boffin_may_give(view, state, phase)
+    named = _boffin_named(state, int(phase[1:]), setup)
+    if named is not None:
+        if named not in may:
+            return []
+        gift = named if named in BOFFIN_SEEN else BOFFIN_UNSEEN
+        return [((boffin_gift_change(phase, seat, gift, slot),), 1.0)]
+    seen = [k for k in may if k in BOFFIN_SEEN]
+    unseen = len(may) - len(seen)
+    out = []
+    if unseen:
+        out.append(((boffin_gift_change(phase, seat, BOFFIN_UNSEEN, slot),),
+                    1.0))
+    each = 1.0 / unseen if unseen else 1.0
+    out.extend(((boffin_gift_change(phase, seat, k, slot),), each)
+               for k in seen)
+    return out
+
+
+def _boffin_moments(view, state, setup):
+    """When the Boffin gives something in this story, and to whom:
+    [(phase, slot, seat, beside)] in time order — `beside` the Demon that
+    already had one, where a second living Demon came (D Weg 2). At the
+    setup only, or every moment after it."""
+    base = view.world if isinstance(view, Timeline) else view
+    out = []
+    if setup:
+        if "Boffin" in base.roles:
+            start = base.demon_at("N1")
+            if start is not None:
+                out.append(("N1", SETUP_SLOT, start, None))
+        return out
+    changes = sorted((c for c in getattr(view, "changes", ())
+                      if not isinstance(c, BoffinGift)), key=moment_of)
+    for i, c in enumerate(changes):
+        if c.role is None:
+            continue
+        # The board just before this change, and just after it.
+        prior = Timeline(base, tuple(changes[:i])) if i else base
+        after = Timeline(base, tuple(changes[:i + 1]))
+        was = prior.role_at(c.seat, c.phase)
+        if TEAM.get(c.role) == "demon":
+            if was == c.role:
+                continue                  # the same Demon as before
+            others = [d for d in after.demons_at(c.phase)
+                      if d != c.seat and d in state.alive_set(c.phase)]
+            beside = others[0] if isinstance(c, Summoned) and others \
+                else None
+            out.append((c.phase, c.slot, c.seat, beside))
+        elif c.role == "Boffin" and was != "Boffin" \
+                and boffin_seat(prior, state, c.phase) is None:
+            for d in after.demons_at(c.phase):
+                out.append((c.phase, c.slot, d, None))
+    return out
+
+
+@transition_rule
+def a_boffin_gives_the_demon(world, state):
+    """Every ability the Boffin may have given the Demon dealt."""
+    return _boffin_stories(world, state, True)
+
+
+def boffin_new_demon_stories(world, state):
+    """Every ability the Boffin may have given each new Demon (C Weg 1),
+    a second living one (D Weg 2), or the Demon when somebody became the
+    Boffin (I Weg 1): [(changes, cost)]. Not a transition rule: told for
+    each story as it is explained (`_best_story_told`), so the stories do
+    not multiply by it."""
+    return _boffin_stories(world, state, False)
+
+
+def _boffin_stories(world, state, setup):
+    """Every ability the Boffin may have given, at each moment it gives one,
+    as [(changes, cost)].
+
+    At the setup that is every one. For new Demons it is the story where
+    each got "nothing the town sees" (or what it is first offered), and
+    each story where exactly one of them got something else (26.10.2026):
+    beside a tea party, an Engineer and a Summoner there were four such
+    moments in one story and four thousand ways (gate, seed 444). Two new
+    Demons in one game both using what they were given is left out."""
+    if not _boffin_on_board(state):
+        return [((), 1.0)]
+    moments = []
+    for phase, slot, seat, beside in _boffin_moments(world, state, setup):
+        if boffin_seat(world, state, phase) is None \
+                and phase != "N1":
+            continue                      # nobody to give it
+        offers = boffin_offers(world, state, phase, seat, slot, setup)
+        if beside is not None:
+            # The Storyteller decides (D Weg 2): the first keeps it, or the
+            # second gets one and the first's ends.
+            end = boffin_gift_change(phase, beside, "", slot)
+            offers = [((), 1.0)] + [(way + (end,), c) for way, c in offers]
+        if not offers:
+            return []                     # a row names what it cannot be
+        moments.append(offers)
+    if not moments:
+        return [((), 1.0)]
+    if setup:
+        stories = [((), 1.0)]
+        for offers in moments:
+            stories = [(changes + way, cost * c)
+                       for changes, cost in stories for way, c in offers]
+        return stories
+    first = tuple(c for offers in moments for c in offers[0][0])
+    base = 1.0
+    for offers in moments:
+        base *= offers[0][1]
+    stories = [(first, base)]
+    for i, offers in enumerate(moments):
+        for way, c in offers[1:]:
+            changes = tuple(ch for j, other in enumerate(moments)
+                            for ch in (way if j == i else other[0][0]))
+            stories.append((changes, base / offers[0][1] * c))
+    return stories
+
+
+def boffin_unreckoned(view, state):
+    """What the Boffin leaves out that the solver does not reckon, or
+    None: Lil' Monsta, whose babysitter changes every night."""
+    if not _boffin_on_board(state) or "Boffin" not in view.roles:
+        return None
+    if _in_bag(state, "LilMonsta") and lil_monsta_world(
+            view.world if isinstance(view, Timeline) else view):
+        return "boffin"
+    return None
+
+
 def hatter_unreckoned(view, state):
     """What this story leaves out that the solver does not reckon yet, or
     None: Lil' Monsta taken in the middle of the game ("lil monsta", U Weg
@@ -2617,7 +2853,8 @@ def hatter_unreckoned(view, state):
     since stage 2 (25.10.2026). And what the Engineer leaves out
     (`engineer_unreckoned`, 26.10.2026)."""
     if not _hatter_on_board(state):
-        return engineer_unreckoned(view, state)
+        return engineer_unreckoned(view, state) \
+            or boffin_unreckoned(view, state)
     final = phase_index(state.final_phase())
     for _seat, phase in hatter_deaths(view, state):
         night = _tea_night(phase)
@@ -2642,7 +2879,7 @@ def hatter_unreckoned(view, state):
                 p in alive and TEAM[view.role_at(p, before)] == "demon"
                 for p in range(n)):
             return "lil monsta"
-    return engineer_unreckoned(view, state)
+    return engineer_unreckoned(view, state) or boffin_unreckoned(view, state)
 
 
 @impairment.source_rule
@@ -2753,7 +2990,7 @@ def mastermind_marker(phase, seat):
 def is_mastermind_marker(change):
     return change.role is None and change.side is None \
         and not isinstance(change, (Babysits, LilMonstaFell, NotSummoned,
-                                    HandedOn))
+                                    HandedOn, BoffinGift))
 
 
 class LilMonstaFell(Change):
@@ -3123,7 +3360,8 @@ def the_soldier_cannot_be_demon_killed(world, state, night, seat, kind):
     if seat not in state.alive_set(f"N{night}"):
         return []
     # Only while working — a poisoned Soldier dies like anybody else.
-    return [death_causes.Shield("Soldier", needs=seat)]
+    return [death_causes.Shield("Soldier", needs=sober_seat(
+        world, state, seat, "Soldier", f"N{night}"))]
 
 
 @death_causes.immunity_rule
@@ -3136,7 +3374,8 @@ def the_monk_guards_against_the_demon(world, state, night, seat, kind):
     if night < 2:
         return []
     phase = f"N{night}"
-    return [death_causes.Shield("Monk", needs=monk, chosen=True)
+    return [death_causes.Shield("Monk", needs=sober_seat(
+                world, state, monk, "Monk", phase), chosen=True)
             for monk in _holders(world, state, "Monk", phase)
             if monk != seat and monk in state.alive_set(phase)]
 
@@ -3264,7 +3503,8 @@ def a_pacifist_may_spare_the_good(world, state, day, seat):
     phase = f"D{day}"
     if world.evil_at(seat, phase):
         return []                         # only the good are spared
-    return [p for p in _holders(world, state, "Pacifist", phase)
+    return [sober_seat(world, state, p, "Pacifist", phase)
+            for p in _holders(world, state, "Pacifist", phase)
             if p in state.alive_set(phase)]
 
 
@@ -3388,8 +3628,9 @@ def a_tea_lady_keeps_her_neighbours_from_the_gallows(world, state, day,
     """
     if not _on_board(state, "TeaLady"):
         return []
-    return _tea_ladies_keeping(world, state, seat, f"D{day}",
-                               _at_the_gallows(state, day))
+    return [sober_seat(world, state, lady, "TeaLady", f"D{day}")
+            for lady in _tea_ladies_keeping(world, state, seat, f"D{day}",
+                                            _at_the_gallows(state, day))]
 
 
 @survives_execution_rule
@@ -3413,7 +3654,7 @@ def a_fool_walks_away_once(world, state, day, seat):
         if _walked_away(state, earlier, seat) and not survivals_of(
                 world, state, earlier, seat, but=a_fool_walks_away_once):
             return []
-    return [seat]
+    return [sober_seat(world, state, seat, "Fool", f"D{day}")]
 
 
 @survives_execution_rule
@@ -3431,7 +3672,7 @@ def a_sober_sailor_walks_away(world, state, day, seat):
         return []
     if not _has_ability(world, state, seat, "Sailor", f"D{day}"):
         return []
-    return [seat]
+    return [sober_seat(world, state, seat, "Sailor", f"D{day}")]
 
 
 def _in_bag(state, key):
@@ -3994,13 +4235,11 @@ def an_acrobat_may_fall(world, state, night):
 
 
 def _has_ability(world, state, seat, role, phase):
-    """Does this seat have that ability — held, or taken by a Philosopher?"""
+    """Does this seat have that ability — held, taken by a Philosopher, or
+    given the Demon by the Boffin (26.10.2026)?"""
     if world.role_at(seat, phase) == role:
         return True
-    taken = (state.philosophies() or {}).get(seat)
-    return bool(taken and taken[0] == role
-                and world.role_at(seat, phase) == "Philosopher"
-                and phase_index(phase) >= phase_index(taken[1]))
+    return took_it(world, state, seat, role, phase)
 
 
 def _on_board(state, role):
@@ -4031,6 +4270,10 @@ def _holders(world, state, role, phase):
     for who in sorted(state.philosophies() or {}):
         if who not in out and took_it(world, state, who, role, phase):
             out.append(who)
+    # And a Demon the Boffin gave it (26.10.2026).
+    for who in boffin_holders(world, state, role, phase):
+        if who not in out:
+            out.append(who)
     return out
 
 
@@ -4060,7 +4303,9 @@ def _whoever_works(world, state, role, phase):
             continue
         if phase_index(phase) >= phase_index(since):
             return who
-    return None
+    # A Demon the Boffin gave it (26.10.2026).
+    given = boffin_holders(world, state, role, phase)
+    return given[0] if given else None
 
 
 @death_causes.cause_rule
@@ -4094,6 +4339,10 @@ def a_gambler_may_lose(world, state, night):
         if taken == "Gambler" and who not in holders \
                 and world.role_at(who, began) == "Philosopher" \
                 and phase_index(phase) >= phase_index(since):
+            holders.append(who)
+    # And a Demon the Boffin gave it (26.10.2026).
+    for who in boffin_holders(world, state, "Gambler", began):
+        if who not in holders:
             holders.append(who)
     guesses = [info for info in state.infos
                if getattr(info, "source_role", None) == "Gambler"
@@ -4277,7 +4526,8 @@ def _a_lycanthropes_pick(world, state, night, seat, name="Lycanthrope"):
         return []
     return [death_causes.Cause(
         name=name, kind=death_causes.OTHER, seats=reach,
-        capacity=1, actor=seat, quiets_demon=True)]
+        capacity=1, actor=sober_seat(world, state, seat, "Lycanthrope",
+                                     phase), quiets_demon=True)]
 
 
 def _host_gone_by(state, host, phase):
@@ -4368,7 +4618,8 @@ def a_grandmother_grieves(world, state, night, victim, kind):
         # announced her return.)
         if seat in _returned_at(state, f"N{night}"):
             continue
-        out.append(death_causes.Implication(seat=seat, needs=seat))
+        out.append(death_causes.Implication(seat=seat, needs=sober_seat(
+            world, state, seat, "Grandmother", f"N{night}")))
     return out
 
 
@@ -4408,7 +4659,8 @@ def a_tea_lady_keeps_her_neighbours(world, state, night, seat, kind):
     # And one living beside a Goon: its side is not on the board.
     unsure = any(_beside_a_side_nobody_knows(world, state, lady, phase, alive)
                  for alive in _rosters(state, phase))
-    return [death_causes.Shield("Tea Lady", needs=lady,
+    return [death_causes.Shield("Tea Lady", needs=sober_seat(
+                world, state, lady, "TeaLady", phase),
                                 chosen=fell or unsure or not either_way)]
 
 
@@ -4446,7 +4698,8 @@ def a_fool_survives_once(world, state, night, seat, kind):
         return []
     if seat not in state.alive_set(phase):
         return []                         # dead already, so no ability
-    return [death_causes.Shield("Fool", needs=seat, chosen=True)]
+    return [death_causes.Shield("Fool", needs=sober_seat(
+        world, state, seat, "Fool", phase), chosen=True)]
 
 
 @death_causes.immunity_rule
@@ -4463,7 +4716,8 @@ def a_sober_sailor_cannot_die(world, state, night, seat, kind):
         return []
     if seat not in state.alive_set(f"N{night}"):
         return []                         # dead already, so no ability
-    return [death_causes.Shield("Sailor", needs=seat)]
+    return [death_causes.Shield("Sailor", needs=sober_seat(
+        world, state, seat, "Sailor", f"N{night}"))]
 
 
 @death_causes.immunity_rule
@@ -4491,11 +4745,13 @@ def _an_innkeepers_pair(world, state, night, seat, keeper):
     # know which came first.
     picked = _chosen(state, "Innkeeper", night, ("a", "b"), by=keeper)
     if picked is None:
-        return [death_causes.Shield("Innkeeper", needs=keeper, chosen=True)]
+        return [death_causes.Shield("Innkeeper", needs=sober_seat(
+            world, state, keeper, "Innkeeper", phase), chosen=True)]
     if seat not in picked:
         return []
     fell = phase in state.died_at(keeper)
-    return [death_causes.Shield("Innkeeper", needs=keeper, chosen=fell)]
+    return [death_causes.Shield("Innkeeper", needs=sober_seat(
+        world, state, keeper, "Innkeeper", phase), chosen=fell)]
 
 
 @death_causes.immunity_rule
@@ -4725,7 +4981,8 @@ def a_princess_stops_the_demon(world, state, night, seat, kind):
         # and the Demon then killed).
         unmade = not _has_ability(world, state, princess, "Princess",
                                   f"N{night}")
-        return [death_causes.Shield("Princess", needs=princess,
+        return [death_causes.Shield("Princess", needs=sober_seat(
+                    world, state, princess, "Princess", f"N{night}"),
                                     chosen=unmade)]
     return []
 
@@ -4757,7 +5014,8 @@ def a_mayors_death_may_be_moved(world, state, night, seat, kind):
     # Somebody has to already be dead for the kill to go nowhere.
     if len(state.alive_at(phase)) >= state.n_players:
         return []
-    return [death_causes.Shield("Mayor", needs=seat, chosen=True)]
+    return [death_causes.Shield("Mayor", needs=sober_seat(
+        world, state, seat, "Mayor", phase), chosen=True)]
 
 
 @death_causes.immunity_rule
@@ -5260,8 +5518,12 @@ def forced_roles(state):
     # 14.10.2026).
     def or_its_philosopher(seat, role):
         taken = (state.philosophies() or {}).get(seat)
-        return [role, "Philosopher"] if taken and taken[0] == role \
+        out = [role, "Philosopher"] if taken and taken[0] == role \
             else [role]
+        # Or a Demon the Boffin gave it (26.10.2026).
+        if _boffin_on_board(state):
+            out += list(state.script.demons)
+        return out
 
     for info in state.infos:
         if isinstance(info, VirginNomination) and info.triggered:
@@ -5649,13 +5911,15 @@ def _plain_failures(world, state, outcome=None):
             continue
         # And a Philosopher that took her (group 6, D, 14.10.2026).
         if _has_ability(world, state, seat, "Saint", f"D{day}"):
-            failures[day].add(seat)
+            failures[day].add(sober_seat(world, state, seat, "Saint",
+                                         f"D{day}"))
         # A Sailor cannot die, and that holds in daylight too — so a
         # working one walks away from its own execution. Somebody
         # executed and killed was not a working Sailor, which means
         # something had to have stopped it working.
         if _has_ability(world, state, seat, "Sailor", f"D{day}"):
-            failures[day].add(seat)
+            failures[day].add(sober_seat(world, state, seat, "Sailor",
+                                         f"D{day}"))
         # And the same for a Tea Lady's neighbour: executed and dead, so
         # she was not working. The mirror of her saving one.
         if _on_board(state, "TeaLady"):
@@ -5664,7 +5928,8 @@ def _plain_failures(world, state, outcome=None):
                                             standing):
                 if not _beside_a_side_nobody_knows(
                         world, state, lady, f"D{day}", standing):
-                    failures[day].add(lady)
+                    failures[day].add(sober_seat(world, state, lady,
+                                                 "TeaLady", f"D{day}"))
 
     # A Vizier cannot die during the day — by the gallows or anything
     # else. One that did was not working: drunk or poisoned, it dies like
@@ -5846,8 +6111,12 @@ def _plain_failures(world, state, outcome=None):
                     return None, None, 1.0, None   # this cannot have happened
                 outcome[idx] = HELD
                 # A fact can lean on somebody too: a Banshee announced was a
-                # Banshee whose ability worked that night.
+                # Banshee whose ability worked that night — or the Boffin
+                # behind a Demon it gave that ability (26.10.2026).
                 for who in info.leaned_on(world, state):
+                    if info.source_role:
+                        who = sober_seat(world, state, who, info.source_role,
+                                         f"N{info.night}")
                     working.setdefault(info.night, set()).add(who)
                 continue
 
@@ -5938,6 +6207,16 @@ def _plain_failures(world, state, outcome=None):
                                 and TEAM[role] == "townsfolk" else GENUINE)
                     else:
                         held = ARBITRARY
+            # A Demon the Boffin gave this ability (26.10.2026): its own,
+            # worked through the Boffin — and what it yields is weighed
+            # like the character's own (G Weg 1). Whether it was working is
+            # the Boffin's (`sober`, below).
+            if held is ABSENT and seat is not None and role is not None \
+                    and boffin_gift(world, state, seat, acted) == role:
+                held = (INVERTED if vortoxed and TEAM[role] == "townsfolk"
+                        else GENUINE)
+            sober = seat if seat is None \
+                else sober_seat(world, state, seat, role, acted)
             # A row told to somebody *other* than the holder — the player a
             # Nightwatchman chose saying they were woken. A Drunk holding the
             # token has no ability, so the Storyteller wakes nobody for it:
@@ -6093,7 +6372,7 @@ def _plain_failures(world, state, outcome=None):
                         break
             # That, or its own source was off: either explains it.
             if recluse_need is not None and not witnessed:
-                either.append((info.night, frozenset({seat}), frozenset(),
+                either.append((info.night, frozenset({sober}), frozenset(),
                                frozenset({recluse_need})))
                 outcome[idx] = EXCUSED
                 continue
@@ -6102,7 +6381,7 @@ def _plain_failures(world, state, outcome=None):
 
             if faux_need is not None and faux_need[0] == "impaired" \
                     and not witnessed:
-                either.append((info.night, frozenset({seat}),
+                either.append((info.night, frozenset({sober}),
                                frozenset({faux_need[1]}), frozenset()))
                 outcome[idx] = EXCUSED
                 continue
@@ -6119,8 +6398,9 @@ def _plain_failures(world, state, outcome=None):
                 outcome[idx] = INVENTED
             elif not ok:
                 # Poison has to land on whoever the information came from -
-                # poisoning the messenger changes nothing.
-                failures[info.night].add(seat)
+                # poisoning the messenger changes nothing. Or on the Boffin
+                # behind a Demon it gave the ability (26.10.2026).
+                failures[info.night].add(sober)
                 outcome[idx] = EXCUSED
             else:
                 outcome[idx] = HELD
@@ -6135,7 +6415,7 @@ def _plain_failures(world, state, outcome=None):
                     # poisoned the Lycanthrope and the Noble alike, and only
                     # the first was asked).
                     faux_working.setdefault((info.night, faux_need[1]),
-                                            set()).add(seat)
+                                            set()).add(sober)
                 # **A droisoned character cannot misregister.** A Storyteller
                 # chooses freely what a droisoned *information* role yields,
                 # because the information is arbitrary — but registration is
@@ -6159,7 +6439,8 @@ def _plain_failures(world, state, outcome=None):
                 instead = getattr(info, "instead", None)
                 needs = instead(world, state, seat) if instead else None
                 if needs is not None:
-                    either.append((info.night, frozenset({seat})) + tuple(needs))
+                    either.append((info.night, frozenset({sober}))
+                                  + tuple(needs))
                     if needs[0]:
                         outcome[idx] = EXCUSED
     finally:
@@ -6642,7 +6923,8 @@ def a_sweetheart_leaves_somebody_drunk(world, state, night):
     for.
     """
     if not _in_bag(state, "Sweetheart") \
-            and not taken_by_a_philosopher(state, "Sweetheart"):
+            and not taken_by_a_philosopher(state, "Sweetheart") \
+            and not _boffin_on_board(state):
         return []
     # Whoever was the Sweetheart when they died — dealt one, or made one by
     # a Pit-Hag. Only the dealt one was looked for (29.09.2026). And a
@@ -6703,8 +6985,13 @@ def _a_sailors_drunk(world, state, night, seat, by):
     if seat in _returned_at(state, phase):
         return []
 
+    # Drunk itself, a Demon the Boffin gave the Sailor's ability makes
+    # only that copy drunk — the Boffin's, since it has nothing else
+    # (26.10.2026).
+    me = sober_seat(world, state, seat, "Sailor", phase)
+
     def price(hit):
-        if hit == seat:
+        if hit == me:
             return 0.6                    # the usual half of the coin
         return SAILOR_ON_EVIL_PENALTY if world.evil_at(hit, phase) else 0.6
 
@@ -6712,10 +6999,10 @@ def _a_sailors_drunk(world, state, night, seat, by):
     # is a pair rather than the whole table — which is most of what
     # confirming a Sailor is worth.
     picked = _chosen(state, "Sailor", night, by=by)
-    reach = (state.alive_set(phase) if picked is None
-             else frozenset({seat}) | picked)
-    return [impairment.Source("Sailor", reach, capacity=1,
-                              cost=price, repeat_cost=price, actor=seat)]
+    reach = (state.alive_set(phase) | {me} if picked is None
+             else frozenset({me}) | picked)
+    return [impairment.Source("Sailor", frozenset(reach), capacity=1,
+                              cost=price, repeat_cost=price, actor=me)]
 
 
 @impairment.source_rule
@@ -6834,9 +7121,9 @@ def a_courtier_names_a_character(world, state, night):
         # Goon. Whether it was first nobody writes down, so on offer.
         went = went or info.role == "Goon"
         free = (lambda who: 1.0) if went else 1.0
-        out.append(impairment.Source("Courtier", hit,
-                                     capacity=len(hit), cost=free,
-                                     repeat_cost=free, actor=courtier))
+        out.append(impairment.Source(
+            "Courtier", hit, capacity=len(hit), cost=free, repeat_cost=free,
+            actor=sober_seat(world, state, courtier, "Courtier", phase)))
     return out
 
 
@@ -6880,7 +7167,9 @@ def _a_minstrels_song(world, state, night, seat):
         return []
     everyone = frozenset(p for p in range(state.n_players) if p != seat)
     return [impairment.Source("Minstrel", everyone, capacity=len(everyone),
-                              cost=1.0, repeat_cost=1.0, actor=seat)]
+                              cost=1.0, repeat_cost=1.0,
+                              actor=sober_seat(world, state, seat,
+                                               "Minstrel", phase))]
 
 
 @impairment.source_rule
@@ -6964,7 +7253,9 @@ def _a_preachers_sermons(world, state, night, preacher):
     went = any(at in state.died_at(preacher) for at in (phase, f"D{night}"))
     cost = (lambda who: 1.0) if went else 1.0
     return [impairment.Source("Preacher", frozenset(hit), capacity=len(hit),
-                              cost=cost, repeat_cost=cost, actor=preacher)]
+                              cost=cost, repeat_cost=cost,
+                              actor=sober_seat(world, state, preacher,
+                                               "Preacher", phase))]
 
 
 @impairment.source_rule
@@ -6979,7 +7270,8 @@ def a_puzzlemaster_keeps_one_drunk(world, state, night):
     phase = f"N{night}"
     many = (1 if "Puzzlemaster" in dealt_roles(world) else 0) + sum(
         1 for who in (state.philosophies() or {})
-        if took_it(world, state, who, "Puzzlemaster", phase))
+        if took_it(world, state, who, "Puzzlemaster", phase)) + len(
+        boffin_holders(world, state, "Puzzlemaster", phase))
     if not many:
         return []                         # dealt, or nobody is drunk of it
     free = lambda who: 1.0
@@ -7179,9 +7471,14 @@ def _an_innkeepers_drunk(world, state, night, seat, by):
     # recorded choice narrows the drunk from the table to a pair.
     picked = _chosen(state, "Innkeeper", night, ("a", "b"), by=by)
     reach = state.alive_set(phase) if picked is None else picked
-    return [impairment.Source("Innkeeper", reach,
+    # A Demon the Boffin gave it that guards itself: the drunk one is its
+    # copy, which is the Boffin's (26.10.2026).
+    me = sober_seat(world, state, seat, "Innkeeper", phase)
+    if me != seat and seat in reach:
+        reach = (frozenset(reach) - {seat}) | {me}
+    return [impairment.Source("Innkeeper", frozenset(reach),
                               capacity=1, cost=0.5, repeat_cost=0.5,
-                              actor=seat)]
+                              actor=me)]
 
 
 def _impairment_plan(world, state, failures, forbidden):
@@ -7681,10 +7978,21 @@ def _best_story_told(world, state, outcome, viable):
                 TEA_TOLD[0] += 1
             else:
                 plain = rest
-        told = [changes]
+        told = [(changes, weight)]
+        # What the Boffin gave each new Demon in this story (C, D and I),
+        # told here one at a time rather than as stories of their own:
+        # beside a tea party, an Engineer and a Summoner they multiplied
+        # the stories past what memory holds (gate, 26.10.2026, seed 444).
+        if _boffin_on_board(state):
+            view = Timeline(world, changes) if changes else world
+            ways = boffin_new_demon_stories(view, state)
+            if not ways:
+                continue                  # nothing it could have given
+            if ways != [((), 1.0)]:
+                told = [(changes + extra, weight * c) for extra, c in ways]
         at = 0
         while at < len(told):
-            changes = told[at]
+            changes, weight = told[at]
             at += 1
             watch = at == 1 and (plain is not None or before is not None)
             if watch:
@@ -7722,7 +8030,7 @@ def _best_story_told(world, state, outcome, viable):
                             >> (phase_index(turn[0].phase) + 2)):
                         STORIES["skipped"] += 1
                         continue
-                    told.append(changes + turn)
+                    told.append((changes + turn, weight))
             if cost is None:
                 continue
             cost *= weight

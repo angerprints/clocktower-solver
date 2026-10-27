@@ -24,7 +24,7 @@ from botc.info import (registers_as_role,
                        PsychopathKill, PsychopathRoshambo, WidowKnown,
                        SlayerShot, VirginNomination,
                        PreacherChoice, HuntsmanChoice, PuzzlemasterGuess,
-                       EngineerChoice,
+                       EngineerChoice, BoffinGave, BOFFIN_NEVER_GIVES,
                        BoomdandyExploded, BecameInfo,
                        PixieLearned, VillageIdiotInfo, LycanthropeChose,
                        HarpyMadness,
@@ -1121,6 +1121,25 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.engineer_spent = set()
     d.engineer_night = {}               # Engineer seat -> the night it chose
     d.summoner_engineered = None
+    # The Boffin (26.10.2026, J Weg 1): the Demon dealt has a good
+    # character's ability the script has and nobody holds, picked at
+    # random — (seat, character) — and in about half the games the Boffin
+    # writes down which. Only the dealt Demon in its dealt character: a
+    # new Demon gets nothing here, which the solver tells as "nothing the
+    # town sees".
+    d.boffin_gift = None
+    d.boffin_row = False
+    if "Boffin" in roles:
+        from botc.catalogue import CHARACTERS as _C
+        demon = next((p for p in range(n) if TEAM[roles[p]] == "demon"), None)
+        if demon is not None:
+            pool = [k for k in script.keys
+                    if TEAM[k] in ("townsfolk", "outsider")
+                    and k not in BOFFIN_NEVER_GIVES
+                    and roles.count(k) < _C[k].copies]
+            if pool:
+                d.boffin_gift = (demon, rng.choice(pool))
+                d.boffin_row = rng.random() < 0.5
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -1331,7 +1350,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                         if _acts_as(d, gran, "Grandmother", f"N{night}") \
                                 and gran in d.alive_at(f"N{night}") \
                                 and d.deaths.get(gran) is None \
-                                and d.working(gran, night) \
+                                and d.working(_sober(d, gran, "Grandmother", f"N{night}"), night) \
                                 and not _kept_alive_by_a_tea_lady(
                                     d, gran, f"N{night}"):
                             d.deaths[gran] = f"N{night}"
@@ -1790,9 +1809,17 @@ def _moonchild_takes_one(d, night, heard, rng):
         target = rng.choice(others)
         heard.append(MoonchildChoice(night, seat, target=target))
         d.moonchild_picked[night] = target
-        if not d.working(seat, night):
+        if not d.working(_sober(d, seat, "Moonchild", f"N{night}"), night):
             continue
         if d.side_at(target, f"D{day}") != "good":
+            continue
+        # Made a Demon tonight, before the Moonchild's turn: evil by then.
+        # A Snake Charmer that swapped with the Demon tonight, as with the
+        # Summoner's Demon below (gate, seed 1650 of the Boffin's line LN,
+        # 27.10.2026). A Goon or a seat the Mezepheles turned tonight
+        # still dies of it, as before.
+        if TEAM[d.role_at(target, phase)] == "demon" \
+                and TEAM[d.role_at(target, f"D{day}")] != "demon":
             continue
         # Made the Demon tonight, before the Moonchild's turn: evil by
         # then (21.10.2026).
@@ -1834,11 +1861,14 @@ def _the_goon_answers(d, night, chooser, target):
     if not _acts_as(d, target, "Goon", phase) \
             or d.deaths.get(target) is not None:
         return False
-    if not d.working(target, night):
+    if not d.working(_sober(d, target, "Goon", phase), night):
         return False
     d.goon_first[night] = (chooser, target)
     side = d.side_at(chooser, phase)
-    if d.side_at(target, phase) != side:
+    # A Demon the Boffin gave it does not turn good by it (their jinx,
+    # 26.10.2026).
+    if d.side_at(target, phase) != side \
+            and _gift(d, target, phase) != "Goon":
         d.side_changes.append((phase, target, "Goon", side))
     return True
 
@@ -1942,7 +1972,13 @@ def _gossip_comes_true(d, night, rng):
             continue
         if seat not in d.alive_at(f"E{day}"):
             continue                      # back tonight: it said nothing today
-        if not d.working(seat, night) or rng.random() >= 0.3:
+        # A Demon the Boffin gave it: the Boffin's sobriety — and a Boffin
+        # that fell tonight fell before the Gossip's turn, which is after
+        # every kill (26.10.2026, seed 714).
+        sober = _sober(d, seat, "Gossip", phase)
+        if sober != seat and d.deaths.get(sober) is not None:
+            continue
+        if not d.working(sober, night) or rng.random() >= 0.3:
             continue
         demon = d.demon_at(phase)
         able_to_die = [
@@ -1952,7 +1988,7 @@ def _gossip_comes_true(d, night, rng):
             and not _kept_alive_by_a_tea_lady(d, p, phase)
             and not _an_innkeeper_or_sailor_keeps(d, night, p)
             and not (_acts_as(d, p, "Fool", phase) and p not in d.fool_spent
-                     and d.working(p, night))]
+                     and d.working(_sober(d, p, "Fool", phase), night))]
         if not able_to_die:
             continue
         target = rng.choice(able_to_die)
@@ -2006,7 +2042,7 @@ def _a_fool_shrugs_it_off(d, seat, phase):
     """
     if not _acts_as(d, seat, "Fool", phase) or seat in d.fool_spent:
         return False
-    if not d.working(seat, int(phase[1:]), by_day=phase[0] != "N"):
+    if not d.working(_sober(d, seat, "Fool", phase), int(phase[1:]), by_day=phase[0] != "N"):
         return False
     d.fool_spent[seat] = phase
     d.fool_spent_ever.append((seat, phase))
@@ -2058,6 +2094,10 @@ def _tinker_may_go(d, night, rng):
     for seat in range(d.n):
         # Or a Philosopher that took it (13.10.2026).
         if not _acts_as(d, seat, "Tinker", phase):
+            continue
+        # Not a Demon the Boffin gave it: the Storyteller does not end the
+        # game that way here (26.10.2026).
+        if _gift(d, seat, phase) == "Tinker":
             continue
         if seat not in d.alive_at(phase):
             continue
@@ -2169,7 +2209,8 @@ def _monk_guards(d, night, rng):
     # The first working one: the holder, or a Philosopher that took it
     # while the holder is drunk (13.10.2026).
     monk = next((p for p in _holders(d, "Monk", phase)
-                 if p in d.alive_at(phase) and d.working(p, night)), None)
+                 if p in d.alive_at(phase)
+                 and d.working(_sober(d, p, "Monk", phase), night)), None)
     if monk is None:
         return
     others = [p for p in d.alive_at(phase) if p != monk]
@@ -2237,7 +2278,7 @@ def _kept_alive_by_a_tea_lady(d, seat, phase):
     # (02.10.2026).
     if phase[0] == "N":
         night = int(phase[1:])
-        if _acts_as(d, seat, "Sailor", phase) and d.working(seat, night):
+        if _acts_as(d, seat, "Sailor", phase) and d.working(_sober(d, seat, "Sailor", phase), night):
             return True
         # Still standing: an Innkeeper the Demon took at 27 keeps nobody
         # from a Moonchild's pick at 50. The same for a Tea Lady, below.
@@ -2248,7 +2289,7 @@ def _kept_alive_by_a_tea_lady(d, seat, phase):
         if not _acts_as(d, lady, "TeaLady", phase):
             continue
         if lady not in d.alive_at(phase) or not d.working(
-                lady, int(phase[1:]), by_day=phase[0] != "N") \
+                _sober(d, lady, "TeaLady", phase), int(phase[1:]), by_day=phase[0] != "N") \
                 or d.deaths.get(lady) is not None:
             continue
         around = []
@@ -2290,7 +2331,7 @@ def _farmer_hands_it_on(d, night, rng):
                if _acts_as(d, p, "Farmer", phase)
                and d.deaths.get(p) == phase]
     for seat in holders:
-        if not d.working(seat, night):
+        if not d.working(_sober(d, seat, "Farmer", phase), night):
             continue                      # droisoned: it does not function
         def good_enough(p):
             role = d.role_at(p, phase)
@@ -2336,9 +2377,45 @@ def _farmer_hands_it_on(d, night, rng):
 
 def _took(d, seat, role, phase):
     """A Philosopher that took that character, and still the Philosopher
-    then. It chooses on its first night, so it has it from night one."""
-    return d.role_at(seat, phase) == "Philosopher" \
-        and (getattr(d, "philosophies", None) or {}).get(seat) == role
+    then. It chooses on its first night, so it has it from night one.
+    Or the Demon the Boffin gave its ability (26.10.2026)."""
+    if d.role_at(seat, phase) == "Philosopher" \
+            and (getattr(d, "philosophies", None) or {}).get(seat) == role:
+        return True
+    return role is not None and _gift(d, seat, phase) == role
+
+
+def _boffin_at(d, phase):
+    """The living Boffin then, or None."""
+    alive = d.alive_at(phase)
+    return next((p for p in range(d.n)
+                 if p in alive and d.role_at(p, phase) == "Boffin"), None)
+
+
+def _gift(d, seat, phase):
+    """The good character whose ability this seat has through the Boffin
+    then, or None: the Demon dealt, still in its dealt character, with a
+    Boffin alive (26.10.2026). Only one the solver reckons so far (stage
+    1, `solver.BOFFIN_SEEN`): the others it tells as "nothing the town
+    sees", so here they do nothing."""
+    from botc.solver import BOFFIN_SEEN
+    got = getattr(d, "boffin_gift", None)
+    if got is None or got[0] != seat or got[1] not in BOFFIN_SEEN:
+        return None
+    if d.role_at(seat, phase) != d.roles[seat]:
+        return None
+    if _boffin_at(d, phase) is None:
+        return None
+    return got[1]
+
+
+def _sober(d, seat, role, phase):
+    """Whose sobriety this seat's ability as that character rests on: the
+    Boffin's for a Demon it gave the ability, else its own."""
+    if d.role_at(seat, phase) != role and _gift(d, seat, phase) == role:
+        boffin = _boffin_at(d, phase)
+        return seat if boffin is None else boffin
+    return seat
 
 
 def _drunk_by_its_philosopher(d, seat, role, phase):
@@ -2601,7 +2678,7 @@ def _the_princess_stops(d, night):
     phase = f"N{night}"
     return (_acts_as(d, princess, "Princess", phase)
             and princess in d.alive_at(phase)
-            and d.working(princess, night))
+            and d.working(_sober(d, princess, "Princess", phase), night))
 
 
 def _can_die_by_day(d, seat, day):
@@ -2610,7 +2687,7 @@ def _can_die_by_day(d, seat, day):
     Fool's spent by the asking, so this is asked last."""
     phase = f"D{day}"
     if _acts_as(d, seat, "Sailor", phase) \
-            and d.working(seat, day, by_day=True):
+            and d.working(_sober(d, seat, "Sailor", phase), day, by_day=True):
         return False
     if _a_vizier_stands(d, seat, day):
         return False
@@ -2730,7 +2807,8 @@ def _virgin_answers(d, day, who, nominee, rng):
     d.virgin_spent.add(nominee)
     held = d.role_at(who, phase)
     townsfolk = TEAM[held] == "townsfolk" or held == "Spy"
-    triggered = townsfolk and d.working(nominee, day, by_day=True)
+    triggered = townsfolk and d.working(_sober(d, nominee, "Virgin", phase),
+                                        day, by_day=True)
     return VirginNomination(day, nominee, nominator=who, triggered=triggered)
 
 
@@ -2739,7 +2817,9 @@ def _golem_strikes(d, golem, nominee, day, rng):
     Once a game, drunk or not; a Recluse may register as the Demon."""
     phase = f"D{day}"
     d.golem_spent.add(golem)
-    if not d.working(golem, day, by_day=True):
+    # A Demon the Boffin gave it: the Boffin's sobriety (26.10.2026,
+    # seed 2097).
+    if not d.working(_sober(d, golem, "Golem", phase), day, by_day=True):
         return False
     held = d.role_at(nominee, phase)
     if TEAM[held] == "demon" or _babysits(d, nominee, phase):
@@ -2832,7 +2912,7 @@ def _preacher_preaches(d, night, rng):
         if not _acts_as(d, seat, "Preacher", phase):
             continue                      # the Drunk's token: nothing
         if _the_goon_answers(d, night, seat, target) \
-                or not d.working(seat, night):
+                or not d.working(_sober(d, seat, "Preacher", phase), night):
             continue
         if TEAM[d.role_at(target, phase)] == "minion":
             d.preached.append((seat, target, night))
@@ -2955,7 +3035,7 @@ def _puzzlemaster_guesses(d, day, rng, heard):
         d.puzzle_spent.add(seat)
         demon = d.demon_at(phase)
         real = _acts_as(d, seat, "Puzzlemaster", phase) \
-            and d.working(seat, day, by_day=True)
+            and d.working(_sober(d, seat, "Puzzlemaster", phase), day, by_day=True)
         if real and guess == mine and demon is not None:
             shown = demon
         elif real:
@@ -3046,7 +3126,7 @@ def _reads_evil(d, seat, phase):
     night = int(phase[1:])
     # The holder, or a Philosopher that took it (13.10.2026).
     return any(_acts_as(d, p, "Lycanthrope", f"N{night}")
-               and d.working(p, night) for p in d.alive_at(f"N{night}"))
+               and d.working(_sober(d, p, "Lycanthrope", f"N{night}"), night) for p in d.alive_at(f"N{night}"))
 
 
 def _an_innkeeper_or_sailor_keeps(d, night, target):
@@ -3057,7 +3137,7 @@ def _an_innkeeper_or_sailor_keeps(d, night, target):
     phase = f"N{night}"
     if _an_innkeeper_guards(d, night, target):
         return True
-    return _acts_as(d, target, "Sailor", phase) and d.working(target, night)
+    return _acts_as(d, target, "Sailor", phase) and d.working(_sober(d, target, "Sailor", phase), night)
 
 
 def _kept_alive_at_night(d, night, target):
@@ -3066,7 +3146,7 @@ def _kept_alive_at_night(d, night, target):
     phase = f"N{night}"
     if _an_innkeeper_guards(d, night, target):
         return True
-    if _acts_as(d, target, "Sailor", phase) and d.working(target, night):
+    if _acts_as(d, target, "Sailor", phase) and d.working(_sober(d, target, "Sailor", phase), night):
         return True
     if _kept_alive_by_a_tea_lady(d, target, phase):
         return True
@@ -3099,7 +3179,7 @@ def _lycanthrope_hunts(d, night, rng):
         if not _acts_as(d, seat, "Lycanthrope", phase):
             continue                      # the Drunk's token: nothing
         if _the_goon_answers(d, night, seat, target) \
-                or not d.working(seat, night):
+                or not d.working(_sober(d, seat, "Lycanthrope", phase), night):
             continue
         if target == d.faux_paw or d.side_at(target, phase) != "good":
             continue
@@ -3503,7 +3583,7 @@ def _stands_behind(d, seat, day):
     one a working Exorcist named (their jinxes — good would win)."""
     phase = f"D{day}"
     if _acts_as(d, seat, "Soldier", phase) \
-            and d.working(seat, day, by_day=True):
+            and d.working(_sober(d, seat, "Soldier", phase), day, by_day=True):
         return True
     # Each holder's own choice, and only a working one (13.10.2026).
     for role, chosen in (("Innkeeper", _choices(d, "Innkeeper", day)),
@@ -3546,7 +3626,7 @@ def _leviathan_takes_the_day(d, day, hanged, rng, heard):
                 if info is _grandchild_row(heard, gran, day + 1) \
                         and d.deaths.get(gran) is None \
                         and _acts_as(d, gran, "Grandmother", f"D{day}") \
-                        and d.working(gran, day, by_day=True):
+                        and d.working(_sober(d, gran, "Grandmother", f"D{day}"), day, by_day=True):
                     return True
     return day >= 5 and working
 
@@ -3798,7 +3878,7 @@ def _the_curse_bites(d, seat, day):
         return False
     if len(d.alive_at(phase)) <= 3:
         return False
-    if _acts_as(d, seat, "Sailor", phase) and d.working(seat, day):
+    if _acts_as(d, seat, "Sailor", phase) and d.working(_sober(d, seat, "Sailor", phase), day):
         return False
     if _a_vizier_stands(d, seat, day):
         return False
@@ -3824,7 +3904,7 @@ def _walks_away(d, seat, day, rng):
     """
     phase = f"D{day}"
     role = d.role_at(seat, phase)
-    if _acts_as(d, seat, "Sailor", phase) and d.working(seat, day,
+    if _acts_as(d, seat, "Sailor", phase) and d.working(_sober(d, seat, "Sailor", phase), day,
                                                          by_day=True):
         return "Sailor"
     if _a_vizier_stands(d, seat, day):
@@ -3849,7 +3929,7 @@ def _walks_away(d, seat, day, rng):
     pacifist = next((p for p in d.alive_at(phase)
                      if _acts_as(d, p, "Pacifist", phase)
                      and d.deaths.get(p) is None
-                     and d.working(p, day, by_day=True)), None)
+                     and d.working(_sober(d, p, "Pacifist", phase), day, by_day=True)), None)
     if pacifist is not None \
             and d.side_at(seat, phase) == "good":
         # "Once per game is usually about right."
@@ -4945,13 +5025,13 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
     if night in getattr(d, "lyc_quiet", ()):
         return True
     # Working, which is every way of going wrong, not only the Poisoner.
-    if _acts_as(d, target, "Soldier", phase) and d.working(target, night):
+    if _acts_as(d, target, "Soldier", phase) and d.working(_sober(d, target, "Soldier", phase), night):
         return True
 
     # A sober Sailor cannot die. Missing here while the solver has always
     # had it as a shield; nothing tripped only because the Sailor is so
     # often the drunk one of its own pair.
-    if _acts_as(d, target, "Sailor", phase) and d.working(target, night):
+    if _acts_as(d, target, "Sailor", phase) and d.working(_sober(d, target, "Sailor", phase), night):
         return True
 
     # An Innkeeper keeps two players safe. The docstring above has
@@ -4972,7 +5052,7 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
         if not _acts_as(d, lady, "TeaLady", phase) \
                 or lady not in d.alive_at(phase):
             continue
-        if not d.working(lady, night) or lady in gone:
+        if not d.working(_sober(d, lady, "TeaLady", phase), night) or lady in gone:
             continue
         around = _living_beside(d, lady, phase, gone)
         if len(around) < 2 or target not in around:
@@ -4987,7 +5067,8 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
     for chooser, guarded in _choices(d, "Monk", night).items():
         monk = _answering(d, chooser, "Monk", phase)
         if guarded == target and monk is not None \
-                and monk in d.alive_at(phase) and d.working(monk, night) \
+                and monk in d.alive_at(phase) \
+                and d.working(_sober(d, monk, "Monk", phase), night) \
                 and monk not in gone:
             return True
 
@@ -5317,7 +5398,7 @@ def _demon_kill(d, night, rng):
         return None                             # the Monk guarded them
 
     if _acts_as(d, target, "Soldier", f"N{night}") \
-            and d.working(target, night):
+            and d.working(_sober(d, target, "Soldier", f"N{night}"), night):
         return None                             # a sober Soldier survives
     return target
 
@@ -5333,7 +5414,23 @@ ON_DEATH = frozenset({"Ravenkeeper", "Sage", "Klutz"})
 
 def _woke_for_own_ability(d, p, night, shown=False):
     """Did this seat wake tonight for its own ability — what a Chambermaid
-    counts.
+    counts. A Demon the Boffin gave an ability also wakes, from the second
+    night on, whenever that character would (F Weg 1, 26.10.2026)."""
+    if _woke_itself(d, p, night, shown):
+        return True
+    if night < 2:
+        return False
+    from botc.catalogue import CHARACTERS
+    gift = _gift(d, p, f"N{night}")
+    if gift is None or CHARACTERS[gift].believes:
+        return False
+    return _woke_itself(d, p, night, shown, as_role=gift)
+
+
+def _woke_itself(d, p, night, shown=False, as_role=None):
+    """Did this seat wake tonight for its own ability — what a Chambermaid
+    counts. `as_role` asks about a character it holds the ability of
+    without being it (the Boffin's gift).
 
     `shown` also says yes for a seat woken to be *shown* something, a Spy
     its grimoire or an Evil Twin its twin. That is still somebody evil
@@ -5348,7 +5445,7 @@ def _woke_for_own_ability(d, p, night, shown=False):
     # or a Pit-Hag had moved was counted on the schedule of a
     # character it no longer was (tenth place the deal has been
     # mistaken for the timeline, 07.10.2026).
-    what = d.token(p, f"N{night}") or d.role_at(p, f"N{night}")
+    what = as_role or d.token(p, f"N{night}") or d.role_at(p, f"N{night}")
     # A Philosopher that has taken an ability wakes when that
     # character would — settled at the table, and what the night
     # order above has done since 29.09. Here it fell through to
@@ -5366,7 +5463,7 @@ def _woke_for_own_ability(d, p, night, shown=False):
     # A Lunatic lives the night of the Demon it thinks it is —
     # here always the real one — and choosing who it thinks it
     # kills counts (table ruling, 02.10.2026).
-    if d.role_at(p, f"N{night}") == "Lunatic":
+    if as_role is None and d.role_at(p, f"N{night}") == "Lunatic":
         real = d.demon_at(f"N{night}")
         what = (d.role_at(real, f"N{night}") if real is not None
                 else "Lunatic")
@@ -5803,7 +5900,10 @@ def early_choices(d, night, rng):
         # Charmer and every Demon (23.10.2026). So it can be the first to
         # choose a Goon. Whether it falls is settled after the kills
         # (`_acrobat_may_fall`), since "or becomes" reaches to the end.
+        # Not a Demon the Boffin gave it: an evil player does not risk
+        # its Demon on it (26.10.2026).
         if night > 1 and _acts_as(d, seat, "Acrobat", f"N{night}") \
+                and _gift(d, seat, f"N{night}") != "Acrobat" \
                 and seat in d.alive_at(f"N{night}"):
             others = [p for p in range(d.n) if p != seat]
             if others:
@@ -6611,6 +6711,14 @@ def _for_role(d, seat, role, night, rng):
                         if _reads_evil(d, i, here)
                         and _reads_evil(d, (i + 1) % d.n, here))
             return Chef(1, seat, count=pairs)
+
+    # The Boffin writes down what it gave, in about half the games
+    # (J Weg 1, 26.10.2026).
+    if role == "Boffin" and night == 1:
+        got = getattr(d, "boffin_gift", None)
+        if got is None or not getattr(d, "boffin_row", False):
+            return None
+        return BoffinGave(1, seat, role=got[1])
 
     if role == "Pixie" and night == 1:
         # One Townsfolk in play; a Drunk holding its token is shown one

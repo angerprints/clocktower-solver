@@ -130,7 +130,10 @@ export function cultSides(w, s, seat, phase) {
  * took the Goon (ruling G, 13.10.2026)? See info.py. */
 export function sideOpen(w, s, seat, phase) {
   if (CHARACTERS[w.roleAt(seat, phase)].alignment_open) return true;
-  return !!s && tookIt(w, s, seat, "Goon", phase);
+  // Not a Demon the Boffin gave it: it cannot turn good by it (their
+  // jinx, 26.10.2026).
+  return !!s && tookIt(w, s, seat, "Goon", phase)
+    && boffinGiftOf(w, s, seat, phase) !== "Goon";
 }
 
 /** The world once for every way the sides nobody follows could really be
@@ -171,10 +174,61 @@ export function fauxPawLycanthrope(w, s, phase, living = true) {
     ? lyc : null;
 }
 
+/** Is this seat a Philosopher that took that character by then — or a
+ * Demon the Boffin gave its ability (26.10.2026)? See info.py. */
 export function tookIt(w, s, seat, role, phase) {
   const taken = (s.philosophies() || {})[seat];
-  return !!(taken && taken[0] === role && w.roleAt(seat, phase) === "Philosopher"
-            && phaseIndex(phase) >= phaseIndex(taken[1]));
+  if (taken && taken[0] === role && w.roleAt(seat, phase) === "Philosopher"
+      && phaseIndex(phase) >= phaseIndex(taken[1])) return true;
+  return role !== null && role !== undefined
+    && boffinGiftOf(w, s, seat, phase) === role;
+}
+
+// ---------------------------------------------------------------------
+// The Boffin (26.10.2026). See info.py.
+// ---------------------------------------------------------------------
+/** Every ability the Boffin may have given that changes nothing the town
+ * sees, as one story (A Weg 3). */
+export const BOFFIN_UNSEEN = "*";
+
+/** The living seat holding the Boffin then, or null. */
+export function boffinSeat(w, s, phase) {
+  if (!s.script.keys.includes("Boffin")) return null;
+  const alive = s.aliveSet(phase);
+  for (let seat = 0; seat < w.roles.length; seat++)
+    if (alive.has(seat) && w.roleAt(seat, phase) === "Boffin") return seat;
+  return null;
+}
+
+/** The good character whose ability this seat has through the Boffin at
+ * that moment, or null: marked in this story, a Demon character then,
+ * and a Boffin alive. See info.py `boffin_gift`. */
+export function boffinGiftOf(w, s, seat, phase) {
+  if (!s.script.keys.includes("Boffin")) return null;
+  const got = w.giftAt ? w.giftAt(seat, phase) : null;
+  if (!got || got === BOFFIN_UNSEEN) return null;
+  if (TEAM[w.roleAt(seat, phase)] !== "demon") return null;
+  if (boffinSeat(w, s, phase) === null) return null;
+  return got;
+}
+
+/** Every seat with that ability through the Boffin at that moment. */
+export function boffinHolders(w, s, role, phase) {
+  if (role === null || role === undefined || !w.giftedSeats) return [];
+  return w.giftedSeats().filter(seat => boffinGiftOf(w, s, seat, phase) === role);
+}
+
+/** Whose sobriety this seat's ability as that character rests on: its
+ * own, or the Boffin's where the Boffin gave it. See info.py. */
+export function soberSeat(w, s, seat, role, phase) {
+  if (role === null || role === undefined
+      || !s.script.keys.includes("Boffin")
+      || w.roleAt(seat, phase) === role) return seat;
+  if (boffinGiftOf(w, s, seat, phase) === role) {
+    const got = boffinSeat(w, s, phase);
+    return got === null ? seat : got;
+  }
+  return seat;
 }
 
 /** Was the real holder drunk then, because a living Philosopher had
@@ -1643,6 +1697,8 @@ function bansheesThatFell(row, w, s) {
     if (held.includes("Banshee") || (
         gained && gained[0] === "Banshee" && held.includes("Philosopher")
         && phaseIndex(phase) >= phaseIndex(gained[1]))) out.push(seat);
+    // Or a Demon the Boffin gave it (26.10.2026).
+    else if (boffinGiftOf(w, s, seat, began) === "Banshee") out.push(seat);
   }
   return out;
 }
@@ -1941,6 +1997,21 @@ export const EngineerChoice = define("EngineerChoice", "Engineer",
     return engineerChosen(this, s) !== null;
   });
 EngineerChoice.isAChoice = true;
+
+/** Which good character's ability the Boffin gave the Demon, said by the
+ * Boffin (26.10.2026): a good character of the script, none of the four
+ * its jinxes forbid. What follows is aBoffinGivesTheDemon's. See info.py. */
+export const BOFFIN_NEVER_GIVES = new Set(["Drunk", "Heretic", "Ogre",
+                                           "Politician"]);
+export const boffinGiven = (row, s) => {
+  const key = row.role || "";
+  if (!s.script.keys.includes(key)) return null;
+  if (TEAM[key] !== "townsfolk" && TEAM[key] !== "outsider") return null;
+  if (BOFFIN_NEVER_GIVES.has(key)) return null;
+  return key;
+};
+export const BoffinGave = define("BoffinGave", "Boffin",
+  function (w, s) { return boffinGiven(this, s) !== null; });
 
 /** The Puzzlemaster's one guess, and whom it was then shown. Shown the
  * Demon: the guess was the drunk player, or it was off itself. */
@@ -2267,7 +2338,7 @@ export const KINDS = {
   DamselGuess, FearmongerChose, VizierAnnounced, BlindVote,
   ChoirboyInfo, PrincessNominated, GolemNomination, PsychopathKill,
   PsychopathRoshambo, WidowKnown,
-  PreacherChoice, HuntsmanChoice, EngineerChoice, PuzzlemasterGuess,
+  PreacherChoice, HuntsmanChoice, EngineerChoice, BoffinGave, PuzzlemasterGuess,
   BoomdandyExploded, MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
   PixieLearned, VillageIdiotInfo, LycanthropeChose, HarpyMadness,

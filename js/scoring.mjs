@@ -23,7 +23,8 @@ import {SETUP_SLOT, readingAt} from "./worlds.mjs";
 import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
-        summonerWorld, teaParty, turnedEvil, engineered} from "./worlds.mjs";
+        summonerWorld, teaParty, turnedEvil, engineered, boffinGift}
+  from "./worlds.mjs";
 import {aLeviathanIsToldOf, demonHolding, summonedBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
   from "./characters.rules.mjs";
@@ -32,7 +33,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         holdingNow,
         knowsItTurnedEvil, sideOpen,
         livingNeighbours, takenByAPhilosopher, tookIt, wentOnAfter,
-        babysitterAt, engineerChosen}
+        babysitterAt, engineerChosen, boffinGiven, BOFFIN_NEVER_GIVES,
+        BOFFIN_UNSEEN, boffinGiftOf, boffinHolders, boffinSeat, soberSeat}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -132,6 +134,9 @@ const ACTS_AT = {
   aFarmerHandsItOn: 48,
   anOgrePicksASide: 60,                  // late on night one
   demonHandovers: 99,                    // a death, so after everything
+  // The Boffin gives the Demon an ability at the setup — first, so every
+  // rule after it sees it (26.10.2026). See solver.py.
+  aBoffinGivesTheDemon: -1,
 };
 
 export const transitionRule = fn => (
@@ -269,6 +274,12 @@ export function possibleTimelines(world, state, cap = 128) {
     if (state.script.keys.includes("Summoner"))
       cap *= 1 + summonable(state).length * state.nPlayers;
   }
+  // And for every ability the Boffin may have given at the setup
+  // (26.10.2026). See solver.py.
+  if (boffinOnBoard(state)) {
+    const seen = state.script.keys.filter(k => BOFFIN_SEEN.has(k)).length;
+    cap *= 1 + seen;
+  }
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -402,14 +413,19 @@ function whoTurned(changes) {
 const KEYS = new WeakMap(), MOMENTS = new WeakMap();
 // With the slot (Hatter stage 3b): two changes alike but for where in the
 // night they happened are two changes, as Python's tuples are.
+// A Boffin's mark carries its ability apart from the side (26.10.2026),
+// as Python keeps it in the side field: two marks that give different
+// abilities are two stories.
 const sameChange = (a, b) => a === b || (a.phase === b.phase &&
   a.seat === b.seat && (a.role ?? null) === (b.role ?? null) &&
   (a.side ?? null) === (b.side ?? null) &&
-  (a.slot ?? null) === (b.slot ?? null));
+  (a.slot ?? null) === (b.slot ?? null) &&
+  (a.boffin ? a.gift : undefined) === (b.boffin ? b.gift : undefined));
 const changeKey = c => {
   let k = KEYS.get(c);
   if (k === undefined)
-    KEYS.set(c, k = `${c.phase}|${c.seat}|${c.role}|${c.side}|${c.slot ?? null}`);
+    KEYS.set(c, k = `${c.phase}|${c.seat}|${c.role}|${c.side}|${c.slot ?? null}`
+                    + (c.boffin ? `|gift:${c.gift}` : ""));
   return k;
 };
 const momentOf = c => {
@@ -710,7 +726,7 @@ export const mastermindMarker = (phase, seat) => change(phase, seat, null, null)
 export const isMastermindMarker = c =>
   (c.role === null || c.role === undefined) &&
   (c.side === null || c.side === undefined) && !c.babysits && !c.fell
-  && !c.notSummoned && !c.handedOn;
+  && !c.notSummoned && !c.handedOn && !c.boffin;
 
 /** Every way the Demon could have changed hands in this world.
  *
@@ -1286,23 +1302,23 @@ export function aMezephelesMayHaveTurned(world, state) {
   return stories;
 }
 
-/** Does this seat have that ability — held, or taken by a Philosopher? */
+/** Does this seat have that ability — held, taken by a Philosopher, or
+ * given the Demon by the Boffin (26.10.2026)? */
 function hasAbility(world, state, seat, role, phase) {
   if (world.roleAt(seat, phase) === role) return true;
-  const taken = state.philosophies()[seat];
-  return !!(taken && taken[0] === role &&
-            world.roleAt(seat, phase) === "Philosopher" &&
-            phaseIndex(phase) >= phaseIndex(taken[1]));
+  return tookIt(world, state, seat, role, phase);
 }
 
-/** Who has this ability — held, or gained by a Philosopher. */
+/** Who has this ability — held, gained by a Philosopher, or given the
+ * Demon by the Boffin. */
 function whoeverWorks(world, state, role, phase) {
   const seat = world.findAt(role, phase);
   if (seat !== null) return seat;
   for (const [who, [taken, since]] of Object.entries(state.philosophies()))
     if (taken === role && world.roleAt(+who, phase) === "Philosopher" &&
         phaseIndex(phase) >= phaseIndex(since)) return +who;
-  return null;
+  const given = boffinHolders(world, state, role, phase);
+  return given.length ? given[0] : null;
 }
 
 // --------------------------------------------------------------------
@@ -1808,7 +1824,8 @@ export function teaParties(world) {
  * null: "two demons" or "lil monsta" ("hatter at night" is reckoned since
  * stage 3c). See solver.py. */
 export function hatterUnreckoned(view, state) {
-  if (!hatterOnBoard(state)) return engineerUnreckoned(view, state);
+  if (!hatterOnBoard(state))
+    return engineerUnreckoned(view, state) ?? boffinUnreckoned(view, state);
   const final = phaseIndex(state.finalPhase());
   for (const [, phase] of hatterDeaths(view, state)) {
     const night = teaNight(phase);
@@ -1829,7 +1846,7 @@ export function hatterUnreckoned(view, state) {
       if (demonAlive) return "lil monsta";
     }
   }
-  return engineerUnreckoned(view, state);
+  return engineerUnreckoned(view, state) ?? boffinUnreckoned(view, state);
 }
 
 // --------------------------------------------------------------------
@@ -1986,6 +2003,174 @@ function engineerMayTakeTheSummoner(state) {
     return info.night <= 3 && TEAM[chosen[0]] === "minion"
       && !chosen.includes("Summoner");
   });
+}
+
+// --------------------------------------------------------------------
+// The Boffin (26.10.2026, claude/laborratte-lesarten.md). See solver.py.
+// --------------------------------------------------------------------
+
+/** The abilities reckoned so far, each a story of its own (stage 1). */
+export const BOFFIN_SEEN = new Set([
+  "Fool", "Sailor", "TeaLady", "Soldier", "Monk", "Innkeeper", "Mayor",
+  "Pacifist", "Princess", "Tinker", "Gambler", "Acrobat", "Grandmother",
+  "Moonchild", "Gossip", "Lycanthrope", "Golem", "Banshee", "Farmer",
+  "Virgin", "Saint", "Klutz", "Zealot",
+  "Sweetheart", "Courtier", "Minstrel", "Preacher", "Goon",
+  "Puzzlemaster",
+]);
+
+const boffinOnBoard = state => state.script.keys.includes("Boffin");
+
+/** The Boffin rows that name something it could give. */
+export function boffinRows(state) {
+  if (state._boffinCache && state._boffinCache[0] === state.infos
+      && state._boffinCache[1] === state.infos.length)
+    return state._boffinCache[2];
+  const out = state.infos.filter(i => i.type === "BoffinGave"
+                                 && boffinGiven(i, state) !== null);
+  state._boffinCache = [state.infos, state.infos.length, out];
+  return out;
+}
+
+/** Every good character the Boffin could give at that moment (B Weg 1). */
+export function boffinMayGive(view, state, phase) {
+  const held = Array.from({length: state.nPlayers},
+                          (_, p) => view.roleAt(p, phase));
+  const out = [];
+  for (const key of state.script.keys) {
+    if (TEAM[key] !== "townsfolk" && TEAM[key] !== "outsider") continue;
+    if (BOFFIN_NEVER_GIVES.has(key)) continue;
+    const count = held.filter(r => r === key).length;
+    if (count && count >= (CHARACTERS[key].copies || 1)) continue;
+    out.push(key);
+  }
+  return out;
+}
+
+/** What a Boffin row says it gave, for a moment of that night, or null:
+ * a first-night row is about the Demon dealt, a later row about the
+ * Demon made that night (seed 683). See solver.py. */
+function boffinNamed(state, night, setup) {
+  let named = null;
+  for (const info of boffinRows(state))
+    if (info.night === night && (night > 1 || setup))
+      named = boffinGiven(info, state);
+  return named;
+}
+
+/** Every ability the Boffin may have given this seat at that moment, as
+ * [[mark], cost] — "nothing the town sees" first. */
+export function boffinOffers(view, state, phase, seat, slot, setup = false) {
+  const may = boffinMayGive(view, state, phase);
+  const named = boffinNamed(state, parseInt(phase.slice(1), 10), setup);
+  if (named !== null) {
+    if (!may.includes(named)) return [];
+    const gift = BOFFIN_SEEN.has(named) ? named : BOFFIN_UNSEEN;
+    return [[[boffinGift(phase, seat, gift, slot)], 1.0]];
+  }
+  const seen = may.filter(k => BOFFIN_SEEN.has(k));
+  const unseen = may.length - seen.length;
+  const out = [];
+  if (unseen) out.push([[boffinGift(phase, seat, BOFFIN_UNSEEN, slot)], 1.0]);
+  const each = unseen ? 1.0 / unseen : 1.0;
+  for (const k of seen) out.push([[boffinGift(phase, seat, k, slot)], each]);
+  return out;
+}
+
+/** When the Boffin gives something in this story, and to whom. See
+ * solver.py `_boffin_moments`. */
+function boffinMoments(view, state, setup) {
+  const base = view instanceof Timeline ? view.world : view;
+  const out = [];
+  if (setup) {
+    if (base.roles.includes("Boffin")) {
+      const start = base.demonAt("N1");
+      if (start !== null) out.push(["N1", SETUP_SLOT, start, null]);
+    }
+    return out;
+  }
+  const changes = (view.changes || []).filter(c => !c.boffin)
+    .map((c, i) => [c, i, changeAt(c)])
+    .sort((a, b) => a[2] - b[2] || a[1] - b[1]).map(([c]) => c);
+  changes.forEach((c, i) => {
+    if (c.role === null || c.role === undefined) return;
+    // The board just before this change, and just after it.
+    const prior = i ? new Timeline(base, changes.slice(0, i)) : base;
+    const after = new Timeline(base, changes.slice(0, i + 1));
+    const was = prior.roleAt(c.seat, c.phase);
+    if (TEAM[c.role] === "demon") {
+      if (was === c.role) return;          // the same Demon as before
+      const others = after.demonsAt(c.phase).filter(
+        d => d !== c.seat && state.aliveSet(c.phase).has(d));
+      const beside = c.summoned && others.length ? others[0] : null;
+      out.push([c.phase, c.slot ?? null, c.seat, beside]);
+    } else if (c.role === "Boffin" && was !== "Boffin"
+               && boffinSeat(prior, state, c.phase) === null) {
+      for (const d of after.demonsAt(c.phase))
+        out.push([c.phase, c.slot ?? null, d, null]);
+    }
+  });
+  return out;
+}
+
+/** Every ability the Boffin may have given, at each moment it gives one:
+ * every one at the setup; for new Demons the story where each got its
+ * first offer and each where exactly one got something else (seed 444).
+ * See solver.py `_boffin_stories`. */
+function boffinStories(world, state, setup) {
+  if (!boffinOnBoard(state)) return [[[], 1.0]];
+  const moments = [];
+  for (const [phase, slot, seat, beside] of boffinMoments(world, state, setup)) {
+    if (boffinSeat(world, state, phase) === null && phase !== "N1") continue;
+    let offers = boffinOffers(world, state, phase, seat, slot, setup);
+    if (beside !== null) {
+      // The Storyteller decides (D Weg 2): the first keeps it, or the
+      // second gets one and the first's ends.
+      const end = boffinGift(phase, beside, "", slot);
+      offers = [[[], 1.0], ...offers.map(([way, c]) => [[...way, end], c])];
+    }
+    if (!offers.length) return [];        // a row names what it cannot be
+    moments.push(offers);
+  }
+  if (!moments.length) return [[[], 1.0]];
+  if (setup) {
+    let stories = [[[], 1.0]];
+    for (const offers of moments)
+      stories = stories.flatMap(([changes, cost]) =>
+        offers.map(([way, c]) => [[...changes, ...way], cost * c]));
+    return stories;
+  }
+  const first = moments.flatMap(offers => offers[0][0]);
+  let base = 1.0;
+  for (const offers of moments) base *= offers[0][1];
+  const stories = [[first, base]];
+  moments.forEach((offers, i) => {
+    for (const [way, c] of offers.slice(1))
+      stories.push([moments.flatMap((other, j) => j === i ? way : other[0][0]),
+                    base / offers[0][1] * c]);
+  });
+  return stories;
+}
+
+transitionRule(function aBoffinGivesTheDemon(world, state) {
+  return boffinStories(world, state, true);
+});
+
+/** Every ability the Boffin may have given each new Demon (C, D, I): told
+ * for each story as it is explained, not a transition rule. See solver.py
+ * `boffin_new_demon_stories`. */
+export function boffinNewDemonStories(world, state) {
+  return boffinStories(world, state, false);
+}
+
+/** What the Boffin leaves out that the solver does not reckon, or null:
+ * Lil' Monsta, whose babysitter changes every night. */
+export function boffinUnreckoned(view, state) {
+  if (!boffinOnBoard(state) || !view.roles.includes("Boffin")) return null;
+  if (inBag(state, "LilMonsta")
+      && lilMonstaWorld(view instanceof Timeline ? view.world : view))
+    return "boffin";
+  return null;
 }
 
 /** What the Engineer's row leaves out that the solver does not reckon,
@@ -2226,7 +2411,11 @@ export function forcedRoles(state) {
   // A Philosopher that wrote down taking it may be the one (group 5).
   const orItsPhilosopher = (seat, role) => {
     const taken = (state.philosophies() || {})[seat];
-    return taken && taken[0] === role ? [role, "Philosopher"] : [role];
+    const out = taken && taken[0] === role ? [role, "Philosopher"] : [role];
+    // Or a Demon the Boffin gave it (26.10.2026).
+    if (state.script.keys.includes("Boffin"))
+      out.push(...state.script.keys.filter(k => TEAM[k] === "demon"));
+    return out;
   };
   for (const info of state.infos) {
     if (info.type === "VirginNomination" && info.triggered) {
@@ -2532,10 +2721,12 @@ function plainFailures(world, state, outcome = {}) {
     const seat = state.executionDeath(day);
     if (seat === null) continue;
     // And a Philosopher that took her (group 6, D, 14.10.2026).
-    if (hasAbility(world, state, seat, "Saint", `D${day}`)) fail(day, seat);
+    if (hasAbility(world, state, seat, "Saint", `D${day}`))
+      fail(day, soberSeat(world, state, seat, "Saint", `D${day}`));
     // A Sailor cannot die, and that holds in daylight — so a working one
     // walks away from its own execution.
-    if (hasAbility(world, state, seat, "Sailor", `D${day}`)) fail(day, seat);
+    if (hasAbility(world, state, seat, "Sailor", `D${day}`))
+      fail(day, soberSeat(world, state, seat, "Sailor", `D${day}`));
     // And the same for a Tea Lady's neighbour: executed and dead, so she
     // was not working. The mirror of her saving one.
     for (const lady of teaLadyFailedAtTheGallows(world, state, day, seat))
@@ -2709,7 +2900,11 @@ function plainFailures(world, state, outcome = {}) {
         outcome[idx] = HELD;
         // A fact can lean on somebody too: a Banshee announced was a
         // Banshee whose ability worked that night.
-        for (const who of info.leanedOn(world, state)) {
+        // Or the Boffin behind a Demon it gave that ability (26.10.2026).
+        for (let who of info.leanedOn(world, state)) {
+          if (info.sourceRole)
+            who = soberSeat(world, state, who, info.sourceRole,
+                            `N${info.night}`);
           working[info.night] = working[info.night] || new Set();
           working[info.night].add(who);
         }
@@ -2747,6 +2942,11 @@ function plainFailures(world, state, outcome = {}) {
             seat = +who;
             break;
           }
+      if (seat === null) {
+        // Or a Demon the Boffin gave it (26.10.2026).
+        const given = boffinHolders(world, state, role, phase);
+        if (given.length) seat = given[0];
+      }
       if (seat === null) {
         const at = world.believes.indexOf(role);
         seat = at === -1 ? null : at;
@@ -2793,6 +2993,13 @@ function plainFailures(world, state, outcome = {}) {
         else held = ARBITRARY;
       }
     }
+    // A Demon the Boffin gave this ability (26.10.2026): its own, worked
+    // through the Boffin, weighed like the character's own (G Weg 1).
+    if (held === ABSENT && seat !== null && role !== null && role !== undefined
+        && boffinGiftOf(world, state, seat, acted) === role)
+      held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
+    const sober = seat === null ? seat
+      : soberSeat(world, state, seat, role, acted);
     // A row told to somebody other than the holder. A Drunk holding the
     // token has no ability, so nobody else is woken for it. See solver.py.
     const witnessed = !!info.witnessed;
@@ -2907,7 +3114,7 @@ function plainFailures(world, state, outcome = {}) {
         }
     // That, or its own source was off: either explains it.
     if (recluseNeed !== null && !witnessed) {
-      either.push({night: info.night, source: [seat], impaired: [],
+      either.push({night: info.night, source: [sober], impaired: [],
                    working: [recluseNeed]});
       outcome[idx] = EXCUSED;
       return;
@@ -2915,7 +3122,7 @@ function plainFailures(world, state, outcome = {}) {
     if (recluseNeed !== null) ok = true;
 
     if (fauxNeed !== null && fauxNeed[0] === "impaired" && !witnessed) {
-      either.push({night: info.night, source: [seat],
+      either.push({night: info.night, source: [sober],
                    impaired: [fauxNeed[1]], working: []});
       outcome[idx] = EXCUSED;
       return;
@@ -2932,8 +3139,9 @@ function plainFailures(world, state, outcome = {}) {
       outcome[idx] = INVENTED;
     } else if (!ok) {
       // Poison has to land on whoever the information came from —
-      // poisoning the messenger changes nothing.
-      fail(info.night, seat);
+      // poisoning the messenger changes nothing. Or on the Boffin behind
+      // a Demon it gave the ability (26.10.2026).
+      fail(info.night, sober);
       outcome[idx] = EXCUSED;
     } else {
       outcome[idx] = HELD;
@@ -2946,7 +3154,7 @@ function plainFailures(world, state, outcome = {}) {
         // row (open item 57, 12.10.2026). See solver.py.
         const key = `${info.night}|${fauxNeed[1]}`;
         (fauxWorking[key] || (fauxWorking[key] = {night: info.night,
-          lyc: fauxNeed[1], sources: new Set()})).sources.add(seat);
+          lyc: fauxNeed[1], sources: new Set()})).sources.add(sober);
       }
       // **A droisoned character cannot misregister.** Registration is a
       // plain ability and a plain ability simply does not function, so a
@@ -2962,7 +3170,7 @@ function plainFailures(world, state, outcome = {}) {
       // does not wake. Its own source being off explains it as well.
       const needs = info.instead ? info.instead(world, state, seat) : null;
       if (needs) {
-        either.push({night: info.night, source: [seat],
+        either.push({night: info.night, source: [sober],
                      impaired: needs[0], working: needs[1]});
         if (needs[0].length) outcome[idx] = EXCUSED;
       }
@@ -3969,31 +4177,44 @@ function bestStoryTold(world, state, outcome) {
       ? {at: tea.at, read: false} : {at: summ.at, read: false, sides: true});
     const fail = () => (plain !== null ? tea.failed.add(plain)
       : summ.failed.add(before));
-    if (!LISTENING) {                     // nobody turns evil that way here
+    // What the Boffin gave each new Demon in this story, told here one at
+    // a time rather than as stories of their own (seed 444). See
+    // solver.py `_best_story_told`.
+    let ways = [[first, weight]];
+    if (boffinOnBoard(state)) {
       const view = first.length ? new Timeline(world, first) : world;
-      const marks = outcome ? {} : null;
-      const watch = plain !== null || before !== null;
-      if (watch) TEA_READS.now = watching();
-      let cost;
-      try {
-        cost = explainOne(view, state, marks);
-      } finally {
-        if (watch) {
-          if (cost === null && !TEA_READS.now.read) fail();
-          TEA_READS.now = null;
+      const got = boffinNewDemonStories(view, state);
+      if (!got.length) continue;          // nothing it could have given
+      if (!(got.length === 1 && !got[0][0].length && got[0][1] === 1.0))
+        ways = got.map(([extra, c]) => [[...first, ...extra], weight * c]);
+    }
+    if (!LISTENING) {                     // nobody turns evil that way here
+      ways.forEach(([story, w], i) => {
+        const view = story.length ? new Timeline(world, story) : world;
+        const marks = outcome ? {} : null;
+        const watch = (plain !== null || before !== null) && i === 0;
+        if (watch) TEA_READS.now = watching();
+        let cost;
+        try {
+          cost = explainOne(view, state, marks);
+        } finally {
+          if (watch) {
+            if (cost === null && !TEA_READS.now.read) fail();
+            TEA_READS.now = null;
+          }
         }
-      }
-      if (cost === null) continue;
-      const got = cost * weight;
-      viable.push([got, first]);
-      if (best === null || got > best) {
-        best = got; bestChanges = first; bestMarks = marks;
-      }
+        if (cost === null) return;
+        const got = cost * w;
+        viable.push([got, story]);
+        if (best === null || got > best) {
+          best = got; bestChanges = story; bestMarks = marks;
+        }
+      });
       continue;
     }
-    const told = [first];
+    const told = ways;
     for (let at = 0; at < told.length;) {
-      const changes = told[at++];
+      const [changes, weight] = told[at++];
       const watch = (plain !== null || before !== null) && at === 1;
       const fresh = STORIES.explained;
       if (watch) TEA_READS.now = watching();
@@ -4027,7 +4248,7 @@ function bestStoryTold(world, state, outcome) {
               continue;
             }
           }
-          told.push([...changes, ...turn]);
+          told.push([[...changes, ...turn], weight]);
         }
       }
       if (cost === null) continue;

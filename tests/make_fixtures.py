@@ -1080,6 +1080,7 @@ def handmade():
     yield from stellen_62_63()
     yield from the_hatter()
     yield from the_engineer()
+    yield from the_boffin()
 
 
 def the_eighth_five():
@@ -1728,6 +1729,30 @@ def the_engineer():
         script = play_games.an_awkward_script(rng, must_have=("Engineer",))
         yield played(f"x-engineer-played-{seed}-{n}", script, seed, n, 4,
                      rng=rng)
+
+
+def the_boffin():
+    """The Boffin, stage 1 (26.10.2026): the boards of tests/test_boffin.py
+    and played games where the Demon had an ability the town can see."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_boffin import _payloads
+    names = ("nothing", "imp-walks", "imp-walks-night", "row-fool",
+             "starpass", "row-sailor")
+    for name, payload in zip(names, _payloads(), strict=True):
+        yield {"name": f"x-boffin-{name}", "payload": payload}
+    for seed, n in PLAYED_BOFFIN:
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=("Boffin",))
+        yield played(f"x-boffin-played-{seed}-{n}", script, seed, n, 4,
+                     rng=rng)
+
+
+# Games with a Boffin whose Demon had an ability the town can see, each
+# solved in seconds: the Saint (25) and the Gambler (31) with the Boffin's
+# row, the Klutz (41), the Banshee with its row (78), the Acrobat (108).
+PLAYED_BOFFIN = ((25, 7), (31, 8), (41, 8), (78, 10), (108, 10))
 
 
 # Games where the Engineer chose, each solved in seconds: a Widow on the

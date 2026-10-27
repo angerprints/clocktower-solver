@@ -82,6 +82,10 @@ export class World {
   }
 
   teamAt(seat, phase) { return TEAM[this.roleAt(seat, phase)]; }
+
+  /** No story, no Boffin ability. See worlds.py. */
+  giftAt(seat, phase) { return null; }
+  giftedSeats() { return []; }
   alignmentAt(seat, phase) {
     if (LISTENING) noteSideRead(seat, phase);
     // Sides too, for a Summoner's Demon (Hatter stage 2). See worlds.py.
@@ -178,6 +182,14 @@ export const teaParty = (phase, seat, role, side) =>
 export const engineered = (phase, seat, role, side) =>
   ({phase, seat, role, side, tea: true, engineered: true});
 
+/** Which good character's ability the Demon on this seat has from this
+ * moment on, through the Boffin (26.10.2026): a mark that changes nothing
+ * about the seat. `gift` is a character, BOFFIN_UNSEEN, or "" where the
+ * seat has none from here on (D Weg 2). `BoffinGift` in Python, which
+ * keeps the gift in its `side` field. */
+export const boffinGift = (phase, seat, gift, slot = null) =>
+  ({phase, seat, role: null, side: null, slot, gift, boffin: true});
+
 /** Whether anything from the Hatter's night on was looked at while a
  * story was told: {at, read}. See worlds.py. */
 export const TEA_READS = {now: null};
@@ -263,10 +275,15 @@ export class Timeline {
   _indexed() {
     if (this._index) return this._index;
     const roles = new Map(), sides = new Map(), demons = [], held = new Set();
-    const handed = new Map();
+    const handed = new Map(), gifts = new Map();
     let summonAt = null;
     for (const c of this.changes) {
       const at = changeAt(c);
+      if (c.boffin) {
+        if (!gifts.has(c.seat)) gifts.set(c.seat, []);
+        gifts.get(c.seat).push([at, c.gift]);
+        continue;
+      }
       if (c.summoned && summonAt === null) summonAt = at;
       if (c.babysits) { demons.push([at, c.seat, c.phase, false]); continue; }
       if (c.handedOn) {
@@ -289,7 +306,7 @@ export class Timeline {
           demons.push([at, c.seat, null, !!c.summoned]);
       }
     }
-    this._index = {roles, sides, demons, held, summonAt};
+    this._index = {roles, sides, demons, held, summonAt, gifts};
     this._index.steps = this._demonSteps(demons, handed);
     return this._index;
   }
@@ -426,6 +443,20 @@ export class Timeline {
   }
 
   teamAt(seat, phase) { return TEAM[this.roleAt(seat, phase)]; }
+
+  /** The Boffin ability marked on this seat at this moment, or null
+   * (`boffinGift`). Whether it works is info.mjs boffinGiftOf's. */
+  giftAt(seat, phase) {
+    const mine = this._indexed().gifts.get(seat);
+    if (!mine) return null;
+    const here = moment(phase);
+    let got = null;
+    for (const [at, gift] of mine) if (at <= here) got = gift;
+    return got;
+  }
+
+  /** The seats with any Boffin mark. */
+  giftedSeats() { return [...this._indexed().gifts.keys()].sort((a, b) => a - b); }
 
   /** A story with Lil' Monsta in it: somebody babysits. See worlds.py. */
   get lilMonsta() {

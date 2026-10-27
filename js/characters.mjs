@@ -1666,6 +1666,17 @@ export const DATA = {
     "never"
    ],
    "other_night": 1
+  },
+  "Boffin": {
+   "id": "boffin",
+   "name": "Boffin",
+   "team": "minion",
+   "wake": [
+    "first"
+   ],
+   "nights": "first",
+   "impairs": true,
+   "first_night": 120
   }
  },
  "scripts": {

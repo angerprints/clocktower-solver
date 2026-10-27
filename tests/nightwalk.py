@@ -48,6 +48,10 @@ class Night:
         self.guarded = set()                # safe from the Demon tonight
         self.guards = {}                    # seat -> who is guarding it
         self.gained = {}                    # seat -> ability it took
+        # The Boffin's (26.10.2026): the Demon's seat -> the good ability
+        # it has tonight, and the Boffin whose sobriety it rests on.
+        self.boffin = {}
+        self.boffin_seat = None
         self.silenced = set()               # Demons that cannot kill
         self.spared = set()                 # safe from execution tomorrow
         self.fool_spent = set()             # Fools with no free death left
@@ -98,10 +102,31 @@ class Night:
 
     def has(self, seat, role):
         """Holding that character, or a Philosopher that took it
-        (13.10.2026)."""
+        (13.10.2026), or a Demon the Boffin gave it (26.10.2026)."""
         return self.roles.get(seat) == role or (
             self.roles.get(seat) == "Philosopher"
-            and self.gained.get(seat) == role)
+            and self.gained.get(seat) == role) or (
+            self.boffin.get(seat) == role
+            and self.roles.get(seat) != "Philosopher")
+
+    def sober_of(self, seat, role):
+        """Whose sobriety this seat's ability as that character rests on:
+        the Boffin's for a Demon it gave it, else its own."""
+        if self.roles.get(seat) != role and self.boffin.get(seat) == role \
+                and self.boffin_seat is not None:
+            return self.boffin_seat
+        return seat
+
+    def works(self, seat, role):
+        """Alive, and its ability as that character working — through the
+        Boffin's sobriety for a Demon the Boffin gave it."""
+        return seat in self.alive and self.working(self.sober_of(seat, role))
+
+    def gift_ends(self, seat):
+        """What the Boffin gave ends with the Demon's change of character,
+        or the Boffin's own (C and I Weg 1, 27.10.2026)."""
+        if seat in self.boffin or seat == self.boffin_seat:
+            self.boffin.clear()
 
     def lets_go(self, seat, slot):
         """This seat became somebody else in the middle of the night: what
@@ -116,6 +141,7 @@ class Night:
         for target, keeper in list(self.safe.items()):
             if keeper == seat:
                 del self.safe[target]
+        self.gift_ends(seat)
         target = self.made_drunk.pop(seat, None)
         if target is not None:
             self.droisoned.discard(target)
@@ -178,7 +204,7 @@ class Night:
         # the Innkeeper had just protected guessed wrong and died here,
         # where the simulator had it live (03.10.2026; one in a hundred
         # and sixty nights disagreed for this alone).
-        if self.has(seat, "Sailor") and self.working(seat):
+        if self.has(seat, "Sailor") and self.works(seat, "Sailor"):
             self.prevented.add(seat)
             self.log.append((slot, "kept alive", seat, "Sailor"))
             return
@@ -191,7 +217,7 @@ class Night:
         # held earlier has not used it up — and once, so the walk is told
         # which Fools had already spent theirs before tonight.
         if self.has(seat, "Fool") and seat not in self.fool_spent \
-                and self.working(seat):
+                and self.works(seat, "Fool"):
             self.fool_spent.add(seat)
             self.prevented.add(seat)
             self.log.append((slot, "kept alive", seat, "Fool"))
@@ -207,7 +233,7 @@ class Night:
         for lady in self.roles:
             if not self.has(lady, "TeaLady") or lady not in standing:
                 continue
-            if lady in self.droisoned:
+            if self.sober_of(lady, "TeaLady") in self.droisoned:
                 continue
             around = []
             for step in (1, -1):
@@ -224,6 +250,12 @@ class Night:
         return False
 
     def working(self, seat):
+        # A Demon acting at the turn of the ability the Boffin gave it
+        # works by the Boffin's sobriety, not its own (26.10.2026).
+        if getattr(self, "gift_turn", None) == seat \
+                and self.boffin_seat is not None:
+            return seat in self.alive and self.boffin_seat in self.alive \
+                and self.boffin_seat not in self.droisoned
         return seat in self.alive and seat not in self.droisoned
 
 
@@ -465,6 +497,23 @@ def hidden_from(deal, night, heard):
         out[("standing_lifted", night)] = lifted
     out.update({"red_herring": deal.red_herring,
                 "gained": dict(getattr(deal, "philosophies", {}) or {})})
+    # The Boffin's gift, as the simulator has it tonight (26.10.2026).
+    gift = getattr(deal, "boffin_gift", None)
+    if gift is not None:
+        got = simulate._gift(deal, gift[0], phase)
+        boffin = simulate._boffin_at(deal, phase)
+        # Changed later tonight — a Barber's swap, a Snake Charmer's — the
+        # Demon still had it until then: the simulator played its turn
+        # before the change was written (seeds 1794 and 2919 of the gate,
+        # 27.10.2026). The walk ends it at the change (`lets_go`).
+        if got is None and night > 1:
+            before = f"D{night - 1}"
+            boffin = simulate._boffin_at(deal, before)
+            if boffin is not None and boffin in deal.alive_at(phase):
+                got = simulate._gift(deal, gift[0], before)
+        if got is not None:
+            out[("boffin", night)] = {gift[0]: got}
+            out[("boffin_seat", night)] = boffin
     if token_only:
         out[("pukka_token_only", night)] = True
 
@@ -886,6 +935,9 @@ def walk(deal, night, hidden):
     # which is a smell: the walk should take everything it is told
     # through `hidden`, like every other thing it does not derive.
     state.gained.update(hidden.get("gained") or {})
+    # And what the Boffin gave the Demon, tonight (26.10.2026).
+    state.boffin = dict(hidden.get(("boffin", night)) or {})
+    state.boffin_seat = hidden.get(("boffin_seat", night))
 
     state.night = night
     state.faux_paw = hidden.get("faux_paw")
@@ -945,6 +997,7 @@ def walk(deal, night, hidden):
         acrobats.clear()
 
     for slot in _turns(night):
+        state.gift_turn = None       # a Demon's Boffin turn ends with it
         if acrobats and slot > acrobats_fall:
             _acrobat_falls_now(slot)
         # The Hatter's tea party at 1, before anybody acts (C, 22.10.2026):
@@ -1062,9 +1115,20 @@ def walk(deal, night, hidden):
                 or (state.roles[p] == "Philosopher"
                     and state.gained.get(p) in taken_slot
                     and taken_slot[state.gained[p]]
-                    and slot == taken_slot[state.gained[p]])]
+                    and slot == taken_slot[state.gained[p]])
+                # A Demon the Boffin gave one of these acts at its turn
+                # (26.10.2026).
+                or (state.boffin.get(p) in taken_slot
+                    and taken_slot[state.boffin[p]]
+                    and slot == taken_slot[state.boffin[p]])]
         for seat in here:
             role = state.roles[seat]
+            state.gift_turn = None
+            if state.boffin.get(seat) in taken_slot \
+                    and slot == taken_slot.get(state.boffin.get(seat)) \
+                    and getattr(CHARACTERS.get(role), field, 0) != slot:
+                role = state.boffin[seat]
+                state.gift_turn = seat
             # A Philosopher that took the Snake Charmer's ability on an
             # earlier night chooses when the Snake Charmer does. It only
             # ever *read* with what it had taken, so its swap never
@@ -1174,6 +1238,7 @@ def walk(deal, night, hidden):
                     continue
                 became = state.roles[target]
                 state.roles[seat], state.roles[target] = became, "SnakeCharmer"
+                state.gift_ends(target)
                 state.gained.pop(seat, None)     # a Philosopher no longer
                 state.sides[seat], state.sides[target] = "evil", "good"
                 state.droison(target, slot, "SnakeCharmer swap")
@@ -1320,8 +1385,13 @@ def walk(deal, night, hidden):
                 if seat in state.droisoned:
                     continue
                 # Good *when it was chosen*, which was in daylight: a
-                # Goon the Demon has turned since still dies of it.
+                # Goon the Demon has turned since still dies of it. Not a
+                # seat made a Demon tonight before its turn — a Snake
+                # Charmer's swap — which is evil by then, as in the
+                # simulator (27.10.2026).
                 if state.sides_at_dusk.get(target) == "good" \
+                        and TEAM.get(state.roles.get(target, ""), "") \
+                        != "demon" \
                         and target in state.alive:
                     state.kill(target, slot, "Moonchild")
 
@@ -1706,13 +1776,14 @@ def walk(deal, night, hidden):
                         state.prevented.add(seat)
                         continue
                     if state.has(target, "Soldier") \
-                            and state.working(target):
+                            and state.works(target, "Soldier"):
                         state.log.append((slot, "guarded", target, "Soldier"))
                         state.prevented.add(seat)
                         continue
                     state.kill(target, slot, role)
                     _grandmother_grieves(state, target, slot, hidden, night)
 
+    state.gift_turn = None
     # An Acrobat's pick still unsettled when the night ran out of slots.
     if acrobats:
         _acrobat_falls_now(10_000)
@@ -2097,7 +2168,7 @@ def _grandmother_grieves(state, victim, slot, hidden, night):
         if children.get(seat) != victim or seat not in state.alive \
                 or not state.has(seat, "Grandmother"):
             continue
-        if not state.working(seat):
+        if not state.works(seat, "Grandmother"):
             continue                      # droisoned: she feels nothing
         state.kill(seat, slot, "grief")
 
@@ -2119,9 +2190,11 @@ def _goon_answers(state, chooser, target, slot):
     first_slot, first = state.chosen_by.get(target, (None, None))
     if first != chooser or first_slot != slot:
         return                              # somebody got there first
-    if not state.working(target):
+    if not state.works(target, "Goon"):
         return                              # a droisoned Goon does nothing
-    state.sides[target] = state.sides[chooser]
+    # A Demon the Boffin gave it does not turn good (their jinx).
+    if state.boffin.get(target) != "Goon":
+        state.sides[target] = state.sides[chooser]
     state.droison(chooser, slot, "Goon")
     state.log.append((slot, "turned", target, state.sides[chooser]))
 
@@ -2345,7 +2418,7 @@ def _a_guard_holds(state, target, slot, demon, role):
         if demon is not None:             # Lil' Monsta is nobody
             state.prevented.add(demon)
         return True
-    if state.has(target, "Soldier") and state.working(target):
+    if state.has(target, "Soldier") and state.works(target, "Soldier"):
         state.log.append((slot, "guarded", target, "Soldier"))
         if demon is not None:
             state.prevented.add(demon)
@@ -2359,8 +2432,8 @@ def _the_princess_holds(state, hidden, night):
     if state.lycanthrope_killed:
         return True                       # the Lycanthrope's, 11.10.2026
     princess = hidden.get(("princess", night))
-    return princess is not None and state.working(princess) \
-        and state.has(princess, "Princess")
+    return princess is not None and state.has(princess, "Princess") \
+        and state.works(princess, "Princess")
 
 
 def _pukka_takes_its_turn(state, seat, slot, hidden, night):
