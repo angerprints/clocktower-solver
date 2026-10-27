@@ -79,6 +79,57 @@ def gifts(roles=R, rows=(), **kw):
     return out
 
 
+class WhileEstimating(SolverTest):
+    """Stelle 91 (Patrick 27.10.2026): while a solve estimates, each moment
+    tells "nothing the town sees" and one ability the town can see, a
+    different one in different worlds; a row's gift always."""
+
+    def setUp(self):
+        S.SUMMON_SAMPLE[0] = S.SUMMON_SAMPLE_SIZE
+
+    def tearDown(self):
+        S.SUMMON_SAMPLE[0] = None
+
+    def test_nothing_seen_and_one_seen(self):
+        got = gifts()
+        self.assertEqual(len(got), 2)
+        self.assertEqual(got[0], ({6: BOFFIN_UNSEEN}, 1.0))
+        self.assertIn(got[1][0][6], {"Monk", "Soldier", "Fool", "Virgin",
+                                     "Sailor", "TeaLady", "Innkeeper",
+                                     "Goon"})
+        self.assertEqual(got[1][1], round(1 / 3, 4))   # its own cost
+
+    def test_different_worlds_tell_different_ones(self):
+        told = set()
+        for chef in ("Chef", "Empath", "FortuneTeller", "Washerwoman"):
+            roles = [chef] + R[1:]
+            got = gifts(roles)
+            told |= {g[6] for g, _c in got[1:]}
+        self.assertGreater(len(told), 1)
+
+    def test_a_row_is_always_told(self):
+        self.assertEqual(gifts(rows=[gave(1, "Fool")]), [({6: "Fool"}, 1.0)])
+
+    def test_both_languages_pick_the_same(self):
+        seen = ["Monk", "Soldier", "Fool", "Virgin", "Sailor", "TeaLady"]
+        cases = [(list(R), "N1", 6), ([*R[:5], "Imp", "Boffin"], "N3", 5),
+                 (["Empath"] + R[1:], "N2", 6)]
+        py = [S._sampled_gifts(World(tuple(r), (None,) * len(r)), ph, seat,
+                               seen) for r, ph, seat in cases]
+        script = ("import {sampledGifts, SUMMON_SAMPLE} from "
+                  "'./js/scoring.mjs';SUMMON_SAMPLE.k=8;"
+                  "const cs=JSON.parse(process.argv[1]);"
+                  "const seen=JSON.parse(process.argv[2]);"
+                  "console.log(JSON.stringify(cs.map(([r, ph, s]) =>"
+                  " sampledGifts({roles: r}, ph, s, seen))));")
+        got = subprocess.run(["node", "--input-type=module", "-e", script,
+                              json.dumps(cases), json.dumps(seen)], cwd=ROOT,
+                             capture_output=True, text=True, timeout=300)
+        self.assertEqual(got.returncode, 0, got.stderr)
+        self.assertEqual(json.loads(got.stdout), py)
+        self.assertTrue(all(len(p) == 1 for p in py))
+
+
 class TheCharacter(SolverTest):
 
     def test_a_minion_woken_on_the_first_night(self):

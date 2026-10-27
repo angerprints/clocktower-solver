@@ -2078,10 +2078,14 @@ export function boffinOffers(view, state, phase, seat, slot, setup = false) {
   return out;
 }
 
+/** While estimating, how many of the abilities the town can see each
+ * moment tells (Stelle 91, 27.10.2026). See solver.py. */
+export const BOFFIN_SAMPLE_SIZE = 1;
+
 /** Every ability the town can see, or while estimating a fixed spread of
  * them (Stelle 91, Weg 2). See solver.py `_sampled_gifts`. */
-function sampledGifts(view, phase, seat, seen) {
-  const k = SUMMON_SAMPLE.k;
+export function sampledGifts(view, phase, seat, seen) {
+  const k = SUMMON_SAMPLE.k === null ? null : BOFFIN_SAMPLE_SIZE;
   if (k === null || seen.length <= k) return seen;
   const base = view instanceof Timeline ? view.world : view;
   const step = Math.ceil(seen.length / k);
