@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 21.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 27.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -1599,13 +1599,25 @@ Der Bericht steht in `claude/ingenieur.md`, die Lesarten und deine Antworten in 
 | Tor | Hutmacher-Satz unverändert; vier Ingenieur-Zeilen (`messung/tor_ingenieur.sh`) ohne Verlust durch den Ingenieur. |
 | Korpus | 710 Bretter (11 neu), 3 Hutmacher-Bretter geändert (neue Pukka). |
 
+### Die Laborratte, Stufe 1 · *erledigt am 27.10.2026*
+
+Der Bericht steht in `claude/laborratte.md`, die Lesarten und deine Antworten in `claude/laborratte-lesarten.md`. **Deine Antworten vom 26.10.2026:** A Weg 3, B und C Weg 1, D Weg 2, E bis G Weg 1, H Weg 2, I und J Weg 1. Stufe 1 rechnet die 29 Fähigkeiten, die Tode, Hinrichtungen, Siege oder Trunkenheit ändern (`BOFFIN_SEEN`); E, G, H und die übrigen Fähigkeiten kommen in Stufe 2.
+
+| | Gebaut |
+|---|---|
+| Solver | Die Gabe ist eine Markierung je Geschichte (`BoffinGift`): beim Aufbau für den ausgeteilten Dämon, für jeden neuen Dämon (C), bei einem zweiten lebenden Dämon beide Fälle (D), bei einer Laborratte mitten im Spiel (I). Jede sichtbare Fähigkeit ist eine Geschichte, der Rest „nichts Sichtbares“ (Kosten 1 und 1/k). Gehalten wie beim Philosophen; nüchtern über die Laborratte (`sober_seat`). Zeile „Boffin gave the Demon“: Nacht 1 für den Dämon aus dem Aufbau, später für den in dieser Nacht entstandenen. Neue Dämonen: je Geschichte höchstens eine sichtbare Abweichung. Lil' Monsta neben ihr: „not computed“. |
+| Nebenbei | Ein Sitz, der in dieser Nacht vor dem Mondkind zum Dämon wurde (Schlangenbeschwörer-Tausch, Fang-Gu-Sprung), stirbt nicht am Mondkind, im Simulator und im Night-Walk wie im Solver. Rettet 5 alte Torpartien. |
+| Simulator, Night-Walk | Gabe für den ausgeteilten Dämon (nur Stufe-1-Fähigkeiten, ohne Bastler und Akrobatin), Zeile in etwa der Hälfte; die Kammerzofe zählt das Aufwachen für die Gabe (F). Der Night-Walk lässt den Dämon am Platz der Gabe handeln und beendet sie bei einem Wechsel in der Nacht. |
+| Tor | Ingenieur-Satz: Night-Walk überall wie vorher; verworfen gleich oder weniger (Hutmacher 26 → 25 und 40 → 39, ohne Pflicht 5 → 4, Ingenieur 6 → 4, mit Beschwörer 3 → 2: alles Mondkind-Fälle). Fünf Laborratten-Zeilen (`messung/tor_laborratte.sh`) ohne Verlust durch die Laborratte. |
+| Korpus | 721 Bretter (11 neu), keines geändert. |
+
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 und Stufe 3 (die Nacht in ihrer Reihenfolge, mit Punkt 1b) am 23.10.2026, Stufe 2 (zwei lebendige Dämonen) am 26.10.2026, Ingenieur am 26.10.2026; als Nächstes die Laborratte, erst mit Lesarten; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 und Stufe 3 (die Nacht in ihrer Reihenfolge, mit Punkt 1b) am 23.10.2026, Stufe 2 (zwei lebendige Dämonen) am 26.10.2026, Ingenieur am 26.10.2026, Laborratte Stufe 1 am 27.10.2026; als Nächstes Laborratte Stufe 2, dann der Pestdoktor, erst mit Lesarten; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 131 Einträge. Von den 138 Spielercharakteren der App sind 130 im Katalog (dazu der Wächter, ein Fabled), 8 fehlen: 3 Bürger, 3 Außenseiter, 2 Schergen. Davon sind 6 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia, Lil' Monsta und Beschwörer (21.10.2026), Hutmacher Stufe 1 und 3 (23.10.2026), Stufe 2 und Ingenieur (26.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
+Stand des Katalogs: 132 Einträge. Von den 138 Spielercharakteren der App sind 131 im Katalog (dazu der Wächter, ein Fabled), 7 fehlen: 3 Bürger, 3 Außenseiter, 1 Scherge. Davon sind 5 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia, Lil' Monsta und Beschwörer (21.10.2026), Hutmacher Stufe 1 und 3 (23.10.2026), Stufe 2 und Ingenieur (26.10.2026), Laborratte Stufe 1 (27.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1710,6 +1722,9 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 85 | Hutmacher | ~~**Zwei Jinxes zur Scharlachroten Frau bei zwei Dämonen**~~ · *erledigt am 26.10.2026* (Weg 2): Mit Fang Gu oder Al-Hadikhia im Spiel bleibt sie Scharlachrote Frau, wenn danach zwei Dämonen lebten. |
 | 86 | Ingenieur | **Regelfrage: Ein Zombuul, der schon einmal starb, und der Ingenieur wählt einen Dämon.** Lebt der neue Dämon, oder ist er tot, wie das Brett es zeigt? Heute bleibt er Zombuul; „not computed“ hätte jedes Brett mit einer Hinrichtung ohne Zahlen gelassen. Gefunden am 26.10.2026. |
 | 87 | Tor | **Großmutter, deren Enkel als Fang Gu springt.** Ohne die Zeile der Großmutter behält der Solver die wahre Welt, mit ihr nicht (Seed 2935, Zeile mit Ingenieur). Hat mit dem Ingenieur nichts zu tun. Gefunden am 26.10.2026. |
+| 88 | Laborratte | **Stufe 2:** Klammern beim Aufbau (E), Auskünfte des Dämons über die Gabe (G), Professor, Jäger und Philosoph als Gabe (H) und die übrigen Fähigkeiten mit Wirkung (etwa Rabenhüter, Dämonenjäger, Kopfgeldjäger). Bis dahin stecken sie in „nichts Sichtbares“. |
+| 89 | Laborratte | **Zwei neue Dämonen, die beide ihre Gabe sichtbar nutzen,** rechnet der Solver nicht: je Geschichte höchstens eine sichtbare Abweichung, sonst bis zu 4.072 Geschichten je Welt (Tor, Seed 444). |
+| 90 | Laborratte | **Mehrere Laborratten** (durch Grubenweib, Teeparty oder Ingenieur) und **Lil' Monsta neben einer Laborratte** („not computed“) sind nicht gerechnet. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 
