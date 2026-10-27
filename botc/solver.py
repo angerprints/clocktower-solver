@@ -2723,8 +2723,9 @@ def boffin_offers(view, state, phase, seat, slot, setup=False):
             return []
         gift = named if named in BOFFIN_SEEN else BOFFIN_UNSEEN
         return [((boffin_gift_change(phase, seat, gift, slot),), 1.0)]
-    seen = [k for k in may if k in BOFFIN_SEEN]
-    unseen = len(may) - len(seen)
+    seen = _sampled_gifts(view, phase, seat,
+                          [k for k in may if k in BOFFIN_SEEN])
+    unseen = len([k for k in may if k not in BOFFIN_SEEN])
     out = []
     if unseen:
         out.append(((boffin_gift_change(phase, seat, BOFFIN_UNSEEN, slot),),
@@ -2733,6 +2734,21 @@ def boffin_offers(view, state, phase, seat, slot, setup=False):
     out.extend(((boffin_gift_change(phase, seat, k, slot),), each)
                for k in seen)
     return out
+
+
+def _sampled_gifts(view, phase, seat, seen):
+    """Every ability the town can see, or while a solve estimates a fixed
+    spread of `SUMMON_SAMPLE` of them, as for the Summoner (Stelle 91,
+    Patrick 27.10.2026, Weg 2). "Nothing the town sees" and a gift a row
+    names are always told; only the others are thinned, and each keeps
+    its own cost."""
+    k = SUMMON_SAMPLE[0]
+    if k is None or len(seen) <= k:
+        return seen
+    base = view.world if isinstance(view, Timeline) else view
+    step = -(-len(seen) // k)
+    offset = _stable("|".join(base.roles) + f"|{seat}|{phase}|boffin") % step
+    return seen[offset::step]
 
 
 def _boffin_moments(view, state, setup):
