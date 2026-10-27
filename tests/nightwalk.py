@@ -122,6 +122,12 @@ class Night:
         Boffin's sobriety for a Demon the Boffin gave it."""
         return seat in self.alive and self.working(self.sober_of(seat, role))
 
+    def gift_ends(self, seat):
+        """What the Boffin gave ends with the Demon's change of character,
+        or the Boffin's own (C and I Weg 1, 27.10.2026)."""
+        if seat in self.boffin or seat == self.boffin_seat:
+            self.boffin.clear()
+
     def lets_go(self, seat, slot):
         """This seat became somebody else in the middle of the night: what
         it did earlier tonight as its old character ends — a guard it set,
@@ -135,10 +141,7 @@ class Night:
         for target, keeper in list(self.safe.items()):
             if keeper == seat:
                 del self.safe[target]
-        # What the Boffin gave ends with the Demon's change, or the
-        # Boffin's own (C and I Weg 1, 27.10.2026).
-        if seat in self.boffin or seat == self.boffin_seat:
-            self.boffin.clear()
+        self.gift_ends(seat)
         target = self.made_drunk.pop(seat, None)
         if target is not None:
             self.droisoned.discard(target)
@@ -1235,6 +1238,7 @@ def walk(deal, night, hidden):
                     continue
                 became = state.roles[target]
                 state.roles[seat], state.roles[target] = became, "SnakeCharmer"
+                state.gift_ends(target)
                 state.gained.pop(seat, None)     # a Philosopher no longer
                 state.sides[seat], state.sides[target] = "evil", "good"
                 state.droison(target, slot, "SnakeCharmer swap")
