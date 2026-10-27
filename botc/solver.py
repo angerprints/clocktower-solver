@@ -880,6 +880,10 @@ def barber_claimants(state):
     for who, (taken, _since) in (state.philosophies() or {}).items():
         if taken == "Barber":
             out.add(who)
+    # A Boffin row naming it (L Weg 1, 27.10.2026): whichever seat is the
+    # Demon then, so every seat; only one holding it can die as one.
+    if _boffin_names(state, "Barber"):
+        out |= set(range(state.n_players))
     return out
 
 
@@ -2079,6 +2083,9 @@ def hatter_claimants(state):
     for who, (taken, _since) in (state.philosophies() or {}).items():
         if taken == "Hatter":
             out.add(who)
+    # A Boffin row naming it (L Weg 1, 27.10.2026), as for the Barber.
+    if _boffin_names(state, "Hatter"):
+        out |= set(range(state.n_players))
     return out
 
 
@@ -2661,7 +2668,22 @@ BOFFIN_SEEN = frozenset({
     # Who is drunk or poisoned.
     "Sweetheart", "Courtier", "Minstrel", "Preacher", "Goon",
     "Puzzlemaster",
+    # Stage 2 (N and H, Patrick 26./27.10.2026): what a Demon would use
+    # for evil, and what he asked for.
+    "Engineer", "Nightwatchman", "Pixie", "Professor", "Huntsman",
 })
+
+# Told only where a Boffin row names them (L Weg 1, Patrick 27.10.2026):
+# like the Barber and the Hatter themselves, reckoned only once somebody
+# says so.
+BOFFIN_ROW_ONLY = frozenset({"Barber", "Hatter"})
+
+
+def _boffin_names(state, role):
+    """Does a Boffin row name this character?"""
+    return _boffin_on_board(state) and any(
+        info.given(state) == role for info in boffin_rows(state))
+
 
 def _boffin_on_board(state):
     """A Boffin on the script."""
@@ -2721,10 +2743,15 @@ def boffin_offers(view, state, phase, seat, slot, setup=False):
     if named is not None:
         if named not in may:
             return []
-        gift = named if named in BOFFIN_SEEN else BOFFIN_UNSEEN
-        return [((boffin_gift_change(phase, seat, gift, slot),), 1.0)]
+        # Named, it is that ability, whatever it is: its readings are
+        # weighed as its own (G Weg 1, stage 2, 27.10.2026).
+        return [((boffin_gift_change(phase, seat, named, slot),), 1.0)]
     seen = _sampled_gifts(view, phase, seat,
                           [k for k in may if k in BOFFIN_SEEN])
+    # A reading of a good character on this seat makes that character a
+    # story of its own here (K Weg 2, 27.10.2026): never thinned.
+    said = [k for k in _readings_of(state, seat)
+            if k in may and k not in BOFFIN_SEEN]
     unseen = len([k for k in may if k not in BOFFIN_SEEN])
     out = []
     if unseen:
@@ -2732,8 +2759,27 @@ def boffin_offers(view, state, phase, seat, slot, setup=False):
                     1.0))
     each = 1.0 / unseen if unseen else 1.0
     out.extend(((boffin_gift_change(phase, seat, k, slot),), each)
-               for k in seen)
+               for k in seen + said)
     return out
+
+
+def _readings_of(state, seat):
+    """The good characters whose readings this seat wrote down, in the
+    order of the script (K Weg 2)."""
+    got = getattr(state, "_readings_cache", None)
+    if got is None or got[0] is not state.infos \
+            or got[1] != len(state.infos):
+        by_seat = {}
+        for info in state.infos:
+            role = getattr(info, "source_role", None)
+            if role and TEAM.get(role) in ("townsfolk", "outsider") \
+                    and isinstance(info.player, int) \
+                    and not isinstance(info, BoffinGave):
+                by_seat.setdefault(info.player, set()).add(role)
+        got = (state.infos, len(state.infos), by_seat)
+        state._readings_cache = got
+    mine = got[2].get(seat, ())
+    return [k for k in state.script.keys if k in mine]
 
 
 # While a solve estimates (Stelle 91, Patrick 27.10.2026): how many of the
@@ -6049,12 +6095,17 @@ def _plain_failures(world, state, outcome=None):
         # The holder, or a Philosopher that took it — the one that
         # drunk the holder ahead of it (13.10.2026).
         back = _returned_at(state, phase)
+        # And a Demon the Boffin gave it (stage 2, 27.10.2026).
         with _turn_of("Professor", night):
             prof = next((who for who in sorted(state.philosophies() or {})
                          if who in state.alive_set(phase) and who != seat
                          and who not in back
                          and took_it(world, state, who, "Professor", phase)),
                         world.find_at("Professor", phase))
+            if prof is None:
+                prof = next((who for who in boffin_holders(
+                    world, state, "Professor", phase)
+                    if who != seat and who not in back), None)
         if prof is None or not _on_board(state, "Professor"):
             return None, None, 1.0, None
         if prof not in state.alive_set(phase) or night < 2:
@@ -6233,12 +6284,15 @@ def _plain_failures(world, state, outcome=None):
             # worked through the Boffin — and what it yields is weighed
             # like the character's own (G Weg 1). Whether it was working is
             # the Boffin's (`sober`, below).
+            # On the first night "before it acted" is before the setup,
+            # where no gift is marked yet: asked of the night itself.
+            given_at = phase if info.night <= 1 else acted
             if held is ABSENT and seat is not None and role is not None \
-                    and boffin_gift(world, state, seat, acted) == role:
+                    and boffin_gift(world, state, seat, given_at) == role:
                 held = (INVERTED if vortoxed and TEAM[role] == "townsfolk"
                         else GENUINE)
             sober = seat if seat is None \
-                else sober_seat(world, state, seat, role, acted)
+                else sober_seat(world, state, seat, role, given_at)
             # A row told to somebody *other* than the holder — the player a
             # Nightwatchman chose saying they were woken. A Drunk holding the
             # token has no ability, so the Storyteller wakes nobody for it:
