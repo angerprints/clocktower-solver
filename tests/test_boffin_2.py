@@ -146,8 +146,10 @@ class WhatTheyDo(SolverTest):
         built = [changes for changes, _w in S.possible_timelines(world(), st)
                  if any(type(c).__name__ == "Engineered" for c in changes)]
         self.assertTrue(built)
+        # Given the Engineer's ability, or the Philosopher's that took it.
         self.assertTrue(all(any(isinstance(c, BoffinGift)
-                                and c.gift == "Engineer" for c in changes)
+                                and "Engineer" in I.boffin_abilities(
+                                    c.gift, "N2") for c in changes)
                             for changes in built))
 
 
@@ -155,6 +157,42 @@ class WhatTheyDo(SolverTest):
 # Empath.
 R_NO_EMPATH = ["Chef", "Professor", "FortuneTeller", "Washerwoman",
                "Investigator", "Boffin", "Imp"]
+
+
+class APhilosopherDemon(SolverTest):
+    """H and M Weg 2: every choice of a Demon with the Philosopher's
+    ability is a story; one in play is drunk."""
+
+    def choices(self, roles=R, rows=()):
+        out = set()
+        for got in seen_gifts(roles, rows):
+            if got.startswith("Philosopher>"):
+                out.add(got.split(">")[1])
+        return out
+
+    def test_every_choice(self):
+        got = self.choices()
+        self.assertIn(BOFFIN_UNSEEN, got)
+        # In play: drunk, so seen. Not in play and seen: acts.
+        for key in ("Chef", "Empath", "Professor", "Engineer"):
+            self.assertIn(key, got)
+        # Not in play and nothing the town sees: in "*".
+        self.assertNotIn("Recluse", got)
+
+    def test_its_row_decides(self):
+        rows = [I.PhilosopherChoice(2, 6, role="Empath")]
+        self.assertEqual(seen_gifts(rows=rows) & {
+            g for g in seen_gifts(rows=rows) if g.startswith("Phil")},
+            {"Philosopher>Empath>N2"})
+
+    def test_it_drunks_whoever_holds_it(self):
+        view = Timeline(world(), (boffin_gift_change(
+            "N1", 6, I.boffin_philosophy("Empath", "N1"), -1),))
+        got = S.a_boffin_philosopher_drunks_whoever_had_it(view, state(), 2)
+        self.assertEqual([(g.seats, g.actor) for g in got],
+                         [(frozenset({1}), 5)])
+        self.assertTrue(I.took_it(view, state(), 6, "Empath", "N2"))
+        self.assertTrue(I.took_it(view, state(), 6, "Philosopher", "N2"))
 
 
 class ItsReadings(SolverTest):

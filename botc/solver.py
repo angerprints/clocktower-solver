@@ -34,6 +34,8 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    begin_reads, end_reads, listen_for_sides, replay_reads,
                    _LISTENING, falls_as, holding_now, taken_by_a_philosopher,
                    took_it, BoffinGave, BOFFIN_NEVER_GIVES, boffin_gift,
+                   has_boffin_ability, boffin_philosophy, boffin_abilities,
+                   PhilosopherChoice,
                    boffin_holders, boffin_seat, sober_seat,
                    faux_paw_lycanthrope, side_open)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
@@ -2679,7 +2681,38 @@ BOFFIN_SEEN = frozenset({
     "Engineer", "Nightwatchman", "Pixie", "Professor", "Huntsman",
     # Its bracket turns a Townsfolk evil (E Weg 1).
     "BountyHunter",
+    # Its choice is a story of its own (M Weg 2), `_philosopher_choices`.
+    "Philosopher",
 })
+
+@impairment.source_rule
+def a_boffin_philosopher_drunks_whoever_had_it(world, state, night):
+    """A Demon given the Philosopher's ability drunks whoever holds what it
+    took, while it has it — through the Boffin, so it rests while the
+    Boffin is drunk or poisoned (H Weg 2, stage 2, 27.10.2026)."""
+    if not _boffin_on_board(state):
+        return []
+    marked = getattr(world, "_gifts_by_seat", None)
+    if not marked:
+        return []
+    phase = f"N{night}"
+    out = []
+    for seat in sorted(marked):
+        got = boffin_gift(world, state, seat, phase)
+        if not got or not got.startswith("Philosopher>"):
+            continue
+        abilities = boffin_abilities(got, phase)
+        if len(abilities) < 2 or abilities[1] in ("", BOFFIN_UNSEEN):
+            continue
+        had = frozenset(p for p in range(state.n_players)
+                        if p != seat and world.role_at(p, phase)
+                        == abilities[1])
+        if had:
+            out.append(impairment.Source(
+                "Philosopher", had, capacity=len(had), cost=1.0,
+                repeat_cost=1.0, actor=boffin_seat(world, state, phase)))
+    return out
+
 
 # Told only where a Boffin row names them (L Weg 1, Patrick 27.10.2026):
 # like the Barber and the Hatter themselves, reckoned only once somebody
@@ -2769,6 +2802,8 @@ def boffin_offers(view, state, phase, seat, slot, setup=False):
             return []
         # Named, it is that ability, whatever it is: its readings are
         # weighed as its own (G Weg 1, stage 2, 27.10.2026).
+        if named == "Philosopher":
+            return _philosopher_choices(view, state, phase, seat, slot, 1.0)
         return [((boffin_gift_change(phase, seat, named, slot),), 1.0)]
     seen = _sampled_gifts(view, phase, seat,
                           [k for k in may if k in BOFFIN_SEEN])
@@ -2782,8 +2817,43 @@ def boffin_offers(view, state, phase, seat, slot, setup=False):
         out.append(((boffin_gift_change(phase, seat, BOFFIN_UNSEEN, slot),),
                     1.0))
     each = 1.0 / unseen if unseen else 1.0
-    out.extend(((boffin_gift_change(phase, seat, k, slot),), each)
-               for k in seen + said)
+    for k in seen + said:
+        if k == "Philosopher":
+            out.extend(_philosopher_choices(view, state, phase, seat, slot,
+                                            each))
+        else:
+            out.append(((boffin_gift_change(phase, seat, k, slot),), each))
+    return out
+
+
+def _philosopher_choices(view, state, phase, seat, slot, cost):
+    """A Demon given the Philosopher's ability, with every choice it may
+    have made (H and M Weg 2, stage 2, 27.10.2026): its own row where it
+    wrote one, else every good character as a story — those in play drunk
+    their holder, those the town can see act — and the rest, or no choice
+    yet, as one story "nothing the town sees". Chosen when it was given."""
+    row = next((info for info in state.infos
+                if isinstance(info, PhilosopherChoice)
+                and info.player == seat
+                and info.night >= int(phase[1:])), None)
+    if row is not None:
+        since = f"N{row.night}" if row.night > int(phase[1:]) else phase
+        gift = boffin_philosophy(row.role or "", since)
+        return [((boffin_gift_change(phase, seat, gift, slot),), cost)]
+    held = {view.role_at(p, phase) for p in range(state.n_players)
+            if p != seat}
+    may = [k for k in state.script.keys
+           if TEAM.get(k) in ("townsfolk", "outsider")
+           and k != "Philosopher" and k not in BOFFIN_NEVER_GIVES]
+    shown = [k for k in may if k in held or k in BOFFIN_SEEN]
+    shown = _sampled_gifts(view, phase, seat, shown)
+    rest = max(1, len([k for k in may if k not in held
+                       and k not in BOFFIN_SEEN]))
+    out = [((boffin_gift_change(
+        phase, seat, boffin_philosophy(BOFFIN_UNSEEN, phase), slot),), cost)]
+    out.extend(((boffin_gift_change(
+        phase, seat, boffin_philosophy(k, phase), slot),), cost / rest)
+        for k in shown)
     return out
 
 
@@ -6312,7 +6382,8 @@ def _plain_failures(world, state, outcome=None):
             # where no gift is marked yet: asked of the night itself.
             given_at = phase if info.night <= 1 else acted
             if held is ABSENT and seat is not None and role is not None \
-                    and boffin_gift(world, state, seat, given_at) == role:
+                    and has_boffin_ability(world, state, seat, role,
+                                           given_at):
                 held = (INVERTED if vortoxed and TEAM[role] == "townsfolk"
                         else GENUINE)
             sober = seat if seat is None \

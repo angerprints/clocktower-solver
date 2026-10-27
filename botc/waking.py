@@ -582,11 +582,17 @@ def woke(world, state, seat, night):
     # would — but not on the first night, where it is woken to be told
     # rather than to act (F Weg 1, 26.10.2026).
     if night >= 2 and "Boffin" in state.script.keys:
-        from .info import boffin_gift
+        from .info import boffin_abilities, boffin_gift
         gift = boffin_gift(world, state, seat, phase)
-        if gift is not None and not CHARACTERS[gift].believes:
-            return woke_as(world, state, seat, night, gift)
+        for got in boffin_abilities(gift, phase):
+            if got in CHARACTERS and got != BOFFIN_UNSEEN_KEY \
+                    and not CHARACTERS[got].believes \
+                    and woke_as(world, state, seat, night, got):
+                return True
     return False
+
+
+BOFFIN_UNSEEN_KEY = "*"
 
 
 ASLEEP, OPEN = "asleep", "open"

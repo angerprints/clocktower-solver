@@ -790,7 +790,7 @@ def side_open(w, s, seat, phase):
     # Not a Demon the Boffin gave it: it cannot turn good by it (their
     # jinx, 26.10.2026).
     return s is not None and took_it(w, s, seat, "Goon", phase) \
-        and boffin_gift(w, s, seat, phase) != "Goon"
+        and not has_boffin_ability(w, s, seat, "Goon", phase)
 
 
 def faux_paw_lycanthrope(w, s, phase, living=True):
@@ -820,7 +820,7 @@ def took_it(w, s, seat, role, phase):
             and w.role_at(seat, phase) == "Philosopher" \
             and phase_index(phase) >= phase_index(taken[1]):
         return True
-    return role is not None and boffin_gift(w, s, seat, phase) == role
+    return role is not None and has_boffin_ability(w, s, seat, role, phase)
 
 
 # --------------------------------------------------------------------------
@@ -867,13 +867,41 @@ def boffin_gift(w, s, seat, phase):
     return got
 
 
+# A Demon given the Philosopher's ability chooses once (H and M Weg 2,
+# stage 2, 27.10.2026): the gift is then written "Philosopher>X>N2" — the
+# Philosopher's ability, the one it took, and from when. "*" for one the
+# town cannot see, "" for nothing.
+def boffin_philosophy(chosen, since):
+    return f"Philosopher>{chosen}>{since}"
+
+
+def boffin_abilities(gift, phase):
+    """The abilities a gift gives at that moment."""
+    if not gift:
+        return ()
+    if not gift.startswith("Philosopher>"):
+        return (gift,)
+    _ph, chosen, since = gift.split(">")
+    if chosen and phase_index(phase) >= phase_index(since):
+        return ("Philosopher", chosen)
+    return ("Philosopher",)
+
+
+def has_boffin_ability(w, s, seat, role, phase):
+    """Does this seat have that ability through the Boffin then?"""
+    if role is None:
+        return False
+    got = boffin_gift(w, s, seat, phase)
+    return got is not None and role in boffin_abilities(got, phase)
+
+
 def boffin_holders(w, s, role, phase):
     """Every seat with that ability through the Boffin at that moment."""
     marked = getattr(w, "_gifts_by_seat", None)
     if not marked or role is None:
         return []
     return [seat for seat in sorted(marked)
-            if boffin_gift(w, s, seat, phase) == role]
+            if has_boffin_ability(w, s, seat, role, phase)]
 
 
 def sober_seat(w, s, seat, role, phase):
@@ -882,7 +910,7 @@ def sober_seat(w, s, seat, role, phase):
     if role is None or "Boffin" not in s.script.keys \
             or w.role_at(seat, phase) == role:
         return seat
-    if boffin_gift(w, s, seat, phase) == role:
+    if has_boffin_ability(w, s, seat, role, phase):
         got = boffin_seat(w, s, phase)
         return seat if got is None else got
     return seat
@@ -3209,7 +3237,7 @@ class BansheeAnnounced(Info):
                 out.append(seat)
             # Or a Demon the Boffin gave it, an Imp that killed itself
             # (26.10.2026).
-            elif boffin_gift(w, s, seat, began) == "Banshee":
+            elif has_boffin_ability(w, s, seat, "Banshee", began):
                 out.append(seat)
         return tuple(out)
 
