@@ -135,6 +135,10 @@ class Night:
         for target, keeper in list(self.safe.items()):
             if keeper == seat:
                 del self.safe[target]
+        # What the Boffin gave ends with the Demon's change, or the
+        # Boffin's own (C and I Weg 1, 27.10.2026).
+        if seat in self.boffin or seat == self.boffin_seat:
+            self.boffin.clear()
         target = self.made_drunk.pop(seat, None)
         if target is not None:
             self.droisoned.discard(target)
@@ -494,9 +498,19 @@ def hidden_from(deal, night, heard):
     gift = getattr(deal, "boffin_gift", None)
     if gift is not None:
         got = simulate._gift(deal, gift[0], phase)
+        boffin = simulate._boffin_at(deal, phase)
+        # Changed later tonight — a Barber's swap, a Snake Charmer's — the
+        # Demon still had it until then: the simulator played its turn
+        # before the change was written (seeds 1794 and 2919 of the gate,
+        # 27.10.2026). The walk ends it at the change (`lets_go`).
+        if got is None and night > 1:
+            before = f"D{night - 1}"
+            boffin = simulate._boffin_at(deal, before)
+            if boffin is not None and boffin in deal.alive_at(phase):
+                got = simulate._gift(deal, gift[0], before)
         if got is not None:
             out[("boffin", night)] = {gift[0]: got}
-            out[("boffin_seat", night)] = simulate._boffin_at(deal, phase)
+            out[("boffin_seat", night)] = boffin
     if token_only:
         out[("pukka_token_only", night)] = True
 
