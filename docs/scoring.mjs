@@ -2068,13 +2068,29 @@ export function boffinOffers(view, state, phase, seat, slot, setup = false) {
     const gift = BOFFIN_SEEN.has(named) ? named : BOFFIN_UNSEEN;
     return [[[boffinGift(phase, seat, gift, slot)], 1.0]];
   }
-  const seen = may.filter(k => BOFFIN_SEEN.has(k));
-  const unseen = may.length - seen.length;
+  const seen = sampledGifts(view, phase, seat,
+                           may.filter(k => BOFFIN_SEEN.has(k)));
+  const unseen = may.filter(k => !BOFFIN_SEEN.has(k)).length;
   const out = [];
   if (unseen) out.push([[boffinGift(phase, seat, BOFFIN_UNSEEN, slot)], 1.0]);
   const each = unseen ? 1.0 / unseen : 1.0;
   for (const k of seen) out.push([[boffinGift(phase, seat, k, slot)], each]);
   return out;
+}
+
+/** While estimating, how many of the abilities the town can see each
+ * moment tells (Stelle 91, 27.10.2026). See solver.py. */
+export const BOFFIN_SAMPLE_SIZE = 1;
+
+/** Every ability the town can see, or while estimating a fixed spread of
+ * them (Stelle 91, Weg 2). See solver.py `_sampled_gifts`. */
+export function sampledGifts(view, phase, seat, seen) {
+  const k = SUMMON_SAMPLE.k === null ? null : BOFFIN_SAMPLE_SIZE;
+  if (k === null || seen.length <= k) return seen;
+  const base = view instanceof Timeline ? view.world : view;
+  const step = Math.ceil(seen.length / k);
+  const offset = stable(`${base.roles.join("|")}|${seat}|${phase}|boffin`) % step;
+  return seen.filter((_g, i) => i >= offset && (i - offset) % step === 0);
 }
 
 /** When the Boffin gives something in this story, and to whom. See
