@@ -853,8 +853,16 @@ def _bags(n_players, script=DEFAULT, fabled=()):
             # at a table with no Outsiders — that one is taken. Where
             # there is not, the character is in play and changes nothing:
             # a Vigormortis removes an Outsider "if there is one".
+            #
+            # What another character in the bag brings is not there to be
+            # taken away: a Huntsman's Damsel is no Outsider a Vigormortis
+            # can remove (gate of the Boffin, stage 2, 27.10.2026 — the
+            # deal had a Huntsman, his Damsel and a Vigormortis, and no
+            # bag held it).
+            kept = _brought(present)
             possible = [shift for shift in shifts
-                        if all(counts[team] + delta >= 0
+                        if all(counts[team] + delta >= (kept.get(team, 0)
+                                                        if delta < 0 else 0)
                                for team, delta in shift.items())] or [{}]
             for shift in possible:
                 moved = dict(counts)
@@ -904,6 +912,16 @@ def _bags(n_players, script=DEFAULT, fabled=()):
             continue
         seen.add(signature)
         out.append((present, counts))
+    return out
+
+
+def _brought(present):
+    """How many of each team the characters in this bag bring along."""
+    out = {}
+    for key in present:
+        for other in getattr(CHARACTERS.get(key), "brings", ()) or ():
+            team = TEAM[other]
+            out[team] = out.get(team, 0) + 1
     return out
 
 

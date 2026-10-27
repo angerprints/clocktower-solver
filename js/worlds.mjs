@@ -625,9 +625,13 @@ export function bags(nPlayers, script = DEFAULT, fabled = []) {
       // there is another to choose, that one is taken; where there is
       // not, the character is in play and changes nothing — a Vigormortis
       // removes an Outsider "if there is one".
+      // What another character in the bag brings is not there to be
+      // taken away: a Huntsman's Damsel is no Outsider a Vigormortis can
+      // remove (stage 2 of the Boffin). See worlds.py.
+      const kept = brought(present);
       let possible = shifts.filter(shift =>
         Object.entries(shift).every(([team, delta]) =>
-          counts[team] + delta >= 0));
+          counts[team] + delta >= (delta < 0 ? kept[team] || 0 : 0)));
       if (!possible.length) possible = [{}];
       for (const shift of possible) {
         const moved = {...counts};
@@ -654,6 +658,7 @@ export function bags(nPlayers, script = DEFAULT, fabled = []) {
   }
 
   out = out.concat(marionetteToBe(out, script));
+  out = out.concat(boffinBrackets(out, script));
   const room = Object.fromEntries(TEAMS.map(t => [t, script.byTeam(t).length]));
   const seen = new Set(), kept = [];
   for (const [present, counts] of out) {
@@ -778,6 +783,71 @@ function prune(options, count, target, look, order, k, used) {
 // deal; its Minion's place goes to a good character of either kind. The
 // extra bags, marked with the kind the Marionette's player held. See
 // worlds.py.
+/** How many of each team the characters in this bag bring along. */
+function brought(present) {
+  const out = {};
+  for (const key of present)
+    for (const other of (CHARACTERS[key] && CHARACTERS[key].brings) || [])
+      out[TEAM[other]] = (out[TEAM[other]] || 0) + 1;
+  return out;
+}
+
+/** The Boffin's gift changes the setup as its bracket says (E Weg 1,
+ * stage 2, 27.10.2026). See worlds.py `_boffin_brackets`. */
+export const BOFFIN_BRACKETS = ["Balloonist", "Huntsman"];
+
+function boffinBrackets(bags, script) {
+  if (!script.keys.includes("Boffin")) return [];
+  const out = [];
+  for (const key of BOFFIN_BRACKETS) {
+    if (!script.keys.includes(key)) continue;
+    const brings = CHARACTERS[key].brings || [];
+    for (const [present, counts] of bags) {
+      if (present.has(key) || [...present].some(p => p.startsWith("gift:")))
+        continue;
+      for (const shift of CHARACTERS[key].setup) {
+        if (!Object.keys(shift).length) continue;
+        const moved = {...counts};
+        for (const [team, delta] of Object.entries(shift)) moved[team] += delta;
+        out.push([new Set([...present, "Boffin", `gift:${key}`, ...brings]),
+                  moved]);
+      }
+    }
+  }
+  return out;
+}
+
+const BRACKET_CACHE = new Map();
+
+/** Which gift's bracket this deal needs, or null where a deal without one
+ * explains it. See worlds.py `bracket_gifts`. */
+export function bracketGifts(roles, script, fabled = []) {
+  if (!script.keys.includes("Boffin") || !roles.includes("Boffin")) return null;
+  const movers = script.setupModifiers;
+  const dealt = roles.filter(r => r in movers).sort();
+  const split = TEAMS.map(t => roles.filter(r => TEAM[r] === t).length);
+  const key = [script.keys.join(","), fabled.join(","), roles.length,
+               dealt.join(","), split.join(","), roles.includes("Damsel")]
+    .join("|");
+  if (BRACKET_CACHE.has(key)) return BRACKET_CACHE.get(key);
+  let plain = false;
+  const gifts = new Set();
+  for (const [present, counts] of bags(roles.length, script, fabled)) {
+    const real = [...present].filter(p => p in movers).sort();
+    if (real.join(",") !== [...new Set(dealt)].join(",")) continue;
+    if ([...present].some(p => !(p in movers) && CHARACTERS[p]
+                          && !roles.includes(p))) continue;
+    if (TEAMS.some((t, i) => counts[t] !== split[i])) continue;
+    const marks = [...present].filter(p => p.startsWith("gift:"))
+      .map(p => p.slice(5));
+    if (!marks.length) { plain = true; break; }
+    marks.forEach(m => gifts.add(m));
+  }
+  const answer = plain || !gifts.size ? null : gifts;
+  BRACKET_CACHE.set(key, answer);
+  return answer;
+}
+
 const MARIONETTE_HELD = {"Marionette@outsider": "outsider",
                          "Marionette@townsfolk": "townsfolk"};
 

@@ -238,5 +238,69 @@ class OnlyWithItsRow(SolverTest):
         self.assertEqual(S.barber_claimants(state(rows)), set(range(7)))
 
 
+
+def _payloads():
+    def pay(events, rows=(), claims=C, days=(1, 2)):
+        players = [{"claim": c, "events": events.get(i, [])}
+                   for i, c in enumerate(claims)]
+        return {"n_players": len(claims), "players": players,
+                "infos": list(rows),
+                "script": {"name": "Laborratte 2", "characters": IDS},
+                "days_done": list(days)}
+
+    def b(night, role):
+        return {"type": "BoffinGave", "night": night, "player": 5,
+                "role": role}
+
+    return [
+        pay({}),
+        pay({0: ["N2", "R3"]}, days=(1, 2, 3)),
+        pay({}, [{"type": "NightwatchmanSeen", "night": 2, "player": 1,
+                  "shown": 6}]),
+        pay({}, [{"type": "EngineerChoice", "night": 2, "player": 6,
+                  "roles": ["Poisoner"]}], days=(1, 2, 3)),
+        pay({}, [b(1, "Philosopher")]),
+        pay({}, [{"type": "PhilosopherChoice", "night": 1, "player": 6,
+                  "role": "Empath"}]),
+        pay({}, [b(1, "Empath")], claims=C[:6] + ["Empath"]),
+        pay({}, [{"type": "Empath", "night": 1, "player": 6, "count": 1}],
+            claims=C[:6] + ["Empath"]),
+        pay({}, claims=C[:4] + ["Saint"] + C[5:]),
+    ]
+
+
+class BothLanguagesAgree(SolverTest):
+
+    def test_on_stage_two_boards(self):
+        import json
+        import pathlib
+        import subprocess
+        import app
+        root = pathlib.Path(__file__).resolve().parent.parent
+        cases = _payloads()
+        script = ("import {solveBoard} from './js/api.mjs';"
+                  "const ps=JSON.parse(process.argv[1]);"
+                  "console.log(JSON.stringify(ps.map(p => {"
+                  " const r = solveBoard(p); if (r.error) return r.error;"
+                  " return {valid: r.valid, un: r.unreckoned || {},"
+                  "  rows: r.rows.map(x => [x.evil_pct, x.demon_pct])};"
+                  "})));")
+        got = subprocess.run(["node", "--input-type=module", "-e", script,
+                              json.dumps(cases)], cwd=root,
+                             capture_output=True, text=True, timeout=900)
+        self.assertEqual(got.returncode, 0, got.stderr)
+        js = json.loads(got.stdout)
+        for i, (p, j) in enumerate(zip(cases, js)):
+            r = app.run_solve(p)
+            self.assertNotIn("error", r, i)
+            self.assertNotIsInstance(j, str, (i, j))
+            self.assertEqual(j["valid"], r["valid"], i)
+            self.assertEqual(j["un"], r.get("unreckoned") or {}, i)
+            for (je, jd), row in zip(j["rows"], r["rows"]):
+                self.assertAlmostEqual(je, row["evil_pct"], places=6, msg=i)
+                self.assertAlmostEqual(jd, row["demon_pct"], places=6,
+                                       msg=i)
+
+
 if __name__ == "__main__":
     unittest.main()

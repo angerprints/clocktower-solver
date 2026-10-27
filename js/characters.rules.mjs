@@ -19,7 +19,8 @@ import {dealtRoles, teaMade} from "./worlds.mjs";
 import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
-        takenByAPhilosopher, tookIt, boffinHolders, soberSeat}
+        takenByAPhilosopher, tookIt, boffinHolders, soberSeat,
+        boffinAbilities, boffinGiftOf, boffinSeat}
   from "./info.mjs";
 
 // --------------------------------------------------------------------
@@ -295,6 +296,30 @@ sourceRule(function aPhilosopherDrunksWhoeverHadIt(world, state, night) {
     out.push(new Source("Philosopher", had,
                         {capacity: had.size, cost: free, repeatCost: free,
                          actor: seat}));
+  }
+  return out;
+});
+
+/** A Demon given the Philosopher's ability drunks whoever holds what it
+ * took, while it has it, through the Boffin (H Weg 2, stage 2). See
+ * solver.py `a_boffin_philosopher_drunks_whoever_had_it`. */
+sourceRule(function aBoffinPhilosopherDrunksWhoeverHadIt(world, state, night) {
+  if (!state.script.keys.includes("Boffin") || !world.giftedSeats) return [];
+  const phase = `N${night}`;
+  const out = [];
+  for (const seat of world.giftedSeats()) {
+    const got = boffinGiftOf(world, state, seat, phase);
+    if (!got || !got.startsWith("Philosopher>")) continue;
+    const abilities = boffinAbilities(got, phase);
+    if (abilities.length < 2 || abilities[1] === "" || abilities[1] === "*")
+      continue;
+    const had = new Set();
+    for (let p = 0; p < state.nPlayers; p++)
+      if (p !== seat && world.roleAt(p, phase) === abilities[1]) had.add(p);
+    if (had.size)
+      out.push(new Source("Philosopher", had,
+                          {capacity: had.size, cost: 1.0, repeatCost: 1.0,
+                           actor: boffinSeat(world, state, phase)}));
   }
   return out;
 });
