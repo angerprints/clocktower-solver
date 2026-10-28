@@ -4051,8 +4051,15 @@ export const STORIES = {explained: 0, recalled: 0, skipped: 0};
  * asked about. Neither changes an answer. See `_explain_or_recall` in
  * solver.py for the reasoning (11.10.2026, open item 52).
  * Returns [cost, marks, what was asked]. */
+/** How many different stories `explainOrRecall` keeps to recall by. */
+export const TOLD_BEFORE_LIMIT = 20000;
+
 function explainOrRecall(world, changes, state, withMarks, toldBefore) {
   const {flips, turns, restKey} = whoTurned(changes);
+  // Past a limit it starts again from nothing: recalling only saves time
+  // (seed 2189 of the Boffin's gate). See solver.py.
+  if (!toldBefore.has(restKey) && toldBefore.size >= TOLD_BEFORE_LIMIT)
+    toldBefore.clear();
   let before = toldBefore.get(restKey);
   if (!before) toldBefore.set(restKey, before = []);
   for (const [theirs, theirTurns, reads, cost, marks] of before) {

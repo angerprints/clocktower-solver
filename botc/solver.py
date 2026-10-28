@@ -8277,6 +8277,10 @@ def _differ_only_unasked(flips, others, reads):
     return True
 
 
+# How many different stories `_explain_or_recall` keeps to recall by.
+TOLD_BEFORE_LIMIT = 20000
+
+
 def _explain_or_recall(world, changes, state, with_marks, told_before):
     """`_explain`, unless a story told before settles this one.
 
@@ -8301,6 +8305,13 @@ def _explain_or_recall(world, changes, state, with_marks, told_before):
         view = Timeline(world, changes) if changes else world
         return _explain(view, state, marks), marks, _NOBODY_ASKED
     flips, turns, rest = _who_turned(changes)
+    # What is kept to recall by grows with every story told, and beside a
+    # tea party, a Summoner and the Boffin's gifts that was ninety thousand
+    # stories and more memory than there is (gate of the Boffin, stage 2,
+    # seed 2189, 28.10.2026). Recalling only saves time and never changes
+    # an answer, so past a limit it starts again from nothing.
+    if rest not in told_before and len(told_before) >= TOLD_BEFORE_LIMIT:
+        told_before.clear()
     before = told_before.setdefault(rest, [])
     found = None
     for theirs, their_turns, reads, cost, marks in before:
