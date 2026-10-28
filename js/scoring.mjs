@@ -3453,7 +3453,13 @@ function explainedNight(world, state, night, died) {
   const memo = memoFor(base, "_nightsMemo", state);
   // Past a limit it starts again from nothing: it only saves time (seed
   // 2189 of the Boffin's gate). See solver.py.
-  if (memo.got.size >= NIGHTS_MEMO_LIMIT) memo.got.clear();
+  if (memo.got.size >= NIGHTS_MEMO_LIMIT) {
+    // This night's are the ones that grew; earlier shared nights stay.
+    for (const key of [...memo.got.keys()])
+      if (key.startsWith(`${night}#`) || key.startsWith(`${night}?`))
+        memo.got.delete(key);
+    if (memo.got.size >= NIGHTS_MEMO_LIMIT) memo.got.clear();
+  }
   // And this telling's hidden choices (`hiddenChoices`).
   const hidden = state._hidden ? `|${state._hidden[0]}|${state._hidden[1]}` : "";
   if (!LISTENING) {                       // nobody turns evil that way here

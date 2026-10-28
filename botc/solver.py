@@ -5397,7 +5397,13 @@ def _explained_night(world, state, night):
     # memory there is (seed 2189 of the Boffin's gate, 28.10.2026). It
     # only saves time, so past a limit it starts again from nothing.
     if len(memo) >= NIGHTS_MEMO_LIMIT:
-        memo.clear()
+        # This night's are the ones that grew; the earlier nights the
+        # stories share are kept.
+        for key in [k for k in memo
+                    if (k[1] if k[0] == "turned" else k[0]) == night]:
+            del memo[key]
+        if len(memo) >= NIGHTS_MEMO_LIMIT:
+            memo.clear()
     # And the hidden choices of this telling: whom a Lycanthrope cannot
     # kill, and whose death takes a Lleech with it (`_hidden_choices`).
     if not _LISTENING[0]:                 # nobody turns evil that way here
