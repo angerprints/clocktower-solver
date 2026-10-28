@@ -36,7 +36,15 @@ line torL 4 0 Boffin
 line torLS 4 0 Boffin Fool Sailor Soldier Monk TeaLady
 line torLD 4 0 Boffin Poisoner Courtier Minstrel Goon
 line torLN 4 0 Boffin ScarletWoman SnakeCharmer PitHag Barber
-line torL2 4 0 Boffin Summoner Engineer Hatter
+# In 12 pieces of 250: a game of it (seed 2189) takes hours, and a piece
+# survives a restart (Stelle 92, Weg 1, 28.10.2026). The pieces are added
+# up by hand; each prints its own summary.
+for start in 0 250 500 750 1000 1250 1500 1750 2000 2250 2500 2750; do
+  f=$OUT/torL2_$start.txt
+  grep -q "Zeilen:" "$f" 2>/dev/null && continue
+  python3 messung/tor.py 250 4 $start Boffin Summoner Engineer Hatter \
+    > "$f.tmp" 2>&1 && mv "$f.tmp" "$f"
+done
 # Stage 2: abilities that act (N, H, M), the brackets (E), and the gifts
 # only a row names (L) beside new Demons.
 line torLA 4 0 Boffin Professor Engineer Nightwatchman Pixie Philosopher
