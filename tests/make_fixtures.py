@@ -1082,6 +1082,7 @@ def handmade():
     yield from the_engineer()
     yield from the_boffin()
     yield from the_boffin_2()
+    yield from the_plague_doctor()
 
 
 def the_eighth_five():
@@ -1789,6 +1790,43 @@ BOFFIN_2_LINES = {
 # Bounty Hunter (e 340).
 PLAYED_BOFFIN_2 = (("a", 5, 7), ("a", 65, 7), ("e", 145, 7), ("e", 156, 8),
                    ("e", 340, 7))
+
+
+def the_plague_doctor():
+    """The Plague Doctor, stage 1 (28.10.2026): the boards of
+    tests/test_plague_doctor.py and played games where the Storyteller
+    gained an ability stage 1 reckons."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent / "tools"))
+    import play_games
+    from test_plague_doctor import _payloads
+    names = ("plain", "godfather", "witch", "advocate", "row-poisoner",
+             "scarlet-woman")
+    for name, payload in zip(names, _payloads(), strict=True):
+        yield {"name": f"x-plague-{name}", "payload": payload}
+    for line, seed, n in PLAYED_PLAGUE:
+        must = PLAGUE_LINES[line]
+        rng = random.Random(seed)
+        script = play_games.an_awkward_script(rng, must_have=must)
+        yield played(f"x-plague-played-{line}-{seed}-{n}", script, seed, n,
+                     4, rng=rng)
+
+
+# The gate lines of the Plague Doctor the played boards come from.
+PLAGUE_LINES = {
+    "k": ("PlagueDoctor", "Poisoner", "Godfather", "Assassin"),
+    "h": ("PlagueDoctor", "Witch", "DevilsAdvocate", "Mastermind"),
+    "j": ("PlagueDoctor", "ScarletWoman", "Goblin", "Fearmonger"),
+    "x": ("PlagueDoctor", "Widow", "Xaan", "Spy"),
+}
+# Each solved in seconds, the Storyteller with: the Godfather (k 27), the
+# Poisoner (k 72), the Assassin (k 86), the Witch (h 72), the Devil's
+# Advocate (h 107), the Mastermind (h 207); a Minion with the Goblin's
+# (j 32), the Scarlet Woman's (j 137), the Fearmonger's (j 47); the Xaan
+# (x 1), the Widow (x 47).
+PLAYED_PLAGUE = (("k", 27, 9), ("k", 72, 9), ("k", 86, 8), ("h", 72, 9),
+                 ("h", 107, 9), ("h", 207, 9), ("j", 32, 9), ("j", 137, 9),
+                 ("j", 47, 9), ("x", 1, 8), ("x", 47, 9))
 
 
 # Games where the Engineer chose, each solved in seconds: a Widow on the
