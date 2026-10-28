@@ -3430,6 +3430,9 @@ function leviathanDemands(world, state, fail, either) {
  * same question asked of the same cause.
  */
 /** A memo on this deal, good for this state in this epoch only. */
+/** How many nights `explainedNight` keeps per deal. */
+export const NIGHTS_MEMO_LIMIT = 20000;
+
 function memoFor(base, name, state) {
   let memo = base[name];
   if (!memo || memo.state !== state || memo.epoch !== state._epoch) {
@@ -3448,6 +3451,9 @@ function explainedNight(world, state, night, died) {
   const here = phaseIndex(`N${night}`);
   const upto = (world.changes || []).filter(c => momentOf(c) <= here);
   const memo = memoFor(base, "_nightsMemo", state);
+  // Past a limit it starts again from nothing: it only saves time (seed
+  // 2189 of the Boffin's gate). See solver.py.
+  if (memo.got.size >= NIGHTS_MEMO_LIMIT) memo.got.clear();
   // And this telling's hidden choices (`hiddenChoices`).
   const hidden = state._hidden ? `|${state._hidden[0]}|${state._hidden[1]}` : "";
   if (!LISTENING) {                       // nobody turns evil that way here

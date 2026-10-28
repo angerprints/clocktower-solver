@@ -5373,6 +5373,10 @@ def _memo_for(base, name, state):
     return memo[2]
 
 
+# How many nights `_explained_night` keeps per deal.
+NIGHTS_MEMO_LIMIT = 20000
+
+
 def _explained_night(world, state, night):
     """`explain_night`, kept per deal and per what had happened by then.
 
@@ -5388,6 +5392,12 @@ def _explained_night(world, state, night):
     upto = tuple(c for c in getattr(world, "changes", ())
                  if phase_index(c.phase) <= here)
     memo = _memo_for(base, "_nights_memo", state)
+    # Late nights are told once per story and never shared, and beside a
+    # tea party, a Summoner and the Boffin's gifts the memo grew past the
+    # memory there is (seed 2189 of the Boffin's gate, 28.10.2026). It
+    # only saves time, so past a limit it starts again from nothing.
+    if len(memo) >= NIGHTS_MEMO_LIMIT:
+        memo.clear()
     # And the hidden choices of this telling: whom a Lycanthrope cannot
     # kill, and whose death takes a Lleech with it (`_hidden_choices`).
     if not _LISTENING[0]:                 # nobody turns evil that way here
