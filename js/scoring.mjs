@@ -4562,6 +4562,9 @@ function bestStoryTold(world, state, outcome) {
       continue;
     }
     const told = ways;
+    // Every story told so far, before a Mezepheles's turns are added. See
+    // solver.py.
+    const own = told.length;
     for (let at = 0; at < told.length;) {
       const [changes, weight] = told[at++];
       const watch = (plain !== null || before !== null) && at === 1;
@@ -4582,7 +4585,7 @@ function bestStoryTold(world, state, outcome) {
       // A story that leaves something to pay for, or does not fit at
       // all, is told again with each player a Mezepheles could have
       // turned (`aMezephelesMayHaveTurned`).
-      if (turning && at === 1 && (cost === null || cost < 1.0)) {
+      if (turning && at <= own && (cost === null || cost < 1.0)) {
         const view = changes.length ? new Timeline(world, changes) : world;
         for (const turn of aMezephelesMayHaveTurned(view, state)) {
           // Not if the story could not be explained and never asked

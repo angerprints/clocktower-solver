@@ -8536,6 +8536,8 @@ def _best_story_told(world, state, outcome, viable):
                     for got, c in plague_told_later(world, ch, state)]
             if not told:
                 continue
+        # Every story told so far, before a Mezepheles's turns are added.
+        own = len(told)
         at = 0
         while at < len(told):
             changes, weight = told[at]
@@ -8564,7 +8566,10 @@ def _best_story_told(world, state, outcome, viable):
             # A story that leaves something to pay for, or does not fit
             # at all, is told again with each player a Mezepheles could
             # have turned (`a_mezepheles_may_have_turned`).
-            if turning and at == 1 and (cost is None or cost < 1.0):
+            # Each of the stories told here, not only the first: the
+            # Plague Doctor's Fearmonger given a Minion was a later one
+            # (the gate, seed 545 of the Boffin line, 28.10.2026).
+            if turning and at <= own and (cost is None or cost < 1.0):
                 view = Timeline(world, changes) if changes else world
                 for turn in a_mezepheles_may_have_turned(view, state):
                     # Not if the story could not be explained and never
