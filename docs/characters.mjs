@@ -1677,6 +1677,16 @@ export const DATA = {
    "nights": "first",
    "impairs": true,
    "first_night": 120
+  },
+  "PlagueDoctor": {
+   "id": "plaguedoctor",
+   "name": "Plague Doctor",
+   "team": "outsider",
+   "wake": [
+    "never"
+   ],
+   "impairs": true,
+   "other_night": 610
   }
  },
  "scripts": {
