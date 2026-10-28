@@ -153,8 +153,8 @@ const ACTS_AT = {
   // rule after it sees it (26.10.2026). See solver.py.
   aBoffinGivesTheDemon: -1,
   // The Plague Doctor's death gives the Storyteller an ability
-  // (28.10.2026): first too, after the Boffin. See solver.py.
-  aPlagueDoctorGivesTheStoryteller: -1,
+  // (28.10.2026): after every change but the handovers. See solver.py.
+  aPlagueDoctorGivesTheStoryteller: 98,
 };
 
 export const transitionRule = fn => (
@@ -298,11 +298,10 @@ export function possibleTimelines(world, state, cap = 128) {
     const seen = state.script.keys.filter(k => BOFFIN_SEEN.has(k)).length;
     cap *= 1 + seen;
   }
-  // And for every ability the Storyteller may have gained (28.10.2026).
+  // And for every ability the Storyteller may have gained (28.10.2026):
+  // as many times as this world tells. See solver.py.
   if (plagueOnBoard(state))
-    cap *= 1 + state.script.keys.filter(k => PLAGUE_SEEN.has(k)).length
-      + state.nPlayers * state.script.keys.filter(
-        k => PLAGUE_MINION_SEEN.has(k)).length;
+    cap *= Math.max(1, plagueStories(world, state).length);
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -2431,7 +2430,19 @@ export function plagueOffers(view, state, phase) {
   return out;
 }
 
-transitionRule(function aPlagueDoctorGivesTheStoryteller(world, state) {
+const plagueStories = (world, state) =>
+  aPlagueDoctorGivesTheStoryteller(world, state);
+
+/** What a story holds where the Storyteller gained something no
+ * transition rule asks about: told later, for each story as it is
+ * explained (`plagueToldLater`). See solver.py. */
+export const PLAGUE_LATER = "?";
+const plagueInTransitions = mark =>
+  mark.gift === "ScarletWoman" || mark.gift === "Mastermind";
+
+/** Every Minion ability the Storyteller may have gained that a transition
+ * rule asks about — the rest as one mark PLAGUE_LATER. See solver.py. */
+function aPlagueDoctorGivesTheStoryteller(world, state) {
   if (!plagueOnBoard(state)) return [[[], 1.0]];
   const moments = plagueMoments(world, state);
   if (!moments.length) return [[[], 1.0]];
@@ -2439,11 +2450,33 @@ transitionRule(function aPlagueDoctorGivesTheStoryteller(world, state) {
   for (const [phase] of moments) {
     const offers = plagueOffers(world, state, phase);
     if (!offers.length) return [];        // a row names what it cannot be
+    const now = offers.filter(([way]) => plagueInTransitions(way[0]));
+    if (now.length < offers.length)
+      now.push([[plagueGift(phase, STORYTELLER, PLAGUE_LATER,
+                            offers[0][0][0].slot)], 1.0]);
     stories = stories.flatMap(([changes, cost]) =>
-      offers.map(([way, c]) => [[...changes, ...way], cost * c]));
+      now.map(([way, c]) => [[...changes, ...way], cost * c]));
   }
   return stories;
-});
+}
+
+/** A story with what the Storyteller gained told in full: every way to
+ * fill each PLAGUE_LATER mark, as [[changes, cost]]. See solver.py. */
+export function plagueToldLater(world, changes, state) {
+  const later = changes.filter(c => c.plague && c.gift === PLAGUE_LATER);
+  if (!later.length) return [[changes, 1.0]];
+  const rest = changes.filter(c => !later.includes(c));
+  const view = new Timeline(world, rest);
+  let out = [[rest, 1.0]];
+  for (const mark of later) {
+    const offers = plagueOffers(view, state, mark.phase)
+      .filter(([way]) => !plagueInTransitions(way[0]));
+    out = out.flatMap(([got, cost]) =>
+      offers.map(([way, c]) => [[...got, ...way], cost * c]));
+  }
+  return out;
+}
+transitionRule(aPlagueDoctorGivesTheStoryteller);
 
 /** What the Plague Doctor leaves out that stage 1 does not reckon, or
  * null. See solver.py. */
@@ -4496,6 +4529,13 @@ function bestStoryTold(world, state, outcome) {
       if (!got.length) continue;          // nothing it could have given
       if (!(got.length === 1 && !got[0][0].length && got[0][1] === 1.0))
         ways = got.map(([extra, c]) => [[...first, ...extra], weight * c]);
+    }
+    // What the Storyteller gained that no transition rule asked about
+    // (the Plague Doctor, 28.10.2026), told the same way. See solver.py.
+    if (plagueOnBoard(state)) {
+      ways = ways.flatMap(([ch, wt]) => plagueToldLater(world, ch, state)
+        .map(([got, c]) => [got, wt * c]));
+      if (!ways.length) continue;
     }
     if (!LISTENING) {                     // nobody turns evil that way here
       ways.forEach(([story, w], i) => {

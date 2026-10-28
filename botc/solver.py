@@ -324,10 +324,13 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             # (`boffin_new_demon_stories`, 26.10.2026).
             "a_boffin_gives_the_demon": -1,
             # The Plague Doctor's death gives the Storyteller an ability
-            # (28.10.2026): read off the deaths on the board, first too,
-            # so every rule after it — a Scarlet Woman's handover — sees
-            # it. After the Boffin, whose Demon may hold it (H Weg 1).
-            "a_plague_doctor_gives_the_storyteller": -1}
+            # (28.10.2026): read off the deaths on the board, after every
+            # change but the handovers — whoever holds it when it dies may
+            # be somebody a Barber's swap made the Plague Doctor (the gate,
+            # seed 2432 of line J) — and before the handovers, so a Minion
+            # given the Scarlet Woman's ability steps up. After the Boffin
+            # too, whose Demon may hold it (H Weg 1).
+            "a_plague_doctor_gives_the_storyteller": 98}
 
 
 # Whose turn each rule is (Hatter stage 3b, 23.10.2026): the rule reads
@@ -512,11 +515,12 @@ def possible_timelines(world, state, cap=128):
     if _boffin_on_board(state):
         seen = sum(1 for k in state.script.keys if k in BOFFIN_SEEN)
         cap *= 1 + seen
-    # And for every ability the Storyteller may have gained (28.10.2026).
+    # And for every ability the Storyteller may have gained (28.10.2026):
+    # as many times as this world tells — each beside every Barber's swap
+    # and Farmer the board allows (the gate, seed 932 of line K).
     if _plague_on_board(state):
-        cap *= 1 + sum(1 for k in state.script.keys if k in PLAGUE_SEEN) \
-            + state.n_players * sum(1 for k in state.script.keys
-                                    if k in PLAGUE_MINION_SEEN)
+        cap *= max(1, len(a_plague_doctor_gives_the_storyteller(world,
+                                                                state)))
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -3161,10 +3165,25 @@ def plague_offers(view, state, phase):
     return out
 
 
+# What a story told in `possible_timelines` holds where the Storyteller
+# gained something no transition rule asks about: told later, for each
+# story as it is explained (`plague_told_later`), so the stories do not
+# multiply by it — beside a Barber's swaps and a Farmer they ran past the
+# room they have (the gate, seed 932 of line K). A transition rule asks
+# only about the Scarlet Woman's ability (a handover) and the
+# Mastermind's (a Demon's line ends).
+PLAGUE_LATER = "?"
+
+
+def _plague_in_transitions(mark):
+    return mark.gift in ("ScarletWoman", "Mastermind")
+
+
 @transition_rule
 def a_plague_doctor_gives_the_storyteller(world, state):
     """Every Minion ability the Storyteller may have gained, at each death
-    of a Plague Doctor: [(changes, cost)]."""
+    of a Plague Doctor, that a transition rule asks about — the rest as
+    one mark `PLAGUE_LATER`, told later: [(changes, cost)]."""
     if not _plague_on_board(state):
         return [((), 1.0)]
     moments = plague_moments(world, state)
@@ -3175,9 +3194,35 @@ def a_plague_doctor_gives_the_storyteller(world, state):
         offers = plague_offers(world, state, phase)
         if not offers:
             return []                     # a row names what it cannot be
+        now = [(way, c) for way, c in offers
+               if _plague_in_transitions(way[0])]
+        if len(now) < len(offers):
+            slot = offers[0][0][0].slot
+            now.append(((plague_gift_change(phase, STORYTELLER, PLAGUE_LATER,
+                                            slot),), 1.0))
         stories = [(changes + way, cost * c)
-                   for changes, cost in stories for way, c in offers]
+                   for changes, cost in stories for way, c in now]
     return stories
+
+
+def plague_told_later(world, changes, state):
+    """A story with what the Storyteller gained told in full: every way to
+    fill each `PLAGUE_LATER` mark, as [(changes, cost)] — the offers no
+    transition rule asks about, read off the story as it stands."""
+    later = [c for c in changes
+             if isinstance(c, PlagueGift) and c.gift == PLAGUE_LATER]
+    if not later:
+        return [(changes, 1.0)]
+    rest = tuple(c for c in changes if c not in later)
+    view = Timeline(world, rest)
+    out = [(rest, 1.0)]
+    for mark in later:
+        offers = [(way, c) for way, c in plague_offers(view, state,
+                                                        mark.phase)
+                  if not _plague_in_transitions(way[0])]
+        out = [(got + way, cost * c) for got, cost in out
+               for way, c in offers]
+    return out
 
 
 def plague_unreckoned(view, state):
@@ -8484,6 +8529,13 @@ def _best_story_told(world, state, outcome, viable):
                 continue                  # nothing it could have given
             if ways != [((), 1.0)]:
                 told = [(changes + extra, weight * c) for extra, c in ways]
+        # What the Storyteller gained that no transition rule asked about
+        # (the Plague Doctor, 28.10.2026), told the same way.
+        if _plague_on_board(state):
+            told = [(got, wt * c) for ch, wt in told
+                    for got, c in plague_told_later(world, ch, state)]
+            if not told:
+                continue
         at = 0
         while at < len(told):
             changes, weight = told[at]

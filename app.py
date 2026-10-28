@@ -522,7 +522,10 @@ def run_solve(payload):
                     # a player" means any player: one killed earlier that
                     # night is still shown who it is.
                     "NightwatchmanSeen",
-                    # The table is told, whoever writes it down.
+                    # The table is told, whoever writes it down — and
+                    # what the Storyteller gained when the Plague Doctor
+                    # died, written down by anybody (28.10.2026).
+                    "PlagueDoctorGave",
                     "BansheeAnnounced", "FearmongerChose",
                     "VizierAnnounced", "BlindVote", "LeviathanAnnounced",
                     "AlHadikhiaChose",

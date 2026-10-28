@@ -54,10 +54,18 @@ def world(roles=R):
     return World(tuple(roles), (None,) * len(roles))
 
 
+def stories(roles=R, **kw):
+    """Every story, with what the Storyteller gained told in full."""
+    st = state(**kw)
+    return [(got, cost * c)
+            for changes, cost in S.possible_timelines(world(roles), st)
+            for got, c in S.plague_told_later(world(roles), changes, st)]
+
+
 def gifts(roles=R, **kw):
     """{(seat, ability): cost} over every story."""
     out = {}
-    for got, cost in S.possible_timelines(world(roles), state(**kw)):
+    for got, cost in stories(roles, **kw):
         for c in got:
             if isinstance(c, PlagueGift):
                 out[(c.seat, c.gift)] = cost
@@ -106,11 +114,10 @@ class TheStories(SolverTest):
 
     def test_every_death_gives_one_more(self):
         # G Weg 1: died, stood up, died again — two gifts in one story.
-        stories = S.possible_timelines(world(), state(
-            deaths={4: ("D1", "N3")}, resurrections={4: ("N2",)},
-            days=(1, 2, 3)))
+        told = stories(deaths={4: ("D1", "N3")}, resurrections={4: ("N2",)},
+                       days=(1, 2, 3))
         most = max(sum(isinstance(c, PlagueGift) for c in got)
-                   for got, _w in stories)
+                   for got, _w in told)
         self.assertEqual(most, 2)
 
 
