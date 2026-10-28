@@ -3430,6 +3430,9 @@ function leviathanDemands(world, state, fail, either) {
  * same question asked of the same cause.
  */
 /** A memo on this deal, good for this state in this epoch only. */
+/** How many nights `explainedNight` keeps per deal. */
+export const NIGHTS_MEMO_LIMIT = 20000;
+
 function memoFor(base, name, state) {
   let memo = base[name];
   if (!memo || memo.state !== state || memo.epoch !== state._epoch) {
@@ -3448,6 +3451,15 @@ function explainedNight(world, state, night, died) {
   const here = phaseIndex(`N${night}`);
   const upto = (world.changes || []).filter(c => momentOf(c) <= here);
   const memo = memoFor(base, "_nightsMemo", state);
+  // Past a limit it starts again from nothing: it only saves time (seed
+  // 2189 of the Boffin's gate). See solver.py.
+  if (memo.got.size >= NIGHTS_MEMO_LIMIT) {
+    // This night's are the ones that grew; earlier shared nights stay.
+    for (const key of [...memo.got.keys()])
+      if (key.startsWith(`${night}#`) || key.startsWith(`${night}?`))
+        memo.got.delete(key);
+    if (memo.got.size >= NIGHTS_MEMO_LIMIT) memo.got.clear();
+  }
   // And this telling's hidden choices (`hiddenChoices`).
   const hidden = state._hidden ? `|${state._hidden[0]}|${state._hidden[1]}` : "";
   if (!LISTENING) {                       // nobody turns evil that way here
@@ -4051,8 +4063,15 @@ export const STORIES = {explained: 0, recalled: 0, skipped: 0};
  * asked about. Neither changes an answer. See `_explain_or_recall` in
  * solver.py for the reasoning (11.10.2026, open item 52).
  * Returns [cost, marks, what was asked]. */
+/** How many different stories `explainOrRecall` keeps to recall by. */
+export const TOLD_BEFORE_LIMIT = 20000;
+
 function explainOrRecall(world, changes, state, withMarks, toldBefore) {
   const {flips, turns, restKey} = whoTurned(changes);
+  // Past a limit it starts again from nothing: recalling only saves time
+  // (seed 2189 of the Boffin's gate). See solver.py.
+  if (!toldBefore.has(restKey) && toldBefore.size >= TOLD_BEFORE_LIMIT)
+    toldBefore.clear();
   let before = toldBefore.get(restKey);
   if (!before) toldBefore.set(restKey, before = []);
   for (const [theirs, theirTurns, reads, cost, marks] of before) {
