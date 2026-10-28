@@ -60,6 +60,7 @@ export const INFO_SOURCES = {
   PsychopathRoshambo: "Psychopath", WidowKnown: "Widow",
   PreacherChoice: "Preacher", HuntsmanChoice: "Huntsman",
   EngineerChoice: "Engineer", BoffinGave: "Boffin",
+  PlagueDoctorGave: "PlagueDoctor",
   PuzzlemasterGuess: "Puzzlemaster", BoomdandyExploded: "Boomdandy",
   PixieLearned: "Pixie", VillageIdiotInfo: "VillageIdiot",
   LycanthropeChose: "Lycanthrope", HarpyMadness: "Harpy",

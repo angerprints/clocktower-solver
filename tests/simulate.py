@@ -25,6 +25,7 @@ from botc.info import (registers_as_role,
                        SlayerShot, VirginNomination,
                        PreacherChoice, HuntsmanChoice, PuzzlemasterGuess,
                        EngineerChoice, BoffinGave, BOFFIN_NEVER_GIVES,
+                       PlagueDoctorGave,
                        BoomdandyExploded, BecameInfo,
                        PixieLearned, VillageIdiotInfo, LycanthropeChose,
                        HarpyMadness,
@@ -1047,7 +1048,9 @@ def _heir(d, phase, rng):
     minions = [m for m in alive if TEAM[d.role_at(m, phase)] == "minion"]
     if not minions:
         return None
-    sw = [m for m in minions if d.roles[m] == "ScarletWoman"]
+    sw = [m for m in minions if d.roles[m] == "ScarletWoman"] \
+        + [m for m in minions if d.roles[m] != "ScarletWoman"
+           and _plague_minion(d, m, "ScarletWoman", phase)]
     if sw and len(d.alive_at(phase)) >= 5:
         return sw[0]
     return rng.choice(minions)
@@ -1158,6 +1161,14 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                     from botc.info import boffin_philosophy
                     d.boffin_gift = (demon, boffin_philosophy(took, "N1"))
                     d.boffin_took = took
+    # The Plague Doctor (28.10.2026): what the Storyteller gained —
+    # [(phase, a Minion or None, ability)] — and what it did with it.
+    d.plague = []
+    d.plague_done = set()
+    d.st_poisoned = {}                  # night -> its Poisoner's pick
+    d.st_widow = None                   # (seat, night) its Widow poisoned
+    d.st_kills = {}                     # night -> {ability: whom}
+    d.st_assassin_spent = False
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -1177,6 +1188,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     for night in range(1, nights + 1):
         d.nights_played = night
         living = d.alive_at(f"N{night}")
+        # A Plague Doctor that died by day (28.10.2026).
+        _plague_check(d, rng, heard)
         # The Hatter (22.10.2026): the evil players choose at the very
         # start of the night after it died, before anybody acts (C).
         if d.hatted:
@@ -1217,6 +1230,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 and d.working(poisoner, night)):
             d.poisoned[night] = rng.choice(living)
             d.poisoned_by[night] = poisoner
+        # The Storyteller's Poisoner and Widow, the Plague Doctor's gift
+        # (28.10.2026): nothing stops them.
+        if _st_has(d, "Poisoner"):
+            d.st_poisoned[night] = rng.choice(living)
+        if _st_has(d, "Widow") and d.st_widow is None:
+            d.st_widow = (rng.choice(range(d.n)), night)
 
         # An Organ Grinder chooses whether to be drunk until dusk. Its own
         # business: nothing else reads it, and a Mathematician does not
@@ -1251,6 +1270,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # guard was still `None`, so it always said no and the Innkeeper
         # protected nobody. The rule was right and the moment was wrong.
         heard += early_choices(d, night, rng)
+        _plague_fearmongers_choose(d, night, rng, heard)
         # A Lleech made since chooses its host tonight; the Harpy at 18
         # (27 the first night), before every Demon (11.10.2026).
         _lleech_picks_a_host(d, night, rng)
@@ -1388,6 +1408,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # kill again (D Weg 1).
         if d.hatted:
             _tea_after_a_death_tonight(d, night, rng, None)
+        # A Plague Doctor the Demons killed: from now on (D Weg 1).
+        _plague_check(d, rng, heard)
 
         # Board-changing steps run **before** the readings, because by
         # slot they happen before every character that reads.
@@ -1493,6 +1515,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # new side is dated from the day, so tonight's readings see the
         # old one, as they do at the table (11.10.2026).
         _cult_leader_turns(d, night, rng)
+        # And one that died later in the night.
+        _plague_check(d, rng, heard)
 
         heard += [row for row in honest_info(d, night, rng)
                   if d.role_at(row.player, f"N{night}") not in CHOOSES_EARLY]
@@ -1936,6 +1960,16 @@ def _assassin_strikes(d, night, rng):
         _the_goon_answers(d, night, seat, target)
         if able:
             d.deaths[target] = phase
+    # The Storyteller's, the Plague Doctor's gift (28.10.2026): once a
+    # game, and nothing stops it — nor does a Goon turn it, being no
+    # player's choice.
+    if _st_has(d, "Assassin") and not d.st_assassin_spent:
+        targets = _good_and_standing(d, night)
+        if targets and rng.random() < 0.3:
+            target = rng.choice(targets)
+            d.st_assassin_spent = True
+            d.st_kills.setdefault(night, {})["Assassin"] = target
+            d.deaths[target] = phase
 
 
 def _godfather_kills(d, night, rng):
@@ -1966,6 +2000,14 @@ def _godfather_kills(d, night, rng):
                 or _a_fool_shrugs_it_off(d, target, phase):
             continue
         d.deaths[target] = phase
+    # The Storyteller's, the Plague Doctor's gift (28.10.2026).
+    if _st_has(d, "Godfather"):
+        targets = _good_and_standing(d, night)
+        if targets:
+            target = rng.choice(targets)
+            d.st_kills.setdefault(night, {})["Godfather"] = target
+            if not _kept_alive_at_night(d, night, target):
+                d.deaths[target] = phase
 
 
 def _gossip_comes_true(d, night, rng):
@@ -2148,6 +2190,10 @@ def _witch_curses(d, night, rng):
                   if d.role_at(p, phase) == "Witch"
                   and _has_its_ability(d, p, phase)), None)
     if witch is None or not d.working(witch, night):
+        # The Storyteller's curse, the Plague Doctor's gift (28.10.2026).
+        if _st_has(d, "Witch") and len(d.alive_at(phase)) > 3:
+            d.cursed[night] = rng.choice(d.alive_at(phase))
+            d.cursed_by[night] = "ST"
         return
     others = [p for p in d.alive_at(phase) if p != witch]
     # "If just 3 players live, you lose this ability."
@@ -2192,6 +2238,15 @@ def _devils_advocate_picks(d, night, rng):
                      if d.role_at(p, phase) == "DevilsAdvocate"
                      and p in d.alive_at(phase)), None)
     if advocate is None:
+        # The Storyteller's, the Plague Doctor's gift (28.10.2026): mostly
+        # the Demon. "Different to last night" is not held to.
+        if _st_has(d, "DevilsAdvocate"):
+            demon = d.demon_at(phase)
+            living = d.alive_at(phase)
+            if living:
+                d.spared[night] = ("ST", demon if demon in living
+                                   and rng.random() < 0.6
+                                   else rng.choice(living))
         return
     before = d.spared.get(night - 1)
     last = before[1] if before and before[0] == advocate else None
@@ -2496,6 +2551,112 @@ def _answering(d, chooser, role, phase):
 def _holders(d, role, phase):
     """Every seat with that ability then, in seat order."""
     return [p for p in range(d.n) if _acts_as(d, p, role, phase)]
+
+
+# --------------------------------------------------------------------------
+# The Plague Doctor (28.10.2026, claude/pestdoktor-lesarten.md, J Weg 1)
+# --------------------------------------------------------------------------
+# When one dies sober, the Storyteller gains a Minion ability of the script
+# at random — stage 1's only (A Weg 1) — and uses it for evil. The five
+# jinxed ones go to a living Minion (E Weg 1). In about half the games the
+# table writes down which (`PlagueDoctorGave`). What the solver tells as
+# "nothing the town sees" does nothing here: a Spy's grimoire, a Wraith's
+# eyes, the Storyteller's Psychopath, Harpy, Vizier, Organ Grinder and
+# Cerenovus.
+
+def _plague_pool(d, phase):
+    """What the Storyteller may gain then, and the living Minions."""
+    from botc.catalogue import CHARACTERS
+    from botc.solver import PLAGUE_STAGE_2, PLAGUE_TO_A_MINION
+    minions = [m for m in d.alive_at(phase)
+               if TEAM[d.role_at(m, phase)] == "minion"
+               and d.deaths.get(m) is None]
+    pool = [k for k in d.script.keys
+            if TEAM.get(k) == "minion" and CHARACTERS[k].modelled
+            and k not in PLAGUE_STAGE_2
+            and (k not in PLAGUE_TO_A_MINION or minions)]
+    return pool, minions
+
+
+def _plague_check(d, rng, heard):
+    """Every death of a Plague Doctor not answered yet: the Storyteller
+    gains an ability — a Minion, for the jinxed five. Asked at the start
+    of each night (a death by day), after the Demons' kills, and at the
+    end of the night."""
+    if "PlagueDoctor" not in d.script.keys:
+        return
+    from botc.solver import PLAGUE_TO_A_MINION
+    for seat in range(d.n):
+        for at in d.deaths_of(seat):
+            if (seat, at) in d.plague_done:
+                continue
+            d.plague_done.add((seat, at))
+            phase = f"D{at[1:]}" if at[0] == "E" else at
+            if not _falls_as(d, seat, "PlagueDoctor", phase):
+                continue
+            night = int(at[1:])
+            if not d.working(_sober(d, seat, "PlagueDoctor", phase), night,
+                             by_day=phase[0] == "D"):
+                continue                  # drunk or poisoned: nothing
+            pool, minions = _plague_pool(d, phase)
+            if not pool:
+                continue
+            key = rng.choice(pool)
+            holder = rng.choice(minions) if key in PLAGUE_TO_A_MINION \
+                else None
+            d.plague.append((phase, holder, key))
+            if rng.random() < 0.5:
+                heard.append(PlagueDoctorGave(night, seat, role=key))
+
+
+def _st_has(d, key, before=None):
+    """Has the Storyteller gained that ability — by now, or strictly
+    before that phase?"""
+    return any(seat is None and k == key
+               and (before is None or phase_index(at) < phase_index(before))
+               for at, seat, k in getattr(d, "plague", ()))
+
+
+def _plague_minion(d, seat, key, phase):
+    """A Minion the Plague Doctor's death gave that ability by then, and a
+    Minion still (E Weg 1)."""
+    if seat is None or TEAM[d.role_at(seat, phase)] != "minion":
+        return False
+    return any(s == seat and k == key and phase_index(at) <= phase_index(phase)
+               for at, s, k in getattr(d, "plague", ()))
+
+
+def _scarlet(d, seat, phase):
+    """The Scarlet Woman dealt — or a Minion given her ability (E)."""
+    return d.roles[seat] == "ScarletWoman" \
+        or _plague_minion(d, seat, "ScarletWoman", phase)
+
+
+def _fearmonger_at(d, p, phase):
+    """Holding the Fearmonger, or a Minion given its ability (E)."""
+    return d.role_at(p, phase) == "Fearmonger" \
+        or _plague_minion(d, p, "Fearmonger", phase)
+
+
+def _plague_fearmongers_choose(d, night, rng, heard):
+    """A Minion given the Fearmonger's ability chooses every night, as the
+    Fearmonger does, and the table is told when it is a new one."""
+    phase = f"N{night}"
+    for seat in d.alive_at(phase):
+        if d.role_at(seat, phase) == "Fearmonger" \
+                or not _plague_minion(d, seat, "Fearmonger", phase) \
+                or d.deaths.get(seat) is not None:
+            continue
+        others = [p for p in d.alive_at(phase) if p != seat]
+        if not others:
+            continue
+        before = d.fear_target.get(seat)
+        target = before if before in others and rng.random() < 0.5 \
+            else rng.choice(others)
+        d.fear_chose[night] = target
+        d.fear_target[seat] = target
+        if target != before:
+            heard.append(FearmongerChose(night, seat))
 
 
 def _chose(d, role, night, seat, what, last=False):
@@ -2822,7 +2983,7 @@ def _slayer_shoots(d, day, rng, heard):
             return _second_line_falls(d, phase)
         if TEAM[held] == "demon":
             heir = _heir(d, phase, rng)
-            if heir is not None and d.roles[heir] == "ScarletWoman" \
+            if heir is not None and _scarlet(d, heir, phase) \
                     and len(d.alive_at(phase)) >= 5 \
                     and not _sw_stays_by_jinx(d, phase, target):
                 d.deaths[target] = phase
@@ -2922,7 +3083,7 @@ def _the_fearmonger_wins(d, day, hanged):
         return False
     phase = f"D{day}"
     fear = next((p for p in d.alive_at(phase)
-                 if d.role_at(p, phase) == "Fearmonger"), None)
+                 if _fearmonger_at(d, p, phase)), None)
     return fear is not None and d.fear_target.get(fear) == target \
         and d.working(fear, day, by_day=True)
 
@@ -3358,7 +3519,8 @@ def _lleech_follows(d, phase, night, rng, by_day=False, hanged=None):
         if not was_demon or d.line2:
             continue
         sw = next((p for p in d.alive_at(at)
-                   if d.role_at(p, at) == "ScarletWoman"
+                   if (d.role_at(p, at) == "ScarletWoman"
+                       or _plague_minion(d, p, "ScarletWoman", at))
                    and d.deaths.get(p) is None), None)
         if sw is not None and len(d.alive_at(at)) >= 5:
             d.handovers.append((at, sw))
@@ -3752,7 +3914,7 @@ def _hold_a_day(d, day, rng):
     fear = fear_pick = None
     if "Fearmonger" in d.script.keys:
         fear = next((p for p in living
-                     if d.role_at(p, phase) == "Fearmonger"), None)
+                     if _fearmonger_at(d, p, phase)), None)
         fear_pick = d.fear_target.get(fear) if fear is not None else None
         if fear_pick is not None and fear_pick in living \
                 and fear_pick != fear and rng.random() < 0.3:
@@ -3906,7 +4068,8 @@ def _a_goblin_said_so(d, day, executed, rng, heard):
     """
     if "Goblin" not in d.script.keys:
         return False
-    if d.role_at(executed, f"D{day}") == "Goblin":
+    if d.role_at(executed, f"D{day}") == "Goblin" \
+            or _plague_minion(d, executed, "Goblin", f"D{day}"):
         if rng.random() >= 0.7:
             return False                  # kept quiet, and simply died
         heard.append(GoblinClaim(day, executed))
@@ -3925,9 +4088,12 @@ def _the_curse_bites(d, seat, day):
     """
     phase = f"D{day}"
     witch = d.cursed_by.get(day)
-    if witch is None or d.role_at(witch, phase) != "Witch":
+    if witch == "ST":
+        pass                              # the Storyteller's (28.10.2026)
+    elif witch is None or d.role_at(witch, phase) != "Witch":
         return False
-    if not _has_its_ability(d, witch, phase) or not d.working(witch, day):
+    elif not _has_its_ability(d, witch, phase) \
+            or not d.working(witch, day):
         return False
     if len(d.alive_at(phase)) <= 3:
         return False
@@ -3967,6 +4133,8 @@ def _walks_away(d, seat, day, rng):
     if _kept_alive_by_a_tea_lady(d, seat, phase):
         return "TeaLady"
     advocate, chosen = d.spared.get(day) or (None, None)
+    if chosen == seat and advocate == "ST":
+        return "DevilsAdvocate"           # the Storyteller's (28.10.2026)
     if chosen == seat and advocate in d.alive_at(phase) \
             and d.deaths.get(advocate) is None \
             and d.role_at(advocate, phase) == "DevilsAdvocate" \
@@ -4039,7 +4207,7 @@ def _execute(d, day, rng, allow_takeover=False):
             living = [p for p in living if p != good]
     heir = _heir(d, phase, rng)
     takeover = (allow_takeover and heir is not None
-                and d.roles[heir] == "ScarletWoman"
+                and _scarlet(d, heir, phase)
                 and len(d.alive_at(phase)) >= 5
                 and not _sw_stays_by_jinx(d, phase, demon))
     # Two more ways the Demon can go up without the game ending there.
@@ -4065,25 +4233,29 @@ def _execute(d, day, rng, allow_takeover=False):
     # day and the solver — rightly — had the Scarlet Woman holding the
     # Vortox (07.10.2026). No published script has both.
     she_would = (heir is not None
-                 and d.role_at(heir, phase) == "ScarletWoman"
+                 and (d.role_at(heir, phase) == "ScarletWoman"
+                      or _plague_minion(d, heir, "ScarletWoman", phase))
                  and len(d.alive_at(phase)) >= 5)
     mastermind = d.seat_of("Mastermind")
     extra_day = (not takeover and not zombuul_first and not she_would
-                 and mastermind is not None
-                 and d.role_at(mastermind, phase) == "Mastermind"
-                 and mastermind in d.alive_at(phase)
-                 # Hanged itself, babysitting Lil' Monsta: dead, it has
-                 # no ability to buy the day with (21.10.2026).
-                 and mastermind != demon
-                 and d.working(mastermind, day)
+                 and ((mastermind is not None
+                       and d.role_at(mastermind, phase) == "Mastermind"
+                       and mastermind in d.alive_at(phase)
+                       # Hanged itself, babysitting Lil' Monsta: dead, it
+                       # has no ability to buy the day with (21.10.2026).
+                       and mastermind != demon
+                       and d.working(mastermind, day))
+                      # The Storyteller's, the Plague Doctor's gift.
+                      or _st_has(d, "Mastermind"))
                  and d.game_ends_after is None)
     # Or a Devil's Advocate has it covered, and it walks away.
     advocate, chosen = d.spared.get(day) or (None, None)
     covered = (demon is not None and chosen == demon
-               and advocate in d.alive_at(phase)
-               and d.deaths.get(advocate) is None
-               and d.role_at(advocate, phase) == "DevilsAdvocate"
-               and d.working(advocate, day))
+               and (advocate == "ST" or (
+                   advocate in d.alive_at(phase)
+                   and d.deaths.get(advocate) is None
+                   and d.role_at(advocate, phase) == "DevilsAdvocate"
+                   and d.working(advocate, day))))
     # A Lleech whose host lives walks away from it (11.10.2026).
     lleech_stands = (demon is not None
                      and _a_lleech_holds(d, demon, f"D{day}", day,
@@ -5475,10 +5647,18 @@ def _woke_for_own_ability(d, p, night, shown=False):
         return False
     from botc.catalogue import CHARACTERS
     from botc.info import boffin_abilities
-    return any(got in CHARACTERS and not CHARACTERS[got].believes
-               and _woke_itself(d, p, night, shown, as_role=got)
-               for got in boffin_abilities(_gift(d, p, f"N{night}"),
-                                           f"N{night}"))
+    if any(got in CHARACTERS and not CHARACTERS[got].believes
+           and _woke_itself(d, p, night, shown, as_role=got)
+           for got in boffin_abilities(_gift(d, p, f"N{night}"),
+                                       f"N{night}")):
+        return True
+    # A Minion the Plague Doctor's death gave the Spy's, the Wraith's or
+    # the Fearmonger's ability wakes for it (I Weg 1, 28.10.2026).
+    phase = f"N{night}"
+    return any(_plague_minion(d, p, key, phase)
+               and _woke_itself(d, p, night, shown, as_role=key)
+               for _at, seat, key in getattr(d, "plague", ())
+               if seat == p)
 
 
 def _woke_itself(d, p, night, shown=False, as_role=None):
@@ -6175,6 +6355,13 @@ def droisoned_at(d, night, by_day=False):
         by = getattr(d, "poisoned_by", {}).get(night)
         if by is None or d.role_at(by, phase) == "Poisoner":
             out.add(d.poisoned[night])
+    # The Storyteller's Poisoner and Widow, the Plague Doctor's gift
+    # (28.10.2026): nothing stops them, and the Widow's lasts.
+    if getattr(d, "st_poisoned", {}).get(night) is not None:
+        out.add(d.st_poisoned[night])
+    if getattr(d, "st_widow", None) is not None \
+            and d.st_widow[1] <= night:
+        out.add(d.st_widow[0])
 
     # Whoever chose the Goon first tonight is drunk until dusk — from
     # that moment, so its own choice already fails. Before the Sailor and
@@ -6406,6 +6593,11 @@ def droisoned_at(d, night, by_day=False):
             and _has_its_ability(d, xaan, phase) \
             and night == sum(1 for r in d.roles
                              if TEAM[r] == "outsider"):
+        silenced |= {p for p in range(d.n)
+                     if TEAM[d.role_at(p, phase)] == "townsfolk"}
+    # And the Storyteller's Xaan, gained before its night (28.10.2026).
+    if _st_has(d, "Xaan", before=phase) \
+            and night == sum(1 for r in d.roles if TEAM[r] == "outsider"):
         silenced |= {p for p in range(d.n)
                      if TEAM[d.role_at(p, phase)] == "townsfolk"}
     out |= silenced

@@ -820,7 +820,9 @@ def took_it(w, s, seat, role, phase):
             and w.role_at(seat, phase) == "Philosopher" \
             and phase_index(phase) >= phase_index(taken[1]):
         return True
-    return role is not None and has_boffin_ability(w, s, seat, role, phase)
+    return role is not None and (
+        has_boffin_ability(w, s, seat, role, phase)
+        or has_plague_ability(w, s, seat, role, phase))
 
 
 # --------------------------------------------------------------------------
@@ -902,6 +904,46 @@ def boffin_holders(w, s, role, phase):
         return []
     return [seat for seat in sorted(marked)
             if has_boffin_ability(w, s, seat, role, phase)]
+
+
+# --------------------------------------------------------------------------
+# The Plague Doctor (28.10.2026, claude/pestdoktor-lesarten.md)
+# --------------------------------------------------------------------------
+# "If you die, the Storyteller gains a Minion ability." Nobody holds it:
+# the Storyteller is the seat `STORYTELLER`, which no player is, so it is
+# never drunk, poisoned or dead. Which ability is a story
+# (`worlds.PlagueGift`, solver.a_plague_doctor_gives_the_storyteller).
+STORYTELLER = None
+
+# Every ability the Storyteller may gain that changes nothing the town
+# sees (B Weg 3), as one story.
+PLAGUE_UNSEEN = "*"
+
+
+def storyteller_has(w, role, phase):
+    """Has the Storyteller that Minion ability at this moment?"""
+    return role is not None and role in w.plague_at(STORYTELLER, phase)
+
+
+def has_plague_ability(w, s, seat, role, phase):
+    """Was this Minion given that ability by the Plague Doctor's death —
+    the Spy's, the Scarlet Woman's, the Wraith's, the Fearmonger's or the
+    Goblin's, their jinxes (E Weg 1) — and is it a Minion still? Its own
+    then: it rests while the Minion is drunk or poisoned."""
+    if role is None or seat is None:
+        return False
+    if role not in w.plague_at(seat, phase):
+        return False
+    return TEAM.get(w.role_at(seat, phase)) == "minion"
+
+
+def plague_holders(w, s, role, phase):
+    """Every Minion with that ability through the Plague Doctor then."""
+    marked = getattr(w, "_plagues_by_seat", None)
+    if not marked or role is None:
+        return []
+    return [seat for seat in sorted(k for k in marked if k is not None)
+            if has_plague_ability(w, s, seat, role, phase)]
 
 
 def sober_seat(w, s, seat, role, phase):
@@ -3282,7 +3324,11 @@ class GoblinClaim(Info):
     def must_have_failed(self, w, s):
         """Whose ability cannot have been working for this to be so."""
         day = self.night
-        if w.role_at(self.player, f"D{day}") != "Goblin":
+        # Or a Minion the Plague Doctor's death gave it (their jinx,
+        # 28.10.2026, E Weg 1).
+        if w.role_at(self.player, f"D{day}") != "Goblin" \
+                and not has_plague_ability(w, s, self.player, "Goblin",
+                                           f"D{day}"):
             return ()
         # Executed is enough: "an ability that triggers on execution does
         # not need the execution to kill" (table ruling, 08.10.2026).
@@ -3404,7 +3450,12 @@ class FearmongerChose(Info):
         from .solver import minion_still_acts
         phase = f"N{self.night}"
         seat = w.find_at("Fearmonger", phase)
-        return seat is not None and minion_still_acts(w, s, seat, phase)
+        if seat is not None and minion_still_acts(w, s, seat, phase):
+            return True
+        # Or a Minion the Plague Doctor's death gave it (their jinx,
+        # 28.10.2026, E Weg 1).
+        return any(minion_still_acts(w, s, who, phase)
+                   for who in plague_holders(w, s, "Fearmonger", phase))
 
 
 @dataclass
@@ -3876,6 +3927,40 @@ class BoffinGave(Info):
         key = self.role or ""
         if key not in s.script.keys or TEAM.get(key) not in (
                 "townsfolk", "outsider") or key in BOFFIN_NEVER_GIVES:
+            return None
+        return key
+
+    def holds(self, w, s, rh, seat=None):
+        return self.given(s) is not None
+
+
+@dataclass
+class PlagueDoctorGave(Info):
+    """Which Minion ability the Storyteller gained when the Plague Doctor
+    died, as the table learned it (28.10.2026, claude/pestdoktor-
+    lesarten.md) — told after the game, or worked out. `night` is the
+    number of the night or day it died.
+
+    Without one, every ability it could have been is a story of its own,
+    those nobody sees together (B Weg 3); with one, only the named one. A
+    Minion of the script (C Weg 1)."""
+
+    role: str = ""
+    source_role = "PlagueDoctor"
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None                       # the Storyteller's, not a seat's
+
+    def given(self, s):
+        """The Minion named, or None where it cannot be one."""
+        key = self.role or ""
+        if key not in s.script.keys or TEAM.get(key) != "minion":
             return None
         return key
 

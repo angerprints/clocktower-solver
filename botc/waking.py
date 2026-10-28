@@ -589,6 +589,13 @@ def woke(world, state, seat, night):
                     and not CHARACTERS[got].believes \
                     and woke_as(world, state, seat, night, got):
                 return True
+    # A Minion the Plague Doctor's death gave the Spy's, the Wraith's or
+    # the Fearmonger's ability wakes for it as that one would (I Weg 1,
+    # 28.10.2026). The Storyteller's own wakes nobody.
+    if world.team_at(seat, phase) == "minion":
+        for got in world.plague_at(seat, phase):
+            if got in CHARACTERS and woke_as(world, state, seat, night, got):
+                return True
     return False
 
 

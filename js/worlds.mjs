@@ -86,6 +86,9 @@ export class World {
   /** No story, no Boffin ability. See worlds.py. */
   giftAt(seat, phase) { return null; }
   giftedSeats() { return []; }
+  /** No story, nothing the Plague Doctor gave. See worlds.py. */
+  plagueAt(seat, phase) { return []; }
+  plaguedSeats() { return []; }
   alignmentAt(seat, phase) {
     if (LISTENING) noteSideRead(seat, phase);
     // Sides too, for a Summoner's Demon (Hatter stage 2). See worlds.py.
@@ -190,6 +193,14 @@ export const engineered = (phase, seat, role, side) =>
 export const boffinGift = (phase, seat, gift, slot = null) =>
   ({phase, seat, role: null, side: null, slot, gift, boffin: true});
 
+/** A Minion ability the Plague Doctor's death gave (28.10.2026): to the
+ * Storyteller (`seat` null), or to a Minion for the five jinxed ones (E
+ * Weg 1). A kind of Boffin mark, so every place that passes those by
+ * passes this one by too; they add up (G Weg 1). `PlagueGift` in Python. */
+export const plagueGift = (phase, seat, gift, slot = null) =>
+  ({phase, seat, role: null, side: null, slot, gift, boffin: true,
+    plague: true});
+
 /** Whether anything from the Hatter's night on was looked at while a
  * story was told: {at, read}. See worlds.py. */
 export const TEA_READS = {now: null};
@@ -275,10 +286,16 @@ export class Timeline {
   _indexed() {
     if (this._index) return this._index;
     const roles = new Map(), sides = new Map(), demons = [], held = new Set();
-    const handed = new Map(), gifts = new Map();
+    const handed = new Map(), gifts = new Map(), plagues = new Map();
     let summonAt = null;
     for (const c of this.changes) {
       const at = changeAt(c);
+      if (c.plague) {
+        const key = c.seat ?? null;
+        if (!plagues.has(key)) plagues.set(key, []);
+        plagues.get(key).push([at, c.gift]);
+        continue;
+      }
       if (c.boffin) {
         if (!gifts.has(c.seat)) gifts.set(c.seat, []);
         gifts.get(c.seat).push([at, c.gift]);
@@ -306,7 +323,7 @@ export class Timeline {
           demons.push([at, c.seat, null, !!c.summoned]);
       }
     }
-    this._index = {roles, sides, demons, held, summonAt, gifts};
+    this._index = {roles, sides, demons, held, summonAt, gifts, plagues};
     this._index.steps = this._demonSteps(demons, handed);
     return this._index;
   }
@@ -457,6 +474,22 @@ export class Timeline {
 
   /** The seats with any Boffin mark. */
   giftedSeats() { return [...this._indexed().gifts.keys()].sort((a, b) => a - b); }
+
+  /** The Minion abilities the Plague Doctor gave this seat — or the
+   * Storyteller, seat null — by this moment. See worlds.py. */
+  plagueAt(seat, phase) {
+    const mine = this._indexed().plagues.get(seat ?? null);
+    if (!mine) return [];
+    const here = moment(phase);
+    return mine.filter(([at, gift]) => at <= here && gift !== "*")
+      .map(([, gift]) => gift);
+  }
+
+  /** The Minions with any Plague Doctor mark. */
+  plaguedSeats() {
+    return [...this._indexed().plagues.keys()].filter(k => k !== null)
+      .sort((a, b) => a - b);
+  }
 
   /** A story with Lil' Monsta in it: somebody babysits. See worlds.py. */
   get lilMonsta() {

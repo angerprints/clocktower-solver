@@ -633,6 +633,11 @@ def hidden_from(deal, night, heard):
         got = getattr(deal, where, {}).get(night)
         if got is not None:
             out[(key, night)] = got
+    # What the Storyteller killed with an ability the Plague Doctor's death
+    # gave it (28.10.2026): {ability: whom}, at that ability's turn.
+    st_kills = getattr(deal, "st_kills", {}).get(night)
+    if st_kills:
+        out[("st_kills", night)] = dict(st_kills)
     # A Devil's Advocate's pick, hidden like the Monk's guard.
     spared = getattr(deal, "spared", {}).get(night)
     if spared is not None:
@@ -996,6 +1001,7 @@ def walk(deal, night, hidden):
         or getattr(CHARACTERS["Hatter"], field, 0)
     acrobats = []
     acrobats_fall = getattr(CHARACTERS["Gossip"], field, 0)
+    st_kills = dict(hidden.get(("st_kills", night)) or {})
 
     def _acrobat_falls_now(slot):
         only = hidden.get(("preached_only", night)) or set()
@@ -1097,6 +1103,12 @@ def walk(deal, night, hidden):
             # A guard it set earlier tonight as a Monk or an Innkeeper
             # went with the character that set it (`lets_go`, above).
             summon = None
+        # The Storyteller's Assassin and Godfather, the Plague Doctor's
+        # gift (28.10.2026): at their turn, nobody's ability to stop.
+        for key, target in st_kills.items():
+            if slot == getattr(CHARACTERS[key], field, 0) \
+                    and target in state.alive:
+                state.kill(target, slot, key, unstoppable=key == "Assassin")
         # Lil' Monsta at 35: the Minions choose, then a player might die
         # — never the babysitter, nobody an Exorcist that named last
         # night's babysitter left awake for (21.10.2026).

@@ -416,6 +416,12 @@ export function woke(world, state, seat, night) {
       if (CHARACTERS[got] && !CHARACTERS[got].believes
           && wokeAs(world, state, seat, night, got)) return true;
   }
+  // A Minion the Plague Doctor's death gave the Spy's, the Wraith's or the
+  // Fearmonger's ability wakes for it (I Weg 1, 28.10.2026). See waking.py.
+  if (world.plagueAt && world.teamAt(seat, phase) === "minion")
+    for (const got of world.plagueAt(seat, phase))
+      if (CHARACTERS[got] && wokeAs(world, state, seat, night, got))
+        return true;
   return false;
 }
 

@@ -14,7 +14,8 @@ from dataclasses import dataclass
 from typing import NamedTuple
 
 from .catalogue import CHARACTERS
-from .info import BOFFIN_UNSEEN, _READS, note_side_read, phase_index
+from .info import (BOFFIN_UNSEEN, PLAGUE_UNSEEN, STORYTELLER, _READS,
+                   note_side_read, phase_index)
 from .roles import (EVIL, TEAM, SETUP, alignment, believed_tokens,
                     believes_another, is_evil, knows_what_it_is,
                     must_hide, thinks_it_is_evil, wake_fits)
@@ -94,6 +95,10 @@ class World:
     def gift_at(self, seat, phase):
         """No story, no Boffin ability (`Timeline.gift_at`)."""
         return None
+
+    def plague_at(self, seat, phase):
+        """No story, nothing the Plague Doctor gave (`Timeline.plague_at`)."""
+        return ()
 
     def alignment_at(self, seat, phase):
         """Which side this seat was on at this phase.
@@ -263,6 +268,24 @@ def boffin_gift_change(phase, seat, gift, slot=None):
     return BoffinGift(phase, seat, None, gift, slot)
 
 
+class PlagueGift(BoffinGift):
+    """A Minion ability the Plague Doctor's death gave (28.10.2026): to the
+    Storyteller (`seat` is `STORYTELLER`), or — for the Spy, the Scarlet
+    Woman, the Wraith, the Fearmonger and the Goblin, their jinxes — to a
+    Minion, who learns it (E Weg 1). A mark like the Boffin's, kept in
+    `side`; `PLAGUE_UNSEEN` for every ability the town cannot see. Each
+    death of a sober Plague Doctor adds one (G Weg 1): they add up.
+
+    A kind of `BoffinGift`, so every place that already passes a gift by
+    as no change to a character or a side passes this one by as well."""
+    __slots__ = ()
+
+
+def plague_gift_change(phase, seat, gift, slot=None):
+    """A `PlagueGift` mark: an ability gained at that moment."""
+    return PlagueGift(phase, seat, None, gift, slot)
+
+
 # Whether anything from the Hatter's night on was looked at while a story
 # was told (solver._best_tea_story): [moment, looked]. A telling where
 # nobody chose anything new, that failed without looking, fails the same
@@ -422,8 +445,12 @@ class Timeline:
         # order; only the walk is shorter.
         roles, sides, demons, held = {}, {}, [], set()
         handed, gifts = {}, {}
+        plagues = {}
         for change in self.changes:
             at = _at(change)
+            if isinstance(change, PlagueGift):
+                plagues.setdefault(change.seat, []).append((at, change.gift))
+                continue
             if isinstance(change, BoffinGift):
                 gifts.setdefault(change.seat, []).append((at, change.gift))
                 continue
@@ -453,6 +480,7 @@ class Timeline:
         object.__setattr__(self, "_roles_by_seat", roles)
         object.__setattr__(self, "_sides_by_seat", sides)
         object.__setattr__(self, "_gifts_by_seat", gifts)
+        object.__setattr__(self, "_plagues_by_seat", plagues)
         object.__setattr__(self, "_roles_changed_to", held)
         object.__setattr__(self, "_demon_changes",
                            self._demon_steps(demons, handed))
@@ -628,6 +656,16 @@ class Timeline:
 
     def team_at(self, seat, phase):
         return TEAM[self.role_at(seat, phase)]
+
+    def plague_at(self, seat, phase):
+        """The Minion abilities the Plague Doctor gave this seat — or the
+        Storyteller, `STORYTELLER` — by this moment (`PlagueGift`)."""
+        mine = self._plagues_by_seat.get(seat)
+        if not mine:
+            return ()
+        here = moment(phase)
+        return tuple(gift for at, gift in mine
+                     if at <= here and gift != PLAGUE_UNSEEN)
 
     def gift_at(self, seat, phase):
         """The Boffin ability marked on this seat at this moment, or None

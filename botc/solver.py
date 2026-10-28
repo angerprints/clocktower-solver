@@ -37,7 +37,10 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    has_boffin_ability, boffin_philosophy, boffin_abilities,
                    PhilosopherChoice,
                    boffin_holders, boffin_seat, sober_seat,
-                   faux_paw_lycanthrope, side_open)
+                   faux_paw_lycanthrope, side_open,
+                   PlagueDoctorGave, PLAGUE_UNSEEN, STORYTELLER,
+                   storyteller_has, has_plague_ability, plague_holders,
+                   BecameInfo, EvilTwinPair, BoomdandyExploded)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
                     INVERTED, registers_as_role, evil_registrations,
@@ -50,6 +53,7 @@ from .worlds import _at as moment_of
 from .worlds import READ_AT, SETUP_SLOT, _row_slot, reading_at
 from .worlds import Engineered
 from .worlds import BOFFIN_UNSEEN, BoffinGift, boffin_gift_change, bracket_gifts
+from .worlds import PlagueGift, plague_gift_change
 from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
                      SUMMON_READS, Summoned, TEA_READS, TeaParty,
                      Timeline, TurnedEvil, World,
@@ -199,6 +203,20 @@ def invention_cost(info):
 # Consistency
 # --------------------------------------------------------------------------
 
+def scarlet_seat(world, state, phase):
+    """Who has the Scarlet Woman's ability now: the one holding her — or a
+    Minion the Plague Doctor's death gave it (their jinx, 28.10.2026, E
+    Weg 1), where she is not alive to have it."""
+    seat = world.find_at("ScarletWoman", phase)
+    if not _plague_on_board(state) \
+            or (seat is not None and seat in state.alive_set(phase)):
+        return seat
+    for who in plague_holders(world, state, "ScarletWoman", phase):
+        if who in state.alive_set(phase):
+            return who
+    return seat
+
+
 def scarlet_woman_takes_over(world, state, phase):
     """Does the Scarlet Woman become the Demon if it dies at this phase?
 
@@ -206,7 +224,7 @@ def scarlet_woman_takes_over(world, state, phase):
     still alive when the Demon goes. She takes priority over any other
     Minion, so when this is true there is no choice to be made.
     """
-    seat = world.find_at("ScarletWoman", phase)
+    seat = scarlet_seat(world, state, phase)
     if seat is None:
         return False
     alive = state.alive_at(phase)
@@ -227,7 +245,7 @@ def starpass_heirs(world, state, phase):
     if not minions:
         return []
     if scarlet_woman_takes_over(world, state, phase):
-        return [world.find_at("ScarletWoman", phase)]
+        return [scarlet_seat(world, state, phase)]
     return minions
 
 
@@ -304,7 +322,12 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             # so every rule after it sees it (a Demon's Farmer dying at
             # night). What it gives a new Demon is told with each story
             # (`boffin_new_demon_stories`, 26.10.2026).
-            "a_boffin_gives_the_demon": -1}
+            "a_boffin_gives_the_demon": -1,
+            # The Plague Doctor's death gives the Storyteller an ability
+            # (28.10.2026): read off the deaths on the board, first too,
+            # so every rule after it — a Scarlet Woman's handover — sees
+            # it. After the Boffin, whose Demon may hold it (H Weg 1).
+            "a_plague_doctor_gives_the_storyteller": -1}
 
 
 # Whose turn each rule is (Hatter stage 3b, 23.10.2026): the rule reads
@@ -489,6 +512,11 @@ def possible_timelines(world, state, cap=128):
     if _boffin_on_board(state):
         seen = sum(1 for k in state.script.keys if k in BOFFIN_SEEN)
         cap *= 1 + seen
+    # And for every ability the Storyteller may have gained (28.10.2026).
+    if _plague_on_board(state):
+        cap *= 1 + sum(1 for k in state.script.keys if k in PLAGUE_SEEN) \
+            + state.n_players * sum(1 for k in state.script.keys
+                                    if k in PLAGUE_MINION_SEEN)
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -816,7 +844,7 @@ def the_scarlet_woman_steps_up(view, state, phase, character):
         return []
     if not scarlet_woman_takes_over(view, state, phase):
         return []
-    return [Change(phase, view.find_at("ScarletWoman", phase), character)]
+    return [Change(phase, scarlet_seat(view, state, phase), character)]
 
 
 @transition_rule
@@ -2683,6 +2711,9 @@ BOFFIN_SEEN = frozenset({
     "BountyHunter",
     # Its choice is a story of its own (M Weg 2), `_philosopher_choices`.
     "Philosopher",
+    # Its death gives the Storyteller a Minion ability (H Weg 1 of the
+    # Plague Doctor, 28.10.2026).
+    "PlagueDoctor",
 })
 
 # Named by a Boffin row, still "nothing the town sees" (O, P and Q Weg 1,
@@ -2989,6 +3020,192 @@ def boffin_unreckoned(view, state):
     return None
 
 
+# --------------------------------------------------------------------------
+# The Plague Doctor (28.10.2026, claude/pestdoktor-lesarten.md)
+# --------------------------------------------------------------------------
+# "If you die, the Storyteller gains a Minion ability." Patrick's answers
+# of 28.10.2026, all Weg 1 but B:
+#
+# * B Weg 3: which ability is a story. Each that changes what the town
+#   sees is one of its own; the others are one, "nothing the town sees",
+#   weighed as many as it holds — as for the Boffin. A row
+#   (`PlagueDoctorGave`) names it, and only that one is told.
+# * C: any Minion of the script, one in play too.
+# * D: from its death on, the night it died too.
+# * E: the Spy's, the Scarlet Woman's, the Wraith's, the Fearmonger's and
+#   the Goblin's go to a living Minion instead (their jinxes), each Minion
+#   a story; with none alive the Storyteller gains another.
+# * G: every death of a Plague Doctor gives one more.
+# * H: a Philosopher that took it, and a Demon the Boffin gave it, give
+#   one when they die; a real one their Philosopher drunk gives none.
+#
+# Stage 1 (A Weg 1) reckons what poisons, kills or changes an execution,
+# and those five. Whether the Plague Doctor was sober when it died is not
+# asked: a drunk one gives nothing, and "nothing the town sees" is that
+# story already.
+
+# What the Storyteller holds that the town can see, stage 1.
+PLAGUE_SEEN = frozenset({
+    # Who is poisoned.
+    "Poisoner", "Widow", "Xaan",
+    # Who dies at night: the town sees a body nothing else explains.
+    "Godfather", "Assassin",
+    # Executions and deaths by day that only these explain.
+    "Witch", "Cerenovus", "DevilsAdvocate", "Mastermind",
+})
+
+# Their jinxes: a Minion gains these instead (E Weg 1).
+PLAGUE_TO_A_MINION = frozenset({"Spy", "ScarletWoman", "Wraith",
+                                "Fearmonger", "Goblin"})
+# Of those, what the town can see.
+PLAGUE_MINION_SEEN = frozenset({"ScarletWoman", "Fearmonger", "Goblin"})
+
+# Stage 2 (A Weg 1): abilities that change characters or sides — the
+# Pit-Hag's, the Mezepheles's, the Summoner's, the Boffin's, and the four
+# whose jinx makes a player something (F). Until then they are "nothing
+# the town sees", and a story where one may show is not reckoned
+# (`plague_unreckoned`).
+PLAGUE_STAGE_2 = frozenset({"PitHag", "Mezepheles", "Summoner", "Boffin",
+                            "Baron", "EvilTwin", "Boomdandy",
+                            "Marionette"})
+
+
+def _plague_on_board(state):
+    """A Plague Doctor on the script."""
+    return "PlagueDoctor" in state.script.keys
+
+
+def plague_rows(state):
+    """The Plague Doctor rows that name a Minion of the script."""
+    return [i for i in state.infos if isinstance(i, PlagueDoctorGave)
+            and i.given(state) is not None]
+
+
+def plague_moments(view, state):
+    """Every moment a Plague Doctor died in this story, and whose death it
+    was: [(phase, seat)] in time order. The one holding it, a Philosopher
+    that took it, a Demon the Boffin gave it (H Weg 1) — not a real one
+    its Philosopher had drunk (`falls_as`)."""
+    out = []
+    for seat, phase in state.death_phases():
+        if falls_as(view, state, seat, "PlagueDoctor", phase):
+            out.append((phase, seat))
+    return sorted(out, key=lambda m: (phase_index(m[0]), m[1]))
+
+
+def plague_may_give(view, state, phase):
+    """Every Minion ability the Storyteller may gain at this moment: a
+    Minion of the script the solver reasons about (C Weg 1) — one of the
+    five jinxed ones only while a Minion lives to take it (E Weg 1)."""
+    alive = state.alive_set(phase)
+    minions = [m for m in range(state.n_players)
+               if m in alive and view.team_at(m, phase) == "minion"]
+    out = []
+    for key in state.script.keys:
+        if TEAM.get(key) != "minion" or not CHARACTERS[key].modelled:
+            continue
+        if key in PLAGUE_TO_A_MINION and not minions:
+            continue
+        out.append(key)
+    return out, minions
+
+
+def _plague_seen_here(key, view, phase):
+    """Does this ability, gained at this moment, change what the town
+    sees? The Xaan only while its night is still to come."""
+    if key == "Xaan":
+        x = _xaan_x(view)
+        return x >= 1 and phase_index(phase) <= phase_index(f"N{x}")
+    return key in PLAGUE_SEEN or key in PLAGUE_MINION_SEEN
+
+
+def _xaan_x(view):
+    """A Xaan's X: the Outsiders dealt, whatever happened since."""
+    base = view.world if isinstance(view, Timeline) else view
+    return sum(1 for r in base.roles if TEAM.get(r) == "outsider")
+
+
+def plague_offers(view, state, phase):
+    """Every ability the Storyteller may have gained at this moment, as
+    [((mark,), cost)] — "nothing the town sees" first. Seen ones cost one
+    over how many it holds, so the shares go as a random pick would; one
+    a Minion gains is split over the Minions."""
+    may, minions = plague_may_give(view, state, phase)
+    named = None
+    for info in plague_rows(state):
+        if info.night == int(phase[1:]):
+            named = info.given(state)
+    if named is not None:
+        if named not in may:
+            return []
+        may = [named]
+    seen = [k for k in may if _plague_seen_here(k, view, phase)]
+    unseen = len(may) - len(seen)
+    # From its death on (D Weg 1). Which turn of the night it died at is
+    # not on the board, so a death at night counts from the night's start:
+    # a world is kept rather than lost. A change with no slot would stand
+    # at the night's end.
+    slot = SETUP_SLOT if phase[:1] == "N" else None
+    out = []
+    if unseen:
+        out.append(((plague_gift_change(phase, STORYTELLER, PLAGUE_UNSEEN,
+                                        slot),), 1.0))
+    each = 1.0 / unseen if unseen else 1.0
+    for key in seen:
+        if key in PLAGUE_TO_A_MINION:
+            out.extend(((plague_gift_change(phase, m, key, slot),),
+                        each / len(minions)) for m in minions)
+        else:
+            out.append(((plague_gift_change(phase, STORYTELLER, key, slot),),
+                        each))
+    return out
+
+
+@transition_rule
+def a_plague_doctor_gives_the_storyteller(world, state):
+    """Every Minion ability the Storyteller may have gained, at each death
+    of a Plague Doctor: [(changes, cost)]."""
+    if not _plague_on_board(state):
+        return [((), 1.0)]
+    moments = plague_moments(world, state)
+    if not moments:
+        return [((), 1.0)]
+    stories = [((), 1.0)]
+    for phase, _seat in moments:
+        offers = plague_offers(world, state, phase)
+        if not offers:
+            return []                     # a row names what it cannot be
+        stories = [(changes + way, cost * c)
+                   for changes, cost in stories for way, c in offers]
+    return stories
+
+
+def plague_unreckoned(view, state):
+    """What the Plague Doctor leaves out that stage 1 does not reckon, or
+    None: a Storyteller who may hold a stage 2 ability that shows here —
+    the Pit-Hag's, the Mezepheles's, the Summoner's, the Boffin's, the
+    Marionette's always; the Baron's, the Evil Twin's and the Boomdandy's
+    where a row from its death on could be theirs (F Weg 1)."""
+    if not _plague_on_board(state):
+        return None
+    marks = [c for c in getattr(view, "changes", ())
+             if isinstance(c, PlagueGift)]
+    if not any(c.gift == PLAGUE_UNSEEN for c in marks):
+        return None
+    first = min(int(c.phase[1:]) for c in marks)
+    keys = state.script.keys
+    if any(k in keys for k in ("PitHag", "Mezepheles", "Summoner", "Boffin",
+                                "Marionette")):
+        return "plague doctor"
+    rows = {"Baron": BecameInfo, "EvilTwin": EvilTwinPair,
+            "Boomdandy": BoomdandyExploded}
+    for key, kind in rows.items():
+        if key in keys and any(isinstance(i, kind) and i.night >= first
+                               for i in state.infos):
+            return "plague doctor"
+    return None
+
+
 def hatter_unreckoned(view, state):
     """What this story leaves out that the solver does not reckon yet, or
     None: Lil' Monsta taken in the middle of the game ("lil monsta", U Weg
@@ -2998,7 +3215,8 @@ def hatter_unreckoned(view, state):
     (`engineer_unreckoned`, 26.10.2026)."""
     if not _hatter_on_board(state):
         return engineer_unreckoned(view, state) \
-            or boffin_unreckoned(view, state)
+            or boffin_unreckoned(view, state) \
+            or plague_unreckoned(view, state)
     final = phase_index(state.final_phase())
     for _seat, phase in hatter_deaths(view, state):
         night = _tea_night(phase)
@@ -3023,7 +3241,8 @@ def hatter_unreckoned(view, state):
                 p in alive and TEAM[view.role_at(p, before)] == "demon"
                 for p in range(n)):
             return "lil monsta"
-    return engineer_unreckoned(view, state) or boffin_unreckoned(view, state)
+    return engineer_unreckoned(view, state) \
+        or boffin_unreckoned(view, state) or plague_unreckoned(view, state)
 
 
 @impairment.source_rule
@@ -3110,11 +3329,12 @@ def _mastermind_day(world, state, phase, holder):
     if not _executed(state, day, holder):
         return False
     seat = world.find_at("Mastermind", phase)
-    if seat is None or seat not in state.alive_set(phase):
+    told = storyteller_has(world, "Mastermind", phase)
+    if (seat is None or seat not in state.alive_set(phase)) and not told:
         return False
     # Hanged itself, babysitting Lil' Monsta: dead, it has no ability to
     # buy the day with (21.10.2026).
-    if seat == holder:
+    if seat == holder and not told:
         return False
     latest = phase_index(state.final_phase())
     return latest <= phase_index(f"D{day + 1}")
@@ -3153,7 +3373,7 @@ def _the_scarlet_woman_babysits(world, state):
     if not fell:
         return [()]
     at, seat = fell[0].phase, fell[0].seat
-    scarlet = world.find_at("ScarletWoman", at)
+    scarlet = scarlet_seat(world, state, at)
     if scarlet is None or scarlet == seat \
             or not scarlet_woman_takes_over(world, state, at):
         return []
@@ -3540,6 +3760,11 @@ def survives_execution_rule(fn):
     return fn
 
 
+# A Devil's Advocate's ability the Storyteller holds, among the seats that
+# may have saved somebody from the gallows (28.10.2026): no seat at all.
+STORYTELLER_SAVES = "storyteller"
+
+
 def survivals_of(world, state, day, seat, but=None):
     out = []
     for rule in SURVIVES_EXECUTION_RULES:
@@ -3563,6 +3788,10 @@ def a_devils_advocate_saves_from_the_gallows(world, state, day, seat):
     if not _in_bag(state, "DevilsAdvocate"):
         return []
     phase = f"N{day}"
+    # The Storyteller's, the Plague Doctor's gift (28.10.2026): nothing
+    # has to have been working. "Different to last night" is not held to.
+    if storyteller_has(world, "DevilsAdvocate", phase):
+        return [STORYTELLER_SAVES]
     advocate = world.find_at("DevilsAdvocate", phase)
     if advocate is None or advocate not in state.alive_set(phase):
         return []
@@ -4204,7 +4433,10 @@ def a_godfather_answers_an_outsider(world, state, night):
         return []
     phase = f"N{night}"
     seat = world.find_at("Godfather", phase)
-    if seat is None or seat not in state.alive_set(phase):
+    # The Storyteller's, the Plague Doctor's gift (28.10.2026): nothing
+    # stops it.
+    told = storyteller_has(world, "Godfather", phase)
+    if (seat is None or seat not in state.alive_set(phase)) and not told:
         return []
     day = f"D{night - 1}"
     lost = any(day in state.died_at(who)
@@ -4212,12 +4444,21 @@ def a_godfather_answers_an_outsider(world, state, night):
                for who in (state.deaths or {}))
     if not lost:
         return []
-    return [death_causes.Cause(
-        name="Godfather", kind=death_causes.OTHER,
-        seats=frozenset(range(state.n_players)), capacity=1, must_fire=True,
-        # Drunk or poisoned it kills nobody, and so does one that chose
-        # the Goon first: a quiet night stopped at its source.
-        actor=seat)]
+    out = []
+    if seat is not None and seat in state.alive_set(phase):
+        out.append(death_causes.Cause(
+            name="Godfather", kind=death_causes.OTHER,
+            seats=frozenset(range(state.n_players)), capacity=1,
+            must_fire=True,
+            # Drunk or poisoned it kills nobody, and so does one that
+            # chose the Goon first: a quiet night stopped at its source.
+            actor=seat))
+    if told:
+        out.append(death_causes.Cause(
+            name="Godfather (Storyteller)", kind=death_causes.OTHER,
+            seats=frozenset(range(state.n_players)), capacity=1,
+            must_fire=True))
+    return out
 
 
 @death_causes.cause_rule
@@ -4235,17 +4476,26 @@ def an_assassin_kills_through_anything(world, state, night):
     if not _in_bag(state, "Assassin") or night < 2:
         return []
     phase = f"N{night}"
+    out = []
+    # The Storyteller's, the Plague Doctor's gift (28.10.2026): once a
+    # game as well, which is not held to here — a world is kept rather
+    # than lost.
+    if storyteller_has(world, "Assassin", phase):
+        out.append(death_causes.Cause(
+            name="Assassin (Storyteller)", kind=death_causes.OTHER,
+            seats=frozenset(range(state.n_players)), capacity=1,
+            cost=ASSASSIN_STRIKE_PENALTY, unstoppable=True))
     seat = world.find_at("Assassin", phase)
     if seat is None or seat not in state.alive_set(phase):
-        return []
+        return out
     spent = [info.night for info in state.infos
              if getattr(info, "source_role", None) == "Assassin"]
     if spent and night not in spent:
-        return []                         # used on some other night
+        return out                        # used on some other night
     return [death_causes.Cause(
         name="Assassin", kind=death_causes.OTHER,
         seats=frozenset(range(state.n_players)), capacity=1,
-        cost=ASSASSIN_STRIKE_PENALTY, unstoppable=True)]
+        cost=ASSASSIN_STRIKE_PENALTY, unstoppable=True)] + out
 
 
 @death_causes.cause_rule
@@ -5905,6 +6155,11 @@ def _plain_failures(world, state, outcome=None):
     # The one who did it has to have been working, which is why this
     # demands them rather than merely wanting them.
     for day, seat in sorted((state.witch_deaths or {}).items()):
+        # The Storyteller's curse, the Plague Doctor's gift (28.10.2026):
+        # nothing to have been working, while more than 3 live.
+        if storyteller_has(world, "Witch", f"N{day}") \
+                and len(state.alive_set(f"D{day}")) > 3:
+            continue
         witch = world.find_at("Witch", f"N{day}")
         # "If just 3 players live, you lose this ability" — and the curse
         # goes with it, so nobody drops dead nominating at a table of
@@ -5925,6 +6180,9 @@ def _plain_failures(world, state, outcome=None):
         invented *= YAGGABABBLE_BY_DAY_PENALTY
         working.setdefault(day, set()).add(yagga)
     for day, seat in sorted((state.madness_executions or {}).items()):
+        # The Storyteller's, the Plague Doctor's gift (28.10.2026).
+        if storyteller_has(world, "Cerenovus", f"N{day}"):
+            continue
         maddener = world.find_at("Cerenovus", f"N{day}")
         if maddener is None or not minion_still_acts(world, state, maddener,
                                                      f"N{day}"):
@@ -5968,14 +6226,17 @@ def _plain_failures(world, state, outcome=None):
         mastermind = world.find_at("Mastermind", change.phase)
         if mastermind is None \
                 or mastermind not in state.alive_set(change.phase):
-            return None, None, 1.0, None
-        working.setdefault(day, set()).add(mastermind)
+            # The Storyteller's, the Plague Doctor's gift (28.10.2026).
+            if not storyteller_has(world, "Mastermind", change.phase):
+                return None, None, 1.0, None
+        else:
+            working.setdefault(day, set()).add(mastermind)
         # Not when she is the one executed: a Scarlet Woman babysitting
         # Lil' Monsta (21.10.2026).
         if scarlet_woman_takes_over(world, state, change.phase) \
-                and world.find_at("ScarletWoman", change.phase) \
+                and scarlet_seat(world, state, change.phase) \
                 != change.seat:
-            failures[day].add(world.find_at("ScarletWoman", change.phase))
+            failures[day].add(scarlet_seat(world, state, change.phase))
 
     # The Summoner (21.10.2026): working when it made the Demon — unless a
     # Courtier or a Preacher took its ability, and the Storyteller made it
@@ -6222,6 +6483,8 @@ def _plain_failures(world, state, outcome=None):
         survivors = set(survivals_of(world, state, day, seat))
         if not survivors:
             return None, None, 1.0, None  # nothing here survives an execution
+        if STORYTELLER_SAVES in survivors:
+            continue                      # nobody's sobriety to ask
         # One of them did it, and that one was working. With a single
         # candidate that is a demand; with several it is "one of these",
         # which the plan cannot hold — it knows sets, not alternatives.
@@ -7501,6 +7764,39 @@ def a_xaan_poisons_the_town(world, state, night):
     cost = (lambda who: 1.0) if went else 1.0
     return [impairment.Source("Xaan", town, capacity=len(town), cost=cost,
                               repeat_cost=cost, actor=xaan)]
+
+
+@impairment.source_rule
+def the_storyteller_poisons(world, state, night):
+    """A Poisoner's, a Widow's or a Xaan's ability the Storyteller gained
+    when the Plague Doctor died (28.10.2026, stage 1). Nobody holds it, so
+    nothing stops it and nobody's sobriety it rests on: the Poisoner picks
+    anybody alive each night, priced as the Poisoner is; the Widow anybody,
+    free, as the Widow is; the Xaan every Townsfolk on its night X, if
+    that night is not past (the Outsiders dealt, as for the Xaan)."""
+    if not _plague_on_board(state):
+        return []
+    phase = f"N{night}"
+    have = world.plague_at(STORYTELLER, phase)
+    if not have:
+        return []
+    out = []
+    if "Poisoner" in have:
+        out.append(impairment.Source(
+            "Poisoner (Storyteller)", state.alive_set(phase), capacity=1,
+            cost=POISON_HIT_PENALTY, repeat_cost=POISON_REPEAT_PENALTY))
+    if "Widow" in have:
+        free = lambda who: 1.0
+        out.append(impairment.Source(
+            "Widow (Storyteller)", frozenset(range(state.n_players)),
+            capacity=1, cost=free, repeat_cost=free))
+    if "Xaan" in have and night == _xaan_x(world):
+        town = frozenset(p for p in range(state.n_players)
+                         if world.team_at(p, phase) == "townsfolk")
+        if town:
+            out.append(impairment.Source("Xaan", town, capacity=len(town),
+                                         cost=1.0, repeat_cost=1.0))
+    return out
 
 
 @impairment.source_rule

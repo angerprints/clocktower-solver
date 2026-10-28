@@ -24,10 +24,10 @@ import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
         summonerWorld, teaParty, turnedEvil, engineered, boffinGift,
-        bracketGifts}
+        bracketGifts, plagueGift}
   from "./worlds.mjs";
 import {aLeviathanIsToldOf, demonHolding, summonedBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
-        pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
+        pixieGain, survivalsOf, teaLadyFailedAtTheGallows, STORYTELLER_SAVES}
   from "./characters.rules.mjs";
 import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide, fallsAs,
         fauxPawLycanthrope,
@@ -36,7 +36,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         livingNeighbours, takenByAPhilosopher, tookIt, wentOnAfter,
         babysitterAt, engineerChosen, boffinGiven, BOFFIN_NEVER_GIVES,
         BOFFIN_UNSEEN, boffinGiftOf, boffinHolders, boffinSeat, soberSeat,
-        boffinAbilities, boffinPhilosophy, hasBoffinAbility}
+        boffinAbilities, boffinPhilosophy, hasBoffinAbility,
+        PLAGUE_UNSEEN, STORYTELLER, plagueGiven, plagueHolders, storytellerHas}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -62,8 +63,20 @@ export const inventionCost = info =>
  * when the Demon goes. She takes priority over any other Minion, so when
  * this is true there is no choice to be made.
  */
-export function scarletWomanTakesOver(world, state, phase) {
+/** Who has the Scarlet Woman's ability now: the one holding her — or a
+ * Minion the Plague Doctor's death gave it (their jinx, 28.10.2026, E Weg
+ * 1), where she is not alive to have it. See solver.py. */
+export function scarletSeat(world, state, phase) {
   const seat = world.findAt("ScarletWoman", phase);
+  if (!plagueOnBoard(state)
+      || (seat !== null && state.aliveSet(phase).has(seat))) return seat;
+  for (const who of plagueHolders(world, state, "ScarletWoman", phase))
+    if (state.aliveSet(phase).has(who)) return who;
+  return seat;
+}
+
+export function scarletWomanTakesOver(world, state, phase) {
+  const seat = scarletSeat(world, state, phase);
   if (seat === null) return false;
   const alive = state.aliveAt(phase);
   return alive.includes(seat) && alive.length >= 5;
@@ -82,7 +95,7 @@ export function starpassHeirs(world, state, phase) {
     if (world.teamAt(m, phase) === "minion" && alive.has(m)) minions.push(m);
   if (!minions.length) return [];
   if (scarletWomanTakesOver(world, state, phase))
-    return [world.findAt("ScarletWoman", phase)];
+    return [scarletSeat(world, state, phase)];
   return minions;
 }
 
@@ -139,6 +152,9 @@ const ACTS_AT = {
   // The Boffin gives the Demon an ability at the setup — first, so every
   // rule after it sees it (26.10.2026). See solver.py.
   aBoffinGivesTheDemon: -1,
+  // The Plague Doctor's death gives the Storyteller an ability
+  // (28.10.2026): first too, after the Boffin. See solver.py.
+  aPlagueDoctorGivesTheStoryteller: -1,
 };
 
 export const transitionRule = fn => (
@@ -282,6 +298,11 @@ export function possibleTimelines(world, state, cap = 128) {
     const seen = state.script.keys.filter(k => BOFFIN_SEEN.has(k)).length;
     cap *= 1 + seen;
   }
+  // And for every ability the Storyteller may have gained (28.10.2026).
+  if (plagueOnBoard(state))
+    cap *= 1 + state.script.keys.filter(k => PLAGUE_SEEN.has(k)).length
+      + state.nPlayers * state.script.keys.filter(
+        k => PLAGUE_MINION_SEEN.has(k)).length;
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -695,7 +716,7 @@ heirRule(function anOutsiderBecomesTheFangGu(view, state, phase, character) {
 heirRule(function theScarletWomanStepsUp(view, state, phase, character) {
   if (phase[0].toUpperCase() === "N" && STARPASSES.has(character)) return [];
   if (!scarletWomanTakesOver(view, state, phase)) return [];
-  return [change(phase, view.findAt("ScarletWoman", phase), character)];
+  return [change(phase, scarletSeat(view, state, phase), character)];
 });
 
 /** Was this seat executed on this day by any route the rules call an
@@ -719,9 +740,11 @@ function mastermindDay(world, state, phase, holder) {
   const day = parseInt(phase.slice(1), 10);
   if (!executed(state, day, holder)) return false;
   const seat = world.findAt("Mastermind", phase);
-  if (seat === null || !state.aliveSet(phase).has(seat)) return false;
+  const told = storytellerHas(world, "Mastermind", phase);
+  if ((seat === null || !state.aliveSet(phase).has(seat)) && !told)
+    return false;
   // Hanged itself, babysitting Lil' Monsta: it has no day to buy.
-  if (seat === holder) return false;
+  if (seat === holder && !told) return false;
   return phaseIndex(state.finalPhase()) <= phaseIndex(`D${day + 1}`);
 }
 
@@ -749,7 +772,7 @@ function theScarletWomanBabysits(world, state) {
   const fell = (world.changes || []).filter(c => c.fell);
   if (!fell.length) return [[]];
   const at = fell[0].phase, seat = fell[0].seat;
-  const scarlet = world.findAt("ScarletWoman", at);
+  const scarlet = scarletSeat(world, state, at);
   if (scarlet === null || scarlet === seat
       || !scarletWomanTakesOver(world, state, at)) return [];
   const index = phaseIndex(at) + 1;
@@ -1837,7 +1860,8 @@ export function teaParties(world) {
  * stage 3c). See solver.py. */
 export function hatterUnreckoned(view, state) {
   if (!hatterOnBoard(state))
-    return engineerUnreckoned(view, state) ?? boffinUnreckoned(view, state);
+    return engineerUnreckoned(view, state) ?? boffinUnreckoned(view, state)
+      ?? plagueUnreckoned(view, state);
   const final = phaseIndex(state.finalPhase());
   for (const [, phase] of hatterDeaths(view, state)) {
     const night = teaNight(phase);
@@ -1858,7 +1882,8 @@ export function hatterUnreckoned(view, state) {
       if (demonAlive) return "lil monsta";
     }
   }
-  return engineerUnreckoned(view, state) ?? boffinUnreckoned(view, state);
+  return engineerUnreckoned(view, state) ?? boffinUnreckoned(view, state)
+    ?? plagueUnreckoned(view, state);
 }
 
 // --------------------------------------------------------------------
@@ -2032,6 +2057,9 @@ export const BOFFIN_SEEN = new Set([
   // Stage 2 (N, H, E and M; 26./27.10.2026). See solver.py.
   "Engineer", "Nightwatchman", "Pixie", "Professor", "Huntsman",
   "BountyHunter", "Philosopher",
+  // Its death gives the Storyteller a Minion ability (H Weg 1 of the
+  // Plague Doctor, 28.10.2026).
+  "PlagueDoctor",
 ]);
 
 /** Named by a Boffin row, still "nothing the town sees" (O, P, Q). */
@@ -2306,6 +2334,132 @@ export function engineerUnreckoned(view, state) {
                () => view.demonsAt(`N${info.night}`).length) > 1)
       return "engineer";
   }
+  return null;
+}
+
+// --------------------------------------------------------------------
+// The Plague Doctor (28.10.2026, claude/pestdoktor-lesarten.md). See
+// solver.py.
+// --------------------------------------------------------------------
+
+/** What the Storyteller holds that the town can see, stage 1. */
+export const PLAGUE_SEEN = new Set([
+  "Poisoner", "Widow", "Xaan", "Godfather", "Assassin",
+  "Witch", "Cerenovus", "DevilsAdvocate", "Mastermind",
+]);
+/** Their jinxes: a Minion gains these instead (E Weg 1). */
+export const PLAGUE_TO_A_MINION = new Set(["Spy", "ScarletWoman", "Wraith",
+                                           "Fearmonger", "Goblin"]);
+/** Of those, what the town can see. */
+export const PLAGUE_MINION_SEEN = new Set(["ScarletWoman", "Fearmonger",
+                                           "Goblin"]);
+/** Stage 2: what changes characters or sides. See solver.py. */
+export const PLAGUE_STAGE_2 = new Set(["PitHag", "Mezepheles", "Summoner",
+  "Boffin", "Baron", "EvilTwin", "Boomdandy", "Marionette"]);
+
+const plagueOnBoard = state => state.script.keys.includes("PlagueDoctor");
+
+/** The Plague Doctor rows that name a Minion of the script. */
+export const plagueRows = state => state.infos.filter(
+  i => i.type === "PlagueDoctorGave" && plagueGiven(i, state) !== null);
+
+/** Every moment a Plague Doctor died in this story, and whose death it
+ * was: [[phase, seat]] in time order. See solver.py. */
+export function plagueMoments(view, state) {
+  const out = [];
+  for (const [seat, phase] of state.deathPhases())
+    if (fallsAs(view, state, Number(seat), "PlagueDoctor", phase))
+      out.push([phase, Number(seat)]);
+  return out.sort((a, b) => phaseIndex(a[0]) - phaseIndex(b[0]) || a[1] - b[1]);
+}
+
+/** Every Minion ability the Storyteller may gain at this moment, and the
+ * living Minions: [may, minions]. See solver.py. */
+export function plagueMayGive(view, state, phase) {
+  const alive = state.aliveSet(phase);
+  const minions = [];
+  for (let m = 0; m < state.nPlayers; m++)
+    if (alive.has(m) && view.teamAt(m, phase) === "minion") minions.push(m);
+  const out = [];
+  for (const key of state.script.keys) {
+    if (TEAM[key] !== "minion" || !CHARACTERS[key].modelled) continue;
+    if (PLAGUE_TO_A_MINION.has(key) && !minions.length) continue;
+    out.push(key);
+  }
+  return [out, minions];
+}
+
+/** A Xaan's X: the Outsiders dealt. */
+const xaanX = view => (view instanceof Timeline ? view.world : view).roles
+  .filter(r => TEAM[r] === "outsider").length;
+
+function plagueSeenHere(key, view, phase) {
+  if (key === "Xaan") {
+    const x = xaanX(view);
+    return x >= 1 && phaseIndex(phase) <= phaseIndex(`N${x}`);
+  }
+  return PLAGUE_SEEN.has(key) || PLAGUE_MINION_SEEN.has(key);
+}
+
+/** Every ability the Storyteller may have gained at this moment, as
+ * [[marks], cost] — "nothing the town sees" first. See solver.py. */
+export function plagueOffers(view, state, phase) {
+  let [may, minions] = plagueMayGive(view, state, phase);
+  let named = null;
+  for (const info of plagueRows(state))
+    if (info.night === parseInt(phase.slice(1), 10))
+      named = plagueGiven(info, state);
+  if (named !== null) {
+    if (!may.includes(named)) return [];
+    may = [named];
+  }
+  const seen = may.filter(k => plagueSeenHere(k, view, phase));
+  const unseen = may.length - seen.length;
+  // From its death on (D Weg 1): a death at night counts from the night's
+  // start. See solver.py.
+  const slot = phase[0] === "N" ? SETUP_SLOT : null;
+  const out = [];
+  if (unseen)
+    out.push([[plagueGift(phase, STORYTELLER, PLAGUE_UNSEEN, slot)], 1.0]);
+  const each = unseen ? 1.0 / unseen : 1.0;
+  for (const key of seen) {
+    if (PLAGUE_TO_A_MINION.has(key))
+      for (const m of minions)
+        out.push([[plagueGift(phase, m, key, slot)], each / minions.length]);
+    else out.push([[plagueGift(phase, STORYTELLER, key, slot)], each]);
+  }
+  return out;
+}
+
+transitionRule(function aPlagueDoctorGivesTheStoryteller(world, state) {
+  if (!plagueOnBoard(state)) return [[[], 1.0]];
+  const moments = plagueMoments(world, state);
+  if (!moments.length) return [[[], 1.0]];
+  let stories = [[[], 1.0]];
+  for (const [phase] of moments) {
+    const offers = plagueOffers(world, state, phase);
+    if (!offers.length) return [];        // a row names what it cannot be
+    stories = stories.flatMap(([changes, cost]) =>
+      offers.map(([way, c]) => [[...changes, ...way], cost * c]));
+  }
+  return stories;
+});
+
+/** What the Plague Doctor leaves out that stage 1 does not reckon, or
+ * null. See solver.py. */
+export function plagueUnreckoned(view, state) {
+  if (!plagueOnBoard(state)) return null;
+  const marks = (view.changes || []).filter(c => c.plague);
+  if (!marks.some(c => c.gift === PLAGUE_UNSEEN)) return null;
+  const first = Math.min(...marks.map(c => parseInt(c.phase.slice(1), 10)));
+  const keys = state.script.keys;
+  if (["PitHag", "Mezepheles", "Summoner", "Boffin", "Marionette"]
+      .some(k => keys.includes(k))) return "plague doctor";
+  const rows = {Baron: "Became", EvilTwin: "EvilTwinPair",
+                Boomdandy: "BoomdandyExploded"};
+  for (const [key, kind] of Object.entries(rows))
+    if (keys.includes(key) && state.infos.some(
+      i => i.type === kind && i.night >= first)) return "plague doctor";
   return null;
 }
 
@@ -2698,6 +2852,9 @@ function plainFailures(world, state, outcome = {}) {
   // who did it has to have been working.
   for (const [day, seat] of Object.entries(state.witchDeaths || {})
        .sort((a, b) => Number(a[0]) - Number(b[0]))) {
+    // The Storyteller's curse, the Plague Doctor's gift (28.10.2026).
+    if (storytellerHas(world, "Witch", `N${day}`)
+        && state.aliveSet(`D${day}`).size > 3) continue;
     const witch = world.findAt("Witch", `N${day}`);
     // "If just 3 players live, you lose this ability" — and the curse
     // goes with it.
@@ -2715,6 +2872,8 @@ function plainFailures(world, state, outcome = {}) {
     (working[day] = working[day] || new Set()).add(yagga);
   }
   for (const [day, ] of Object.entries(state.madnessExecutions || {})) {
+    // The Storyteller's, the Plague Doctor's gift (28.10.2026).
+    if (storytellerHas(world, "Cerenovus", `N${day}`)) continue;
     const who = world.findAt("Cerenovus", `N${day}`);
     if (who === null || !minionStillActs(world, state, who, `N${day}`))
       return null;
@@ -2745,14 +2904,17 @@ function plainFailures(world, state, outcome = {}) {
     if (!isMastermindMarker(c)) continue;
     const day = parseInt(c.phase.slice(1), 10);
     const mastermind = world.findAt("Mastermind", c.phase);
-    if (mastermind === null || !state.aliveSet(c.phase).has(mastermind))
-      return null;
-    (working[day] = working[day] || new Set()).add(mastermind);
+    if (mastermind === null || !state.aliveSet(c.phase).has(mastermind)) {
+      // The Storyteller's, the Plague Doctor's gift (28.10.2026).
+      if (!storytellerHas(world, "Mastermind", c.phase)) return null;
+    } else {
+      (working[day] = working[day] || new Set()).add(mastermind);
+    }
     // Not when she is the one executed: a Scarlet Woman babysitting Lil'
     // Monsta (21.10.2026).
     if (scarletWomanTakesOver(world, state, c.phase)
-        && world.findAt("ScarletWoman", c.phase) !== c.seat)
-      fail(day, world.findAt("ScarletWoman", c.phase));
+        && scarletSeat(world, state, c.phase) !== c.seat)
+      fail(day, scarletSeat(world, state, c.phase));
   }
 
   // The Summoner (21.10.2026): working when it made the Demon, unless a
@@ -2975,6 +3137,7 @@ function plainFailures(world, state, outcome = {}) {
     if (state.executionDeath(day) !== null) continue;
     const survivors = new Set(survivalsOf(world, state, day, seat));
     if (!survivors.size) return null;     // nothing here survives one
+    if (survivors.has(STORYTELLER_SAVES)) continue;  // nobody's sobriety
     // One of them did it, and that one was working. With a single
     // candidate that is a demand; with several it is "one of these",
     // which the plan cannot hold. Demanding all of them threw out a
