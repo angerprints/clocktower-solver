@@ -166,6 +166,7 @@ SOURCE_TURNS = {"poisoner": "Poisoner",
                 "a_vigormortis_poisons_beside_its_dead_minions":
                     "Vigormortis",
                 "a_philosopher_drunks_whoever_had_it": "Philosopher",
+                "a_boffin_philosopher_drunks_whoever_had_it": "Philosopher",
                 "a_pukka_poisons_whoever_it_will_kill": "Pukka",
                 "a_sailor_drunks_one_of_two": "Sailor",
                 "a_courtier_names_a_character": "Courtier",

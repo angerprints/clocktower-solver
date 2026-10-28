@@ -23,7 +23,8 @@ import {SETUP_SLOT, readingAt} from "./worlds.mjs";
 import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
-        summonerWorld, teaParty, turnedEvil, engineered, boffinGift}
+        summonerWorld, teaParty, turnedEvil, engineered, boffinGift,
+        bracketGifts}
   from "./worlds.mjs";
 import {aLeviathanIsToldOf, demonHolding, summonedBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows}
@@ -34,7 +35,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         knowsItTurnedEvil, sideOpen,
         livingNeighbours, takenByAPhilosopher, tookIt, wentOnAfter,
         babysitterAt, engineerChosen, boffinGiven, BOFFIN_NEVER_GIVES,
-        BOFFIN_UNSEEN, boffinGiftOf, boffinHolders, boffinSeat, soberSeat}
+        BOFFIN_UNSEEN, boffinGiftOf, boffinHolders, boffinSeat, soberSeat,
+        boffinAbilities, boffinPhilosophy, hasBoffinAbility}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -594,6 +596,9 @@ export function barberClaimants(state) {
   // A Philosopher that wrote down taking the Barber (13.10.2026).
   for (const [who, [taken]] of Object.entries(state.philosophies() || {}))
     if (taken === "Barber") out.add(Number(who));
+  // A Boffin row naming it (L Weg 1): every seat. See solver.py.
+  if (boffinNames(state, "Barber"))
+    for (let p = 0; p < state.nPlayers; p++) out.add(p);
   return out;
 }
 
@@ -1179,6 +1184,10 @@ transitionRule(function aBountyHunterBringsAnEvilTownsfolk(world, state) {
   });
   if (dealt.includes("BountyHunter"))
     return town.map(p => [[turnedEvil("N0", p, "bountyhunter")], 1.0]);
+  // A Demon the Boffin gave it at the setup (E Weg 1, stage 2).
+  const demon = world.demonAt("N1");
+  if (demon !== null && boffinGiftOf(world, state, demon, "N1") === "BountyHunter")
+    return town.map(p => [[turnedEvil("N0", p, "bountyhunter")], 1.0]);
   const stories = [[[], 1.0]];
   for (const info of state.infos) {
     if (info.sourceRole !== "Philosopher" || info.role !== "BountyHunter"
@@ -1636,6 +1645,9 @@ export function hatterClaimants(state) {
       out.add(Number(info.player));
   for (const [who, [taken]] of Object.entries(state.philosophies() || {}))
     if (taken === "Hatter") out.add(Number(who));
+  // A Boffin row naming it (L Weg 1), as for the Barber.
+  if (boffinNames(state, "Hatter"))
+    for (let p = 0; p < state.nPlayers; p++) out.add(p);
   return out;
 }
 
@@ -2017,7 +2029,23 @@ export const BOFFIN_SEEN = new Set([
   "Virgin", "Saint", "Klutz", "Zealot",
   "Sweetheart", "Courtier", "Minstrel", "Preacher", "Goon",
   "Puzzlemaster",
+  // Stage 2 (N, H, E and M; 26./27.10.2026). See solver.py.
+  "Engineer", "Nightwatchman", "Pixie", "Professor", "Huntsman",
+  "BountyHunter", "Philosopher",
 ]);
+
+/** Named by a Boffin row, still "nothing the town sees" (O, P, Q). */
+export const BOFFIN_NAMED_UNSEEN = new Set([
+  "Butler", "Recluse", "Magician", "PoppyGrower", "Snitch", "Lunatic",
+  "CultLeader", "Alsaahir", "Mutant", "Damsel", "Atheist",
+]);
+
+/** Told only where a Boffin row names them (L Weg 1). See solver.py. */
+export const BOFFIN_ROW_ONLY = new Set(["Barber", "Hatter"]);
+
+/** Does a Boffin row name this character? */
+export const boffinNames = (state, role) => boffinOnBoard(state)
+  && boffinRows(state).some(info => boffinGiven(info, state) === role);
 
 const boffinOnBoard = state => state.script.keys.includes("Boffin");
 
@@ -2032,8 +2060,9 @@ export function boffinRows(state) {
   return out;
 }
 
-/** Every good character the Boffin could give at that moment (B Weg 1). */
-export function boffinMayGive(view, state, phase) {
+/** Every good character the Boffin could give at that moment (B Weg 1);
+ * at the setup only where what its bracket brings is in play (E Weg 1). */
+export function boffinMayGive(view, state, phase, setup = false) {
   const held = Array.from({length: state.nPlayers},
                           (_, p) => view.roleAt(p, phase));
   const out = [];
@@ -2042,6 +2071,8 @@ export function boffinMayGive(view, state, phase) {
     if (BOFFIN_NEVER_GIVES.has(key)) continue;
     const count = held.filter(r => r === key).length;
     if (count && count >= (CHARACTERS[key].copies || 1)) continue;
+    if (setup && (CHARACTERS[key].brings || []).some(o => !held.includes(o)))
+      continue;
     out.push(key);
   }
   return out;
@@ -2061,21 +2092,94 @@ function boffinNamed(state, night, setup) {
 /** Every ability the Boffin may have given this seat at that moment, as
  * [[mark], cost] — "nothing the town sees" first. */
 export function boffinOffers(view, state, phase, seat, slot, setup = false) {
-  const may = boffinMayGive(view, state, phase);
+  const may = boffinMayGive(view, state, phase, setup);
   const named = boffinNamed(state, parseInt(phase.slice(1), 10), setup);
+  // A deal only a gift's bracket explains has that gift (E Weg 1).
+  let forced = null;
+  if (setup) {
+    const base = view instanceof Timeline ? view.world : view;
+    forced = bracketGifts(base.roles, state.script, state.fabled || []);
+  }
+  if (forced !== null) {
+    const unseen = Math.max(1, may.filter(k => !BOFFIN_SEEN.has(k)).length);
+    return may.filter(k => forced.has(k) && (named === null || named === k))
+      .map(k => [[boffinGift(phase, seat, k, slot)],
+                 named === k ? 1.0 : 1.0 / unseen]);
+  }
   if (named !== null) {
     if (!may.includes(named)) return [];
-    const gift = BOFFIN_SEEN.has(named) ? named : BOFFIN_UNSEEN;
+    // Named, it is that ability (G Weg 1, stage 2) — except those that
+    // stay "nothing the town sees" whatever (O, P, Q). See solver.py.
+    if (named === "Philosopher")
+      return philosopherChoices(view, state, phase, seat, slot, 1.0);
+    const gift = BOFFIN_NAMED_UNSEEN.has(named) ? BOFFIN_UNSEEN : named;
     return [[[boffinGift(phase, seat, gift, slot)], 1.0]];
   }
   const seen = sampledGifts(view, phase, seat,
                            may.filter(k => BOFFIN_SEEN.has(k)));
+  // A reading on this seat makes that character a story (K Weg 2).
+  const said = readingsOf(state, seat)
+    .filter(k => may.includes(k) && !BOFFIN_SEEN.has(k));
   const unseen = may.filter(k => !BOFFIN_SEEN.has(k)).length;
   const out = [];
   if (unseen) out.push([[boffinGift(phase, seat, BOFFIN_UNSEEN, slot)], 1.0]);
   const each = unseen ? 1.0 / unseen : 1.0;
-  for (const k of seen) out.push([[boffinGift(phase, seat, k, slot)], each]);
+  for (const k of [...seen, ...said]) {
+    if (k === "Philosopher")
+      out.push(...philosopherChoices(view, state, phase, seat, slot, each));
+    else out.push([[boffinGift(phase, seat, k, slot)], each]);
+  }
   return out;
+}
+
+/** A Demon given the Philosopher's ability, with every choice it may have
+ * made (H and M Weg 2). See solver.py `_philosopher_choices`. */
+function philosopherChoices(view, state, phase, seat, slot, cost) {
+  const at = parseInt(phase.slice(1), 10);
+  const row = state.infos.find(info => info.type === "PhilosopherChoice"
+                               && info.player === seat && info.night >= at);
+  if (row) {
+    const since = row.night > at ? `N${row.night}` : phase;
+    return [[[boffinGift(phase, seat, boffinPhilosophy(row.role || "", since),
+                         slot)], cost]];
+  }
+  const held = new Set();
+  for (let p = 0; p < state.nPlayers; p++)
+    if (p !== seat) held.add(view.roleAt(p, phase));
+  const may = state.script.keys.filter(k =>
+    (TEAM[k] === "townsfolk" || TEAM[k] === "outsider")
+    && k !== "Philosopher" && !BOFFIN_NEVER_GIVES.has(k));
+  const shown = sampledGifts(view, phase, seat,
+                             may.filter(k => held.has(k) || BOFFIN_SEEN.has(k)));
+  const rest = Math.max(1, may.filter(k => !held.has(k)
+                                      && !BOFFIN_SEEN.has(k)).length);
+  const out = [[[boffinGift(phase, seat, boffinPhilosophy(BOFFIN_UNSEEN, phase),
+                            slot)], cost]];
+  for (const k of shown)
+    out.push([[boffinGift(phase, seat, boffinPhilosophy(k, phase), slot)],
+              cost / rest]);
+  return out;
+}
+
+/** The good characters whose readings this seat wrote down, in the order
+ * of the script (K Weg 2). See solver.py. */
+function readingsOf(state, seat) {
+  if (!state._readingsCache || state._readingsCache[0] !== state.infos
+      || state._readingsCache[1] !== state.infos.length) {
+    const bySeat = new Map();
+    for (const info of state.infos) {
+      const role = info.sourceRole;
+      if (!role || (TEAM[role] !== "townsfolk" && TEAM[role] !== "outsider"))
+        continue;
+      if (info.type === "BoffinGave" || !Number.isInteger(info.player))
+        continue;
+      if (!bySeat.has(info.player)) bySeat.set(info.player, new Set());
+      bySeat.get(info.player).add(role);
+    }
+    state._readingsCache = [state.infos, state.infos.length, bySeat];
+  }
+  const mine = state._readingsCache[2].get(seat) || new Set();
+  return state.script.keys.filter(k => mine.has(k));
 }
 
 /** While estimating, how many of the abilities the town can see each
@@ -2844,6 +2948,10 @@ function plainFailures(world, state, outcome = {}) {
                .sort((a, b) => b - a))
           if (state.aliveSet(phase).has(who) && who !== seat && !back.has(who)
               && tookIt(world, state, who, "Professor", phase)) got = who;
+        // And a Demon the Boffin gave it (stage 2). See solver.py.
+        if (got === null)
+          got = boffinHolders(world, state, "Professor", phase)
+            .find(who => who !== seat && !back.has(who)) ?? null;
         return got;
       });
       if (prof === null || !onBoard(state, "Professor")) return null;
@@ -3011,11 +3119,14 @@ function plainFailures(world, state, outcome = {}) {
     }
     // A Demon the Boffin gave this ability (26.10.2026): its own, worked
     // through the Boffin, weighed like the character's own (G Weg 1).
+    // On the first night "before it acted" is before the setup: asked of
+    // the night itself (stage 2). See solver.py.
+    const givenAt = info.night <= 1 ? phase : acted;
     if (held === ABSENT && seat !== null && role !== null && role !== undefined
-        && boffinGiftOf(world, state, seat, acted) === role)
+        && hasBoffinAbility(world, state, seat, role, givenAt))
       held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
     const sober = seat === null ? seat
-      : soberSeat(world, state, seat, role, acted);
+      : soberSeat(world, state, seat, role, givenAt);
     // A row told to somebody other than the holder. A Drunk holding the
     // token has no ability, so nobody else is woken for it. See solver.py.
     const witnessed = !!info.witnessed;
@@ -3319,6 +3430,9 @@ function leviathanDemands(world, state, fail, either) {
  * same question asked of the same cause.
  */
 /** A memo on this deal, good for this state in this epoch only. */
+/** How many nights `explainedNight` keeps per deal. */
+export const NIGHTS_MEMO_LIMIT = 20000;
+
 function memoFor(base, name, state) {
   let memo = base[name];
   if (!memo || memo.state !== state || memo.epoch !== state._epoch) {
@@ -3337,6 +3451,15 @@ function explainedNight(world, state, night, died) {
   const here = phaseIndex(`N${night}`);
   const upto = (world.changes || []).filter(c => momentOf(c) <= here);
   const memo = memoFor(base, "_nightsMemo", state);
+  // Past a limit it starts again from nothing: it only saves time (seed
+  // 2189 of the Boffin's gate). See solver.py.
+  if (memo.got.size >= NIGHTS_MEMO_LIMIT) {
+    // This night's are the ones that grew; earlier shared nights stay.
+    for (const key of [...memo.got.keys()])
+      if (key.startsWith(`${night}#`) || key.startsWith(`${night}?`))
+        memo.got.delete(key);
+    if (memo.got.size >= NIGHTS_MEMO_LIMIT) memo.got.clear();
+  }
   // And this telling's hidden choices (`hiddenChoices`).
   const hidden = state._hidden ? `|${state._hidden[0]}|${state._hidden[1]}` : "";
   if (!LISTENING) {                       // nobody turns evil that way here
@@ -3940,8 +4063,15 @@ export const STORIES = {explained: 0, recalled: 0, skipped: 0};
  * asked about. Neither changes an answer. See `_explain_or_recall` in
  * solver.py for the reasoning (11.10.2026, open item 52).
  * Returns [cost, marks, what was asked]. */
+/** How many different stories `explainOrRecall` keeps to recall by. */
+export const TOLD_BEFORE_LIMIT = 20000;
+
 function explainOrRecall(world, changes, state, withMarks, toldBefore) {
   const {flips, turns, restKey} = whoTurned(changes);
+  // Past a limit it starts again from nothing: recalling only saves time
+  // (seed 2189 of the Boffin's gate). See solver.py.
+  if (!toldBefore.has(restKey) && toldBefore.size >= TOLD_BEFORE_LIMIT)
+    toldBefore.clear();
   let before = toldBefore.get(restKey);
   if (!before) toldBefore.set(restKey, before = []);
   for (const [theirs, theirTurns, reads, cost, marks] of before) {

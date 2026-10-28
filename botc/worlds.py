@@ -853,8 +853,16 @@ def _bags(n_players, script=DEFAULT, fabled=()):
             # at a table with no Outsiders — that one is taken. Where
             # there is not, the character is in play and changes nothing:
             # a Vigormortis removes an Outsider "if there is one".
+            #
+            # What another character in the bag brings is not there to be
+            # taken away: a Huntsman's Damsel is no Outsider a Vigormortis
+            # can remove (gate of the Boffin, stage 2, 27.10.2026 — the
+            # deal had a Huntsman, his Damsel and a Vigormortis, and no
+            # bag held it).
+            kept = _brought(present)
             possible = [shift for shift in shifts
-                        if all(counts[team] + delta >= 0
+                        if all(counts[team] + delta >= (kept.get(team, 0)
+                                                        if delta < 0 else 0)
                                for team, delta in shift.items())] or [{}]
             for shift in possible:
                 moved = dict(counts)
@@ -880,6 +888,7 @@ def _bags(n_players, script=DEFAULT, fabled=()):
         bags = grown
 
     bags += _marionette_to_be(bags, script)
+    bags += _boffin_brackets(bags, script)
 
     # Whatever the shifts did, the bag still has to seat everybody. A
     # modifier that moves one number without moving another back is a
@@ -904,6 +913,89 @@ def _bags(n_players, script=DEFAULT, fabled=()):
         seen.add(signature)
         out.append((present, counts))
     return out
+
+
+def _brought(present):
+    """How many of each team the characters in this bag bring along."""
+    out = {}
+    for key in present:
+        for other in getattr(CHARACTERS.get(key), "brings", ()) or ():
+            team = TEAM[other]
+            out[team] = out.get(team, 0) + 1
+    return out
+
+
+# The Boffin's gift changes the setup as its bracket says (E Weg 1,
+# Patrick 26.10.2026; stage 2, 27.10.2026): "[+0 or +1 Outsider]" for a
+# Balloonist's ability, "[+the Damsel]" for a Huntsman's. Such a bag is
+# marked `gift:<character>`; the Boffin and whatever the bracket brings
+# are dealt, the character itself is not (it is not in play), and the
+# solver then tells only that gift where nothing else explains the deal
+# (`bracket_gifts`).
+BOFFIN_BRACKETS = ("Balloonist", "Huntsman")
+
+
+def _boffin_brackets(bags, script):
+    if "Boffin" not in script.keys:
+        return []
+    out = []
+    for key in BOFFIN_BRACKETS:
+        if key not in script.keys:
+            continue
+        brings = set(CHARACTERS[key].brings)
+        for present, counts in bags:
+            if key in present or any(p.startswith("gift:") for p in present):
+                continue
+            for shift in CHARACTERS[key].setup:
+                if not shift:
+                    continue              # the plain bag already holds it
+                moved = dict(counts)
+                for team, delta in shift.items():
+                    moved[team] += delta
+                out.append((present | {"Boffin", f"gift:{key}"} | brings,
+                            moved))
+    return out
+
+
+_BRACKET_CACHE = {}
+
+
+def bracket_gifts(roles, script, fabled=()):
+    """Which gift's bracket this deal needs, or None where a deal without
+    one explains it: the characters whose `gift:` bags alone hold this
+    deal's split with the setup-changing characters it has."""
+    if "Boffin" not in script.keys or "Boffin" not in roles:
+        return None
+    movers = script.setup_modifiers
+    dealt = frozenset(r for r in roles if r in movers)
+    split = tuple(sum(1 for r in roles if TEAM[r] == t)
+                  for t in ("townsfolk", "outsider", "minion", "demon"))
+    key = (tuple(script.keys), tuple(fabled), len(roles), dealt, split,
+           frozenset(r for r in roles if r in ("Damsel",)))
+    got = _BRACKET_CACHE.get(key)
+    if got is not None:
+        return got[0]
+    plain, gifts = False, set()
+    for present, counts in _bags(len(roles), script, fabled):
+        real = frozenset(p for p in present if p in movers)
+        if real != dealt:
+            continue
+        if any(p in CHARACTERS and p not in roles for p in present
+               if p not in movers):
+            continue                      # the bag needs it dealt
+        if tuple(counts[t] for t in ("townsfolk", "outsider", "minion",
+                                     "demon")) != split:
+            continue
+        marks = [p[5:] for p in present if p.startswith("gift:")]
+        if not marks:
+            plain = True
+            break
+        gifts.update(marks)
+    # No bag at all holds it: not a deal of this script, so nothing to
+    # ask of the gift.
+    answer = None if plain or not gifts else frozenset(gifts)
+    _BRACKET_CACHE[key] = (answer,)
+    return answer
 
 
 # Stelle 73, A (Patrick, 22.10.2026): with a Summoner nobody is dealt the

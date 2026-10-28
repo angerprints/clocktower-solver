@@ -168,6 +168,7 @@ const SOURCE_TURNS = {
   aNoDashiiPoisonsItsTownsfolkNeighbours: "NoDashii",
   aVigormortisPoisonsBesideItsDeadMinions: "Vigormortis",
   aPhilosopherDrunksWhoeverHadIt: "Philosopher",
+  aBoffinPhilosopherDrunksWhoeverHadIt: "Philosopher",
   aPukkaPoisonsWhoeverItWillKill: "Pukka",
   aSailorDrunksOneOfTwo: "Sailor",
   aCourtierNamesACharacter: "Courtier",

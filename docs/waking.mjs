@@ -30,7 +30,7 @@
 import {CHARACTERS} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {teaMade} from "./worlds.mjs";
-import {babysitterAt, boffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt}
+import {babysitterAt, boffinAbilities, boffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt}
   from "./info.mjs";
 
 export const NEVER = "never";
@@ -412,8 +412,9 @@ export function woke(world, state, seat, night) {
   // would — not on the first night (F Weg 1, 26.10.2026). See waking.py.
   if (night >= 2 && state.script.keys.includes("Boffin")) {
     const gift = boffinGiftOf(world, state, seat, phase);
-    if (gift !== null && !CHARACTERS[gift].believes)
-      return wokeAs(world, state, seat, night, gift);
+    for (const got of boffinAbilities(gift, phase))
+      if (CHARACTERS[got] && !CHARACTERS[got].believes
+          && wokeAs(world, state, seat, night, got)) return true;
   }
   return false;
 }

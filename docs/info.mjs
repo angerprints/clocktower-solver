@@ -133,7 +133,7 @@ export function sideOpen(w, s, seat, phase) {
   // Not a Demon the Boffin gave it: it cannot turn good by it (their
   // jinx, 26.10.2026).
   return !!s && tookIt(w, s, seat, "Goon", phase)
-    && boffinGiftOf(w, s, seat, phase) !== "Goon";
+    && !hasBoffinAbility(w, s, seat, "Goon", phase);
 }
 
 /** The world once for every way the sides nobody follows could really be
@@ -180,8 +180,7 @@ export function tookIt(w, s, seat, role, phase) {
   const taken = (s.philosophies() || {})[seat];
   if (taken && taken[0] === role && w.roleAt(seat, phase) === "Philosopher"
       && phaseIndex(phase) >= phaseIndex(taken[1])) return true;
-  return role !== null && role !== undefined
-    && boffinGiftOf(w, s, seat, phase) === role;
+  return hasBoffinAbility(w, s, seat, role, phase);
 }
 
 // ---------------------------------------------------------------------
@@ -212,10 +211,31 @@ export function boffinGiftOf(w, s, seat, phase) {
   return got;
 }
 
+/** A Demon given the Philosopher's ability chooses once (H and M Weg 2,
+ * stage 2, 27.10.2026): "Philosopher>X>N2". See info.py. */
+export const boffinPhilosophy = (chosen, since) => `Philosopher>${chosen}>${since}`;
+
+/** The abilities a gift gives at that moment. See info.py. */
+export function boffinAbilities(gift, phase) {
+  if (!gift) return [];
+  if (!gift.startsWith("Philosopher>")) return [gift];
+  const [, chosen, since] = gift.split(">");
+  if (chosen && phaseIndex(phase) >= phaseIndex(since))
+    return ["Philosopher", chosen];
+  return ["Philosopher"];
+}
+
+/** Does this seat have that ability through the Boffin then? */
+export function hasBoffinAbility(w, s, seat, role, phase) {
+  if (role === null || role === undefined) return false;
+  const got = boffinGiftOf(w, s, seat, phase);
+  return got !== null && boffinAbilities(got, phase).includes(role);
+}
+
 /** Every seat with that ability through the Boffin at that moment. */
 export function boffinHolders(w, s, role, phase) {
   if (role === null || role === undefined || !w.giftedSeats) return [];
-  return w.giftedSeats().filter(seat => boffinGiftOf(w, s, seat, phase) === role);
+  return w.giftedSeats().filter(seat => hasBoffinAbility(w, s, seat, role, phase));
 }
 
 /** Whose sobriety this seat's ability as that character rests on: its
@@ -224,7 +244,7 @@ export function soberSeat(w, s, seat, role, phase) {
   if (role === null || role === undefined
       || !s.script.keys.includes("Boffin")
       || w.roleAt(seat, phase) === role) return seat;
-  if (boffinGiftOf(w, s, seat, phase) === role) {
+  if (hasBoffinAbility(w, s, seat, role, phase)) {
     const got = boffinSeat(w, s, phase);
     return got === null ? seat : got;
   }
@@ -1698,7 +1718,7 @@ function bansheesThatFell(row, w, s) {
         gained && gained[0] === "Banshee" && held.includes("Philosopher")
         && phaseIndex(phase) >= phaseIndex(gained[1]))) out.push(seat);
     // Or a Demon the Boffin gave it (26.10.2026).
-    else if (boffinGiftOf(w, s, seat, began) === "Banshee") out.push(seat);
+    else if (hasBoffinAbility(w, s, seat, "Banshee", began)) out.push(seat);
   }
   return out;
 }

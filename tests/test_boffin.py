@@ -164,8 +164,10 @@ class TheStories(SolverTest):
 
     def test_a_row_names_the_one(self):
         self.assertEqual(gifts(rows=[gave(1, "Fool")]), [({6: "Fool"}, 1.0)])
+        # Named, an ability the town cannot see is that ability all the
+        # same: its readings are weighed as its own (G, stage 2).
         self.assertEqual(gifts(rows=[gave(1, "Investigator")]),
-                         [({6: BOFFIN_UNSEEN}, 1.0)])
+                         [({6: "Investigator"}, 1.0)])
 
     def test_no_boffin_no_story(self):
         roles = R[:5] + ["Baron", "Imp"]
