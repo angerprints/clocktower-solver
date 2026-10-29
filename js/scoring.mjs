@@ -4091,6 +4091,17 @@ function nightAccounts(world, state, impairedAlready = {}, workingAlready = {}) 
  * working, so nothing can have stopped it.
  */
 function impairmentPlan(world, state, failures, forbidden) {
+  // The Storyteller's own ability cannot be stopped: a world that needs it
+  // to have failed has none, and needing it to work asks nothing
+  // (Pestdoktor Stufe 2). See solver.py.
+  if (Object.values(failures).some(seats => seats.has(STORYTELLER)))
+    return null;
+  if (Object.values(forbidden).some(seats => seats.has(STORYTELLER))) {
+    const kept = {};
+    for (const [night, seats] of Object.entries(forbidden))
+      kept[night] = new Set([...seats].filter(s => s !== STORYTELLER));
+    forbidden = kept;
+  }
   const got = planAsGiven(world, state, failures, forbidden);
   if (got !== null) return got;
   // A Courtier that was itself drunk or poisoned when it chose made

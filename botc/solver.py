@@ -8290,6 +8290,15 @@ def _impairment_plan(world, state, failures, forbidden):
     been: a Monk that is the only explanation for a quiet night was
     working, so nothing can have stopped it.
     """
+    # The Storyteller's own ability (`STORYTELLER`, the Plague Doctor's
+    # gift: a Boffin's for the Demon, Pestdoktor Stufe 2) cannot be
+    # stopped: a world that needs it to have failed has none, and needing
+    # it to work asks nothing (29.10.2026).
+    if any(STORYTELLER in seats for seats in failures.values()):
+        return None
+    if any(STORYTELLER in seats for seats in forbidden.values()):
+        forbidden = {night: {s for s in seats if s is not STORYTELLER}
+                     for night, seats in forbidden.items()}
     got = _plan_as_given(world, state, failures, forbidden)
     if got is not None:
         return got
