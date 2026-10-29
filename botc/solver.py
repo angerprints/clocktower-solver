@@ -3253,13 +3253,14 @@ def _plague_stage_2_ways(key, view, state, phase, slot):
     # night has the Marionette beside it).
     at = phase
     demon = lambda p: TEAM.get(view.role_at(p, at)) == "demon"
-    # Whom the jinxes make something is it from the night after the death,
-    # as it begins. The day or the night of the death was played as it was
-    # — a Golem whose nomination killed the Plague Doctor was the Golem, a
-    # Gossip or a Lycanthrope whose kill it was had its ability all night
-    # (the gate, seeds 142 and 1001 of line W, 2637 of line P2D,
-    # 29.10.2026).
-    made_at, made_slot = f"N{g + 1}", SETUP_SLOT
+    # Whom the jinxes make something is it from after the phase of the
+    # death: the day after a death at night, the night after one by day.
+    # The phase of the death was played as it was — a Golem whose
+    # nomination killed the Plague Doctor was the Golem, a Gossip or a
+    # Lycanthrope whose kill it was had its ability all night (the gate,
+    # seeds 142 and 1001 of line W, 2637 of line P2D, 29.10.2026).
+    made_at, made_slot = (f"D{g}", None) if phase[:1] == "N" \
+        else (f"N{g + 1}", SETUP_SLOT)
     if key in ("Mezepheles", "Boffin"):
         # Told later: the turn with each story (`_best_story_told`), the
         # gift with each Demon (`boffin_new_demon_stories`).
@@ -6523,9 +6524,16 @@ def _plain_failures(world, state, outcome=None):
     for info in state.infos:
         if not isinstance(info, EvilTwinPair):
             continue
+        # A pair the Storyteller's Evil Twin made (Pestdoktor Stufe 2, F)
+        # counts from its night on: a day before it was nobody's twin (the
+        # gate, seed 2705 of line P2C, 29.10.2026).
+        made = any(role == "EvilTwin" for p in (info.a, info.b)
+                   for _at, role in world.plague_made(p))
         for day in (state.executions or {}):
             hanged = state.execution_death(day)
             if hanged not in (info.a, info.b):
+                continue
+            if made and day < info.night:
                 continue
             other = info.b if hanged == info.a else info.a
             phase = f"D{day}"

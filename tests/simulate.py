@@ -1184,6 +1184,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.st_mez_turned = None
     d.st_twins = None
     d.st_boffin_since = None
+    d.st_made = {}                      # night -> (seat, what its Pit-Hag made)
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -1205,6 +1206,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         living = d.alive_at(f"N{night}")
         # A Plague Doctor that died by day (28.10.2026).
         _plague_check(d, rng, heard)
+        # Its Evil Twin and the twin learn each other tonight (stage 2, F).
+        pending = getattr(d, "st_twin_row", None)
+        if pending is not None and pending[0] == night:
+            d.said_by_others.append(EvilTwinPair(night, pending[1],
+                                                 a=pending[1], b=pending[2]))
+            d.st_twin_row = None
         # The Hatter (22.10.2026): the evil players choose at the very
         # start of the night after it died, before anybody acts (C).
         if d.hatted:
@@ -2659,10 +2666,13 @@ def _plague_stage_2_gained(d, key, phase, rng, heard):
     Marionette make somebody something (E, F, G Weg 1), the Boffin gives
     the Demon an ability (D Weg 1). The Pit-Hag's, the Mezepheles's and the
     Summoner's act later (`_storyteller_acts`). The one made is it from
-    the night after the death, as the solver reads it: the day or night of
-    the death was played as it was."""
+    after the phase of the death, as the solver reads it: that phase was
+    played as it was."""
     night = int(phase[1:])
-    when = f"N{night + 1}"
+    # Dated at the day: after a death at night the day after it, after one
+    # by day that day — so the night-walk sees it held as the next night
+    # begins, as the solver has it.
+    when = f"D{night}"
     if key == "Baron":
         good = _plague_good(d, phase)
         spare = _plague_spare(d, phase, ("outsider",))
@@ -2684,8 +2694,8 @@ def _plague_stage_2_gained(d, key, phase, rng, heard):
         d.changes.append((when, seat, "EvilTwin"))
         # It and its twin know each other the night after (F Weg 1); it is
         # the good player, kept off the gallows.
-        pair = night + 1
-        d.said_by_others.append(EvilTwinPair(pair, seat, a=seat, b=twin))
+        # Told when that night comes, if the game gets there.
+        d.st_twin_row = (night + 1, seat, twin)
         d.st_twins = (seat, twin)
     elif key == "Marionette":
         seat = rng.choice(_plague_puppets(d, phase))
@@ -2730,6 +2740,7 @@ def _storyteller_acts(d, night, rng, heard):
             seat, role = rng.choice(good), rng.choice(spare)
             _says_it_became(d, night, seat, role, phase, rng)
             d.changes.append((phase, seat, role))
+            d.st_made[night] = (seat, role)
     if d.st_mez_turned is None and _st_has(d, "Mezepheles") \
             and _st_gained_by(d, "Mezepheles", f"D{night - 1}") \
             and rng.random() < 0.3:

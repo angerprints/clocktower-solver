@@ -638,6 +638,10 @@ def hidden_from(deal, night, heard):
     st_kills = getattr(deal, "st_kills", {}).get(night)
     if st_kills:
         out[("st_kills", night)] = dict(st_kills)
+    # Whom its Pit-Hag made what tonight (stage 2, A).
+    st_made = getattr(deal, "st_made", {}).get(night)
+    if st_made is not None:
+        out[("st_pithag", night)] = st_made
     # A Devil's Advocate's pick, hidden like the Monk's guard.
     spared = getattr(deal, "spared", {}).get(night)
     if spared is not None:
@@ -1103,6 +1107,21 @@ def walk(deal, night, hidden):
             # A guard it set earlier tonight as a Monk or an Innkeeper
             # went with the character that set it (`lets_go`, above).
             summon = None
+        # The Storyteller's Pit-Hag (Pestdoktor Stufe 2, A): at the
+        # Pit-Hag's turn, nobody's ability to stop.
+        st_made = hidden.get(("st_pithag", night))
+        if st_made is not None \
+                and slot == getattr(CHARACTERS["PitHag"], field, 0):
+            target, became = st_made
+            was = state.roles.get(target)
+            state.lets_go(target, slot)
+            state.roles[target] = became   # the side does not move
+            state.log.append((slot, "made", target, became))
+            if became == "Goon":
+                state.chosen_by.pop(target, None)
+            if was == "Drunk" and target in stops_being_droisoned:
+                state.droisoned.discard(target)
+                stops_being_droisoned.discard(target)
         # The Storyteller's Assassin and Godfather, the Plague Doctor's
         # gift (28.10.2026): at their turn, nobody's ability to stop.
         for key, target in st_kills.items():

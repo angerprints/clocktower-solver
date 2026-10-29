@@ -2496,9 +2496,10 @@ function plagueStage2Ways(key, view, state, phase, slot) {
   // The board when the jinxes act: after the death. See solver.py.
   const at = phase;
   const demon = p => TEAM[view.roleAt(p, at)] === "demon";
-  // Whom the jinxes make something is it from the night after the death,
-  // as it begins. See solver.py.
-  const [madeAt, madeSlot] = [`N${g + 1}`, SETUP_SLOT];
+  // Whom the jinxes make something is it from after the phase of the
+  // death. See solver.py.
+  const [madeAt, madeSlot] = phase[0] === "N" ? [`D${g}`, null]
+    : [`N${g + 1}`, SETUP_SLOT];
   if (key === "Mezepheles" || key === "Boffin") return [[[], 1.0]];
   if (key === "PitHag") {
     const recorded = new Set(state.infos
@@ -3141,9 +3142,14 @@ function plainFailures(world, state, outcome = {}) {
   // deduction the table draws and this never did (02.10.2026).
   for (const info of state.infos) {
     if (info.type !== "EvilTwinPair") continue;
+    // A pair the Storyteller's Evil Twin made counts from its night on. See
+    // solver.py.
+    const made = [info.a, info.b].some(p => (world.plagueMade
+      ? world.plagueMade(p) : []).some(([, role]) => role === "EvilTwin"));
     for (const day of Object.keys(state.executions || {}).map(Number)) {
       const hanged = state.executionDeath(day);
       if (hanged !== info.a && hanged !== info.b) continue;
+      if (made && day < info.night) continue;
       const other = hanged === info.a ? info.b : info.a;
       const phase = `D${day}`;
       // A good Evil Twin, the Storyteller's jinx (Pestdoktor Stufe 2, F
