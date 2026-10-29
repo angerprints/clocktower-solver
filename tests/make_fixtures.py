@@ -1828,10 +1828,13 @@ PLAGUE_LINES = {
     "d": ("PlagueDoctor", "Spy", "Empath", "Investigator", "Undertaker"),
 }
 # Each solved in seconds, the Storyteller with: the Godfather (k 27), the
-# Poisoner (k 72), the Assassin (k 86), the Witch (h 72), the Devil's
-# Advocate (h 107), the Mastermind (h 207); a Minion with the Goblin's
-# (j 32), the Scarlet Woman's (j 137), the Fearmonger's (j 47); the Xaan
-# (x 1), the Widow (x 47).
+# Assassin (k 72), the Pit-Hag (k 86), the Witch (h 72), the Pit-Hag
+# (h 107), the Mastermind (h 207); a Minion with the Goblin's (j 32), the
+# Scarlet Woman's (j 137); the Marionette (j 47), the Xaan (x 1), the Widow
+# (x 47). Since stage 2 the Storyteller picks from its Minions too, so
+# some of these games changed (29.10.2026): the Poisoner (k 387), the
+# Devil's Advocate (h 341) and a Minion with the Fearmonger's (j 332) came
+# in for those they lost.
 # Stage 2 (29.10.2026): the Storyteller's Summoner (a 296), Mezepheles
 # (a 312), Pit-Hag (a 317), Baron (b 56), Boffin (b 177); the Evil Twin
 # (c 2), the Marionette (c 21), the Boomdandy (c 88); a Minion with the
@@ -1841,7 +1844,7 @@ PLAYED_PLAGUE = (("k", 27, 9), ("k", 72, 9), ("k", 86, 8), ("h", 72, 9),
                  ("j", 47, 9), ("x", 1, 8), ("x", 47, 9),
                  ("a", 296, 8), ("a", 312, 9), ("a", 317, 9), ("b", 56, 8),
                  ("b", 177, 9), ("c", 2, 9), ("c", 21, 8), ("c", 88, 10),
-                 ("d", 131, 8))
+                 ("d", 131, 8), ("k", 387, 9), ("h", 341, 8), ("j", 332, 9))
 
 
 # Games where the Engineer chose, each solved in seconds: a Widow on the
