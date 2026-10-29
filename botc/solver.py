@@ -6497,12 +6497,10 @@ def _plain_failures(world, state, outcome=None):
             other = info.b if hanged == info.a else info.a
             phase = f"D{day}"
             # A good Evil Twin, the Storyteller's jinx (Pestdoktor Stufe 2,
-            # F Weg 1): it is the good player, hanged beside its living
-            # twin.
+            # F Weg 1): it is the good player, and the ability its own.
             if world.role_at(hanged, phase) == "EvilTwin" \
                     and not world.evil_at(hanged, phase) \
-                    and world.evil_at(other, phase) \
-                    and other in state.alive_set(phase):
+                    and world.evil_at(other, phase):
                 failures[day].add(hanged)
                 continue
             if world.role_at(other, phase) != "EvilTwin" \

@@ -3130,10 +3130,9 @@ function plainFailures(world, state, outcome = {}) {
       const other = hanged === info.a ? info.b : info.a;
       const phase = `D${day}`;
       // A good Evil Twin, the Storyteller's jinx (Pestdoktor Stufe 2, F
-      // Weg 1): it is the good player. See solver.py.
+      // Weg 1): it is the good player, and the ability its own.
       if (world.roleAt(hanged, phase) === "EvilTwin"
-          && !world.evilAt(hanged, phase) && world.evilAt(other, phase)
-          && state.aliveSet(phase).has(other)) {
+          && !world.evilAt(hanged, phase) && world.evilAt(other, phase)) {
         fail(day, hanged);
         continue;
       }

@@ -385,6 +385,11 @@ class Deal:
         so the new Demon never killed and the solver could not say why
         the nights had gone quiet (07.10.2026).
         """
+        # Made the Marionette by the Storyteller's jinx (Pestdoktor Stufe 2,
+        # G): it lives by what it was.
+        puppet = getattr(self, "st_puppets", {}).get(seat)
+        if puppet is not None and self.role_at(seat, phase) == "Marionette":
+            return puppet
         if self.believes[seat] is None:
             return None
         # Made the Marionette when the Summoner's Demon came: from then on
@@ -575,6 +580,10 @@ class Deal:
         # (I, 14.10.2026). Not a droisoning the Mathematician counts.
         # Only while it is still the Philosopher: one the Summoner made
         # the Demon has the Demon's ability (22.10.2026).
+        # The Storyteller's own ability (the Plague Doctor's gift): nothing
+        # stops it.
+        if seat is None:
+            return True
         phase = f"D{night}" if by_day else f"N{night}"
         if self.philosophies.get(seat) == "Drunk" \
                 and self.role_at(seat, phase) == "Philosopher":
@@ -1169,6 +1178,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.st_widow = None                   # (seat, night) its Widow poisoned
     d.st_kills = {}                     # night -> {ability: whom}
     d.st_assassin_spent = False
+    # Stage 2 (29.10.2026): whom its Marionette made, and what each goes
+    # on believing; its Mezepheles's turn; its Evil Twin and the twin.
+    d.st_puppets = {}
+    d.st_mez_turned = None
+    d.st_twins = None
+    d.st_boffin_since = None
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -1277,6 +1292,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         _harpy_chooses(d, night, rng, heard)
         # The Mezepheles at 18 too: whoever said its word turns evil.
         _mezepheles_turns(d, night, rng)
+        # And what the Storyteller does with an ability the Plague
+        # Doctor's death gave it (stage 2, 29.10.2026).
+        _storyteller_acts(d, night, rng, heard)
         # The Summoner at 19, after the Scarlet Woman and before the
         # Lunatic, the Exorcist and every Demon (21.10.2026).
         if d.summoner is not None:
@@ -2494,6 +2512,10 @@ def _gift(d, seat, phase):
         return None
     if d.role_at(seat, phase) != d.roles[seat]:
         return None
+    # The Storyteller's, from the gain on (Pestdoktor Stufe 2, D).
+    since = getattr(d, "st_boffin_since", None)
+    if since is not None:
+        return got[1] if phase_index(phase) >= phase_index(since) else None
     if _boffin_at(d, phase) is None:
         return None
     return got[1]
@@ -2503,6 +2525,8 @@ def _sober(d, seat, role, phase):
     """Whose sobriety this seat's ability as that character rests on: the
     Boffin's for a Demon it gave the ability, else its own."""
     if d.role_at(seat, phase) != role and _gifted(d, seat, role, phase):
+        if getattr(d, "st_boffin_since", None) is not None:
+            return None                   # the Storyteller's: never drunk
         boffin = _boffin_at(d, phase)
         return seat if boffin is None else boffin
     return seat
@@ -2571,11 +2595,187 @@ def _plague_pool(d, phase):
     minions = [m for m in d.alive_at(phase)
                if TEAM[d.role_at(m, phase)] == "minion"
                and d.deaths.get(m) is None]
+    # Stage 2 too (I Weg 1, 29.10.2026) — those that can act now: the
+    # Marionette beside a good neighbour of the Demon, the Evil Twin with
+    # a good player to make it and an evil one for its twin, the Baron's
+    # and the Boomdandy's with a good player to make.
     pool = [k for k in d.script.keys
             if TEAM.get(k) == "minion" and CHARACTERS[k].modelled
-            and k not in PLAGUE_STAGE_2
-            and (k not in PLAGUE_TO_A_MINION or minions)]
+            and (k not in PLAGUE_TO_A_MINION or minions)
+            and (k not in PLAGUE_STAGE_2 or _plague_can(d, k, phase))]
     return pool, minions
+
+
+def _plague_good(d, phase):
+    """Living good players but the Demon: whom the Storyteller's jinxes
+    make something here — a good one says so (`_says_it_became`)."""
+    demons = set(d.demons_at(phase))
+    return [p for p in d.alive_at(phase) if d.deaths.get(p) is None
+            and p not in demons and d.side_at(p, phase) == "good"]
+
+
+def _plague_puppets(d, phase):
+    """The Demon's good neighbours (G Weg 1)."""
+    out = []
+    for dem in d.demons_at(phase):
+        for nb in ((dem - 1) % d.n, (dem + 1) % d.n):
+            if nb != dem and nb not in out \
+                    and d.side_at(nb, phase) == "good" \
+                    and TEAM[d.role_at(nb, phase)] != "demon" \
+                    and d.role_at(nb, phase) != "Marionette":
+                out.append(nb)
+    return out
+
+
+def _plague_spare(d, phase, teams):
+    """Characters of these types nobody holds or believes in."""
+    held = {d.role_at(p, phase) for p in range(d.n)}
+    held |= {b for b in d.believes if b}
+    return [k for k in d.script.keys if TEAM.get(k) in teams
+            and k not in held]
+
+
+def _plague_can(d, key, phase):
+    """Can a stage 2 ability the Storyteller gains now do anything here?"""
+    if key == "Marionette":
+        return bool(_plague_puppets(d, phase))
+    if key == "EvilTwin":
+        return bool(_plague_good(d, phase)) and any(
+            d.side_at(p, phase) == "evil" for p in d.alive_at(phase)
+            if d.deaths.get(p) is None)
+    if key == "Baron":
+        return bool(_plague_good(d, phase)) \
+            and bool(_plague_spare(d, phase, ("outsider",)))
+    if key == "Boomdandy":
+        return bool(_plague_good(d, phase))
+    if key == "Summoner":
+        return getattr(d, "summoner", None) is None
+    return True
+
+
+def _plague_stage_2_gained(d, key, phase, rng, heard):
+    """What a stage 2 ability does the moment the Storyteller gains it:
+    the jinxes of the Baron, the Boomdandy, the Evil Twin and the
+    Marionette make somebody something (E, F, G Weg 1), the Boffin gives
+    the Demon an ability (D Weg 1). The Pit-Hag's, the Mezepheles's and the
+    Summoner's act later (`_storyteller_acts`)."""
+    night = int(phase[1:])
+    if key == "Baron":
+        good = _plague_good(d, phase)
+        spare = _plague_spare(d, phase, ("outsider",))
+        for seat in rng.sample(good, min(len(good), len(spare),
+                                         rng.choice((1, 2)))):
+            role = spare.pop(rng.randrange(len(spare)))
+            _says_it_became(d, night, seat, role, phase, rng)
+            d.changes.append((phase, seat, role))
+    elif key == "Boomdandy":
+        seat = rng.choice(_plague_good(d, phase))
+        _says_it_became(d, night, seat, "Boomdandy", phase, rng)
+        d.changes.append((phase, seat, "Boomdandy"))
+    elif key == "EvilTwin":
+        seat = rng.choice(_plague_good(d, phase))
+        evil = [p for p in d.alive_at(phase) if d.deaths.get(p) is None
+                and d.side_at(p, phase) == "evil"]
+        twin = rng.choice(evil)
+        _says_it_became(d, night, seat, "EvilTwin", phase, rng)
+        d.changes.append((phase, seat, "EvilTwin"))
+        # It and its twin know each other that night, or the night after
+        # a day (F Weg 1); it is the good player, kept off the gallows.
+        pair = night if phase[0] == "N" else night + 1
+        d.said_by_others.append(EvilTwinPair(pair, seat, a=seat, b=twin))
+        d.st_twins = (seat, twin)
+    elif key == "Marionette":
+        seat = rng.choice(_plague_puppets(d, phase))
+        d.st_puppets[seat] = d.token(seat, phase) or d.role_at(seat, phase)
+        d.changes.append((phase, seat, "Marionette"))
+    elif key == "Boffin":
+        # As a Boffin coming into play (D Weg 1): the Demon dealt, still in
+        # its dealt character, unless a living Boffin gave it one already.
+        from botc.catalogue import CHARACTERS as _C
+        demon = d.demon_at(phase)
+        if demon is None or _boffin_at(d, phase) is not None \
+                or TEAM[d.roles[demon]] != "demon" \
+                or d.role_at(demon, phase) != d.roles[demon]:
+            return
+        held = [d.role_at(p, phase) for p in range(d.n)]
+        pool = [k for k in d.script.keys
+                if TEAM.get(k) in ("townsfolk", "outsider")
+                and k not in BOFFIN_NEVER_GIVES and k != "Philosopher"
+                and held.count(k) < _C[k].copies]
+        if pool:
+            d.boffin_gift = (demon, rng.choice(pool))
+            d.boffin_row = False
+            d.st_boffin_since = phase
+
+
+def _storyteller_acts(d, night, rng, heard):
+    """What the Storyteller does at night with a stage 2 ability it gained:
+    its Pit-Hag at 16 now and then (A), its Mezepheles once at 18 (B), its
+    Summoner on the third night at 19, a Pukka mostly on the second (C)."""
+    phase = f"N{night}"
+    if not getattr(d, "plague", None):
+        return
+    if night >= 2 and _st_has(d, "PitHag", before=None) \
+            and _st_gained_by(d, "PitHag", phase) and rng.random() < 0.25:
+        good = _plague_good(d, phase)
+        in_play = {d.role_at(p, phase) for p in range(d.n)}
+        in_play |= {d.role_at(p, f"E{night - 1}") for p in range(d.n)}
+        in_play |= {b for b in d.believes if b}
+        spare = [k for k in (d.script.townsfolk + d.script.outsiders
+                             + d.script.minions) if k not in in_play]
+        if good and spare:
+            seat, role = rng.choice(good), rng.choice(spare)
+            _says_it_became(d, night, seat, role, phase, rng)
+            d.changes.append((phase, seat, role))
+    if d.st_mez_turned is None and _st_has(d, "Mezepheles") \
+            and _st_gained_by(d, "Mezepheles", f"D{night - 1}") \
+            and rng.random() < 0.3:
+        good = _plague_good(d, phase)
+        if good:
+            seat = rng.choice(good)
+            d.side_changes.append((phase, seat, d.role_at(seat, phase),
+                                   "evil"))
+            d.st_mez_turned = (seat, night)
+    if night in (2, 3) and not d.line2 and _st_has(d, "Summoner") \
+            and _st_gained_by(d, "Summoner", phase) \
+            and getattr(d, "summoner", None) is None:
+        held = {d.role_at(p, phase) for p in range(d.n)}
+        allowed = [k for k in d.script.demons
+                   if k not in ("LilMonsta", "Legion", "Riot")
+                   and k not in held]
+        if not allowed:
+            return
+        if getattr(d, "st_summon_pick", None) not in allowed:
+            d.st_summon_pick = rng.choice(allowed)
+        demon = d.st_summon_pick
+        if night == 2 and not (demon == "Pukka" and rng.random() < 0.75):
+            return
+        pool = _plague_good(d, phase)
+        n = d.n
+        if demon == "LordOfTyphon":
+            pool = [p for p in pool if any(
+                TEAM[d.role_at(q, phase)] == "minion"
+                for q in ((p - 1) % n, (p + 1) % n))]
+        if not pool:
+            return
+        target = rng.choice(pool)
+        d.changes.append((phase, target, demon))
+        d.side_changes.append((phase, target, demon, "evil"))
+        d.line2 = [(phase, target)]
+        d.tea_summoned = (night, target, demon)
+        if demon == "FangGu":
+            d.fanggu_jumped = False
+        if demon == "Po":
+            d.po_charged = False
+        if demon == "Lleech":
+            d._as_demon = target
+
+
+def _st_gained_by(d, key, phase):
+    """Had the Storyteller gained that ability by this moment?"""
+    return any(seat is None and k == key
+               and phase_index(at) <= phase_index(phase)
+               for at, seat, k in getattr(d, "plague", ()))
 
 
 def _plague_check(d, rng, heard):
@@ -2585,7 +2785,7 @@ def _plague_check(d, rng, heard):
     end of the night."""
     if "PlagueDoctor" not in d.script.keys:
         return
-    from botc.solver import PLAGUE_TO_A_MINION
+    from botc.solver import PLAGUE_STAGE_2, PLAGUE_TO_A_MINION
     for seat in range(d.n):
         for at in d.deaths_of(seat):
             if (seat, at) in d.plague_done:
@@ -2607,6 +2807,8 @@ def _plague_check(d, rng, heard):
             d.plague.append((phase, holder, key))
             if rng.random() < 0.5:
                 heard.append(PlagueDoctorGave(night, seat, role=key))
+            if holder is None and key in PLAGUE_STAGE_2:
+                _plague_stage_2_gained(d, key, phase, rng, heard)
 
 
 def _st_has(d, key, before=None):
@@ -3595,6 +3797,9 @@ def _turned_evil_and_knows(d, seat, night):
     if seat == getattr(d, "bh_evil", None):
         return True
     turned = getattr(d, "mez_turned", None)
+    if turned is not None and turned[0] == seat and night >= turned[1]:
+        return True
+    turned = getattr(d, "st_mez_turned", None)
     return turned is not None and turned[0] == seat and night >= turned[1]
 
 
@@ -3623,7 +3828,9 @@ def _may_register_either_way(d, seat, night):
     """A Recluse or a Spy with its ability: the Storyteller's to say."""
     from botc.catalogue import CHARACTERS
     role = d.role_at(seat, f"N{night}")
-    return bool(CHARACTERS[role].registers) and d.working(seat, night)
+    # A Minion given the Spy's ability (Pestdoktor Stufe 2, H).
+    spy = _plague_minion(d, seat, "Spy", f"N{night}")
+    return (bool(CHARACTERS[role].registers) or spy) and d.working(seat, night)
 
 
 def _bounty_hunter_is_shown(d, seat, night, rng):
@@ -4205,6 +4412,11 @@ def _execute(d, day, rng, allow_takeover=False):
         evil, good = twins
         if evil in d.alive_at(phase) and d.role_at(evil, phase) == "EvilTwin":
             living = [p for p in living if p != good]
+    # And a good Evil Twin the Storyteller's jinx made: the good player
+    # itself (Pestdoktor Stufe 2, F).
+    st_twins = getattr(d, "st_twins", None)
+    if st_twins is not None and d.role_at(st_twins[0], phase) == "EvilTwin":
+        living = [p for p in living if p != st_twins[0]]
     heir = _heir(d, phase, rng)
     takeover = (allow_takeover and heir is not None
                 and _scarlet(d, heir, phase)
@@ -8142,7 +8354,11 @@ def _pair_info(d, seat, night, rng, cls, matches, team=None,
     if team is not None:
         liars = [p for p in range(d.n)
                  if p != seat and p not in honest
-                 and _registers_as(d.role_at(p, f"N{night}"), team)
+                 and (_registers_as(d.role_at(p, f"N{night}"), team)
+                      # A Minion given the Spy's ability (Pestdoktor
+                      # Stufe 2, H).
+                      or (team in ("townsfolk", "outsider")
+                          and _plague_minion(d, p, "Spy", f"N{night}")))
                  # A droisoned character cannot misregister (table
                  # rule): a Spy the Courtier has made drunk, or a Pukka
                  # poisoned, is a Spy and reads as one. Never asked here,
