@@ -564,6 +564,14 @@ def _movers_in(world, state):
     # Huntsman (13.10.2026).
     roles |= {taken for taken, _since in (state.philosophies() or {}).values()}
     count = int(swapped) + int(bool(made))
+    # The Storyteller's Pit-Hag or a jinx after a Plague Doctor's death
+    # (Pestdoktor Stufe 2): told by the last rule of all, so a Snake
+    # Charmer it made has to be seen night by night (the gate, seed 927 of
+    # line J, 29.10.2026).
+    if _plague_on_board(state) and deaths and any(
+            k in state.script.keys for k in PLAGUE_STAGE_2
+            if k not in ("Mezepheles", "Boffin")):
+        count += 1
     # The Demon handed on before a Snake Charmer chose it: a Scarlet Woman
     # stepping up in daylight, or a starpass. Run all at once, the charmer
     # (slot 11) is asked before the lineage (last) and looks for the Demon
@@ -3207,8 +3215,12 @@ def _plague_stage_2_seen(key, view, state, phase):
         return bool(_plague_summon_nights(view, state, phase))
     became = _plague_became(state)
     if key == "PitHag":
+        # Not a row a Pit-Hag's own row names.
+        recorded = {(i.night, i.target) for i in state.infos
+                    if getattr(i, "source_role", None) == "PitHag"
+                    and getattr(i, "role", None)}
         return any(phase_index(f"N{i.night}") >= phase_index(phase)
-                   for i in became)
+                   and (i.night, i.player) not in recorded for i in became)
     if key == "Baron":
         return any(i.night == g and TEAM.get(i.role) == "outsider"
                    for i in became)
@@ -3218,7 +3230,7 @@ def _plague_stage_2_seen(key, view, state, phase):
                    and phase_index(f"D{i.night}") >= phase_index(phase)
                    for i in state.infos)
     if key == "EvilTwin":
-        pair = g if phase[:1] == "N" else g + 1
+        pair = g + 1
         return any(i.night == g and i.role == "EvilTwin" for i in became) \
             or any(isinstance(i, EvilTwinPair) and i.night == pair
                    for i in state.infos)
@@ -3236,9 +3248,18 @@ def _plague_stage_2_ways(key, view, state, phase, slot):
     Marionette's neighbour is the Storyteller's pick, split over them."""
     n = state.n_players
     g = int(phase[1:])
-    # The board as the moment began: a night's from its start.
-    at = _before(g, phase) if phase[:1] == "N" else phase
+    # The board when the jinxes act: after the death, at the night's end
+    # (the gate, seed 881 of line P2D: the Demon a Snake Charmer made that
+    # night has the Marionette beside it).
+    at = phase
     demon = lambda p: TEAM.get(view.role_at(p, at)) == "demon"
+    # Whom the jinxes make something is it from the night after the death,
+    # as it begins. The day or the night of the death was played as it was
+    # — a Golem whose nomination killed the Plague Doctor was the Golem, a
+    # Gossip or a Lycanthrope whose kill it was had its ability all night
+    # (the gate, seeds 142 and 1001 of line W, 2637 of line P2D,
+    # 29.10.2026).
+    made_at, made_slot = f"N{g + 1}", SETUP_SLOT
     if key in ("Mezepheles", "Boffin"):
         # Told later: the turn with each story (`_best_story_told`), the
         # gift with each Demon (`boffin_new_demon_stories`).
@@ -3300,8 +3321,8 @@ def _plague_stage_2_ways(key, view, state, phase, slot):
                         or view.role_at(nb, at) == "Marionette":
                     continue
                 seats.append(nb)
-        return [((PlagueMade(phase, nb, "Marionette", "good", slot),),
-                 1.0 / len(seats)) for nb in seats]
+        return [((PlagueMade(made_at, nb, "Marionette", "good",
+                             made_slot),), 1.0 / len(seats)) for nb in seats]
     if key == "Baron":
         # E Weg 1: up to two players but the Demon, each an Outsider
         # nobody holds, as their rows say; the side stays.
@@ -3316,8 +3337,8 @@ def _plague_stage_2_ways(key, view, state, phase, slot):
                         or len({i.role for i in combo}) < k:
                     continue
                 out.append((tuple(PlagueMade(
-                    phase, i.player, i.role,
-                    _plague_side(view, i.player, at), slot)
+                    made_at, i.player, i.role,
+                    _plague_side(view, i.player, at), made_slot)
                     for i in combo), 1.0))
         return out
     seats = []
@@ -3330,7 +3351,7 @@ def _plague_stage_2_ways(key, view, state, phase, slot):
                         >= phase_index(phase)):
                 seats.append(info.player)
     elif key == "EvilTwin":
-        pair = g if phase[:1] == "N" else g + 1
+        pair = g + 1
         for info in state.infos:
             if isinstance(info, BecameInfo) and info.role == "EvilTwin" \
                     and info.night == g:
@@ -3343,8 +3364,9 @@ def _plague_stage_2_ways(key, view, state, phase, slot):
                 or any(way[0].seat == seat for way, _c in out) \
                 or demon(seat) or view.role_at(seat, at) == key:
             continue
-        out.append(((PlagueMade(phase, seat, key,
-                                _plague_side(view, seat, at), slot),), 1.0))
+        out.append(((PlagueMade(made_at, seat, key,
+                                _plague_side(view, seat, at), made_slot),),
+                     1.0))
     return out
 
 
@@ -3398,9 +3420,13 @@ def plague_offers(view, state, phase):
                         each / len(minions)) for m in minions)
         elif key in PLAGUE_STAGE_2:
             mark = plague_gift_change(phase, STORYTELLER, key, slot)
-            out.extend((((mark,) + way), each * share) for way, share
-                       in _plague_stage_2_ways(key, view, state, phase,
-                                               slot))
+            # None fits this story: the Storyteller held it and nothing
+            # came of it that shows (a row naming it, the gate, seeds 1764,
+            # 1799 and 1972 of line P, 29.10.2026).
+            ways = _plague_stage_2_ways(key, view, state, phase, slot) \
+                or [((), 1.0)]
+            out.extend((((mark,) + way), each * share)
+                       for way, share in ways)
         else:
             out.append(((plague_gift_change(phase, STORYTELLER, key, slot),),
                         each))
@@ -4212,6 +4238,13 @@ def _at_the_gallows(state, day, world=None):
     is held against the Tea Lady, where keeping it can only excuse her."""
     phase = f"D{day}"
     hanged = state.executed_on(day)
+    # A Boomdandy that exploded on the gallows: the day's other deaths are
+    # its own, after the execution (a good one the Storyteller's jinx made,
+    # kept by a Tea Lady its explosion then took, Pestdoktor Stufe 2, the
+    # gate, seed 722 of line P2C, 29.10.2026).
+    if any(isinstance(info, BoomdandyExploded) and info.night == day
+           and info.player == hanged for info in state.infos):
+        return frozenset(state.alive_set(phase))
     return frozenset(p for p in state.alive_set(phase)
                      if p == hanged or phase not in state.died_at(p)
                      or (world is not None

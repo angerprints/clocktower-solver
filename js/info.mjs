@@ -1082,9 +1082,11 @@ export const EvilTwinPair = define("EvilTwinPair", "EvilTwin",
     // Pestdoktor Stufe 2, F Weg 1). See info.py.
     const made = (w.plagueMade ? w.plagueMade(twin) : [])
       .filter(([, role]) => role === "EvilTwin").map(([at]) => at);
+    // The sides as the night began: the twin was chosen then. See info.py.
+    const began = this.night > 1 ? `B${this.night - 1}` : phase;
     if (made.length)
       return made.some(at => at === phase || at === `D${this.night - 1}`)
-        && w.evilAt(this.a, phase) !== w.evilAt(this.b, phase);
+        && w.evilAt(this.a, began) !== w.evilAt(this.b, began);
     if (this.night > 1) {
       if (w.roleAt(twin, `D${this.night - 1}`) === "EvilTwin") return false;
     }
@@ -1179,7 +1181,10 @@ export const SnakeCharmerChoice = define("SnakeCharmerChoice", "SnakeCharmer",
     if (this.swapped)
       // Checked *after* the swap, and from the day it took effect: the
       // seat pointed at is now holding the Snake Charmer's character.
-      return w.roleAt(this.target, `D${this.night}`) === "SnakeCharmer";
+      // Or at its turn, read at the row's place in the night: a Pit-Hag
+      // later that night may have made it something else. See info.py.
+      return w.roleAt(this.target, `D${this.night}`) === "SnakeCharmer"
+        || w.roleAt(this.target, phase) === "SnakeCharmer";
     // Nothing happened, so either they were not the Demon or the Snake
     // Charmer was not working — and the second is somebody else's excuse.
     // Not the Demon when it chose, as the night began. See info.py.

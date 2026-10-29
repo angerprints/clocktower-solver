@@ -554,6 +554,11 @@ survivesExecutionRule(function aPacifistMaySpareTheGood(
 function atTheGallows(state, day, world = null) {
   const phase = `D${day}`;
   const hanged = state.executedOn(day);
+  // A Boomdandy that exploded on the gallows: the day's other deaths are
+  // its own, after the execution (Pestdoktor Stufe 2). See solver.py.
+  if (state.infos.some(i => i.type === "BoomdandyExploded" && i.night === day
+                       && i.player === hanged))
+    return new Set(state.aliveSet(phase));
   // With `world`, a Lleech stays: it dies after the gallows, of its host
   // hanging there (11.10.2026). See solver.py.
   return new Set([...state.aliveSet(phase)].filter(

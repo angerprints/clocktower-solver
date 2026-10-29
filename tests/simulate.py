@@ -2658,8 +2658,11 @@ def _plague_stage_2_gained(d, key, phase, rng, heard):
     the jinxes of the Baron, the Boomdandy, the Evil Twin and the
     Marionette make somebody something (E, F, G Weg 1), the Boffin gives
     the Demon an ability (D Weg 1). The Pit-Hag's, the Mezepheles's and the
-    Summoner's act later (`_storyteller_acts`)."""
+    Summoner's act later (`_storyteller_acts`). The one made is it from
+    the night after the death, as the solver reads it: the day or night of
+    the death was played as it was."""
     night = int(phase[1:])
+    when = f"N{night + 1}"
     if key == "Baron":
         good = _plague_good(d, phase)
         spare = _plague_spare(d, phase, ("outsider",))
@@ -2667,27 +2670,27 @@ def _plague_stage_2_gained(d, key, phase, rng, heard):
                                          rng.choice((1, 2)))):
             role = spare.pop(rng.randrange(len(spare)))
             _says_it_became(d, night, seat, role, phase, rng)
-            d.changes.append((phase, seat, role))
+            d.changes.append((when, seat, role))
     elif key == "Boomdandy":
         seat = rng.choice(_plague_good(d, phase))
         _says_it_became(d, night, seat, "Boomdandy", phase, rng)
-        d.changes.append((phase, seat, "Boomdandy"))
+        d.changes.append((when, seat, "Boomdandy"))
     elif key == "EvilTwin":
         seat = rng.choice(_plague_good(d, phase))
         evil = [p for p in d.alive_at(phase) if d.deaths.get(p) is None
                 and d.side_at(p, phase) == "evil"]
         twin = rng.choice(evil)
         _says_it_became(d, night, seat, "EvilTwin", phase, rng)
-        d.changes.append((phase, seat, "EvilTwin"))
-        # It and its twin know each other that night, or the night after
-        # a day (F Weg 1); it is the good player, kept off the gallows.
-        pair = night if phase[0] == "N" else night + 1
+        d.changes.append((when, seat, "EvilTwin"))
+        # It and its twin know each other the night after (F Weg 1); it is
+        # the good player, kept off the gallows.
+        pair = night + 1
         d.said_by_others.append(EvilTwinPair(pair, seat, a=seat, b=twin))
         d.st_twins = (seat, twin)
     elif key == "Marionette":
         seat = rng.choice(_plague_puppets(d, phase))
         d.st_puppets[seat] = d.token(seat, phase) or d.role_at(seat, phase)
-        d.changes.append((phase, seat, "Marionette"))
+        d.changes.append((when, seat, "Marionette"))
     elif key == "Boffin":
         # As a Boffin coming into play (D Weg 1): the Demon dealt, still in
         # its dealt character, unless a living Boffin gave it one already.

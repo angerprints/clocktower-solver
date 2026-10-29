@@ -209,8 +209,8 @@ class StageTwo(SolverTest):
         # two, the board ending on day two — and the rest told later.
         self.assertEqual(gifts, {"?", "Boffin", "Marionette", "Summoner"})
         # The Marionette: the Imp's good neighbour, never the Poisoner.
-        self.assertIn(("PlagueMade", "D1", 0, "Marionette"), got)
-        self.assertNotIn(("PlagueMade", "D1", 5, "Marionette"), got)
+        self.assertIn(("PlagueMade", "N2", 0, "Marionette"), got)
+        self.assertNotIn(("PlagueMade", "N2", 5, "Marionette"), got)
         # The Summoner: a second Demon, never the Imp itself.
         self.assertIn(("PlagueSummoned", "N2", 1, "Pukka"), got)
         self.assertNotIn(("PlagueSummoned", "N2", 6, "Pukka"), got)
@@ -221,7 +221,7 @@ class StageTwo(SolverTest):
         self.assertIn(("PlagueMade", "N2", 0, "Undertaker"), got)
         row = I.BecameInfo(1, 0, role="Saint", was="Chef")
         got = stories2([row], **EXECUTED_D1)
-        self.assertIn(("PlagueMade", "D1", 0, "Saint"), got)
+        self.assertIn(("PlagueMade", "N2", 0, "Saint"), got)
         # Before the gain it is neither.
         self.assertEqual(stories2([row]), {})
 
@@ -229,7 +229,7 @@ class StageTwo(SolverTest):
         boom = I.BoomdandyExploded(2, 0)
         kw = dict(deaths={4: ("D1",), 0: ("D2",)}, executions={1: 4, 2: 0})
         got = stories2([boom], **kw)
-        self.assertIn(("PlagueMade", "D1", 0, "Boomdandy"), got)
+        self.assertIn(("PlagueMade", "N2", 0, "Boomdandy"), got)
         cost, changes = S.best_story(world(), state([boom], script=SC2, **kw))
         self.assertIsNotNone(cost)
         # Without the gain the explosion has no Boomdandy behind it.
@@ -237,7 +237,7 @@ class StageTwo(SolverTest):
             [boom], script=SC2, executions={2: 0}, deaths={0: ("D2",)}))[0])
         pair = I.EvilTwinPair(2, 0, a=0, b=5)
         got = stories2([pair], **EXECUTED_D1)
-        self.assertIn(("PlagueMade", "D1", 0, "EvilTwin"), got)
+        self.assertIn(("PlagueMade", "N2", 0, "EvilTwin"), got)
         # A good Evil Twin and its evil twin know each other that night.
         view = Timeline(world(), (S.PlagueMade("D1", 0, "EvilTwin", "good"),))
         self.assertTrue(pair.holds(view, state([pair], script=SC2), None))

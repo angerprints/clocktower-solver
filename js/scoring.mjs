@@ -337,6 +337,11 @@ function moversIn(world, state) {
   for (const [taken] of Object.values(state.philosophies() || {}))
     roles.add(taken);
   let count = (swapped ? 1 : 0) + (made.size ? 1 : 0);
+  // The Storyteller's Pit-Hag or a jinx after a Plague Doctor's death
+  // (Pestdoktor Stufe 2): seen night by night. See solver.py.
+  if (plagueOnBoard(state) && deaths.length && [...PLAGUE_STAGE_2].some(
+    k => k !== "Mezepheles" && k !== "Boffin" && state.script.keys.includes(k)))
+    count += 1;
   // The Demon handed on before a Snake Charmer chose it (Stelle 60,
   // 15.10.2026). See solver.py.
   if (swapped) {
@@ -2459,8 +2464,14 @@ function plagueStage2Seen(key, view, state, phase) {
   if (key === "Mezepheles") return final >= phaseIndex(`N${g + 1}`);
   if (key === "Summoner") return plagueSummonNights(view, state, phase).length > 0;
   const became = plagueBecame(state);
-  if (key === "PitHag")
-    return became.some(i => phaseIndex(`N${i.night}`) >= phaseIndex(phase));
+  if (key === "PitHag") {
+    // Not a row a Pit-Hag's own row names.
+    const recorded = new Set(state.infos
+      .filter(i => i.sourceRole === "PitHag" && i.role)
+      .map(i => `${i.night}|${i.target}`));
+    return became.some(i => phaseIndex(`N${i.night}`) >= phaseIndex(phase)
+                       && !recorded.has(`${i.night}|${i.player}`));
+  }
   if (key === "Baron")
     return became.some(i => i.night === g && TEAM[i.role] === "outsider");
   if (key === "Boomdandy")
@@ -2468,7 +2479,7 @@ function plagueStage2Seen(key, view, state, phase) {
       || state.infos.some(i => i.type === "BoomdandyExploded"
                           && phaseIndex(`D${i.night}`) >= phaseIndex(phase));
   if (key === "EvilTwin") {
-    const pair = phase[0] === "N" ? g : g + 1;
+    const pair = g + 1;
     return became.some(i => i.night === g && i.role === "EvilTwin")
       || state.infos.some(i => i.type === "EvilTwinPair" && i.night === pair);
   }
@@ -2482,8 +2493,12 @@ const plagueSide = (view, seat, at) => view.evilAt(seat, at) ? "evil" : "good";
 function plagueStage2Ways(key, view, state, phase, slot) {
   const n = state.nPlayers;
   const g = parseInt(phase.slice(1), 10);
-  const at = phase[0] === "N" ? beganAt(g, phase) : phase;
+  // The board when the jinxes act: after the death. See solver.py.
+  const at = phase;
   const demon = p => TEAM[view.roleAt(p, at)] === "demon";
+  // Whom the jinxes make something is it from the night after the death,
+  // as it begins. See solver.py.
+  const [madeAt, madeSlot] = [`N${g + 1}`, SETUP_SLOT];
   if (key === "Mezepheles" || key === "Boffin") return [[[], 1.0]];
   if (key === "PitHag") {
     const recorded = new Set(state.infos
@@ -2541,7 +2556,7 @@ function plagueStage2Ways(key, view, state, phase, slot) {
           continue;
         seats.push(nb);
       }
-    return seats.map(nb => [[plagueMade(phase, nb, "Marionette", "good", slot)],
+    return seats.map(nb => [[plagueMade(madeAt, nb, "Marionette", "good", madeSlot)],
                             1.0 / seats.length]);
   }
   if (key === "Baron") {
@@ -2550,8 +2565,8 @@ function plagueStage2Ways(key, view, state, phase, slot) {
     const rows = plagueBecame(state).filter(i => i.night === g
       && TEAM[i.role] === "outsider" && !held.has(i.role) && !demon(i.player));
     const out = [];
-    const made = combo => combo.map(i => plagueMade(phase, i.player, i.role,
-      plagueSide(view, i.player, at), slot));
+    const made = combo => combo.map(i => plagueMade(madeAt, i.player, i.role,
+      plagueSide(view, i.player, at), madeSlot));
     for (let x = 0; x < rows.length; x++) out.push([made([rows[x]]), 1.0]);
     for (let x = 0; x < rows.length; x++)
       for (let y = x + 1; y < rows.length; y++) {
@@ -2569,7 +2584,7 @@ function plagueStage2Ways(key, view, state, phase, slot) {
               && phaseIndex(`D${info.night}`) >= phaseIndex(phase)))
         seats.push(info.player);
   } else if (key === "EvilTwin") {
-    const pair = phase[0] === "N" ? g : g + 1;
+    const pair = g + 1;
     for (const info of state.infos) {
       if (info.type === "Became" && info.role === "EvilTwin" && info.night === g)
         seats.push(info.player);
@@ -2582,7 +2597,7 @@ function plagueStage2Ways(key, view, state, phase, slot) {
     if (!Number.isInteger(seat) || seat < 0 || seat >= n
         || out.some(([way]) => way[0].seat === seat)
         || demon(seat) || view.roleAt(seat, at) === key) continue;
-    out.push([[plagueMade(phase, seat, key, plagueSide(view, seat, at), slot)],
+    out.push([[plagueMade(madeAt, seat, key, plagueSide(view, seat, at), madeSlot)],
               1.0]);
   }
   return out;
@@ -2626,8 +2641,10 @@ export function plagueOffers(view, state, phase) {
         out.push([[plagueGift(phase, m, key, slot)], each / minions.length]);
     else if (PLAGUE_STAGE_2.has(key)) {
       const mark = plagueGift(phase, STORYTELLER, key, slot);
-      for (const [way, share] of plagueStage2Ways(key, view, state, phase, slot))
-        out.push([[mark, ...way], each * share]);
+      // None fits this story: held, and nothing came of it that shows.
+      let ways = plagueStage2Ways(key, view, state, phase, slot);
+      if (!ways.length) ways = [[[], 1.0]];
+      for (const [way, share] of ways) out.push([[mark, ...way], each * share]);
     } else out.push([[plagueGift(phase, STORYTELLER, key, slot)], each]);
   }
   return out;

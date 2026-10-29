@@ -227,12 +227,19 @@ def always_impaired(world, state, night):
     phase = f"N{night}"
     # A Summoner's Marionette-to-be that was the Drunk or the Lunatic
     # until the Demon came is one all along (22.10.2026).
+    # A seat the Storyteller made the Marionette (the Plague Doctor's
+    # jinx, Pestdoktor Stufe 2, G) is one from then on, and not before.
+    def puppet(seat):
+        return any(role == "Marionette" for _at, role in
+                   world.plague_made(seat))
     seats = frozenset(seat for seat, token in enumerate(world.believes)
                       if token is not None
-                      and (world.role_at(seat, phase) == world.roles[seat]
-                           or (world.roles[seat] == "Marionette"
-                               and world.role_at(seat, phase)
-                               in ("Drunk", "Lunatic"))))
+                      and ((world.role_at(seat, phase) == "Marionette")
+                           if puppet(seat) else
+                           (world.role_at(seat, phase) == world.roles[seat]
+                            or (world.roles[seat] == "Marionette"
+                                and world.role_at(seat, phase)
+                                in ("Drunk", "Lunatic")))))
     if not seats:
         return []
     return [Source("believer", seats, capacity=len(seats), cost=1.0,

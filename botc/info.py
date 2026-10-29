@@ -2181,7 +2181,13 @@ class SnakeCharmerChoice(Info):
             # Saying nothing here instead would make a swap almost free —
             # it would hold in every world, including the ones where the
             # target was never the Demon and no swap could have happened.
-            return w.role_at(self.target, f"D{self.night}") == "SnakeCharmer"
+            #
+            # Or at its turn, read at the row's place in the night: a
+            # Pit-Hag later that night may have made it something else
+            # (the Storyteller's, Pestdoktor Stufe 2, the gate, seed 21 of
+            # line J, 29.10.2026).
+            return w.role_at(self.target, f"D{self.night}") == "SnakeCharmer" \
+                or w.role_at(self.target, phase) == "SnakeCharmer"
         # Nothing happened, so either they were not the Demon, or the
         # Snake Charmer was not working — and the second is somebody
         # else's excuse to pay for.
@@ -2259,8 +2265,12 @@ class EvilTwinPair(Info):
         # it was made. Its side is kept, so the sides are asked of the seats.
         made = [at for at, role in w.plague_made(twin) if role == "EvilTwin"]
         if made:
+            # The sides as the night began: the twin was chosen then, and a
+            # Snake Charmer swapping it later that night changes nothing
+            # about whom it was shown (the gate, seed 2386 of line P2C).
+            began = f"B{self.night - 1}" if self.night > 1 else phase
             return any(at in (phase, f"D{self.night - 1}") for at in made) \
-                and w.evil_at(self.a, phase) != w.evil_at(self.b, phase)
+                and w.evil_at(self.a, began) != w.evil_at(self.b, began)
         if self.night > 1:
             if w.role_at(twin, f"D{self.night - 1}") == "EvilTwin":
                 return False
