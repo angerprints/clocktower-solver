@@ -60,6 +60,7 @@ export const INFO_SOURCES = {
   PsychopathRoshambo: "Psychopath", WidowKnown: "Widow",
   PreacherChoice: "Preacher", HuntsmanChoice: "Huntsman",
   EngineerChoice: "Engineer", BoffinGave: "Boffin",
+  PlagueDoctorGave: "PlagueDoctor",
   PuzzlemasterGuess: "Puzzlemaster", BoomdandyExploded: "Boomdandy",
   PixieLearned: "Pixie", VillageIdiotInfo: "VillageIdiot",
   LycanthropeChose: "Lycanthrope", HarpyMadness: "Harpy",
@@ -320,6 +321,7 @@ export function readBoard(payload) {
                          // Woken late, and "choose a player" means any.
                          "NightwatchmanSeen",
                          // The table is told, whoever writes it down.
+                         "PlagueDoctorGave",
                          "BansheeAnnounced", "FearmongerChose",
                          "VizierAnnounced", "BlindVote", "LeviathanAnnounced",
                          "AlHadikhiaChose",

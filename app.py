@@ -162,6 +162,9 @@ def build_info(d):
                                             for x in d.get("roles") or ()))
     if kind == "BoffinGave":
         return I.BoffinGave(night, player, trust, role=d.get("role") or "")
+    if kind == "PlagueDoctorGave":
+        return I.PlagueDoctorGave(night, player, trust,
+                                  role=d.get("role") or "")
     if kind == "PuzzlemasterGuess":
         return I.PuzzlemasterGuess(night, player, trust,
                                    guess=_int(d, "guess"),
@@ -519,7 +522,10 @@ def run_solve(payload):
                     # a player" means any player: one killed earlier that
                     # night is still shown who it is.
                     "NightwatchmanSeen",
-                    # The table is told, whoever writes it down.
+                    # The table is told, whoever writes it down — and
+                    # what the Storyteller gained when the Plague Doctor
+                    # died, written down by anybody (28.10.2026).
+                    "PlagueDoctorGave",
                     "BansheeAnnounced", "FearmongerChose",
                     "VizierAnnounced", "BlindVote", "LeviathanAnnounced",
                     "AlHadikhiaChose",
@@ -785,6 +791,7 @@ INFO_SOURCES = {
     "PsychopathRoshambo": "Psychopath", "WidowKnown": "Widow",
     "PreacherChoice": "Preacher", "HuntsmanChoice": "Huntsman",
     "EngineerChoice": "Engineer", "BoffinGave": "Boffin",
+    "PlagueDoctorGave": "PlagueDoctor",
     "PuzzlemasterGuess": "Puzzlemaster",
     "BoomdandyExploded": "Boomdandy",
     "PixieLearned": "Pixie", "VillageIdiotInfo": "VillageIdiot",

@@ -180,7 +180,37 @@ export function tookIt(w, s, seat, role, phase) {
   const taken = (s.philosophies() || {})[seat];
   if (taken && taken[0] === role && w.roleAt(seat, phase) === "Philosopher"
       && phaseIndex(phase) >= phaseIndex(taken[1])) return true;
-  return hasBoffinAbility(w, s, seat, role, phase);
+  return hasBoffinAbility(w, s, seat, role, phase)
+    || hasPlagueAbility(w, s, seat, role, phase);
+}
+
+// ---------------------------------------------------------------------
+// The Plague Doctor (28.10.2026). See info.py.
+// ---------------------------------------------------------------------
+/** The Storyteller, as the seat that holds what it gained: no player. */
+export const STORYTELLER = null;
+/** Every ability it may gain that the town cannot see (B Weg 3). */
+export const PLAGUE_UNSEEN = "*";
+
+/** Has the Storyteller that Minion ability at this moment? */
+export function storytellerHas(w, role, phase) {
+  return role !== null && role !== undefined && !!w.plagueAt
+    && w.plagueAt(STORYTELLER, phase).includes(role);
+}
+
+/** Was this Minion given that ability by the Plague Doctor's death (E Weg
+ * 1), and is it a Minion still? */
+export function hasPlagueAbility(w, s, seat, role, phase) {
+  if (role === null || role === undefined || seat === null
+      || seat === undefined || !w.plagueAt) return false;
+  if (!w.plagueAt(seat, phase).includes(role)) return false;
+  return TEAM[w.roleAt(seat, phase)] === "minion";
+}
+
+/** Every Minion with that ability through the Plague Doctor then. */
+export function plagueHolders(w, s, role, phase) {
+  if (role === null || role === undefined || !w.plaguedSeats) return [];
+  return w.plaguedSeats().filter(seat => hasPlagueAbility(w, s, seat, role, phase));
 }
 
 // ---------------------------------------------------------------------
@@ -1744,7 +1774,10 @@ export const GoblinClaim = define("GoblinClaim", "Goblin",
     sourceSeat() { return this.player; },
     mustHaveFailed(w, s) {
       const day = this.night;
-      if (w.roleAt(this.player, `D${day}`) !== "Goblin") return [];
+      // Or a Minion the Plague Doctor's death gave it (E Weg 1).
+      if (w.roleAt(this.player, `D${day}`) !== "Goblin"
+          && !hasPlagueAbility(w, s, this.player, "Goblin", `D${day}`))
+        return [];
       // Executed is enough, dead or not (table ruling, 08.10.2026).
       if (s.executedOn(day) !== this.player) return [];
       if (!wentOnAfter(s, day)) return [];
@@ -1800,7 +1833,10 @@ export const FearmongerChose = define("FearmongerChose", "Fearmonger",
   function (w, s) {
     const phase = `N${this.night}`;
     const seat = w.findAt("Fearmonger", phase);
-    return seat !== null && minionStillActs(w, s, seat, phase);
+    if (seat !== null && minionStillActs(w, s, seat, phase)) return true;
+    // Or a Minion the Plague Doctor's death gave it (E Weg 1).
+    return plagueHolders(w, s, "Fearmonger", phase)
+      .some(who => minionStillActs(w, s, who, phase));
   }, {
     hard() { return true; },
     isInformation() { return false; },
@@ -2032,6 +2068,21 @@ export const boffinGiven = (row, s) => {
 };
 export const BoffinGave = define("BoffinGave", "Boffin",
   function (w, s) { return boffinGiven(this, s) !== null; });
+
+/** Which Minion ability the Storyteller gained when the Plague Doctor
+ * died (28.10.2026): a Minion of the script. `night` is the number of the
+ * night or day it died. See info.py. */
+export const plagueGiven = (row, s) => {
+  const key = row.role || "";
+  if (!s.script.keys.includes(key) || TEAM[key] !== "minion") return null;
+  return key;
+};
+export const PlagueDoctorGave = define("PlagueDoctorGave", "PlagueDoctor",
+  function (w, s) { return plagueGiven(this, s) !== null; }, {
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },
+  });
 
 /** The Puzzlemaster's one guess, and whom it was then shown. Shown the
  * Demon: the guess was the drunk player, or it was off itself. */
@@ -2358,7 +2409,8 @@ export const KINDS = {
   DamselGuess, FearmongerChose, VizierAnnounced, BlindVote,
   ChoirboyInfo, PrincessNominated, GolemNomination, PsychopathKill,
   PsychopathRoshambo, WidowKnown,
-  PreacherChoice, HuntsmanChoice, EngineerChoice, BoffinGave, PuzzlemasterGuess,
+  PreacherChoice, HuntsmanChoice, EngineerChoice, BoffinGave, PlagueDoctorGave,
+  PuzzlemasterGuess,
   BoomdandyExploded, MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
   PixieLearned, VillageIdiotInfo, LycanthropeChose, HarpyMadness,

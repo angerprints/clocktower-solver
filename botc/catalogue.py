@@ -725,6 +725,16 @@ _EXPERIMENTAL = [
     # (A Weg 3). Its sobriety is the Boffin's, not the Demon's. Woken on
     # the first night only, with the Demon.
     _c("Boffin", "boffin", "Boffin", "minion", {FIRST}, nights="first"),
+    # The ninth (28.10.2026, claude/pestdoktor-lesarten.md). An Outsider
+    # that never wakes: when it dies sober, the Storyteller gains a Minion
+    # ability of the script for the rest of the game (C Weg 1), from that
+    # moment on (D Weg 1). Which one is a story
+    # (solver.a_plague_doctor_gives_the_storyteller, worlds.PlagueGift),
+    # the ones nobody sees together (B Weg 3). Five go to a Minion
+    # instead, their jinxes (E Weg 1). Stage 1: what poisons, kills, or
+    # changes an execution, and those five.
+    _c("PlagueDoctor", "plaguedoctor", "Plague Doctor", "outsider",
+       {NEVER}),
 ]
 
 
@@ -754,6 +764,8 @@ IMPAIRS = frozenset({
     "VillageIdiot", "Lleech",
     # Through the Demon: a Sailor's, a Courtier's, a Minstrel's ability.
     "Boffin",
+    # Through the Storyteller: a Poisoner's, a Widow's, a Xaan's.
+    "PlagueDoctor",
 })
 
 CHARACTERS = {c.key: c for c in _TB + _SV + _UNMODELLED + _FABLED

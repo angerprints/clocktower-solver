@@ -20,7 +20,7 @@ import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
         takenByAPhilosopher, tookIt, boffinHolders, soberSeat,
-        boffinAbilities, boffinGiftOf, boffinSeat}
+        boffinAbilities, boffinGiftOf, boffinSeat, storytellerHas}
   from "./info.mjs";
 
 // --------------------------------------------------------------------
@@ -431,6 +431,11 @@ export const SURVIVES_EXECUTION_RULES = [];
 export const survivesExecutionRule = fn =>
   (SURVIVES_EXECUTION_RULES.push(fn), fn);
 
+/** A Devil's Advocate's ability the Storyteller holds, among the seats
+ * that may have saved somebody from the gallows (28.10.2026): no seat at
+ * all. See solver.py. */
+export const STORYTELLER_SAVES = "storyteller";
+
 export function survivalsOf(world, state, day, seat, but = null) {
   const out = [];
   for (const rule of SURVIVES_EXECUTION_RULES)
@@ -449,6 +454,9 @@ const walkedAway = (state, day, seat) =>
 const aDevilsAdvocateSavesFromTheGallows = survivesExecutionRule(
   function aDevilsAdvocateSavesFromTheGallows(world, state, day, seat) {
     if (!inBag(state, "DevilsAdvocate")) return [];
+    // The Storyteller's, the Plague Doctor's gift (28.10.2026).
+    if (storytellerHas(world, "DevilsAdvocate", `N${day}`))
+      return [STORYTELLER_SAVES];
     const advocate = acting(world, state, "DevilsAdvocate", day);
     if (advocate === null) return [];
     // "Different to last night": it cannot keep the same player from the
@@ -956,16 +964,25 @@ causeRule(function aGossipMayKill(world, state, night) {
 causeRule(function aGodfatherAnswersAnOutsider(world, state, night) {
   if (!inBag(state, "Godfather") || night < 2) return [];
   const seat = acting(world, state, "Godfather", night);
-  if (seat === null) return [];
+  // The Storyteller's, the Plague Doctor's gift (28.10.2026): nothing
+  // stops it.
+  const told = storytellerHas(world, "Godfather", `N${night}`);
+  if (seat === null && !told) return [];
   const day = `D${night - 1}`;
   const lost = Object.keys(state.deaths || {}).some(who =>
     state.diedAt(who).includes(day) &&
     world.teamAt(Number(who), day) === "outsider");
   if (!lost) return [];
+  const out = [];
   // Drunk or poisoned it kills nobody, and so does one that chose the
   // Goon first: a quiet night stopped at its source.
-  return [new Cause("Godfather", OTHER, allSeats(state),
-                    {capacity: 1, mustFire: true, actor: seat})];
+  if (seat !== null)
+    out.push(new Cause("Godfather", OTHER, allSeats(state),
+                       {capacity: 1, mustFire: true, actor: seat}));
+  if (told)
+    out.push(new Cause("Godfather (Storyteller)", OTHER, allSeats(state),
+                       {capacity: 1, mustFire: true}));
+  return out;
 });
 
 /** Once per game, and nothing stops it.
@@ -975,13 +992,20 @@ causeRule(function aGodfatherAnswersAnOutsider(world, state, night) {
  * working. Not the Demon's kill either. */
 causeRule(function anAssassinKillsThroughAnything(world, state, night) {
   if (!inBag(state, "Assassin") || night < 2) return [];
-  if (acting(world, state, "Assassin", night) === null) return [];
+  // The Storyteller's, the Plague Doctor's gift (28.10.2026): once a game
+  // too, not held to here. See solver.py.
+  const out = storytellerHas(world, "Assassin", `N${night}`)
+    ? [new Cause("Assassin (Storyteller)", OTHER, allSeats(state),
+                 {capacity: 1, cost: PRIORS.ASSASSIN_STRIKE_PENALTY,
+                  unstoppable: true})]
+    : [];
+  if (acting(world, state, "Assassin", night) === null) return out;
   const spent = state.infos.filter(i => i.sourceRole === "Assassin")
                            .map(i => i.night);
-  if (spent.length && !spent.includes(night)) return [];
+  if (spent.length && !spent.includes(night)) return out;
   return [new Cause("Assassin", OTHER, allSeats(state),
                     {capacity: 1, cost: PRIORS.ASSASSIN_STRIKE_PENALTY,
-                     unstoppable: true})];
+                     unstoppable: true}), ...out];
 });
 
 /** The Storyteller decides, and there is no trigger to wait for.
@@ -1898,6 +1922,41 @@ sourceRule(function aXaanPoisonsTheTown(world, state, night) {
     ? () => 1.0 : 1.0;
   return [new Source("Xaan", town, {capacity: town.size, cost,
                                     repeatCost: cost, actor: xaan})];
+});
+
+/** A Poisoner's, a Widow's or a Xaan's ability the Storyteller gained
+ * when the Plague Doctor died (28.10.2026, stage 1): nothing stops it.
+ * See solver.py. */
+sourceRule(function theStorytellerPoisons(world, state, night) {
+  if (!state.script.keys.includes("PlagueDoctor") || !world.plagueAt)
+    return [];
+  const phase = `N${night}`;
+  const have = world.plagueAt(null, phase);
+  if (!have.length) return [];
+  const out = [];
+  if (have.includes("Poisoner"))
+    out.push(new Source("Poisoner (Storyteller)", state.aliveSet(phase),
+                        {capacity: 1, cost: PRIORS.POISON_HIT_PENALTY,
+                         repeatCost: PRIORS.POISON_REPEAT_PENALTY}));
+  if (have.includes("Widow")) {
+    const everyone = new Set(Array.from({length: state.nPlayers}, (_, i) => i));
+    out.push(new Source("Widow (Storyteller)", everyone,
+                        {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0}));
+  }
+  if (have.includes("Xaan")) {
+    const base = world.world || world;
+    const x = base.roles.filter(role => CHARACTERS[role].team === "outsider")
+      .length;
+    if (night === x) {
+      const town = new Set();
+      for (let p = 0; p < state.nPlayers; p++)
+        if (world.teamAt(p, phase) === "townsfolk") town.add(p);
+      if (town.size)
+        out.push(new Source("Xaan", town, {capacity: town.size, cost: 1.0,
+                                           repeatCost: 1.0}));
+    }
+  }
+  return out;
 });
 
 /** "[+0 to +2 Village Idiots. 1 of the extras is drunk]" With two or

@@ -625,14 +625,14 @@ footer{padding:0 18px 40px}
 // The solver runs here, on this device. `app.py` is a convenience for
 // running it from a laptop, not a requirement: nothing below asks a
 // server for an answer.
-import * as solver from "./api.mjs?v=fee6418c3557";
+import * as solver from "./api.mjs?v=fe4680e8ab9c";
 
 // The solve runs beside the page, in a worker, so a long board neither
 // freezes the page nor hides that it is busy: it reports how far along it
 // is and can be stopped. Where a browser cannot start a module worker —
 // an old one, or a page opened straight from disk — it runs here as it
 // always did, and the page freezes for the length of it as it always did.
-const WORKER_URL = "./worker.mjs?v=fee6418c3557";
+const WORKER_URL = "./worker.mjs?v=fe4680e8ab9c";
 let WORKER = null, NO_WORKER = false, JOB = null;
 
 function worker(){
@@ -786,6 +786,9 @@ const SCHEMA = {
   EngineerChoice:     [["roles","roles:evil"]],
   // A good character of the script that is not in play (26.10.2026).
   BoffinGave:         [["role","role:good"]],
+  // A Minion of the script: what the Storyteller gained when the Plague
+  // Doctor died, on the night or day it died (28.10.2026).
+  PlagueDoctorGave:   [["role","role:minions"]],
   PuzzlemasterGuess:  [["guess","player"],["shown","player"]],
   BoomdandyExploded:  [["pointed","playerOrNone"]],
   // The seventh five. The Pixie says which Townsfolk it was shown; a
@@ -875,6 +878,7 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   PsychopathRoshambo:"Psychopath", WidowKnown:"Widow",
   PreacherChoice:"Preacher", HuntsmanChoice:"Huntsman",
   EngineerChoice:"Engineer", BoffinGave:"Boffin",
+  PlagueDoctorGave:"PlagueDoctor",
   PuzzlemasterGuess:"Puzzlemaster", BoomdandyExploded:"Boomdandy",
   PixieLearned:"Pixie", VillageIdiotInfo:"VillageIdiot",
   LycanthropeChose:"Lycanthrope", HarpyMadness:"Harpy",
@@ -948,6 +952,7 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   PsychopathRoshambo:"Roshambo at the execution", WidowKnown:"Widow known",
   PreacherChoice:"Preacher chose", HuntsmanChoice:"Huntsman chose",
   EngineerChoice:"Engineer chose", BoffinGave:"Boffin gave the Demon",
+  PlagueDoctorGave:"Plague Doctor's death",
   PuzzlemasterGuess:"Puzzlemaster guess", BoomdandyExploded:"Boomdandy exploded",
   PixieLearned:"Pixie shown", VillageIdiotInfo:"Village Idiot",
   LycanthropeChose:"Lycanthrope chose", HarpyMadness:"Harpy madness",
@@ -1798,6 +1803,9 @@ function describeRow(r){
     case "BoffinGave":
       return r.role ? `gave the Demon the ${role(r.role)}'s ability`
                     : `gave the Demon an ability — pick the character`;
+    case "PlagueDoctorGave":
+      return r.role ? `gave the Storyteller the ${role(r.role)}'s ability`
+                    : `gave the Storyteller a Minion ability — pick it`;
     case "PuzzlemasterGuess":
       return `guessed ${who(r.guess)} is the drunk one, and was shown ${
         who(r.shown)} as the Demon`;

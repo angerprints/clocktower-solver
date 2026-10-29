@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 28.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 29.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -1623,13 +1623,26 @@ Der Bericht steht in `claude/laborratte-stufe-2.md`, die Lesarten und deine Antw
 | Tor | Zeilen ohne Laborratte wie in Stufe 1; acht Laborratten-Zeilen (`messung/tor_laborratte_2.sh`) ohne Verlust durch die Laborratte. |
 | Korpus | 735 Bretter (14 neu), 3 geändert (gewollt). |
 
+### Der Pestdoktor, Stufe 1 · *erledigt am 28.10.2026*
+
+Der Bericht steht in `claude/pestdoktor.md`, die Lesarten und deine Antworten in `claude/pestdoktor-lesarten.md`. **Deine Antworten vom 28.10.2026:** A Weg 1, B Weg 3, C bis J Weg 1. Stufe 1 rechnet, was vergiftet, tötet oder eine Hinrichtung ändert, und die fünf Jinx-Schergen; Grubenweib, Mezepheles, Beschwörer, Laborratte und die vier Jinx-Spieler kommen in Stufe 2.
+
+| | Gebaut |
+|---|---|
+| Solver | Bei jedem Tod eines Pestdoktors (auch eines Philosophen mit seiner Fähigkeit oder eines Dämons mit ihr von der Laborratte) eine Gabe an den Erzähler (`PlagueGift`, Sitz `STORYTELLER`), ab diesem Tod, bei einem Tod in der Nacht ab Nachtbeginn. Jede sichtbare Schergen-Fähigkeit des Skripts eine Geschichte, der Rest „nichts Sichtbares“ (Kosten 1 und 1/k); Zeile „Plague Doctor's death gave the Storyteller“. Giftmischer, Witwe, Xaan, Pate, Meuchelmörder, Hexe, Cerenovus, Teufelsadvokat, Strippenzieher des Erzählers; Scharlachrote Frau, Goblin, Angstmacher (und Spion, Geist) an einen lebendigen Schergen. Nur Scharlachrote Frau und Strippenzieher stehen in den Geschichten, der Rest wird beim Erklären verteilt (`PLAGUE_LATER`). Stufe-2-Fähigkeiten, die sichtbar werden können: „not computed“. |
+| Nebenbei | Die Wendungen des Mezepheles werden für jede erzählte Geschichte einer Welt probiert, nicht nur für die erste. |
+| Simulator, Night-Walk | Der Erzähler bekommt bei einem nüchternen Tod eine zufällige Stufe-1-Fähigkeit und setzt sie ein; der Night-Walk lässt Pate und Meuchelmörder des Erzählers an ihrem Platz töten. |
+| Tor | Zeilen ohne Pestdoktor unverändert; sieben Pestdoktor-Zeilen (`messung/tor_pestdoktor.sh`) ohne Verlust durch den Pestdoktor, 3.070 Gaben. |
+| Korpus | 752 Bretter (17 neu), keines geändert. |
+| Tests | 1.894 Tests in 73 Dateien grün (13 neu). |
+
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 und Stufe 3 (die Nacht in ihrer Reihenfolge, mit Punkt 1b) am 23.10.2026, Stufe 2 (zwei lebendige Dämonen) am 26.10.2026, Ingenieur am 26.10.2026, Laborratte Stufe 1 am 27.10.2026, Stufe 2 am 28.10.2026; als Nächstes der Pestdoktor, erst mit Lesarten; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 und Stufe 3 (die Nacht in ihrer Reihenfolge, mit Punkt 1b) am 23.10.2026, Stufe 2 (zwei lebendige Dämonen) am 26.10.2026, Ingenieur am 26.10.2026, Laborratte Stufe 1 am 27.10.2026, Stufe 2 am 28.10.2026, Pestdoktor Stufe 1 am 28.10.2026; als Nächstes Stufe 2 des Pestdoktors, erst mit Lesarten; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 132 Einträge. Von den 138 Spielercharakteren der App sind 131 im Katalog (dazu der Wächter, ein Fabled), 7 fehlen: 3 Bürger, 3 Außenseiter, 1 Scherge. Davon sind 5 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia, Lil' Monsta und Beschwörer (21.10.2026), Hutmacher Stufe 1 und 3 (23.10.2026), Stufe 2 und Ingenieur (26.10.2026), Laborratte Stufe 1 (27.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
+Stand des Katalogs: 133 Einträge. Von den 138 Spielercharakteren der App sind 132 im Katalog (dazu der Wächter, ein Fabled), 6 fehlen: 3 Bürger, 2 Außenseiter, 1 Scherge. Davon sind 4 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia, Lil' Monsta und Beschwörer (21.10.2026), Hutmacher Stufe 1 und 3 (23.10.2026), Stufe 2 und Ingenieur (26.10.2026), Laborratte Stufe 1 (27.10.2026), Stufe 2 und Pestdoktor Stufe 1 (28.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1741,6 +1754,8 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 92 | Laborratte | ~~**Rechenzeit der Philosophen-Gabe (M Weg 2)**~~ · *entschieden am 28.10.2026* (Weg 1): So lassen. Jede Wahl bleibt eine Geschichte, weil Wahlen nur mit Zeile oder nur im Spiel wahre Welten verlieren können. Selten (im Tor eine von 24.000 Partien, Seed 2189: 2,6 Stunden in Python); die Seite schätzt solche Bretter. Die Torzeile mit Beschwörer, Ingenieur und Hutmacher läuft in Stücken (`messung/tor_laborratte_2.sh`). |
 | 93 | Werkzeug | **Ein guter Außenseiter, der einen Bürger behauptet,** macht ein gespieltes Brett für die Seite leer, weil die Seite gute Spieler nicht lügen lässt (Seed 47 der Klammer-Zeile). Gefunden am 28.10.2026. |
 | 94 | Ingenieur | **Ingenieur macht den Dämon zur Pukka** (Seed 1429 der Zeile mit Professor, Ingenieur, Nachtwächter, Feenkind, Philosoph): verloren, auch ohne Laborratten-Regeln. Nicht untersucht. |
+| 95 | Jäger | **Der Jäger macht die Unschuld zum Philosophen, die Kammerzofe passt in Nacht 2 nicht** (Seed 2685 der Pestdoktor-Zeile mit Geist, Kammerzofe, Philosoph; Seed 2693 der Zeile mit Laborratte und Imp). Verloren auch ohne Pestdoktor; bei 2693 mit jeder genannten Laborratten-Gabe außer dem Philosophen. Nicht untersucht. Gefunden am 28.10.2026. |
+| 96 | Pestdoktor | **Stufe 2:** Grubenweib, Mezepheles, Beschwörer und Laborratte des Erzählers, die vier Jinx-Spieler (Baron, Böser Zwilling, Bombenleger, Marionette, F Weg 1) und ein Scherge mit der Fähigkeit des Spions, der als gut registriert. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 

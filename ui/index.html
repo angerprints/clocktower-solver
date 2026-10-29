@@ -786,6 +786,9 @@ const SCHEMA = {
   EngineerChoice:     [["roles","roles:evil"]],
   // A good character of the script that is not in play (26.10.2026).
   BoffinGave:         [["role","role:good"]],
+  // A Minion of the script: what the Storyteller gained when the Plague
+  // Doctor died, on the night or day it died (28.10.2026).
+  PlagueDoctorGave:   [["role","role:minions"]],
   PuzzlemasterGuess:  [["guess","player"],["shown","player"]],
   BoomdandyExploded:  [["pointed","playerOrNone"]],
   // The seventh five. The Pixie says which Townsfolk it was shown; a
@@ -875,6 +878,7 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   PsychopathRoshambo:"Psychopath", WidowKnown:"Widow",
   PreacherChoice:"Preacher", HuntsmanChoice:"Huntsman",
   EngineerChoice:"Engineer", BoffinGave:"Boffin",
+  PlagueDoctorGave:"PlagueDoctor",
   PuzzlemasterGuess:"Puzzlemaster", BoomdandyExploded:"Boomdandy",
   PixieLearned:"Pixie", VillageIdiotInfo:"VillageIdiot",
   LycanthropeChose:"Lycanthrope", HarpyMadness:"Harpy",
@@ -948,6 +952,7 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   PsychopathRoshambo:"Roshambo at the execution", WidowKnown:"Widow known",
   PreacherChoice:"Preacher chose", HuntsmanChoice:"Huntsman chose",
   EngineerChoice:"Engineer chose", BoffinGave:"Boffin gave the Demon",
+  PlagueDoctorGave:"Plague Doctor's death",
   PuzzlemasterGuess:"Puzzlemaster guess", BoomdandyExploded:"Boomdandy exploded",
   PixieLearned:"Pixie shown", VillageIdiotInfo:"Village Idiot",
   LycanthropeChose:"Lycanthrope chose", HarpyMadness:"Harpy madness",
@@ -1798,6 +1803,9 @@ function describeRow(r){
     case "BoffinGave":
       return r.role ? `gave the Demon the ${role(r.role)}'s ability`
                     : `gave the Demon an ability — pick the character`;
+    case "PlagueDoctorGave":
+      return r.role ? `gave the Storyteller the ${role(r.role)}'s ability`
+                    : `gave the Storyteller a Minion ability — pick it`;
     case "PuzzlemasterGuess":
       return `guessed ${who(r.guess)} is the drunk one, and was shown ${
         who(r.shown)} as the Demon`;
