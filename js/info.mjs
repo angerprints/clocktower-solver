@@ -213,6 +213,36 @@ export function plagueHolders(w, s, role, phase) {
   return w.plaguedSeats().filter(seat => hasPlagueAbility(w, s, seat, role, phase));
 }
 
+/** A Minion with the Spy's ability through the Plague Doctor then: it
+ * registers as the Spy does (Pestdoktor Stufe 2, H Weg 1). See info.py. */
+export function plagueSpy(w, seat, phase) {
+  if (seat === null || seat === undefined || !w.plagueAt) return false;
+  return w.plagueAt(seat, phase).includes("Spy")
+    && TEAM[w.roleAt(seat, phase)] === "minion";
+}
+
+/** The teams this seat may register as besides its own. See info.py. */
+export function registersOf(w, seat, phase) {
+  const got = CHARACTERS[w.roleAt(seat, phase)].registers || [];
+  if (plagueSpy(w, seat, phase))
+    return [...new Set([...got, ...CHARACTERS.Spy.registers])];
+  return got;
+}
+
+/** `registersAsRole` for this seat at that moment. See info.py. */
+export function registersHere(w, seat, phase, claimed) {
+  if (registersAsRole(w.roleAt(seat, phase), claimed)) return true;
+  return claimed in TEAM && CHARACTERS.Spy.registers.includes(TEAM[claimed])
+    && plagueSpy(w, seat, phase);
+}
+
+/** `evilRegistrations` for this seat at that moment. See info.py. */
+export function evilRegistrationsHere(w, seat, phase) {
+  const got = evilRegistrations(w.roleAt(seat, phase), w.alignmentAt(seat, phase));
+  if (!got.includes(false) && plagueSpy(w, seat, phase)) return [true, false];
+  return got;
+}
+
 // ---------------------------------------------------------------------
 // The Boffin (26.10.2026). See info.py.
 // ---------------------------------------------------------------------
@@ -237,9 +267,14 @@ export function boffinGiftOf(w, s, seat, phase) {
   const got = w.giftAt ? w.giftAt(seat, phase) : null;
   if (!got || got === BOFFIN_UNSEEN) return null;
   if (TEAM[w.roleAt(seat, phase)] !== "demon") return null;
-  if (boffinSeat(w, s, phase) === null) return null;
+  if (!boffinWorking(w, s, phase)) return null;
   return got;
 }
+
+/** A living Boffin then — or the Storyteller holding its ability, the
+ * Plague Doctor's gift (Pestdoktor Stufe 2, D Weg 1). See info.py. */
+export const boffinWorking = (w, s, phase) =>
+  boffinSeat(w, s, phase) !== null || storytellerHas(w, "Boffin", phase);
 
 /** A Demon given the Philosopher's ability chooses once (H and M Weg 2,
  * stage 2, 27.10.2026): "Philosopher>X>N2". See info.py. */
@@ -276,6 +311,8 @@ export function soberSeat(w, s, seat, role, phase) {
       || w.roleAt(seat, phase) === role) return seat;
   if (hasBoffinAbility(w, s, seat, role, phase)) {
     const got = boffinSeat(w, s, phase);
+    if (got === null && storytellerHas(w, "Boffin", phase))
+      return STORYTELLER;                 // nothing can stop it (D Weg 1)
     return got === null ? seat : got;
   }
   return seat;
@@ -345,7 +382,7 @@ export function evilOptions(w, s, seat, phase) {
   } else if (s && sideOpen(w, s, seat, phase)) {
     got = [true, false];                 // a Philosopher's Goon
   } else {
-    got = evilRegistrations(w.roleAt(seat, phase), w.alignmentAt(seat, phase));
+    got = evilRegistrationsHere(w, seat, phase);
   }
   const hidden = s ? s._hidden : null;
   if (!hidden || hidden[0] === null || hidden[0] !== seat) return got;
@@ -522,7 +559,7 @@ const define = (name, sourceRole, holds, extra = {}) => {
 const misregistered = (w, seat, phase, claimed) => {
   if (seat === null || seat === undefined) return false;
   const actual = w.roleAt(seat, phase);
-  return actual !== claimed && registersAsRole(actual, claimed);
+  return actual !== claimed && registersHere(w, seat, phase, claimed);
 };
 
 /** Whether one of the pair really *is* that character.
@@ -552,8 +589,8 @@ const pairLeanedOn = function (w) {
 
 export const Washerwoman = define("Washerwoman", "Washerwoman",
   function (w) {
-    return registersAsRole(w.roleAt(this.a, "N1"), this.role) ||
-           registersAsRole(w.roleAt(this.b, "N1"), this.role);
+    return registersHere(w, this.a, "N1", this.role) ||
+           registersHere(w, this.b, "N1", this.role);
   }, {leanedOn: pairLeanedOn, isTrue: pairIsTrue});
 
 /** Could this character avoid being counted as an Outsider?
@@ -576,14 +613,14 @@ export const Librarian = define("Librarian", "Librarian",
       // with a Recluse sitting right there.
       return w.roles.every((_r, p) =>
         canShowAsSomethingElse(w.roleAt(p, "N1")));
-    return registersAsRole(w.roleAt(this.a, "N1"), this.role) ||
-           registersAsRole(w.roleAt(this.b, "N1"), this.role);
+    return registersHere(w, this.a, "N1", this.role) ||
+           registersHere(w, this.b, "N1", this.role);
   }, {leanedOn: pairLeanedOn, isTrue: pairIsTrue});
 
 export const Investigator = define("Investigator", "Investigator",
   function (w) {
-    return registersAsRole(w.roleAt(this.a, "N1"), this.role) ||
-           registersAsRole(w.roleAt(this.b, "N1"), this.role);
+    return registersHere(w, this.a, "N1", this.role) ||
+           registersHere(w, this.b, "N1", this.role);
   }, {leanedOn: pairLeanedOn, isTrue: pairIsTrue});
 
 export const Chef = define("Chef", "Chef",
@@ -678,7 +715,7 @@ export const Undertaker = define("Undertaker", "Undertaker",
     // character they were dealt if the Demon changed hands.
     const day = this.night - 1;
     if (s.executionDeath(day) !== this.target) return false;
-    return registersAsRole(w.roleAt(this.target, `D${day}`), this.role);
+    return registersHere(w, this.target, `D${day}`, this.role);
   }, {
     /** Whether the executed seat really was that character. */
     isTrue(w) {
@@ -694,7 +731,7 @@ export const Undertaker = define("Undertaker", "Undertaker",
 
 export const Ravenkeeper = define("Ravenkeeper", "Ravenkeeper",
   function (w) {
-    return registersAsRole(w.roleAt(this.target, `N${this.night}`), this.role);
+    return registersHere(w, this.target, `N${this.night}`, this.role);
   }, {
     /** Whether that seat really was that character. */
     isTrue(w) {
@@ -720,7 +757,7 @@ const couldBeMinion = (w, seat, phase) =>
  */
 const mustBeMinion = (w, seat, phase) =>
   w.teamAt(seat, phase) === "minion" &&
-  !CHARACTERS[w.roleAt(seat, phase)].registers.some(t => t !== "minion");
+  !registersOf(w, seat, phase).some(t => t !== "minion");
 
 /** Whether the Demon voted during the day just gone.
  *
@@ -852,7 +889,7 @@ export const JugglerInfo = define("JugglerInfo", "Juggler",
     for (const guess of this.guesses || []) {
       const [who, role] = Array.isArray(guess)
         ? guess : [guess.player, guess.role];
-      if (role && registersAsRole(w.roleAt(Number(who), phase), role))
+      if (role && registersHere(w, Number(who), phase, role))
         right += 1;
     }
     return right === this.count;
@@ -908,7 +945,7 @@ export function savantTruths(says, w, phase, real = false, s = null) {
       return [...cultSides(w, s, seat, phase)];
     if (s && sideOpen(w, s, seat, phase)) return [true, false];
     if (real) return [!!w.evilAt(seat, phase)];
-    return evilRegistrations(w.roleAt(seat, phase), w.alignmentAt(seat, phase));
+    return evilRegistrationsHere(w, seat, phase);
   };
   const set = xs => new Set(xs);
   switch (says.kind) {
@@ -923,14 +960,15 @@ export function savantTruths(says, w, phase, real = false, s = null) {
     case "is": {
       const actual = w.roleAt(says.seat, phase);
       const out = set([actual === says.role]);
-      if (!real && registersAsRole(actual, says.role)) out.add(true);
+      if (!real && registersHere(w, says.seat, phase, says.role)) out.add(true);
       return out;
     }
     case "in_play": case "not_in_play": {
       const held = [];
       for (let p = 0; p < n; p++) held.push(w.roleAt(p, phase));
       const out = set([held.includes(says.role)]);
-      if (!real && held.some(r => registersAsRole(r, says.role))) out.add(true);
+      if (!real && held.some((_r, p) => registersHere(w, p, phase, says.role)))
+        out.add(true);
       return says.kind === "in_play" ? out : set([...out].map(v => !v));
     }
     case "demon_among": {
@@ -948,8 +986,8 @@ export function savantTruths(says, w, phase, real = false, s = null) {
       if (real) return set([actual === says.count]);
       const lo = roles.filter(r => TEAM[r] === "outsider" &&
         !CHARACTERS[r].registers.some(t => t !== "outsider")).length;
-      const hi = actual + roles.filter(r => TEAM[r] !== "outsider" &&
-        CHARACTERS[r].registers.includes("outsider")).length;
+      const hi = actual + roles.filter((r, p) => TEAM[r] !== "outsider" &&
+        registersOf(w, p, phase).includes("outsider")).length;
       const out = new Set();
       if (lo <= says.count && says.count <= hi) out.add(true);
       if (!(lo === hi && hi === says.count)) out.add(false);
@@ -1039,8 +1077,15 @@ export const EvilTwinPair = define("EvilTwinPair", "EvilTwin",
     const phase = `N${this.night}`;
     const first = w.roleAt(this.a, phase), second = w.roleAt(this.b, phase);
     if (first !== "EvilTwin" && second !== "EvilTwin") return false;
+    const twin = first === "EvilTwin" ? this.a : this.b;
+    // Or the night the Storyteller's Evil Twin made it (the jinx,
+    // Pestdoktor Stufe 2, F Weg 1). See info.py.
+    const made = (w.plagueMade ? w.plagueMade(twin) : [])
+      .filter(([, role]) => role === "EvilTwin").map(([at]) => at);
+    if (made.length)
+      return made.some(at => at === phase || at === `D${this.night - 1}`)
+        && w.evilAt(this.a, phase) !== w.evilAt(this.b, phase);
     if (this.night > 1) {
-      const twin = first === "EvilTwin" ? this.a : this.b;
       if (w.roleAt(twin, `D${this.night - 1}`) === "EvilTwin") return false;
     }
     return isEvil(first) !== isEvil(second);
@@ -1321,7 +1366,7 @@ export const KingInfo = define("KingInfo", "King",
     if (!met) return false;
     const phase = `N${this.night}`;
     for (const p of reallyLiving(w, s, this.night))
-      if (registersAsRole(w.roleAt(p, phase), this.role)) return true;
+      if (registersHere(w, p, phase, this.role)) return true;
     return false;
   }, {
     isInformation() { return !!this.role; },
@@ -1508,9 +1553,9 @@ export const DreamerInfo = define("DreamerInfo", "Dreamer",
   function (w) {
     // One of each side, or the reading is not a Dreamer's at all.
     if (isEvil(this.good_role) || !isEvil(this.evil_role)) return false;
-    const actual = w.roleAt(this.target, `N${this.night}`);
-    return registersAsRole(actual, this.good_role) ||
-           registersAsRole(actual, this.evil_role);
+    const phase = `N${this.night}`;
+    return registersHere(w, this.target, phase, this.good_role) ||
+           registersHere(w, this.target, phase, this.evil_role);
   });
 
 /** Whether a Dreamer's reading was *true*, as against merely legal.
@@ -1541,9 +1586,11 @@ export const GrandmotherInfo = define("GrandmotherInfo", "Grandmother",
     // came back from the dead and was shown a new one.
     const phase = `N${this.night}`;
     const shown = w.roleAt(this.target, phase);
-    if (!registersAsRole(shown, this.role)) return false;
-    // She is shown a *good* player, and the Spy can be one of those.
-    return !w.evilAt(this.target, phase) || shown === "Spy";
+    if (!registersHere(w, this.target, phase, this.role)) return false;
+    // She is shown a *good* player, and the Spy can be one of those — a
+    // Minion with its ability too (Pestdoktor Stufe 2, H).
+    return !w.evilAt(this.target, phase) || shown === "Spy"
+      || plagueSpy(w, this.target, phase);
   }, {
     /** Whether that seat really is that character, and good. */
     isTrue(w) {
@@ -1565,8 +1612,8 @@ export const GamblerGuess = define("GamblerGuess", "Gambler",
     const who = seat === null ? this.player : seat;
     // What the seat held when the guess was made: the Gambler is tenth in
     // the night, ahead of everything that moves a character (07.10.2026).
-    const right = registersAsRole(
-      w.roleAt(this.target, `B${this.night - 1}`), this.role);
+    const right = registersHere(w, this.target, `B${this.night - 1}`,
+                                this.role);
     // Dead by morning is not the same as guessed wrong: it guesses before
     // the Demon acts, so one that guessed right can be killed all the
     // same. What killed it is the night's business — the guess is only
@@ -1606,10 +1653,13 @@ export const CourtierChoice = define("CourtierChoice", "Courtier",
 export const VirginNomination = define("VirginNomination", "Virgin",
   function (w, s) {
     const phase = `D${this.night}`;
+    // A Minion with the Spy's ability may show as a Townsfolk too
+    // (Pestdoktor Stufe 2, H).
+    const spy = plagueSpy(w, this.nominator, phase);
     if (this.triggered)
       return worksAs(w, s, this.player, "Virgin", phase) &&
-             registersTownsfolk(w.roleAt(this.nominator, phase));
-    return !registersTownsfolk(w.roleAt(this.nominator, phase));
+             (spy || registersTownsfolk(w.roleAt(this.nominator, phase)));
+    return spy || !registersTownsfolk(w.roleAt(this.nominator, phase));
   },
   {
     hard() { return this.triggered; },
@@ -2124,7 +2174,7 @@ export const PixieLearned = define("PixieLearned", "Pixie",
     const who = (seat === null || seat === undefined) ? this.player : seat;
     const phase = `N${this.night}`;
     for (let p = 0; p < w.roles.length; p++)
-      if (p !== who && registersAsRole(w.roleAt(p, phase), this.role))
+      if (p !== who && registersHere(w, p, phase, this.role))
         return true;
     return false;
   }, {
@@ -2153,8 +2203,7 @@ export const VillageIdiotInfo = define("VillageIdiotInfo", "VillageIdiot",
       if (s && cultOnScript(s) && actsAsCultLeader(w, s, this.target, phase))
         return [];
       if (w.evilAt(this.target, phase) !== !!this.evil &&
-          evilRegistrations(w.roleAt(this.target, phase),
-                            w.alignmentAt(this.target, phase))
+          evilRegistrationsHere(w, this.target, phase)
             .includes(!!this.evil))
         return [this.target];
       return [];
@@ -2178,9 +2227,7 @@ export const LycanthropeChose = define("LycanthropeChose", "Lycanthrope",
       const hidden = s._hidden;
       if (hidden && hidden[0] === this.target) return true;
       if (sideOpen(w, s, this.target, phase)) return true;  // a Philosopher's Goon
-      return evilRegistrations(w.roleAt(this.target, phase),
-                               w.alignmentAt(this.target, phase))
-        .includes(true);
+      return evilRegistrationsHere(w, this.target, phase).includes(true);
     },
     instead(w, s, seat) {
       if (this.open(w, s, seat)) return null;

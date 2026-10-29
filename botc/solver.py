@@ -36,7 +36,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    took_it, BoffinGave, BOFFIN_NEVER_GIVES, boffin_gift,
                    has_boffin_ability, boffin_philosophy, boffin_abilities,
                    PhilosopherChoice,
-                   boffin_holders, boffin_seat, sober_seat,
+                   boffin_holders, boffin_seat, sober_seat, boffin_working,
                    faux_paw_lycanthrope, side_open,
                    PlagueDoctorGave, PLAGUE_UNSEEN, STORYTELLER,
                    storyteller_has, has_plague_ability, plague_holders,
@@ -53,7 +53,8 @@ from .worlds import _at as moment_of
 from .worlds import READ_AT, SETUP_SLOT, _row_slot, reading_at
 from .worlds import Engineered
 from .worlds import BOFFIN_UNSEEN, BoffinGift, boffin_gift_change, bracket_gifts
-from .worlds import PlagueGift, plague_gift_change
+from .worlds import PlagueGift, plague_gift_change, PlagueMade, PlagueSummoned
+from .info import registers_of, evil_registrations_here
 from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
                      SUMMON_READS, Summoned, TEA_READS, TeaParty,
                      Timeline, TurnedEvil, World,
@@ -723,7 +724,7 @@ def _night_by_night(world, state, cap, last, stories):
                 # Barber's at 40 on the same night touch the same seat
                 # one after the other, and asking a rule again on a later
                 # pass must not move its change behind the other's.
-                owner = {c: k for k, mine in owned for c in mine}
+                owner = {c: k for k, mine, _c in owned for c in mine}
                 key = tuple(sorted(changes, key=lambda c: (
                     phase_index(c.phase), owner.get(c, len(TRANSITION_RULES)))))
                 if key in seen:
@@ -737,7 +738,14 @@ def _night_by_night(world, state, cap, last, stories):
             for changes, weight, owned in stories:
                 if len(grown) >= cap:
                     break
-                mine = dict(owned).get(i, ())
+                # What this rule contributed so far, and at what cost: an
+                # offer that grows it on a later night pays its own cost in
+                # place of that one, not on top of it — the Plague
+                # Doctor's second death, or its Pit-Hag's change on a later
+                # night, paid the first gain twice (Pestdoktor Stufe 2,
+                # 29.10.2026).
+                mine, paid = next(((m, c) for k, m, c in owned if k == i),
+                                  ((), 1.0))
                 others = tuple(c for c in changes if c not in mine)
                 view = Timeline(world, others) if others else world
                 fitted = False
@@ -752,9 +760,10 @@ def _night_by_night(world, state, cap, last, stories):
                         continue
                     fitted = True
                     added = [c for c in upto if c not in mine]
-                    again = tuple((k, v) for k, v in owned if k != i)
-                    keep(others + upto, weight * (cost if added else 1.0),
-                         again + ((i, upto),))
+                    again = tuple(e for e in owned if e[0] != i)
+                    keep(others + upto,
+                         weight * (cost / paid if added else 1.0),
+                         again + ((i, upto, cost if added else paid),))
                     if len(grown) >= cap:
                         break
                 if not fitted and not final:
@@ -1152,8 +1161,8 @@ def _could_be_good(world, seat, phase):
     """
     if not world.evil_at(seat, phase):
         return True
-    role = world.role_at(seat, phase)
-    return bool({"townsfolk", "outsider"} & CHARACTERS[role].registers)
+    # A Minion with the Spy's ability too (Pestdoktor Stufe 2, H).
+    return bool({"townsfolk", "outsider"} & registers_of(world, seat, phase))
 
 
 @transition_rule
@@ -1393,6 +1402,12 @@ class MezephelesTurn(TurnedEvil):
     __slots__ = ()
 
 
+class StorytellerTurn(MezephelesTurn):
+    """The good player the Storyteller's Mezepheles turned (Pestdoktor
+    Stufe 2, B Weg 1, 29.10.2026): once, beside a real one's."""
+    __slots__ = ()
+
+
 _SEAT_FIELDS = ("a", "b", "c", "target", "guess", "shown", "second",
                 "nominator", "pointed")
 _SEAT_SETS = ("joined", "demons", "minions")
@@ -1517,24 +1532,37 @@ def a_mezepheles_may_have_turned(world, state):
         return stories
     last = int(state.final_phase()[1:])
     seats = None
+    # The Storyteller's, from the night after it gained it (B Weg 1).
+    gained = [c.phase for c in getattr(world, "changes", ())
+              if isinstance(c, PlagueGift) and c.seat is STORYTELLER
+              and c.gift == "Mezepheles"]
+    first = min((int(p[1:]) + 1 for p in gained), default=None)
     for night in range(2, last + 1):
         phase = f"N{night}"
         began = _before(night, phase)
         mez = world.find_at("Mezepheles", began)
-        if mez is None or not minion_still_acts(world, state, mez, phase):
+        mine = mez is not None and minion_still_acts(world, state, mez,
+                                                     phase)
+        theirs = first is not None and night >= first
+        if not mine and not theirs:
             continue
         if seats is None:
             seats = sorted(_seats_the_board_looks_at(world, state))
         for seat in seats:
-            if seat == mez or world.evil_at(seat, phase):
+            if world.evil_at(seat, phase):
                 continue
             if side_open(world, state, seat, phase) \
                     and not acts_as_cult_leader(world, state, seat, phase):
                 continue                  # a Goon's side nobody follows
             # At the Mezepheles's turn of that night (Hatter stage 3b):
             # a reader earlier in the night still sees the seat good.
-            stories.append((MezephelesTurn(phase, seat, None, "evil",
-                                           slot_of("Mezepheles", night)),))
+            slot = slot_of("Mezepheles", night)
+            if mine and seat != mez:
+                stories.append((MezephelesTurn(phase, seat, None, "evil",
+                                               slot),))
+            if theirs:
+                stories.append((StorytellerTurn(phase, seat, None, "evil",
+                                                slot),))
     return stories
 
 
@@ -2927,6 +2955,15 @@ def _boffin_moments(view, state, setup):
             if start is not None:
                 out.append(("N1", SETUP_SLOT, start, None))
         return out
+    # The Storyteller gaining the Boffin's ability (Pestdoktor Stufe 2, D
+    # Weg 1): the Demons then get one, unless a living Boffin gave them
+    # theirs already.
+    for c in getattr(view, "changes", ()):
+        if isinstance(c, PlagueGift) and c.seat is STORYTELLER \
+                and c.gift == "Boffin" \
+                and boffin_seat(view, state, c.phase) is None:
+            for d in view.demons_at(c.phase):
+                out.append((c.phase, c.slot, d, None))
     changes = sorted((c for c in getattr(view, "changes", ())
                       if not isinstance(c, BoffinGift)), key=moment_of)
     for i, c in enumerate(changes):
@@ -2945,7 +2982,7 @@ def _boffin_moments(view, state, setup):
                 else None
             out.append((c.phase, c.slot, c.seat, beside))
         elif c.role == "Boffin" and was != "Boffin" \
-                and boffin_seat(prior, state, c.phase) is None:
+                and not boffin_working(prior, state, c.phase):
             for d in after.demons_at(c.phase):
                 out.append((c.phase, c.slot, d, None))
     return out
@@ -2980,8 +3017,7 @@ def _boffin_stories(world, state, setup):
         return [((), 1.0)]
     moments = []
     for phase, slot, seat, beside in _boffin_moments(world, state, setup):
-        if boffin_seat(world, state, phase) is None \
-                and phase != "N1":
+        if not boffin_working(world, state, phase) and phase != "N1":
             continue                      # nobody to give it
         offers = boffin_offers(world, state, phase, seat, slot, setup)
         if beside is not None:
@@ -3064,11 +3100,12 @@ PLAGUE_TO_A_MINION = frozenset({"Spy", "ScarletWoman", "Wraith",
 # Of those, what the town can see.
 PLAGUE_MINION_SEEN = frozenset({"ScarletWoman", "Fearmonger", "Goblin"})
 
-# Stage 2 (A Weg 1): abilities that change characters or sides — the
-# Pit-Hag's, the Mezepheles's, the Summoner's, the Boffin's, and the four
-# whose jinx makes a player something (F). Until then they are "nothing
-# the town sees", and a story where one may show is not reckoned
-# (`plague_unreckoned`).
+# Stage 2 (29.10.2026, claude/pestdoktor-stufe-2-lesarten.md, all Weg 1):
+# the abilities that change characters or sides — the Pit-Hag's, the
+# Mezepheles's, the Summoner's, the Boffin's, and the four whose jinx
+# makes a player something. Each is a story of its own where something on
+# the board can show it (`_plague_stage_2_seen`), else it is "nothing the
+# town sees".
 PLAGUE_STAGE_2 = frozenset({"PitHag", "Mezepheles", "Summoner", "Boffin",
                             "Baron", "EvilTwin", "Boomdandy",
                             "Marionette"})
@@ -3114,13 +3151,213 @@ def plague_may_give(view, state, phase):
     return out, minions
 
 
-def _plague_seen_here(key, view, phase):
+def _plague_seen_here(key, view, state, phase):
     """Does this ability, gained at this moment, change what the town
-    sees? The Xaan only while its night is still to come."""
+    sees? The Xaan only while its night is still to come; one of stage 2
+    where the board can show it (`_plague_stage_2_seen`)."""
     if key == "Xaan":
         x = _xaan_x(view)
         return x >= 1 and phase_index(phase) <= phase_index(f"N{x}")
+    if key in PLAGUE_STAGE_2:
+        return _plague_stage_2_seen(key, view, state, phase)
     return key in PLAGUE_SEEN or key in PLAGUE_MINION_SEEN
+
+
+def _plague_became(state):
+    """The rows saying a seat became a character the solver knows."""
+    return [i for i in state.infos if isinstance(i, BecameInfo)
+            and i.role in CHARACTERS]
+
+
+def _plague_summon_nights(view, state, phase):
+    """The nights the Storyteller's Summoner, gained at this moment, can
+    summon on the board (C Weg 1): the third, a Pukka on the second (their
+    jinx) — none in a world dealt the Summoner, where there is no Demon
+    for a second one to stand beside (`plague_unreckoned`)."""
+    base = view.world if isinstance(view, Timeline) else view
+    if summoner_world(base):
+        return []
+    final = phase_index(state.final_phase())
+    out = []
+    for night in (2, 3):
+        here = f"N{night}"
+        if night == 2 and "Pukka" not in state.script.keys:
+            continue
+        if phase_index(phase) <= phase_index(here) <= final:
+            out.append(night)
+    return out
+
+
+def _plague_stage_2_seen(key, view, state, phase):
+    """Can the board show this stage 2 ability, gained at this moment?
+    Read off its rows and its length, and the deal, never the story — so
+    the transition rule and the telling agree how many are hidden.
+
+    The Boffin's and the Marionette's always (D, G); the Mezepheles's
+    once a night after it is on the board (B); the Summoner's on its night
+    (C). The Pit-Hag's (A), the Baron's, the Boomdandy's and the Evil
+    Twin's (E, F) only beside a row that can be theirs."""
+    g = int(phase[1:])
+    final = phase_index(state.final_phase())
+    if key in ("Boffin", "Marionette"):
+        return True
+    if key == "Mezepheles":
+        return final >= phase_index(f"N{g + 1}")
+    if key == "Summoner":
+        return bool(_plague_summon_nights(view, state, phase))
+    became = _plague_became(state)
+    if key == "PitHag":
+        return any(phase_index(f"N{i.night}") >= phase_index(phase)
+                   for i in became)
+    if key == "Baron":
+        return any(i.night == g and TEAM.get(i.role) == "outsider"
+                   for i in became)
+    if key == "Boomdandy":
+        return any(i.night == g and i.role == "Boomdandy" for i in became) \
+            or any(isinstance(i, BoomdandyExploded)
+                   and phase_index(f"D{i.night}") >= phase_index(phase)
+                   for i in state.infos)
+    if key == "EvilTwin":
+        pair = g if phase[:1] == "N" else g + 1
+        return any(i.night == g and i.role == "EvilTwin" for i in became) \
+            or any(isinstance(i, EvilTwinPair) and i.night == pair
+                   for i in state.infos)
+    return False
+
+
+def _plague_side(view, seat, at):
+    return "evil" if view.evil_at(seat, at) else "good"
+
+
+def _plague_stage_2_ways(key, view, state, phase, slot):
+    """Every way a stage 2 ability the Storyteller gained at this moment
+    can have gone, as [(changes, share)]: [] where none fits this story.
+    A choice is free (`share` 1), as for the real characters; the
+    Marionette's neighbour is the Storyteller's pick, split over them."""
+    n = state.n_players
+    g = int(phase[1:])
+    # The board as the moment began: a night's from its start.
+    at = _before(g, phase) if phase[:1] == "N" else phase
+    demon = lambda p: TEAM.get(view.role_at(p, at)) == "demon"
+    if key in ("Mezepheles", "Boffin"):
+        # Told later: the turn with each story (`_best_story_told`), the
+        # gift with each Demon (`boffin_new_demon_stories`).
+        return [((), 1.0)]
+    if key == "PitHag":
+        # A Weg 1: every row "became" from then on may have been it, one a
+        # night, to a character nobody held as the night began; the side
+        # stays. One a Pit-Hag row names is that Pit-Hag's.
+        recorded = {(i.night, i.target) for i in state.infos
+                    if getattr(i, "source_role", None) == "PitHag"
+                    and getattr(i, "role", None)}
+        by_night = {}
+        for info in _plague_became(state):
+            night = info.night
+            here = f"N{night}"
+            if phase_index(here) < phase_index(phase) \
+                    or (night, info.player) in recorded:
+                continue
+            began = _before(night, here)
+            if any(view.role_at(p, began) == info.role for p in range(n)):
+                continue
+            by_night.setdefault(night, []).append(PlagueMade(
+                here, info.player, info.role,
+                _plague_side(view, info.player, began),
+                slot_of("PitHag", night)))
+        ways = [()]
+        for night in sorted(by_night):
+            ways = [way + more for way in ways
+                    for more in [()] + [(c,) for c in by_night[night]]][:48]
+        return [(way, 1.0) for way in ways if way]
+    if key == "Summoner":
+        out = []
+        for night in _plague_summon_nights(view, state, phase):
+            here = f"N{night}"
+            held = {view.role_at(p, here) for p in range(n)}
+            # Beside the Demon: never the Demon itself.
+            demons = set(view.demons_at(_before(night, here)))
+            for kind in _summonable(state):
+                if kind in held or (night == 2 and kind != "Pukka"):
+                    continue
+                for target in _summoned_seats(view, state, night, kind,
+                                              puppet=False):
+                    if target in demons:
+                        continue
+                    for extra in _typhon_neighbours(view, state, night,
+                                                    target, kind):
+                        out.append(((PlagueSummoned(
+                            here, target, kind, "evil",
+                            slot_of("Summoner", night)),)
+                            + stamped(extra, "Summoner"), 1.0))
+        return _sampled_storyteller_ways(view, phase, out)
+    if key == "Marionette":
+        # G Weg 1: a good neighbour of the Demon, and it stays good.
+        seats = []
+        for d in view.demons_at(at):
+            for nb in _neighbours(n, d):
+                if nb == d or nb in seats or demon(nb) \
+                        or view.evil_at(nb, at) \
+                        or view.role_at(nb, at) == "Marionette":
+                    continue
+                seats.append(nb)
+        return [((PlagueMade(phase, nb, "Marionette", "good", slot),),
+                 1.0 / len(seats)) for nb in seats]
+    if key == "Baron":
+        # E Weg 1: up to two players but the Demon, each an Outsider
+        # nobody holds, as their rows say; the side stays.
+        held = {view.role_at(p, at) for p in range(n)}
+        rows = [i for i in _plague_became(state)
+                if i.night == g and TEAM.get(i.role) == "outsider"
+                and i.role not in held and not demon(i.player)]
+        out = []
+        for k in (1, 2):
+            for combo in itertools.combinations(rows, k):
+                if len({i.player for i in combo}) < k \
+                        or len({i.role for i in combo}) < k:
+                    continue
+                out.append((tuple(PlagueMade(
+                    phase, i.player, i.role,
+                    _plague_side(view, i.player, at), slot)
+                    for i in combo), 1.0))
+        return out
+    seats = []
+    if key == "Boomdandy":
+        for info in state.infos:
+            if (isinstance(info, BecameInfo) and info.role == "Boomdandy"
+                    and info.night == g) \
+                    or (isinstance(info, BoomdandyExploded)
+                        and phase_index(f"D{info.night}")
+                        >= phase_index(phase)):
+                seats.append(info.player)
+    elif key == "EvilTwin":
+        pair = g if phase[:1] == "N" else g + 1
+        for info in state.infos:
+            if isinstance(info, BecameInfo) and info.role == "EvilTwin" \
+                    and info.night == g:
+                seats.append(info.player)
+            elif isinstance(info, EvilTwinPair) and info.night == pair:
+                seats.extend((info.a, info.b))
+    out = []
+    for seat in seats:
+        if not isinstance(seat, int) or not 0 <= seat < n \
+                or any(way[0].seat == seat for way, _c in out) \
+                or demon(seat) or view.role_at(seat, at) == key:
+            continue
+        out.append(((PlagueMade(phase, seat, key,
+                                _plague_side(view, seat, at), slot),), 1.0))
+    return out
+
+
+def _sampled_storyteller_ways(view, phase, ways):
+    """Every way, or while a solve estimates a fixed spread of them, as
+    for a tea party's Summoner (`_sampled_ways`)."""
+    k = SUMMON_SAMPLE[0]
+    if k is None or len(ways) <= k:
+        return ways
+    base = view.world if isinstance(view, Timeline) else view
+    step = -(-len(ways) // k)
+    offset = _stable("|".join(base.roles) + f"|st|{phase}") % step
+    return ways[offset::step]
 
 
 def _xaan_x(view):
@@ -3143,7 +3380,7 @@ def plague_offers(view, state, phase):
         if named not in may:
             return []
         may = [named]
-    seen = [k for k in may if _plague_seen_here(k, view, phase)]
+    seen = [k for k in may if _plague_seen_here(k, view, state, phase)]
     unseen = len(may) - len(seen)
     # From its death on (D Weg 1). Which turn of the night it died at is
     # not on the board, so a death at night counts from the night's start:
@@ -3159,6 +3396,11 @@ def plague_offers(view, state, phase):
         if key in PLAGUE_TO_A_MINION:
             out.extend(((plague_gift_change(phase, m, key, slot),),
                         each / len(minions)) for m in minions)
+        elif key in PLAGUE_STAGE_2:
+            mark = plague_gift_change(phase, STORYTELLER, key, slot)
+            out.extend((((mark,) + way), each * share) for way, share
+                       in _plague_stage_2_ways(key, view, state, phase,
+                                               slot))
         else:
             out.append(((plague_gift_change(phase, STORYTELLER, key, slot),),
                         each))
@@ -3176,7 +3418,13 @@ PLAGUE_LATER = "?"
 
 
 def _plague_in_transitions(mark):
-    return mark.gift in ("ScarletWoman", "Mastermind")
+    """Gains a transition rule asks about: the Scarlet Woman's (a
+    handover), the Mastermind's (a Demon's line ends), and every one of
+    stage 2 that changes a character — and the Boffin's, whose gift to the
+    Demon is told before the rest (`_best_story_told`). The Mezepheles's
+    turn is told later."""
+    return mark.gift in ("ScarletWoman", "Mastermind") \
+        or (mark.gift in PLAGUE_STAGE_2 and mark.gift != "Mezepheles")
 
 
 @transition_rule
@@ -3226,27 +3474,19 @@ def plague_told_later(world, changes, state):
 
 
 def plague_unreckoned(view, state):
-    """What the Plague Doctor leaves out that stage 1 does not reckon, or
-    None: a Storyteller who may hold a stage 2 ability that shows here —
-    the Pit-Hag's, the Mezepheles's, the Summoner's, the Boffin's, the
-    Marionette's always; the Baron's, the Evil Twin's and the Boomdandy's
-    where a row from its death on could be theirs (F Weg 1)."""
-    if not _plague_on_board(state):
+    """What the Plague Doctor leaves out that the solver does not reckon,
+    or None: since stage 2 (29.10.2026) only a Summoner the Storyteller
+    gained on time in a world dealt the Summoner, where there is no Demon
+    yet for a second one to stand beside."""
+    if not _plague_on_board(state) or "Summoner" not in state.script.keys:
         return None
-    marks = [c for c in getattr(view, "changes", ())
-             if isinstance(c, PlagueGift)]
-    if not any(c.gift == PLAGUE_UNSEEN for c in marks):
+    base = view.world if isinstance(view, Timeline) else view
+    if not summoner_world(base):
         return None
-    first = min(int(c.phase[1:]) for c in marks)
-    keys = state.script.keys
-    if any(k in keys for k in ("PitHag", "Mezepheles", "Summoner", "Boffin",
-                                "Marionette")):
-        return "plague doctor"
-    rows = {"Baron": BecameInfo, "EvilTwin": EvilTwinPair,
-            "Boomdandy": BoomdandyExploded}
-    for key, kind in rows.items():
-        if key in keys and any(isinstance(i, kind) and i.night >= first
-                               for i in state.infos):
+    final = phase_index(state.final_phase())
+    for c in getattr(view, "changes", ()):
+        if isinstance(c, PlagueGift) and c.gift == PLAGUE_UNSEEN \
+                and phase_index(c.phase) <= phase_index("N3") <= final:
             return "plague doctor"
     return None
 
@@ -4427,7 +4667,13 @@ def a_pit_hag_making_a_demon_makes_deaths_arbitrary(world, state, night):
     grandchild lost to one leaves her standing and a Soldier is no safer
     than anybody else.
     """
-    if not _in_bag(state, "PitHag") or not _pit_hag_made_a_demon(state, night):
+    if not _in_bag(state, "PitHag"):
+        return []
+    # Or the Storyteller's Pit-Hag (Pestdoktor Stufe 2, A Weg 1).
+    if not _pit_hag_made_a_demon(state, night) and not any(
+            isinstance(c, PlagueMade) and c.phase == f"N{night}"
+            and TEAM.get(c.role) == "demon"
+            for c in getattr(world, "changes", ())):
         return []
     return [death_causes.Cause(
         "Pit-Hag", death_causes.OTHER, frozenset(range(state.n_players)),
@@ -4959,8 +5205,7 @@ def _a_lycanthropes_pick(world, state, night, seat, name="Lycanthrope"):
     faux = _faux_paw(state)
     reach = frozenset(
         p for p in state.alive_set(phase)
-        if p != faux and False in evil_registrations(
-            world.role_at(p, phase), world.alignment_at(p, phase)))
+        if p != faux and False in evil_registrations_here(world, p, phase))
     if not reach:
         return []
     return [death_causes.Cause(
@@ -5988,6 +6233,10 @@ def forced_roles(state):
             townsfolk = list(state.script.townsfolk)
             spies = [k for k in state.script.keys
                      if "townsfolk" in CHARACTERS[k].registers]
+            # Or any Minion, given the Spy's ability by the Plague Doctor
+            # (Pestdoktor Stufe 2, H).
+            if _plague_on_board(state) and "Spy" in state.script.keys:
+                spies += list(state.script.minions)
             pin(info.nominator, townsfolk + spies)
         elif isinstance(info, SlayerShot) and info.died:
             pin(info.player, or_its_philosopher(info.player, "Slayer"))
@@ -6247,6 +6496,15 @@ def _plain_failures(world, state, outcome=None):
                 continue
             other = info.b if hanged == info.a else info.a
             phase = f"D{day}"
+            # A good Evil Twin, the Storyteller's jinx (Pestdoktor Stufe 2,
+            # F Weg 1): it is the good player, hanged beside its living
+            # twin.
+            if world.role_at(hanged, phase) == "EvilTwin" \
+                    and not world.evil_at(hanged, phase) \
+                    and world.evil_at(other, phase) \
+                    and other in state.alive_set(phase):
+                failures[day].add(hanged)
+                continue
             if world.role_at(other, phase) != "EvilTwin" \
                     or other not in state.alive_set(phase) \
                     or world.evil_at(hanged, phase):
@@ -6551,6 +6809,9 @@ def _plain_failures(world, state, outcome=None):
     # could not tell from its not having worked at all.
     for change in getattr(world, "changes", ()):
         if not isinstance(change, MezephelesTurn):
+            continue
+        # The Storyteller's: nothing can stop it (Pestdoktor Stufe 2, B).
+        if isinstance(change, StorytellerTurn):
             continue
         night = int(change.phase[1:])
         mez = world.find_at("Mezepheles", _before(night, change.phase))
@@ -8198,7 +8459,7 @@ def _balloonist_types(world, seat, night):
     role = world.role_at(seat, f"N{night}")
     if role is None:
         return set()
-    return {TEAM[role]} | set(CHARACTERS[role].registers)
+    return {TEAM[role]} | set(registers_of(world, seat, f"N{night}"))
 
 
 def a_balloonist_chain_fits(world, state):
@@ -8233,7 +8494,7 @@ def a_balloonist_chain_fits(world, state):
         if role is None:
             return set()
         out = {TEAM[role]}
-        out |= set(CHARACTERS[role].registers)
+        out |= set(registers_of(world, seat, phase))
         return out
 
     # Walk the chain, keeping every type the run could have ended on.
@@ -8569,9 +8830,23 @@ def _best_story_told(world, state, outcome, viable):
             # Each of the stories told here, not only the first: the
             # Plague Doctor's Fearmonger given a Minion was a later one
             # (the gate, seed 545 of the Boffin line, 28.10.2026).
-            if turning and at <= own and (cost is None or cost < 1.0):
+            # A second turn only of the other kind, the real one's first:
+            # the Storyteller's Mezepheles beside a real one (Pestdoktor
+            # Stufe 2, B Weg 1).
+            kinds = {type(c) for c in changes
+                     if isinstance(c, MezephelesTurn)} if at > own else set()
+            again = kinds == {MezephelesTurn} and any(
+                isinstance(c, PlagueGift) and c.gift == "Mezepheles"
+                for c in changes)
+            if turning and (at <= own or again) \
+                    and (cost is None or cost < 1.0):
                 view = Timeline(world, changes) if changes else world
                 for turn in a_mezepheles_may_have_turned(view, state):
+                    if type(turn[0]) in kinds or (
+                            kinds and turn[0].seat in
+                            {c.seat for c in changes
+                             if isinstance(c, MezephelesTurn)}):
+                        continue
                     # Not if the story could not be explained and never
                     # asked about that player's side from that night on:
                     # the second shortcut of `_explain_or_recall`, taken
@@ -8615,7 +8890,10 @@ def _who_turned(changes):
         if isinstance(change, TurnedEvil):
             at = phase_index(change.phase)
             flips[change.seat] = min(at, flips.get(change.seat, at))
-            if isinstance(change, MezephelesTurn):
+            if isinstance(change, StorytellerTurn):
+                # Apart from a real one's: nothing has to be working.
+                turns.append(change.phase + "st")
+            elif isinstance(change, MezephelesTurn):
                 turns.append(change.phase)
         else:
             rest.append(change)

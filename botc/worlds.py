@@ -100,6 +100,11 @@ class World:
         """No story, nothing the Plague Doctor gave (`Timeline.plague_at`)."""
         return ()
 
+    def plague_made(self, seat):
+        """No story, nobody the Storyteller made anything
+        (`Timeline.plague_made`)."""
+        return ()
+
     def alignment_at(self, seat, phase):
         """Which side this seat was on at this phase.
 
@@ -284,6 +289,21 @@ class PlagueGift(BoffinGift):
 def plague_gift_change(phase, seat, gift, slot=None):
     """A `PlagueGift` mark: an ability gained at that moment."""
     return PlagueGift(phase, seat, None, gift, slot)
+
+
+class PlagueMade(Change):
+    """A seat the Storyteller's stage 2 ability made something (Pestdoktor
+    Stufe 2, 29.10.2026): its Pit-Hag's (A), the jinxes of the Baron, the
+    Boomdandy, the Evil Twin (E, F) and the Marionette (G). The side is
+    kept (E, F, G Weg 1). One made the Marionette goes on believing it is
+    what it was (`Timeline.believes`)."""
+    __slots__ = ()
+
+
+class PlagueSummoned(Summoned):
+    """The player the Storyteller's Summoner made an evil Demon, beside
+    the Demon in play (C Weg 1, 29.10.2026)."""
+    __slots__ = ()
 
 
 # Whether anything from the Hatter's night on was looked at while a story
@@ -481,6 +501,19 @@ class Timeline:
         object.__setattr__(self, "_sides_by_seat", sides)
         object.__setattr__(self, "_gifts_by_seat", gifts)
         object.__setattr__(self, "_plagues_by_seat", plagues)
+        # Seats the Storyteller made the Marionette, and what each believes
+        # it is: what it held, or believed, just before.
+        puppets = []
+        for change in self.changes:
+            if isinstance(change, PlagueMade) \
+                    and change.role == "Marionette":
+                was = self.world.believes[change.seat]
+                for at, role in roles.get(change.seat, ()):
+                    if at < _at(change):
+                        was = role
+                puppets.append((change.seat, was or self.world.roles[
+                    change.seat]))
+        object.__setattr__(self, "_puppets", tuple(puppets))
         object.__setattr__(self, "_roles_changed_to", held)
         object.__setattr__(self, "_demon_changes",
                            self._demon_steps(demons, handed))
@@ -547,7 +580,15 @@ class Timeline:
 
     @property
     def believes(self):
-        return self.world.believes
+        # A seat the Storyteller made the Marionette (Pestdoktor Stufe 2,
+        # G): it goes on believing it is what it was.
+        made = self._puppets
+        if not made:
+            return self.world.believes
+        out = list(self.world.believes)
+        for seat, was in made:
+            out[seat] = was
+        return tuple(out)
 
     def find(self, role):
         return self.world.find(role)
@@ -666,6 +707,12 @@ class Timeline:
         here = moment(phase)
         return tuple(gift for at, gift in mine
                      if at <= here and gift != PLAGUE_UNSEEN)
+
+    def plague_made(self, seat):
+        """What the Storyteller's stage 2 ability made this seat, and when:
+        [(phase, role)] (`PlagueMade`)."""
+        return tuple((c.phase, c.role) for c in self.changes
+                     if c.seat == seat and isinstance(c, PlagueMade))
 
     def gift_at(self, seat, phase):
         """The Boffin ability marked on this seat at this moment, or None

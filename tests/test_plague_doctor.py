@@ -180,23 +180,121 @@ class WhatTheyDo(SolverTest):
                          (5, "ScarletWoman"))
 
 
+# Stage 2 (29.10.2026, claude/pestdoktor-stufe-2-lesarten.md, all Weg 1).
+IDS2 = ["chef", "empath", "fortuneteller", "washerwoman", "investigator",
+        "undertaker", "plaguedoctor", "saint", "poisoner", "pithag",
+        "mezepheles", "summoner", "boffin", "baron", "eviltwin",
+        "boomdandy", "marionette", "spy", "imp", "pukka"]
+SC2 = scripts.from_ids("Pestdoktor 2", IDS2)
+
+
+def stories2(rows=(), roles=R, **kw):
+    """{(kind, phase, seat, role or gift): cost} over every story."""
+    st = state(rows, script=SC2, **kw)
+    out = {}
+    for got, cost in S.possible_timelines(world(roles), st):
+        for c in got:
+            key = (type(c).__name__, c.phase, c.seat,
+                   c.gift if isinstance(c, PlagueGift) else c.role)
+            out[key] = cost
+    return out
+
+
+class StageTwo(SolverTest):
+
+    def test_without_a_row_only_what_always_shows(self):
+        got = stories2(**EXECUTED_D1)
+        gifts = {k[3] for k in got if k[0] == "PlagueGift"}
+        # The Boffin's, the Marionette's, the Summoner's — a Pukka on night
+        # two, the board ending on day two — and the rest told later.
+        self.assertEqual(gifts, {"?", "Boffin", "Marionette", "Summoner"})
+        # The Marionette: the Imp's good neighbour, never the Poisoner.
+        self.assertIn(("PlagueMade", "D1", 0, "Marionette"), got)
+        self.assertNotIn(("PlagueMade", "D1", 5, "Marionette"), got)
+        # The Summoner: a second Demon, never the Imp itself.
+        self.assertIn(("PlagueSummoned", "N2", 1, "Pukka"), got)
+        self.assertNotIn(("PlagueSummoned", "N2", 6, "Pukka"), got)
+
+    def test_a_row_became_is_the_pit_hag_or_the_baron(self):
+        row = I.BecameInfo(2, 0, role="Undertaker", was="Chef")
+        got = stories2([row], **EXECUTED_D1)
+        self.assertIn(("PlagueMade", "N2", 0, "Undertaker"), got)
+        row = I.BecameInfo(1, 0, role="Saint", was="Chef")
+        got = stories2([row], **EXECUTED_D1)
+        self.assertIn(("PlagueMade", "D1", 0, "Saint"), got)
+        # Before the gain it is neither.
+        self.assertEqual(stories2([row]), {})
+
+    def test_the_boomdandy_and_the_evil_twin_by_their_rows(self):
+        boom = I.BoomdandyExploded(2, 0)
+        kw = dict(deaths={4: ("D1",), 0: ("D2",)}, executions={1: 4, 2: 0})
+        got = stories2([boom], **kw)
+        self.assertIn(("PlagueMade", "D1", 0, "Boomdandy"), got)
+        cost, changes = S.best_story(world(), state([boom], script=SC2, **kw))
+        self.assertIsNotNone(cost)
+        # Without the gain the explosion has no Boomdandy behind it.
+        self.assertIsNone(S.best_story(world(), state(
+            [boom], script=SC2, executions={2: 0}, deaths={0: ("D2",)}))[0])
+        pair = I.EvilTwinPair(2, 0, a=0, b=5)
+        got = stories2([pair], **EXECUTED_D1)
+        self.assertIn(("PlagueMade", "D1", 0, "EvilTwin"), got)
+        # A good Evil Twin and its evil twin know each other that night.
+        view = Timeline(world(), (S.PlagueMade("D1", 0, "EvilTwin", "good"),))
+        self.assertTrue(pair.holds(view, state([pair], script=SC2), None))
+
+    def test_a_marionette_believes_what_it_was(self):
+        view = Timeline(world(), (S.PlagueMade("D1", 0, "Marionette",
+                                               "good"),))
+        self.assertEqual(view.believes[0], "Chef")
+        self.assertEqual(view.role_at(0, "N2"), "Marionette")
+        self.assertFalse(view.evil_at(0, "N2"))
+
+    def test_the_mezepheles_turns_one_from_the_night_after(self):
+        mark = S.plague_gift_change("D1", None, "Mezepheles")
+        st = state(script=SC2, days=(1, 2, 3), **EXECUTED_D1)
+        view = Timeline(world(), (mark,))
+        turns = [t[0] for t in S.a_mezepheles_may_have_turned(view, st)]
+        self.assertTrue(turns)
+        self.assertTrue(all(isinstance(t, S.StorytellerTurn) for t in turns))
+        self.assertEqual(min(int(t.phase[1:]) for t in turns), 2)
+
+    def test_the_boffin_gives_the_demon_from_the_gain(self):
+        mark = S.plague_gift_change("D1", None, "Boffin")
+        st = state(script=SC2, **EXECUTED_D1)
+        view = Timeline(world(), (mark,))
+        ways = S.boffin_new_demon_stories(view, st)
+        self.assertGreater(len(ways), 1)
+        self.assertTrue(all(c.seat == 6 for way, _c in ways for c in way))
+
+    def test_a_minion_with_the_spys_ability_registers_as_one(self):
+        gift = S.plague_gift_change("D1", 5, "Spy")
+        view = Timeline(world(), (gift,))
+        self.assertTrue(I.registers_here(view, 5, "N2", "Chef"))
+        self.assertFalse(I.registers_here(world(), 5, "N2", "Chef"))
+        self.assertIn(False, I.evil_registrations_here(view, 5, "N2"))
+        self.assertNotIn(False, I.evil_registrations_here(view, 5, "N1"))
+
+
 class NotReckonedYet(SolverTest):
 
-    def test_a_stage_two_ability_on_the_script(self):
-        sc = scripts.from_ids("Pestdoktor 2", IDS + ["pithag"])
-        view = Timeline(world(), (S.plague_gift_change("D1", None, "*"),))
-        st = state(script=sc, **EXECUTED_D1)
+    def test_a_summoner_in_a_world_dealt_one(self):
+        roles = ["Chef", "Empath", "FortuneTeller", "Washerwoman",
+                 "PlagueDoctor", "Summoner", "Poisoner"]
+        view = Timeline(world(roles), (S.plague_gift_change("D1", None,
+                                                            "*"),))
+        st = state(script=SC2, days=(1, 2, 3), **EXECUTED_D1)
         self.assertEqual(S.plague_unreckoned(view, st), "plague doctor")
-        self.assertIsNone(S.plague_unreckoned(view, state(**EXECUTED_D1)))
+        view = Timeline(world(), (S.plague_gift_change("D1", None, "*"),))
+        self.assertIsNone(S.plague_unreckoned(view, st))
 
 
 def _payloads():
-    def pay(events, rows=(), claims=C, days=(1, 2)):
+    def pay(events, rows=(), claims=C, days=(1, 2), ids=IDS):
         players = [{"claim": c, "events": events.get(i, [])}
                    for i, c in enumerate(claims)]
         return {"n_players": len(claims), "players": players,
                 "infos": list(rows),
-                "script": {"name": "Pestdoktor", "characters": IDS},
+                "script": {"name": "Pestdoktor", "characters": ids},
                 "days_done": list(days)}
 
     def gave(night, role):
@@ -204,6 +302,7 @@ def _payloads():
                 "role": role}
 
     pd = C[:4] + ["PlagueDoctor"] + C[5:]
+    pd8 = pd + ["Investigator"]          # room for an Outsider
     return [
         pay({4: ["X1"]}, claims=pd),
         pay({4: ["X1"], 0: ["N2"], 1: ["N2"]}, claims=pd),
@@ -211,6 +310,31 @@ def _payloads():
         pay({4: ["X1"], 0: ["S2"]}, claims=pd),
         pay({4: ["X1"]}, [gave(1, "Poisoner")], claims=pd),
         pay({4: ["X1"], 6: ["X2"]}, claims=pd, days=(1, 2, 3)),
+        # Stage 2 (29.10.2026).
+        pay({4: ["X1"]}, claims=pd8, ids=IDS2),
+        pay({4: ["X1"]}, [{"type": "Became", "night": 2, "player": 0,
+                           "role": "Undertaker", "was": "Chef"}],
+            claims=["Undertaker"] + pd8[1:], ids=IDS2),
+        pay({4: ["X1"]}, [{"type": "Became", "night": 1, "player": 0,
+                           "role": "Saint", "was": "Chef"}],
+            claims=["Saint"] + pd8[1:], ids=IDS2),
+        pay({4: ["X1"], 0: ["X2"], 1: ["D2"], 2: ["D2"]},
+            [{"type": "BoomdandyExploded",
+                                     "night": 2, "player": 0}],
+            claims=pd8, ids=IDS2),
+        pay({4: ["X1"]}, [{"type": "EvilTwinPair", "night": 2, "player": 0,
+                           "a": 0, "b": 5}], claims=pd8, ids=IDS2),
+        pay({4: ["X1"]}, claims=pd8, ids=IDS2, days=(1, 2, 3)),
+        # A Minion given the Spy's ability shown as a Townsfolk (H).
+        pay({4: ["X1"], 6: ["X2"]},
+            [gave(1, "Spy"), {"type": "Undertaker", "night": 3, "player": 5,
+                              "target": 6, "role": "Chef"}],
+            claims=pd8, ids=IDS2, days=(1, 2, 3)),
+        # The Storyteller's Mezepheles and an Empath that sees evil (B).
+        pay({4: ["X1"]},
+            [gave(1, "Mezepheles"), {"type": "Empath", "night": 3,
+                                     "player": 1, "count": 2}],
+            claims=pd8, ids=IDS2, days=(1, 2, 3)),
     ]
 
 

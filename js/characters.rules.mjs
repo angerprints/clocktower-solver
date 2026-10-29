@@ -20,7 +20,8 @@ import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
         takenByAPhilosopher, tookIt, boffinHolders, soberSeat,
-        boffinAbilities, boffinGiftOf, boffinSeat, storytellerHas}
+        boffinAbilities, boffinGiftOf, boffinSeat, storytellerHas,
+        evilRegistrationsHere}
   from "./info.mjs";
 
 // --------------------------------------------------------------------
@@ -932,7 +933,11 @@ causeRule(function aPitHagMakingADemonMakesDeathsArbitrary(world, state, night) 
   if (!inBag(state, "PitHag")) return [];
   const made = state.infos.some(
     i => i.sourceRole === "PitHag" && i.role && i.night === night &&
-         CHARACTERS[i.role] && CHARACTERS[i.role].team === "demon");
+         CHARACTERS[i.role] && CHARACTERS[i.role].team === "demon")
+    // Or the Storyteller's Pit-Hag (Pestdoktor Stufe 2, A Weg 1).
+    || (world.changes || []).some(c => c.plagueMade && c.phase === `N${night}`
+                                  && CHARACTERS[c.role]
+                                  && CHARACTERS[c.role].team === "demon");
   if (!made) return [];
   return [new Cause("Pit-Hag", OTHER, allSeats(state),
                     {capacity: state.nPlayers, cost: 1.0,
@@ -1236,8 +1241,7 @@ function aLycanthropesPick(world, state, night, seat, name = "Lycanthrope") {
   const faux = fauxPaw(state);
   const reach = new Set();
   for (const p of [...state.aliveSet(phase)].sort((a, b) => a - b))
-    if (p !== faux && evilRegistrations(world.roleAt(p, phase),
-                                        world.alignmentAt(p, phase))
+    if (p !== faux && evilRegistrationsHere(world, p, phase)
           .includes(false)) reach.add(p);
   if (!reach.size) return [];
   return [new Cause(name, OTHER, reach,

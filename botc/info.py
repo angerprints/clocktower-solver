@@ -418,7 +418,7 @@ def _misregistered(w, seat, phase, claimed):
     if seat is None:
         return False
     actual = w.role_at(seat, phase)
-    return actual != claimed and registers_as_role(actual, claimed)
+    return actual != claimed and registers_here(w, seat, phase, claimed)
 
 
 @dataclass
@@ -590,8 +590,8 @@ class Washerwoman(Info):
         # a Pit-Hag made on night four they are not, and "your first
         # night" means the first night *of this character*.
         phase = f"N{self.night}"
-        return (registers_as_role(w.role_at(self.a, phase), self.role) or
-                registers_as_role(w.role_at(self.b, phase), self.role))
+        return (registers_here(w, self.a, phase, self.role) or
+                registers_here(w, self.b, phase, self.role))
 
     def is_true(self, w, s, seat=None):
         """Whether one of the pair really *is* that character.
@@ -661,8 +661,8 @@ class Librarian(Info):
         # a Pit-Hag made on night four they are not, and "your first
         # night" means the first night *of this character*.
         phase = f"N{self.night}"
-        return (registers_as_role(w.role_at(self.a, phase), self.role) or
-                registers_as_role(w.role_at(self.b, phase), self.role))
+        return (registers_here(w, self.a, phase, self.role) or
+                registers_here(w, self.b, phase, self.role))
 
     def is_true(self, w, s, seat=None):
         """Whether one of the pair really *is* that character.
@@ -723,8 +723,8 @@ class Investigator(Info):
         # a Pit-Hag made on night four they are not, and "your first
         # night" means the first night *of this character*.
         phase = f"N{self.night}"
-        return (registers_as_role(w.role_at(self.a, phase), self.role) or
-                registers_as_role(w.role_at(self.b, phase), self.role))
+        return (registers_here(w, self.a, phase, self.role) or
+                registers_here(w, self.b, phase, self.role))
 
     def is_true(self, w, s, seat=None):
         """Whether one of the pair really *is* that character.
@@ -864,9 +864,16 @@ def boffin_gift(w, s, seat, phase):
         return None
     if TEAM.get(w.role_at(seat, phase)) != "demon":
         return None
-    if boffin_seat(w, s, phase) is None:
+    if not boffin_working(w, s, phase):
         return None
     return got
+
+
+def boffin_working(w, s, phase):
+    """A living Boffin then — or the Storyteller holding its ability, the
+    Plague Doctor's gift (Pestdoktor Stufe 2, D Weg 1), which never dies."""
+    return boffin_seat(w, s, phase) is not None \
+        or storyteller_has(w, "Boffin", phase)
 
 
 # A Demon given the Philosopher's ability chooses once (H and M Weg 2,
@@ -946,6 +953,46 @@ def plague_holders(w, s, role, phase):
             if has_plague_ability(w, s, seat, role, phase)]
 
 
+def plague_spy(w, seat, phase):
+    """A Minion with the Spy's ability through the Plague Doctor then (its
+    jinx, E Weg 1): from then on it registers as the Spy does (Pestdoktor
+    Stufe 2, H Weg 1, 29.10.2026) — whether that needed it working is the
+    plan's, as for the Spy (`_misregistered`)."""
+    if seat is None or not getattr(w, "_plagues_by_seat", None):
+        return False
+    return "Spy" in w.plague_at(seat, phase) \
+        and TEAM.get(w.role_at(seat, phase)) == "minion"
+
+
+def registers_of(w, seat, phase):
+    """The teams this seat may register as besides its own: its
+    character's, and the Spy's where it has that ability (H Weg 1)."""
+    got = CHARACTERS[w.role_at(seat, phase)].registers
+    if plague_spy(w, seat, phase):
+        return frozenset(got) | frozenset(CHARACTERS["Spy"].registers)
+    return got
+
+
+def registers_here(w, seat, phase, claimed):
+    """`registers_as_role` for this seat at that moment: a Minion with the
+    Spy's ability may show as a Townsfolk or an Outsider (H Weg 1)."""
+    actual = w.role_at(seat, phase)
+    if registers_as_role(actual, claimed):
+        return True
+    return claimed in TEAM and TEAM[claimed] in CHARACTERS["Spy"].registers \
+        and plague_spy(w, seat, phase)
+
+
+def evil_registrations_here(w, seat, phase):
+    """`evil_registrations` for this seat at that moment, with the Spy's
+    good for a Minion that has its ability (H Weg 1)."""
+    got = evil_registrations(w.role_at(seat, phase),
+                             w.alignment_at(seat, phase))
+    if False not in got and plague_spy(w, seat, phase):
+        return (True, False)
+    return got
+
+
 def sober_seat(w, s, seat, role, phase):
     """Whose sobriety this seat's ability as that character rests on: its
     own, or the Boffin's where the Boffin gave it (26.10.2026)."""
@@ -954,6 +1001,8 @@ def sober_seat(w, s, seat, role, phase):
         return seat
     if has_boffin_ability(w, s, seat, role, phase):
         got = boffin_seat(w, s, phase)
+        if got is None and storyteller_has(w, "Boffin", phase):
+            return STORYTELLER            # nothing can stop it (D Weg 1)
         return seat if got is None else got
     return seat
 
@@ -1133,8 +1182,7 @@ def evil_options(w, s, seat, phase):
     elif s is not None and side_open(w, s, seat, phase):
         got = (True, False)               # a Philosopher's Goon
     else:
-        got = evil_registrations(w.role_at(seat, phase),
-                                 w.alignment_at(seat, phase))
+        got = evil_registrations_here(w, seat, phase)
     hidden = getattr(s, "_hidden", None) if s is not None else None
     if not hidden or hidden[0] is None or hidden[0] != seat:
         return got
@@ -1348,7 +1396,7 @@ class Undertaker(Info):
         day = self.night - 1
         if s.execution_death(day) != self.target:
             return False
-        return registers_as_role(w.role_at(self.target, f"D{day}"), self.role)
+        return registers_here(w, self.target, f"D{day}", self.role)
 
     def is_true(self, w, s, seat=None):
         """Whether the executed seat really was that character."""
@@ -1370,8 +1418,7 @@ class Ravenkeeper(Info):
     source_role = "Ravenkeeper"
 
     def holds(self, w, s, rh, seat=None):
-        return registers_as_role(w.role_at(self.target, f"N{self.night}"),
-                                 self.role)
+        return registers_here(w, self.target, f"N{self.night}", self.role)
 
     def is_true(self, w, s, seat=None):
         """Whether that seat really was that character."""
@@ -1407,10 +1454,12 @@ class GrandmotherInfo(Info):
         # she came back from the dead and was shown a new one.
         phase = f"N{self.night}"
         shown = w.role_at(self.target, phase)
-        if not registers_as_role(shown, self.role):
+        if not registers_here(w, self.target, phase, self.role):
             return False
-        # She is shown a *good* player, and the Spy can be one of those.
-        return not w.evil_at(self.target, phase) or shown == "Spy"
+        # She is shown a *good* player, and the Spy can be one of those —
+        # a Minion with its ability too (Pestdoktor Stufe 2, H).
+        return not w.evil_at(self.target, phase) or shown == "Spy" \
+            or plague_spy(w, self.target, phase)
 
     def is_true(self, w, s, seat=None):
         """Whether that seat really is that character, and good — see
@@ -1512,7 +1561,7 @@ def _must_be_minion(world, seat, phase):
     if world.team_at(seat, phase) != "minion":
         return False
     return not any(t != "minion"
-                   for t in CHARACTERS[world.role_at(seat, phase)].registers)
+                   for t in registers_of(world, seat, phase))
 
 
 @dataclass
@@ -1702,7 +1751,7 @@ class JugglerInfo(Info):
                 who, role = guess.get("player"), guess.get("role")
             else:
                 who, role = guess
-            if role and registers_as_role(w.role_at(int(who), phase), role):
+            if role and registers_here(w, int(who), phase, role):
                 right += 1
         return right == self.count
 
@@ -1756,8 +1805,7 @@ def savant_truths(says, w, phase, real=False, s=None):
             return {True, False}
         if real:
             return {bool(w.evil_at(seat, phase))}
-        return set(evil_registrations(w.role_at(seat, phase),
-                                      w.alignment_at(seat, phase)))
+        return set(evil_registrations_here(w, seat, phase))
 
     if kind == "evil":
         return evil(int(says["seat"]))
@@ -1771,7 +1819,7 @@ def savant_truths(says, w, phase, real=False, s=None):
         seat, role = int(says["seat"]), says["role"]
         actual = w.role_at(seat, phase)
         out = {actual == role}
-        if not real and registers_as_role(actual, role):
+        if not real and registers_here(w, seat, phase, role):
             out.add(True)
         return out
     if kind in ("in_play", "not_in_play"):
@@ -1779,7 +1827,8 @@ def savant_truths(says, w, phase, real=False, s=None):
         held = [w.role_at(p, phase) for p in range(n)]
         there = role in held
         out = {there}
-        if not real and any(registers_as_role(r, role) for r in held):
+        if not real and any(registers_here(w, p, phase, role)
+                            for p in range(n)):
             out.add(True)
         return out if kind == "in_play" else {not v for v in out}
     if kind == "demon_among":
@@ -1801,8 +1850,9 @@ def savant_truths(says, w, phase, real=False, s=None):
         # read as an Outsider, widen what the count could have been.
         lo = sum(1 for r, t in teams if t == "outsider"
                  and not (CHARACTERS[r].registers - {"outsider"}))
-        hi = actual + sum(1 for r, t in teams if t != "outsider"
-                          and "outsider" in CHARACTERS[r].registers)
+        hi = actual + sum(1 for p, (r, t) in enumerate(teams)
+                          if t != "outsider"
+                          and "outsider" in registers_of(w, p, phase))
         out = set()
         if lo <= count <= hi:
             out.add(True)
@@ -2203,8 +2253,15 @@ class EvilTwinPair(Info):
         first, second = w.role_at(self.a, phase), w.role_at(self.b, phase)
         if "EvilTwin" not in (first, second):
             return False
+        twin = self.a if first == "EvilTwin" else self.b
+        # Or the night it was made by the Storyteller's Evil Twin (the jinx,
+        # Pestdoktor Stufe 2, F Weg 1): that night, or the night after a day
+        # it was made. Its side is kept, so the sides are asked of the seats.
+        made = [at for at, role in w.plague_made(twin) if role == "EvilTwin"]
+        if made:
+            return any(at in (phase, f"D{self.night - 1}") for at in made) \
+                and w.evil_at(self.a, phase) != w.evil_at(self.b, phase)
         if self.night > 1:
-            twin = self.a if first == "EvilTwin" else self.b
             if w.role_at(twin, f"D{self.night - 1}") == "EvilTwin":
                 return False
         # One of each side, which follows from one of them being it — but
@@ -2707,7 +2764,7 @@ class KingInfo(Info):
         if not met:
             return False
         phase = f"N{self.night}"
-        return any(registers_as_role(w.role_at(p, phase), self.role)
+        return any(registers_here(w, p, phase, self.role)
                    for p in really_living(w, s, self.night))
 
     def is_true(self, w, s, seat=None):
@@ -2940,8 +2997,8 @@ class DreamerInfo(Info):
         # the seat is one of them. Asking only about registration made a
         # Spy shown as the Slayer read as **true**, and a Vortox board
         # containing one had no legal world at all.
-        return (registers_as_role(actual, self.good_role)
-                or registers_as_role(actual, self.evil_role))
+        return (registers_here(w, self.target, phase, self.good_role)
+                or registers_here(w, self.target, phase, self.evil_role))
 
     def is_true(self, w, s, seat=None):
         """Whether the reading is *true*, as against merely legal.
@@ -3050,8 +3107,8 @@ class GamblerGuess(Info):
         # a Gambler that named the Snake Charmer rightly, a moment before
         # it swapped with the Demon, had guessed wrong and lived
         # (07.10.2026).
-        right = registers_as_role(
-            w.role_at(self.target, f"B{self.night - 1}"), self.role)
+        right = registers_here(w, self.target, f"B{self.night - 1}",
+                               self.role)
         if f"N{self.night}" in s.died_at(who):
             # Dead by morning is not the same as guessed wrong. It
             # guesses before the Demon acts, so one that guessed right
@@ -3150,10 +3207,15 @@ class VirginNomination(Info):
 
     def holds(self, w, s, rh, seat=None):
         phase = f"D{self.night}"
+        # A Minion with the Spy's ability may show as a Townsfolk too
+        # (Pestdoktor Stufe 2, H).
+        spy = plague_spy(w, self.nominator, phase)
         if self.triggered:
             return (works_as(w, s, self.player, "Virgin", phase)
-                    and _registers_townsfolk(w.role_at(self.nominator, phase)))
-        return not _registers_townsfolk(w.role_at(self.nominator, phase))
+                    and (spy or _registers_townsfolk(
+                        w.role_at(self.nominator, phase))))
+        return spy or not _registers_townsfolk(
+            w.role_at(self.nominator, phase))
 
 
 # Older name, kept so existing scripts still run.
@@ -4080,8 +4142,7 @@ class PixieLearned(Info):
             return False
         who = self.player if seat is None else seat
         phase = f"N{self.night}"
-        return any(p != who and registers_as_role(w.role_at(p, phase),
-                                                  self.role)
+        return any(p != who and registers_here(w, p, phase, self.role)
                    for p in range(len(w.roles)))
 
     def is_true(self, w, s, seat=None):
@@ -4125,9 +4186,8 @@ class VillageIdiotInfo(Info):
                                                        phase):
             return ()
         if w.evil_at(self.target, phase) != self.evil \
-                and self.evil in evil_registrations(
-                    w.role_at(self.target, phase),
-                    w.alignment_at(self.target, phase)):
+                and self.evil in evil_registrations_here(w, self.target,
+                                                         phase):
             return (self.target,)
         return ()
 
@@ -4166,8 +4226,7 @@ class LycanthropeChose(Info):
             return True                   # the faux paw
         if side_open(w, s, self.target, phase):
             return True                   # a Philosopher's Goon, too
-        return True in evil_registrations(w.role_at(self.target, phase),
-                                          w.alignment_at(self.target, phase))
+        return True in evil_registrations_here(w, self.target, phase)
 
     def holds(self, w, s, rh, seat=None):
         if self._open(w, s, seat):
