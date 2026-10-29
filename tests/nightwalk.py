@@ -357,8 +357,11 @@ def _droisoned_as_the_night_began(deal, night):
     # Except a tea party's (22.10.2026): that is the very start of the
     # night, before anybody acts.
     tea = getattr(deal, "tea_made", None) or {}
+    # And the Storyteller's jinxes (Pestdoktor Stufe 2), as it began.
+    jinx = set(getattr(deal, "st_jinx", {}).get(night, ()))
     deal.changes = [c for c in changes if c[0] != phase
-                    or tea.get((c[1], night)) == c[2]]
+                    or tea.get((c[1], night)) == c[2]
+                    or (c[1], c[2]) in jinx]
     deal.deaths = {p: at for p, at in deaths.items() if at != phase}
     deal.perma_poisoned = {
         p for p in poisoned
@@ -638,6 +641,10 @@ def hidden_from(deal, night, heard):
     st_kills = getattr(deal, "st_kills", {}).get(night)
     if st_kills:
         out[("st_kills", night)] = dict(st_kills)
+    # Whom its jinxes made something as tonight began (stage 2).
+    jinx = getattr(deal, "st_jinx", {}).get(night)
+    if jinx:
+        out[("st_jinx", night)] = list(jinx)
     # Whom its Pit-Hag made what tonight (stage 2, A).
     st_made = getattr(deal, "st_made", {}).get(night)
     if st_made is not None:
@@ -916,6 +923,10 @@ def walk(deal, night, hidden):
     # idempotent.
     was = f"E{night - 1}" if night > 1 else phase
     roles = {seat: deal.role_at(seat, was) for seat in range(deal.n)}
+    # Whom the Storyteller's jinxes made something as the night began
+    # (Pestdoktor Stufe 2): before anybody acts.
+    for seat, role in hidden.get(("st_jinx", night)) or ():
+        roles[seat] = role
     sides = {seat: deal.side_at(seat, was) for seat in range(deal.n)}
     # Alive when the night began. `alive_at` counts somebody who comes
     # back tonight as alive tonight, which is right for the night as a

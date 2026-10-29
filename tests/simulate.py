@@ -1185,6 +1185,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.st_twins = None
     d.st_boffin_since = None
     d.st_made = {}                      # night -> (seat, what its Pit-Hag made)
+    d.st_jinx = {}                      # night -> [(seat, what a jinx made)]
     # The good tokens the Lord of Typhon's or the Kazali's Minions were
     # handed first.
     d.first_tokens = dict(told)
@@ -2669,10 +2670,12 @@ def _plague_stage_2_gained(d, key, phase, rng, heard):
     after the phase of the death, as the solver reads it: that phase was
     played as it was."""
     night = int(phase[1:])
-    # Dated at the day: after a death at night the day after it, after one
-    # by day that day — so the night-walk sees it held as the next night
-    # begins, as the solver has it.
-    when = f"D{night}"
+    # After a death at night from the day after it, after one by day from
+    # the next night as it begins, as the solver has it. The night-walk is
+    # told the second (`st_jinx`): it starts that night from the board as
+    # the night before ended.
+    when = f"D{night}" if phase[0] == "N" else f"N{night + 1}"
+    jinx = d.st_jinx.setdefault(night + 1, []) if phase[0] != "N" else []
     if key == "Baron":
         good = _plague_good(d, phase)
         spare = _plague_spare(d, phase, ("outsider",))
@@ -2681,10 +2684,12 @@ def _plague_stage_2_gained(d, key, phase, rng, heard):
             role = spare.pop(rng.randrange(len(spare)))
             _says_it_became(d, night, seat, role, phase, rng)
             d.changes.append((when, seat, role))
+            jinx.append((seat, role))
     elif key == "Boomdandy":
         seat = rng.choice(_plague_good(d, phase))
         _says_it_became(d, night, seat, "Boomdandy", phase, rng)
         d.changes.append((when, seat, "Boomdandy"))
+        jinx.append((seat, "Boomdandy"))
     elif key == "EvilTwin":
         seat = rng.choice(_plague_good(d, phase))
         evil = [p for p in d.alive_at(phase) if d.deaths.get(p) is None
@@ -2692,6 +2697,7 @@ def _plague_stage_2_gained(d, key, phase, rng, heard):
         twin = rng.choice(evil)
         _says_it_became(d, night, seat, "EvilTwin", phase, rng)
         d.changes.append((when, seat, "EvilTwin"))
+        jinx.append((seat, "EvilTwin"))
         # It and its twin know each other the night after (F Weg 1); it is
         # the good player, kept off the gallows.
         # Told when that night comes, if the game gets there.
@@ -2701,6 +2707,7 @@ def _plague_stage_2_gained(d, key, phase, rng, heard):
         seat = rng.choice(_plague_puppets(d, phase))
         d.st_puppets[seat] = d.token(seat, phase) or d.role_at(seat, phase)
         d.changes.append((when, seat, "Marionette"))
+        jinx.append((seat, "Marionette"))
     elif key == "Boffin":
         # As a Boffin coming into play (D Weg 1): the Demon dealt, still in
         # its dealt character, unless a living Boffin gave it one already.
