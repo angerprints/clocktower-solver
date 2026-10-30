@@ -10,7 +10,7 @@
 // statement would otherwise be false, which cannot be known until the
 // statement has been checked.
 
-import {CHARACTERS} from "./catalogue.mjs";
+import {CHARACTERS, slotOf} from "./catalogue.mjs";
 import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./roles.mjs";
 import {ORGAN_GRINDER_BY_CHOICE, killedByAVigormortis, minionStillActs, sourcesOn}
   from "./impairment.mjs";
@@ -1617,8 +1617,13 @@ export const GamblerGuess = define("GamblerGuess", "Gambler",
     const who = seat === null ? this.player : seat;
     // What the seat held when the guess was made: the Gambler is tenth in
     // the night, ahead of everything that moves a character (07.10.2026).
-    const right = registersHere(w, this.target, `B${this.night - 1}`,
-                                this.role);
+    // At its turn of the night: after an Engineer at eight (Stelle 94).
+    // See info.py.
+    const phase = `N${this.night}`;
+    const right = readingAt(phase, slotOf("Gambler", 1) || 0,
+                            slotOf("Gambler", this.night) || 0,
+                            () => registersHere(w, this.target, phase,
+                                                this.role));
     // Dead by morning is not the same as guessed wrong: it guesses before
     // the Demon acts, so one that guessed right can be killed all the
     // same. What killed it is the night's business — the guess is only
