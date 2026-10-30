@@ -27,9 +27,9 @@
 //   * A Professor after somebody came back to life, when a Shabaloth is
 //     about. Whichever of them did it is not written down.
 
-import {CHARACTERS} from "./catalogue.mjs";
+import {CHARACTERS, slotOf} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {teaMade} from "./worlds.mjs";
+import {readingAt, teaMade} from "./worlds.mjs";
 import {babysitterAt, boffinAbilities, boffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt}
   from "./info.mjs";
 
@@ -92,7 +92,10 @@ condition("Lunatic", (world, state, seat, night) =>
 // beside one was read differently by the two (02.10.2026).
 condition("Philosopher", (world, state, seat, night) => {
   const took = state.philosophies()[seat];
-  if (!took) return true;
+  // One made a Philosopher this night after its turn — the Huntsman's
+  // Damsel — was not woken for it tonight; it is from the next night on,
+  // until it chooses (Stelle 95, 30.10.2026).
+  if (!took) return !madeAfterItsTurn(world, seat, night, "Philosopher");
   const [taken, since] = took;
   // `<` until 07.10.2026: on the night it chose it was asked whether the
   // *taken* character wakes, and one that took the Saint had not woken.
@@ -103,6 +106,17 @@ condition("Philosopher", (world, state, seat, night) => {
   if (taken === "Philosopher" || CHARACTERS[taken].believes) return false;
   return wokeAs(world, state, seat, night, taken);
 });
+
+/** Did this seat become `role` this night, after `role`'s turn? */
+function madeAfterItsTurn(world, seat, night, role) {
+  const phase = `N${night}`;
+  if (world.roleAt(seat, phase) !== role) return false;
+  const before = night === 1 ? world.roles[seat]
+    : world.roleAt(seat, `D${night - 1}`);
+  if (before === role) return false;
+  return readingAt(phase, slotOf(role, 1) || 0, slotOf(role, night) || 0,
+                   () => world.roleAt(seat, phase) !== role);
+}
 
 /** Answered on the night after the day it guessed, and never again. */
 condition("Juggler", (world, state, seat, night) => night === 2);

@@ -183,7 +183,27 @@ def _philosopher(world, state, seat, night):
         if taken == "Philosopher" or CHARACTERS[taken].believes:
             return False
         return woke_as(world, state, seat, night, taken)
+    # One made a Philosopher this night after its turn — the Huntsman's
+    # Damsel, a Pit-Hag's late choice — was not woken for it tonight; it
+    # is from the next night on, until it chooses (Stelle 95, 30.10.2026).
+    if _made_after_its_turn(world, seat, night, "Philosopher"):
+        return False
     return True
+
+
+def _made_after_its_turn(world, seat, night, role):
+    """Did this seat become `role` this night, after `role`'s turn?"""
+    from .catalogue import slot_of
+    from .worlds import reading_at
+    phase = f"N{night}"
+    if world.role_at(seat, phase) != role:
+        return False
+    before = world.roles[seat] if night == 1 \
+        else world.role_at(seat, f"D{night - 1}")
+    if before == role:
+        return False
+    with reading_at(phase, slot_of(role, 1) or 0, slot_of(role, night) or 0):
+        return world.role_at(seat, phase) != role
 
 
 @condition("Juggler")

@@ -5078,10 +5078,12 @@ def a_gambler_may_lose(world, state, night):
             continue                      # no guess recorded, no risk
         # And a guess that was right kills nobody. Then a Gambler dead by
         # morning went some other way, and that way has to be found.
-        # Judged as the guess was made, before anything moved tonight —
-        # see `GamblerGuess.holds`.
-        if all(world.role_at(g.target, began) == g.role for g in mine):
-            continue
+        # Judged as the guess was made, at its turn: after an Engineer at
+        # eight, before a Snake Charmer at eleven and a Pit-Hag at sixteen
+        # — see `GamblerGuess.holds` (Stelle 94, 30.10.2026).
+        with _turn_of("Gambler", night):
+            if all(world.role_at(g.target, phase) == g.role for g in mine):
+                continue
         causes.append(death_causes.Cause(
             name="Gambler", kind=death_causes.OTHER,
             seats=frozenset({seat}), capacity=1))

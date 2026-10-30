@@ -1102,9 +1102,13 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
 
     d = Deal(roles, believes, red_herring, {}, {}, None)
     d.script = script
-    # Lil' Monsta in play: no Demon was dealt (21.10.2026).
+    # Lil' Monsta in play: no Demon was dealt (21.10.2026) — and no
+    # Summoner, whose bag has no Demon either, as the solver reads it
+    # (`worlds.lil_monsta_world`). Both on the script, a Summoner's game
+    # was played with babysitters as well (Stelle 78, 30.10.2026).
     d.lil_monsta = "LilMonsta" in script.keys \
-        and not any(TEAM[r] == "demon" for r in roles)
+        and not any(TEAM[r] == "demon" for r in roles) \
+        and "Summoner" not in roles
     # The Summoner, and what it made when (21.10.2026).
     d.summoner = roles.index("Summoner") if "Summoner" in roles else None
     d.marionette_slot = marionette_slot
@@ -5988,6 +5992,11 @@ def _woke_itself(d, p, night, shown=False, as_role=None):
     # "never" or "sometimes", so night one never counted it.
     if what == "Philosopher" and night == 1:
         return p in d.philosophies
+    # One that has not chosen yet — the Huntsman's Damsel made it after
+    # its place on the first night — is woken every night until it does,
+    # as the solver has it and as the Courtier is (Stelle 95, 30.10.2026).
+    if what == "Philosopher" and p not in d.philosophies:
+        return True
     if when == "conditional":
         return bool(_conditionally_woke(d, p, what, night))
     # Taken at tonight's tea party, a first-night character has its first

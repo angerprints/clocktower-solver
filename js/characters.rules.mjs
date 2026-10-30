@@ -8,14 +8,14 @@
 //
 // Adding a character is an entry in the catalogue and a rule here.
 
-import {CHARACTERS} from "./catalogue.mjs";
+import {CHARACTERS, slotOf} from "./catalogue.mjs";
 import {CAUSE_TURNS, DEMON, OTHER, PICKED, Cause, causeRule, immunityRule, implication,
         implicationRule, shield} from "./deaths.mjs";
 import {ORGAN_GRINDER_BY_CHOICE, Source, makePoisonerRule, minionStillActs,
         sourceRule, sourcesOn} from "./impairment.mjs";
 import {PRIORS} from "./priors.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {dealtRoles, teaMade} from "./worlds.mjs";
+import {dealtRoles, readingAt, teaMade} from "./worlds.mjs";
 import {evilRegistrations, registersAsRole} from "./roles.mjs";
 import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
@@ -1141,8 +1141,12 @@ causeRule(function aGamblerMayLose(world, state, night) {
     let mine = guesses.filter(g => g.player === seat);
     if (!mine.length) mine = guesses.filter(g => !holders.includes(g.player));
     if (!mine.length) continue;            // no guess recorded, no risk
-    // A guess that was right kills nobody, judged as it was made.
-    if (mine.every(g => world.roleAt(g.target, began) === g.role)) continue;
+    // A guess that was right kills nobody, judged as it was made, at its
+    // turn (Stelle 94). See solver.py.
+    if (readingAt(phase, slotOf("Gambler", 1) || 0,
+                  slotOf("Gambler", night) || 0,
+                  () => mine.every(g => world.roleAt(g.target, phase) === g.role)))
+      continue;
     causes.push(new Cause("Gambler", OTHER, new Set([seat]), {capacity: 1}));
   }
   return causes;
