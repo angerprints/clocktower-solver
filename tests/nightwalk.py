@@ -501,8 +501,16 @@ def hidden_from(deal, night, heard):
         out[("standing_later", night)] = later
     if lifted:
         out[("standing_lifted", night)] = lifted
+    # A Philosopher back from the dead is a new one that has not chosen:
+    # from the night it returned it has nothing (Stelle 69, Weg 1). Dead
+    # until then that night, it had nothing to use before either.
+    from botc.info import phase_index as _pi
+    lost = getattr(deal, "phil_lost", None) or {}
     out.update({"red_herring": deal.red_herring,
-                "gained": dict(getattr(deal, "philosophies", {}) or {})})
+                "gained": {seat: took for seat, took in (
+                    getattr(deal, "philosophies", {}) or {}).items()
+                    if seat not in lost
+                    or _pi(phase) < _pi(lost[seat])}})
     # The Boffin's gift, as the simulator has it tonight (26.10.2026).
     gift = getattr(deal, "boffin_gift", None)
     if gift is not None:
