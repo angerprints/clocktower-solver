@@ -75,6 +75,9 @@ class Deal:
         # {seat: the character a Philosopher took}. Not a change of
         # character, so it cannot live in `changes`.
         self.philosophies = {}
+        # (night, seat) -> woken, for a Philosopher made after its place
+        # that night (Stelle 95, A Weg 1).
+        self.phil_woke_late = {}
         self.poisoned_by = {}
         self.side_changes = []              # [(phase, seat, role, side)]
         # State a Demon carries between nights. A Pukka's poison kills on
@@ -3429,6 +3432,12 @@ def _huntsman_hunts(d, night, rng):
         made = rng.choice(spare)
         d.changes.append((phase, target, made))
         d.huntsman_chose[night] = (seat, target, made)
+        # A Philosopher made after its place: the Storyteller may wake it
+        # at once or leave it for tomorrow (Stelle 95, A Weg 1,
+        # 30.10.2026). Woken, it shakes its head here — the simulator lets
+        # only a dealt Philosopher choose, on the first night.
+        if made == "Philosopher" and _made_after_its_place(d, target, night):
+            d.phil_woke_late[(night, target)] = rng.random() < 0.5
         # A first-night character made tonight learns its information at
         # once, its own place passed or not (Patrick, Lesart K,
         # 20.10.2026); any other waits for its next night. The Pixie is
@@ -5999,6 +6008,9 @@ def _woke_itself(d, p, night, shown=False, as_role=None):
     # The Philosopher chooses on the first night here, always,
     # and choosing is waking for its ability. Its wake set says
     # "never" or "sometimes", so night one never counted it.
+    if what == "Philosopher" and p not in d.philosophies \
+            and (night, p) in d.phil_woke_late:
+        return d.phil_woke_late[(night, p)]
     if what == "Philosopher" and night == 1:
         return p in d.philosophies
     # One that has not chosen yet — the Huntsman's Damsel made it after
