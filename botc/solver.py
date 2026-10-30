@@ -522,6 +522,11 @@ def possible_timelines(world, state, cap=128):
     if _plague_on_board(state):
         cap *= max(1, len(a_plague_doctor_gives_the_storyteller(world,
                                                                 state)))
+    # And for every Townsfolk the Huntsman's Damsel may have become: up to
+    # seventeen stories, each beside every Barber's swap, and the true
+    # swap fell off the end (Stelle 97, seed 2327, 30.10.2026).
+    if _on_board(state, "Huntsman"):
+        cap *= max(1, len(a_huntsman_finds_the_damsel(world, state)))
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 

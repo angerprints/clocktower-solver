@@ -303,6 +303,10 @@ export function possibleTimelines(world, state, cap = 128) {
   // as many times as this world tells. See solver.py.
   if (plagueOnBoard(state))
     cap *= Math.max(1, plagueStories(world, state).length);
+  // And for every Townsfolk the Huntsman's Damsel may have become, beside
+  // every Barber's swap (Stelle 97, 30.10.2026). See solver.py.
+  if (onBoard(state, "Huntsman"))
+    cap *= Math.max(1, aHuntsmanFindsTheDamsel(world, state).length);
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -1032,7 +1036,7 @@ transitionRule(function aPitHagNobodyWroteDown(world, state) {
 /** A Damsel the Huntsman chose becomes a Townsfolk not in play: the one
  * she said she became, or any. Or she stayed, and then the Huntsman was
  * not working, which its row asks for (10.10.2026). See solver.py. */
-transitionRule(function aHuntsmanFindsTheDamsel(world, state) {
+function aHuntsmanFindsTheDamsel(world, state) {
   if (!onBoard(state, "Huntsman")) return [[[], 1.0]];
   for (const info of state.infos) {
     if (info.type !== "HuntsmanChoice") continue;
@@ -1060,7 +1064,8 @@ transitionRule(function aHuntsmanFindsTheDamsel(world, state) {
     return out;
   }
   return [[[], 1.0]];
-});
+}
+transitionRule(aHuntsmanFindsTheDamsel);
 
 /** Could this seat have shown as good, if the Storyteller liked?
  *
