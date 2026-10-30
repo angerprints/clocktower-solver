@@ -1738,6 +1738,10 @@ def walk(deal, night, hidden):
                         and state.working(seat):
                     state.choose(seat, jump, slot)
                     state.kill(seat, slot, "FangGu jumped")
+                    # The Demon killed it: its Grandmother goes too
+                    # (Stelle 87, Weg 1, 30.10.2026).
+                    if seat in state.died:
+                        _grandmother_grieves(state, seat, slot, hidden, night)
                     state.roles[jump] = "FangGu"
                     state.log.append((slot, "jumped", seat, jump))
                     continue

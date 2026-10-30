@@ -3117,8 +3117,14 @@ class GamblerGuess(Info):
         # a Gambler that named the Snake Charmer rightly, a moment before
         # it swapped with the Demon, had guessed wrong and lived
         # (07.10.2026).
-        right = registers_here(w, self.target, f"B{self.night - 1}",
-                               self.role)
+        # At its turn of the night: after an Engineer at eight, before a
+        # Snake Charmer at eleven (Stelle 94, 30.10.2026).
+        from .worlds import reading_at
+        from .catalogue import slot_of
+        with reading_at(f"N{self.night}", slot_of("Gambler", 1) or 0,
+                        slot_of("Gambler", self.night) or 0):
+            right = registers_here(w, self.target, f"N{self.night}",
+                                   self.role)
         if f"N{self.night}" in s.died_at(who):
             # Dead by morning is not the same as guessed wrong. It
             # guesses before the Demon acts, so one that guessed right

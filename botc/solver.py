@@ -522,6 +522,11 @@ def possible_timelines(world, state, cap=128):
     if _plague_on_board(state):
         cap *= max(1, len(a_plague_doctor_gives_the_storyteller(world,
                                                                 state)))
+    # And for every Townsfolk the Huntsman's Damsel may have become: up to
+    # seventeen stories, each beside every Barber's swap, and the true
+    # swap fell off the end (Stelle 97, seed 2327, 30.10.2026).
+    if _on_board(state, "Huntsman"):
+        cap *= max(1, len(a_huntsman_finds_the_damsel(world, state)))
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -5078,10 +5083,12 @@ def a_gambler_may_lose(world, state, night):
             continue                      # no guess recorded, no risk
         # And a guess that was right kills nobody. Then a Gambler dead by
         # morning went some other way, and that way has to be found.
-        # Judged as the guess was made, before anything moved tonight —
-        # see `GamblerGuess.holds`.
-        if all(world.role_at(g.target, began) == g.role for g in mine):
-            continue
+        # Judged as the guess was made, at its turn: after an Engineer at
+        # eight, before a Snake Charmer at eleven and a Pit-Hag at sixteen
+        # — see `GamblerGuess.holds` (Stelle 94, 30.10.2026).
+        with _turn_of("Gambler", night):
+            if all(world.role_at(g.target, phase) == g.role for g in mine):
+                continue
         causes.append(death_causes.Cause(
             name="Gambler", kind=death_causes.OTHER,
             seats=frozenset({seat}), capacity=1))
