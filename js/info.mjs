@@ -178,7 +178,7 @@ export function fauxPawLycanthrope(w, s, phase, living = true) {
  * Demon the Boffin gave its ability (26.10.2026)? See info.py. */
 /** Came back to life after `since`, up to `phase`: a new instance, and a
  * Philosopher's taking is gone (Stelle 69, Weg 1). See info.py. */
-function backSince(s, seat, since, phase) {
+export function backSince(s, seat, since, phase) {
   const low = phaseIndex(since), high = phaseIndex(phase);
   return ((s.resurrections || {})[seat] || []).some(
     at => at && low < phaseIndex(at) && phaseIndex(at) <= high);

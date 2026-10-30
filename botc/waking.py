@@ -165,8 +165,11 @@ def _philosopher(world, state, seat, night):
     saying a seat woke when it did not rules out every world where the
     Chambermaid was right.
     """
-    from .info import phase_index      # local: info imports waking
+    from .info import phase_index, _back_since  # local: info imports waking
     took = (state.philosophies() or {}).get(seat)
+    # Back from the dead, it is a new one that has not chosen (Stelle 69).
+    if took and _back_since(state, seat, took[1], f"N{night}"):
+        took = None
     if took:
         taken, since = took
         # `<` until 07.10.2026, which made the comment a lie: on the
@@ -699,6 +702,9 @@ def uncertain(world, state, seat, night):
     # 14.10.2026, a Chambermaid beside one).
     took = (state.philosophies() or {}).get(seat) \
         if acting == "Philosopher" else None
+    from .info import _back_since    # local: info imports waking
+    if took and _back_since(state, seat, took[1], phase):
+        took = None                  # a new one, back (Stelle 69)
     if took and night > int(took[1][1:]) and took[0] != "Philosopher" \
             and not CHARACTERS[took[0]].believes:
         acting = took[0]
