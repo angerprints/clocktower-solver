@@ -713,7 +713,10 @@ heirRule(function anOutsiderBecomesTheFangGu(view, state, phase, character) {
   // Once per game, asked of the jump itself: an evil Fang Gu written onto
   // a seat dealt an Outsider. A Snake Charmer swap moves the star too.
   if ((view.changes || []).some(c => c.role === "FangGu" && c.side === "evil"
-      && TEAM[view.roles[c.seat]] === "outsider"
+      // An Outsider as that night began, not as dealt (seed 2178).
+      && c.phase[0] === "N"
+      && view.teamAt(c.seat, Number(c.phase.slice(1)) > 1
+                     ? `B${Number(c.phase.slice(1)) - 1}` : "N0") === "outsider"
       && phaseIndex(c.phase) < phaseIndex(phase))) return [];
   const alive = state.aliveSet(phase);
   const out = [];
@@ -2838,7 +2841,13 @@ transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
 
   let stories = [[[], 1.0]];
   const base = world;
-  for (const info of [...swaps].sort((a, b) => a.night - b.night)) {
+  // In the order they were written down, which is the order they acted; a
+  // later swap the same night reads the board the earlier one left at the
+  // charmer's turn (Stelle 48 a). See solver.py.
+  const order = new Map(state.infos.map((info, k) => [info, k]));
+  const swappedTonight = new Set();
+  for (const info of [...swaps].sort((a, b) => a.night - b.night
+                                         || order.get(a) - order.get(b))) {
     // Each swap sees the ones before it. See solver.py.
     const soFar = stories.length ? stories[0][0] : [];
     world = soFar.length ? new Timeline(base, soFar) : base;
@@ -2846,7 +2855,8 @@ transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
     // not after the swap this rule is about to write. The swap is dated
     // at the night now that it is immediate.
     const phase = `N${info.night}`;
-    const began = info.night > 1 ? `B${info.night - 1}` : "N0";  // the deal, as Python's `_before`
+    const began = swappedTonight.has(info.night) ? phase
+      : info.night > 1 ? `B${info.night - 1}` : "N0";  // the deal, as Python's `_before`
     // The seat that said so, if it has the ability — held or taken by a
     // Philosopher — else whoever works it. See solver.py.
     const charmer = hasAbility(world, state, info.player, "SnakeCharmer", began)
@@ -2881,9 +2891,14 @@ transitionRule(function aSnakeCharmerTakesTheStar(world, state) {
        change(after, charmer,
               ((world.changes || []).filter(c => c.engineered
                 && c.seat === demon && c.phase === after).pop() || {}).role
-                ?? world.roleAt(demon, began), sides[0]),
-       change(after, demon, "SnakeCharmer", sides[1])],
+                ?? world.roleAt(demon, began), sides[0],
+              slotOf("SnakeCharmer", info.night)),
+       // At the charmer's turn: what acts after it tonight sees the swap
+       // (Stelle 48 a). See solver.py.
+       change(after, demon, "SnakeCharmer", sides[1],
+              slotOf("SnakeCharmer", info.night))],
       cost]);
+    swappedTonight.add(info.night);
   }
   return stories;
 });
@@ -3305,9 +3320,12 @@ function plainFailures(world, state, outcome = {}) {
     if (lleech !== null && host !== null && host !== undefined) {
       const byPhase = (a, b) => phaseIndex(a) - phaseIndex(b);
       const mine = [...state.diedAt(lleech)].sort(byPhase);
-      const gone = mine.length ? mine[0] : null;
+      let gone = mine.length ? mine[0] : null;
       const theirs = host >= 0 ? [...state.diedAt(host)].sort(byPhase) : [];
       const at = theirs.length ? theirs[0] : null;
+      // A host hanged takes it with it that day: one moment (seed 91).
+      if (gone !== null && at !== null && gone[0] === "D" && at[0] === "E"
+          && gone.slice(1) === at.slice(1)) gone = at;
       if (at !== null && world.roleAt(lleech, at) === "Lleech"
           && state.aliveSet(at).has(lleech)
           && (gone === null || phaseIndex(gone) >= phaseIndex(at))) {
@@ -3485,11 +3503,23 @@ function plainFailures(world, state, outcome = {}) {
     const role = info.sourceRole;
     const phase = `N${info.night}`;
     let seat = seats[idx];
+    // Handed to somebody else, but the one who said it holds the character
+    // in this world: its own (Stelle 48 a, seed 1679). See solver.py.
+    if (seat !== null && seat !== info.player && Number.isInteger(info.player)
+        && info.player >= 0 && info.player < state.nPlayers
+        && world.roleAt(info.player,
+                        info.night > 1 ? `B${info.night - 1}` : "N0") === role)
+      seat = info.player;
     if (seat === null) {
       // Who acted, not who holds the character now — a swap dated at
       // this night would otherwise find the seat it ended up at.
       const began = info.night > 1 ? `B${info.night - 1}` : "N0";  // the deal, as Python's `_before`
-      seat = world.findAt(role, began);
+      // The one who said it, when it holds the character: three Village
+      // Idiots are one character (seed 91, 30.10.2026). See solver.py.
+      seat = Number.isInteger(info.player) && info.player >= 0
+          && info.player < state.nPlayers
+          && world.roleAt(info.player, began) === role
+        ? info.player : world.findAt(role, began);
       if (seat === null) seat = world.findAt(role, phase);
       // Nobody holds it, and the one who said it believes it does: a
       // Drunk with that token (13.10.2026). See solver.py.
