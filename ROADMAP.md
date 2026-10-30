@@ -1669,7 +1669,7 @@ Der Bericht steht in `claude/stellen-paket-2.md`. **Deine Antworten vom 30.10.20
 | Stellen | 64 und 65 (Mathematiker zählt Wirkungen mit einem Spieler dahinter nur als möglich), 67 (kurze Rückkehr zählt nicht), 69 (zurückgeholter Philosoph ist neu), 41 und 84 (geprüft, erledigt). |
 | Tor | `messung/tor_stellen_2.sh`: Mathematiker/Vortox 10 → 9, Mathematiker/Höfling 7 → 3, Jäger/Unschuld/Feenkind 5 → 4, Al-Hadikhia/Teedame 12 → 11, Al-Hadikhia/Professor 6 → 5, Fang Gu/Gastwirt 6 → 6, Pestdoktor/Spion 11 → 9; alles andere gleich. |
 | Korpus | 772 Bretter, 2 gespielte Partien mit Mathematiker haben mehr gültige Welten (gewollt). |
-| Tests | TESTS |
+| Tests | 1.904 Tests in 74 Dateien grün; ein festgenagelter Mathematiker-Test () auf die neue Spanne umgestellt. |
 
 ### Als Nächstes
 
