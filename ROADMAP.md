@@ -1680,7 +1680,7 @@ Der Bericht steht in `claude/stellen-paket-3.md`. **Deine Antwort vom 30.10.2026
 | Stellen | 48 a (zwei Tausche in einer Nacht, Tausch am Platz), 48 e (Mondkind: Fraktion beim Zeigen), 82 a (Minnesänger, der vor der Hinrichtung stirbt). Dazu: Zeile gehört dem Sprecher, der den Charakter hält (drei Dorftrottel, stiller Schlangenbeschwörer); Lleech stirbt mit dem gehängten Wirt im selben Moment; nur Lebende erben (Simulator); ein Fang-Gu-Sprung wird an der Fraktion zu Beginn der Nacht erkannt. |
 | Tor | `messung/tor_stellen_3.sh`: 27 Partien gewinnen ihre wahre Welt zurück (Pestdoktor-Zeilen 63 → 49, Hutmacher 25 → 20, ohne Pflicht 4 → 3), keine neu verloren. |
 | Korpus | 772 Bretter, 6 geändert; 3 mit weniger Welten durch die Sprecher-Zuordnung, wahre Welt geprüft. |
-| Tests | TESTS |
+| Tests | 1.904 Tests in 74 Dateien grün. |
 
 ### Als Nächstes
 
