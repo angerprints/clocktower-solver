@@ -24,7 +24,7 @@ import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
         summonerWorld, teaParty, turnedEvil, engineered, boffinGift,
-        bracketGifts, plagueGift}
+        bracketGifts, plagueGift, plagueMade, plagueSummoned}
   from "./worlds.mjs";
 import {aLeviathanIsToldOf, demonHolding, summonedBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows, STORYTELLER_SAVES}
@@ -37,7 +37,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         babysitterAt, engineerChosen, boffinGiven, BOFFIN_NEVER_GIVES,
         BOFFIN_UNSEEN, boffinGiftOf, boffinHolders, boffinSeat, soberSeat,
         boffinAbilities, boffinPhilosophy, hasBoffinAbility,
-        PLAGUE_UNSEEN, STORYTELLER, plagueGiven, plagueHolders, storytellerHas}
+        PLAGUE_UNSEEN, STORYTELLER, plagueGiven, plagueHolders, storytellerHas,
+        boffinWorking, registersOf}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -336,6 +337,11 @@ function moversIn(world, state) {
   for (const [taken] of Object.values(state.philosophies() || {}))
     roles.add(taken);
   let count = (swapped ? 1 : 0) + (made.size ? 1 : 0);
+  // The Storyteller's Pit-Hag or a jinx after a Plague Doctor's death
+  // (Pestdoktor Stufe 2): seen night by night. See solver.py.
+  if (plagueOnBoard(state) && deaths.length && [...PLAGUE_STAGE_2].some(
+    k => k !== "Mezepheles" && k !== "Boffin" && state.script.keys.includes(k)))
+    count += 1;
   // The Demon handed on before a Snake Charmer chose it (Stelle 60,
   // 15.10.2026). See solver.py.
   if (swapped) {
@@ -425,7 +431,8 @@ function whoTurned(changes) {
       const at = momentOf(c);
       const had = flips.get(c.seat);
       flips.set(c.seat, had === undefined ? at : Math.min(at, had));
-      if (c.turned === "mezepheles") turns += c.phase + ";";
+      if (c.turned === "mezepheles")
+        turns += c.phase + (c.storyteller ? "st" : "") + ";";
     } else restKey += changeKey(c) + (c.barber ? "b" + c.barber : "") + ";";
   }
   return {flips, turns, restKey};
@@ -547,6 +554,9 @@ function nightByNight(world, state, cap, last) {
         if (grown.length >= cap) break;
         const entry = owned.find(([k]) => k === i);
         const mine = entry ? entry[1] : [];
+        // What it paid for that, so a later night pays its cost in place of
+        // it, not on top (Pestdoktor Stufe 2). See solver.py.
+        const paid = entry ? entry[2] : 1.0;
         const mineKeys = new Set(mine.map(changeKey));
         const others = mine.length
           ? changes.filter(c => !mineKeys.has(changeKey(c))) : changes;
@@ -564,8 +574,8 @@ function nightByNight(world, state, cap, last) {
           fitted = true;
           const added = upto.some(c => !mine.some(m => sameChange(m, c)));
           const again = owned.filter(([k]) => k !== i);
-          keep([...others, ...upto], weight * (added ? cost : 1.0),
-               [...again, [i, upto]]);
+          keep([...others, ...upto], weight * (added ? cost / paid : 1.0),
+               [...again, [i, upto, added ? cost : paid]]);
           if (grown.length >= cap) break;
         }
         if (!fitted && !final) keep(changes, weight, owned);
@@ -1059,7 +1069,8 @@ transitionRule(function aHuntsmanFindsTheDamsel(world, state) {
  */
 function couldBeGood(world, seat, phase) {
   if (!world.evilAt(seat, phase)) return true;
-  const regs = CHARACTERS[world.roleAt(seat, phase)].registers || [];
+  // A Minion with the Spy's ability too (Pestdoktor Stufe 2, H).
+  const regs = registersOf(world, seat, phase);
   return regs.includes("townsfolk") || regs.includes("outsider");
 }
 
@@ -1314,20 +1325,34 @@ export function aMezephelesMayHaveTurned(world, state) {
   if (!inBag(state, "Mezepheles")) return stories;
   const last = parseInt(state.finalPhase().slice(1), 10);
   let seats = null;
+  // The Storyteller's, from the night after it gained it (Pestdoktor
+  // Stufe 2, B Weg 1). See solver.py.
+  let first = null;
+  for (const c of world.changes || [])
+    if (c.plague && (c.seat ?? null) === STORYTELLER && c.gift === "Mezepheles") {
+      const at = parseInt(c.phase.slice(1), 10) + 1;
+      if (first === null || at < first) first = at;
+    }
   for (let night = 2; night <= last; night++) {
     const phase = `N${night}`;
     const mez = world.findAt("Mezepheles", `B${night - 1}`);
-    if (mez === null || mez === undefined
-        || !minionStillActs(world, state, mez, phase)) continue;
+    const mine = mez !== null && mez !== undefined
+      && minionStillActs(world, state, mez, phase);
+    const theirs = first !== null && night >= first;
+    if (!mine && !theirs) continue;
     if (seats === null)
       seats = [...seatsTheBoardLooksAt(world, state)].sort((a, b) => a - b);
     for (const seat of seats) {
-      if (seat === mez || world.evilAt(seat, phase)) continue;
+      if (world.evilAt(seat, phase)) continue;
       if (sideOpen(world, state, seat, phase)
           && !actsAsCultLeader(world, state, seat, phase)) continue;
       // At the Mezepheles's turn of that night (Hatter stage 3b).
-      stories.push([{...turnedEvil(phase, seat, "mezepheles"),
-                     slot: slotOf("Mezepheles", night)}]);
+      const slot = slotOf("Mezepheles", night);
+      if (mine && seat !== mez)
+        stories.push([{...turnedEvil(phase, seat, "mezepheles"), slot}]);
+      if (theirs)
+        stories.push([{...turnedEvil(phase, seat, "mezepheles"), slot,
+                       storyteller: true}]);
     }
   }
   return stories;
@@ -2236,6 +2261,13 @@ function boffinMoments(view, state, setup) {
     }
     return out;
   }
+  // The Storyteller gaining the Boffin's ability (Pestdoktor Stufe 2, D
+  // Weg 1). See solver.py.
+  for (const c of view.changes || [])
+    if (c.plague && (c.seat ?? null) === STORYTELLER && c.gift === "Boffin"
+        && boffinSeat(view, state, c.phase) === null)
+      for (const d of view.demonsAt(c.phase))
+        out.push([c.phase, c.slot ?? null, d, null]);
   const changes = (view.changes || []).filter(c => !c.boffin)
     .map((c, i) => [c, i, changeAt(c)])
     .sort((a, b) => a[2] - b[2] || a[1] - b[1]).map(([c]) => c);
@@ -2252,7 +2284,7 @@ function boffinMoments(view, state, setup) {
       const beside = c.summoned && others.length ? others[0] : null;
       out.push([c.phase, c.slot ?? null, c.seat, beside]);
     } else if (c.role === "Boffin" && was !== "Boffin"
-               && boffinSeat(prior, state, c.phase) === null) {
+               && !boffinWorking(prior, state, c.phase)) {
       for (const d of after.demonsAt(c.phase))
         out.push([c.phase, c.slot ?? null, d, null]);
     }
@@ -2268,7 +2300,7 @@ function boffinStories(world, state, setup) {
   if (!boffinOnBoard(state)) return [[[], 1.0]];
   const moments = [];
   for (const [phase, slot, seat, beside] of boffinMoments(world, state, setup)) {
-    if (boffinSeat(world, state, phase) === null && phase !== "N1") continue;
+    if (!boffinWorking(world, state, phase) && phase !== "N1") continue;
     let offers = boffinOffers(world, state, phase, seat, slot, setup);
     if (beside !== null) {
       // The Storyteller decides (D Weg 2): the first keeps it, or the
@@ -2392,12 +2424,195 @@ export function plagueMayGive(view, state, phase) {
 const xaanX = view => (view instanceof Timeline ? view.world : view).roles
   .filter(r => TEAM[r] === "outsider").length;
 
-function plagueSeenHere(key, view, phase) {
+function plagueSeenHere(key, view, state, phase) {
   if (key === "Xaan") {
     const x = xaanX(view);
     return x >= 1 && phaseIndex(phase) <= phaseIndex(`N${x}`);
   }
+  if (PLAGUE_STAGE_2.has(key)) return plagueStage2Seen(key, view, state, phase);
   return PLAGUE_SEEN.has(key) || PLAGUE_MINION_SEEN.has(key);
+}
+
+/** The rows saying a seat became a character the solver knows. */
+const plagueBecame = state => state.infos.filter(
+  i => i.type === "Became" && i.role in CHARACTERS);
+
+const beganAt = (night, phase) => night > 1 ? `B${night - 1}` : "N0";
+
+/** The nights the Storyteller's Summoner, gained at this moment, can
+ * summon on the board (C Weg 1). See solver.py. */
+function plagueSummonNights(view, state, phase) {
+  const base = view instanceof Timeline ? view.world : view;
+  if (summonerWorld(base)) return [];
+  const final = phaseIndex(state.finalPhase());
+  const out = [];
+  for (const night of [2, 3]) {
+    const here = `N${night}`;
+    if (night === 2 && !state.script.keys.includes("Pukka")) continue;
+    if (phaseIndex(phase) <= phaseIndex(here) && phaseIndex(here) <= final)
+      out.push(night);
+  }
+  return out;
+}
+
+/** Can the board show this stage 2 ability, gained at this moment? Read
+ * off its rows, its length and the deal. See solver.py. */
+function plagueStage2Seen(key, view, state, phase) {
+  const g = parseInt(phase.slice(1), 10);
+  const final = phaseIndex(state.finalPhase());
+  if (key === "Boffin" || key === "Marionette") return true;
+  if (key === "Mezepheles") return final >= phaseIndex(`N${g + 1}`);
+  if (key === "Summoner") return plagueSummonNights(view, state, phase).length > 0;
+  const became = plagueBecame(state);
+  if (key === "PitHag") {
+    // Not a row a Pit-Hag's own row names.
+    const recorded = new Set(state.infos
+      .filter(i => i.sourceRole === "PitHag" && i.role)
+      .map(i => `${i.night}|${i.target}`));
+    return became.some(i => phaseIndex(`N${i.night}`) >= phaseIndex(phase)
+                       && !recorded.has(`${i.night}|${i.player}`));
+  }
+  if (key === "Baron")
+    return became.some(i => i.night === g && TEAM[i.role] === "outsider");
+  if (key === "Boomdandy")
+    return became.some(i => i.night === g && i.role === "Boomdandy")
+      || state.infos.some(i => i.type === "BoomdandyExploded"
+                          && phaseIndex(`D${i.night}`) >= phaseIndex(phase));
+  if (key === "EvilTwin") {
+    const pair = g + 1;
+    return became.some(i => i.night === g && i.role === "EvilTwin")
+      || state.infos.some(i => i.type === "EvilTwinPair" && i.night === pair);
+  }
+  return false;
+}
+
+const plagueSide = (view, seat, at) => view.evilAt(seat, at) ? "evil" : "good";
+
+/** Every way a stage 2 ability the Storyteller gained at this moment can
+ * have gone, as [[changes, share]]. See solver.py. */
+function plagueStage2Ways(key, view, state, phase, slot) {
+  const n = state.nPlayers;
+  const g = parseInt(phase.slice(1), 10);
+  // The board when the jinxes act: after the death. See solver.py.
+  const at = phase;
+  const demon = p => TEAM[view.roleAt(p, at)] === "demon";
+  // Whom the jinxes make something is it from after the phase of the
+  // death. See solver.py.
+  const [madeAt, madeSlot] = phase[0] === "N" ? [`D${g}`, null]
+    : [`N${g + 1}`, SETUP_SLOT];
+  if (key === "Mezepheles" || key === "Boffin") return [[[], 1.0]];
+  if (key === "PitHag") {
+    const recorded = new Set(state.infos
+      .filter(i => i.sourceRole === "PitHag" && i.role)
+      .map(i => `${i.night}|${i.target}`));
+    const byNight = new Map();
+    for (const info of plagueBecame(state)) {
+      const night = info.night;
+      const here = `N${night}`;
+      if (phaseIndex(here) < phaseIndex(phase)
+          || recorded.has(`${night}|${info.player}`)) continue;
+      const began = beganAt(night, here);
+      let held = false;
+      for (let p = 0; p < n; p++)
+        if (view.roleAt(p, began) === info.role) held = true;
+      if (held) continue;
+      if (!byNight.has(night)) byNight.set(night, []);
+      byNight.get(night).push(plagueMade(here, info.player, info.role,
+        plagueSide(view, info.player, began), slotOf("PitHag", night)));
+    }
+    let ways = [[]];
+    for (const night of [...byNight.keys()].sort((x, y) => x - y)) {
+      const more = [[], ...byNight.get(night).map(c => [c])];
+      ways = ways.flatMap(way => more.map(m => [...way, ...m])).slice(0, 48);
+    }
+    return ways.filter(way => way.length).map(way => [way, 1.0]);
+  }
+  if (key === "Summoner") {
+    const out = [];
+    for (const night of plagueSummonNights(view, state, phase)) {
+      const here = `N${night}`;
+      const held = new Set();
+      for (let p = 0; p < n; p++) held.add(view.roleAt(p, here));
+      // Beside the Demon: never the Demon itself.
+      const demons = new Set(view.demonsAt(beganAt(night, here)));
+      for (const kind of summonable(state)) {
+        if (held.has(kind) || (night === 2 && kind !== "Pukka")) continue;
+        for (const target of summonedSeats(view, state, night, kind, false)) {
+          if (demons.has(target)) continue;
+          for (const extra of typhonNeighbours(view, state, night, target, kind))
+            out.push([[plagueSummoned(here, target, kind,
+                                      slotOf("Summoner", night)),
+                       ...stamped(extra, "Summoner")], 1.0]);
+        }
+      }
+    }
+    return sampledStorytellerWays(view, phase, out);
+  }
+  if (key === "Marionette") {
+    const seats = [];
+    for (const d of view.demonsAt(at))
+      for (const nb of neighboursOf(n, d)) {
+        if (nb === d || seats.includes(nb) || demon(nb)
+            || view.evilAt(nb, at) || view.roleAt(nb, at) === "Marionette")
+          continue;
+        seats.push(nb);
+      }
+    return seats.map(nb => [[plagueMade(madeAt, nb, "Marionette", "good", madeSlot)],
+                            1.0 / seats.length]);
+  }
+  if (key === "Baron") {
+    const held = new Set();
+    for (let p = 0; p < n; p++) held.add(view.roleAt(p, at));
+    const rows = plagueBecame(state).filter(i => i.night === g
+      && TEAM[i.role] === "outsider" && !held.has(i.role) && !demon(i.player));
+    const out = [];
+    const made = combo => combo.map(i => plagueMade(madeAt, i.player, i.role,
+      plagueSide(view, i.player, at), madeSlot));
+    for (let x = 0; x < rows.length; x++) out.push([made([rows[x]]), 1.0]);
+    for (let x = 0; x < rows.length; x++)
+      for (let y = x + 1; y < rows.length; y++) {
+        if (rows[x].player === rows[y].player || rows[x].role === rows[y].role)
+          continue;
+        out.push([made([rows[x], rows[y]]), 1.0]);
+      }
+    return out;
+  }
+  const seats = [];
+  if (key === "Boomdandy") {
+    for (const info of state.infos)
+      if ((info.type === "Became" && info.role === "Boomdandy" && info.night === g)
+          || (info.type === "BoomdandyExploded"
+              && phaseIndex(`D${info.night}`) >= phaseIndex(phase)))
+        seats.push(info.player);
+  } else if (key === "EvilTwin") {
+    const pair = g + 1;
+    for (const info of state.infos) {
+      if (info.type === "Became" && info.role === "EvilTwin" && info.night === g)
+        seats.push(info.player);
+      else if (info.type === "EvilTwinPair" && info.night === pair)
+        seats.push(info.a, info.b);
+    }
+  }
+  const out = [];
+  for (const seat of seats) {
+    if (!Number.isInteger(seat) || seat < 0 || seat >= n
+        || out.some(([way]) => way[0].seat === seat)
+        || demon(seat) || view.roleAt(seat, at) === key) continue;
+    out.push([[plagueMade(madeAt, seat, key, plagueSide(view, seat, at), madeSlot)],
+              1.0]);
+  }
+  return out;
+}
+
+/** Every way, or while a solve estimates a fixed spread of them. See
+ * solver.py. */
+function sampledStorytellerWays(view, phase, ways) {
+  const k = SUMMON_SAMPLE.k;
+  if (k === null || ways.length <= k) return ways;
+  const base = view instanceof Timeline ? view.world : view;
+  const step = Math.ceil(ways.length / k);
+  const offset = stable(`${base.roles.join("|")}|st|${phase}`) % step;
+  return ways.filter((_w, i) => i >= offset && (i - offset) % step === 0);
 }
 
 /** Every ability the Storyteller may have gained at this moment, as
@@ -2412,7 +2627,7 @@ export function plagueOffers(view, state, phase) {
     if (!may.includes(named)) return [];
     may = [named];
   }
-  const seen = may.filter(k => plagueSeenHere(k, view, phase));
+  const seen = may.filter(k => plagueSeenHere(k, view, state, phase));
   const unseen = may.length - seen.length;
   // From its death on (D Weg 1): a death at night counts from the night's
   // start. See solver.py.
@@ -2425,7 +2640,13 @@ export function plagueOffers(view, state, phase) {
     if (PLAGUE_TO_A_MINION.has(key))
       for (const m of minions)
         out.push([[plagueGift(phase, m, key, slot)], each / minions.length]);
-    else out.push([[plagueGift(phase, STORYTELLER, key, slot)], each]);
+    else if (PLAGUE_STAGE_2.has(key)) {
+      const mark = plagueGift(phase, STORYTELLER, key, slot);
+      // None fits this story: held, and nothing came of it that shows.
+      let ways = plagueStage2Ways(key, view, state, phase, slot);
+      if (!ways.length) ways = [[[], 1.0]];
+      for (const [way, share] of ways) out.push([[mark, ...way], each * share]);
+    } else out.push([[plagueGift(phase, STORYTELLER, key, slot)], each]);
   }
   return out;
 }
@@ -2438,7 +2659,8 @@ const plagueStories = (world, state) =>
  * explained (`plagueToldLater`). See solver.py. */
 export const PLAGUE_LATER = "?";
 const plagueInTransitions = mark =>
-  mark.gift === "ScarletWoman" || mark.gift === "Mastermind";
+  mark.gift === "ScarletWoman" || mark.gift === "Mastermind"
+  || (PLAGUE_STAGE_2.has(mark.gift) && mark.gift !== "Mezepheles");
 
 /** Every Minion ability the Storyteller may have gained that a transition
  * rule asks about — the rest as one mark PLAGUE_LATER. See solver.py. */
@@ -2481,18 +2703,15 @@ transitionRule(aPlagueDoctorGivesTheStoryteller);
 /** What the Plague Doctor leaves out that stage 1 does not reckon, or
  * null. See solver.py. */
 export function plagueUnreckoned(view, state) {
-  if (!plagueOnBoard(state)) return null;
-  const marks = (view.changes || []).filter(c => c.plague);
-  if (!marks.some(c => c.gift === PLAGUE_UNSEEN)) return null;
-  const first = Math.min(...marks.map(c => parseInt(c.phase.slice(1), 10)));
-  const keys = state.script.keys;
-  if (["PitHag", "Mezepheles", "Summoner", "Boffin", "Marionette"]
-      .some(k => keys.includes(k))) return "plague doctor";
-  const rows = {Baron: "Became", EvilTwin: "EvilTwinPair",
-                Boomdandy: "BoomdandyExploded"};
-  for (const [key, kind] of Object.entries(rows))
-    if (keys.includes(key) && state.infos.some(
-      i => i.type === kind && i.night >= first)) return "plague doctor";
+  if (!plagueOnBoard(state) || !state.script.keys.includes("Summoner"))
+    return null;
+  const base = view instanceof Timeline ? view.world : view;
+  if (!summonerWorld(base)) return null;
+  const final = phaseIndex(state.finalPhase());
+  for (const c of view.changes || [])
+    if (c.plague && c.gift === PLAGUE_UNSEEN
+        && phaseIndex(c.phase) <= phaseIndex("N3")
+        && phaseIndex("N3") <= final) return "plague doctor";
   return null;
 }
 
@@ -2731,6 +2950,10 @@ export function forcedRoles(state) {
       // The Drunk is an Outsider, so a Drunk nominator is out.
       const spies = state.script.keys.filter(
         k => CHARACTERS[k].registers.includes("townsfolk"));
+      // Or any Minion, given the Spy's ability by the Plague Doctor
+      // (Pestdoktor Stufe 2, H).
+      if (plagueOnBoard(state) && state.script.keys.includes("Spy"))
+        spies.push(...state.script.minions);
       pin(info.nominator, [...state.script.townsfolk, ...spies]);
     } else if (info.type === "SlayerShot" && info.died) {
       pin(info.player, orItsPhilosopher(info.player, "Slayer"));
@@ -2919,11 +3142,23 @@ function plainFailures(world, state, outcome = {}) {
   // deduction the table draws and this never did (02.10.2026).
   for (const info of state.infos) {
     if (info.type !== "EvilTwinPair") continue;
+    // A pair the Storyteller's Evil Twin made counts from its night on. See
+    // solver.py.
+    const made = [info.a, info.b].some(p => (world.plagueMade
+      ? world.plagueMade(p) : []).some(([, role]) => role === "EvilTwin"));
     for (const day of Object.keys(state.executions || {}).map(Number)) {
       const hanged = state.executionDeath(day);
       if (hanged !== info.a && hanged !== info.b) continue;
+      if (made && day < info.night) continue;
       const other = hanged === info.a ? info.b : info.a;
       const phase = `D${day}`;
+      // A good Evil Twin, the Storyteller's jinx (Pestdoktor Stufe 2, F
+      // Weg 1): it is the good player, and the ability its own.
+      if (world.roleAt(hanged, phase) === "EvilTwin"
+          && !world.evilAt(hanged, phase) && world.evilAt(other, phase)) {
+        fail(day, hanged);
+        continue;
+      }
       if (world.roleAt(other, phase) !== "EvilTwin" ||
           !state.aliveSet(phase).has(other) ||
           world.evilAt(hanged, phase)) continue;
@@ -3190,6 +3425,8 @@ function plainFailures(world, state, outcome = {}) {
   // something later that night may have reached it.
   for (const c of world.changes || []) {
     if (c.turned !== "mezepheles") continue;
+    // The Storyteller's: nothing can stop it (Pestdoktor Stufe 2, B).
+    if (c.storyteller) continue;
     const night = parseInt(c.phase.slice(1), 10);
     const mez = world.findAt("Mezepheles", `B${night - 1}`);
     if (mez === null || mez === undefined) return null;
@@ -3877,6 +4114,17 @@ function nightAccounts(world, state, impairedAlready = {}, workingAlready = {}) 
  * working, so nothing can have stopped it.
  */
 function impairmentPlan(world, state, failures, forbidden) {
+  // The Storyteller's own ability cannot be stopped: a world that needs it
+  // to have failed has none, and needing it to work asks nothing
+  // (Pestdoktor Stufe 2). See solver.py.
+  if (Object.values(failures).some(seats => seats.has(STORYTELLER)))
+    return null;
+  if (Object.values(forbidden).some(seats => seats.has(STORYTELLER))) {
+    const kept = {};
+    for (const [night, seats] of Object.entries(forbidden))
+      kept[night] = new Set([...seats].filter(s => s !== STORYTELLER));
+    forbidden = kept;
+  }
   const got = planAsGiven(world, state, failures, forbidden);
   if (got !== null) return got;
   // A Courtier that was itself drunk or poisoned when it chose made
@@ -4585,9 +4833,18 @@ function bestStoryTold(world, state, outcome) {
       // A story that leaves something to pay for, or does not fit at
       // all, is told again with each player a Mezepheles could have
       // turned (`aMezephelesMayHaveTurned`).
-      if (turning && at <= own && (cost === null || cost < 1.0)) {
+      // A second turn only of the other kind, the real one's first: the
+      // Storyteller's Mezepheles beside a real one. See solver.py.
+      const turned = at > own
+        ? changes.filter(c => c.turned === "mezepheles") : [];
+      const again = turned.length > 0 && turned.every(c => !c.storyteller)
+        && changes.some(c => c.plague && c.gift === "Mezepheles");
+      if (turning && (at <= own || again)
+          && (cost === null || cost < 1.0)) {
         const view = changes.length ? new Timeline(world, changes) : world;
         for (const turn of aMezephelesMayHaveTurned(view, state)) {
+          if (turned.length && (!turn[0].storyteller
+              || turned.some(c => c.seat === turn[0].seat))) continue;
           // Not if the story could not be explained and never asked
           // about that player's side from that night on: the second
           // shortcut of `explainOrRecall`, taken before the story is

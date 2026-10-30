@@ -134241,6 +134241,875 @@
    }
   },
   {
+   "name": "x-plague-played-k-387-9",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "Farmer",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Monk",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Courtier",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Balloonist",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Farmer",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [
+       "D2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Klutz",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Golem",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "PlagueDoctor",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
+      ]
+     }
+    ],
+    "infos": [
+     {
+      "type": "CourtierChoice",
+      "night": 1,
+      "player": 2,
+      "role": "Banshee"
+     },
+     {
+      "type": "Acrobat",
+      "night": 2,
+      "player": 4,
+      "target": 7
+     },
+     {
+      "type": "PlagueDoctorGave",
+      "night": 2,
+      "player": 8,
+      "role": "Poisoner"
+     },
+     {
+      "type": "GolemNomination",
+      "night": 2,
+      "player": 7,
+      "target": 5,
+      "died": true
+     },
+     {
+      "type": "Acrobat",
+      "night": 3,
+      "player": 4,
+      "target": 8
+     },
+     {
+      "type": "Became",
+      "night": 3,
+      "player": 4,
+      "role": "Farmer",
+      "was": "Acrobat"
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "plaguedoctor",
+      "poisoner",
+      "godfather",
+      "assassin",
+      "xaan",
+      "snakecharmer",
+      "philosopher",
+      "princess",
+      "balloonist",
+      "cultleader",
+      "farmer",
+      "acrobat",
+      "savant",
+      "clockmaker",
+      "courtier",
+      "monk",
+      "pacifist",
+      "banshee",
+      "klutz",
+      "recluse",
+      "golem",
+      "shabaloth",
+      "vortox",
+      "vigormortis",
+      "po"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 247,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 2.9482,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 2.9482
+     },
+     {
+      "evil_pct": 81.7309,
+      "demon_pct": 76.3377,
+      "drunk_pct": 0.0,
+      "lying_pct": 81.7309
+     },
+     {
+      "evil_pct": 13.0371,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 13.0371
+     },
+     {
+      "evil_pct": 10.2048,
+      "demon_pct": 8.2198,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.2048
+     },
+     {
+      "evil_pct": 19.4841,
+      "demon_pct": 15.4425,
+      "drunk_pct": 0.0,
+      "lying_pct": 19.4841
+     },
+     {
+      "evil_pct": 32.5928,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 32.5928
+     },
+     {
+      "evil_pct": 38.0972,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 38.0972
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 1.9049,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 1.9049
+     }
+    ],
+    "blame": {
+     "3": {
+      "0": {
+       "Demon": 0.978,
+       "Assassin": 0.0049,
+       "Godfather": 0.0171
+      }
+     },
+     "4": {
+      "3": {
+       "Demon": 0.9892,
+       "Assassin": 0.0036,
+       "Godfather": 0.0072
+      }
+     },
+     "2": {
+      "8": {
+       "Demon": 0.9618,
+       "Assassin": 0.0382
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-plague-played-h-341-8",
+   "payload": {
+    "n_players": 8,
+    "players": [
+     {
+      "name": "",
+      "claim": "BountyHunter",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "PlagueDoctor",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Fool",
+      "events": [
+       "S2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Mayor",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Moonchild",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "King",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "HuntsmanChoice",
+      "night": 1,
+      "player": 6,
+      "target": 7
+     },
+     {
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 7,
+      "target": 0,
+      "role": "BountyHunter"
+     },
+     {
+      "type": "BountyHunterInfo",
+      "night": 1,
+      "player": 0,
+      "target": 4
+     },
+     {
+      "type": "KingInfo",
+      "night": 4,
+      "player": 5,
+      "role": ""
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "plaguedoctor",
+      "witch",
+      "devilsadvocate",
+      "mastermind",
+      "xaan",
+      "philosopher",
+      "snakecharmer",
+      "bountyhunter",
+      "chef",
+      "investigator",
+      "villageidiot",
+      "gossip",
+      "mayor",
+      "fool",
+      "empath",
+      "huntsman",
+      "king",
+      "grandmother",
+      "moonchild",
+      "klutz",
+      "damsel",
+      "leviathan",
+      "fanggu",
+      "vigormortis",
+      "zombuul"
+     ]
+    },
+    "quiet_nights": [
+     2,
+     4
+    ],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": false
+   },
+   "expect": {
+    "valid": 22,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 10.3109,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 24.9404,
+      "demon_pct": 6.3022,
+      "drunk_pct": 0.0,
+      "lying_pct": 24.8509
+     },
+     {
+      "evil_pct": 22.4223,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 22.4223,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 74.7614,
+      "demon_pct": 37.4851,
+      "drunk_pct": 0.0,
+      "lying_pct": 74.5527
+     },
+     {
+      "evil_pct": 22.4223,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 100.0,
+      "demon_pct": 56.2127,
+      "drunk_pct": 0.0,
+      "lying_pct": 100.0
+     },
+     {
+      "evil_pct": 23.0187,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.5964
+     }
+    ],
+    "blame": {
+     "3": {
+      "7": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "x-plague-played-j-332-9",
+   "payload": {
+    "n_players": 9,
+    "players": [
+     {
+      "name": "",
+      "claim": "BountyHunter",
+      "events": [
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2
+      ],
+      "nominated": [
+       1,
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Philosopher",
+      "events": [
+       "X1"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Empath",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Pacifist",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "CultLeader",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "never",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Slayer",
+      "events": [
+       "N3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [],
+      "nominated": []
+     }
+    ],
+    "infos": [
+     {
+      "type": "PhilosopherChoice",
+      "night": 1,
+      "player": 1,
+      "role": "PlagueDoctor"
+     },
+     {
+      "type": "Washerwoman",
+      "night": 1,
+      "player": 7,
+      "a": 2,
+      "b": 4,
+      "role": "Pacifist"
+     },
+     {
+      "type": "BountyHunterInfo",
+      "night": 1,
+      "player": 0,
+      "target": 5
+     },
+     {
+      "type": "GamblerGuess",
+      "night": 2,
+      "player": 3,
+      "target": 4,
+      "role": "Slayer"
+     },
+     {
+      "type": "FearmongerChose",
+      "night": 2,
+      "player": 5
+     },
+     {
+      "type": "BountyHunterInfo",
+      "night": 2,
+      "player": 0,
+      "target": 1
+     },
+     {
+      "type": "BountyHunterInfo",
+      "night": 3,
+      "player": 0,
+      "target": 2
+     }
+    ],
+    "script": {
+     "name": "Mixed",
+     "characters": [
+      "plaguedoctor",
+      "scarletwoman",
+      "goblin",
+      "fearmonger",
+      "pithag",
+      "philosopher",
+      "snakecharmer",
+      "balloonist",
+      "washerwoman",
+      "slayer",
+      "king",
+      "gambler",
+      "soldier",
+      "bountyhunter",
+      "pacifist",
+      "empath",
+      "cultleader",
+      "princess",
+      "barber",
+      "snitch",
+      "damsel",
+      "pukka",
+      "vortox",
+      "ojo",
+      "vigormortis"
+     ]
+    },
+    "quiet_nights": [],
+    "days_done": [
+     1,
+     2,
+     3
+    ],
+    "game_over": true
+   },
+   "expect": {
+    "valid": 184,
+    "sampled": false,
+    "rows": [
+     {
+      "evil_pct": 85.268,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 24.6398
+     },
+     {
+      "evil_pct": 14.732,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 80.0242,
+      "demon_pct": 62.4244,
+      "drunk_pct": 0.0,
+      "lying_pct": 80.0242
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 10.5599,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 10.5599
+     },
+     {
+      "evil_pct": 27.2247,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 21.9448
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 55.1754,
+      "demon_pct": 37.5756,
+      "drunk_pct": 0.0,
+      "lying_pct": 55.1754
+     },
+     {
+      "evil_pct": 7.6559,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 7.6559
+     }
+    ],
+    "blame": {
+     "2": {
+      "3": {
+       "Gambler": 1.0
+      },
+      "5": {
+       "Demon": 1.0
+      }
+     },
+     "4": {
+      "6": {
+       "Demon": 1.0
+      }
+     },
+     "3": {
+      "8": {
+       "Demon": 1.0
+      }
+     }
+    }
+   }
+  },
+  {
    "name": "random-00",
    "payload": {
     "n_players": 9,

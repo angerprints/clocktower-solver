@@ -224,10 +224,15 @@ sourceRule(function alwaysImpaired(world, state, night) {
     // A Summoner's Marionette-to-be that was the Drunk or the Lunatic until
     // the Demon came is one all along (22.10.2026).
     const now = world.roleAt(seat, `N${night}`);
+    // A seat the Storyteller made the Marionette (Pestdoktor Stufe 2, G)
+    // is one from then on, and not before. See impairment.py.
+    const puppet = !!world.plagueMade && world.plagueMade(seat)
+      .some(([, role]) => role === "Marionette");
     if (token !== null && token !== undefined
-        && (now === world.roles[seat]
-            || (world.roles[seat] === "Marionette"
-                && (now === "Drunk" || now === "Lunatic"))))
+        && (puppet ? now === "Marionette"
+            : (now === world.roles[seat]
+               || (world.roles[seat] === "Marionette"
+                   && (now === "Drunk" || now === "Lunatic")))))
       seats.add(seat);
   });
   if (!seats.size) return [];

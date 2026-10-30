@@ -89,6 +89,7 @@ export class World {
   /** No story, nothing the Plague Doctor gave. See worlds.py. */
   plagueAt(seat, phase) { return []; }
   plaguedSeats() { return []; }
+  plagueMade(seat) { return []; }
   alignmentAt(seat, phase) {
     if (LISTENING) noteSideRead(seat, phase);
     // Sides too, for a Summoner's Demon (Hatter stage 2). See worlds.py.
@@ -200,6 +201,17 @@ export const boffinGift = (phase, seat, gift, slot = null) =>
 export const plagueGift = (phase, seat, gift, slot = null) =>
   ({phase, seat, role: null, side: null, slot, gift, boffin: true,
     plague: true});
+
+/** A seat the Storyteller's stage 2 ability made something (Pestdoktor
+ * Stufe 2, 29.10.2026): its Pit-Hag's, the jinxes of the Baron, the
+ * Boomdandy, the Evil Twin and the Marionette. `PlagueMade` in Python. */
+export const plagueMade = (phase, seat, role, side, slot = null) =>
+  ({phase, seat, role, side, slot, plagueMade: true});
+
+/** The player the Storyteller's Summoner made an evil Demon beside the
+ * Demon in play (C Weg 1). `PlagueSummoned` in Python. */
+export const plagueSummoned = (phase, seat, role, slot = null) =>
+  ({phase, seat, role, side: "evil", slot, summoned: true});
 
 /** Whether anything from the Hatter's night on was looked at while a
  * story was told: {at, read}. See worlds.py. */
@@ -375,7 +387,32 @@ export class Timeline {
   // Questions about the whole game go straight through; only questions
   // about a moment consult the changes.
   get roles() { return this.world.roles; }
-  get believes() { return this.world.believes; }
+  get believes() {
+    // A seat the Storyteller made the Marionette (Pestdoktor Stufe 2, G)
+    // goes on believing it is what it was. See worlds.py.
+    const ix = this._indexed();
+    if (ix.puppets === undefined) {
+      ix.puppets = [];
+      for (const c of this.changes) {
+        if (!c.plagueMade || c.role !== "Marionette") continue;
+        let was = this.world.believes[c.seat];
+        for (const [at, role] of ix.roles.get(c.seat) || [])
+          if (at < changeAt(c)) was = role;
+        ix.puppets.push([c.seat, was || this.world.roles[c.seat]]);
+      }
+    }
+    if (!ix.puppets.length) return this.world.believes;
+    const out = [...this.world.believes];
+    for (const [seat, was] of ix.puppets) out[seat] = was;
+    return out;
+  }
+
+  /** What the Storyteller's stage 2 ability made this seat, and when:
+   * [[phase, role]]. See worlds.py. */
+  plagueMade(seat) {
+    return this.changes.filter(c => c.seat === seat && c.plagueMade)
+      .map(c => [c.phase, c.role]);
+  }
   find(role) { return this.world.find(role); }
   apparentRole(i) { return this.world.apparentRole(i); }
   evilPlayers() { return this.world.evilPlayers(); }
