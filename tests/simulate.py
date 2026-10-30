@@ -78,6 +78,8 @@ class Deal:
         # (night, seat) -> woken, for a Philosopher made after its place
         # that night (Stelle 95, A Weg 1).
         self.phil_woke_late = {}
+        # seat -> the phase a Philosopher came back and lost what it took.
+        self.phil_lost = {}
         self.poisoned_by = {}
         self.side_changes = []              # [(phase, seat, role, side)]
         # State a Demon carries between nights. A Pukka's poison kills on
@@ -476,6 +478,11 @@ class Deal:
         self.courtier_chose.pop(seat, None)
         self.assassin_chose.pop(seat, None)
         self.nightwatchman_chose.pop(seat, None)
+        # A Philosopher back is a new one that has not chosen: what it took
+        # is gone from now on (Stelle 69, Weg 1, 30.10.2026).
+        if seat in self.philosophies \
+                and self.role_at(seat, phase) == "Philosopher":
+            self.phil_lost[seat] = phase
 
     def record(self, upto=None, told=True):
         """What the table saw happen to its players, for a `GameState`.
@@ -1017,9 +1024,12 @@ def _al_hadikhia_chooses(d, night, rng, heard):
             killed.append(p)
     if working and all(d.deaths.get(p) is None for p in picks):
         # All three live, so all three die — at once, so who is kept
-        # alive is asked of the table before any of them goes.
+        # alive is asked of the table before any of them goes. One dead
+        # before tonight who chose life never stood: beside a Tea Lady it
+        # does not tip her protection (Stelle 67, Weg 2, 30.10.2026).
+        up = tuple(getattr(d, "ah_from_before", {}).get(night, ()))
         going = [p for p in dict.fromkeys(picks)
-                 if not _protected(d, night, p, by_exorcist=False)]
+                 if not _protected(d, night, p, by_exorcist=False, gone=up)]
         for p in going:
             d.deaths[p] = phase
             killed.append(p)
@@ -1440,7 +1450,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                     held = d.role_at(victim, f"N{night}")
                     if (held == "Banshee" or (
                             held == "Philosopher"
-                            and d.philosophies.get(victim) == "Banshee")) \
+                            and _phil(d, victim, f"N{night}") == "Banshee")) \
                             and d.working(victim, night):
                         heard.append(BansheeAnnounced(night, victim))
 
@@ -2489,13 +2499,29 @@ def _farmer_hands_it_on(d, night, rng):
                                                was=was))
 
 
+def _phil(d, seat, phase):
+    """What this Philosopher took, still its own then: not once it came
+    back from the dead, a new one that has not chosen (Stelle 69, Weg 1,
+    30.10.2026)."""
+    took = (getattr(d, "philosophies", None) or {}).get(seat)
+    lost = (getattr(d, "phil_lost", None) or {}).get(seat)
+    if took and lost is not None:
+        from botc.info import phase_index
+        if phase_index(phase) >= phase_index(lost):
+            return None
+    return took
+
+
 def _took(d, seat, role, phase):
     """A Philosopher that took that character, and still the Philosopher
     then. It chooses on its first night, so it has it from night one.
     Or the Demon the Boffin gave its ability (26.10.2026)."""
     if d.role_at(seat, phase) == "Philosopher" \
             and (getattr(d, "philosophies", None) or {}).get(seat) == role:
-        return True
+        lost = (getattr(d, "phil_lost", None) or {}).get(seat)
+        from botc.info import phase_index
+        if lost is None or phase_index(phase) < phase_index(lost):
+            return True
     return _gifted(d, seat, role, phase)
 
 
@@ -3908,7 +3934,7 @@ def _bounty_hunter_is_shown(d, seat, night, rng):
 def _acts_as_cult_leader(d, seat, phase):
     role = d.role_at(seat, phase)
     return role == "CultLeader" or (
-        role == "Philosopher" and d.philosophies.get(seat) == "CultLeader")
+        role == "Philosopher" and _phil(d, seat, phase) == "CultLeader")
 
 
 def _cult_leader_turns(d, night, rng):
@@ -5820,7 +5846,7 @@ def _demon_kills(d, night, rng):
         d.lev_chose[night] = (demon, target)
         held = d.role_at(target, phase)
         if not (held == "Banshee" or (held == "Philosopher"
-                                      and d.philosophies.get(target)
+                                      and _phil(d, target, phase)
                                       == "Banshee")):
             return []
         tried.append(target)
@@ -5939,8 +5965,8 @@ def _woke_itself(d, p, night, shown=False, as_role=None):
     # character would — settled at the table, and what the night
     # order above has done since 29.09. Here it fell through to
     # "once a game, so not tonight" and never woke again.
-    if what == "Philosopher" and p in d.philosophies and night > 1:
-        what = d.philosophies[p]
+    if what == "Philosopher" and _phil(d, p, f"N{night}") and night > 1:
+        what = _phil(d, p, f"N{night}")
         # Took the Trunkenbold: the Townsfolk it was shown. Took the
         # Verrückte: the Demon in play, as a Lunatic (I, 14.10.2026).
         if what == "Drunk":
@@ -6016,7 +6042,8 @@ def _woke_itself(d, p, night, shown=False, as_role=None):
     # One that has not chosen yet — the Huntsman's Damsel made it after
     # its place on the first night — is woken every night until it does,
     # as the solver has it and as the Courtier is (Stelle 95, 30.10.2026).
-    if what == "Philosopher" and p not in d.philosophies:
+    # And one back from the dead: a new one, not chosen (Stelle 69).
+    if what == "Philosopher" and not _phil(d, p, f"N{night}"):
         return True
     if when == "conditional":
         return bool(_conditionally_woke(d, p, what, night))
@@ -6282,8 +6309,9 @@ def _in_night_order(d, night):
         # character would. It kept its own slot 2, so one holding the
         # Mathematician counted before the Pit-Hag at 16 had turned the
         # drunk real Mathematician into somebody else (29.09.2026).
-        if what == "Philosopher" and seat in d.philosophies and night > 1:
-            what = d.philosophies[seat]
+        if what == "Philosopher" and _phil(d, seat, f"N{night}") \
+                and night > 1:
+            what = _phil(d, seat, f"N{night}")
         got = getattr(CHARACTERS[what], field, 0) if what in CHARACTERS else 0
         return (got if got else 10_000, seat)
 
@@ -6420,8 +6448,8 @@ def early_choices(d, night, rng):
         # holding the Snake Charmer pointed at a Demon the Barber had only
         # just made at slot 40 (29.09.2026).
         if role == "Philosopher" and night > 1 \
-                and d.philosophies.get(seat) in CHOOSES_EARLY:
-            role = d.philosophies[seat]
+                and _phil(d, seat, f"N{night}") in CHOOSES_EARLY:
+            role = _phil(d, seat, f"N{night}")
         # The Fearmonger acts at 17, after the Pit-Hag at 16 — so a seat
         # the Pit-Hag has just unmade chooses nothing, and one it has just
         # made a Fearmonger chooses tonight (the gate, seeds 898 and 2928,
@@ -6519,7 +6547,7 @@ def honest_info(d, night, rng):
         if (d.deaths.get(seat) == f"N{night}"
                 and role_now not in ON_DEATH
                 and not (role_now == "Philosopher"
-                         and d.philosophies.get(seat) == "Klutz")):
+                         and _phil(d, seat, f"N{night}") == "Klutz")):
             continue
         # The character it holds *now*, not the one it was dealt. A
         # Pit-Hag turns somebody into the Sage and the Sage should then
@@ -6537,7 +6565,7 @@ def honest_info(d, night, rng):
         # One that took the Trunkenbold is told, as the Townsfolk it was
         # shown, whatever the Storyteller likes (I, 14.10.2026).
         if made is None and role == "Philosopher" and night > 1 \
-                and d.philosophies.get(seat) == "Drunk" \
+                and _phil(d, seat, f"N{night}") == "Drunk" \
                 and d.phil_token.get(seat):
             made = _droisoned_info(d, seat, night, rng,
                                    apparent=d.phil_token[seat])
@@ -6545,7 +6573,7 @@ def honest_info(d, night, rng):
                 out.append(made)
             continue
         if made is None and role == "Philosopher" and night > 1:
-            took = d.philosophies.get(seat)
+            took = _phil(d, seat, f"N{night}")
             # An early chooser it took has already acted, in the early pass.
             if took and not (took in CHOOSES_EARLY and night > 1):
                 made = _for_role(d, seat, took, night, rng)
@@ -7370,7 +7398,7 @@ def _for_role(d, seat, role, night, rng):
         target = rng.choice([p for p in range(d.n) if p != seat])
         d.nightwatchman_chose[seat] = night
         real = (d.role_at(seat, phase) == "Nightwatchman"
-                or d.philosophies.get(seat) == "Nightwatchman")
+                or _phil(d, seat, phase) == "Nightwatchman")
         # A Drunk holding the token points too, and nothing comes of it:
         # it has no ability to choose anybody *with*, so a Goon does not
         # stir and the replay is told nothing.

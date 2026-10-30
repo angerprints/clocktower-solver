@@ -2024,8 +2024,11 @@ class FoundByTheWideSweep(SolverTest):
                           infos=infos)
         dead = GameState(n_players=5, script=scripts.SECTS_AND_VIOLETS,
                          infos=infos, deaths={1: ("D1",)})
-        self.assertEqual(_possible_impairment_counts(w, alive, 2)[0], 1)
-        self.assertEqual(_possible_impairment_counts(w, dead, 2)[0], 0)
+        # A range since Stelle 65 (30.10.2026): whether the Philosopher's
+        # drunkenness held is the plan's to say, so it may have been one or
+        # none — and dead, the Dreamer is not counted at all.
+        self.assertEqual(_possible_impairment_counts(w, alive, 2), (0, 1))
+        self.assertEqual(_possible_impairment_counts(w, dead, 2), (0, 0))
 
 
 class TheScriptReadAgainstTheWiki(SolverTest):
