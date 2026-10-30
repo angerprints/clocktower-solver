@@ -844,8 +844,13 @@ def an_outsider_becomes_the_fang_gu(view, state, phase, character):
     # evil Fang Gu written onto a seat that was dealt an Outsider.
     # Earlier than this moment only: a story built a night at a time
     # already holds this very jump when it is asked again later.
+    # An Outsider *as that night began*, not as dealt: a Damsel the
+    # Huntsman made a Snake Charmer, who swapped with the Fang Gu, was
+    # read as its jump (seed 2178, 30.10.2026).
     if any(c.role == "FangGu" and c.side == "evil"
-           and TEAM[view.roles[c.seat]] == "outsider"
+           and c.phase[0] == "N"
+           and view.team_at(c.seat, _before(int(c.phase[1:]), c.phase))
+           == "outsider"
            and phase_index(c.phase) < phase_index(phase)
            for c in getattr(view, "changes", ())):
         return []                         # it has already jumped once
@@ -6745,6 +6750,12 @@ def _plain_failures(world, state, outcome=None):
             theirs = (sorted(state.died_at(host), key=phase_index)
                       if host >= 0 else [])
             at = theirs[0] if theirs else None
+            # A host hanged takes it with it that day: the board writes
+            # the Lleech's death for the day and the host's for the
+            # execution, one moment for the table (seed 91, 30.10.2026).
+            if gone is not None and at is not None and gone[0] == "D" \
+                    and at[0] == "E" and gone[1:] == at[1:]:
+                gone = at
             if at is not None and world.role_at(lleech, at) == "Lleech" \
                     and lleech in state.alive_set(at) \
                     and (gone is None

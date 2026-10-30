@@ -713,7 +713,10 @@ heirRule(function anOutsiderBecomesTheFangGu(view, state, phase, character) {
   // Once per game, asked of the jump itself: an evil Fang Gu written onto
   // a seat dealt an Outsider. A Snake Charmer swap moves the star too.
   if ((view.changes || []).some(c => c.role === "FangGu" && c.side === "evil"
-      && TEAM[view.roles[c.seat]] === "outsider"
+      // An Outsider as that night began, not as dealt (seed 2178).
+      && c.phase[0] === "N"
+      && view.teamAt(c.seat, Number(c.phase.slice(1)) > 1
+                     ? `B${Number(c.phase.slice(1)) - 1}` : "N0") === "outsider"
       && phaseIndex(c.phase) < phaseIndex(phase))) return [];
   const alive = state.aliveSet(phase);
   const out = [];
@@ -3317,9 +3320,12 @@ function plainFailures(world, state, outcome = {}) {
     if (lleech !== null && host !== null && host !== undefined) {
       const byPhase = (a, b) => phaseIndex(a) - phaseIndex(b);
       const mine = [...state.diedAt(lleech)].sort(byPhase);
-      const gone = mine.length ? mine[0] : null;
+      let gone = mine.length ? mine[0] : null;
       const theirs = host >= 0 ? [...state.diedAt(host)].sort(byPhase) : [];
       const at = theirs.length ? theirs[0] : null;
+      // A host hanged takes it with it that day: one moment (seed 91).
+      if (gone !== null && at !== null && gone[0] === "D" && at[0] === "E"
+          && gone.slice(1) === at.slice(1)) gone = at;
       if (at !== null && world.roleAt(lleech, at) === "Lleech"
           && state.aliveSet(at).has(lleech)
           && (gone === null || phaseIndex(gone) >= phaseIndex(at))) {

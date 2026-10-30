@@ -3792,11 +3792,6 @@ def _lleech_follows(d, phase, night, rng, by_day=False, hanged=None):
         if not d.working(lleech, night, by_day=by_day):
             continue                      # off now: it goes when it is not
         at = f"D{night}" if by_day else f"N{night}"
-        # With its host, at the same moment: a host executed went at
-        # "E", and a Lleech written down at "D" died before it — which the
-        # solver reads as a Lleech that was off (seed 91, 30.10.2026).
-        if by_day and d.deaths.get(host) == f"E{night}":
-            at = f"E{night}"
         was_demon = d.demon_at(at) == lleech
         d.deaths[lleech] = at
         # Beside a second Demon, `_demons_fall` settles it (Hatter stage 2).
