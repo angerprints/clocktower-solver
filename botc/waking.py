@@ -184,8 +184,9 @@ def _philosopher(world, state, seat, night):
             return False
         return woke_as(world, state, seat, night, taken)
     # One made a Philosopher this night after its turn — the Huntsman's
-    # Damsel, a Pit-Hag's late choice — was not woken for it tonight; it
-    # is from the next night on, until it chooses (Stelle 95, 30.10.2026).
+    # Damsel — is not surely woken tonight: the Storyteller may wake it to
+    # choose or not (`uncertain`, Stelle 95, A Weg 1); from the next night
+    # on it is, until it chooses.
     if _made_after_its_turn(world, seat, night, "Philosopher"):
         return False
     return True
@@ -706,6 +707,13 @@ def uncertain(world, state, seat, night):
     if took and night > int(took[1][1:]) and took[0] != "Philosopher" \
             and CHARACTERS[took[0]].believes \
             and seat in state.alive_set(phase):
+        return True
+    # One made a Philosopher this night after its turn: the Storyteller
+    # may wake it at once to choose, or leave it until tomorrow (Stelle 95,
+    # A Weg 1, 30.10.2026).
+    if acting == "Philosopher" and not took \
+            and seat in state.alive_set(phase) \
+            and _made_after_its_turn(world, seat, night, "Philosopher"):
         return True
     if acting == "Choirboy":
         # Woken if the Demon killed the King tonight. A King dead in the
