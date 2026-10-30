@@ -1060,8 +1060,9 @@ function aMoonchildsPick(world, state, night, child, name = "Moonchild") {
   const went = state.diedAt(child);
   if (!went.includes(`N${night - 1}`) && !went.includes(`D${night - 1}`))
     return [];
+  // Good when it was chosen, in the day (Stelle 48 e, Weg 1). See solver.py.
   const good = new Set([...state.aliveSet(phase)]
-    .filter(seat => !world.evilAt(seat, phase)));
+    .filter(seat => !world.evilAt(seat, `D${night - 1}`)));
   // Recorded, it points somewhere in particular — and then a good player
   // it named *does* die. One still standing needs a reason: somebody
   // keeping them alive, or the Moonchild's ability not working that
@@ -1827,6 +1828,8 @@ function aMinstrelsSong(world, state, night, seat) {
   // There to hear it: a Minstrel raised tonight was dead when the Minion
   // hanged, and its ability did nothing.
   if (!state.aliveSet(`D${night - 1}`).has(seat)) return [];
+  // Nor one that died during that day, before the hanging (Stelle 82).
+  if (state.diedAt(seat).includes(`D${night - 1}`)) return [];
   // "If a Minion *died* by execution": one that walked away silences
   // nobody.
   const executed = state.executionDeath(night - 1);

@@ -844,8 +844,13 @@ def an_outsider_becomes_the_fang_gu(view, state, phase, character):
     # evil Fang Gu written onto a seat that was dealt an Outsider.
     # Earlier than this moment only: a story built a night at a time
     # already holds this very jump when it is asked again later.
+    # An Outsider *as that night began*, not as dealt: a Damsel the
+    # Huntsman made a Snake Charmer, who swapped with the Fang Gu, was
+    # read as its jump (seed 2178, 30.10.2026).
     if any(c.role == "FangGu" and c.side == "evil"
-           and TEAM[view.roles[c.seat]] == "outsider"
+           and c.phase[0] == "N"
+           and view.team_at(c.seat, _before(int(c.phase[1:]), c.phase))
+           == "outsider"
            and phase_index(c.phase) < phase_index(phase)
            for c in getattr(view, "changes", ())):
         return []                         # it has already jumped once
@@ -1598,9 +1603,15 @@ def a_snake_charmer_takes_the_star(world, state):
     if not swaps:
         return [((), 1.0)]
 
+    # In the order they were written down, which is the order they acted:
+    # a Philosopher working the Snake Charmer and the real one share a
+    # turn, and the second reads the board the first has just changed
+    # (Stelle 48 a, seed 882, 30.10.2026).
+    order = {id(info): k for k, info in enumerate(state.infos)}
+    swapped_tonight = set()
     stories = [((), 1.0)]
     base = world
-    for info in sorted(swaps, key=lambda i: i.night):
+    for info in sorted(swaps, key=lambda i: (i.night, order[id(i)])):
         # Each swap sees the ones before it. Two swaps in a game — a
         # charmer takes the star, and later a Philosopher working the
         # Snake Charmer takes it from them — were each judged against the
@@ -1621,6 +1632,9 @@ def a_snake_charmer_takes_the_star(world, state):
         # cause.
         phase = f"N{info.night}"
         before = _before(info.night, phase)
+        # After an earlier swap tonight, the board as that one left it.
+        if info.night in swapped_tonight:
+            before = phase
         # Held, or a Philosopher working it — nobody *holds* the character
         # then, and the swap plainly happened.
         #
@@ -1694,11 +1708,16 @@ def a_snake_charmer_takes_the_star(world, state):
             if isinstance(c, Engineered) and c.seat == demon \
                     and c.phase == after:
                 held = c.role
-        stories = [(changes + (Change(after, charmer, held, sides[0]),
+        # At the charmer's turn, so what acts after it tonight — a Monk
+        # beside a No Dashii that moved, a second charmer — sees the swap
+        # made (Stelle 48 a, seeds 882 and 1679, 30.10.2026).
+        slot = slot_of("SnakeCharmer", info.night)
+        stories = [(changes + (Change(after, charmer, held, sides[0], slot),
                                Change(after, demon, "SnakeCharmer",
-                                      sides[1])),
+                                      sides[1], slot)),
                     cost)
                    for changes, cost in stories]
+        swapped_tonight.add(info.night)
     return stories
 
 
@@ -4878,8 +4897,11 @@ def _a_moonchilds_pick(world, state, night, child, name="Moonchild"):
     if not any(p in (f"N{night - 1}", f"D{night - 1}")
                for p in state.died_at(child)):
         return []
+    # Good when it was chosen, in the day — not in the night it dies: a
+    # good player a Snake Charmer or a Fang Gu makes the Demon tonight
+    # still dies of it (Stelle 48 e, Weg 1, 30.10.2026).
     good = frozenset(seat for seat in state.alive_set(phase)
-                     if not world.evil_at(seat, phase))
+                     if not world.evil_at(seat, f"D{night - 1}"))
     # Recorded, it points somewhere in particular — so a seat that died
     # reads good and one that did not reads evil, which is the whole
     # value of writing the pick down.
@@ -6728,6 +6750,12 @@ def _plain_failures(world, state, outcome=None):
             theirs = (sorted(state.died_at(host), key=phase_index)
                       if host >= 0 else [])
             at = theirs[0] if theirs else None
+            # A host hanged takes it with it that day: the board writes
+            # the Lleech's death for the day and the host's for the
+            # execution, one moment for the table (seed 91, 30.10.2026).
+            if gone is not None and at is not None and gone[0] == "D" \
+                    and at[0] == "E" and gone[1:] == at[1:]:
+                gone = at
             if at is not None and world.role_at(lleech, at) == "Lleech" \
                     and lleech in state.alive_set(at) \
                     and (gone is None
@@ -6915,6 +6943,18 @@ def _plain_failures(world, state, outcome=None):
             role = info.source_role
             phase = f"N{info.night}"
             seat = src
+            # Handed to somebody else who claims the character — but the
+            # one who said it holds the character in this world: then it
+            # is that one's own. A silent Snake Charmer's row went to the
+            # old Demon it had swapped into a Snake Charmer, which claimed
+            # it (Stelle 48 a, seed 1679, 30.10.2026).
+            if seat is not None and seat != info.player \
+                    and isinstance(info.player, int) \
+                    and 0 <= info.player < state.n_players \
+                    and role in CHARACTERS \
+                    and world.role_at(info.player,
+                                      _before(info.night, phase)) == role:
+                seat = info.player
             if seat is None:
                 # Who *acted*, not who holds the character now.
                 #
@@ -6924,7 +6964,17 @@ def _plain_failures(world, state, outcome=None):
                 # at the board as it stood when the night began, and fall
                 # back to now for a character that arrived tonight.
                 began = _before(info.night, phase)
-                seat = world.find_at(role, began)
+                # The one who said it, when it holds the character: three
+                # Village Idiots are one character, and asking for "the"
+                # holder gave every row to the first of them — the row of
+                # one who lied about its character was then judged as the
+                # first one's (seed 91, 30.10.2026).
+                if isinstance(info.player, int) \
+                        and 0 <= info.player < state.n_players \
+                        and world.role_at(info.player, began) == role:
+                    seat = info.player
+                else:
+                    seat = world.find_at(role, began)
                 if seat is None:
                     seat = world.find_at(role, phase)
                 # Nobody holds it, and the one who said it believes it does:
@@ -7969,6 +8019,10 @@ def _a_minstrels_song(world, state, night, seat):
     # There to hear it: a Minstrel raised tonight was dead when the
     # Minion hanged, and its ability did nothing.
     if seat not in state.alive_set(f"D{night - 1}"):
+        return []
+    # Nor one that died during that day, before the hanging at its end — a
+    # Harpy's strike, a Slayer's shot (Stelle 82, seed 841, 30.10.2026).
+    if f"D{night - 1}" in state.died_at(seat):
         return []
     # "If a Minion *died* by execution." One that walked away — a Devil's
     # Advocate's pick — silences nobody, and this used to drunk the whole
