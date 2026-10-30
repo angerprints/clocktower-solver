@@ -1067,7 +1067,11 @@ def _heir(d, phase, rng):
     with five or more players left. Otherwise the Storyteller passes the
     star to any living Minion.
     """
-    alive = [p for p in d.alive_at(phase) if p != d.demon_at(phase)]
+    # Standing now: a Scarlet Woman a Psychopath killed earlier the same
+    # day is no heir to a Demon the Slayer shoots after (seed 1753 of the
+    # Hatter's line, 30.10.2026).
+    alive = [p for p in d.alive_at(phase) if p != d.demon_at(phase)
+             and d.deaths.get(p) is None]
     minions = [m for m in alive if TEAM[d.role_at(m, phase)] == "minion"]
     if not minions:
         return None
@@ -1517,6 +1521,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             if not _evil_has_won(d, f"N{night}"):
                 _professor_raises(d, night, rng)
             _moonchild_takes_one(d, night, heard, rng)
+            if getattr(d, "moon_ended", None):
+                d.ended_at, d.ended_why = d.moon_ended, "moonchild"
+                d.game_ends_after = night
+                break
             if d.hatted:
                 _tea_after_a_death_tonight(d, night, rng, "Moonchild")
             _tinker_may_go(d, night, rng)
@@ -1906,19 +1914,10 @@ def _moonchild_takes_one(d, night, heard, rng):
             continue
         if d.side_at(target, f"D{day}") != "good":
             continue
-        # Made a Demon tonight, before the Moonchild's turn: evil by then.
-        # A Snake Charmer that swapped with the Demon tonight, as with the
-        # Summoner's Demon below (gate, seed 1650 of the Boffin's line LN,
-        # 27.10.2026). A Goon or a seat the Mezepheles turned tonight
-        # still dies of it, as before.
-        if TEAM[d.role_at(target, phase)] == "demon" \
-                and TEAM[d.role_at(target, f"D{day}")] != "demon":
-            continue
-        # Made the Demon tonight, before the Moonchild's turn: evil by
-        # then (21.10.2026).
-        made = getattr(d, "summoned", None)
-        if made is not None and made[:2] == (night, target):
-            continue
+        # Good when it was chosen, in the day, is what counts (Stelle 48 e,
+        # Weg 1, 30.10.2026): a seat a Snake Charmer, a Fang Gu or the
+        # Summoner made the Demon tonight dies of it too — and then the
+        # Scarlet Woman takes it on, or good has won (`moon_ended`).
         if d.deaths.get(target) is not None:
             continue                      # the Demon got there first
         if d.back_at(target, phase) is not None:
@@ -1927,6 +1926,16 @@ def _moonchild_takes_one(d, night, heard, rng):
                 or _a_fool_shrugs_it_off(d, target, phase):
             continue
         d.deaths[target] = phase
+        held = d.role_at(target, phase)
+        if TEAM[held] == "demon" and target in d.demons_at(phase):
+            heir = _heir(d, phase, rng)
+            if heir is not None and _scarlet(d, heir, phase) \
+                    and len(d.alive_at(phase)) >= 5 \
+                    and not _sw_stays_by_jinx(d, phase, target):
+                d.handovers.append((phase, heir))
+                d.changes.append((phase, heir, held))
+            elif not _another_demon_stands(d, phase, target):
+                d.moon_ended = phase
 
 
 def _the_goon_answers(d, night, chooser, target):
@@ -3783,6 +3792,11 @@ def _lleech_follows(d, phase, night, rng, by_day=False, hanged=None):
         if not d.working(lleech, night, by_day=by_day):
             continue                      # off now: it goes when it is not
         at = f"D{night}" if by_day else f"N{night}"
+        # With its host, at the same moment: a host executed went at
+        # "E", and a Lleech written down at "D" died before it — which the
+        # solver reads as a Lleech that was off (seed 91, 30.10.2026).
+        if by_day and d.deaths.get(host) == f"E{night}":
+            at = f"E{night}"
         was_demon = d.demon_at(at) == lleech
         d.deaths[lleech] = at
         # Beside a second Demon, `_demons_fall` settles it (Hatter stage 2).
@@ -6764,6 +6778,7 @@ def droisoned_at(d, night, by_day=False):
             if not _acts_as(d, minstrel, "Minstrel", phase) \
                     or minstrel not in living \
                     or minstrel not in d.alive_at(f"E{day}") \
+                    or minstrel in d.died_on(f"D{day}") \
                     or _drunk_by_its_philosopher(d, minstrel, "Minstrel",
                                                  phase):
                 continue

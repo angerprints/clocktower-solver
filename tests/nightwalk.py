@@ -1446,13 +1446,10 @@ def walk(deal, night, hidden):
                 if seat in state.droisoned:
                     continue
                 # Good *when it was chosen*, which was in daylight: a
-                # Goon the Demon has turned since still dies of it. Not a
-                # seat made a Demon tonight before its turn — a Snake
-                # Charmer's swap — which is evil by then, as in the
-                # simulator (27.10.2026).
+                # Goon the Demon has turned since still dies of it, and so
+                # does a seat made the Demon tonight (Stelle 48 e, Weg 1,
+                # 30.10.2026).
                 if state.sides_at_dusk.get(target) == "good" \
-                        and TEAM.get(state.roles.get(target, ""), "") \
-                        != "demon" \
                         and target in state.alive:
                     state.kill(target, slot, "Moonchild")
 
