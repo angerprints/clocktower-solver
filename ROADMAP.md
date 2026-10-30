@@ -1658,7 +1658,7 @@ Der Bericht steht in `claude/stellen-paket-1.md`. **Deine Entscheidung vom 30.10
 | Stellen | 78 (Lil' Monsta nur ohne Beschwörer, Simulator), 94 (Glücksspieler liest zu seiner Zeit), 95 (Philosoph, der noch nicht gewählt hat), 97 (Grenze mit dem Jäger), 87 (Großmutter trauert um den springenden Fang Gu). |
 | Tor | `messung/tor_stellen_1.sh`: alle Zeilen des Pestdoktor-2-Tors unverändert bis auf drei gewonnene Seeds (2685, 2693, 2327); neu Ingenieur 4 → 3, Leviathan/Lil' Monsta/Beschwörer 762 → 9, Glücksspieler 5 → 5, Jäger-Zeile 19 → 18. |
 | Korpus | 772 Bretter, 0 geändert. |
-| Tests | TESTS |
+| Tests | 1.895 Tests in 73 Dateien grün; eine Klasse in `test_js_sampling.py` bricht nach 600 s ab, auf main genauso. |
 
 ### Als Nächstes
 
