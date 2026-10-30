@@ -30,7 +30,7 @@
 import {CHARACTERS, slotOf} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {readingAt, teaMade} from "./worlds.mjs";
-import {babysitterAt, boffinAbilities, boffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt}
+import {backSince, babysitterAt, boffinAbilities, boffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt}
   from "./info.mjs";
 
 export const NEVER = "never";
@@ -91,10 +91,12 @@ condition("Lunatic", (world, state, seat, night) =>
 // This said "always" here while Python had the schedule — a Chambermaid
 // beside one was read differently by the two (02.10.2026).
 condition("Philosopher", (world, state, seat, night) => {
-  const took = state.philosophies()[seat];
+  let took = state.philosophies()[seat];
+  // Back from the dead, it is a new one that has not chosen (Stelle 69).
+  if (took && backSince(state, seat, took[1], `N${night}`)) took = null;
   // One made a Philosopher this night after its turn — the Huntsman's
-  // Damsel — was not woken for it tonight; it is from the next night on,
-  // until it chooses (Stelle 95, 30.10.2026).
+  // Damsel — is not surely woken tonight (`uncertain`, Stelle 95, A Weg 1);
+  // from the next night on it is, until it chooses.
   if (!took) return !madeAfterItsTurn(world, seat, night, "Philosopher");
   const [taken, since] = took;
   // `<` until 07.10.2026: on the night it chose it was asked whether the
@@ -498,8 +500,9 @@ export function uncertain(world, state, seat, night) {
   // A Philosopher after the night it took something is as uncertain as
   // that character: one that took the Professor may have spent it unseen
   // (14.10.2026). See waking.py.
-  const took = acting === "Philosopher"
+  let took = acting === "Philosopher"
     ? (state.philosophies() || {})[seat] : null;
+  if (took && backSince(state, seat, took[1], phase)) took = null;
   if (took && night > Number(took[1].slice(1)) && took[0] !== "Philosopher"
       && !CHARACTERS[took[0]].believes)
     acting = took[0];
@@ -507,6 +510,11 @@ export function uncertain(world, state, seat, night) {
   // which nobody wrote down: it may have woken (I, 14.10.2026).
   if (took && night > Number(took[1].slice(1)) && took[0] !== "Philosopher"
       && CHARACTERS[took[0]].believes && state.aliveSet(phase).has(seat))
+    return true;
+  // One made a Philosopher this night after its turn: the Storyteller may
+  // wake it at once to choose, or not (Stelle 95, A Weg 1). See waking.py.
+  if (acting === "Philosopher" && !took && state.aliveSet(phase).has(seat)
+      && madeAfterItsTurn(world, seat, night, "Philosopher"))
     return true;
   if (acting === "Choirboy")
     // Woken if the Demon killed the King tonight, and whose kill a King's
