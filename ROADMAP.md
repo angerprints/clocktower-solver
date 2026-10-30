@@ -1,6 +1,6 @@
 # Clocktower-Solver — Roadmap, neu bewertet
 
-**Stand:** 29.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
+**Stand:** 30.10.2026 (Neubewertung vom 29.09.2026, seither fortgeschrieben)
 **Projekt:** botc-solver (Tischhilfe, gehostet auf angerprints.github.io/clocktower-solver)
 **Ausgangslage:** 959 Tests grün, 0 unmögliche Bretter auf Trouble Brewing, Bad Moon Rising, Sects & Violets und in allen fünf Charakter-Gates. solver.py nach dem Aufräumen 3.596 Zeilen.
 
@@ -1636,13 +1636,26 @@ Der Bericht steht in `claude/pestdoktor.md`, die Lesarten und deine Antworten in
 | Korpus | 752 Bretter (17 neu), keines geändert. |
 | Tests | 1.894 Tests in 73 Dateien grün (13 neu). |
 
+### Der Pestdoktor, Stufe 2 · *erledigt am 30.10.2026*
+
+Der Bericht steht in `claude/pestdoktor-stufe-2.md`, die Lesarten und deine Antworten in `claude/pestdoktor-stufe-2-lesarten.md`. **Deine Antworten vom 29.10.2026:** A bis I Weg 1.
+
+| | Gebaut |
+|---|---|
+| Solver | Grubenweib des Erzählers erklärt „wurde zu“-Zeilen ab der Gabe (ein Dämon macht die Tode beliebig), Mezepheles des Erzählers wendet einmal (neben einem echten zweimal), Beschwörer macht in Nacht 3 einen zweiten Dämon, Laborratte gibt dem Dämon eine Fähigkeit, die nie endet. Baron, Bombenleger, Böser Zwilling nur mit ihren Zeilen, Marionette mit jedem guten Nachbarn; die Fraktion bleibt, wirksam ab der Phase nach dem Tod (`PlagueMade`, `PlagueSummoned`). Ein Scherge mit der Fähigkeit des Spions registriert wie ein Spion (`registers_here`, `evil_registrations_here`). „Nicht gerechnet“ nur noch der Beschwörer des Erzählers in einer Welt mit ausgeteiltem Beschwörer. |
+| Nebenbei | Nacht für Nacht bezahlte eine Regel ihre Kosten doppelt, wenn sie in einer späteren Nacht etwas hinzufügte. Eine Explosion des Bombenlegers zählt nach dem Galgen. Die Zeile eines tauschenden Schlangenbeschwörers gilt an ihrem Platz in der Nacht. |
+| Simulator, Night-Walk | Der Erzähler wählt auch aus Stufe 2; der Night-Walk kennt sein Grubenweib und die Jinx-Wechsel. |
+| Tor | Zeilen ohne Pestdoktor unverändert; elf Pestdoktor-Zeilen (`messung/tor_pestdoktor_2.sh`) ohne Verlust durch den Pestdoktor, 4.834 Partien mit Gabe, 1.773 Gaben aus Stufe 2. |
+| Korpus | 772 Bretter (20 neu), 6 geändert (gewollt: 5 gespielte Partien sind andere Spiele, `sv-played-672` durch die Schlangenbeschwörer-Zeile). |
+| Tests | 1.895 Tests in 73 Dateien grün (7 neu); eine Klasse in `test_js_sampling.py` bricht nach 600 s ab, auf main genauso (langsamere Maschine). |
+
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 und Stufe 3 (die Nacht in ihrer Reihenfolge, mit Punkt 1b) am 23.10.2026, Stufe 2 (zwei lebendige Dämonen) am 26.10.2026, Ingenieur am 26.10.2026, Laborratte Stufe 1 am 27.10.2026, Stufe 2 am 28.10.2026, Pestdoktor Stufe 1 am 28.10.2026; als Nächstes Stufe 2 des Pestdoktors, erst mit Lesarten; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 und Stufe 3 (die Nacht in ihrer Reihenfolge, mit Punkt 1b) am 23.10.2026, Stufe 2 (zwei lebendige Dämonen) am 26.10.2026, Ingenieur am 26.10.2026, Laborratte Stufe 1 am 27.10.2026, Stufe 2 am 28.10.2026, Pestdoktor Stufe 1 am 28.10.2026, Stufe 2 am 30.10.2026; als Nächstes der Alchemist; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
-Stand des Katalogs: 134 Einträge (nachgezählt am 29.10.2026; die Zahlen davor lagen um eins zu tief). Von den 138 Spielercharakteren der App sind 133 im Katalog (dazu der Wächter, ein Fabled), 5 fehlen: 3 Bürger (Alchemist, Kannibale, Vergessliche), 1 Außenseiter (Eremit), 1 Scherge (Zauberer). Davon sind 3 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia, Lil' Monsta und Beschwörer (21.10.2026), Hutmacher Stufe 1 und 3 (23.10.2026), Stufe 2 und Ingenieur (26.10.2026), Laborratte Stufe 1 (27.10.2026), Stufe 2 und Pestdoktor Stufe 1 (28.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
+Stand des Katalogs: 134 Einträge (nachgezählt am 29.10.2026; die Zahlen davor lagen um eins zu tief). Von den 138 Spielercharakteren der App sind 133 im Katalog (dazu der Wächter, ein Fabled), 5 fehlen: 3 Bürger (Alchemist, Kannibale, Vergessliche), 1 Außenseiter (Eremit), 1 Scherge (Zauberer). Davon sind 3 groß und 2 lassen sich gar nicht modellieren (Vergessliche, Zauberer). Mittlere und nur aufzeichenbare gibt es keine mehr. Erledigt: Lord of Typhon und Kazali (20.10.2026), Al-Hadikhia, Lil' Monsta und Beschwörer (21.10.2026), Hutmacher Stufe 1 und 3 (23.10.2026), Stufe 2 und Ingenieur (26.10.2026), Laborratte Stufe 1 (27.10.2026), Stufe 2 und Pestdoktor Stufe 1 (28.10.2026), Pestdoktor Stufe 2 (30.10.2026). Deine Bemerkung vom 20.10.2026: Der Alchemist kommt erst, wenn alle Schergen gebaut sind. Die Reihenfolge, der du am 20.10.2026 zugestimmt hast, erst wer nichts leiht, dann wer leiht: Al-Hadikhia, Lil' Monsta, Beschwörer, Hutmacher, Ingenieur, Laborratte, Pestdoktor, Alchemist, Eremit, Kannibale. Der Zauberer (ein Scherge) lässt sich nicht modellieren. Sie kommen nur in ein zufälliges gemischtes Skript, wenn ein Lauf sie verlangt (`ONLY_WHEN_ASKED` in `tools/play_games.py`), damit alte Seeds ihre Partie behalten.
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
@@ -1755,7 +1768,9 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 93 | Werkzeug | **Ein guter Außenseiter, der einen Bürger behauptet,** macht ein gespieltes Brett für die Seite leer, weil die Seite gute Spieler nicht lügen lässt (Seed 47 der Klammer-Zeile). Gefunden am 28.10.2026. |
 | 94 | Ingenieur | **Ingenieur macht den Dämon zur Pukka** (Seed 1429 der Zeile mit Professor, Ingenieur, Nachtwächter, Feenkind, Philosoph): verloren, auch ohne Laborratten-Regeln. Nicht untersucht. |
 | 95 | Jäger | **Der Jäger macht die Unschuld zum Philosophen, die Kammerzofe passt in Nacht 2 nicht** (Seed 2685 der Pestdoktor-Zeile mit Geist, Kammerzofe, Philosoph; Seed 2693 der Zeile mit Laborratte und Imp). Verloren auch ohne Pestdoktor; bei 2693 mit jeder genannten Laborratten-Gabe außer dem Philosophen. Nicht untersucht. Gefunden am 28.10.2026. |
-| 96 | Pestdoktor | **Stufe 2:** Grubenweib, Mezepheles, Beschwörer und Laborratte des Erzählers, die vier Jinx-Spieler (Baron, Böser Zwilling, Bombenleger, Marionette, F Weg 1) und ein Scherge mit der Fähigkeit des Spions, der als gut registriert. |
+| 96 | Pestdoktor | *Erledigt am 30.10.2026:* Stufe 2 (Grubenweib, Mezepheles, Beschwörer und Laborratte des Erzählers, die vier Jinx-Spieler, Registrierung eines Schergen mit der Fähigkeit des Spions). Bericht in `claude/pestdoktor-stufe-2.md`. |
+| 97 | Pestdoktor | **Grenze von 256 Erzählungen mit Jäger, Barbier und Gabe des Pestdoktors** (Seed 2327 der Pestdoktor-Zeile mit Scharlachroter Frau, Goblin, Angstmacher): Der wahre Tausch des Barbiers wird abgeschnitten. Wahrscheinlich auch ohne Gabe, nicht gemessen. |
+| 98 | Pestdoktor | **Night-Walk in der Nacht, in der der Beschwörer des Erzählers einen zweiten Dämon macht:** Die beliebigen Tode dieser Nacht kennt der Night-Walk nicht (4 Nächte in 3.000 Partien). Der Solver rechnet sie. |
 
 **Berichtigt:** Die frühere Stelle 6 („der direkte Messlauf verwirft 20 von 1.500, der Lauf über das Brett nicht“) war falsch. Beide Wege verwerfen etwa gleich viel, und es ist die Barbier-Klasse aus Stelle 4. Die frühere Stelle 4 (Philosoph und Schlangenbeschwörer, Seeds 836 und 181) lässt sich nicht mehr nachstellen, weil der Simulator seither anders spielt. Im neuen Lauf über 3.000 Partien gibt es keine verworfene Partie ohne Barbier-Tausch.
 
