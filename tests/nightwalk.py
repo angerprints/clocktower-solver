@@ -2444,7 +2444,9 @@ def _al_hadikhia_takes_its_turn(state, seat, slot, hidden, night):
     if princess:
         state.log.append((slot, "princess", seat, "no kill"))
         return
-    state.at_once = set(state.alive)
+    # One dead before tonight who chose life never stood: it does not
+    # count beside a Tea Lady (Stelle 67, Weg 2, 30.10.2026).
+    state.at_once = set(state.alive) - back
     try:
         going = [p for p in dict.fromkeys(picks)
                  if not _a_guard_holds(state, p, slot, seat, "AlHadikhia")]

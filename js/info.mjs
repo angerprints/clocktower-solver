@@ -176,10 +176,19 @@ export function fauxPawLycanthrope(w, s, phase, living = true) {
 
 /** Is this seat a Philosopher that took that character by then — or a
  * Demon the Boffin gave its ability (26.10.2026)? See info.py. */
+/** Came back to life after `since`, up to `phase`: a new instance, and a
+ * Philosopher's taking is gone (Stelle 69, Weg 1). See info.py. */
+function backSince(s, seat, since, phase) {
+  const low = phaseIndex(since), high = phaseIndex(phase);
+  return ((s.resurrections || {})[seat] || []).some(
+    at => at && low < phaseIndex(at) && phaseIndex(at) <= high);
+}
+
 export function tookIt(w, s, seat, role, phase) {
   const taken = (s.philosophies() || {})[seat];
   if (taken && taken[0] === role && w.roleAt(seat, phase) === "Philosopher"
-      && phaseIndex(phase) >= phaseIndex(taken[1])) return true;
+      && phaseIndex(phase) >= phaseIndex(taken[1])
+      && !backSince(s, seat, taken[1], phase)) return true;
   return hasBoffinAbility(w, s, seat, role, phase)
     || hasPlagueAbility(w, s, seat, role, phase);
 }
@@ -1448,9 +1457,10 @@ export function possibleImpairmentCounts(world, state, night) {
     // Vigormortis poisons one of the two Townsfolk beside a dead Minion
     // and the Storyteller chooses which. Counting its whole reach as
     // certainly impaired said two where the answer was one.
-    // A Preacher or a Xaan rests while it is off itself; see info.py.
+    // A Preacher, a Xaan, a Courtier — any source with a seat behind it —
+    // rests while that seat is off itself (Stelle 65); see info.py.
     if (source.freeForEveryone() && source.capacity >= source.seats.size
-        && source.name !== "Preacher" && source.name !== "Xaan") {
+        && (source.actor === null || source.actor === undefined)) {
       for (const seat of source.seats) if (living.has(seat)) always.add(seat);
     } else movable.push(source);
   }

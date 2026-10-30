@@ -818,11 +818,23 @@ def took_it(w, s, seat, role, phase):
     taken = (s.philosophies() or {}).get(seat)
     if taken and taken[0] == role \
             and w.role_at(seat, phase) == "Philosopher" \
-            and phase_index(phase) >= phase_index(taken[1]):
+            and phase_index(phase) >= phase_index(taken[1]) \
+            and not _back_since(s, seat, taken[1], phase):
         return True
     return role is not None and (
         has_boffin_ability(w, s, seat, role, phase)
         or has_plague_ability(w, s, seat, role, phase))
+
+
+def _back_since(s, seat, since, phase):
+    """Did this seat come back to life after `since`, up to `phase`? Then
+    it is a new instance (ruling of 03.10.2026): a Philosopher that died
+    and returned has not chosen yet, and what it took is gone (Stelle 69,
+    Weg 1, 30.10.2026). A later choice is a row of its own."""
+    low, high = phase_index(since), phase_index(phase)
+    return any(low < phase_index(at) <= high
+               for at in (getattr(s, "resurrections", None) or {}).get(seat, ())
+               if at)
 
 
 # --------------------------------------------------------------------------
@@ -1533,9 +1545,13 @@ def _possible_impairment_counts(world, state, night):
         # was then compared against nothing.
         # A Preacher or a Xaan rests while it is drunk or poisoned itself,
         # and that is settled by the plan, not here: either way, as with
-        # a source that picks (10.10.2026).
+        # a source that picks (10.10.2026). So does every source with a
+        # seat behind it (`actor`): a Courtier poisoned by the Xaan when it
+        # named the Pixie made nobody drunk, and the Mathematician's
+        # honest nought read as impossible (Stelle 65, seed 1988,
+        # 30.10.2026).
         if source.free_for_everyone() and source.capacity >= len(source.seats) \
-                and source.name not in ("Preacher", "Xaan"):
+                and source.actor is None:
             always |= set(source.seats) & living
         else:
             movable.append(source)

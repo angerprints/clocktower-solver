@@ -78,6 +78,8 @@ class Deal:
         # (night, seat) -> woken, for a Philosopher made after its place
         # that night (Stelle 95, A Weg 1).
         self.phil_woke_late = {}
+        # seat -> the phase a Philosopher came back and lost what it took.
+        self.phil_lost = {}
         self.poisoned_by = {}
         self.side_changes = []              # [(phase, seat, role, side)]
         # State a Demon carries between nights. A Pukka's poison kills on
@@ -476,6 +478,11 @@ class Deal:
         self.courtier_chose.pop(seat, None)
         self.assassin_chose.pop(seat, None)
         self.nightwatchman_chose.pop(seat, None)
+        # A Philosopher back is a new one that has not chosen: what it took
+        # is gone from now on (Stelle 69, Weg 1, 30.10.2026).
+        if seat in self.philosophies \
+                and self.role_at(seat, phase) == "Philosopher":
+            self.phil_lost[seat] = phase
 
     def record(self, upto=None, told=True):
         """What the table saw happen to its players, for a `GameState`.
@@ -1017,9 +1024,12 @@ def _al_hadikhia_chooses(d, night, rng, heard):
             killed.append(p)
     if working and all(d.deaths.get(p) is None for p in picks):
         # All three live, so all three die — at once, so who is kept
-        # alive is asked of the table before any of them goes.
+        # alive is asked of the table before any of them goes. One dead
+        # before tonight who chose life never stood: beside a Tea Lady it
+        # does not tip her protection (Stelle 67, Weg 2, 30.10.2026).
+        up = tuple(getattr(d, "ah_from_before", {}).get(night, ()))
         going = [p for p in dict.fromkeys(picks)
-                 if not _protected(d, night, p, by_exorcist=False)]
+                 if not _protected(d, night, p, by_exorcist=False, gone=up)]
         for p in going:
             d.deaths[p] = phase
             killed.append(p)
@@ -2495,7 +2505,10 @@ def _took(d, seat, role, phase):
     Or the Demon the Boffin gave its ability (26.10.2026)."""
     if d.role_at(seat, phase) == "Philosopher" \
             and (getattr(d, "philosophies", None) or {}).get(seat) == role:
-        return True
+        lost = (getattr(d, "phil_lost", None) or {}).get(seat)
+        from botc.info import phase_index
+        if lost is None or phase_index(phase) < phase_index(lost):
+            return True
     return _gifted(d, seat, role, phase)
 
 
