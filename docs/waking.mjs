@@ -423,6 +423,11 @@ export function woke(world, state, seat, night) {
   const role = world.roleAt(seat, phase);
   if (!state.aliveSet(phase).has(seat) && role !== "Ravenkeeper") return false;
   if (cameBackTonight(world, state, seat, night) === ASLEEP) return false;
+  // Made it tonight after its own turn: it waits for the next night
+  // (Lesart K; seed 109). See waking.py.
+  if (role !== "Philosopher" && CHARACTERS[role]
+      && CHARACTERS[role].nights !== "first"
+      && madeAfterItsTurn(world, seat, night, role)) return false;
   if (wokeAs(world, state, seat, night, role)) return true;
   // A Demon the Boffin gave an ability wakes for it as that character
   // would — not on the first night (F Weg 1, 26.10.2026). See waking.py.
@@ -483,7 +488,10 @@ function actsAs(world, seat, phase) {
   // Lil' Monsta, which wakes for nothing of its own (21.10.2026).
   if (babysitterAt(world, phase) === demon)
     return "LilMonsta";
-  return world.roleAt(demon, phase);
+  // The Demon's own seat holding the Lunatic: the Imp, as with none
+  // (Paket 5, seed 1534). See waking.py.
+  const got = world.roleAt(demon, phase);
+  return got === "Lunatic" ? "Imp" : got;
 }
 
 /** Could this seat's waking have gone either way?

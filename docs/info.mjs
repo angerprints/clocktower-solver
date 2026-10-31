@@ -148,7 +148,11 @@ export function* eachRealSide(w, s, phase) {
       sides = [...cultSides(w, s, seat, phase)].sort();
     else if (s && sideOpen(w, s, seat, phase)) sides = [false, true];
     else continue;
-    if (sides.length > 1) open.push([seat, sides]);
+    // And one settled on a side the deal does not show (seed 208). See
+    // info.py.
+    if (sides.length > 1
+        || (sides.length === 1 && sides[0] !== w.evilAt(seat, phase)))
+      open.push([seat, sides]);
   }
   if (!open.length) { yield w; return; }
   const combos = open.reduce((acc, [, sides]) =>

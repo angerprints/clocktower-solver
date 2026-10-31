@@ -339,7 +339,7 @@ export function planNight(sources, required, forbidden, previous) {
 export const SILENCERS = ["Preacher", "Xaan", "Philosopher"];
 // Sources that rest while their actor is drunk or poisoned: the two
 // silencers, and a Lleech's poison on its host (11.10.2026).
-export const RESTING = ["Preacher", "Xaan", "Lleech"];
+export const RESTING = ["Preacher", "Xaan", "Lleech", "Lleech, till the swap"];
 
 /** Sources whose own actor a silencer reached tonight do nothing. */
 export function silencedOut(sources) {
