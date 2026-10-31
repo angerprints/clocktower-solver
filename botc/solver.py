@@ -5490,10 +5490,15 @@ def an_innkeeper_guards_two(world, state, night, seat, kind):
     if not _on_board(state, "Innkeeper"):
         return []
     phase = f"N{night}"
-    # Who held it at its turn: one the Pit-Hag unmade later that night
-    # had already chosen (Paket 5, seed 1363), one it made later had not.
+    # Held at its turn and still when the kill came: one the Pit-Hag made
+    # later had not chosen, and one the Pit-Hag unmade later has lost the
+    # protection with the ability (seed 2423 of the Acrobat's line, Paket
+    # 5) — though its drunk stays where it fell, see
+    # `an_innkeeper_drunks_one_of_the_two_it_guards`.
     with _turn_of("Innkeeper", night):
-        holders = _holders(world, state, "Innkeeper", phase)
+        chose = set(_holders(world, state, "Innkeeper", phase))
+    holders = [p for p in _holders(world, state, "Innkeeper", phase)
+               if p in chose]
     return [shield for keeper in holders
             for shield in _an_innkeepers_pair(world, state, night, seat,
                                               keeper)]
@@ -8422,9 +8427,15 @@ def an_innkeeper_drunks_one_of_the_two_it_guards(world, state, night):
     if not _on_board(state, "Innkeeper"):
         return []
     phase = f"N{night}"
-    # At its turn, as `an_innkeeper_guards_two` (Paket 5, seed 1363).
+    # Who held it at its turn too: one the Pit-Hag unmade later that
+    # night had already drunk somebody (Paket 5, seed 1363). One it made
+    # later is still offered, as before: dropping it lost a world (seed
+    # 1439 of the Plague Doctor's line), whose real cause is still open
+    # (Stelle 105).
+    holders = _holders(world, state, "Innkeeper", phase)
     with _turn_of("Innkeeper", night):
-        holders = _holders(world, state, "Innkeeper", phase)
+        holders = list(dict.fromkeys(
+            _holders(world, state, "Innkeeper", phase) + list(holders)))
     return [source for seat in holders
             for source in _an_innkeepers_drunk(world, state, night, seat,
                                                _by(holders, seat))]

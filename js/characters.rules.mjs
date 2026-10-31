@@ -1457,10 +1457,13 @@ immunityRule(function aSoberSailorCannotDie(world, state, night, seat) {
 /** From everything, not only the Demon — and it picks who. */
 immunityRule(function anInnkeeperGuardsTwo(world, state, night, seat) {
   if (!onBoard(state, "Innkeeper") || night < 2) return [];
-  // Who held it at its turn (Paket 5, seed 1363). See solver.py.
-  return readingAt(`N${night}`, slotOf("Innkeeper", 1) || 0,
+  // Held at its turn and still when the kill came (Paket 5, seeds 1363
+  // and 2423). See solver.py.
+  const chose = new Set(readingAt(`N${night}`, slotOf("Innkeeper", 1) || 0,
                    slotOf("Innkeeper", night) || 0,
-                   () => holders(world, state, "Innkeeper", `N${night}`)).flatMap(
+                   () => holders(world, state, "Innkeeper", `N${night}`)));
+  return holders(world, state, "Innkeeper", `N${night}`)
+    .filter(p => chose.has(p)).flatMap(
     keeper => anInnkeepersPair(world, state, night, seat, keeper));
 });
 
@@ -2130,10 +2133,13 @@ sourceRule(function aPixieMayBeDenied(world, state, night) {
  * works the same way. */
 sourceRule(function anInnkeeperDrunksOneOfTheTwoItGuards(world, state, night) {
   if (!onBoard(state, "Innkeeper") || night < 2) return [];
-  // At its turn, as anInnkeeperGuardsTwo (Paket 5, seed 1363).
-  const hs = readingAt(`N${night}`, slotOf("Innkeeper", 1) || 0,
+  // Who held it at its turn too, and whoever holds it at the end, as
+  // before (Paket 5, seeds 1363 and 1439). See solver.py.
+  const atEnd = holders(world, state, "Innkeeper", `N${night}`);
+  const hs = [...new Set([...readingAt(`N${night}`, slotOf("Innkeeper", 1) || 0,
                        slotOf("Innkeeper", night) || 0,
-                       () => holders(world, state, "Innkeeper", `N${night}`));
+                       () => holders(world, state, "Innkeeper", `N${night}`)),
+                          ...atEnd])];
   return hs.flatMap(seat => anInnkeepersDrunk(world, state, night, seat,
                                               byOf(hs, seat)));
 });
