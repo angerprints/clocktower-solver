@@ -1031,7 +1031,10 @@ def walk(deal, night, hidden):
         for seat, target in acrobats:
             # Still working by then: an Acrobat poisoned after its pick
             # (a Pukka's choice) has no ability left to fell it.
+            # And still the Acrobat: a Pit-Hag that made it something
+            # else since took the ability with it (seed 108, 31.10.2026).
             if seat in state.alive and state.working(seat) \
+                    and state.has(seat, "Acrobat") \
                     and target in state.droisoned and target not in only:
                 state.kill(seat, slot, "Acrobat")
         acrobats.clear()
