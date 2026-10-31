@@ -1862,7 +1862,10 @@ PLAYED_HATTER = ((1, 8), (56, 8), (62, 9), (82, 9), (120, 7), (175, 7),
 
 # Games where a Minion chose the Summoner at a tea party and it summoned a
 # second living Demon on the third night (Hatter stage 2, 25.10.2026).
-PLAYED_TWO_DEMONS = ((7050, 7), (4500, 7))
+# 7050 gave way to 7440 on 31.10.2026: the simulator plays it differently
+# since Stellen-Paket 4, and the board it makes now is sampled — which the
+# corpus never holds (test_js_solve). 7440 has two living Demons too.
+PLAYED_TWO_DEMONS = ((7440, 7), (4500, 7))
 
 
 def stellen_62_63():
