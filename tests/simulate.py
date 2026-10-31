@@ -3473,6 +3473,12 @@ def _huntsman_hunts(d, night, rng):
         made = rng.choice(spare)
         d.changes.append((phase, target, made))
         d.huntsman_chose[night] = (seat, target, made)
+        # Made at the Huntsman's place: Lesart K, as for the Pit-Hag's
+        # (`_woke_itself`; Paket 5, seed 1127).
+        from botc.catalogue import CHARACTERS as _C
+        d.__dict__.setdefault("made_at", {})[(night, target)] = (
+            _C["Huntsman"].first_night if night == 1
+            else _C["Huntsman"].other_night)
         # A Philosopher made after its place: the Storyteller may wake it
         # at once or leave it for tomorrow (Stelle 95, A Weg 1,
         # 30.10.2026). Woken, it shakes its head here — the simulator lets
@@ -6019,6 +6025,17 @@ def _woke_itself(d, p, night, shown=False, as_role=None):
             what = "LilMonsta"
     char = CHARACTERS[what]
     when, patterns = char.nights, char.wake
+    # Made tonight after its own place — by the Pit-Hag — it waits for
+    # its next night (Patrick, Lesart K, 20.10.2026), as the solver has it
+    # (`waking.woke`); a first-night character on the first night learns
+    # at once (Paket 5, seed 339).
+    made_at = getattr(d, "made_at", {}).get((night, p))
+    if made_at is not None and as_role is None \
+            and what != "Philosopher" \
+            and not (night == 1 and when == "first"):
+        own = char.first_night if night == 1 else char.other_night
+        if own and own < made_at:
+            return False
     # Back from the dead tonight: "they wake later tonight if they
     # normally would". Regurgitated at the Shabaloth's turn or
     # raised at the Professor's, and dead for every slot before
@@ -7802,6 +7819,12 @@ def _for_role(d, seat, role, night, rng):
         if d.side_at(target, phase) == "good":
             _says_it_became(d, night, target, became, phase, rng)
         d.changes.append((phase, target, became))
+        # Made at the Pit-Hag's place: a character whose own place came
+        # before it waits for its next night (Lesart K), and a Chambermaid
+        # does not count it tonight (Paket 5, seed 339).
+        from botc.catalogue import CHARACTERS as _C
+        d.__dict__.setdefault("made_at", {})[(night, target)] = \
+            _C["PitHag"].other_night
         return PitHagChoice(night, seat, target=target, role=became)
 
     if role == "Philosopher" and night == 1 and seat not in d.philosophies \

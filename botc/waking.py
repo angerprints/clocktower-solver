@@ -688,7 +688,11 @@ def _acts_as(world, seat, phase):
     from .info import babysitter_at
     if babysitter_at(world, phase) == demon:
         return "LilMonsta"
-    return world.role_at(demon, phase)
+    # A story where the Demon's own seat holds the Lunatic now (a Barber's
+    # swap, then the Pit-Hag) has no Demon to dream of: as with none, the
+    # Imp. Asked back, it recursed forever (Paket 5, seed 1534).
+    got = world.role_at(demon, phase)
+    return "Imp" if got == "Lunatic" else got
 
 
 def uncertain(world, state, seat, night):

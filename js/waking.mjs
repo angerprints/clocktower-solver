@@ -488,7 +488,10 @@ function actsAs(world, seat, phase) {
   // Lil' Monsta, which wakes for nothing of its own (21.10.2026).
   if (babysitterAt(world, phase) === demon)
     return "LilMonsta";
-  return world.roleAt(demon, phase);
+  // The Demon's own seat holding the Lunatic: the Imp, as with none
+  // (Paket 5, seed 1534). See waking.py.
+  const got = world.roleAt(demon, phase);
+  return got === "Lunatic" ? "Imp" : got;
 }
 
 /** Could this seat's waking have gone either way?
