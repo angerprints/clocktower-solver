@@ -119155,78 +119155,13 @@
    }
   },
   {
-   "name": "x-hatter-two-demons-7050-7",
+   "name": "x-hatter-two-demons-7440-7",
    "payload": {
     "n_players": 7,
     "players": [
      {
       "name": "",
-      "claim": "Acrobat",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": [
-       1,
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "",
-      "events": [
-       "N4"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "never",
-      "voted": [
-       2
-      ],
-      "nominated": [
-       1,
-       3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "",
-      "events": [
-       "X2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "never",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Noble",
-      "events": [
-       "N4"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2,
-       3
-      ],
-      "nominated": [
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Barber",
+      "claim": "Huntsman",
       "events": [
        "X3"
       ],
@@ -119235,6 +119170,55 @@
       "wake": "",
       "voted": [
        1,
+       2
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Seamstress",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Chef",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Washerwoman",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
        2
       ],
       "nominated": []
@@ -119255,62 +119239,64 @@
      },
      {
       "name": "",
-      "claim": "Innkeeper",
+      "claim": "Grandmother",
       "events": [
-       "N3",
-       "R4"
+       "N4"
       ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
        1,
-       2
+       3
       ],
       "nominated": [
-       1,
        2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Huntsman",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": [
+       1
       ]
      }
     ],
     "infos": [
      {
-      "type": "PhilosopherChoice",
+      "type": "PixieLearned",
       "night": 1,
-      "player": 2,
-      "role": "Butler"
-     },
-     {
-      "type": "InnkeeperChoice",
-      "night": 2,
       "player": 6,
-      "a": 2,
-      "b": 3
+      "role": "Huntsman"
      },
      {
-      "type": "Acrobat",
+      "type": "GrandmotherInfo",
+      "night": 1,
+      "player": 5,
+      "target": 0,
+      "role": "Huntsman"
+     },
+     {
+      "type": "HuntsmanChoice",
       "night": 2,
       "player": 0,
-      "target": 1
-     },
-     {
-      "type": "InnkeeperChoice",
-      "night": 3,
-      "player": 6,
-      "a": 1,
-      "b": 4
-     },
-     {
-      "type": "Acrobat",
-      "night": 3,
-      "player": 0,
-      "target": 1
-     },
-     {
-      "type": "DamselGuess",
-      "night": 3,
-      "player": 4,
       "target": 3
+     },
+     {
+      "type": "Became",
+      "night": 2,
+      "player": 3,
+      "role": "Washerwoman",
+      "was": "Damsel"
      }
     ],
     "script": {
@@ -119318,33 +119304,33 @@
      "characters": [
       "hatter",
       "summoner",
-      "marionette",
-      "snakecharmer",
+      "poisoner",
       "philosopher",
+      "snakecharmer",
+      "washerwoman",
+      "professor",
+      "nightwatchman",
+      "chef",
+      "fortuneteller",
+      "seamstress",
       "alsaahir",
-      "magician",
-      "virgin",
-      "sage",
-      "noble",
-      "pacifist",
-      "acrobat",
-      "innkeeper",
-      "king",
-      "oracle",
       "huntsman",
-      "butler",
-      "barber",
+      "grandmother",
+      "dreamer",
+      "pixie",
+      "drunk",
+      "lunatic",
       "damsel",
-      "devilsadvocate",
       "godfather",
+      "cerenovus",
+      "yaggababble",
       "zombuul",
       "po",
-      "shabaloth",
       "leviathan"
      ]
     },
     "quiet_nights": [
-     2
+     3
     ],
     "days_done": [
      1,
@@ -119354,52 +119340,71 @@
     "game_over": true
    },
    "expect": {
-    "valid": 913,
-    "sampled": true,
+    "valid": 337,
+    "sampled": false,
     "rows": [
      {
-      "evil_pct": 51.3347,
-      "demon_pct": 45.6571,
-      "drunk_pct": 0.0,
-      "lying_pct": 41.7621
+      "evil_pct": 0.5352,
+      "demon_pct": 0.3862,
+      "drunk_pct": 0.1043,
+      "lying_pct": 10.2987
      },
      {
-      "evil_pct": 21.2389,
-      "demon_pct": 20.4931,
-      "drunk_pct": 0.0,
-      "lying_pct": 6.3825
+      "evil_pct": 16.7154,
+      "demon_pct": 11.5808,
+      "drunk_pct": 21.1306,
+      "lying_pct": 27.4528
      },
      {
-      "evil_pct": 15.9725,
-      "demon_pct": 16.1696,
-      "drunk_pct": 0.0,
-      "lying_pct": 15.0537
+      "evil_pct": 87.6428,
+      "demon_pct": 82.5719,
+      "drunk_pct": 3.1216,
+      "lying_pct": 89.2131
      },
      {
-      "evil_pct": 41.8357,
-      "demon_pct": 36.437,
-      "drunk_pct": 0.0,
-      "lying_pct": 33.0414
+      "evil_pct": 0.1983,
+      "demon_pct": 0.1795,
+      "drunk_pct": 0.0033,
+      "lying_pct": 0.0222
      },
      {
-      "evil_pct": 89.4867,
-      "demon_pct": 13.9117,
-      "drunk_pct": 13.0362,
-      "lying_pct": 89.4867
+      "evil_pct": 86.1024,
+      "demon_pct": 0.1794,
+      "drunk_pct": 4.007,
+      "lying_pct": 89.9301
      },
      {
-      "evil_pct": 11.4321,
-      "demon_pct": 4.8612,
-      "drunk_pct": 0.0,
-      "lying_pct": 10.5133
+      "evil_pct": 9.692,
+      "demon_pct": 6.8088,
+      "drunk_pct": 21.3454,
+      "lying_pct": 15.906
      },
      {
-      "evil_pct": 10.5007,
-      "demon_pct": 9.3674,
-      "drunk_pct": 0.0,
-      "lying_pct": 3.7604
+      "evil_pct": 0.5182,
+      "demon_pct": 0.1798,
+      "drunk_pct": 4.8858,
+      "lying_pct": 89.7013
      }
-    ]
+    ],
+    "blame": {
+     "4": {
+      "1": {
+       "Demon": 0.8721,
+       "Yaggababble, again": 0.1279
+      },
+      "5": {
+       "Demon": 0.8721,
+       "Yaggababble, again": 0.1279
+      }
+     },
+     "2": {
+      "6": {
+       "Demon": 0.8529,
+       "Yaggababble, again": 0.0843,
+       "Godfather": 0.0628
+      }
+     }
+    }
    }
   },
   {
