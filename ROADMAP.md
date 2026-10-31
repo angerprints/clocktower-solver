@@ -1691,7 +1691,7 @@ Der Bericht steht in `claude/stellen-paket-4.md`. **Deine Antwort vom 31.10.2026
 | Stellen | 42 (Registrieren oder gestörte Quelle), 82 b (Vortox nimmt die echte Fraktion), Grubenweib prüft am Nachtanfang, verwandelte Akrobatin fällt nicht, Nachtwächter-Zeile gehört dem Wählenden, Schutz der Teedame am Nachtanfang, Tipp auf die Unschuld des Philosophen. |
 | Tor | `messung/tor_stellen_4.sh`: 19 Zeilen besser (Vortox 36 → 3), 1 Partie neu mit Barbier-Tausch (Stelle 4); Night-Walk eine neue Abweichung, neue Stelle 103. |
 | Korpus | 772 Bretter, 3 geändert (2 neu gespielt, 1 mit mehr Welten). |
-| Tests | TESTS |
+| Tests | 1.904 Tests in 74 Dateien grün; das Korpus-Brett mit zwei lebenden Dämonen ist jetzt Seed 7822 (7050 wurde gestichprobt). |
 
 ### Als Nächstes
 
