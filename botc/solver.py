@@ -5490,7 +5490,10 @@ def an_innkeeper_guards_two(world, state, night, seat, kind):
     if not _on_board(state, "Innkeeper"):
         return []
     phase = f"N{night}"
-    holders = _holders(world, state, "Innkeeper", phase)
+    # Who held it at its turn: one the Pit-Hag unmade later that night
+    # had already chosen (Paket 5, seed 1363), one it made later had not.
+    with _turn_of("Innkeeper", night):
+        holders = _holders(world, state, "Innkeeper", phase)
     return [shield for keeper in holders
             for shield in _an_innkeepers_pair(world, state, night, seat,
                                               keeper)]
@@ -7687,6 +7690,14 @@ def a_philosopher_drunks_whoever_had_it(world, state, night):
         at = began if not still else phase
         had = frozenset(p for p in range(state.n_players)
                         if p != who and world.role_at(p, at) == taken)
+        # And whoever held it as the night began and lost it during the
+        # night — a Snake Charmer the Pit-Hag made a Mathematician at 280,
+        # drunk when it chose at 220 (Paket 5, seed 199): on offer.
+        lost = frozenset(p for p in range(state.n_players)
+                         if p != who and p not in had
+                         and world.role_at(p, began) == taken)
+        if lost:
+            had, went = had | lost, True
         if not had:
             continue                      # nobody else was holding it
         free = (lambda seat: 1.0) if went else 1.0
@@ -8411,7 +8422,9 @@ def an_innkeeper_drunks_one_of_the_two_it_guards(world, state, night):
     if not _on_board(state, "Innkeeper"):
         return []
     phase = f"N{night}"
-    holders = _holders(world, state, "Innkeeper", phase)
+    # At its turn, as `an_innkeeper_guards_two` (Paket 5, seed 1363).
+    with _turn_of("Innkeeper", night):
+        holders = _holders(world, state, "Innkeeper", phase)
     return [source for seat in holders
             for source in _an_innkeepers_drunk(world, state, night, seat,
                                                _by(holders, seat))]

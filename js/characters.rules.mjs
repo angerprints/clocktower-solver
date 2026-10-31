@@ -292,8 +292,16 @@ sourceRule(function aPhilosopherDrunksWhoeverHadIt(world, state, night) {
     const had = new Set();
     for (let p = 0; p < state.nPlayers; p++)
       if (p !== seat && world.roleAt(p, at) === taken) had.add(p);
+    // And whoever held it as the night began and lost it during the night
+    // (Paket 5, seed 199): on offer. See solver.py.
+    let lost = false;
+    for (let p = 0; p < state.nPlayers; p++)
+      if (p !== seat && !had.has(p) && world.roleAt(p, began) === taken) {
+        had.add(p);
+        lost = true;
+      }
     if (!had.size) continue;
-    const free = went ? () => 1.0 : 1.0;
+    const free = (went || lost) ? () => 1.0 : 1.0;
     out.push(new Source("Philosopher", had,
                         {capacity: had.size, cost: free, repeatCost: free,
                          actor: seat}));
@@ -1449,7 +1457,10 @@ immunityRule(function aSoberSailorCannotDie(world, state, night, seat) {
 /** From everything, not only the Demon — and it picks who. */
 immunityRule(function anInnkeeperGuardsTwo(world, state, night, seat) {
   if (!onBoard(state, "Innkeeper") || night < 2) return [];
-  return holders(world, state, "Innkeeper", `N${night}`).flatMap(
+  // Who held it at its turn (Paket 5, seed 1363). See solver.py.
+  return readingAt(`N${night}`, slotOf("Innkeeper", 1) || 0,
+                   slotOf("Innkeeper", night) || 0,
+                   () => holders(world, state, "Innkeeper", `N${night}`)).flatMap(
     keeper => anInnkeepersPair(world, state, night, seat, keeper));
 });
 
@@ -2119,7 +2130,10 @@ sourceRule(function aPixieMayBeDenied(world, state, night) {
  * works the same way. */
 sourceRule(function anInnkeeperDrunksOneOfTheTwoItGuards(world, state, night) {
   if (!onBoard(state, "Innkeeper") || night < 2) return [];
-  const hs = holders(world, state, "Innkeeper", `N${night}`);
+  // At its turn, as anInnkeeperGuardsTwo (Paket 5, seed 1363).
+  const hs = readingAt(`N${night}`, slotOf("Innkeeper", 1) || 0,
+                       slotOf("Innkeeper", night) || 0,
+                       () => holders(world, state, "Innkeeper", `N${night}`));
   return hs.flatMap(seat => anInnkeepersDrunk(world, state, night, seat,
                                               byOf(hs, seat)));
 });
