@@ -1399,7 +1399,12 @@ immunityRule(function aTeaLadyKeepsHerNeighbours(world, state, night, seat) {
     alive => teaLadyKeeping(world, state, seat, phase, alive));
   const lady = held.find(who => who !== null);
   if (lady === undefined) return [];
-  const eitherWay = held.every(who => who !== null);
+  // And held as the night began too: a side beside her that changed
+  // tonight (seed 46). See solver.py.
+  const atDusk = readingAt(phase, 1, 1, () => rosters(state, phase).map(
+    alive => teaLadyKeeping(world, state, seat, phase, alive)));
+  const eitherWay = held.every(who => who !== null)
+    && atDusk.every(who => who !== null);
   // A Tea Lady who died tonight herself stops protecting the moment she
   // goes. A Shabaloth that takes her first and her neighbour second kills
   // both, and the plan knows whole nights rather than the order within

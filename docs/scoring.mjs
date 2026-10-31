@@ -3755,8 +3755,15 @@ function plainFailures(world, state, outcome = {}) {
       // plain ability and a plain ability simply does not function, so a
       // row that held only by somebody misregistering forbids that seat
       // from having been droisoned that night.
-      for (const who of (info.leanedOn ? info.leanedOn(world, state, seat) : []))
-        (working[info.night] || (working[info.night] = new Set())).add(who);
+      // Or its own source was off, for a reading of its own (Stelle 42).
+      // See solver.py.
+      for (const who of (info.leanedOn ? info.leanedOn(world, state, seat) : [])) {
+        if (witnessed || sober === null || sober === undefined || sober === who)
+          (working[info.night] || (working[info.night] = new Set())).add(who);
+        else
+          either.push({night: info.night, source: [sober], impaired: [],
+                       working: [who]});
+      }
       if (recluseNeed !== null)
         (working[info.night] || (working[info.night] = new Set()))
           .add(recluseNeed);
