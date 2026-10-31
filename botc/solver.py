@@ -7900,8 +7900,14 @@ def a_goon_drunks_whoever_chose_it(world, state, night):
     if not _on_board(state, "Goon"):
         return []
     phase = f"N{night}"
-    # The holder, and a Philosopher that took it (13.10.2026).
-    return [source for goon in _holders(world, state, "Goon", phase)
+    # The holder, and a Philosopher that took it (13.10.2026) — and one
+    # that was the Goon as the night began: a Gambler that chose it at 200
+    # was drunk at once, before the Fang Gu jumped into it later (seed
+    # 2268 of the line with Village Idiot, Preacher and Spy, 31.10.2026).
+    goons = list(dict.fromkeys(
+        _holders(world, state, "Goon", phase)
+        + _holders(world, state, "Goon", _before(night, phase))))
+    return [source for goon in goons
             if goon in state.alive_set(phase)
             for source in _a_goons_chooser(world, state, night, goon)]
 

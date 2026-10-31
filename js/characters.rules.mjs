@@ -1733,7 +1733,11 @@ sourceRule(function aGoonDrunksWhoeverChoseIt(world, state, night) {
   if (!onBoard(state, "Goon")) return [];
   // The holder, and a Philosopher that took it (13.10.2026).
   const phase = `N${night}`;
-  return holders(world, state, "Goon", phase)
+  // And one that was the Goon as the night began (seed 2268). See solver.py.
+  const began = night > 1 ? `B${night - 1}` : "N0";
+  const goons = [...new Set([...holders(world, state, "Goon", phase),
+                             ...holders(world, state, "Goon", began)])];
+  return goons
     .filter(goon => state.aliveSet(phase).has(goon))
     .flatMap(goon => aGoonsChooser(world, state, night, goon));
 });

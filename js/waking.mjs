@@ -423,6 +423,11 @@ export function woke(world, state, seat, night) {
   const role = world.roleAt(seat, phase);
   if (!state.aliveSet(phase).has(seat) && role !== "Ravenkeeper") return false;
   if (cameBackTonight(world, state, seat, night) === ASLEEP) return false;
+  // Made it tonight after its own turn: it waits for the next night
+  // (Lesart K; seed 109). See waking.py.
+  if (role !== "Philosopher" && CHARACTERS[role]
+      && !(night === 1 && CHARACTERS[role].nights === "first")
+      && madeAfterItsTurn(world, seat, night, role)) return false;
   if (wokeAs(world, state, seat, night, role)) return true;
   // A Demon the Boffin gave an ability wakes for it as that character
   // would — not on the first night (F Weg 1, 26.10.2026). See waking.py.
