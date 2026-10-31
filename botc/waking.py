@@ -602,12 +602,12 @@ def woke(world, state, seat, night):
         return False
     # Made it tonight after its own turn — a Pit-Hag's Courtier at 280,
     # whose turn is 170 — it waits for the next night (Patrick, Lesart K,
-    # 20.10.2026), as the simulator has it; a first-night character on the
-    # first night learns at once, and the Philosopher is the Storyteller's
+    # 20.10.2026), as the simulator has it; a first-night character learns
+    # at once (a tea party's, O Weg 1), and the Philosopher is the Storyteller's
     # call (`uncertain`, Stelle 95). A Chambermaid counted it (seed 109 of
     # the line with Pit-Hag, Farmer and Politician, 31.10.2026).
     if role != "Philosopher" and role in CHARACTERS \
-            and not (night == 1 and CHARACTERS[role].nights == "first") \
+            and CHARACTERS[role].nights != "first" \
             and _made_after_its_turn(world, seat, night, role):
         return False
     if woke_as(world, state, seat, night, role):

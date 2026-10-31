@@ -3041,6 +3041,13 @@ def _barber_swap(d, night, rng):
     sitter = demon if _babysits(d, demon, phase) else None
     d.changes.append((phase, a, got_b))
     d.changes.append((phase, b, got_a))
+    # Swapped at the Barber's place: Lesart K, as for the Pit-Hag's
+    # (`_woke_itself`; Paket 5, seed 1220).
+    from botc.catalogue import CHARACTERS as _C
+    made_at = d.__dict__.setdefault("made_at", {})
+    for seat in (a, b):
+        made_at[(night, seat)] = max(made_at.get((night, seat), 0),
+                                     _C["Barber"].other_night)
     # Kept for the night walk, which swaps at the Barber's own slot when
     # it is told who (tests/nightwalk.py).
     if not hasattr(d, "barber_swaps"):
@@ -4778,6 +4785,12 @@ def _tea_party(d, night, rng, at_night=False):
         d.changes.append((phase, seat, role))
         d.side_changes.append((phase, seat, role, side))
         d.tea_made[(seat, night)] = role
+        # Made at the Hatter's death in the night: Lesart K, as for the
+        # Pit-Hag's (`_woke_itself`, Paket 5).
+        if at_night and d.tea_slot.get(night):
+            made_at = d.__dict__.setdefault("made_at", {})
+            made_at[(night, seat)] = max(made_at.get((night, seat), 0),
+                                         d.tea_slot[night])
         if role == "Summoner" and night <= 3:
             d.tea_summoner = (seat, night,
                               d.tea_slot.get(night) if at_night else None)
@@ -6031,8 +6044,7 @@ def _woke_itself(d, p, night, shown=False, as_role=None):
     # at once (Paket 5, seed 339).
     made_at = getattr(d, "made_at", {}).get((night, p))
     if made_at is not None and as_role is None \
-            and what != "Philosopher" \
-            and not (night == 1 and when == "first"):
+            and what != "Philosopher" and when != "first":
         own = char.first_night if night == 1 else char.other_night
         if own and own < made_at:
             return False
