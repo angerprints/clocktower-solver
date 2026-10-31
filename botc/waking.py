@@ -600,6 +600,16 @@ def woke(world, state, seat, night):
         return False
     if _came_back_tonight(world, state, seat, night) == ASLEEP:
         return False
+    # Made it tonight after its own turn — a Pit-Hag's Courtier at 280,
+    # whose turn is 170 — it waits for the next night (Patrick, Lesart K,
+    # 20.10.2026), as the simulator has it; a first-night character learns
+    # at once (a tea party's, O Weg 1), and the Philosopher is the Storyteller's
+    # call (`uncertain`, Stelle 95). A Chambermaid counted it (seed 109 of
+    # the line with Pit-Hag, Farmer and Politician, 31.10.2026).
+    if role != "Philosopher" and role in CHARACTERS \
+            and CHARACTERS[role].nights != "first" \
+            and _made_after_its_turn(world, seat, night, role):
+        return False
     if woke_as(world, state, seat, night, role):
         return True
     # A Demon the Boffin gave an ability wakes for it as that character
@@ -678,7 +688,11 @@ def _acts_as(world, seat, phase):
     from .info import babysitter_at
     if babysitter_at(world, phase) == demon:
         return "LilMonsta"
-    return world.role_at(demon, phase)
+    # A story where the Demon's own seat holds the Lunatic now (a Barber's
+    # swap, then the Pit-Hag) has no Demon to dream of: as with none, the
+    # Imp. Asked back, it recursed forever (Paket 5, seed 1534).
+    got = world.role_at(demon, phase)
+    return "Imp" if got == "Lunatic" else got
 
 
 def uncertain(world, state, seat, night):

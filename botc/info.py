@@ -1242,7 +1242,12 @@ def each_real_side(w, s, phase):
             sides = (False, True)
         else:
             continue
-        if len(sides) > 1:
+        # And one settled on a side the deal does not show: a Cult Leader
+        # that has turned evil, on one side only. Left out, the reading
+        # was judged against the dealt good side (seed 208 of the line with
+        # Acrobat and Pit-Hag, 31.10.2026).
+        if len(sides) > 1 or (len(sides) == 1
+                              and sides[0] != w.evil_at(seat, phase)):
             open_.append((seat, sides))
     if not open_:
         yield w

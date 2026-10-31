@@ -984,14 +984,21 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
   const made = state.infos.filter(
     i => i.sourceRole === "PitHag" && i.role);
   if (!made.length) return [[[], 1.0]];
-  const changes = made.map(info => {
+  let stories = [[]];
+  for (const info of made) {
     const phase = `N${info.night}`;
     // The side when the Pit-Hag acted, as the night began. See solver.py.
     const before = info.night > 1 ? `B${info.night - 1}` : "N0";  // the deal, as Python's `_before`
-    const side = world.evilAt(info.target, before) ? "evil" : "good";
-    return change(phase, info.target, info.role, side);
-  });
-  return [[changes, 1.0]];
+    // A Cult Leader's side follows its neighbours; open stays open.
+    const sides = state.script.keys.includes("CultLeader")
+        && actsAsCultLeader(world, state, info.target, before)
+      ? [...cultSides(world, state, info.target, before)]
+          .sort((a, b) => Number(a) - Number(b))
+      : [Boolean(world.evilAt(info.target, before))];
+    stories = stories.flatMap(story => sides.map(evil => [...story,
+      change(phase, info.target, info.role, evil ? "evil" : "good")]));
+  }
+  return stories.map(story => [story, 1.0]);
 });
 
 /** A seat said it became something, on a night a Pit-Hag could have made
@@ -4319,7 +4326,9 @@ function fauxPawCandidates(world, state) {
 function hiddenChoices(world, state) {
   let faux = [null], host = [null];
   if ((inBag(state, "Lycanthrope") || takenByAPhilosopher(state, "Lycanthrope"))
-      && (world.roles.includes("Lycanthrope")
+      // As the players really hold it: a Summoner's Marionette holds the
+      // Lycanthrope it believes until the Demon comes. See solver.py.
+      && (dealtRoles(world).includes("Lycanthrope")
           || takenByAPhilosopher(state, "Lycanthrope")))
     faux = fauxPawCandidates(world, state);
   if (inBag(state, "Lleech")) {

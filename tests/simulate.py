@@ -3041,6 +3041,13 @@ def _barber_swap(d, night, rng):
     sitter = demon if _babysits(d, demon, phase) else None
     d.changes.append((phase, a, got_b))
     d.changes.append((phase, b, got_a))
+    # Swapped at the Barber's place: Lesart K, as for the Pit-Hag's
+    # (`_woke_itself`; Paket 5, seed 1220).
+    from botc.catalogue import CHARACTERS as _C
+    made_at = d.__dict__.setdefault("made_at", {})
+    for seat in (a, b):
+        made_at[(night, seat)] = max(made_at.get((night, seat), 0),
+                                     _C["Barber"].other_night)
     # Kept for the night walk, which swaps at the Barber's own slot when
     # it is told who (tests/nightwalk.py).
     if not hasattr(d, "barber_swaps"):
@@ -3473,6 +3480,12 @@ def _huntsman_hunts(d, night, rng):
         made = rng.choice(spare)
         d.changes.append((phase, target, made))
         d.huntsman_chose[night] = (seat, target, made)
+        # Made at the Huntsman's place: Lesart K, as for the Pit-Hag's
+        # (`_woke_itself`; Paket 5, seed 1127).
+        from botc.catalogue import CHARACTERS as _C
+        d.__dict__.setdefault("made_at", {})[(night, target)] = (
+            _C["Huntsman"].first_night if night == 1
+            else _C["Huntsman"].other_night)
         # A Philosopher made after its place: the Storyteller may wake it
         # at once or leave it for tomorrow (Stelle 95, A Weg 1,
         # 30.10.2026). Woken, it shakes its head here — the simulator lets
@@ -4772,6 +4785,12 @@ def _tea_party(d, night, rng, at_night=False):
         d.changes.append((phase, seat, role))
         d.side_changes.append((phase, seat, role, side))
         d.tea_made[(seat, night)] = role
+        # Made at the Hatter's death in the night: Lesart K, as for the
+        # Pit-Hag's (`_woke_itself`, Paket 5).
+        if at_night and d.tea_slot.get(night):
+            made_at = d.__dict__.setdefault("made_at", {})
+            made_at[(night, seat)] = max(made_at.get((night, seat), 0),
+                                         d.tea_slot[night])
         if role == "Summoner" and night <= 3:
             d.tea_summoner = (seat, night,
                               d.tea_slot.get(night) if at_night else None)
@@ -6019,6 +6038,16 @@ def _woke_itself(d, p, night, shown=False, as_role=None):
             what = "LilMonsta"
     char = CHARACTERS[what]
     when, patterns = char.nights, char.wake
+    # Made tonight after its own place — by the Pit-Hag — it waits for
+    # its next night (Patrick, Lesart K, 20.10.2026), as the solver has it
+    # (`waking.woke`); a first-night character on the first night learns
+    # at once (Paket 5, seed 339).
+    made_at = getattr(d, "made_at", {}).get((night, p))
+    if made_at is not None and as_role is None \
+            and what != "Philosopher" and when != "first":
+        own = char.first_night if night == 1 else char.other_night
+        if own and own < made_at:
+            return False
     # Back from the dead tonight: "they wake later tonight if they
     # normally would". Regurgitated at the Shabaloth's turn or
     # raised at the Professor's, and dead for every slot before
@@ -6432,16 +6461,11 @@ def early_choices(d, night, rng):
                 if d.philosophies.get(seat) == "Preacher":
                     d.preached = [(p, t, since) for p, t, since in d.preached
                                   if not (since == 1 and p != seat)]
-                # Shown a grandchild from the night of taking (C, group 6).
-                if d.philosophies.get(seat) == "Grandmother":
-                    shown = _for_role(d, seat, "Grandmother", night, rng)
-                    if shown is not None and (
-                            _vortox_working(d, night)
-                            or (not d.working(seat, night)
-                                and rng.random() < 0.75)):
-                        shown = _make_false(d, shown, night, rng)
-                    if shown is not None:
-                        out.append(shown)
+                # Shown a grandchild from the night of taking (C, group 6)
+                # — at the Grandmother's place, not here: a Snake Charmer
+                # that swaps with the Demon in between has changed who is
+                # good (Paket 5, Seed 885, Weg 1, 31.10.2026). The late
+                # pass does it.
                 # Took the Trunkenbold: it lives by the Townsfolk it was
                 # shown, and what it is told as that one is made up (I).
                 if d.philosophies.get(seat) == "Drunk" \
@@ -6599,7 +6623,8 @@ def honest_info(d, night, rng):
             if made is not None:
                 out.append(made)
             continue
-        if made is None and role == "Philosopher" and night > 1:
+        if made is None and role == "Philosopher" and (
+                night > 1 or _phil(d, seat, f"N{night}") == "Grandmother"):
             took = _phil(d, seat, f"N{night}")
             # An early chooser it took has already acted, in the early pass.
             if took and not (took in CHOOSES_EARLY and night > 1):
@@ -7806,6 +7831,12 @@ def _for_role(d, seat, role, night, rng):
         if d.side_at(target, phase) == "good":
             _says_it_became(d, night, target, became, phase, rng)
         d.changes.append((phase, target, became))
+        # Made at the Pit-Hag's place: a character whose own place came
+        # before it waits for its next night (Lesart K), and a Chambermaid
+        # does not count it tonight (Paket 5, seed 339).
+        from botc.catalogue import CHARACTERS as _C
+        d.__dict__.setdefault("made_at", {})[(night, target)] = \
+            _C["PitHag"].other_night
         return PitHagChoice(night, seat, target=target, role=became)
 
     if role == "Philosopher" and night == 1 and seat not in d.philosophies \

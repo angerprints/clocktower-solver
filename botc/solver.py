@@ -1076,7 +1076,7 @@ def a_pit_hag_makes_somebody_else(world, state):
             and getattr(info, "role", None)]
     if not made:
         return [((), 1.0)]
-    changes = []
+    stories = [()]
     for info in made:
         phase = f"N{info.night}"
         # The side as it stood when the Pit-Hag acted, at slot 16 — not
@@ -1084,9 +1084,18 @@ def a_pit_hag_makes_somebody_else(world, state):
         # which is what a story built a night at a time shows it on the
         # next pass (29.09.2026).
         before = _before(info.night, phase)
-        side = "evil" if world.evil_at(info.target, before) else "good"
-        changes.append(Change(phase, info.target, info.role, side))
-    return [(tuple(changes), 1.0)]
+        # A Cult Leader's side is not on the board: it follows its
+        # neighbours, so it is read the way the Cult Leader reads it, and
+        # where that is open, both stay open (Paket 5, Seed 2709).
+        if "CultLeader" in state.script.keys \
+                and acts_as_cult_leader(world, state, info.target, before):
+            sides = sorted(cult_sides(world, state, info.target, before))
+        else:
+            sides = [bool(world.evil_at(info.target, before))]
+        stories = [story + (Change(phase, info.target, info.role,
+                                   "evil" if evil else "good"),)
+                   for story in stories for evil in sides]
+    return [(story, 1.0) for story in stories]
 
 
 @transition_rule
@@ -5481,7 +5490,15 @@ def an_innkeeper_guards_two(world, state, night, seat, kind):
     if not _on_board(state, "Innkeeper"):
         return []
     phase = f"N{night}"
-    holders = _holders(world, state, "Innkeeper", phase)
+    # Held at its turn and still when the kill came: one the Pit-Hag made
+    # later had not chosen, and one the Pit-Hag unmade later has lost the
+    # protection with the ability (seed 2423 of the Acrobat's line, Paket
+    # 5) — though its drunk stays where it fell, see
+    # `an_innkeeper_drunks_one_of_the_two_it_guards`.
+    with _turn_of("Innkeeper", night):
+        chose = set(_holders(world, state, "Innkeeper", phase))
+    holders = [p for p in _holders(world, state, "Innkeeper", phase)
+               if p in chose]
     return [shield for keeper in holders
             for shield in _an_innkeepers_pair(world, state, night, seat,
                                               keeper)]
@@ -7678,6 +7695,14 @@ def a_philosopher_drunks_whoever_had_it(world, state, night):
         at = began if not still else phase
         had = frozenset(p for p in range(state.n_players)
                         if p != who and world.role_at(p, at) == taken)
+        # And whoever held it as the night began and lost it during the
+        # night — a Snake Charmer the Pit-Hag made a Mathematician at 280,
+        # drunk when it chose at 220 (Paket 5, seed 199): on offer.
+        lost = frozenset(p for p in range(state.n_players)
+                         if p != who and p not in had
+                         and world.role_at(p, began) == taken)
+        if lost:
+            had, went = had | lost, True
         if not had:
             continue                      # nobody else was holding it
         free = (lambda seat: 1.0) if went else 1.0
@@ -7900,8 +7925,14 @@ def a_goon_drunks_whoever_chose_it(world, state, night):
     if not _on_board(state, "Goon"):
         return []
     phase = f"N{night}"
-    # The holder, and a Philosopher that took it (13.10.2026).
-    return [source for goon in _holders(world, state, "Goon", phase)
+    # The holder, and a Philosopher that took it (13.10.2026) — and one
+    # that was the Goon as the night began: a Gambler that chose it at 200
+    # was drunk at once, before the Fang Gu jumped into it later (seed
+    # 2268 of the line with Village Idiot, Preacher and Spy, 31.10.2026).
+    goons = list(dict.fromkeys(
+        _holders(world, state, "Goon", phase)
+        + _holders(world, state, "Goon", _before(night, phase))))
+    return [source for goon in goons
             if goon in state.alive_set(phase)
             for source in _a_goons_chooser(world, state, night, goon)]
 
@@ -8024,8 +8055,12 @@ def a_minstrel_silences_the_table(world, state, night):
     if not _on_board(state, "Minstrel"):
         return []
     phase = f"N{night}"
-    # The holder, and a Philosopher that took it (13.10.2026).
+    # The holder, and a Philosopher that took it (13.10.2026) — holding it
+    # already when the Minion hanged: one made tonight, by a Huntsman's
+    # pick or a Pit-Hag's, heard nothing (Paket 5, Seed 768).
+    began = set(_holders(world, state, "Minstrel", _before(night, phase)))
     return [source for seat in _holders(world, state, "Minstrel", phase)
+            if seat in began
             for source in _a_minstrels_song(world, state, night, seat)]
 
 
@@ -8254,21 +8289,41 @@ def a_lleech_poisons_its_host(world, state, night):
     holder = next((p for p in range(state.n_players)
                    if p in state.alive_set(phase)
                    and world.role_at(p, phase) == "Lleech"), None)
-    if holder is None:
-        return []
+    # And the one that held it as the night began, if a Snake Charmer
+    # took it from that seat during the night: its host stayed poisoned
+    # until the swap, for whoever woke before it (Paket 5, Seed 590).
+    began = next((p for p in range(state.n_players)
+                  if p in state.alive_set(phase)
+                  and world.role_at(p, _before(night, phase)) == "Lleech"),
+                 None)
+    out = []
+    if began is not None and began != holder:
+        out += _lleech_source(world, state, phase, began,
+                              LLEECH_TILL_THE_SWAP)
+    if holder is not None:
+        out += _lleech_source(world, state, phase, holder, "Lleech")
+    return out
+
+
+# The host of a Lleech that lost it during the night, poisoned until then.
+# Its own name, so it and the Lleech's new host are two choices.
+LLEECH_TILL_THE_SWAP = "Lleech, till the swap"
+
+
+def _lleech_source(world, state, phase, holder, name):
     dealt = world.find("Lleech")
     host = _lleech_host(state)
     if holder == dealt and host is not None and host >= 0:
         if host not in state.alive_set(phase):
             return []
-        return [impairment.Source("Lleech", frozenset({host}), capacity=1,
+        return [impairment.Source(name, frozenset({host}), capacity=1,
                                   cost=1.0, repeat_cost=1.0, actor=holder)]
     # Somebody who never died — or the host of a Lleech made later, a
     # Scarlet Woman's or a Pit-Hag's, which "must choose an alive player"
     # that night and is not followed further.
     reach = frozenset(p for p in state.alive_set(phase) if p != holder)
     free = lambda who: 1.0
-    return [impairment.Source("Lleech", reach, capacity=1, cost=free,
+    return [impairment.Source(name, reach, capacity=1, cost=free,
                               repeat_cost=free, actor=holder)]
 
 
@@ -8372,7 +8427,15 @@ def an_innkeeper_drunks_one_of_the_two_it_guards(world, state, night):
     if not _on_board(state, "Innkeeper"):
         return []
     phase = f"N{night}"
+    # Who held it at its turn too: one the Pit-Hag unmade later that
+    # night had already drunk somebody (Paket 5, seed 1363). One it made
+    # later is still offered, as before: dropping it lost a world (seed
+    # 1439 of the Plague Doctor's line), whose real cause is still open
+    # (Stelle 105).
     holders = _holders(world, state, "Innkeeper", phase)
+    with _turn_of("Innkeeper", night):
+        holders = list(dict.fromkeys(
+            _holders(world, state, "Innkeeper", phase) + list(holders)))
     return [source for seat in holders
             for source in _an_innkeepers_drunk(world, state, night, seat,
                                                _by(holders, seat))]
@@ -9346,8 +9409,10 @@ def _hidden_choices(world, state):
     """
     faux = [None]
     host = [None]
+    # Dealt as the players really hold it: a Summoner's Marionette holds
+    # the Lycanthrope it believes until the Demon comes (Paket 5, 418).
     if _on_board(state, "Lycanthrope") and (
-            "Lycanthrope" in world.roles
+            "Lycanthrope" in dealt_roles(world)
             or taken_by_a_philosopher(state, "Lycanthrope")):
         faux = _faux_paw_candidates(world, state)
     if _in_bag(state, "Lleech"):
