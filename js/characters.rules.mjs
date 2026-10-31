@@ -1827,9 +1827,13 @@ sourceRule(function aCourtierNamesACharacter(world, state, night) {
  * running, which is the thing to check if the span arithmetic is wrong. */
 sourceRule(function aMinstrelSilencesTheTable(world, state, night) {
   if (!onBoard(state, "Minstrel")) return [];
-  // The holder, and a Philosopher that took it (13.10.2026).
-  return holders(world, state, "Minstrel", `N${night}`).flatMap(
-    seat => aMinstrelsSong(world, state, night, seat));
+  // The holder, and a Philosopher that took it (13.10.2026) — holding it
+  // already when the Minion hanged (Paket 5, Seed 768). See solver.py.
+  const began = new Set(holders(world, state, "Minstrel",
+                                night > 1 ? `B${night - 1}` : "N0"));
+  return holders(world, state, "Minstrel", `N${night}`)
+    .filter(seat => began.has(seat))
+    .flatMap(seat => aMinstrelsSong(world, state, night, seat));
 });
 
 function aMinstrelsSong(world, state, night, seat) {
@@ -2006,20 +2010,38 @@ sourceRule(function aLleechPoisonsItsHost(world, state, night) {
   for (let p = 0; p < state.nPlayers && holder === null; p++)
     if (state.aliveSet(phase).has(p) && world.roleAt(p, phase) === "Lleech")
       holder = p;
-  if (holder === null) return [];
+  // And the one that held it as the night began, if a Snake Charmer took
+  // it during the night (Paket 5, Seed 590). See solver.py.
+  const before = night > 1 ? `B${night - 1}` : "N0";
+  let began = null;
+  for (let p = 0; p < state.nPlayers && began === null; p++)
+    if (state.aliveSet(phase).has(p) && world.roleAt(p, before) === "Lleech")
+      began = p;
+  const out = [];
+  if (began !== null && began !== holder)
+    out.push(...lleechSource(world, state, phase, began, LLEECH_TILL_THE_SWAP));
+  if (holder !== null)
+    out.push(...lleechSource(world, state, phase, holder, "Lleech"));
+  return out;
+});
+
+// The host of a Lleech that lost it during the night. See solver.py.
+export const LLEECH_TILL_THE_SWAP = "Lleech, till the swap";
+
+function lleechSource(world, state, phase, holder, name) {
   const dealt = world.find("Lleech");
   const host = lleechHost(state);
   if (holder === dealt && host !== null && host !== undefined && host >= 0) {
     if (!state.aliveSet(phase).has(host)) return [];
-    return [new Source("Lleech", new Set([host]),
+    return [new Source(name, new Set([host]),
                        {capacity: 1, cost: 1.0, repeatCost: 1.0,
                         actor: holder})];
   }
   const reach = new Set([...state.aliveSet(phase)].filter(p => p !== holder));
-  return [new Source("Lleech", reach,
+  return [new Source(name, reach,
                      {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0,
                       actor: holder})];
-});
+}
 
 // A Pixie that did not get the ability it was mad about. Named so the
 // Mathematician can leave it out.

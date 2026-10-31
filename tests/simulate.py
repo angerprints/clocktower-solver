@@ -6432,16 +6432,11 @@ def early_choices(d, night, rng):
                 if d.philosophies.get(seat) == "Preacher":
                     d.preached = [(p, t, since) for p, t, since in d.preached
                                   if not (since == 1 and p != seat)]
-                # Shown a grandchild from the night of taking (C, group 6).
-                if d.philosophies.get(seat) == "Grandmother":
-                    shown = _for_role(d, seat, "Grandmother", night, rng)
-                    if shown is not None and (
-                            _vortox_working(d, night)
-                            or (not d.working(seat, night)
-                                and rng.random() < 0.75)):
-                        shown = _make_false(d, shown, night, rng)
-                    if shown is not None:
-                        out.append(shown)
+                # Shown a grandchild from the night of taking (C, group 6)
+                # — at the Grandmother's place, not here: a Snake Charmer
+                # that swaps with the Demon in between has changed who is
+                # good (Paket 5, Seed 885, Weg 1, 31.10.2026). The late
+                # pass does it.
                 # Took the Trunkenbold: it lives by the Townsfolk it was
                 # shown, and what it is told as that one is made up (I).
                 if d.philosophies.get(seat) == "Drunk" \
@@ -6599,7 +6594,8 @@ def honest_info(d, night, rng):
             if made is not None:
                 out.append(made)
             continue
-        if made is None and role == "Philosopher" and night > 1:
+        if made is None and role == "Philosopher" and (
+                night > 1 or _phil(d, seat, f"N{night}") == "Grandmother"):
             took = _phil(d, seat, f"N{night}")
             # An early chooser it took has already acted, in the early pass.
             if took and not (took in CHOOSES_EARLY and night > 1):

@@ -1076,7 +1076,7 @@ def a_pit_hag_makes_somebody_else(world, state):
             and getattr(info, "role", None)]
     if not made:
         return [((), 1.0)]
-    changes = []
+    stories = [()]
     for info in made:
         phase = f"N{info.night}"
         # The side as it stood when the Pit-Hag acted, at slot 16 — not
@@ -1084,9 +1084,18 @@ def a_pit_hag_makes_somebody_else(world, state):
         # which is what a story built a night at a time shows it on the
         # next pass (29.09.2026).
         before = _before(info.night, phase)
-        side = "evil" if world.evil_at(info.target, before) else "good"
-        changes.append(Change(phase, info.target, info.role, side))
-    return [(tuple(changes), 1.0)]
+        # A Cult Leader's side is not on the board: it follows its
+        # neighbours, so it is read the way the Cult Leader reads it, and
+        # where that is open, both stay open (Paket 5, Seed 2709).
+        if "CultLeader" in state.script.keys \
+                and acts_as_cult_leader(world, state, info.target, before):
+            sides = sorted(cult_sides(world, state, info.target, before))
+        else:
+            sides = [bool(world.evil_at(info.target, before))]
+        stories = [story + (Change(phase, info.target, info.role,
+                                   "evil" if evil else "good"),)
+                   for story in stories for evil in sides]
+    return [(story, 1.0) for story in stories]
 
 
 @transition_rule
@@ -8030,8 +8039,12 @@ def a_minstrel_silences_the_table(world, state, night):
     if not _on_board(state, "Minstrel"):
         return []
     phase = f"N{night}"
-    # The holder, and a Philosopher that took it (13.10.2026).
+    # The holder, and a Philosopher that took it (13.10.2026) — holding it
+    # already when the Minion hanged: one made tonight, by a Huntsman's
+    # pick or a Pit-Hag's, heard nothing (Paket 5, Seed 768).
+    began = set(_holders(world, state, "Minstrel", _before(night, phase)))
     return [source for seat in _holders(world, state, "Minstrel", phase)
+            if seat in began
             for source in _a_minstrels_song(world, state, night, seat)]
 
 
@@ -8260,21 +8273,41 @@ def a_lleech_poisons_its_host(world, state, night):
     holder = next((p for p in range(state.n_players)
                    if p in state.alive_set(phase)
                    and world.role_at(p, phase) == "Lleech"), None)
-    if holder is None:
-        return []
+    # And the one that held it as the night began, if a Snake Charmer
+    # took it from that seat during the night: its host stayed poisoned
+    # until the swap, for whoever woke before it (Paket 5, Seed 590).
+    began = next((p for p in range(state.n_players)
+                  if p in state.alive_set(phase)
+                  and world.role_at(p, _before(night, phase)) == "Lleech"),
+                 None)
+    out = []
+    if began is not None and began != holder:
+        out += _lleech_source(world, state, phase, began,
+                              LLEECH_TILL_THE_SWAP)
+    if holder is not None:
+        out += _lleech_source(world, state, phase, holder, "Lleech")
+    return out
+
+
+# The host of a Lleech that lost it during the night, poisoned until then.
+# Its own name, so it and the Lleech's new host are two choices.
+LLEECH_TILL_THE_SWAP = "Lleech, till the swap"
+
+
+def _lleech_source(world, state, phase, holder, name):
     dealt = world.find("Lleech")
     host = _lleech_host(state)
     if holder == dealt and host is not None and host >= 0:
         if host not in state.alive_set(phase):
             return []
-        return [impairment.Source("Lleech", frozenset({host}), capacity=1,
+        return [impairment.Source(name, frozenset({host}), capacity=1,
                                   cost=1.0, repeat_cost=1.0, actor=holder)]
     # Somebody who never died — or the host of a Lleech made later, a
     # Scarlet Woman's or a Pit-Hag's, which "must choose an alive player"
     # that night and is not followed further.
     reach = frozenset(p for p in state.alive_set(phase) if p != holder)
     free = lambda who: 1.0
-    return [impairment.Source("Lleech", reach, capacity=1, cost=free,
+    return [impairment.Source(name, reach, capacity=1, cost=free,
                               repeat_cost=free, actor=holder)]
 
 
@@ -9352,8 +9385,10 @@ def _hidden_choices(world, state):
     """
     faux = [None]
     host = [None]
+    # Dealt as the players really hold it: a Summoner's Marionette holds
+    # the Lycanthrope it believes until the Demon comes (Paket 5, 418).
     if _on_board(state, "Lycanthrope") and (
-            "Lycanthrope" in world.roles
+            "Lycanthrope" in dealt_roles(world)
             or taken_by_a_philosopher(state, "Lycanthrope")):
         faux = _faux_paw_candidates(world, state)
     if _in_bag(state, "Lleech"):

@@ -391,7 +391,7 @@ def plan_night(sources, required, forbidden, previous):
 # Sources that rest while their actor is drunk or poisoned and are
 # otherwise unavoidable: the two silencers, and a Lleech's poison on its
 # host (11.10.2026).
-RESTING = ("Preacher", "Xaan", "Lleech")
+RESTING = ("Preacher", "Xaan", "Lleech", "Lleech, till the swap")
 
 
 def plan_night_resting(sources, required, forbidden, previous):
