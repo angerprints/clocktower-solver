@@ -1702,7 +1702,7 @@ Der Bericht steht in `claude/stellen-paket-5.md`. **Deine Antwort vom 31.10.2026
 | Stellen | Reste aus 99 und 102 (418, 768, 885), dazu: Kultführer unter dem Vortox, Lesart K beim Wecken überall (Solver und Simulator: Grubenweib, Jäger, Barbier, Teeparty), Schläger am Nachtanfang, Grubenweib liest die Seite des Kultführers, Lleech bis zum Tausch, Minnesänger nur wer es schon war, Faux Paw der Beschwörer-Marionette, Gastwirt an seinem Platz, Philosophen-Trunkenheit, Absturz beim Verrückten (auch auf main). Neue Stellen 104 und 105. |
 | Tor | `messung/tor_stellen_5.sh`: 220 → 204 verlorene Partien in allen Zeilen, keine neu verloren; Night-Walk eine neue Abweichung (Stelle 105). |
 | Korpus | 772 Bretter, 4 geändert, alle mit gleich vielen oder mehr Welten, jede Ursache einzeln bestimmt. |
-| Tests | SUITE_ROADMAP |
+| Tests | 1.904 Tests in 74 Dateien grün. |
 
 ### Als Nächstes
 
