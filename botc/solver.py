@@ -5397,6 +5397,14 @@ def a_tea_lady_keeps_her_neighbours(world, state, night, seat, kind):
     if lady is None:
         return []
     either_way = all(who is not None for who in held)
+    # And on a night a side beside her changed — a Snake Charmer's swap at
+    # 220 — a death before it, a Gambler's at 200, fell while her
+    # neighbour was still evil: demanded only if it held as the night
+    # began as well (seed 46, 31.10.2026).
+    with reading_at(phase, 1, 1):
+        at_dusk = [_tea_lady_keeping(world, state, seat, phase, alive)
+                   for alive in _rosters(state, phase)]
+    either_way = either_way and all(who is not None for who in at_dusk)
     # A Tea Lady who died tonight herself stops protecting the moment she
     # goes. A Shabaloth that takes her first and her neighbour second
     # kills both, and the plan knows whole nights rather than the order
@@ -7262,8 +7270,17 @@ def _plain_failures(world, state, outcome=None):
                 # and that seat is forbidden from being droisoned that night.
                 # The plan already understood "must not be impaired"; this is
                 # the first caller to use it for registration.
+                # Or its own source was off, which explains it just as
+                # well — but only for a reading of its own: a witnessed one
+                # from a droisoned source was never said (Stelle 42,
+                # 31.10.2026: a Spy the Preacher had silenced, beside a
+                # Village Idiot drunk all game, seed 175).
                 for who in info.leaned_on(world, state, seat):
-                    working.setdefault(info.night, set()).add(who)
+                    if witnessed or sober is None or sober == who:
+                        working.setdefault(info.night, set()).add(who)
+                    else:
+                        either.append((info.night, frozenset({sober}),
+                                       frozenset(), frozenset({who})))
                 if recluse_need is not None:
                     working.setdefault(info.night, set()).add(recluse_need)
                 # And one that held only if somebody else was impaired or

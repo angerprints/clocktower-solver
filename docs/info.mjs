@@ -1168,7 +1168,8 @@ export const PitHagChoice = define("PitHagChoice", "PitHag",
       c.seat === this.target && c.role === this.role);
     if (!took && w.roleAt(this.target, phase) !== this.role) return false;
     if (this.night > 1) {
-      const earlier = `N${this.night - 1}`;
+      // As the night began, not the night before (seed 1877). See info.py.
+      const earlier = `B${this.night - 1}`;
       for (let p = 0; p < w.roles.length; p++)
         if (p !== this.target && w.roleAt(p, earlier) === this.role)
           return false;
@@ -1409,7 +1410,13 @@ export const NightwatchmanSeen = define("NightwatchmanSeen", "Nightwatchman",
     return s.aliveSet(phase).has(seat) && !s.diedAt(seat).includes(phase);
   }, {
     witnessed: true,
-    sourceSeat() { return null; },
+    // Whoever chose them that night, when its row is written down (seed
+    // 2126). See info.py.
+    sourceSeat(state) {
+      const by = state.infos.find(i => i.type === "NightwatchmanChoice"
+        && i.night === this.night && i.target === this.player);
+      return by ? by.player : null;
+    },
     leanedOn(w, s, seat) {
       return (seat === null || seat === undefined) ? [] : [seat];
     },

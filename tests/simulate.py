@@ -2377,6 +2377,10 @@ def _acrobat_may_fall(d, night, heard, rng):
             continue
         if not d.working(seat, night):
             continue                      # droisoned: it does not function
+        # Made something else later tonight — a Pit-Hag at 16 — it has no
+        # Acrobat's ability left to fall by (seed 108, 31.10.2026).
+        if not _acts_as(d, seat, "Acrobat", phase):
+            continue
         # Preached is no ability, not drunk: it does not fell an Acrobat
         # (10.10.2026) — unless something else droisoned that Minion too.
         if row.target not in droisoned or (
@@ -3334,17 +3338,19 @@ def _a_minion_guesses_the_damsel(d, day, rng, heard):
     if not minions or rng.random() >= 0.25:
         return False
     who = rng.choice(minions)
-    # Or a Philosopher that took her (group 6, O, 14.10.2026).
-    damsel = next((p for p in living if _acts_as(d, p, "Damsel", phase)),
-                  None)
-    if damsel is not None and rng.random() < 0.4:
-        target = damsel
+    # Or a Philosopher that took her (group 6, O, 14.10.2026) — either of
+    # them: a guess at the Philosopher is a guess at the Damsel too
+    # (Patrick, Weg 1, 31.10.2026; seed 2040), and only the first of the
+    # two counted.
+    damsels = [p for p in living if _acts_as(d, p, "Damsel", phase)]
+    if damsels and rng.random() < 0.4:
+        target = rng.choice(damsels)
     else:
         target = rng.choice([p for p in living if p != who] or [who])
     heard.append(DamselGuess(day, who, target=target))
     d.damsel_guessed = True
-    return (target == damsel and damsel is not None
-            and d.working(damsel, day, by_day=True) and not _spy_ever(d))
+    return (target in damsels
+            and d.working(target, day, by_day=True) and not _spy_ever(d))
 
 
 def _the_fearmonger_wins(d, day, hanged):
@@ -3609,6 +3615,18 @@ def _reads_evil(d, seat, phase):
     # The holder, or a Philosopher that took it (13.10.2026).
     return any(_acts_as(d, p, "Lycanthrope", f"N{night}")
                and d.working(_sober(d, p, "Lycanthrope", f"N{night}"), night) for p in d.alive_at(f"N{night}"))
+
+
+def _told_evil(d, seat, phase):
+    """The side a Townsfolk's reading starts from: as `_reads_evil` —
+    unless a Vortox is working that night. Then what is so is what gets
+    turned false, not what could have been said (table ruling,
+    07.10.2026): a faux paw beside a good player was told "same" by a
+    Vortoxed Seamstress (Stelle 82 b, seed 2594, 31.10.2026)."""
+    night = int(phase[1:]) if phase[1:].isdigit() else 1
+    if phase[0] == "N" and _vortox_working(d, night):
+        return d.side_at(seat, phase) == "evil"
+    return _reads_evil(d, seat, phase)
 
 
 def _an_innkeeper_or_sailor_keeps(d, night, target):
@@ -3921,7 +3939,7 @@ def _bounty_hunter_is_shown(d, seat, night, rng):
         return None                       # the one it knows is still alive
     seen = d.bh_seen.setdefault(seat, set())
     others = [p for p in range(d.n) if p != seat and p not in seen]
-    evil = [p for p in others if _reads_evil(d, p, phase)]
+    evil = [p for p in others if _told_evil(d, p, phase)]
     maybe = [p for p in others if p not in evil
              and d.side_at(p, phase) == "good"
              and _may_register_either_way(d, p, night)
@@ -7269,8 +7287,8 @@ def _for_role(d, seat, role, night, rng):
         if role == "Chef":
             # By what each seat reads as: the faux paw evil (11.10.2026).
             pairs = sum(1 for i in range(d.n)
-                        if _reads_evil(d, i, here)
-                        and _reads_evil(d, (i + 1) % d.n, here))
+                        if _told_evil(d, i, here)
+                        and _told_evil(d, (i + 1) % d.n, here))
             return Chef(1, seat, count=pairs)
 
     # The Boffin writes down what it gave, in about half the games
@@ -7300,7 +7318,7 @@ def _for_role(d, seat, role, night, rng):
             return None
         target = rng.choice(others)
         return VillageIdiotInfo(night, seat, target=target,
-                                evil=_reads_evil(d, target, f"N{night}"))
+                                evil=_told_evil(d, target, f"N{night}"))
 
     if role == "Noble" and night == 1:
         # Three players, exactly one evil **by registration** — two who
@@ -7314,7 +7332,7 @@ def _for_role(d, seat, role, night, rng):
         # ones that may go either way — a Recluse the Storyteller chose
         # to mark, a Spy it chose to hide.
         def shown_evil(p):
-            if _reads_evil(d, p, phase) and d.side_at(p, phase) == "good":
+            if _told_evil(d, p, phase) and d.side_at(p, phase) == "good":
                 return True               # the faux paw (11.10.2026)
             # By the side it is on now, which is not always its
             # character's: a Bounty Hunter's evil Townsfolk reads evil,
@@ -7345,7 +7363,7 @@ def _for_role(d, seat, role, night, rng):
         # Storyteller chose to show as good, which is the wiki's example.
         phase = "N1"
         good = [p for p in range(d.n) if p != seat
-                and not _reads_evil(d, p, phase)]
+                and not _told_evil(d, p, phase)]
         # A droisoned character cannot misregister (table rule): a
         # poisoned Spy is a Spy and reads as one.
         spies = [p for p in range(d.n) if p != seat
@@ -7480,7 +7498,7 @@ def _for_role(d, seat, role, night, rng):
         # dealt: an Ogre that picked an evil player is evil from day one.
         return Empath(night, seat,
                       count=sum(1 for p in nb
-                                if _reads_evil(d, p, f"N{night}")))
+                                if _told_evil(d, p, f"N{night}")))
 
     if role == "FortuneTeller":
         others = [p for p in d.alive_at(f"N{night}")
@@ -7882,7 +7900,7 @@ def _for_role(d, seat, role, night, rng):
                 if p not in d.alive_at(phase) or d.deaths.get(p) == phase]
         return OracleInfo(night, seat,
                           count=sum(1 for p in dead
-                                    if _reads_evil(d, p, phase)))
+                                    if _told_evil(d, p, phase)))
 
     if role == "Seamstress" and night == 1:
         # Once a game, and the simulator uses it on the first night so
@@ -7891,7 +7909,7 @@ def _for_role(d, seat, role, night, rng):
         if len(others) < 2:
             return None
         a, b = sorted(rng.sample(others, 2))
-        same = _reads_evil(d, a, "N1") == _reads_evil(d, b, "N1")
+        same = _told_evil(d, a, "N1") == _told_evil(d, b, "N1")
         return SeamstressInfo(night, seat, a=a, b=b, same=same)
 
     if role == "Sage" and (
@@ -8211,7 +8229,7 @@ def _nearest_evil_each_way(d, seat, night):
     out = {1: None, -1: None}
     for gap in range(1, d.n):
         other = (seat + gap) % d.n
-        if not _reads_evil(d, other, phase):
+        if not _told_evil(d, other, phase):
             continue
         for way, steps in ((1, gap), (-1, d.n - gap)):
             if steps <= d.n - steps and (out[way] is None or steps < out[way]):

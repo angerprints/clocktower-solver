@@ -2157,9 +2157,11 @@ class PitHagChoice(Info):
                    for c in getattr(w, "changes", ()))
         if not took and w.role_at(self.target, phase) != self.role:
             return False              # the change did not take
-        # It could only make something nobody already was. Checked on the
-        # night before, since by this phase the change has landed.
-        earlier = f"N{self.night - 1}" if self.night > 1 else "N1"
+        # It could only make something nobody already was. Checked as the
+        # night began, since by this phase the change has landed — and not
+        # on the night before: a Politician the Farmer's death made the
+        # Farmer at dawn was no longer in play (seed 1877, 30.10.2026).
+        earlier = f"B{self.night - 1}" if self.night > 1 else "N1"
         if self.night > 1:
             for p in range(len(w.roles)):
                 if p != self.target and w.role_at(p, earlier) == self.role:
@@ -2856,7 +2858,16 @@ class NightwatchmanSeen(Info):
     source_role = "Nightwatchman"
 
     def source_seat(self, state):
-        return None                       # whoever holds it, never a claim
+        # Whoever chose them that night, when its row is written down: a
+        # Philosopher that took the Nightwatchman, shown wrongly under a
+        # Vortox, was read as the real one it made drunk (seed 2126 of
+        # the line with Philosopher, Snake Charmer and Hatter, 31.10.2026).
+        # Otherwise whoever holds it, never a claim.
+        return next((info.player for info in state.infos
+                     if type(info).__name__ == "NightwatchmanChoice"
+                     and info.night == self.night
+                     and getattr(info, "target", None) == self.player),
+                    None)
 
     def holds(self, w, s, rh, seat=None):
         if seat is None or self.shown != seat:
