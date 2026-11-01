@@ -1725,7 +1725,7 @@ Der Bericht steht in `claude/stelle-5.md`. **Deine Bestätigung vom 01.11.2026:*
 | Simulator | Werwolf tötet einen guten Dämon (Scharlachrote Frau oder Spielende); ein in der Nacht schon toter Dämon tötet nicht; Barbier tauscht keinen frischen Farmer-Erben. |
 | Tor | `messung/tor_stelle_5.sh`: alte Zeilen 105 → 98, vier neue Zeilen 28 → 23 (auf main), keine neu verloren, Night-Walk gleich. Zeilen mit Barbier und Farmer rechnen länger (bis +36 %). |
 | Korpus | 772 Bretter, 3 geändert (No Dashii), eines mit mehr Welten (247 → 258). |
-| Tests | SUITE_ROADMAP |
+| Tests | grün, 1.904 Tests in 74 Dateien |
 | Wording | `tools/check_wording.py` kennt jetzt auch Bauer, Wolfsmensch, Faux Paw und Ermittler. |
 
 ### Als Nächstes
