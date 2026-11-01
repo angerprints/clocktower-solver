@@ -24868,31 +24868,31 @@
      },
      {
       "evil_pct": 1.2149,
-      "demon_pct": 0.0,
+      "demon_pct": 0.0452,
       "drunk_pct": 0.0,
       "lying_pct": 7.389
      },
      {
       "evil_pct": 81.7753,
-      "demon_pct": 49.9782,
+      "demon_pct": 49.1959,
       "drunk_pct": 0.0,
       "lying_pct": 85.0842
      },
      {
       "evil_pct": 21.4428,
-      "demon_pct": 0.0,
+      "demon_pct": 1.0853,
       "drunk_pct": 0.0,
       "lying_pct": 29.7428
      },
      {
       "evil_pct": 12.7031,
-      "demon_pct": 0.0,
+      "demon_pct": 0.4341,
       "drunk_pct": 0.0,
       "lying_pct": 16.1973
      },
      {
       "evil_pct": 81.2693,
-      "demon_pct": 49.4511,
+      "demon_pct": 48.6688,
       "drunk_pct": 0.0,
       "lying_pct": 83.8481
      }
@@ -135015,7 +135015,7 @@
     "rows": [
      {
       "evil_pct": 85.268,
-      "demon_pct": 0.0,
+      "demon_pct": 4.62,
       "drunk_pct": 0.0,
       "lying_pct": 24.6398
      },
@@ -135027,7 +135027,7 @@
      },
      {
       "evil_pct": 80.0242,
-      "demon_pct": 62.4244,
+      "demon_pct": 55.7213,
       "drunk_pct": 0.0,
       "lying_pct": 80.0242
      },
@@ -135039,13 +135039,13 @@
      },
      {
       "evil_pct": 10.5599,
-      "demon_pct": 0.0,
+      "demon_pct": 1.32,
       "drunk_pct": 0.0,
       "lying_pct": 10.5599
      },
      {
       "evil_pct": 27.2247,
-      "demon_pct": 0.0,
+      "demon_pct": 2.7431,
       "drunk_pct": 0.0,
       "lying_pct": 21.9448
      },
@@ -135057,13 +135057,13 @@
      },
      {
       "evil_pct": 55.1754,
-      "demon_pct": 37.5756,
+      "demon_pct": 34.6387,
       "drunk_pct": 0.0,
       "lying_pct": 55.1754
      },
      {
       "evil_pct": 7.6559,
-      "demon_pct": 0.0,
+      "demon_pct": 0.957,
       "drunk_pct": 0.0,
       "lying_pct": 7.6559
      }
