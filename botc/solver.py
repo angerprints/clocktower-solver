@@ -527,6 +527,11 @@ def possible_timelines(world, state, cap=128):
     # swap fell off the end (Stelle 97, seed 2327, 30.10.2026).
     if _on_board(state, "Huntsman"):
         cap *= max(1, len(a_huntsman_finds_the_damsel(world, state)))
+    # And for every heir a Farmer may have had, each beside every Barber's
+    # swap: with seven heirs the true one came after the cut (Stelle 5,
+    # seed 1931).
+    if _barber_on_board(state) and _on_board(state, "Farmer"):
+        cap *= max(1, len(a_farmer_hands_it_on(world, state)))
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -1009,6 +1014,12 @@ def _barber_offers(world, state):
                 stories.append(((kind(night, first, b, side_a),
                                  kind(night, second, a, side_b)),
                                 1.0 if ours else BARBER_SWAP_PENALTY))
+    # The usual swap first. Stories are cut at a cap, and with a Farmer's
+    # heirs beside it the pairs past the first few seats never reached
+    # the search: in pair order the No Dashii and its Pit-Hag at seats 7
+    # and 10 came long after every pair with seat 0 (Stelle 5, seed
+    # 2799). Stable, so the pairs keep their order within each kind.
+    stories.sort(key=lambda story: story[1] < 1.0)
     return stories
 
 
@@ -1173,13 +1184,16 @@ def a_huntsman_finds_the_damsel(world, state):
             continue
         began = f"B{night - 1}" if night > 1 else "N0"
         target = info.target
-        # Or a Philosopher that took her (group 6, P, 14.10.2026).
-        if world.role_at(target, began) != "Damsel" \
-                and not took_it(world, state, target, "Damsel", began):
+        # Or a Philosopher that took her (group 6, P, 14.10.2026). The
+        # Damsel at the Huntsman's turn, which this rule is asked at: a
+        # Barber's swap earlier that night may have handed her to the seat
+        # it chose (Stelle 5, seed 447).
+        if world.role_at(target, phase) != "Damsel" \
+                and not took_it(world, state, target, "Damsel", phase):
             continue
         said = [b.role for b in state.infos
                 if isinstance(b, BecameInfo) and b.player == target
-                and b.night >= night and b.role in state.script.townsfolk]
+                and b.night == night and b.role in state.script.townsfolk]
         in_play = {world.role_at(p, began) for p in range(state.n_players)}
         options = said[:1] or [k for k in state.script.townsfolk
                                if k not in in_play]
@@ -7560,12 +7574,32 @@ def a_no_dashii_poisons_its_townsfolk_neighbours(world, state, night):
     seat = holding_now(world, state, "NoDashii", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
-    hit = _nearest_townsfolk(world, state, seat, phase, state.n_players)
+    hit = set(_nearest_townsfolk(world, state, seat, phase,
+                                 state.n_players))
+    began = _before(night, phase)
+    then = holding_now(world, state, "NoDashii", began)
+    start = set(_nearest_townsfolk(world, state, then, began,
+                                   state.n_players)) \
+        if then is not None else set()
     out = []
-    if hit:
-        out.append(impairment.Source("No Dashii", frozenset(hit),
-                                     capacity=len(hit), cost=1.0,
+    # Forced only on whoever was beside it all night. A neighbour it got
+    # during the night — the Barber swapped it next to the old Demon, a
+    # Pit-Hag made it, a seat between them died — was poisoned from then
+    # on, and a kill or a reading earlier that night saw it sober
+    # (Stelle 5, seed 2442: the No Dashii swapped with its Investigator
+    # neighbour, and the old seat had to be working at its kill). On
+    # offer, as for the one below.
+    stayed = hit & start if then is not None else set()
+    if stayed:
+        out.append(impairment.Source("No Dashii", frozenset(stayed),
+                                     capacity=len(stayed), cost=1.0,
                                      repeat_cost=1.0))
+    late = hit - stayed
+    if late:
+        out.append(impairment.Source(
+            "No Dashii, since the change", frozenset(late),
+            capacity=len(late), cost=lambda who: 1.0,
+            repeat_cost=lambda who: 1.0))
     # Whoever was beside it as the night began, and no longer is. "The
     # players who are poisoned may change immediately" — so on a night a
     # Pit-Hag turns its Townsfolk neighbour into something else, that
@@ -7573,16 +7607,12 @@ def a_no_dashii_poisons_its_townsfolk_neighbours(world, state, night):
     # happened. A Snake Charmer there pointed at the No Dashii, nothing
     # came of it, and by the end of the night it was an Evil Twin with
     # no reason to have failed (02.10.2026). On offer, not forced.
-    began = _before(night, phase)
-    then = holding_now(world, state, "NoDashii", began)
-    if then is not None:
-        earlier = _nearest_townsfolk(world, state, then, began,
-                                     state.n_players) - set(hit)
-        if earlier:
-            out.append(impairment.Source(
-                "No Dashii, as the night began", frozenset(earlier),
-                capacity=len(earlier), cost=lambda who: 1.0,
-                repeat_cost=lambda who: 1.0))
+    earlier = start - hit
+    if earlier:
+        out.append(impairment.Source(
+            "No Dashii, as the night began", frozenset(earlier),
+            capacity=len(earlier), cost=lambda who: 1.0,
+            repeat_cost=lambda who: 1.0))
     return out
 
 

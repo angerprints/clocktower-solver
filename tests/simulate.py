@@ -1604,6 +1604,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         if d.summoner is not None and _summoner_check(d, night):
             d.game_ends_after = night
             break
+        # The Lycanthrope took a good Demon and nobody caught it.
+        if getattr(d, "lyc_ended", None) == f"N{night}":
+            d.ended_at, d.ended_why = f"N{night}", "demons dead"
+            d.game_ends_after = night
+            break
         if _evil_has_won(d, f"N{night}"):
             d.ended_at, d.ended_why = f"N{night}", "two alive"
             d.game_ends_after = night
@@ -3027,6 +3032,14 @@ def _barber_swap(d, night, rng):
     # "Not another Demon": the second one is left where it is (Hatter
     # stage 2).
     living = [p for p in living if p != d.second_demon(phase)]
+    # Nor a Farmer's heir made tonight. It is the Farmer from its
+    # predecessor's death on, but both here and in the solver the change
+    # is stamped at dawn, after this swap, so the swap would hand it a
+    # character the dawn then overwrites (Stelle 5, seed 1931; the
+    # solver's side is open as Stelle 106).
+    fresh = {who for when, who, what in d.changes
+             if when == f"D{night}" and what == "Farmer"}
+    living = [p for p in living if p not in fresh]
     if len(living) < 2:
         return []
     minions = [p for p in living if TEAM[d.role_at(p, phase)] == "minion"]
@@ -3697,6 +3710,24 @@ def _lycanthrope_hunts(d, night, rng):
         if target == d.faux_paw or d.side_at(target, phase) != "good":
             continue
         if _kept_alive_at_night(d, night, target):
+            continue
+        held = d.role_at(target, phase)
+        if TEAM[held] == "demon" and not (d.line2 and target
+                                          == d.second_demon(phase)):
+            # A good Demon, the Barber's doing: it dies like any good
+            # player, and the Scarlet Woman catches it or good has won
+            # at dawn (Stelle 5, seed 2507 — the game went on with nobody
+            # holding the Demon).
+            heir = _heir(d, phase, rng)
+            d.deaths[target] = phase
+            d.lyc_quiet.add(night)
+            if heir is not None and _scarlet(d, heir, phase) \
+                    and len(d.alive_at(phase)) >= 5 \
+                    and not _sw_stays_by_jinx(d, phase, target):
+                d.handovers.append((phase, heir))
+                d.changes.append((phase, heir, held))
+            elif not _another_demon_stands(d, phase, target):
+                d.lyc_ended = phase
             continue
         d.deaths[target] = phase
         d.lyc_quiet.add(night)
@@ -5651,6 +5682,10 @@ def _demon_kills(d, night, rng):
     # A Zombuul that survived its first death is on the board as dead and
     # still the Demon, so being off the living list does not stop it.
     if demon is None or (demon not in living and d.zombuul_up != demon):
+        return []
+    # Nor one that died earlier tonight: a good Demon the Lycanthrope
+    # took at 22 does not kill at its own turn (Stelle 5, seed 2507).
+    if d.deaths.get(demon) == phase and d.zombuul_up != demon:
         return []
     # The Demon it is *now*, not the one this seat was dealt.
     #

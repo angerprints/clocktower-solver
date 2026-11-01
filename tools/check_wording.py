@@ -52,6 +52,10 @@ WRONG = {
     r"\bOgre\b": "Oger (Ogre)",
     r"Sweetheart": "Liebchen (Sweetheart)",
     r"\bGoon\b": "Schläger (Goon)",
+    r"\bBauer\w*": "Farmer (Farmer)",
+    r"Wolfsmensch\w*": "Werwolf (Lycanthrope)",
+    r"Faux[ -]Paw": "Falsche Pfote (faux paw)",
+    r"Ermittler\w*": "Detektiv (Investigator)",
 }
 
 # A real name, of a character that is easy to mean by mistake.
