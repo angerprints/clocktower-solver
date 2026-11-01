@@ -957,7 +957,9 @@ causeRule(function aPitHagMakingADemonMakesDeathsArbitrary(world, state, night) 
     i => i.sourceRole === "PitHag" && i.role && i.night === night &&
          CHARACTERS[i.role] && CHARACTERS[i.role].team === "demon")
     // Or the Storyteller's Pit-Hag (Pestdoktor Stufe 2, A Weg 1).
-    || (world.changes || []).some(c => c.plagueMade && c.phase === `N${night}`
+    // And one only the player's own "became" row tells (Stelle 83).
+    || (world.changes || []).some(c => (c.plagueMade || c.pitHagDemon)
+                                  && c.phase === `N${night}`
                                   && CHARACTERS[c.role]
                                   && CHARACTERS[c.role].team === "demon");
   if (!made) return [];
@@ -2199,6 +2201,15 @@ Object.assign(CAUSE_TURNS, {
 // Two living Demons (Hatter stage 2, 25.10.2026). Last of the causes,
 // as in Python.
 // --------------------------------------------------------------------
+
+/** The change that made a second living Demon in this story — a
+ * Summoner's or a Pit-Hag's (Stelle 83) — or null. See solver.py. */
+export function madeBeside(view) {
+  for (const c of view.changes || [])
+    if ((c.summoned || c.pitHagDemon) && view.demonsAt(c.phase).length > 1)
+      return c;
+  return null;
+}
 
 /** The summoning that made a second living Demon in this story, or null.
  * See solver.py. */

@@ -201,6 +201,15 @@ class Summoned(Change):
     __slots__ = ()
 
 
+class PitHagDemon(Change):
+    """The player a Pit-Hag made a Demon beside the Demon in play
+    (Stelle 83, A Weg 1, 01.11.2026): the old one stays a Demon, so two
+    live — as a Summoner's (`Summoned`). On the player's own side: a good
+    player made a Demon is a good Demon (B Weg 1, the wiki). The Demon
+    made another Demon is the same holder and a plain `Change`."""
+    __slots__ = ()
+
+
 class HandedOn(Change):
     """Which Demon a handover took the star from, where two Demons live
     (Hatter stage 2, 25.10.2026): a mark on the seat that fell, at the
@@ -496,7 +505,8 @@ class Timeline:
                         isinstance(change, TeaParty)
                         and TEAM.get(was) != "minion"):
                     demons.append((at, change.seat, None,
-                                   isinstance(change, Summoned)))
+                                   isinstance(change, (Summoned,
+                                                       PitHagDemon))))
         object.__setattr__(self, "_roles_by_seat", roles)
         object.__setattr__(self, "_sides_by_seat", sides)
         object.__setattr__(self, "_gifts_by_seat", gifts)

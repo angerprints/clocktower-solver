@@ -159,6 +159,12 @@ export const lilMonstaWorld = world =>
 export const summoned = (phase, seat, role) =>
   ({phase, seat, role, side: "evil", summoned: true});
 
+/** The player a Pit-Hag made a Demon beside the Demon in play (Stelle 83,
+ * A Weg 1): the old one stays a Demon, so two live. On the player's own
+ * side. `PitHagDemon` in Python. */
+export const pitHagDemon = (phase, seat, role, side) =>
+  ({phase, seat, role, side, pitHagDemon: true});
+
 /** Which Demon a handover took the star from, where two Demons live
  * (Hatter stage 2, 25.10.2026): a mark that changes nothing. `HandedOn` in
  * Python. */
@@ -332,7 +338,7 @@ export class Timeline {
         // A tea party moves the Demon only where a Minion took a Demon
         // character (the swap). See worlds.py.
         if (TEAM[c.role] === "demon" && !(c.tea && TEAM[was] !== "minion"))
-          demons.push([at, c.seat, null, !!c.summoned]);
+          demons.push([at, c.seat, null, !!(c.summoned || c.pitHagDemon)]);
       }
     }
     this._index = {roles, sides, demons, held, summonAt, gifts, plagues};

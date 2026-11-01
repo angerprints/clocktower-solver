@@ -1147,6 +1147,14 @@ def walk(deal, night, hidden):
         # The Storyteller's Assassin and Godfather, the Plague Doctor's
         # gift (28.10.2026): at their turn, nobody's ability to stop.
         for key, target in st_kills.items():
+            # The Pit-Hag made a Demon (Stelle 83): tonight's deaths are
+            # the Storyteller's, at its turn, nobody's ability to stop.
+            if key == "PitHag":
+                if slot == getattr(CHARACTERS[key], field, 0):
+                    for victim in target:
+                        if victim in state.alive:
+                            state.kill(victim, slot, key, unstoppable=True)
+                continue
             if slot == getattr(CHARACTERS[key], field, 0) \
                     and target in state.alive:
                 state.kill(target, slot, key, unstoppable=key == "Assassin")

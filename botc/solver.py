@@ -56,7 +56,8 @@ from .worlds import BOFFIN_UNSEEN, BoffinGift, boffin_gift_change, bracket_gifts
 from .worlds import PlagueGift, plague_gift_change, PlagueMade, PlagueSummoned
 from .info import registers_of, evil_registrations_here
 from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
-                     SUMMON_READS, Summoned, TEA_READS, TeaParty,
+                     SUMMON_READS, Summoned, PitHagDemon, TEA_READS,
+                     TeaParty,
                      Timeline, TurnedEvil, World,
                      enumerate_worlds, iter_worlds, lil_monsta_world,
                      dealt_roles, sample_worlds, summoner_world)
@@ -1143,10 +1144,22 @@ def a_pit_hag_makes_somebody_else(world, state):
             sides = sorted(cult_sides(world, state, info.target, before))
         else:
             sides = [bool(world.evil_at(info.target, before))]
-        stories = [story + (Change(phase, info.target, info.role,
-                                   "evil" if evil else "good"),)
+        # A Demon made beside the Demon in play: a second one (Stelle 83,
+        # A Weg 1). The Demon made another Demon stays the one.
+        kind = PitHagDemon if _beside_the_demon(world, info.target,
+                                                info.role, before) \
+            else Change
+        stories = [story + (kind(phase, info.target, info.role,
+                                 "evil" if evil else "good"),)
                    for story in stories for evil in sides]
     return [(story, 1.0) for story in stories]
+
+
+def _beside_the_demon(world, target, role, before):
+    """Does making this seat this character make a second Demon — a
+    Demon's character on a seat that is no Demon as the night began?"""
+    return TEAM.get(role) == "demon" \
+        and target not in world.demons_at(before)
 
 
 @transition_rule
@@ -1181,7 +1194,10 @@ def a_pit_hag_nobody_wrote_down(world, state):
                for p in range(state.n_players)):
             continue
         side = "evil" if world.evil_at(info.player, before) else "good"
-        made = Change(phase, info.player, info.role, side)
+        kind = PitHagDemon if _beside_the_demon(world, info.player,
+                                                info.role, before) \
+            else Change
+        made = kind(phase, info.player, info.role, side)
         stories = (stories + [(changes + (made,), cost)
                               for changes, cost in stories])[:48]
     return stories
@@ -2573,6 +2589,17 @@ def a_hatted_summoner_summons(world, state):
     return out
 
 
+def made_beside(view):
+    """The change that made a second living Demon in this story — a
+    Summoner's, or a Pit-Hag's (Stelle 83) — or None."""
+    for change in getattr(view, "changes", ()):
+        if not isinstance(change, (Summoned, PitHagDemon)):
+            continue
+        if len(view.demons_at(change.phase)) > 1:
+            return change
+    return None
+
+
 def summoned_beside(view):
     """The `Summoned` change that made a second living Demon in this
     story, or None: one made where a Demon already was, on another
@@ -3823,7 +3850,8 @@ def demon_lineages(world, state, cap=24):
     # each line is walked on its own, the second on top of the first, and
     # a line may end with its Demon dead while the other goes on — which
     # the story has to bear out once both are in (`_a_demon_left`).
-    beside = summoned_beside(world)
+    # And one a Pit-Hag made beside the Demon in play (Stelle 83, A Weg 1).
+    beside = made_beside(world)
     if beside is None:
         return [line for line, _ends in _demon_line(
             world, state, world, start, since, 0, None, cap)]
@@ -4791,9 +4819,10 @@ def a_pit_hag_making_a_demon_makes_deaths_arbitrary(world, state, night):
     if not _in_bag(state, "PitHag"):
         return []
     # Or the Storyteller's Pit-Hag (Pestdoktor Stufe 2, A Weg 1).
+    # And one only the player's own "became" row tells (Stelle 83).
     if not _pit_hag_made_a_demon(state, night) and not any(
-            isinstance(c, PlagueMade) and c.phase == f"N{night}"
-            and TEAM.get(c.role) == "demon"
+            isinstance(c, (PlagueMade, PitHagDemon))
+            and c.phase == f"N{night}" and TEAM.get(c.role) == "demon"
             for c in getattr(world, "changes", ())):
         return []
     return [death_causes.Cause(

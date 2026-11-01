@@ -24,9 +24,9 @@ import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
         summonerWorld, teaParty, turnedEvil, engineered, boffinGift,
-        bracketGifts, plagueGift, plagueMade, plagueSummoned}
+        bracketGifts, plagueGift, plagueMade, plagueSummoned, pitHagDemon}
   from "./worlds.mjs";
-import {aLeviathanIsToldOf, demonHolding, summonedBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
+import {aLeviathanIsToldOf, demonHolding, summonedBeside, madeBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows, STORYTELLER_SAVES}
   from "./characters.rules.mjs";
 import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide, fallsAs,
@@ -852,7 +852,8 @@ export function demonLineages(world, state, cap = 24) {
   // A second living Demon a Summoner made (Hatter stage 2, 25.10.2026):
   // each line walked on its own, the second on top of the first. See
   // solver.py.
-  const beside = summonedBeside(world);
+  // And one a Pit-Hag made beside the Demon in play (Stelle 83).
+  const beside = madeBeside(world);
   if (!beside)
     return demonLine(world, state, world, start, since, 0, null, cap)
       .map(([line]) => line);
@@ -1030,11 +1031,21 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
       ? [...cultSides(world, state, info.target, before)]
           .sort((a, b) => Number(a) - Number(b))
       : [Boolean(world.evilAt(info.target, before))];
+    // A Demon made beside the Demon in play: a second one (Stelle 83).
+    const make = besideTheDemon(world, info.target, info.role, before)
+      ? pitHagDemon : change;
     stories = stories.flatMap(story => sides.map(evil => [...story,
-      change(phase, info.target, info.role, evil ? "evil" : "good")]));
+      make(phase, info.target, info.role, evil ? "evil" : "good")]));
   }
   return stories.map(story => [story, 1.0]);
 });
+
+/** Does making this seat this character make a second Demon? See
+ * solver.py `_beside_the_demon`. */
+function besideTheDemon(world, target, role, before) {
+  return CHARACTERS[role] && CHARACTERS[role].team === "demon"
+    && !world.demonsAt(before).includes(target);
+}
 
 /** A seat said it became something, on a night a Pit-Hag could have made
  * it so, and no Pit-Hag row names it: that may have been the Pit-Hag,
@@ -1059,7 +1070,8 @@ transitionRule(function aPitHagNobodyWroteDown(world, state) {
       if (world.roleAt(p, before) === info.role) held = true;
     if (held) continue;
     const side = world.evilAt(info.player, before) ? "evil" : "good";
-    const made = change(phase, info.player, info.role, side);
+    const made = (besideTheDemon(world, info.player, info.role, before)
+      ? pitHagDemon : change)(phase, info.player, info.role, side);
     stories = [...stories, ...stories.map(([c, w]) => [[...c, made], w])]
       .slice(0, 48);
   }
