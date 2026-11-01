@@ -1879,10 +1879,11 @@ class FasterWithoutChangingAnAnswer(SolverTest):
                           deaths={6: "D1", 0: "N2"})
         self.assertEqual(S._movers_in(quiet, plain), 0)
         self.assertEqual(S._movers_in(barber, plain), 2)   # Barber, Fang Gu
-        # A Barber nobody claimed is no swap to consider (table ruling).
+        # A Barber nobody claimed still lets the Demon swap with one of
+        # its Minions (Stelle 4, 01.11.2026), so it counts too.
         hidden = GameState(n_players=9, script=SV, claims={6: "Sage"},
                            deaths={6: "D1", 0: "N2"})
-        self.assertEqual(S._movers_in(barber, hidden), 1)
+        self.assertEqual(S._movers_in(barber, hidden), 2)
         swapped = GameState(n_players=9, script=SV, claims={},
                             infos=[SnakeCharmerChoice(1, 2, target=8,
                                                       swapped=True)])
@@ -1923,10 +1924,10 @@ class FasterWithoutChangingAnAnswer(SolverTest):
 
 
 class ABarberSwapNeedsADeadBarberClaim(SolverTest):
-    """Table ruling, 29.09.2026: a Barber swap is only considered once a
-    seat that claimed the Barber has died. Its death offers every pair of
-    seats, and a Barber nobody claimed is a death the table has no reason
-    to read as one."""
+    """Table ruling, 29.09.2026: every pair of seats is only considered
+    once a seat that claimed the Barber has died. A Barber nobody claimed
+    offers just the Demon swapping with one of its Minions (Stelle 4,
+    Weg 1, 01.11.2026)."""
 
     ROLES = ("Clockmaker", "Dreamer", "Oracle", "Sage", "Juggler", "Klutz",
              "Barber", "Witch", "Vortox")
@@ -1939,8 +1940,14 @@ class ABarberSwapNeedsADeadBarberClaim(SolverTest):
     def test_a_claimed_barber_offers_the_swaps(self):
         self.assertGreater(len(self.stories("Barber")), 30)
 
-    def test_a_hidden_one_offers_none(self):
-        self.assertEqual(self.stories("Sage"), [((), 1.0)])
+    def test_a_hidden_one_offers_only_the_demon_and_its_minions(self):
+        from botc.solver import DemonMinionSwap
+        got = self.stories("Sage")
+        self.assertEqual(got[0], ((), 1.0))
+        swaps = [story for story, _w in got[1:]]
+        self.assertEqual(len(swaps), 1)
+        self.assertTrue(all(isinstance(c, DemonMinionSwap) for c in swaps[0]))
+        self.assertEqual({c.seat for c in swaps[0]}, {7, 8})
 
     def test_saying_so_later_counts_as_a_claim(self):
         from botc.info import BecameInfo

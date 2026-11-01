@@ -1713,7 +1713,7 @@ Der Bericht steht in `claude/stelle-4.md`. **Deine Antwort vom 01.11.2026:** Weg
 | Solver | Python und JS: Angebote für jeden toten Barbier-Sitz; ohne Claim nur Dämon ↔ Scherge. |
 | Tor | `messung/tor_stellen_5.sh`: 209 → 103 verlorene Partien, keine neu; Sects & Violets 13 → 2; Rechenzeit +5 %. |
 | Korpus | 772 Bretter, 2 geändert, nur Anteile. |
-| Tests | SUITE_ROADMAP |
+| Tests | 1.904 Tests in 74 Dateien grün; zwei Tests in `test_sv` auf Weg 1 umgeschrieben. |
 
 ### Als Nächstes
 
