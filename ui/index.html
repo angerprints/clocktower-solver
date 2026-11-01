@@ -2250,6 +2250,12 @@ function drawInspector(){
     : p.certainty==="hiding" ? "Also allows a good player covering up — an Outsider claiming somebody else's role. That is the good lie people actually tell, and it stays cheap to search."
     : p.certainty==="unsure" ? "The claim is set aside — this seat could hold any role. Slow: it multiplies the search, so use it on one or two seats at most."
     : "Treated as a normal claim: could be true, could be the Drunk, could be a bluff.";
+  // Stelle 54, Weg 1 (01.11.2026): the Bounty Hunter's evil Townsfolk is
+  // searched behind its own claim only; a different claim needs this seat
+  // set aside by hand.
+  if (p.claim && (!p.certainty || p.certainty === "hiding")
+      && ((SCRIPT||{}).characters || []).includes("bountyhunter"))
+    $("#cert-note").textContent += " With a Bounty Hunter on the script, one Townsfolk is evil. If it claims its own character, the solver finds it; if you think it claims a different one, set this seat to “Claim not trusted”.";
 
   $("#wake-look").innerHTML = wakeLookup(p.wake||"", selected);
 
