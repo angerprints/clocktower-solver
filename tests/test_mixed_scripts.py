@@ -572,6 +572,12 @@ class ABarberSwapWithADemonAlreadyGone(SolverTest):
     and divided by nought: the whole solve fell over in Python and gave
     numbers that are not numbers in JavaScript (found comparing the two
     on a mixed game, 11.10.2026).
+
+    Since Stelle 53 (01.11.2026) the board is read a night at a time and
+    the swap rule sees the handover: the woman is the Imp, there is no
+    Minion left to swap with, and the dead Imp is never chosen (Weg 1).
+    Every swap told is then one of "any other pair", and the shares must
+    still add up.
     """
 
     SCRIPT = scripts.from_ids(
@@ -602,9 +608,14 @@ class ABarberSwapWithADemonAlreadyGone(SolverTest):
         world = World(tuple(roles), (None,) * 8)
         viable = []
         S.best_story(world, state, viable=viable)
-        swapped = [changes for _cost, changes in viable
-                   if any(isinstance(c, S.DemonMinionSwap) for c in changes)]
-        self.assertTrue(swapped)
+        swaps = [[c for c in changes
+                  if isinstance(c, (S.DemonMinionSwap, S.OtherSwap))]
+                 for _cost, changes in viable]
+        swaps = [pair for pair in swaps if pair]
+        self.assertTrue(swaps)
+        self.assertFalse([p for p in swaps
+                          if any(isinstance(c, S.DemonMinionSwap) for c in p)])
+        self.assertFalse([p for p in swaps if any(c.seat == 5 for c in p)])
         shares = S._story_shares(world, viable, state)
         self.assertAlmostEqual(sum(share for _view, share in shares), 1.0)
 
