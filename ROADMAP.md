@@ -1704,9 +1704,20 @@ Der Bericht steht in `claude/stellen-paket-5.md`. **Deine Antwort vom 31.10.2026
 | Korpus | 772 Bretter, 4 geändert, alle mit gleich vielen oder mehr Welten, jede Ursache einzeln bestimmt. |
 | Tests | 1.904 Tests in 74 Dateien grün. |
 
+### Stelle 4 · Versteckter Barbier · *erledigt am 01.11.2026*
+
+Der Bericht steht in `claude/stelle-4.md`. **Deine Antwort vom 01.11.2026:** Weg 1, ein versteckter Barbier bietet nur den Tausch Dämon ↔ Scherge an.
+
+| | Gebaut |
+|---|---|
+| Solver | Python und JS: Angebote für jeden toten Barbier-Sitz; ohne Claim nur Dämon ↔ Scherge. |
+| Tor | `messung/tor_stellen_5.sh`: 209 → 103 verlorene Partien, keine neu; Sects & Violets 13 → 2; Rechenzeit +5 %. |
+| Korpus | 772 Bretter, 2 geändert, nur Anteile. |
+| Tests | 1.904 Tests in 74 Dateien grün; zwei Tests in `test_sv` auf Weg 1 umgeschrieben. |
+
 ### Als Nächstes
 
-**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 und Stufe 3 (die Nacht in ihrer Reihenfolge, mit Punkt 1b) am 23.10.2026, Stufe 2 (zwei lebendige Dämonen) am 26.10.2026, Ingenieur am 26.10.2026, Laborratte Stufe 1 am 27.10.2026, Stufe 2 am 28.10.2026, Pestdoktor Stufe 1 am 28.10.2026, Stufe 2 am 30.10.2026; davor nach deiner Entscheidung vom 30.10.2026 erst die Stellen-Pakete (Paket 1, 2 und 3 am 30.10.2026, Paket 4 und 5 am 31.10.2026), dann der Alchemist; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
+**1 · Deine Reihenfolge vom 15.10.2026:** erst Stelle 60 (erledigt am 19.10.2026), dann die großen Charaktere einzeln (Lord of Typhon und Kazali erledigt am 20.10.2026, Al-Hadikhia, Lil' Monsta und Beschwörer am 21.10.2026, Korrekturen zum Beschwörer am 22.10.2026; Hutmacher Stufe 1 und Stufe 3 (die Nacht in ihrer Reihenfolge, mit Punkt 1b) am 23.10.2026, Stufe 2 (zwei lebendige Dämonen) am 26.10.2026, Ingenieur am 26.10.2026, Laborratte Stufe 1 am 27.10.2026, Stufe 2 am 28.10.2026, Pestdoktor Stufe 1 am 28.10.2026, Stufe 2 am 30.10.2026; davor nach deiner Entscheidung vom 30.10.2026 erst die Stellen-Pakete (Paket 1, 2 und 3 am 30.10.2026, Paket 4 und 5 am 31.10.2026, Stelle 4 am 01.11.2026), dann der Alchemist; Reihenfolge der übrigen siehe Stand des Katalogs), dann Ketzer und Politiker für die echten, danach die Nachtreihenfolge aller Charaktere.
 
 **1a · Experimentelle Charaktere, einzeln und in Batches von fünf** (deine Entscheidung vom 05.10.2026, offene Stelle 14). Welche fünf in einen Batch kommen, entscheidest du.
 
@@ -1731,8 +1742,8 @@ Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und J
 | 1 | Bad Moon Rising | *Erledigt am 04.10.2026:* Gestörter Dämon als Erklärung für eine ruhige Nacht, jetzt auch bei Zombuul, Pukka und Shabaloth. Mit eingetragenen stillen Nächten gingen 83 von 60.000 Partien verloren, jetzt 0. |
 | 2 | Bad Moon Rising | **„Jede Störung ruht, wenn ihre Quelle gestört ist“** (deine Entscheidung vom 02.10.2026). Abgebildet für Höfling und Philosoph (Tod, und Störung beim Wählen) und für die Pukka, seit dem 03.10. auch mit dem Kill, der dadurch später kommt. Nicht allgemein für eine Quelle, die erst später gestört wird. |
 | 3 | Bad Moon Rising | **Poe und Meuchelmörder bleiben locker:** drei Tote in zwei Nächten hintereinander, und ein Meuchelmörder ohne eingetragene Zeile kann in mehreren Nächten zuschlagen (jeder Schlag kostet 0,25). |
-| 4 | Sects & Violets | **Barbier-Tausch ohne gemeldeten Barbier** verliert die wahre Welt, in 40 von 6.000 Partien (4 Nächte, Stand 05.10.2026). Nach deiner Regel gewollt. |
-| 5 | Sects & Violets | **Sitze, deren Rolle gewechselt hat,** werden nicht von ihrer ursprünglichen Rolle aus gesucht (halber Barbier-Tausch). 2 von 6.000 Partien. |
+| 4 | Sects & Violets | **Barbier-Tausch ohne gemeldeten Barbier** verliert die wahre Welt, in 40 von 6.000 Partien (4 Nächte, Stand 05.10.2026). Nach deiner Regel gewollt. *Am 01.11.2026 nach deinem Weg 1 teilweise geöffnet: Ein versteckter Barbier bietet den Tausch Dämon ↔ Scherge an. Tor 209 → 103 verlorene Partien, Sects & Violets 13 → 2 von 3.000. Offen und nach Weg 1 gewollt: 51 Partien mit anderem Paar. Die 7 mit behauptetem Barbier gehören zu Stelle 5. Bericht in `claude/stelle-4.md`.* |
+| 5 | Sects & Violets | **Sitze, deren Rolle gewechselt hat,** werden nicht von ihrer ursprünglichen Rolle aus gesucht (halber Barbier-Tausch). 2 von 6.000 Partien. *Am 01.11.2026 dazu: 7 Partien im Tor mit behauptetem Barbier, z. B. Seed 77 der Zeile Jäger/Unschuld/Barbier/Philosoph/Kammerzofe: Aus „wurde Schlangenbeschwörer, war Schwätzer“ liest der Solver den neuen Charakter schon für den früheren Wechsel durch den Jäger.* |
 | 6 | Sects & Violets | **Mathematiker unter einem Vortox:** Seine Zahl wird als Bereich geprüft, deshalb bleibt hier die alte, lockere Regel. |
 | 7 | Sects & Violets | **Barbier-Bretter brauchen im Browser etwa 20 Sekunden.** Die Seite friert dabei nicht mehr ein. |
 | 8 | Echte Partien | **Ein Info-Claim, den alle kennen und der nie nachts stirbt,** deutet auf Trunkenbold, Marionette oder böse. Idee aus der ersten echten Partie, nicht gebaut. |
