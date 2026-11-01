@@ -362,6 +362,15 @@ function moversIn(world, state) {
     if (deaths.some(([s, p]) => dealt.has(Number(s)) && phaseIndex(p) < until))
       count++;
   }
+  // The same for the Barber (Stelle 53, 01.11.2026): a dealt Demon dead
+  // by the night of a Barber's swap. See solver.py.
+  if (barberDied) {
+    const dealt = new Set();
+    world.roles.forEach((r, seat) => { if (TEAM[r] === "demon") dealt.add(seat); });
+    const until = Math.max(...deaths.map(([, p]) => phaseIndex(barberNight(p))));
+    if (deaths.some(([s, p]) => dealt.has(Number(s)) && phaseIndex(p) <= until))
+      count++;
+  }
   // A Huntsman that chose, and may have found the Damsel (10.10.2026).
   if (roles.has("Huntsman")
       && state.infos.some(i => i.type === "HuntsmanChoice")) count++;
@@ -648,6 +657,12 @@ function barberOnBoard(state) {
   return inBag(state, "Barber") || takenByAPhilosopher(state, "Barber");
 }
 
+// The night a Barber's death at this moment lets the Demon swap.
+function barberNight(phase) {
+  const day = parseInt(phase.slice(1), 10);
+  return "NDEX".indexOf(phase[0].toUpperCase()) > 0 ? `N${day + 1}` : `N${day}`;
+}
+
 function barberOffers(world, state) {
   // Whoever was the Barber when they died, dealt or made — and claimed
   // it. See solver.py.
@@ -663,13 +678,18 @@ function barberOffers(world, state) {
 
   const stories = [[[], 1.0]];
   for (const [phase, hidden] of deaths) {
-    const day = parseInt(phase.slice(1), 10);
-    const night = "NDEX".indexOf(phase[0].toUpperCase()) > 0
-      ? `N${day + 1}` : `N${day}`;
+    const night = barberNight(phase);
     if (phaseIndex(night) > phaseIndex(state.finalPhase())) continue;
     const demons = world.demonsAt(night);
+    // "Not another Demon": a seat still holding a Demon's character that
+    // is not the Demon now is never chosen (Stelle 53, Weg 1). See solver.py.
+    const others = new Set();
+    for (let s = 0; s < state.nPlayers; s++)
+      if (!demons.includes(s) && TEAM[world.roleAt(s, night)] === "demon")
+        others.add(s);
     for (let first = 0; first < state.nPlayers; first++)
       for (let second = first + 1; second < state.nPlayers; second++) {
+        if (others.has(first) || others.has(second)) continue;
         const a = world.roleAt(first, night), b = world.roleAt(second, night);
         if (a === b) continue;
         // Sides written out: a swap moves characters, never sides.
