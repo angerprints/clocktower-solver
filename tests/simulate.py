@@ -51,6 +51,12 @@ from botc.roles import (DEMONS, MINIONS, OUTSIDERS, SETUP, TEAM, TOWNSFOLK,
 from botc.info import phase_index
 from botc.worlds import World
 
+# Stelle 83 (C Weg 2, 01.11.2026): the Pit-Hag makes a Demon only in runs
+# that ask for it, so every other seed keeps its game. The share of its
+# turns on which it tries, from the environment: `SIM_PIT_HAG_DEMONS=0.5`.
+import os as _os
+PIT_HAG_DEMONS = float(_os.environ.get("SIM_PIT_HAG_DEMONS", "0") or 0)
+
 
 class Deal:
     """One dealt game: the true world plus everything that happened."""
@@ -1354,7 +1360,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             _al_hadikhia_decides(d, night, rng, heard)
             break
 
-        if night > 1:
+        if night > 1 and _pit_hag_night(d, night, rng):
+            pass                          # the Storyteller's (Stelle 83)
+        elif night > 1:
             demon = d.demon_at(f"N{night}")
             heir = _heir(d, f"N{night}", rng)
             # A Princess that had her nominee executed yesterday: the
@@ -5174,6 +5182,83 @@ def _hatted_summoner_summons(d, night, rng, heard):
                                                  ())) + ((other, role),)
 
 
+def _pit_hag_makes_a_demon(d, night, seat, living, in_play, rng):
+    """The Pit-Hag makes somebody a Demon not in play (Stelle 83).
+
+    Any living player but itself. The Demon made a Demon of another kind
+    stays the one Demon; anybody else becomes a second, on their own side
+    — a good player is a good Demon (A and B Weg 1, the wiki). Never a
+    third: with two standing already it makes something else.
+    """
+    phase = f"N{night}"
+    if getattr(d, "line2", None) or d.lil_monsta:
+        return None
+    free = [k for k in d.script.demons if k not in in_play
+            and k not in ("LilMonsta", "Legion", "Riot")]
+    old = d.demon_at(phase)
+    if not free or not living or old is None \
+            or d.deaths.get(old) is not None:
+        return None
+    target = rng.choice(living)
+    became = rng.choice(free)
+    if not d.working(seat, night):
+        return None
+    kind = "type" if target == old \
+        else "evil" if d.side_at(target, phase) == "evil" else "good"
+    if kind == "good":
+        _says_it_became(d, night, target, became, phase, rng)
+    d.changes.append((phase, target, became))
+    from botc.catalogue import CHARACTERS as _C
+    d.__dict__.setdefault("made_at", {})[(night, target)] = \
+        _C["PitHag"].other_night
+    if kind != "type":
+        d.line2 = [(phase, target)]
+    d.__dict__.setdefault("pit_hag_demon", {})[night] = (target, kind, old)
+    return PitHagChoice(night, seat, target=target, role=became)
+
+
+def _pit_hag_night(d, night, rng):
+    """Tonight's deaths, where the Pit-Hag made a Demon: the
+    Storyteller's (D Weg 1, the wiki, and Patrick's note to A). A Demon
+    made another Demon: nobody. A new evil Demon: the old one and one
+    more, the village's hint. A good Demon: half the time one of the two,
+    else both stand and each kills as usual (False).
+
+    True when the night's deaths are settled here and no Demon kills.
+    """
+    made = getattr(d, "pit_hag_demon", {}).get(night)
+    if made is None:
+        return False
+    target, kind, old = made
+    phase = f"N{night}"
+    if kind == "good" and rng.random() < 0.5:
+        return False
+    living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    # Never a Zombuul: its first death is none, and the Storyteller who
+    # wants a Demon gone takes one that goes (seed 941).
+    mortal = lambda p: d.role_at(p, phase) != "Zombuul"
+    if kind == "evil":
+        rest = [p for p in living if p not in (old, target)]
+        dead = ([old] if mortal(old) else []) \
+            + ([rng.choice(rest)] if rest else [])
+    elif kind == "good":
+        pick = rng.choice([old, target])
+        dead = [pick] if mortal(pick) else []
+    else:
+        dead = []
+    for victim in dead:
+        if victim in living:
+            d.deaths[victim] = phase
+    d.st_kills.setdefault(night, {})["PitHag"] = tuple(dead)
+    # Nobody's kill tonight: the night-walk hands every Demon nothing.
+    d.demon_killed[night] = []
+    d.demon_aimed[night] = []
+    if kind != "type":
+        d.__dict__.setdefault("demon_aimed2", {})[night] = []
+        d.__dict__.setdefault("demon2_seat", {})[night] = target
+    return True
+
+
 def _second_demon_kills(d, night, rng, heard):
     """The second Demon's kill, by its own ability (C Weg 1; on the night
     it was made too, F Weg 1): the first's machinery, asked as it."""
@@ -7193,9 +7278,12 @@ def _make_false(d, info, night, rng):
         return info
 
     if kind == "ChoirboyInfo":
-        # Anybody but the Demon.
-        demon = d.demon_at(f"N{night}")
-        others = [p for p in range(d.n) if p not in (info.player, demon)]
+        # Anybody but the Demon — either of two (Stelle 83, seed 975): it
+        # left out only the first, and named the second, which had killed
+        # the King, so the false reading was true.
+        demons = set(d.demons_at(f"N{night}"))
+        others = [p for p in range(d.n)
+                  if p != info.player and p not in demons]
         if not others:
             return None
         info.target = rng.choice(others)
@@ -7825,6 +7913,13 @@ def _for_role(d, seat, role, night, rng):
         # when, at slot 16, it was still in play (29.09.2026).
         in_play |= {d.role_at(p, f"E{night - 1}") for p in range(d.n)}
         in_play |= {b for b in d.believes if b}
+        # A Demon, in a run that asks for it (Stelle 83). No draw at all
+        # otherwise: every other seed keeps its game.
+        if PIT_HAG_DEMONS and rng.random() < PIT_HAG_DEMONS:
+            made = _pit_hag_makes_a_demon(d, night, seat, living, in_play,
+                                          rng)
+            if made is not None:
+                return made
         spare = [k for k in (d.script.townsfolk + d.script.outsiders
                              + d.script.minions) if k not in in_play]
         if not spare:
@@ -7924,11 +8019,14 @@ def _for_role(d, seat, role, night, rng):
     if role == "Flowergirl" and night > 1:
         # Whether the Demon voted during the day just gone.
         day = night - 1
-        demon = d.demon_at(f"D{day}")
+        # Either of two Demons (Hatter stage 2, B Weg 1): it asked only the
+        # first, and a Pit-Hag's second that voted read as nobody (Stelle
+        # 83, seed 207).
+        demons = d.demons_at(f"D{day}")
         # Eyes closed or not, the Storyteller saw who voted.
-        voted = demon is not None and (
-            demon in d.votes.get(day, set())
-            or demon in d.hidden_votes.get(day, set()))
+        voted = any(demon in d.votes.get(day, set())
+                    or demon in d.hidden_votes.get(day, set())
+                    for demon in demons)
         return FlowergirlInfo(night, seat, voted=voted)
 
     if role == "TownCrier" and night > 1:

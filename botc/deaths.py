@@ -95,6 +95,11 @@ class Cause(NamedTuple):
     # Which Demon's kill this is, where two live (Hatter stage 2,
     # 26.10.2026): a shield may hold against one of them only.
     demon: int = None
+    # "Deaths tonight are arbitrary" (the Pit-Hag making a Demon, the
+    # Summoner making a second): the Storyteller's night, every death and
+    # none. Nothing else has to fire tonight then — an Ojo the Pit-Hag
+    # just made need not kill (Stelle 83, 01.11.2026).
+    arbitrary: bool = False
 
 
 CAUSE_RULES = []
@@ -236,6 +241,10 @@ def causes_on(world, state, night):
             got = [c._replace(name=f"{name} {k}") if c.name == name else c
                    for c in got]
         out.extend(got)
+    # An arbitrary night: nothing has to fire (Stelle 83).
+    if any(c.arbitrary for c in out):
+        out = [c._replace(must_fire=False) if c.must_fire else c
+               for c in out]
     return out
 
 

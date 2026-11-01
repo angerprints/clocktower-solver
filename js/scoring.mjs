@@ -24,9 +24,9 @@ import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
         summonerWorld, teaParty, turnedEvil, engineered, boffinGift,
-        bracketGifts, plagueGift, plagueMade, plagueSummoned}
+        bracketGifts, plagueGift, plagueMade, plagueSummoned, pitHagDemon}
   from "./worlds.mjs";
-import {aLeviathanIsToldOf, demonHolding, summonedBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
+import {aLeviathanIsToldOf, demonHolding, summonedBeside, madeBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows, STORYTELLER_SAVES}
   from "./characters.rules.mjs";
 import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide, fallsAs,
@@ -852,21 +852,40 @@ export function demonLineages(world, state, cap = 24) {
   // A second living Demon a Summoner made (Hatter stage 2, 25.10.2026):
   // each line walked on its own, the second on top of the first. See
   // solver.py.
-  const beside = summonedBeside(world);
+  // And one a Pit-Hag made beside the Demon in play (Stelle 83).
+  const beside = madeBeside(world);
   if (!beside)
     return demonLine(world, state, world, start, since, 0, null, cap)
       .map(([line]) => line);
   const out = [];
+  const seen = new Set();
+  const keep = (story, ends) => {
+    const key = story.map(c => JSON.stringify(c)).sort().join("|");
+    if (seen.has(key)) return;
+    seen.add(key);
+    if (aDemonLeft(story.length ? new Timeline(world, story) : world,
+                   state, ends))
+      out.push(story);
+  };
   for (const [first, ends] of demonLine(world, state, world, start, since,
                                         0, beside, cap)) {
     const view = first.length ? new Timeline(world, first) : world;
     for (const [second, more] of demonLine(world, state, view, beside.seat,
                                            phaseIndex(beside.phase), 1,
                                            beside, cap)) {
-      const story = [...first, ...second];
-      if (aDemonLeft(story.length ? new Timeline(world, story) : world,
-                     state, [...ends, ...more]))
-        out.push(story);
+      keep([...first, ...second], [...ends, ...more]);
+      if (out.length >= cap) return out;
+    }
+  }
+  // And the second line first (Stelle 83, seed 1709). See solver.py.
+  for (const [second, more] of demonLine(world, state, world, beside.seat,
+                                         phaseIndex(beside.phase), 1,
+                                         beside, cap)) {
+    if (!second.length) continue;
+    const view = new Timeline(world, second);
+    for (const [first, ends] of demonLine(world, state, view, start, since,
+                                          0, beside, cap)) {
+      keep([...first, ...second], [...ends, ...more]);
       if (out.length >= cap) return out;
     }
   }
@@ -970,6 +989,10 @@ function demonLine(world, state, base, start, since, line, beside, cap) {
     // At the turn of the Demon that fell (Hatter stage 3b). See solver.py.
     for (const rule of HEIR_RULES)
       moves.push(...stamped(rule(view, state, phase, character), character));
+    // Never after the Demons have killed (Stelle 83). See solver.py.
+    if (phase[0] === "N")
+      moves = moves.map(m => m.slot !== null && m.slot !== undefined
+                        && m.slot > DEMONS_DONE ? {...m, slot: DEMONS_DONE} : m);
     // The Scarlet Woman stays herself where two Demons would live, with a
     // Fang Gu or an Al-Hadikhia in play (their jinxes; Hatter stage 2).
     // See solver.py.
@@ -1030,11 +1053,21 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
       ? [...cultSides(world, state, info.target, before)]
           .sort((a, b) => Number(a) - Number(b))
       : [Boolean(world.evilAt(info.target, before))];
+    // A Demon made beside the Demon in play: a second one (Stelle 83).
+    const make = besideTheDemon(world, info.target, info.role, phase)
+      ? pitHagDemon : change;
     stories = stories.flatMap(story => sides.map(evil => [...story,
-      change(phase, info.target, info.role, evil ? "evil" : "good")]));
+      make(phase, info.target, info.role, evil ? "evil" : "good")]));
   }
   return stories.map(story => [story, 1.0]);
 });
+
+/** Does making this seat this character make a second Demon? See
+ * solver.py `_beside_the_demon`. */
+function besideTheDemon(world, target, role, phase) {
+  return CHARACTERS[role] && CHARACTERS[role].team === "demon"
+    && !world.demonsAt(phase).includes(target);
+}
 
 /** A seat said it became something, on a night a Pit-Hag could have made
  * it so, and no Pit-Hag row names it: that may have been the Pit-Hag,
@@ -1059,7 +1092,8 @@ transitionRule(function aPitHagNobodyWroteDown(world, state) {
       if (world.roleAt(p, before) === info.role) held = true;
     if (held) continue;
     const side = world.evilAt(info.player, before) ? "evil" : "good";
-    const made = change(phase, info.player, info.role, side);
+    const made = (besideTheDemon(world, info.player, info.role, phase)
+      ? pitHagDemon : change)(phase, info.player, info.role, side);
     stories = [...stories, ...stories.map(([c, w]) => [[...c, made], w])]
       .slice(0, 48);
   }
@@ -3379,8 +3413,11 @@ function plainFailures(world, state, outcome = {}) {
         else if (!aMastermindKeepsTheLleech(world, state, host, at))
           fail(key, lleech);
       }
+      // Except on a night whose deaths are the Storyteller's (Stelle 83).
+      // See solver.py.
       if (gone !== null && world.roleAt(lleech, gone) === "Lleech"
-          && (at === null || phaseIndex(gone) < phaseIndex(at)))
+          && (at === null || phaseIndex(gone) < phaseIndex(at))
+          && !anArbitraryNight(world, state, gone))
         fail(Number(gone.slice(1)), lleech);
     }
   }
@@ -5022,3 +5059,22 @@ export const explanationCost = (world, state) => bestStory(world, state).cost;
 
 export const worldConsistent = (world, state) =>
   explanationCost(world, state) !== null;
+
+
+/** Are this moment's deaths the Storyteller's — a night a Pit-Hag made a
+ * Demon, or a Summoner a second one (Stelle 83)? See solver.py
+ * `_an_arbitrary_night`. */
+function anArbitraryNight(world, state, phase) {
+  if (phase[0] !== "N") return false;
+  const night = Number(phase.slice(1));
+  const isDemon = r => CHARACTERS[r] && CHARACTERS[r].team === "demon";
+  if (inBag(state, "PitHag") && state.infos.some(
+      i => i.sourceRole === "PitHag" && i.role && i.night === night
+           && isDemon(i.role)))
+    return true;
+  if ((world.changes || []).some(c => (c.plagueMade || c.pitHagDemon)
+                                 && c.phase === phase && isDemon(c.role)))
+    return true;
+  const made = summonedBeside(world);
+  return !!made && made.phase === phase;
+}

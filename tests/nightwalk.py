@@ -1147,6 +1147,14 @@ def walk(deal, night, hidden):
         # The Storyteller's Assassin and Godfather, the Plague Doctor's
         # gift (28.10.2026): at their turn, nobody's ability to stop.
         for key, target in st_kills.items():
+            # The Pit-Hag made a Demon (Stelle 83): tonight's deaths are
+            # the Storyteller's, at its turn, nobody's ability to stop.
+            if key == "PitHag":
+                if slot == getattr(CHARACTERS[key], field, 0):
+                    for victim in target:
+                        if victim in state.alive:
+                            state.kill(victim, slot, key, unstoppable=True)
+                continue
             if slot == getattr(CHARACTERS[key], field, 0) \
                     and target in state.alive:
                 state.kill(target, slot, key, unstoppable=key == "Assassin")
@@ -1644,8 +1652,11 @@ def walk(deal, night, hidden):
                         state.chosen_by.pop(target, None)
                     # A Drunk made into something is sober from here, not
                     # from the Sweetheart's slot: a Drunk made a
-                    # Lycanthrope at 16 kills at 22 (11.10.2026).
-                    if was == "Drunk" and target in stops_being_droisoned:
+                    # Lycanthrope at 16 kills at 22 (11.10.2026). And any
+                    # seat whose droisoning ends with its old character: a
+                    # Townsfolk the Xaan poisoned, made a Vortox at 280,
+                    # kills at 460 (Stelle 83, seed 204).
+                    if target in stops_being_droisoned:
                         state.droisoned.discard(target)
                         stops_being_droisoned.discard(target)
 

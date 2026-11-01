@@ -34,10 +34,13 @@ export class Cause {
     capacity = 1, cost = 1.0, mustFire = false, unstoppable = false,
     victimImpairedAt = null, alsoImpaired = [], actor = null,
     actorCost = 1.0, actorKillsWorking = true, excuses = [],
-    quietsDemon = false, demon = null,
+    quietsDemon = false, demon = null, arbitrary = false,
   } = {}) {
     this.name = name;
     this.kind = kind;
+    // "Deaths tonight are arbitrary": nothing else has to fire tonight
+    // (Stelle 83). See deaths.py.
+    this.arbitrary = arbitrary;
     this.seats = seats instanceof Set ? seats : new Set(seats);
     this.capacity = capacity;
     this.cost = cost;
@@ -144,6 +147,11 @@ export function causesOn(world, state, night) {
     }
     out.push(...got);
   }
+  // An arbitrary night: nothing has to fire (Stelle 83). See deaths.py.
+  if (out.some(c => c.arbitrary))
+    return out.map(c => !c.mustFire ? c
+      : Object.assign(Object.create(Object.getPrototypeOf(c)), c,
+                      {mustFire: false}));
   return out;
 }
 

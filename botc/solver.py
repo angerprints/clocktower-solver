@@ -56,7 +56,8 @@ from .worlds import BOFFIN_UNSEEN, BoffinGift, boffin_gift_change, bracket_gifts
 from .worlds import PlagueGift, plague_gift_change, PlagueMade, PlagueSummoned
 from .info import registers_of, evil_registrations_here
 from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
-                     SUMMON_READS, Summoned, TEA_READS, TeaParty,
+                     SUMMON_READS, Summoned, PitHagDemon, TEA_READS,
+                     TeaParty,
                      Timeline, TurnedEvil, World,
                      enumerate_worlds, iter_worlds, lil_monsta_world,
                      dealt_roles, sample_worlds, summoner_world)
@@ -1143,10 +1144,25 @@ def a_pit_hag_makes_somebody_else(world, state):
             sides = sorted(cult_sides(world, state, info.target, before))
         else:
             sides = [bool(world.evil_at(info.target, before))]
-        stories = [story + (Change(phase, info.target, info.role,
-                                   "evil" if evil else "good"),)
+        # A Demon made beside the Demon in play: a second one (Stelle 83,
+        # A Weg 1). The Demon made another Demon stays the one.
+        kind = PitHagDemon if _beside_the_demon(world, info.target,
+                                                info.role, phase) \
+            else Change
+        stories = [story + (kind(phase, info.target, info.role,
+                                 "evil" if evil else "good"),)
                    for story in stories for evil in sides]
     return [(story, 1.0) for story in stories]
+
+
+def _beside_the_demon(world, target, role, phase):
+    """Does making this seat this character make a second Demon — a
+    Demon's character on a seat that is no Demon when the Pit-Hag acts?
+    Asked at its turn: a Snake Charmer that swapped with the Demon at 220
+    made the seat it left a good Snake Charmer before the Pit-Hag's 280
+    (Stelle 83, seed 1466)."""
+    return TEAM.get(role) == "demon" \
+        and target not in world.demons_at(phase)
 
 
 @transition_rule
@@ -1181,7 +1197,10 @@ def a_pit_hag_nobody_wrote_down(world, state):
                for p in range(state.n_players)):
             continue
         side = "evil" if world.evil_at(info.player, before) else "good"
-        made = Change(phase, info.player, info.role, side)
+        kind = PitHagDemon if _beside_the_demon(world, info.player,
+                                                info.role, phase) \
+            else Change
+        made = kind(phase, info.player, info.role, side)
         stories = (stories + [(changes + (made,), cost)
                               for changes, cost in stories])[:48]
     return stories
@@ -2573,6 +2592,17 @@ def a_hatted_summoner_summons(world, state):
     return out
 
 
+def made_beside(view):
+    """The change that made a second living Demon in this story — a
+    Summoner's, or a Pit-Hag's (Stelle 83) — or None."""
+    for change in getattr(view, "changes", ()):
+        if not isinstance(change, (Summoned, PitHagDemon)):
+            continue
+        if len(view.demons_at(change.phase)) > 1:
+            return change
+    return None
+
+
 def summoned_beside(view):
     """The `Summoned` change that made a second living Demon in this
     story, or None: one made where a Demon already was, on another
@@ -3823,21 +3853,44 @@ def demon_lineages(world, state, cap=24):
     # each line is walked on its own, the second on top of the first, and
     # a line may end with its Demon dead while the other goes on — which
     # the story has to bear out once both are in (`_a_demon_left`).
-    beside = summoned_beside(world)
+    # And one a Pit-Hag made beside the Demon in play (Stelle 83, A Weg 1).
+    beside = made_beside(world)
     if beside is None:
         return [line for line, _ends in _demon_line(
             world, state, world, start, since, 0, None, cap)]
-    out = []
+    out, seen = [], set()
+
+    def keep(story, ends):
+        key = frozenset(story)
+        if key in seen:
+            return
+        seen.add(key)
+        if _a_demon_left(Timeline(world, story) if story else world,
+                         state, ends):
+            out.append(story)
+
     for first, ends in _demon_line(world, state, world, start, since, 0,
                                    beside, cap):
         view = Timeline(world, first) if first else world
         for second, more in _demon_line(world, state, view, beside.seat,
                                         phase_index(beside.phase), 1,
                                         beside, cap):
-            story = first + second
-            if _a_demon_left(Timeline(world, story) if story else world,
-                             state, ends + more):
-                out.append(story)
+            keep(first + second, ends + more)
+            if len(out) >= cap:
+                return out
+    # And the second line first (Stelle 83, seed 1709): a Scarlet Woman
+    # that took the second Demon's star on night two is no Scarlet Woman
+    # for the first's death on night three — walked first-line-first,
+    # that line offered her again and never let itself simply end.
+    for second, more in _demon_line(world, state, world, beside.seat,
+                                    phase_index(beside.phase), 1, beside,
+                                    cap):
+        if not second:
+            continue
+        view = Timeline(world, second)
+        for first, ends in _demon_line(world, state, view, start, since, 0,
+                                       beside, cap):
+            keep(first + second, ends + more)
             if len(out) >= cap:
                 return out
     return out
@@ -3960,6 +4013,15 @@ def _demon_line(world, state, base, start, since, line, beside, cap):
             # the night says only that it died.
             moves.extend(stamped(rule(view, state, phase, character),
                                  character))
+        # Never after the Demons have killed (Stelle 83): the Leviathan's
+        # turn is the last of the night, and one another Demon killed at
+        # 420 handed the Scarlet Woman its star at 980 — after a Fortune
+        # Teller at 760 that saw her as the Demon. She takes it when it
+        # dies, and every Demon's kill is done by `_DEMONS_DONE`.
+        if phase[:1] == "N":
+            moves = [m._replace(slot=_DEMONS_DONE)
+                     if m.slot is not None and m.slot > _DEMONS_DONE else m
+                     for m in moves]
         # "If there would be two living Demons, one of which was the
         # Scarlet Woman, the Scarlet Woman remains the Scarlet Woman" —
         # with a Fang Gu or an Al-Hadikhia in play (their jinxes; Hatter
@@ -4763,6 +4825,22 @@ def a_po_kills_none_or_three(world, state, night):
         capacity=1 if night == 2 else 3, must_fire=False)]
 
 
+def _an_arbitrary_night(world, state, phase):
+    """Are this moment's deaths the Storyteller's — a night a Pit-Hag
+    made a Demon, or a Summoner a second one (Stelle 83)?"""
+    if phase[:1] != "N":
+        return False
+    night = int(phase[1:])
+    if _in_bag(state, "PitHag") and _pit_hag_made_a_demon(state, night):
+        return True
+    if any(isinstance(c, (PlagueMade, PitHagDemon)) and c.phase == phase
+           and TEAM.get(c.role) == "demon"
+           for c in getattr(world, "changes", ())):
+        return True
+    made = summoned_beside(world)
+    return made is not None and made.phase == phase
+
+
 def _pit_hag_made_a_demon(state, night):
     """Did a recorded creation make a Demon on this night?"""
     for info in state.infos:
@@ -4791,14 +4869,16 @@ def a_pit_hag_making_a_demon_makes_deaths_arbitrary(world, state, night):
     if not _in_bag(state, "PitHag"):
         return []
     # Or the Storyteller's Pit-Hag (Pestdoktor Stufe 2, A Weg 1).
+    # And one only the player's own "became" row tells (Stelle 83).
     if not _pit_hag_made_a_demon(state, night) and not any(
-            isinstance(c, PlagueMade) and c.phase == f"N{night}"
-            and TEAM.get(c.role) == "demon"
+            isinstance(c, (PlagueMade, PitHagDemon))
+            and c.phase == f"N{night}" and TEAM.get(c.role) == "demon"
             for c in getattr(world, "changes", ())):
         return []
     return [death_causes.Cause(
         "Pit-Hag", death_causes.OTHER, frozenset(range(state.n_players)),
-        capacity=state.n_players, cost=1.0, unstoppable=True)]
+        capacity=state.n_players, cost=1.0, unstoppable=True,
+        arbitrary=True)]
 
 
 @death_causes.cause_rule
@@ -6844,8 +6924,12 @@ def _plain_failures(world, state, outcome=None):
                 elif not _a_mastermind_keeps_the_lleech(world, state,
                                                         host, at):
                     failures[int(at[1:])].add(lleech)
+            # Except on a night whose deaths are the Storyteller's: a Pit-Hag
+            # that made a Demon, a Summoner's second — like the Assassin,
+            # it takes the Lleech whatever its host does (Stelle 83).
             if gone is not None and world.role_at(lleech, gone) == "Lleech" \
-                    and (at is None or phase_index(gone) < phase_index(at)):
+                    and (at is None or phase_index(gone) < phase_index(at)) \
+                    and not _an_arbitrary_night(world, state, gone):
                 failures[int(gone[1:])].add(lleech)
 
     # A day with votes on the board was voted with eyes open, so no Organ
@@ -7599,12 +7683,20 @@ def a_no_dashii_poisons_its_townsfolk_neighbours(world, state, night):
         return []
     phase = f"N{night}"
     seat = holding_now(world, state, "NoDashii", phase)
-    if seat is None or seat not in state.alive_set(phase):
-        return []
-    hit = set(_nearest_townsfolk(world, state, seat, phase,
-                                 state.n_players))
     began = _before(night, phase)
     then = holding_now(world, state, "NoDashii", began)
+    if seat is not None and seat not in state.alive_set(phase):
+        return []
+    # And one a Pit-Hag made something else tonight (Stelle 83, seed
+    # 2825): its neighbours were poisoned until it happened — a Snake
+    # Charmer at 220 that chose it, before the Pit-Hag at 280, swapped
+    # nothing. Only the "as the night began" offer below.
+    if seat is None and (then is None
+                         or then not in state.alive_set(phase)):
+        return []
+    hit = set(_nearest_townsfolk(world, state, seat, phase,
+                                 state.n_players)) \
+        if seat is not None else set()
     start = set(_nearest_townsfolk(world, state, then, began,
                                    state.n_players)) \
         if then is not None else set()
@@ -10753,4 +10845,5 @@ def a_second_demon_makes_deaths_arbitrary(world, state, night):
         return []
     return [death_causes.Cause(
         "Summoner", death_causes.OTHER, frozenset(range(state.n_players)),
-        capacity=state.n_players, cost=1.0, unstoppable=True)]
+        capacity=state.n_players, cost=1.0, unstoppable=True,
+        arbitrary=True)]
