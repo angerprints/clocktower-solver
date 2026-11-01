@@ -1735,7 +1735,7 @@ Der Bericht steht in `claude/stelle-53.md`. **Deine Antwort vom 01.11.2026 (Weg 
 | | Gebaut |
 |---|---|
 | Solver | Python und JS: Ein ausgeteilter Dämon, der bis zur Barbier-Nacht tot ist, zählt als zweiter Beweger, der Solver rechnet dann Nacht für Nacht. Ein Sitz mit Dämon-Charakter, der nicht der Dämon ist, wird nie getauscht (auch der tote alte Fang Gu nach seinem Sprung). |
-| Tests | `tests/test_stelle_53.py`, 4 Tests; drei davon scheitern auf main. Testsuite TESTS_53 |
+| Tests | `tests/test_stelle_53.py`, 4 Tests; drei davon scheitern auf main; ein alter Test in `test_mixed_scripts` umgeschrieben. Testsuite grün, 1.908 Tests in 75 Dateien |
 | Tor | Neue Zeile Barbier/Scharlachrote Frau/Dämonenjäger: 3 verloren auf main und jetzt, dieselben, keine davon ein Barbier-Fall. Die vier Barbier-Zeilen aus Stelle 5 unverändert. Von 34 Partien mit Barbier-Tod nach Dämon-Tod: 26 gleich, 1 geändert (1739, wahre Welt und Dämon bleiben), 7 auf beiden Ständen über 4 Minuten. |
 | Korpus | 772 Bretter, 3 geändert (nur Anteile, bis 0,35 Prozentpunkte), alle vom toten Fang Gu. |
 
