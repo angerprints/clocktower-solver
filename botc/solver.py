@@ -3855,17 +3855,39 @@ def demon_lineages(world, state, cap=24):
     if beside is None:
         return [line for line, _ends in _demon_line(
             world, state, world, start, since, 0, None, cap)]
-    out = []
+    out, seen = [], set()
+
+    def keep(story, ends):
+        key = frozenset(story)
+        if key in seen:
+            return
+        seen.add(key)
+        if _a_demon_left(Timeline(world, story) if story else world,
+                         state, ends):
+            out.append(story)
+
     for first, ends in _demon_line(world, state, world, start, since, 0,
                                    beside, cap):
         view = Timeline(world, first) if first else world
         for second, more in _demon_line(world, state, view, beside.seat,
                                         phase_index(beside.phase), 1,
                                         beside, cap):
-            story = first + second
-            if _a_demon_left(Timeline(world, story) if story else world,
-                             state, ends + more):
-                out.append(story)
+            keep(first + second, ends + more)
+            if len(out) >= cap:
+                return out
+    # And the second line first (Stelle 83, seed 1709): a Scarlet Woman
+    # that took the second Demon's star on night two is no Scarlet Woman
+    # for the first's death on night three — walked first-line-first,
+    # that line offered her again and never let itself simply end.
+    for second, more in _demon_line(world, state, world, beside.seat,
+                                    phase_index(beside.phase), 1, beside,
+                                    cap):
+        if not second:
+            continue
+        view = Timeline(world, second)
+        for first, ends in _demon_line(world, state, view, start, since, 0,
+                                       beside, cap):
+            keep(first + second, ends + more)
             if len(out) >= cap:
                 return out
     return out
@@ -3988,6 +4010,15 @@ def _demon_line(world, state, base, start, since, line, beside, cap):
             # the night says only that it died.
             moves.extend(stamped(rule(view, state, phase, character),
                                  character))
+        # Never after the Demons have killed (Stelle 83): the Leviathan's
+        # turn is the last of the night, and one another Demon killed at
+        # 420 handed the Scarlet Woman its star at 980 — after a Fortune
+        # Teller at 760 that saw her as the Demon. She takes it when it
+        # dies, and every Demon's kill is done by `_DEMONS_DONE`.
+        if phase[:1] == "N":
+            moves = [m._replace(slot=_DEMONS_DONE)
+                     if m.slot is not None and m.slot > _DEMONS_DONE else m
+                     for m in moves]
         # "If there would be two living Demons, one of which was the
         # Scarlet Woman, the Scarlet Woman remains the Scarlet Woman" —
         # with a Fang Gu or an Al-Hadikhia in play (their jinxes; Hatter
@@ -4791,6 +4822,22 @@ def a_po_kills_none_or_three(world, state, night):
         capacity=1 if night == 2 else 3, must_fire=False)]
 
 
+def _an_arbitrary_night(world, state, phase):
+    """Are this moment's deaths the Storyteller's — a night a Pit-Hag
+    made a Demon, or a Summoner a second one (Stelle 83)?"""
+    if phase[:1] != "N":
+        return False
+    night = int(phase[1:])
+    if _in_bag(state, "PitHag") and _pit_hag_made_a_demon(state, night):
+        return True
+    if any(isinstance(c, (PlagueMade, PitHagDemon)) and c.phase == phase
+           and TEAM.get(c.role) == "demon"
+           for c in getattr(world, "changes", ())):
+        return True
+    made = summoned_beside(world)
+    return made is not None and made.phase == phase
+
+
 def _pit_hag_made_a_demon(state, night):
     """Did a recorded creation make a Demon on this night?"""
     for info in state.infos:
@@ -4827,7 +4874,8 @@ def a_pit_hag_making_a_demon_makes_deaths_arbitrary(world, state, night):
         return []
     return [death_causes.Cause(
         "Pit-Hag", death_causes.OTHER, frozenset(range(state.n_players)),
-        capacity=state.n_players, cost=1.0, unstoppable=True)]
+        capacity=state.n_players, cost=1.0, unstoppable=True,
+        arbitrary=True)]
 
 
 @death_causes.cause_rule
@@ -6873,8 +6921,12 @@ def _plain_failures(world, state, outcome=None):
                 elif not _a_mastermind_keeps_the_lleech(world, state,
                                                         host, at):
                     failures[int(at[1:])].add(lleech)
+            # Except on a night whose deaths are the Storyteller's: a Pit-Hag
+            # that made a Demon, a Summoner's second — like the Assassin,
+            # it takes the Lleech whatever its host does (Stelle 83).
             if gone is not None and world.role_at(lleech, gone) == "Lleech" \
-                    and (at is None or phase_index(gone) < phase_index(at)):
+                    and (at is None or phase_index(gone) < phase_index(at)) \
+                    and not _an_arbitrary_night(world, state, gone):
                 failures[int(gone[1:])].add(lleech)
 
     # A day with votes on the board was voted with eyes open, so no Organ
@@ -10782,4 +10834,5 @@ def a_second_demon_makes_deaths_arbitrary(world, state, night):
         return []
     return [death_causes.Cause(
         "Summoner", death_causes.OTHER, frozenset(range(state.n_players)),
-        capacity=state.n_players, cost=1.0, unstoppable=True)]
+        capacity=state.n_players, cost=1.0, unstoppable=True,
+        arbitrary=True)]

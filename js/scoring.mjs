@@ -858,16 +858,34 @@ export function demonLineages(world, state, cap = 24) {
     return demonLine(world, state, world, start, since, 0, null, cap)
       .map(([line]) => line);
   const out = [];
+  const seen = new Set();
+  const keep = (story, ends) => {
+    const key = story.map(c => JSON.stringify(c)).sort().join("|");
+    if (seen.has(key)) return;
+    seen.add(key);
+    if (aDemonLeft(story.length ? new Timeline(world, story) : world,
+                   state, ends))
+      out.push(story);
+  };
   for (const [first, ends] of demonLine(world, state, world, start, since,
                                         0, beside, cap)) {
     const view = first.length ? new Timeline(world, first) : world;
     for (const [second, more] of demonLine(world, state, view, beside.seat,
                                            phaseIndex(beside.phase), 1,
                                            beside, cap)) {
-      const story = [...first, ...second];
-      if (aDemonLeft(story.length ? new Timeline(world, story) : world,
-                     state, [...ends, ...more]))
-        out.push(story);
+      keep([...first, ...second], [...ends, ...more]);
+      if (out.length >= cap) return out;
+    }
+  }
+  // And the second line first (Stelle 83, seed 1709). See solver.py.
+  for (const [second, more] of demonLine(world, state, world, beside.seat,
+                                         phaseIndex(beside.phase), 1,
+                                         beside, cap)) {
+    if (!second.length) continue;
+    const view = new Timeline(world, second);
+    for (const [first, ends] of demonLine(world, state, view, start, since,
+                                          0, beside, cap)) {
+      keep([...first, ...second], [...ends, ...more]);
       if (out.length >= cap) return out;
     }
   }
@@ -971,6 +989,10 @@ function demonLine(world, state, base, start, since, line, beside, cap) {
     // At the turn of the Demon that fell (Hatter stage 3b). See solver.py.
     for (const rule of HEIR_RULES)
       moves.push(...stamped(rule(view, state, phase, character), character));
+    // Never after the Demons have killed (Stelle 83). See solver.py.
+    if (phase[0] === "N")
+      moves = moves.map(m => m.slot !== null && m.slot !== undefined
+                        && m.slot > DEMONS_DONE ? {...m, slot: DEMONS_DONE} : m);
     // The Scarlet Woman stays herself where two Demons would live, with a
     // Fang Gu or an Al-Hadikhia in play (their jinxes; Hatter stage 2).
     // See solver.py.
@@ -3391,8 +3413,11 @@ function plainFailures(world, state, outcome = {}) {
         else if (!aMastermindKeepsTheLleech(world, state, host, at))
           fail(key, lleech);
       }
+      // Except on a night whose deaths are the Storyteller's (Stelle 83).
+      // See solver.py.
       if (gone !== null && world.roleAt(lleech, gone) === "Lleech"
-          && (at === null || phaseIndex(gone) < phaseIndex(at)))
+          && (at === null || phaseIndex(gone) < phaseIndex(at))
+          && !anArbitraryNight(world, state, gone))
         fail(Number(gone.slice(1)), lleech);
     }
   }
@@ -5034,3 +5059,22 @@ export const explanationCost = (world, state) => bestStory(world, state).cost;
 
 export const worldConsistent = (world, state) =>
   explanationCost(world, state) !== null;
+
+
+/** Are this moment's deaths the Storyteller's — a night a Pit-Hag made a
+ * Demon, or a Summoner a second one (Stelle 83)? See solver.py
+ * `_an_arbitrary_night`. */
+function anArbitraryNight(world, state, phase) {
+  if (phase[0] !== "N") return false;
+  const night = Number(phase.slice(1));
+  const isDemon = r => CHARACTERS[r] && CHARACTERS[r].team === "demon";
+  if (inBag(state, "PitHag") && state.infos.some(
+      i => i.sourceRole === "PitHag" && i.role && i.night === night
+           && isDemon(i.role)))
+    return true;
+  if ((world.changes || []).some(c => (c.plagueMade || c.pitHagDemon)
+                                 && c.phase === phase && isDemon(c.role)))
+    return true;
+  const made = summonedBeside(world);
+  return !!made && made.phase === phase;
+}

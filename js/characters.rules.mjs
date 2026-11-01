@@ -965,7 +965,7 @@ causeRule(function aPitHagMakingADemonMakesDeathsArbitrary(world, state, night) 
   if (!made) return [];
   return [new Cause("Pit-Hag", OTHER, allSeats(state),
                     {capacity: state.nPlayers, cost: 1.0,
-                     unstoppable: true})];
+                     unstoppable: true, arbitrary: true})];
 });
 
 /** A second way to die at night, and not the Demon's.
@@ -2226,7 +2226,7 @@ causeRule(function aSecondDemonMakesDeathsArbitrary(world, state, night) {
   if (!made || made.phase !== `N${night}`) return [];
   return [new Cause("Summoner", OTHER, allSeats(state),
                     {capacity: state.nPlayers, cost: 1.0,
-                     unstoppable: true})];
+                     unstoppable: true, arbitrary: true})];
 });
 CAUSE_TURNS.aSecondDemonMakesDeathsArbitrary =
   CHARACTERS.Summoner.other_night;
