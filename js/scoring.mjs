@@ -333,9 +333,12 @@ function moversIn(world, state) {
   const deaths = [...state.deathPhases()].filter(([, p]) => p);
   const phases = deaths.map(([, p]) => p);
   const atNight = phases.some(p => p[0].toUpperCase() === "N");
-  // A Barber counts only once a seat that claimed it has died.
+  // A Barber counts once a seat that claimed it has died — or the seat
+  // holding it in this world (Stelle 4, Weg 1). See solver.py.
   const claimed = barberClaimants(state);
-  const barberDied = deaths.some(([s]) => claimed.has(Number(s)));
+  const barberDied = deaths.some(([s]) => claimed.has(Number(s))
+      || world.roles[Number(s)] === "Barber")
+    || (made.has("Barber") && deaths.length > 0);
   const roles = new Set([...world.roles, ...made]);
   // And whatever a Philosopher took (13.10.2026). See solver.py.
   for (const [taken] of Object.values(state.philosophies() || {}))
@@ -480,10 +483,10 @@ function nightsItActs(rule, state) {
     .filter(i => i.sourceRole === role && i[field]).map(i => i.night));
   switch (rule.name) {
     case "aBarberLetsTheDemonSwapTwo": {
-      const claimed = barberClaimants(state);
+      // After any death (Stelle 4, Weg 1). See solver.py.
       const out = new Set();
       for (const [seat, phases] of Object.entries(state.deaths || {}))
-        if (claimed.has(Number(seat)))
+        if (seat !== undefined)
           for (const p of phases) {
             const k = parseInt(p.slice(1), 10);
             out.add(p[0].toUpperCase() !== "N" ? k + 1 : k);
@@ -644,15 +647,18 @@ function barberOnBoard(state) {
 function barberOffers(world, state) {
   // Whoever was the Barber when they died, dealt or made — and claimed
   // it. See solver.py.
+  // One that never claimed it offers only the Demon with one of its own
+  // Minions (Stelle 4, Weg 1, 01.11.2026). See solver.py.
   const claimed = barberClaimants(state);
   const deaths = [];
   for (let seat = 0; seat < state.nPlayers; seat++)
-    if (claimed.has(seat)) for (const phase of state.diedAt(seat))
-      if (fallsAs(world, state, seat, "Barber", phase)) deaths.push(phase);
+    for (const phase of state.diedAt(seat))
+      if (fallsAs(world, state, seat, "Barber", phase))
+        deaths.push([phase, !claimed.has(seat)]);
   if (!deaths.length) return [[[], 1.0]];
 
   const stories = [[[], 1.0]];
-  for (const phase of deaths) {
+  for (const [phase, hidden] of deaths) {
     const day = parseInt(phase.slice(1), 10);
     const night = "NDEX".indexOf(phase[0].toUpperCase()) > 0
       ? `N${day + 1}` : `N${day}`;
@@ -669,6 +675,7 @@ function barberOffers(world, state) {
         // any other pair is priced as a deliberate play (table habit).
         const ours = (demons.includes(first) && TEAM[b] === "minion") ||
                      (demons.includes(second) && TEAM[a] === "minion");
+        if (hidden && !ours) continue;
         const pair = [change(night, first, b, sideA),
                       change(night, second, a, sideB)];
         for (const c of pair)
@@ -4930,8 +4937,7 @@ function bestStoryTold(world, state, outcome) {
  * than all-or-nothing. See solver.py. */
 export function storyShares(world, viable, state = null) {
   // A Barber swap gets the share the table gives it, not its price.
-  if (state && viable.length > 1 && barberOnBoard(state) &&
-      barberClaimants(state).size)
+  if (state && viable.length > 1 && barberOnBoard(state))
     viable = viable.map(([cost, changes]) =>
       [cost * barberShare(world, changes, state), changes]);
   // A Summoner chosen at a tea party is one choice, however many ways it

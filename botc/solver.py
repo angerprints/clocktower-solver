@@ -562,8 +562,13 @@ def _movers_in(world, state):
     deaths = [(s, p) for s, p in state.death_phases() if p]
     phases = [p for _s, p in deaths]
     at_night = any(p[0].upper() == "N" for p in phases)
-    # A Barber counts only once a seat that claimed it has died.
-    barber_died = bool(barber_claimants(state) & {s for s, _p in deaths})
+    # A Barber counts once a seat that claimed it has died — or the seat
+    # holding it in this world, claimed or not, which may still offer the
+    # Demon's swap with a Minion (Stelle 4, Weg 1, 01.11.2026).
+    dead = {s for s, _p in deaths}
+    barber_died = bool(barber_claimants(state) & dead) \
+        or any(world.roles[s] == "Barber" for s in dead) \
+        or ("Barber" in made and bool(dead))
     roles = set(world.roles) | made
     # And whatever a Philosopher took: a Barber, a Farmer, an Ogre, a
     # Huntsman (13.10.2026).
@@ -682,10 +687,10 @@ def _nights_it_acts(rule, state):
         and getattr(info, field, None)}
     name = rule.__name__
     if name == "a_barber_lets_the_demon_swap_two":
-        claimed = barber_claimants(state)
+        # After any death: a Barber nobody claimed may have died too
+        # (Stelle 4, Weg 1).
         return {int(p[1:]) + 1 if p[0].upper() != "N" else int(p[1:])
-                for seat, p in state.death_phases()
-                if p and seat in claimed}
+                for seat, p in state.death_phases() if p}
     if name == "a_pit_hag_makes_somebody_else":
         return rows("PitHag", "role")
     if name == "a_snake_charmer_takes_the_star":
@@ -957,15 +962,21 @@ def _barber_offers(world, state):
     claimed = barber_claimants(state)
     # A Philosopher that took it counts as one, and a real one drunk by
     # that Philosopher when it died swaps nothing (13.10.2026).
-    deaths = [(seat, phase) for seat in range(state.n_players)
-              if seat in claimed
+    #
+    # And one that never said so — hidden behind another claim, or behind
+    # none — offers the swap this table usually makes and nothing else:
+    # the Demon with one of its own Minions (Stelle 4, Weg 1, 01.11.2026).
+    # A pair or three of stories, not fifty: the reason for the ruling of
+    # 29.09.2026 stands for every other pair.
+    deaths = [(seat, phase, seat not in claimed)
+              for seat in range(state.n_players)
               for phase in state.died_at(seat)
               if falls_as(world, state, seat, "Barber", phase)]
     if not deaths:
         return [((), 1.0)]
 
     stories = [((), 1.0)]
-    for _barber, phase in deaths:
+    for _barber, phase, hidden in deaths:
         day = int(phase[1:])
         night = f"N{day + 1}" if phase[0].upper() in "DEX" else f"N{day}"
         if phase_index(night) > phase_index(state.final_phase()):
@@ -986,6 +997,8 @@ def _barber_offers(world, state):
                 # 30.09.2026). `_barber_share` splits the credit inside.
                 ours = ((first in demons and TEAM[b] == "minion")
                         or (second in demons and TEAM[a] == "minion"))
+                if hidden and not ours:
+                    continue
                 kind = DemonMinionSwap if ours else OtherSwap
                 # Sides written out, not left to the new character: a
                 # Change with no side takes the character's, so a swapped
@@ -9216,8 +9229,7 @@ def _story_shares(world, viable, state=None):
     """
     # A Barber swap gets the share the table gives it, not its price:
     # see `_barber_share`. Only asked where a swap was open at all.
-    if state is not None and len(viable) > 1 and _barber_on_board(state) \
-            and barber_claimants(state):
+    if state is not None and len(viable) > 1 and _barber_on_board(state):
         viable = [(cost * _barber_share(world, changes, state), changes)
                   for cost, changes in viable]
     # A Summoner chosen at a tea party is one choice, however many ways it
