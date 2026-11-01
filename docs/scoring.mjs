@@ -307,6 +307,10 @@ export function possibleTimelines(world, state, cap = 128) {
   // every Barber's swap (Stelle 97, 30.10.2026). See solver.py.
   if (onBoard(state, "Huntsman"))
     cap *= Math.max(1, aHuntsmanFindsTheDamsel(world, state).length);
+  // And for every heir a Farmer may have had, beside every Barber's swap
+  // (Stelle 5, seed 1931). See solver.py.
+  if (barberOnBoard(state) && onBoard(state, "Farmer"))
+    cap *= Math.max(1, aFarmerHandsItOn(world, state).length);
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -683,7 +687,11 @@ function barberOffers(world, state) {
         stories.push([pair, ours ? 1.0 : BARBER_SWAP_PENALTY]);
       }
   }
-  return stories;
+  // The usual swap first: stories are cut at a cap, and in pair order a
+  // Demon and Minion at high seats never reached the search (Stelle 5,
+  // seed 2799). Stable, so the pairs keep their order within each kind.
+  const usual = stories.filter(s => s[1] >= 1.0);
+  return usual.concat(stories.filter(s => s[1] < 1.0));
 }
 
 // Demons that hand the star on when they kill themselves. The Imp is the
@@ -1064,11 +1072,13 @@ function aHuntsmanFindsTheDamsel(world, state) {
         && o.player === info.player && o.night <= night)) continue;
     const began = night > 1 ? `B${night - 1}` : "N0";
     const target = info.target;
-    // Or a Philosopher that took her (group 6, P, 14.10.2026).
-    if (world.roleAt(target, began) !== "Damsel"
-        && !tookIt(world, state, target, "Damsel", began)) continue;
+    // Or a Philosopher that took her (group 6, P, 14.10.2026). At the
+    // Huntsman's turn: a Barber's swap may have handed her over that
+    // night (Stelle 5, seed 447).
+    if (world.roleAt(target, phase) !== "Damsel"
+        && !tookIt(world, state, target, "Damsel", phase)) continue;
     const said = state.infos.filter(b => b.type === "Became"
-      && b.player === target && b.night >= night
+      && b.player === target && b.night === night
       && state.script.townsfolk.includes(b.role)).map(b => b.role);
     const inPlay = new Set();
     for (let p = 0; p < state.nPlayers; p++) inPlay.add(world.roleAt(p, began));
@@ -1107,7 +1117,7 @@ function couldBeGood(world, seat, phase) {
  * than the first: `findAt` returns the Farmer that was *dealt*, and that
  * seat goes on being a Farmer in the base world after it dies.
  */
-transitionRule(function aFarmerHandsItOn(world, state) {
+const aFarmerHandsItOn = transitionRule(function aFarmerHandsItOn(world, state) {
   if (!onBoard(state, "Farmer")) return [[[], 1.0]];
   let stories = [[[], 1.0]];
   const latest = phaseIndex(state.finalPhase());

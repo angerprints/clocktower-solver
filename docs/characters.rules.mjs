@@ -207,26 +207,35 @@ sourceRule(function aNoDashiiPoisonsItsTownsfolkNeighbours(world, state, night) 
   const phase = `N${night}`;
   const seat = holdingNow(world, state, "NoDashii", phase);
   if (seat === null || !state.aliveSet(phase).has(seat)) return [];
-  const hit = nearestTownsfolk(world, state, seat, phase);
+  const hit = new Set(nearestTownsfolk(world, state, seat, phase));
+  const began = beganAt(night);
+  const then = holdingNow(world, state, "NoDashii", began);
+  const start = then !== null
+    ? new Set(nearestTownsfolk(world, state, then, began)) : new Set();
   const out = [];
-  if (hit.size)
-    out.push(new Source("No Dashii", hit,
-                        {capacity: hit.size, cost: 1.0, repeatCost: 1.0}));
+  // Forced only on whoever was beside it all night. A neighbour it got
+  // during the night (a Barber's swap, a Pit-Hag, a seat between them
+  // dying) was poisoned from then on, and earlier that night it was sober
+  // (Stelle 5, seed 2442). On offer, as for the one below.
+  const stayed = new Set([...hit].filter(p => start.has(p)));
+  if (stayed.size)
+    out.push(new Source("No Dashii", stayed,
+                        {capacity: stayed.size, cost: 1.0, repeatCost: 1.0}));
+  const late = new Set([...hit].filter(p => !stayed.has(p)));
+  if (late.size)
+    out.push(new Source("No Dashii, since the change", late,
+                        {capacity: late.size, cost: () => 1.0,
+                         repeatCost: () => 1.0}));
   // Whoever was beside it as the night began, and no longer is: "the
   // players who are poisoned may change immediately". On a night a
   // Pit-Hag turns its Townsfolk neighbour into something else, that
   // neighbour was poisoned for the part of the night before it happened.
   // On offer, not forced.
-  const began = beganAt(night);
-  const then = holdingNow(world, state, "NoDashii", began);
-  if (then !== null) {
-    const earlier = new Set([...nearestTownsfolk(world, state, then, began)]
-      .filter(p => !hit.has(p)));
-    if (earlier.size)
-      out.push(new Source("No Dashii, as the night began", earlier,
-                          {capacity: earlier.size, cost: () => 1.0,
-                           repeatCost: () => 1.0}));
-  }
+  const earlier = new Set([...start].filter(p => !hit.has(p)));
+  if (earlier.size)
+    out.push(new Source("No Dashii, as the night began", earlier,
+                        {capacity: earlier.size, cost: () => 1.0,
+                         repeatCost: () => 1.0}));
   return out;
 });
 
