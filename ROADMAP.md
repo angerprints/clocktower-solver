@@ -1750,7 +1750,7 @@ Der Bericht steht in `claude/stelle-83.md`, die Lesarten in `claude/stelle-83-le
 | Night-Walk | Tode der willkürlichen Nacht; Gift des alten Charakters endet bei der Verwandlung. |
 | Tor | `messung/tor_stelle_83.sh`: fünf Zeilen mit Schalter, verworfen 89/90/102/96/110 → 3/1/2/3/4 (nur Seed 729 mit Grubenweib-Dämon); drei Zeilen ohne Schalter wie main. |
 | Korpus | 772 Bretter, 5 geändert: 1 mit mehr Welten (283 → 290, No Dashii), 4 nur Anteile (willkürliche Nacht, zwei Pestdoktor-Bretter bis 23,7 Prozentpunkte). |
-| Tests | `tests/test_stelle_83.py`. SUITE_ROADMAP |
+| Tests | `tests/test_stelle_83.py`. Testsuite grün, 1.914 Tests in 76 Dateien. |
 
 ### Als Nächstes
 
