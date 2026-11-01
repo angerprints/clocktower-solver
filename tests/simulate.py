@@ -5234,11 +5234,16 @@ def _pit_hag_night(d, night, rng):
     if kind == "good" and rng.random() < 0.5:
         return False
     living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    # Never a Zombuul: its first death is none, and the Storyteller who
+    # wants a Demon gone takes one that goes (seed 941).
+    mortal = lambda p: d.role_at(p, phase) != "Zombuul"
     if kind == "evil":
         rest = [p for p in living if p not in (old, target)]
-        dead = [old] + ([rng.choice(rest)] if rest else [])
+        dead = ([old] if mortal(old) else []) \
+            + ([rng.choice(rest)] if rest else [])
     elif kind == "good":
-        dead = [rng.choice([old, target])]
+        pick = rng.choice([old, target])
+        dead = [pick] if mortal(pick) else []
     else:
         dead = []
     for victim in dead:
@@ -7273,9 +7278,12 @@ def _make_false(d, info, night, rng):
         return info
 
     if kind == "ChoirboyInfo":
-        # Anybody but the Demon.
-        demon = d.demon_at(f"N{night}")
-        others = [p for p in range(d.n) if p not in (info.player, demon)]
+        # Anybody but the Demon — either of two (Stelle 83, seed 975): it
+        # left out only the first, and named the second, which had killed
+        # the King, so the false reading was true.
+        demons = set(d.demons_at(f"N{night}"))
+        others = [p for p in range(d.n)
+                  if p != info.player and p not in demons]
         if not others:
             return None
         info.target = rng.choice(others)

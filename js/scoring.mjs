@@ -1054,7 +1054,7 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
           .sort((a, b) => Number(a) - Number(b))
       : [Boolean(world.evilAt(info.target, before))];
     // A Demon made beside the Demon in play: a second one (Stelle 83).
-    const make = besideTheDemon(world, info.target, info.role, before)
+    const make = besideTheDemon(world, info.target, info.role, phase)
       ? pitHagDemon : change;
     stories = stories.flatMap(story => sides.map(evil => [...story,
       make(phase, info.target, info.role, evil ? "evil" : "good")]));
@@ -1064,9 +1064,9 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
 
 /** Does making this seat this character make a second Demon? See
  * solver.py `_beside_the_demon`. */
-function besideTheDemon(world, target, role, before) {
+function besideTheDemon(world, target, role, phase) {
   return CHARACTERS[role] && CHARACTERS[role].team === "demon"
-    && !world.demonsAt(before).includes(target);
+    && !world.demonsAt(phase).includes(target);
 }
 
 /** A seat said it became something, on a night a Pit-Hag could have made
@@ -1092,7 +1092,7 @@ transitionRule(function aPitHagNobodyWroteDown(world, state) {
       if (world.roleAt(p, before) === info.role) held = true;
     if (held) continue;
     const side = world.evilAt(info.player, before) ? "evil" : "good";
-    const made = (besideTheDemon(world, info.player, info.role, before)
+    const made = (besideTheDemon(world, info.player, info.role, phase)
       ? pitHagDemon : change)(phase, info.player, info.role, side);
     stories = [...stories, ...stories.map(([c, w]) => [[...c, made], w])]
       .slice(0, 48);

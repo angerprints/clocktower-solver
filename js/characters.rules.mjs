@@ -206,10 +206,15 @@ sourceRule(function aNoDashiiPoisonsItsTownsfolkNeighbours(world, state, night) 
   if (!inBag(state, "NoDashii")) return [];
   const phase = `N${night}`;
   const seat = holdingNow(world, state, "NoDashii", phase);
-  if (seat === null || !state.aliveSet(phase).has(seat)) return [];
-  const hit = new Set(nearestTownsfolk(world, state, seat, phase));
   const began = beganAt(night);
   const then = holdingNow(world, state, "NoDashii", began);
+  if (seat !== null && !state.aliveSet(phase).has(seat)) return [];
+  // And one a Pit-Hag made something else tonight (Stelle 83, seed 2825):
+  // only the "as the night began" offer. See solver.py.
+  if (seat === null && (then === null || !state.aliveSet(phase).has(then)))
+    return [];
+  const hit = seat !== null
+    ? new Set(nearestTownsfolk(world, state, seat, phase)) : new Set();
   const start = then !== null
     ? new Set(nearestTownsfolk(world, state, then, began)) : new Set();
   const out = [];

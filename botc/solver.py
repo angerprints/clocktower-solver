@@ -1147,7 +1147,7 @@ def a_pit_hag_makes_somebody_else(world, state):
         # A Demon made beside the Demon in play: a second one (Stelle 83,
         # A Weg 1). The Demon made another Demon stays the one.
         kind = PitHagDemon if _beside_the_demon(world, info.target,
-                                                info.role, before) \
+                                                info.role, phase) \
             else Change
         stories = [story + (kind(phase, info.target, info.role,
                                  "evil" if evil else "good"),)
@@ -1155,11 +1155,14 @@ def a_pit_hag_makes_somebody_else(world, state):
     return [(story, 1.0) for story in stories]
 
 
-def _beside_the_demon(world, target, role, before):
+def _beside_the_demon(world, target, role, phase):
     """Does making this seat this character make a second Demon — a
-    Demon's character on a seat that is no Demon as the night began?"""
+    Demon's character on a seat that is no Demon when the Pit-Hag acts?
+    Asked at its turn: a Snake Charmer that swapped with the Demon at 220
+    made the seat it left a good Snake Charmer before the Pit-Hag's 280
+    (Stelle 83, seed 1466)."""
     return TEAM.get(role) == "demon" \
-        and target not in world.demons_at(before)
+        and target not in world.demons_at(phase)
 
 
 @transition_rule
@@ -1195,7 +1198,7 @@ def a_pit_hag_nobody_wrote_down(world, state):
             continue
         side = "evil" if world.evil_at(info.player, before) else "good"
         kind = PitHagDemon if _beside_the_demon(world, info.player,
-                                                info.role, before) \
+                                                info.role, phase) \
             else Change
         made = kind(phase, info.player, info.role, side)
         stories = (stories + [(changes + (made,), cost)
@@ -7680,12 +7683,20 @@ def a_no_dashii_poisons_its_townsfolk_neighbours(world, state, night):
         return []
     phase = f"N{night}"
     seat = holding_now(world, state, "NoDashii", phase)
-    if seat is None or seat not in state.alive_set(phase):
-        return []
-    hit = set(_nearest_townsfolk(world, state, seat, phase,
-                                 state.n_players))
     began = _before(night, phase)
     then = holding_now(world, state, "NoDashii", began)
+    if seat is not None and seat not in state.alive_set(phase):
+        return []
+    # And one a Pit-Hag made something else tonight (Stelle 83, seed
+    # 2825): its neighbours were poisoned until it happened — a Snake
+    # Charmer at 220 that chose it, before the Pit-Hag at 280, swapped
+    # nothing. Only the "as the night began" offer below.
+    if seat is None and (then is None
+                         or then not in state.alive_set(phase)):
+        return []
+    hit = set(_nearest_townsfolk(world, state, seat, phase,
+                                 state.n_players)) \
+        if seat is not None else set()
     start = set(_nearest_townsfolk(world, state, then, began,
                                    state.n_players)) \
         if then is not None else set()
