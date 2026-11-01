@@ -599,6 +599,20 @@ def _movers_in(world, state):
                and phase_index(p) < phase_index(f"N{last_swap}")
                for seat, p in deaths):
             count += 1
+    # The same for the Barber (Stelle 53, 01.11.2026): a dealt Demon dead
+    # by the night of a Barber's swap — a Scarlet Woman stepped up in
+    # daylight, or a starpass. Run all at once, the Barber (slot 40) is
+    # asked before the lineage and offered the dead Demon as the one that
+    # swaps, and the heir's swap with a Minion as two of anybody.
+    if barber_died:
+        dealt = {seat for seat, role in enumerate(world.roles)
+                 if TEAM[role] == "demon"}
+        swap_nights = [_barber_night(p) for _s, p in deaths]
+        last_night = max(swap_nights, key=phase_index)
+        if any(seat in dealt
+               and phase_index(p) <= phase_index(last_night)
+               for seat, p in deaths):
+            count += 1
     # A Huntsman that chose, and may have found the Damsel (10.10.2026).
     if "Huntsman" in roles and any(isinstance(info, HuntsmanChoice)
                                    for info in state.infos):
@@ -982,16 +996,23 @@ def _barber_offers(world, state):
 
     stories = [((), 1.0)]
     for _barber, phase, hidden in deaths:
-        day = int(phase[1:])
-        night = f"N{day + 1}" if phase[0].upper() in "DEX" else f"N{day}"
+        night = _barber_night(phase)
         if phase_index(night) > phase_index(state.final_phase()):
             continue                      # the game had already finished
         view = world
         seats = range(state.n_players)
         demons = view.demons_at(night)
+        # "2 players (not another Demon)": a seat still holding a Demon's
+        # character that is not the Demon now — the one executed or shot
+        # before a Scarlet Woman stepped up — is never chosen (Stelle 53,
+        # Weg 1, 01.11.2026). The simulator swaps living seats only.
+        others = {s for s in seats if s not in demons
+                  and TEAM[view.role_at(s, night)] == "demon"}
         for first in seats:
+            if first in others:
+                continue
             for second in seats:
-                if second <= first:
+                if second <= first or second in others:
                     continue
                 a, b = view.role_at(first, night), view.role_at(second, night)
                 if a == b:
@@ -1021,6 +1042,12 @@ def _barber_offers(world, state):
     # 2799). Stable, so the pairs keep their order within each kind.
     stories.sort(key=lambda story: story[1] < 1.0)
     return stories
+
+
+def _barber_night(phase):
+    """The night a Barber's death at this moment lets the Demon swap."""
+    day = int(phase[1:])
+    return f"N{day + 1}" if phase[0].upper() in "DEX" else f"N{day}"
 
 
 class DemonMinionSwap(Change):
