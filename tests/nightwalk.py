@@ -1652,8 +1652,11 @@ def walk(deal, night, hidden):
                         state.chosen_by.pop(target, None)
                     # A Drunk made into something is sober from here, not
                     # from the Sweetheart's slot: a Drunk made a
-                    # Lycanthrope at 16 kills at 22 (11.10.2026).
-                    if was == "Drunk" and target in stops_being_droisoned:
+                    # Lycanthrope at 16 kills at 22 (11.10.2026). And any
+                    # seat whose droisoning ends with its old character: a
+                    # Townsfolk the Xaan poisoned, made a Vortox at 280,
+                    # kills at 460 (Stelle 83, seed 204).
+                    if target in stops_being_droisoned:
                         state.droisoned.discard(target)
                         stops_being_droisoned.discard(target)
 

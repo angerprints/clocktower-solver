@@ -11,8 +11,12 @@ D Weg 1: the Storyteller in the simulator as the wiki has it: a Demon
     made another Demon, nobody dies; a new evil Demon, the old one and one
     more (Patrick's note to A); a good Demon, half the time one of the two.
 
-Found on the way: the simulator's Flowergirl asked only the first Demon
-(seed 207).
+Found on the way (claude/stelle-83.md): arbitrary nights where nothing
+has to fire, a Lleech the Storyteller may take, a Scarlet Woman stepping
+up for a Leviathan before the night's readings, two Demon lines walked in
+either order, a No Dashii made something else, the second Demon seen at
+the Pit-Hag's turn; in the simulator the Flowergirl and the Choirboy
+asking both Demons, and no Zombuul taken on the arbitrary night.
 """
 import json
 import pathlib
@@ -32,9 +36,18 @@ from botc.info import GameState                   # noqa: E402
 from botc.worlds import Change, PitHagDemon, Timeline, World  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-# seed: (kind, players) — found with SIM_PIT_HAG_DEMONS=0.5, must PitHag;
-# every one was lost before.
-PLAYED = {41: "good", 109: "evil", 133: "evil", 207: "good"}
+# seed: (characters the gate line asks for, what the Pit-Hag made) —
+# found with SIM_PIT_HAG_DEMONS=0.5; every one was lost before. 207 is the
+# Flowergirl that asked one Demon, 526 an Ojo that need not kill on its
+# arbitrary night, 1593 a Leviathan whose Scarlet Woman steps up before a
+# Fortune Teller, 2825 a No Dashii made something else after a Snake
+# Charmer chose it.
+PLAYED = {41: (("PitHag",), "good"),
+          109: (("PitHag",), "evil"),
+          207: (("PitHag",), "good"),
+          526: (("PitHag", "Vortox", "Flowergirl"), "type"),
+          1593: (("PitHag", "ScarletWoman", "FangGu"), "good"),
+          2825: (("PitHag", "Barber", "SnakeCharmer"), "type")}
 
 
 class asked:
@@ -70,8 +83,8 @@ class ThePlayedGamesAreKept(SolverTest):
 
     def test_every_one(self):
         with asked():
-            for seed, kind in PLAYED.items():
-                deal, st = game(seed)
+            for seed, (must, kind) in PLAYED.items():
+                deal, st = game(seed, must)
                 with self.subTest(seed=seed):
                     made = deal.pit_hag_demon
                     self.assertEqual([k for _t, k, _o in made.values()],
@@ -80,8 +93,8 @@ class ThePlayedGamesAreKept(SolverTest):
                         S.explanation_cost(deal.world(), st))
 
     def test_unasked_the_pit_hag_makes_no_demon(self):
-        for seed in PLAYED:
-            deal, _st = game(seed)
+        for seed, (must, _kind) in PLAYED.items():
+            deal, _st = game(seed, must)
             with self.subTest(seed=seed):
                 self.assertFalse(getattr(deal, "pit_hag_demon", None))
 
@@ -130,9 +143,9 @@ def _payloads():
     import play_games
     out = []
     with asked():
-        for seed in PLAYED:
+        for seed, (must, _kind) in PLAYED.items():
             rng = random.Random(seed)
-            script = play_games.an_awkward_script(rng, must_have=("PitHag",))
+            script = play_games.an_awkward_script(rng, must_have=must)
             n = [7, 8, 9, 10, 11][seed % 5]
             out.append(played(f"s{seed}", script, seed, n, 4,
                               rng=rng)["payload"])
