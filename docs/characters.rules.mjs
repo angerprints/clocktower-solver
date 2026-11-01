@@ -206,10 +206,15 @@ sourceRule(function aNoDashiiPoisonsItsTownsfolkNeighbours(world, state, night) 
   if (!inBag(state, "NoDashii")) return [];
   const phase = `N${night}`;
   const seat = holdingNow(world, state, "NoDashii", phase);
-  if (seat === null || !state.aliveSet(phase).has(seat)) return [];
-  const hit = new Set(nearestTownsfolk(world, state, seat, phase));
   const began = beganAt(night);
   const then = holdingNow(world, state, "NoDashii", began);
+  if (seat !== null && !state.aliveSet(phase).has(seat)) return [];
+  // And one a Pit-Hag made something else tonight (Stelle 83, seed 2825):
+  // only the "as the night began" offer. See solver.py.
+  if (seat === null && (then === null || !state.aliveSet(phase).has(then)))
+    return [];
+  const hit = seat !== null
+    ? new Set(nearestTownsfolk(world, state, seat, phase)) : new Set();
   const start = then !== null
     ? new Set(nearestTownsfolk(world, state, then, began)) : new Set();
   const out = [];
@@ -957,13 +962,15 @@ causeRule(function aPitHagMakingADemonMakesDeathsArbitrary(world, state, night) 
     i => i.sourceRole === "PitHag" && i.role && i.night === night &&
          CHARACTERS[i.role] && CHARACTERS[i.role].team === "demon")
     // Or the Storyteller's Pit-Hag (Pestdoktor Stufe 2, A Weg 1).
-    || (world.changes || []).some(c => c.plagueMade && c.phase === `N${night}`
+    // And one only the player's own "became" row tells (Stelle 83).
+    || (world.changes || []).some(c => (c.plagueMade || c.pitHagDemon)
+                                  && c.phase === `N${night}`
                                   && CHARACTERS[c.role]
                                   && CHARACTERS[c.role].team === "demon");
   if (!made) return [];
   return [new Cause("Pit-Hag", OTHER, allSeats(state),
                     {capacity: state.nPlayers, cost: 1.0,
-                     unstoppable: true})];
+                     unstoppable: true, arbitrary: true})];
 });
 
 /** A second way to die at night, and not the Demon's.
@@ -2200,6 +2207,15 @@ Object.assign(CAUSE_TURNS, {
 // as in Python.
 // --------------------------------------------------------------------
 
+/** The change that made a second living Demon in this story — a
+ * Summoner's or a Pit-Hag's (Stelle 83) — or null. See solver.py. */
+export function madeBeside(view) {
+  for (const c of view.changes || [])
+    if ((c.summoned || c.pitHagDemon) && view.demonsAt(c.phase).length > 1)
+      return c;
+  return null;
+}
+
 /** The summoning that made a second living Demon in this story, or null.
  * See solver.py. */
 export function summonedBeside(view) {
@@ -2215,7 +2231,7 @@ causeRule(function aSecondDemonMakesDeathsArbitrary(world, state, night) {
   if (!made || made.phase !== `N${night}`) return [];
   return [new Cause("Summoner", OTHER, allSeats(state),
                     {capacity: state.nPlayers, cost: 1.0,
-                     unstoppable: true})];
+                     unstoppable: true, arbitrary: true})];
 });
 CAUSE_TURNS.aSecondDemonMakesDeathsArbitrary =
   CHARACTERS.Summoner.other_night;
