@@ -3174,6 +3174,12 @@ function plainFailures(world, state, outcome = {}) {
   let impossible = false;
   const fail = (night, seat) =>
     ((failures[night] = failures[night] || new Set()).add(seat));
+  // What the days alone ask, keyed like the nights they follow, kept apart
+  // because a source whose actor died in the night does not reach the day
+  // (Stelle 104, 02.11.2026). See solver.py.
+  const dayFailures = {}, dayWorking = {};
+  const failByDay = (day, seat) =>
+    ((dayFailures[day] = dayFailures[day] || new Set()).add(seat));
   // Nights where a reading came out true under a Vortox: either the
   // Vortox was off or the sources were droisoned. See solver.py.
   const vortoxOr = {};
@@ -3199,7 +3205,7 @@ function plainFailures(world, state, outcome = {}) {
     if ((state.executions || {})[day] !== undefined) continue;
     const vortox = holdingNow(world, state, "Vortox", `D${day}`);
     if (vortox === null || !state.aliveSet(`D${day}`).has(vortox)) continue;
-    fail(day, vortox);
+    failByDay(day, vortox);
   }
 
   // Two deaths that name a character nobody chose to reveal, and the one
@@ -3254,13 +3260,13 @@ function plainFailures(world, state, outcome = {}) {
       // Weg 1): it is the good player, and the ability its own.
       if (world.roleAt(hanged, phase) === "EvilTwin"
           && !world.evilAt(hanged, phase) && world.evilAt(other, phase)) {
-        fail(day, hanged);
+        failByDay(day, hanged);
         continue;
       }
       if (world.roleAt(other, phase) !== "EvilTwin" ||
           !state.aliveSet(phase).has(other) ||
           world.evilAt(hanged, phase)) continue;
-      fail(day, other);
+      failByDay(day, other);
     }
   }
 
@@ -3274,13 +3280,13 @@ function plainFailures(world, state, outcome = {}) {
       // The Storyteller's, the Plague Doctor's gift (28.10.2026).
       if (!storytellerHas(world, "Mastermind", c.phase)) return null;
     } else {
-      (working[day] = working[day] || new Set()).add(mastermind);
+      (dayWorking[day] = dayWorking[day] || new Set()).add(mastermind);
     }
     // Not when she is the one executed: a Scarlet Woman babysitting Lil'
     // Monsta (21.10.2026).
     if (scarletWomanTakesOver(world, state, c.phase)
         && scarletSeat(world, state, c.phase) !== c.seat)
-      fail(day, scarletSeat(world, state, c.phase));
+      failByDay(day, scarletSeat(world, state, c.phase));
   }
 
   // The Summoner (21.10.2026): working when it made the Demon, unless a
@@ -3370,15 +3376,15 @@ function plainFailures(world, state, outcome = {}) {
     if (seat === null) continue;
     // And a Philosopher that took her (group 6, D, 14.10.2026).
     if (hasAbility(world, state, seat, "Saint", `D${day}`))
-      fail(day, soberSeat(world, state, seat, "Saint", `D${day}`));
+      failByDay(day, soberSeat(world, state, seat, "Saint", `D${day}`));
     // A Sailor cannot die, and that holds in daylight — so a working one
     // walks away from its own execution.
     if (hasAbility(world, state, seat, "Sailor", `D${day}`))
-      fail(day, soberSeat(world, state, seat, "Sailor", `D${day}`));
+      failByDay(day, soberSeat(world, state, seat, "Sailor", `D${day}`));
     // And the same for a Tea Lady's neighbour: executed and dead, so she
     // was not working. The mirror of her saving one.
     for (const lady of teaLadyFailedAtTheGallows(world, state, day, seat))
-      fail(day, lady);
+      failByDay(day, lady);
   }
 
   // A Vizier cannot die during the day. One that did was not working —
@@ -3388,7 +3394,7 @@ function plainFailures(world, state, outcome = {}) {
       if (phase[0] === "D" && world.roleAt(seat, phase) === "Vizier"
           && !(executed(state, Number(phase.slice(1)), seat)
                && babysitterAt(world, phase) === seat))
-        fail(Number(phase.slice(1)), seat);
+        failByDay(Number(phase.slice(1)), seat);
 
   // A Lleech dies when its host does and not before (11.10.2026). The
   // host is this telling's hidden choice. See solver.py.
@@ -3430,7 +3436,7 @@ function plainFailures(world, state, outcome = {}) {
       const phase = `D${dayKey}`;
       const grinder = world.findAt("OrganGrinder", phase);
       if (grinder !== null && state.aliveSet(phase).has(grinder))
-        fail(Number(dayKey), grinder);
+        failByDay(Number(dayKey), grinder);
     }
 
   // Somebody standing again needs a reason, and the reason has to have
@@ -3516,7 +3522,7 @@ function plainFailures(world, state, outcome = {}) {
     // Devil's Advocate's rescue whenever a Pacifist on the same board was
     // drunk — and it replaced whatever else had to be working that day.
     if (survivors.size === 1) {
-      const set = (working[day] = working[day] || new Set());
+      const set = (dayWorking[day] = dayWorking[day] || new Set());
       for (const who of survivors) set.add(who);
     }
   }
@@ -3866,7 +3872,8 @@ function plainFailures(world, state, outcome = {}) {
          (a, b) => a.night - b.night || a.lyc - b.lyc))
     either.push({night: group.night, source: [...group.sources].sort((a, b) => a - b),
                  impaired: [], working: [group.lyc]});
-  return {failures, ftInfos, invented, mustWork: working, vortoxOr, either};
+  return {failures, ftInfos, invented, mustWork: working, vortoxOr, either,
+          daytime: [dayFailures, dayWorking]};
 }
 
 /** The living Demon at this moment, if it is a Yaggababble. */
@@ -4236,11 +4243,13 @@ function nightAccounts(world, state, impairedAlready = {}, workingAlready = {}) 
  * been: a Monk that is the only explanation for a quiet night was
  * working, so nothing can have stopped it.
  */
-function impairmentPlan(world, state, failures, forbidden) {
+function impairmentPlan(world, state, failures, forbidden, day = null) {
+  let [dayFailures, dayWorking] = day || [{}, {}];
   // The Storyteller's own ability cannot be stopped: a world that needs it
   // to have failed has none, and needing it to work asks nothing
   // (Pestdoktor Stufe 2). See solver.py.
-  if (Object.values(failures).some(seats => seats.has(STORYTELLER)))
+  if (Object.values(failures).some(seats => seats.has(STORYTELLER))
+      || Object.values(dayFailures).some(seats => seats.has(STORYTELLER)))
     return null;
   if (Object.values(forbidden).some(seats => seats.has(STORYTELLER))) {
     const kept = {};
@@ -4248,7 +4257,14 @@ function impairmentPlan(world, state, failures, forbidden) {
       kept[night] = new Set([...seats].filter(s => s !== STORYTELLER));
     forbidden = kept;
   }
-  const got = planAsGiven(world, state, failures, forbidden);
+  if (Object.values(dayWorking).some(seats => seats.has(STORYTELLER))) {
+    const kept = {};
+    for (const [night, seats] of Object.entries(dayWorking))
+      kept[night] = new Set([...seats].filter(s => s !== STORYTELLER));
+    dayWorking = kept;
+  }
+  day = [dayFailures, dayWorking];
+  const got = planAsGiven(world, state, failures, forbidden, null, null, day);
   if (got !== null) return got;
   // A Courtier that was itself drunk or poisoned when it chose made
   // nobody drunk at all. Its drunkenness is unavoidable while it stands,
@@ -4274,7 +4290,8 @@ function impairmentPlan(world, state, failures, forbidden) {
     // And a Philosopher that gained nothing has nothing of the character
     // it named to act with (13.10.2026). See solver.py.
     const mine = source === "Philosopher" ? [holder, info.role] : null;
-    const other = planAsGiven(world, state, again, forbidden, [source], mine);
+    const other = planAsGiven(world, state, again, forbidden, [source], mine,
+                              day);
     if (other !== null) return other;
   }
   // And a Preacher that was off when it chose silenced nobody. See
@@ -4287,29 +4304,76 @@ function impairmentPlan(world, state, failures, forbidden) {
     for (const [night, seats] of Object.entries(failures))
       again[night] = new Set(seats);
     (again[info.night] = again[info.night] || new Set()).add(info.player);
-    const other = planAsGiven(world, state, again, forbidden, ["Preacher"]);
+    const other = planAsGiven(world, state, again, forbidden, ["Preacher"],
+                              null, day);
     if (other !== null) return other;
   }
   return null;
 }
 
+/** Tonight's sources whose actor died tonight (Stelle 104). */
+function dyingSources(state, night, sources) {
+  const phase = `N${night}`, died = new Set();
+  for (const seat of Object.keys(state.deaths || {}))
+    if (state.diedAt(+seat).includes(phase)) died.add(+seat);
+  if (!died.size) return [];
+  return sources.filter(s => s.actor !== null && s.actor !== undefined
+    && died.has(s.actor));
+}
+
+/** The night demands with the day's after each joined in — except after a
+ * night in which a source's actor died, whose day the plan settles on its
+ * own. See solver.py. */
+function withTheDays(world, state, nights, days) {
+  if (!days || !Object.keys(days).length) return nights;
+  const out = {};
+  for (const [night, seats] of Object.entries(nights))
+    out[night] = new Set(seats);
+  for (const [day, seats] of Object.entries(days)) {
+    if (!seats.size || dyingSources(state, +day,
+                                    sourcesOn(world, state, +day)).length)
+      continue;
+    const set = (out[day] = out[day] || new Set());
+    for (const seat of seats) set.add(seat);
+  }
+  return out;
+}
+
+/** The plan, night by night. `day` is [impaired, working] of the days
+ * alone, joined to the night unless a source's actor died in it (Stelle
+ * 104). See solver.py. */
 function planAsGiven(world, state, failures, forbidden, without = null,
-                     mine = null) {
+                     mine = null, day = null) {
+  const [dayFailures, dayWorking] = day || [{}, {}];
   let total = 1.0;
   let previous = {};
-  const nights = new Set([...Object.keys(failures), ...Object.keys(forbidden)]
-    .map(Number));
+  const nights = new Set([...Object.keys(failures), ...Object.keys(forbidden),
+                          ...Object.keys(dayFailures),
+                          ...Object.keys(dayWorking)].map(Number));
   for (const night of [...nights].sort((a, b) => a - b)) {
-    const wanted = failures[night] || new Set();
-    const blocked = forbidden[night] || new Set();
+    const wanted = new Set(failures[night] || []);
+    const blocked = new Set(forbidden[night] || []);
     for (const s of wanted) if (blocked.has(s)) return null;
     let sources = sourcesOn(world, state, night);
     if (without) sources = sources.filter(src => !without.includes(src.name));
     if (mine) sources = sources.filter(
       src => src.actor !== mine[0] || src.name !== mine[1]);
+    const byDay = new Set(dayFailures[night] || []);
+    const kept = new Set(dayWorking[night] || []);
+    let split = null;
+    if (byDay.size || kept.size) {
+      const dying = dyingSources(state, night, sources);
+      for (const s of byDay) wanted.add(s);
+      if (dying.length) split = [byDay, kept, dying];
+      else {
+        for (const s of kept) blocked.add(s);
+        for (const s of wanted) if (blocked.has(s)) return null;
+      }
+    }
     const got = planNightResting(sources,
                           [...wanted].sort((a, b) => a - b),
-                          [...blocked].sort((a, b) => a - b), previous);
+                          [...blocked].sort((a, b) => a - b), previous,
+                          split);
     if (got === null) return null;
     total *= got.cost;
     previous = {...previous, ...got.hits};
@@ -4459,12 +4523,17 @@ function explainOnce(world, state, outcome = null) {
   }
   const sorted = plainFailures(world, state, outcome || {});
   if (sorted === null) return null;
-  const {failures, ftInfos, invented, mustWork, vortoxOr, either} = sorted;
+  const {failures, ftInfos, invented, mustWork, vortoxOr, either,
+         daytime} = sorted;
+  const day = daytime || [{}, {}];
 
   // Every way the nights could have gone. Each brings its own demands on
   // who was impaired and who was working, so the plan is solved once per
-  // account and the cheapest wins.
-  const accounts = nightAccounts(world, state, failures, mustWork || {});
+  // account and the cheapest wins. The days' demands count as the
+  // night's, unless the night's own source died in it (Stelle 104).
+  const accounts = nightAccounts(
+    world, state, withTheDays(world, state, failures, day[0]),
+    withTheDays(world, state, mustWork || {}, day[1]));
   if (!accounts.length) return null;
 
   const settle = (readings, extraWorking = {}) => {
@@ -4495,7 +4564,7 @@ function explainOnce(world, state, outcome = null) {
         needed[day] = needed[day] || new Set();
         for (const s of seats) needed[day].add(s);
       }
-      const planned = impairmentPlan(world, state, wanted, needed);
+      const planned = impairmentPlan(world, state, wanted, needed, day);
       if (planned === null) continue;
       const got = planned * acc.cost * invented;
       if (best === null || got > best) best = got;
