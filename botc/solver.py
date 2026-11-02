@@ -8597,15 +8597,13 @@ def an_innkeeper_drunks_one_of_the_two_it_guards(world, state, night):
     if not _on_board(state, "Innkeeper"):
         return []
     phase = f"N{night}"
-    # Who held it at its turn too: one the Pit-Hag unmade later that
-    # night had already drunk somebody (Paket 5, seed 1363). One it made
-    # later is still offered, as before: dropping it lost a world (seed
-    # 1439 of the Plague Doctor's line), whose real cause is still open
-    # (Stelle 105).
-    holders = _holders(world, state, "Innkeeper", phase)
+    # Who held it at its turn: one the Pit-Hag unmade later that night
+    # had already drunk somebody (Paket 5, seed 1363), and one it made
+    # later waits for its next night (Lesart K). Seed 1439 of the Plague
+    # Doctor's line, which seemed to need the late one, was the
+    # simulator letting a poisoned seat act after it (Stelle 105).
     with _turn_of("Innkeeper", night):
-        holders = list(dict.fromkeys(
-            _holders(world, state, "Innkeeper", phase) + list(holders)))
+        holders = _holders(world, state, "Innkeeper", phase)
     return [source for seat in holders
             for source in _an_innkeepers_drunk(world, state, night, seat,
                                                _by(holders, seat))]
