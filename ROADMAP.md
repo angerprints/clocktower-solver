@@ -1761,7 +1761,7 @@ Der Bericht steht in `claude/stelle-101.md`. **Deine Antwort vom 02.11.2026:** E
 | Simulator | Ein erschaffener Philosoph (Grubenweib, Jäger, Barbier, Teeparty) wählt in seiner ersten möglichen Nacht und wacht dafür auf (Kammerzofe, Seed 171). |
 | Tor | `messung/tor_stelle_101.sh`, vier Zeilen: gleich wie auf main; 45 Partien mit spät wählendem Philosoph, alle behalten. |
 | Korpus | 1 gespielte Partie mit erschaffenem Philosophen spielt jetzt anders (`x-stelle-62-63-philosopher-made-on-night-one-229`). |
-| Tests | `tests/test_stelle_101.py`. SUITE_ROADMAP |
+| Tests | `tests/test_stelle_101.py`. Testsuite grün, 1.915 Tests in 77 Dateien (`test_js_sampling` einzeln, er riss im Doppellauf seine Zeitgrenze von 600 Sekunden). |
 
 ### Als Nächstes
 
