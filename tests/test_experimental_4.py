@@ -239,8 +239,10 @@ class TheOrganGrinder(SolverTest):
     def test_votes_on_the_board_need_it_drunk_which_is_free(self):
         voted = {1: {0, 1}}
         world, state = board(FOUR, self.roles(), votes=voted)
-        failures, _ft, _c, _w = S._plain_failures(world, state)
-        self.assertIn(5, failures.get(1, ()))
+        S._plain_failures(world, state)
+        # A day's demand, kept apart from the night's since Stelle 104.
+        day_failures, _day_working = state._daytime
+        self.assertIn(5, day_failures.get(1, ()))
         self.assertEqual(S.explanation_cost(world, state), 1.0)
 
     def test_not_both(self):

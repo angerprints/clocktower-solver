@@ -280,7 +280,10 @@ function* arrangements(n, k, taken = [], used = new Set()) {
  * else, and a seat a free source cannot avoid reaching makes a forbidden
  * seat impossible.
  */
-export function planNight(sources, required, forbidden, previous) {
+export function planNight(sources, required, forbidden, previous,
+                          day = null) {
+  if (day !== null && day !== undefined)
+    return planNightSplit(sources, required, forbidden, previous, ...day);
   const free = sources.filter(s => s.unavoidable());
   const paid = sources.filter(s => !s.unavoidable());
 
@@ -333,6 +336,60 @@ export function planNight(sources, required, forbidden, previous) {
   return best === null ? null : {cost: best, hits: bestHits};
 }
 
+/** `planNight` for a night in which a source's actor died (Stelle 104,
+ * 02.11.2026): its drunkenness or poison ended with it, so it covers the
+ * night's demands and none of the day's. See impairment.py. */
+function planNightSplit(sources, required, forbidden, previous,
+                        dayRequired, dayForbidden, dying) {
+  const lasts = source => !dying.includes(source);
+  const free = sources.filter(s => s.unavoidable());
+  const paid = sources.filter(s => !s.unavoidable());
+  const dayNeed = dayRequired instanceof Set ? dayRequired
+    : new Set(dayRequired);
+  const dayForbid = dayForbidden instanceof Set ? dayForbidden
+    : new Set(dayForbidden);
+
+  const byNight = new Set(), byDay = new Set();
+  for (const source of free)
+    for (const seat of source.seats) {
+      byNight.add(seat);
+      if (lasts(source)) byDay.add(seat);
+    }
+  const forbid = forbidden instanceof Set ? forbidden : new Set(forbidden);
+  for (const seat of byNight) if (forbid.has(seat)) return null;
+  for (const seat of byDay) if (dayForbid.has(seat)) return null;
+
+  const need = required instanceof Set ? required : new Set(required);
+  for (const seat of need) if (forbid.has(seat)) return null;
+  for (const seat of dayNeed) if (dayForbid.has(seat)) return null;
+
+  const covered = seat => (dayNeed.has(seat) ? byDay : byNight).has(seat);
+  const outstanding = [...need].filter(seat => !covered(seat));
+  if (!outstanding.length) return {cost: 1.0, hits: {}};
+
+  const slots = [];
+  for (const source of paid)
+    for (let i = 0; i < source.capacity; i++) slots.push(source);
+  if (outstanding.length > slots.length) return null;
+
+  let best = null, bestHits = null;
+  for (const arrangement of arrangements(slots.length, outstanding.length)) {
+    let cost = 1.0, ok = true;
+    const hits = {};
+    for (let i = 0; i < outstanding.length; i++) {
+      const seat = outstanding[i], source = slots[arrangement[i]];
+      if (!source.seats.has(seat) || forbid.has(seat)
+          || (dayNeed.has(seat) && !lasts(source))
+          || (dayForbid.has(seat) && lasts(source))) { ok = false; break; }
+      const same = previous[source.name] === seat;
+      cost *= source.price(seat, same);
+      hits[source.name] = seat;
+    }
+    if (ok && (best === null || cost > best)) { best = cost; bestHits = hits; }
+  }
+  return best === null ? null : {cost: best, hits: bestHits};
+}
+
 // The two that take an ability away outright (10.10.2026), and a
 // Philosopher's on whoever held what it took (13.10.2026). See
 // impairment.py.
@@ -354,9 +411,10 @@ export function silencedOut(sources) {
 
 /** `planNight`, and if nothing fits, the same night with one resting
  * silencer set aside and its actor impaired instead. See impairment.py. */
-export function planNightResting(sources, required, forbidden, previous) {
+export function planNightResting(sources, required, forbidden, previous,
+                                 day = null) {
   const working = silencedOut(sources);
-  let got = planNight(working, required, forbidden, previous);
+  let got = planNight(working, required, forbidden, previous, day);
   if (got !== null) return got;
   const forbid = forbidden instanceof Set ? forbidden : new Set(forbidden);
   for (const source of working) {
@@ -366,7 +424,7 @@ export function planNightResting(sources, required, forbidden, previous) {
     const rest = silencedOut(sources.filter(s => s !== source));
     const wanted = [...new Set([...required, source.actor])]
       .sort((a, b) => a - b);
-    got = planNight(rest, wanted, forbidden, previous);
+    got = planNight(rest, wanted, forbidden, previous, day);
     if (got !== null) return got;
   }
   return null;

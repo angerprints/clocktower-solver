@@ -6843,9 +6843,15 @@ def droisoned_at(d, night, by_day=False):
     # the ability, and a Mathematician asked after that is sober — the
     # solver, which sees no Poisoner that night, already said so
     # (07.10.2026).
+    #
+    # And killed later that night, it leaves its target sober for the day:
+    # an ability ends with its holder's death (table ruling, v3.1.4;
+    # Stelle 104, 02.11.2026, seed 1800 of the gate).
     if d.poisoned.get(night) is not None:
         by = getattr(d, "poisoned_by", {}).get(night)
-        if by is None or d.role_at(by, phase) == "Poisoner":
+        if (by is None or d.role_at(by, phase) == "Poisoner") \
+                and not (by_day and by is not None
+                         and by not in d.alive_at(f"D{night}")):
             out.add(d.poisoned[night])
     # The Storyteller's Poisoner and Widow, the Plague Doctor's gift
     # (28.10.2026): nothing stops them, and the Widow's lasts.
@@ -6936,7 +6942,8 @@ def droisoned_at(d, night, by_day=False):
     for seat, took in (getattr(d, "philosophies", None) or {}).items():
         if d.role_at(seat, phase) != "Philosopher":
             continue                      # no longer the one who took it
-        if seat not in living:
+        # Dead tonight, sober tomorrow (Stelle 104).
+        if seat not in (d.alive_at(f"D{night}") if by_day else living):
             continue
         for other in range(d.n):
             if other != seat and d.role_at(other, phase) == took:
@@ -6963,7 +6970,8 @@ def droisoned_at(d, night, by_day=False):
         # holder that Philosopher drunk (13.10.2026).
         for minstrel in range(d.n):
             if not _acts_as(d, minstrel, "Minstrel", phase) \
-                    or minstrel not in living \
+                    or minstrel not in (d.alive_at(f"D{night}") if by_day
+                                        else living) \
                     or minstrel not in d.alive_at(f"E{day}") \
                     or minstrel in d.died_on(f"D{day}") \
                     or _drunk_by_its_philosopher(d, minstrel, "Minstrel",
@@ -7054,8 +7062,10 @@ def droisoned_at(d, night, by_day=False):
     for since, holder, courtier in getattr(d, "courtier_drunks", ()):
         if not since <= night <= since + 2:
             continue
+        # Tomorrow as well when it died tonight (Stelle 104).
+        until = f"D{night}" if by_day else phase
         died = any(phase_index(f"N{since}") <= phase_index(at)
-                   < phase_index(phase) for at in d.deaths_of(courtier))
+                   < phase_index(until) for at in d.deaths_of(courtier))
         # The character is drunk, not the player: one who has become
         # somebody else since is sober (Stelle 70, Patrick, 22.10.2026).
         # And a Courtier that has become somebody else has no ability
@@ -7084,6 +7094,7 @@ def droisoned_at(d, night, by_day=False):
                  if d.role_at(p, phase) == "Xaan"), None)
     if xaan is not None and xaan not in out \
             and _has_its_ability(d, xaan, phase) \
+            and (not by_day or xaan in d.alive_at(f"D{night}")) \
             and night == sum(1 for r in d.roles
                              if TEAM[r] == "outsider"):
         silenced |= {p for p in range(d.n)
