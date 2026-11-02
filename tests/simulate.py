@@ -2363,6 +2363,11 @@ def _monk_guards(d, night, rng):
     if others:
         d.monk_guarded[night] = rng.choice(others)
         _chose(d, "Monk", night, monk, d.monk_guarded[night])
+        # A player choosing a player: the Goon answers, at the Monk's 230,
+        # before any Demon. It never did, so an Al-Hadikhia at 500 read as
+        # the first to choose it (Stelle 103, seed 2409). Drunk by it, the
+        # Monk guards nobody — `_protected` asks whether it is working.
+        _the_goon_answers(d, night, monk, d.monk_guarded[night])
 
 
 def _acrobat_may_fall(d, night, heard, rng):
