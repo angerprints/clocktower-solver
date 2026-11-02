@@ -1773,7 +1773,7 @@ Stand des Katalogs: 134 Einträge (nachgezählt am 29.10.2026; die Zahlen davor 
 
 Ein Charakter gilt als fertig, wenn er durch das Tor ist: Solver in Python und JavaScript, Simulator, Night-Walk, vierzig gemischte Partien (`messung/tor.py`) ohne Brett, das wegen seiner Zeilen unmöglich wird, und eintragbar auf der Website.
 
-**1b · Die Nachtreihenfolge erneuern** · *erledigt am 23.10.2026* mit Hutmacher Stufe 3 (vorgezogen, A Weg 1): das Nachtblatt des Herausgebers, wie es ist. Nichts mehr von Hand eingetragen außer den bewussten Ausnahmen in `_NOT_AS_IN_THE_SHEET`.
+**1b · Die Nachtreihenfolge erneuern** · *erledigt am 23.10.2026* mit Hutmacher Stufe 3 (vorgezogen, A Weg 1): das Nachtblatt des Herausgebers, wie es ist. Nichts mehr von Hand eingetragen außer den bewussten Ausnahmen in `_NOT_AS_IN_THE_SHEET`. *Gegengeprüft am 02.11.2026* mit deinem offiziellen Nachtblatt zum Skript „Alles“ (PDF, Seiten 11–17): Die Reihenfolge ist für jeden gemeinsamen Charakter identisch, und du hast sie samt den 8 Ausnahmen bestätigt. Abgelegt im Projekt als `claude/nachtreihenfolge.md`.
 
 **2 · Zwei kleine Stellen in Sects & Violets,** die nebenher gehen:
 - Wer früh in der Nacht handelt und in derselben Nacht vom Grubenweib verwandelt wird (offene Stelle 36): gebaut mit Hutmacher Stufe 3; offen bleiben die Stellen 80 und 81.
