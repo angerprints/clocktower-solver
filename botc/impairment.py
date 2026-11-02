@@ -319,7 +319,7 @@ def arrangements(sources, cap=64):
     return out
 
 
-def plan_night(sources, required, forbidden, previous):
+def plan_night(sources, required, forbidden, previous, day=None):
     """Could these sources have impaired exactly who the world needs?
 
     `required` must be impaired, `forbidden` must not be. Returns
@@ -329,7 +329,13 @@ def plan_night(sources, required, forbidden, previous):
     Free sources are applied first: a seat covered by one needs nothing
     else, and a seat a free source cannot avoid reaching makes a
     `forbidden` seat impossible.
+
+    `day`, when given, is (day_required, day_forbidden, dying) for a
+    night one of whose sources died in it — see `_plan_night_split`.
     """
+    if day is not None:
+        return _plan_night_split(sources, required, forbidden, previous,
+                                 *day)
     free = [s for s in sources if s.unavoidable()]
     paid = [s for s in sources if s not in free]
 
@@ -388,13 +394,80 @@ def plan_night(sources, required, forbidden, previous):
     return best, best_hits
 
 
+def _plan_night_split(sources, required, forbidden, previous,
+                      day_required, day_forbidden, dying):
+    """`plan_night` for a night in which a source's actor died.
+
+    "An ability always ends with death", and the drunkenness or poison it
+    gave with it (table ruling, v3.1.4, 03.10.2026). A night and the day
+    after it share one span in the plan, so a source whose actor died
+    that night still reached into the day — an Innkeeper killed in the
+    night that drunk the Tea Lady kept her drunk at the gallows, and the
+    neighbour she saved there threw the world out (Stelle 104, seed 2517).
+
+    `required` holds the night's demands and the day's together;
+    `day_required` and `day_forbidden` are the day's alone. A source in
+    `dying` worked only until its actor died: it may impair somebody the
+    night needs impaired and the day needs working, and it cannot be the
+    reason somebody was impaired by day.
+    """
+    def lasts(source):
+        return source not in dying
+
+    free = [s for s in sources if s.unavoidable()]
+    paid = [s for s in sources if s not in free]
+
+    by_night, by_day = set(), set()
+    for source in free:
+        by_night |= source.seats
+        if lasts(source):
+            by_day |= source.seats
+    if by_night & set(forbidden) or by_day & set(day_forbidden):
+        return None                       # something unavoidable reached them
+    if set(required) & set(forbidden) \
+            or set(day_required) & set(day_forbidden):
+        return None                       # asked to be working and not
+
+    def covered(seat):
+        return seat in (by_day if seat in day_required else by_night)
+
+    outstanding = [seat for seat in required if not covered(seat)]
+    if not outstanding:
+        return 1.0, {}
+
+    slots = []
+    for source in paid:
+        slots.extend([source] * source.capacity)
+    if len(outstanding) > len(slots):
+        return None
+
+    best, best_hits = None, None
+    for arrangement in permutations(range(len(slots)), len(outstanding)):
+        cost, hits, ok = 1.0, {}, True
+        for seat, slot in zip(outstanding, arrangement):
+            source = slots[slot]
+            if seat not in source.seats or seat in forbidden \
+                    or (seat in day_required and not lasts(source)) \
+                    or (seat in day_forbidden and lasts(source)):
+                ok = False
+                break
+            same = previous.get(source.name) == seat
+            cost *= source.price(seat, same)
+            hits[source.name] = seat
+        if ok and (best is None or cost > best):
+            best, best_hits = cost, hits
+    if best is None:
+        return None
+    return best, best_hits
+
+
 # Sources that rest while their actor is drunk or poisoned and are
 # otherwise unavoidable: the two silencers, and a Lleech's poison on its
 # host (11.10.2026).
 RESTING = ("Preacher", "Xaan", "Lleech", "Lleech, till the swap")
 
 
-def plan_night_resting(sources, required, forbidden, previous):
+def plan_night_resting(sources, required, forbidden, previous, day=None):
     """`plan_night`, and if nothing fits, the same night with one resting
     source set aside and its actor impaired instead.
 
@@ -405,7 +478,7 @@ def plan_night_resting(sources, required, forbidden, previous):
     source at a time, in the order they came.
     """
     working = silenced_out(sources)
-    got = plan_night(working, required, forbidden, previous)
+    got = plan_night(working, required, forbidden, previous, day)
     if got is not None:
         return got
     for source in working:
@@ -414,7 +487,7 @@ def plan_night_resting(sources, required, forbidden, previous):
             continue
         rest = silenced_out([s for s in sources if s is not source])
         wanted = sorted(set(required) | {source.actor})
-        got = plan_night(rest, wanted, forbidden, previous)
+        got = plan_night(rest, wanted, forbidden, previous, day)
         if got is not None:
             return got
     return None

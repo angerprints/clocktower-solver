@@ -6639,6 +6639,14 @@ def _plain_failures(world, state, outcome=None):
     # Lycanthrope) -> their sources. See below.
     faux_working = {}
     working = {}
+    # What the days alone ask, keyed like the nights they follow: who had
+    # to be impaired, who working, by daylight. Kept apart from the night
+    # because a source whose actor died in the night stopped there and
+    # does not reach the day (Stelle 104, 02.11.2026). `_explain` reads
+    # them here; the plan joins them to the night when nothing died.
+    day_failures = defaultdict(set)
+    day_working = {}
+    state._daytime = (day_failures, day_working)
     ft_infos = []
     invented = 1.0
     if outcome is None:
@@ -6656,7 +6664,7 @@ def _plain_failures(world, state, outcome=None):
         vortox = holding_now(world, state, "Vortox", f"D{day}")
         if vortox is None or vortox not in state.alive_set(f"D{day}"):
             continue
-        failures[day].add(vortox)
+        day_failures[day].add(vortox)
 
     # Two deaths that name a character nobody chose to reveal.
     #
@@ -6730,13 +6738,13 @@ def _plain_failures(world, state, outcome=None):
             if world.role_at(hanged, phase) == "EvilTwin" \
                     and not world.evil_at(hanged, phase) \
                     and world.evil_at(other, phase):
-                failures[day].add(hanged)
+                day_failures[day].add(hanged)
                 continue
             if world.role_at(other, phase) != "EvilTwin" \
                     or other not in state.alive_set(phase) \
                     or world.evil_at(hanged, phase):
                 continue
-            failures[day].add(other)
+            day_failures[day].add(other)
 
     # A Mastermind's extra day, if this story has one.
     #
@@ -6760,13 +6768,13 @@ def _plain_failures(world, state, outcome=None):
             if not storyteller_has(world, "Mastermind", change.phase):
                 return None, None, 1.0, None
         else:
-            working.setdefault(day, set()).add(mastermind)
+            day_working.setdefault(day, set()).add(mastermind)
         # Not when she is the one executed: a Scarlet Woman babysitting
         # Lil' Monsta (21.10.2026).
         if scarlet_woman_takes_over(world, state, change.phase) \
                 and scarlet_seat(world, state, change.phase) \
                 != change.seat:
-            failures[day].add(scarlet_seat(world, state, change.phase))
+            day_failures[day].add(scarlet_seat(world, state, change.phase))
 
     # The Summoner (21.10.2026): working when it made the Demon — unless a
     # Courtier or a Preacher took its ability, and the Storyteller made it
@@ -6862,14 +6870,14 @@ def _plain_failures(world, state, outcome=None):
             continue
         # And a Philosopher that took her (group 6, D, 14.10.2026).
         if _has_ability(world, state, seat, "Saint", f"D{day}"):
-            failures[day].add(sober_seat(world, state, seat, "Saint",
+            day_failures[day].add(sober_seat(world, state, seat, "Saint",
                                          f"D{day}"))
         # A Sailor cannot die, and that holds in daylight too — so a
         # working one walks away from its own execution. Somebody
         # executed and killed was not a working Sailor, which means
         # something had to have stopped it working.
         if _has_ability(world, state, seat, "Sailor", f"D{day}"):
-            failures[day].add(sober_seat(world, state, seat, "Sailor",
+            day_failures[day].add(sober_seat(world, state, seat, "Sailor",
                                          f"D{day}"))
         # And the same for a Tea Lady's neighbour: executed and dead, so
         # she was not working. The mirror of her saving one.
@@ -6879,7 +6887,7 @@ def _plain_failures(world, state, outcome=None):
                                             standing):
                 if not _beside_a_side_nobody_knows(
                         world, state, lady, f"D{day}", standing):
-                    failures[day].add(sober_seat(world, state, lady,
+                    day_failures[day].add(sober_seat(world, state, lady,
                                                  "TeaLady", f"D{day}"))
 
     # A Vizier cannot die during the day — by the gallows or anything
@@ -6893,7 +6901,7 @@ def _plain_failures(world, state, outcome=None):
                     and world.role_at(seat, phase) == "Vizier" \
                     and not (_executed(state, int(phase[1:]), seat)
                              and babysitter_at(world, phase) == seat):
-                failures[int(phase[1:])].add(seat)
+                day_failures[int(phase[1:])].add(seat)
 
     # A Lleech dies when its host does and not before (11.10.2026). The
     # host is this telling's hidden choice. Dying with it, the Lleech was
@@ -6942,7 +6950,7 @@ def _plain_failures(world, state, outcome=None):
             phase = f"D{day}"
             grinder = world.find_at("OrganGrinder", phase)
             if grinder is not None and grinder in state.alive_set(phase):
-                failures[day].add(grinder)
+                day_failures[day].add(grinder)
 
     # Somebody standing again needs a reason, and the reason has to have
     # been working. Two characters do it.
@@ -7033,7 +7041,7 @@ def _plain_failures(world, state, outcome=None):
         # drunk. And it *replaced* whatever else had to be working that
         # day rather than adding to it.
         if len(survivors) == 1:
-            working.setdefault(day, set()).update(survivors)
+            day_working.setdefault(day, set()).update(survivors)
 
     if _a_zealot_kept_its_hand_down(world, state):
         return None, None, 1.0, None      # a Zealot that did not vote
@@ -8623,7 +8631,7 @@ def _an_innkeepers_drunk(world, state, night, seat, by):
                               actor=me)]
 
 
-def _impairment_plan(world, state, failures, forbidden):
+def _impairment_plan(world, state, failures, forbidden, day=None):
     """Who had to be impaired each night, and what that cost.
 
     Returns ({night: {source: seat}}, cost) or None if no arrangement of
@@ -8633,17 +8641,26 @@ def _impairment_plan(world, state, failures, forbidden):
     false, an ability that did not fire. `forbidden` is who must not have
     been: a Monk that is the only explanation for a quiet night was
     working, so nothing can have stopped it.
+
+    `day` is (impaired, working) of the days alone, keyed like the nights
+    they follow (Stelle 104): see `_plan_as_given`.
     """
+    day_failures, day_working = day or ({}, {})
     # The Storyteller's own ability (`STORYTELLER`, the Plague Doctor's
     # gift: a Boffin's for the Demon, Pestdoktor Stufe 2) cannot be
     # stopped: a world that needs it to have failed has none, and needing
     # it to work asks nothing (29.10.2026).
-    if any(STORYTELLER in seats for seats in failures.values()):
+    if any(STORYTELLER in seats for seats in failures.values()) \
+            or any(STORYTELLER in seats for seats in day_failures.values()):
         return None
     if any(STORYTELLER in seats for seats in forbidden.values()):
         forbidden = {night: {s for s in seats if s is not STORYTELLER}
                      for night, seats in forbidden.items()}
-    got = _plan_as_given(world, state, failures, forbidden)
+    if any(STORYTELLER in seats for seats in day_working.values()):
+        day_working = {night: {s for s in seats if s is not STORYTELLER}
+                       for night, seats in day_working.items()}
+    day = (day_failures, day_working)
+    got = _plan_as_given(world, state, failures, forbidden, day=day)
     if got is not None:
         return got
     # A Courtier that was itself drunk or poisoned when it chose made
@@ -8671,7 +8688,7 @@ def _impairment_plan(world, state, failures, forbidden):
         # made it drunk (13.10.2026).
         mine = (holder, info.role) if source == "Philosopher" else None
         got = _plan_as_given(world, state, again, forbidden,
-                             without=(source,), mine=mine)
+                             without=(source,), mine=mine, day=day)
         if got is not None:
             return got
     # And a Preacher that was drunk or poisoned when it chose silenced
@@ -8685,19 +8702,52 @@ def _impairment_plan(world, state, failures, forbidden):
         again = {night: set(seats) for night, seats in failures.items()}
         again.setdefault(info.night, set()).add(info.player)
         got = _plan_as_given(world, state, again, forbidden,
-                             without=("Preacher",))
+                             without=("Preacher",), day=day)
         if got is not None:
             return got
     return None
 
 
-def _plan_as_given(world, state, failures, forbidden, without=(), mine=None):
+def _dying_sources(state, night, sources):
+    """Tonight's sources whose actor died tonight (Stelle 104)."""
+    died = _died_on(state, night)
+    if not died:
+        return []
+    return [s for s in sources if s.actor is not None and s.actor in died]
+
+
+def _with_the_days(world, state, nights, days):
+    """The night demands with the day's after each joined in — except
+    after a night in which a source's actor died, whose day the plan
+    settles on its own (`_plan_as_given`)."""
+    if not days:
+        return nights
+    out = {night: set(seats) for night, seats in nights.items()}
+    for day, seats in days.items():
+        if seats and not _dying_sources(
+                state, day, impairment.sources_on(world, state, day)):
+            out.setdefault(day, set()).update(seats)
+    return out
+
+
+def _plan_as_given(world, state, failures, forbidden, without=(), mine=None,
+                   day=None):
+    """The plan, night by night, for these demands.
+
+    `day` is (impaired, working) of the days alone. A night and the day
+    after it are one span, and the day's demands join the night's —
+    unless a source's actor died in that night: its drunkenness or poison
+    ended there, so it may cover the night and not the day (Stelle 104,
+    02.11.2026, the table's ruling of v3.1.4).
+    """
+    day_failures, day_working = day or ({}, {})
     plan, total = {}, 1.0
     previous = {}
-    nights = set(failures) | set(forbidden)
+    nights = set(failures) | set(forbidden) | set(day_failures) \
+        | set(day_working)
     for night in sorted(nights):
-        wanted = failures.get(night, set())
-        blocked = forbidden.get(night, set())
+        wanted = set(failures.get(night, ()))
+        blocked = set(forbidden.get(night, ()))
         if wanted & blocked:
             return None                   # asked to be both at once
         sources = impairment.sources_on(world, state, night)
@@ -8706,8 +8756,21 @@ def _plan_as_given(world, state, failures, forbidden, without=(), mine=None):
         if mine is not None:
             sources = [s for s in sources
                        if (s.actor, s.name) != mine]
+        by_day = set(day_failures.get(night, ()))
+        kept = set(day_working.get(night, ()))
+        split = None
+        if by_day or kept:
+            dying = _dying_sources(state, night, sources)
+            if dying:
+                split = (by_day, kept, dying)
+                wanted |= by_day
+            else:
+                wanted |= by_day
+                blocked |= kept
+                if wanted & blocked:
+                    return None           # asked to be both at once
         got = impairment.plan_night_resting(
-            sources, sorted(wanted), sorted(blocked), previous)
+            sources, sorted(wanted), sorted(blocked), previous, split)
         if got is None:
             return None
         cost, hits = got
@@ -9620,11 +9683,16 @@ def _explain_once(world, state, outcome=None):
     if failures is None:
         return None
     vortox_or = getattr(state, "_vortox_or", None) or {}
+    daytime = getattr(state, "_daytime", None) or ({}, {})
 
     # Every way the nights could have gone. Each brings its own demands
     # on who was impaired and who was working, so the impairment plan is
-    # solved once per account and the cheapest wins.
-    accounts = _night_accounts(world, state, failures, must_work)
+    # solved once per account and the cheapest wins. The days' demands
+    # count against them as the night's do, unless the night's own
+    # source died in it (Stelle 104) — then the plan decides.
+    accounts = _night_accounts(
+        world, state, _with_the_days(world, state, failures, daytime[0]),
+        _with_the_days(world, state, must_work or {}, daytime[1]))
     if not accounts:
         return None
 
@@ -9692,7 +9760,8 @@ def _explain_once(world, state, outcome=None):
                 needed.setdefault(day, set()).update(seats)
             for day, seats in (extra_working or {}).items():
                 needed.setdefault(day, set()).update(seats)
-            planned = _impairment_plan(world, state, wanted, needed)
+            planned = _impairment_plan(world, state, wanted, needed,
+                                       day=daytime)
             if planned is None:
                 continue
             got = planned[1] * night_cost * invented_factor
