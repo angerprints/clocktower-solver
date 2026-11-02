@@ -3439,6 +3439,25 @@ def _preached(d, night, phase=None, by_day=False):
             and TEAM[d.role_at(target, phase)] == "minion"}
 
 
+def _a_made_philosopher_wakes(d, seat, night):
+    """A seat made the Philosopher, not dealt it, that can choose tonight:
+    made on an earlier night, or tonight before the Philosopher's place
+    (Stelle 101)."""
+    from botc.catalogue import CHARACTERS as _C
+    from botc.info import phase_index
+    here = phase_index(f"N{night}")
+    made = [when for when, who, what in d.changes
+            if who == seat and what == "Philosopher"]
+    if not made:
+        return False
+    if any(phase_index(when) < here for when in made):
+        return True
+    at = getattr(d, "made_at", {}).get((night, seat))
+    own = _C["Philosopher"].first_night if night == 1 \
+        else _C["Philosopher"].other_night
+    return at is not None and own and at < own
+
+
 def _made_after_its_place(d, seat, night):
     """Made tonight by the Huntsman, after its own place in the night?
 
@@ -6131,6 +6150,11 @@ def _woke_itself(d, p, night, shown=False, as_role=None):
     # character would — settled at the table, and what the night
     # order above has done since 29.09. Here it fell through to
     # "once a game, so not tonight" and never woke again.
+    # And it woke on the night it chose, the first or a later one for one
+    # made later (Stelle 101, seed 171).
+    if what == "Philosopher" and as_role is None and night > 1 \
+            and getattr(d, "phil_night", {}).get(p) == night:
+        return True
     if what == "Philosopher" and _phil(d, p, f"N{night}") and night > 1:
         what = _phil(d, p, f"N{night}")
         # Took the Trunkenbold: the Townsfolk it was shown. Took the
@@ -7969,7 +7993,12 @@ def _for_role(d, seat, role, night, rng):
             _C["PitHag"].other_night
         return PitHagChoice(night, seat, target=target, role=became)
 
-    if role == "Philosopher" and night == 1 and seat not in d.philosophies \
+    # And one made later — by the Pit-Hag, the Huntsman, the Barber, a tea
+    # party — on its first night it can (Stelle 101, Patrick 02.11.2026:
+    # "darf in der nächsten Nacht aktiv werden"): it is near the front of
+    # the night, so one made at the Pit-Hag's 280 chooses the night after.
+    if role == "Philosopher" and seat not in d.philosophies \
+            and (night == 1 or _a_made_philosopher_wakes(d, seat, night)) \
             and not _made_after_its_place(d, seat, night):
         # It takes a good character's ability, once a game. Not a change
         # of character — it stays the Philosopher and works two at once —
@@ -7981,6 +8010,9 @@ def _for_role(d, seat, role, night, rng):
             return None
         took = rng.choice(pool)
         d.philosophies[seat] = took
+        # The night it chose, when it woke to (Stelle 101): a made one
+        # chooses after the first night, and a Chambermaid counts it.
+        d.__dict__.setdefault("phil_night", {})[seat] = night
         # The Lycanthrope's "1 good player registers as evil" comes with
         # it, where nobody dealt one already chose (13.10.2026).
         # The Pixie starts knowing an in-play Townsfolk from the night of
