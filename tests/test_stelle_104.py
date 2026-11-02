@@ -61,6 +61,28 @@ class TheInnkeeperDiesInTheNight(SolverTest):
         self.assertIsNotNone(S.explanation_cost(deal.world(), st))
 
 
+class ThePoisonerDiesInTheNight(SolverTest):
+    """The simulator kept a Poisoner's poison through the day after the
+    Demon killed it (seed 1800 of the gate line Innkeeper, Poisoner, Tea
+    Lady, Sailor, Saint): the Tea Lady it poisoned in night 2 stood by
+    while her neighbour, the Oracle, died at the gallows. The same rule
+    now holds there for the Courtier, the Philosopher, the Xaan and the
+    Minstrel too."""
+
+    def test_the_tea_lady_is_sober_by_day(self):
+        deal, st = game(1800, ("Innkeeper", "Poisoner", "TeaLady", "Sailor",
+                               "Saint"))
+        self.assertEqual((deal.roles[4], deal.roles[5]),
+                         ("Poisoner", "TeaLady"))
+        self.assertEqual(deal.poisoned_by.get(2), 4)
+        self.assertEqual(deal.poisoned.get(2), 5)
+        self.assertIn("N2", st.died_at(4))
+        # The Oracle beside her is executed on day 2 and walks away.
+        self.assertEqual(st.executions.get(2), 2)
+        self.assertIsNone(st.execution_death(2))
+        self.assertIsNotNone(S.explanation_cost(deal.world(), st))
+
+
 # One Innkeeper (actor 0) and one Poisoner (actor 5) on a night.
 INN = Source("Innkeeper", frozenset({1, 6}), capacity=1, cost=0.5,
              repeat_cost=0.5, actor=0)
