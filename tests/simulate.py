@@ -2359,9 +2359,14 @@ def _monk_guards(d, night, rng):
     phase = f"N{night}"
     # The first working one: the holder, or a Philosopher that took it
     # while the holder is drunk (13.10.2026).
-    monk = next((p for p in _holders(d, "Monk", phase)
-                 if p in d.alive_at(phase)
-                 and d.working(_sober(d, p, "Monk", phase), night)), None)
+    awake = [p for p in _holders(d, "Monk", phase) if p in d.alive_at(phase)]
+    monk = next((p for p in awake
+                 if d.working(_sober(d, p, "Monk", phase), night)), None)
+    # A drunk or poisoned Monk still wakes and chooses, and guards nobody;
+    # choosing the Goon first, the Goon turns to its side (Stelle 112,
+    # Patrick 02.11.2026). It never chose, so the Goon never answered.
+    if monk is None and awake:
+        monk = awake[0]
     if monk is None:
         return
     others = [p for p in d.alive_at(phase) if p != monk]
