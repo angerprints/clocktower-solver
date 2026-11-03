@@ -1539,12 +1539,6 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
 
             _acrobat_may_fall(d, night, heard, rng)
 
-            # A Farmer that fell in the night hands the character on.
-            # Done after every death is recorded, because it fires on
-            # *any* night death — a Gossip kill, an Assassin, a Pukka's
-            # poison — not only the Demon's.
-            _farmer_hands_it_on(d, night, rng)
-
             # A Barber that died today lets the Demon swap two players
             # tonight — characters only, so a swapped player keeps their
             # own side and a good seat can end up holding a Minion's
@@ -1560,6 +1554,17 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # The Huntsman at 45, after the Barber: a Damsel it finds is a
             # Townsfolk not in play before anybody reads (10.10.2026).
             heard += _huntsman_hunts(d, night, rng)
+
+            # A Farmer that fell in the night hands the character on.
+            # Done after every death is recorded, because it fires on
+            # *any* night death — a Gossip kill, an Assassin, a Pukka's
+            # poison — not only the Demon's. And at its own place, 690 on
+            # the night sheet: after the Barber's swap at 590 and the
+            # Huntsman at 660, so the heir is chosen from the board those
+            # left (Stelle 106, 03.11.2026). It came before the Barber,
+            # and a swap could hand the fresh heir a character the dawn
+            # then overwrote (seed 1931).
+            _farmer_hands_it_on(d, night, rng)
 
         # A Lleech whose host died tonight dies with it — or tonight, if
         # it is working again after its host went while it was not.
@@ -3045,14 +3050,9 @@ def _barber_swap(d, night, rng):
     # "Not another Demon": the second one is left where it is (Hatter
     # stage 2).
     living = [p for p in living if p != d.second_demon(phase)]
-    # Nor a Farmer's heir made tonight. It is the Farmer from its
-    # predecessor's death on, but both here and in the solver the change
-    # is stamped at dawn, after this swap, so the swap would hand it a
-    # character the dawn then overwrites (Stelle 5, seed 1931; the
-    # solver's side is open as Stelle 106).
-    fresh = {who for when, who, what in d.changes
-             if when == f"D{night}" and what == "Farmer"}
-    living = [p for p in living if p not in fresh]
+    # A Farmer's heir is not made yet: the Farmer's place, 690, comes
+    # after this one (Stelle 106). It was kept out of the swap while the
+    # heir was made first (Stelle 5, seed 1931).
     if len(living) < 2:
         return []
     minions = [p for p in living if TEAM[d.role_at(p, phase)] == "minion"]
