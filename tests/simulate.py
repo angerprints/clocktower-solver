@@ -6854,25 +6854,7 @@ def honest_info(d, night, rng):
     return out
 
 
-def _xaans_night(d, night, seat, out, by_day=False):
-    """Is this a Townsfolk the Xaan poisons tonight — its night X, the
-    Xaan alive and working (not in `out`)? The same test as the Xaan's
-    below, asked early for the Innkeeper and the Sailor."""
-    phase = f"N{night}"
-    if TEAM[d.role_at(seat, phase)] != "townsfolk":
-        return False
-    if night != sum(1 for r in d.roles if TEAM[r] == "outsider"):
-        return False
-    xaan = next((p for p in range(d.n)
-                 if d.role_at(p, phase) == "Xaan"), None)
-    if xaan is not None and xaan not in out \
-            and _has_its_ability(d, xaan, phase) \
-            and (not by_day or xaan in d.alive_at(f"D{night}")):
-        return True
-    return _st_has(d, "Xaan", before=phase)
-
-
-def droisoned_at(d, night, by_day=False):
+def droisoned_at(d, night, by_day=False, _without_their_drunks=False):
     """Everybody whose ability is not working tonight, by any cause.
 
     Not just the Poisoner. Sects & Violets droisons four other ways and
@@ -6890,6 +6872,16 @@ def droisoned_at(d, night, by_day=False):
     phase = f"N{night}"
     living = d.alive_at(phase)
     out = set()
+    # Everybody droisoned by everything but the Innkeeper's and the
+    # Sailor's drunks, asked first where either chose tonight: whoever is
+    # in it was droisoned before either acted, and drunks nobody (Stelle
+    # 114). Only the drunks themselves are left out, not what rests on
+    # them.
+    known = frozenset()
+    if not _without_their_drunks and (_choices(d, "InnkeeperDrunk", night)
+                                      or _choices(d, "SailorDrunk", night)):
+        known = frozenset(droisoned_at(d, night, by_day,
+                                       _without_their_drunks=True))
 
     # Handed the wrong token: wrong every night of the game.
     for p in range(d.n):
@@ -6979,6 +6971,8 @@ def droisoned_at(d, night, by_day=False):
     # (13.10.2026).
     for role, key in (("Innkeeper", "InnkeeperDrunk"),
                       ("Sailor", "SailorDrunk")):
+        if _without_their_drunks:
+            break
         for chooser, got in _choices(d, key, night).items():
             holder = _answering(d, chooser, role, phase)
             # Killed later that night, it leaves its drunk sober for the
@@ -6987,12 +6981,14 @@ def droisoned_at(d, night, by_day=False):
             if by_day and holder is not None \
                     and d.deaths.get(holder) == phase:
                 continue
-            # Nor one the Xaan poisoned tonight, which is added further
-            # down: a poisoned Innkeeper or Sailor drunks nobody (Stelle
-            # 114, seeds 2320 and 2509).
+            # Nor one droisoned by what is added further down — the
+            # Xaan's night, a Lleech's host, a Widow's poison (`known`): a
+            # poisoned Innkeeper or Sailor drunks nobody (Stelle 114,
+            # seeds 2320, 2509 and 254). A Sailor that drunk itself still
+            # did.
             if holder is not None and holder in living \
                     and holder not in out \
-                    and not _xaans_night(d, night, holder, out, by_day) \
+                    and (holder == got or holder not in known) \
                     and not _drunk_by_its_philosopher(d, holder, role,
                                                       phase):
                 out.add(got)
