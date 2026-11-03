@@ -1,7 +1,7 @@
 #!/bin/bash
 # The gate for Stelle 114 (03.11.2026): an Innkeeper or a Sailor the Xaan
 # poisons on its night drunks nobody. The line of Stelle 104 where the two
-# seeds were lost, and two with the Xaan asked for.
+# seeds were lost, two with the Xaan asked for, and the line of Stelle 115.
 #   bash messung/tor_stelle_114.sh OUTDIR
 cd "$(dirname "$0")/.."
 OUT=$1
@@ -14,3 +14,5 @@ line() {
 line torIP 4 0 Innkeeper Poisoner TeaLady Sailor Saint
 line torXI 4 0 Xaan Innkeeper Damsel
 line torXS 4 0 Xaan Sailor TeaLady
+# Stelle 115: the line Innkeeper, Pit-Hag, No Dashii of Stelle 105.
+line torIH 4 0 Innkeeper PitHag NoDashii
