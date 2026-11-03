@@ -311,6 +311,10 @@ export function possibleTimelines(world, state, cap = 128) {
   // (Stelle 5, seed 1931). See solver.py.
   if (barberOnBoard(state) && onBoard(state, "Farmer"))
     cap *= Math.max(1, aFarmerHandsItOn(world, state).length);
+  // And for every swap of a Barber the Al-Hadikhia raised and killed
+  // again (Stelle 107). See solver.py.
+  if (barberOnBoard(state) && barberRaisedAndFell(world, state).length)
+    cap = Math.max(cap, barberRule(world, state).length);
   // Counted in this world, not on the script. See solver.py.
   if (moversIn(world, state) < 2) return allNightsAtOnce(world, state, cap);
   const last = Math.max(1, parseInt(state.finalPhase().slice(1), 10));
@@ -504,6 +508,9 @@ function nightsItActs(rule, state) {
             const k = parseInt(p.slice(1), 10);
             out.add(p[0].toUpperCase() !== "N" ? k + 1 : k);
           }
+      // And a night the Al-Hadikhia chose (Stelle 107). See solver.py.
+      for (const info of state.infos)
+        if (info.type === "AlHadikhiaChose") out.add(info.night);
       return out;
     }
     case "aPitHagMakesSomebodyElse": return rows("PitHag", "role");
@@ -674,44 +681,111 @@ function barberOffers(world, state) {
     for (const phase of state.diedAt(seat))
       if (fallsAs(world, state, seat, "Barber", phase))
         deaths.push([phase, !claimed.has(seat)]);
-  if (!deaths.length) return [[[], 1.0]];
+  // And a dead Barber the Al-Hadikhia raised and killed again, asked of
+  // each story's board (Stelle 107). See solver.py.
+  const raised = inBag(state, "AlHadikhia")
+    ? [...new Set(state.infos.filter(i => i.type === "AlHadikhiaChose"
+                                         && i.night >= 2)
+                              .map(i => `N${i.night}`))]
+    : [];
+  if (!deaths.length && !raised.length) return [[[], 1.0]];
 
-  const stories = [[[], 1.0]];
+  // One swap for each Barber's death, night after night: a story that
+  // swapped is told on with the Demon and its Minion, or a pair the
+  // night's rows name (Stelle 107). See solver.py.
+  const byNight = new Map();
   for (const [phase, hidden] of deaths) {
     const night = barberNight(phase);
     if (phaseIndex(night) > phaseIndex(state.finalPhase())) continue;
-    const demons = world.demonsAt(night);
-    // "Not another Demon": a seat still holding a Demon's character that
-    // is not the Demon now is never chosen (Stelle 53, Weg 1). See solver.py.
-    const others = new Set();
-    for (let s = 0; s < state.nPlayers; s++)
-      if (!demons.includes(s) && TEAM[world.roleAt(s, night)] === "demon")
-        others.add(s);
-    for (let first = 0; first < state.nPlayers; first++)
-      for (let second = first + 1; second < state.nPlayers; second++) {
-        if (others.has(first) || others.has(second)) continue;
-        const a = world.roleAt(first, night), b = world.roleAt(second, night);
-        if (a === b) continue;
-        // Sides written out: a swap moves characters, never sides.
-        const sideA = world.evilAt(first, night) ? "evil" : "good";
-        const sideB = world.evilAt(second, night) ? "evil" : "good";
-        // The Demon with one of its own Minions costs a world nothing;
-        // any other pair is priced as a deliberate play (table habit).
-        const ours = (demons.includes(first) && TEAM[b] === "minion") ||
-                     (demons.includes(second) && TEAM[a] === "minion");
-        if (hidden && !ours) continue;
-        const pair = [change(night, first, b, sideA),
-                      change(night, second, a, sideB)];
-        for (const c of pair)
-          Object.defineProperty(c, "barber", {value: ours ? "ours" : "other"});
-        stories.push([pair, ours ? 1.0 : BARBER_SWAP_PENALTY]);
-      }
+    byNight.set(night, (byNight.has(night) ? byNight.get(night) : true) && hidden);
+  }
+  const nights = [...new Set([...byNight.keys(), ...raised])]
+    .sort((x, y) => phaseIndex(x) - phaseIndex(y));
+  let stories = [[[], 1.0]];
+  for (const night of nights) {
+    if (phaseIndex(night) > phaseIndex(state.finalPhase())) continue;
+    const grown = [];
+    for (const [told, cost] of stories) {
+      const view = told.length ? new Timeline(world, told) : world;
+      let hidden = byNight.has(night) ? byNight.get(night) : null;
+      for (const [seat] of barberRaisedAndFell(view, state, night))
+        hidden = (hidden === null ? true : hidden) && !claimed.has(seat);
+      if (hidden === null) continue;
+      for (const [pair, price] of barberPairs(view, state, night, hidden,
+                                              told.length > 0))
+        grown.push([told.concat(pair), cost * price]);
+    }
+    stories = stories.concat(grown);
   }
   // The usual swap first: stories are cut at a cap, and in pair order a
   // Demon and Minion at high seats never reached the search (Stelle 5,
-  // seed 2799). Stable, so the pairs keep their order within each kind.
-  const usual = stories.filter(s => s[1] >= 1.0);
-  return usual.concat(stories.filter(s => s[1] < 1.0));
+  // seed 2799). Stable, by price: two deliberate swaps after one
+  // (Stelle 107).
+  return stories.map((s, i) => [s, i])
+    .sort((x, y) => (y[0][1] - x[0][1]) || (x[1] - y[1]))
+    .map(([s]) => s);
+}
+
+/** (seat, night) for a dead Barber the Al-Hadikhia chose, that night or
+ * every night (Stelle 107). See solver.py. */
+export function barberRaisedAndFell(world, state, night = null) {
+  if (!inBag(state, "AlHadikhia")) return [];
+  const out = [];
+  for (const info of state.infos) {
+    if (info.type !== "AlHadikhiaChose" || info.night < 2) continue;
+    const phase = `N${info.night}`;
+    if (night !== null && phase !== night) continue;
+    const alive = state.aliveSet(phase);
+    for (const seat of [...new Set(info.chosen())].sort((a, b) => a - b)) {
+      if (alive.has(seat) || out.some(([s, p]) => s === seat && p === phase))
+        continue;
+      if (fallsAs(world, state, seat, "Barber", phase)) out.push([seat, phase]);
+    }
+  }
+  return out;
+}
+
+// Each swap the Demon could make tonight, with its price. `again`: the
+// story swapped before (Stelle 107). See solver.py.
+function barberPairs(world, state, night, hidden, again) {
+  const out = [];
+  const demons = world.demonsAt(night);
+  // "Not another Demon": a seat still holding a Demon's character that
+  // is not the Demon now is never chosen (Stelle 53, Weg 1). See solver.py.
+  const others = new Set();
+  for (let s = 0; s < state.nPlayers; s++)
+    if (!demons.includes(s) && TEAM[world.roleAt(s, night)] === "demon")
+      others.add(s);
+  for (let first = 0; first < state.nPlayers; first++)
+    for (let second = first + 1; second < state.nPlayers; second++) {
+      if (others.has(first) || others.has(second)) continue;
+      const a = world.roleAt(first, night), b = world.roleAt(second, night);
+      if (a === b) continue;
+      // Sides written out: a swap moves characters, never sides.
+      const sideA = world.evilAt(first, night) ? "evil" : "good";
+      const sideB = world.evilAt(second, night) ? "evil" : "good";
+      // The Demon with one of its own Minions costs a world nothing;
+      // any other pair is priced as a deliberate play (table habit).
+      const ours = (demons.includes(first) && TEAM[b] === "minion") ||
+                   (demons.includes(second) && TEAM[a] === "minion");
+      if (hidden && !ours) continue;
+      if (again && !ours && !swapWritten(state, night, first, b, second, a))
+        continue;
+      const pair = [change(night, first, b, sideA),
+                    change(night, second, a, sideB)];
+      for (const c of pair)
+        Object.defineProperty(c, "barber", {value: ours ? "ours" : "other"});
+      out.push([pair, ours ? 1.0 : BARBER_SWAP_PENALTY]);
+    }
+  return out;
+}
+
+// Does a row of that night say one of the two became what the swap gave it?
+function swapWritten(state, night, first, getsFirst, second, getsSecond) {
+  const n = Number(night.slice(1));
+  return state.infos.some(i => i.type === "Became" && i.night === n
+    && ((Number(i.player) === first && i.role === getsFirst)
+        || (Number(i.player) === second && i.role === getsSecond)));
 }
 
 // Demons that hand the star on when they kill themselves. The Imp is the
@@ -5099,7 +5173,8 @@ function barberShare(world, changes, state) {
   const counts = new Map();
   // Asked at the Barber's turn, as the stories were told. See solver.py.
   for (const [extra] of offersOf(barberRule, view, state)) {
-    if (!extra.length) continue;
+    // One swap each (Stelle 107). See solver.py.
+    if (extra.length !== 2) continue;
     const got = counts.get(extra[0].phase) || [0, 0];
     got[extra[0].barber === "ours" ? 0 : 1] += 1;
     counts.set(extra[0].phase, got);
