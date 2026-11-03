@@ -990,6 +990,19 @@ function aDemonLeft(view, state, ends) {
   return true;
 }
 
+/** The phase this seat stopped being a Demon, after `after` and before
+ * the Pit-Hag made it the second one, or null. See solver.py
+ * `_left_the_line`. */
+function leftTheLine(view, holder, after, beside) {
+  const until = phaseIndex(beside.phase);
+  for (const c of view.changes || []) {
+    if (c.seat === holder && c.role != null && TEAM[c.role] !== "demon"
+        && after < phaseIndex(c.phase) && phaseIndex(c.phase) < until)
+      return c.phase;
+  }
+  return null;
+}
+
 /** One Demon's line: [changes, ends] for each way. See solver.py. */
 function demonLine(world, state, base, start, since, line, beside, cap) {
   const found = [];
@@ -1024,8 +1037,14 @@ function demonLine(world, state, base, start, since, line, beside, cap) {
     const phase = phases.length ? phases[0] : null;
     // Moved sideways before it died, or before the board ends: follow the
     // star to whoever holds it now. See solver.py.
-    const check = phase !== null ? phase
+    let check = phase !== null ? phase
       : (horizon !== null ? `D${horizon}` : state.finalPhase());
+    // Out and back in (Stelle 111, seed 729): swapped off by a Snake
+    // Charmer, made the second Demon by a Pit-Hag later. See solver.py.
+    if (line === 0 && beside && beside.seat === holder) {
+      const left = leftTheLine(view, holder, after, beside);
+      if (left !== null) check = left;
+    }
     {
       const was = view.roleAt(holder, check);
       if (was && TEAM[was] !== "demon") {

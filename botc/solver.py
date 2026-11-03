@@ -4010,6 +4010,18 @@ def _scarlet_woman_stays(view, state, phase, fallen):
                for d in view.demons_at(phase))
 
 
+def _left_the_line(view, holder, after, beside):
+    """The phase this seat stopped being a Demon, after `after` and
+    before the Pit-Hag made it the second one (`beside`), or None."""
+    until = phase_index(beside.phase)
+    for c in getattr(view, "changes", ()):
+        if c.seat == holder and c.role is not None \
+                and TEAM.get(c.role) != "demon" \
+                and after < phase_index(c.phase) < until:
+            return c.phase
+    return None
+
+
 def _a_demon_left(view, state, ends):
     """Every Demon that fell with nobody to take over, while the game went
     on, left another standing (Hatter stage 2, 25.10.2026)."""
@@ -4068,6 +4080,14 @@ def _demon_line(world, state, base, start, since, line, beside, cap):
         # world was impossible (29.09.2026). Follow the star instead.
         check = phase if phase is not None else (
             f"D{horizon}" if horizon is not None else state.final_phase())
+        # Out and back in (Stelle 111, seed 729): a Snake Charmer swap
+        # took the star off this seat, and a Pit-Hag later made the good
+        # Snake Charmer left there the second Demon. That Demon is the
+        # other line's; this one follows its star from the night it left.
+        if line == 0 and beside is not None and beside.seat == holder:
+            left = _left_the_line(view, holder, after, beside)
+            if left is not None:
+                check = left
         if view.role_at(holder, check) is not None \
                 and TEAM[view.role_at(holder, check)] != "demon":
             # Where a tea party took the Demon's character, the star went
