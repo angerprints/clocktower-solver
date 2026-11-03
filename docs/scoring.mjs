@@ -4412,13 +4412,15 @@ function impairmentPlan(world, state, failures, forbidden, day = null) {
 }
 
 /** Tonight's sources whose actor died tonight (Stelle 104). */
-function dyingSources(state, night, sources) {
+export function dyingSources(state, night, sources) {
   const phase = `N${night}`, died = new Set();
   for (const seat of Object.keys(state.deaths || {}))
     if (state.diedAt(+seat).includes(phase)) died.add(+seat);
   if (!died.size) return [];
-  return sources.filter(s => s.actor !== null && s.actor !== undefined
-    && died.has(s.actor));
+  // Its actor, or its holder (Stelle 113). See solver.py `_whose`.
+  const whose = s => (s.actor !== null && s.actor !== undefined
+    ? s.actor : (s.holder ?? null));
+  return sources.filter(s => whose(s) !== null && died.has(whose(s)));
 }
 
 /** The night demands with the day's after each joined in — except after a

@@ -7841,13 +7841,13 @@ def a_no_dashii_poisons_its_townsfolk_neighbours(world, state, night):
     if stayed:
         out.append(impairment.Source("No Dashii", frozenset(stayed),
                                      capacity=len(stayed), cost=1.0,
-                                     repeat_cost=1.0))
+                                     repeat_cost=1.0, holder=seat))
     late = hit - stayed
     if late:
         out.append(impairment.Source(
             "No Dashii, since the change", frozenset(late),
             capacity=len(late), cost=lambda who: 1.0,
-            repeat_cost=lambda who: 1.0))
+            repeat_cost=lambda who: 1.0, holder=seat))
     # Whoever was beside it as the night began, and no longer is. "The
     # players who are poisoned may change immediately" — so on a night a
     # Pit-Hag turns its Townsfolk neighbour into something else, that
@@ -7860,7 +7860,7 @@ def a_no_dashii_poisons_its_townsfolk_neighbours(world, state, night):
         out.append(impairment.Source(
             "No Dashii, as the night began", frozenset(earlier),
             capacity=len(earlier), cost=lambda who: 1.0,
-            repeat_cost=lambda who: 1.0))
+            repeat_cost=lambda who: 1.0, holder=then))
     return out
 
 
@@ -7938,7 +7938,7 @@ def a_vigormortis_poisons_beside_its_dead_minions(world, state, night):
         if beside:
             out.append(impairment.Source(
                 "Vigormortis", frozenset(beside), capacity=1,
-                cost=1.0, repeat_cost=1.0))
+                cost=1.0, repeat_cost=1.0, holder=seat))
     return out
 
 
@@ -8091,7 +8091,7 @@ def a_pukka_poisons_whoever_it_will_kill(world, state, night):
         return 1.0 if who in due_tomorrow else POISON_REPEAT_PENALTY
 
     out = [impairment.Source("Pukka", alive, capacity=1, cost=fresh,
-                             repeat_cost=fresh_again)]
+                             repeat_cost=fresh_again, holder=seat)]
     due_tonight = _died_on(state, night) & alive
 
     def carried(who):
@@ -8100,7 +8100,7 @@ def a_pukka_poisons_whoever_it_will_kill(world, state, night):
     if night >= 2:
         out.append(impairment.Source("Pukka's token", alive,
                                      capacity=1, cost=carried,
-                                     repeat_cost=carried))
+                                     repeat_cost=carried, holder=seat))
     return out
 
 
@@ -8262,7 +8262,7 @@ def _a_goons_chooser(world, state, night, goon):
     # (03.10.2026).
     free = lambda who: 1.0
     return [impairment.Source("Goon", pickers, capacity=1,
-                              cost=free, repeat_cost=free)]
+                              cost=free, repeat_cost=free, holder=goon)]
 
 
 @impairment.source_rule
@@ -8832,7 +8832,13 @@ def _dying_sources(state, night, sources):
     died = _died_on(state, night)
     if not died:
         return []
-    return [s for s in sources if s.actor is not None and s.actor in died]
+    return [s for s in sources if _whose(s) is not None and _whose(s) in died]
+
+
+def _whose(source):
+    """The seat whose death ends this source: its actor, or its holder
+    (Stelle 113)."""
+    return source.actor if source.actor is not None else source.holder
 
 
 def _with_the_days(world, state, nights, days):
