@@ -6426,6 +6426,20 @@ def _the_dead_have_it(d):
                for p in range(d.n))
 
 
+def _made_after_its_place_tonight(d, seat, role, night):
+    """Made into this character tonight, after its place in the night?
+
+    The same test `_woke_itself` makes for a Chambermaid: a first-night
+    character learns at once, and a Philosopher is asked elsewhere."""
+    from botc.catalogue import CHARACTERS as _C
+    at = getattr(d, "made_at", {}).get((night, seat))
+    if at is None or role not in _C or role == "Philosopher" \
+            or _C[role].nights == "first":
+        return False
+    own = _C[role].first_night if night == 1 else _C[role].other_night
+    return bool(own) and own < at
+
+
 def _droisoned_info(d, seat, night, rng, apparent=None):
     """What a droisoned seat was told, which is the Storyteller's choice.
 
@@ -6448,6 +6462,13 @@ def _droisoned_info(d, seat, night, rng, apparent=None):
         apparent = d.phil_token.get(seat)
     apparent = apparent or d.token(seat, f"N{night}") \
         or d.role_at(seat, f"N{night}")
+    # Made tonight after its own place, it waits for its next night
+    # (Lesart K, 20.10.2026) — droisoned or not. Only the sober seat
+    # waited, so a Cult Leader the Pit-Hag made an Innkeeper at 280,
+    # poisoned beside the No Dashii, still chose at 180 and drunk the
+    # Empath (Stelle 105, seed 1439 of the Plague Doctor's line).
+    if _made_after_its_place_tonight(d, seat, apparent, night):
+        return None
     made = _for_role(d, seat, apparent, night, rng)
     # A drunk Philosopher that took the Klutz still points on dying —
     # in public, so the table sees it; nothing comes of it (13.10.2026).
@@ -7881,6 +7902,14 @@ def _for_role(d, seat, role, night, rng):
         # Drunk is droisoned for the whole game.
         #
         # Sixth thing found asking a narrower question than `working`.
+        #
+        # And it chooses a player, so the Goon answers it like anybody
+        # else: never asked here, so an Ojo at 490 counted as the first
+        # to choose a Goon this charmer had chosen at 220, was drunk, and
+        # the Goon it named lived (Stelle 105, seed 1107 of the line
+        # Philosopher, Grandmother, Snake Charmer). The Goon is never the
+        # Demon, so nothing it stops would have swapped.
+        _the_goon_answers(d, night, seat, target)
         working = d.working(seat, night)
         swapped = target == demon and working and demon is not None
         if swapped:

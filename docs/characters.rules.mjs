@@ -2149,13 +2149,11 @@ sourceRule(function aPixieMayBeDenied(world, state, night) {
  * works the same way. */
 sourceRule(function anInnkeeperDrunksOneOfTheTwoItGuards(world, state, night) {
   if (!onBoard(state, "Innkeeper") || night < 2) return [];
-  // Who held it at its turn too, and whoever holds it at the end, as
-  // before (Paket 5, seeds 1363 and 1439). See solver.py.
-  const atEnd = holders(world, state, "Innkeeper", `N${night}`);
-  const hs = [...new Set([...readingAt(`N${night}`, slotOf("Innkeeper", 1) || 0,
+  // Who held it at its turn, and only then (Paket 5, seed 1363; Lesart
+  // K; Stelle 105, seed 1439). See solver.py.
+  const hs = readingAt(`N${night}`, slotOf("Innkeeper", 1) || 0,
                        slotOf("Innkeeper", night) || 0,
-                       () => holders(world, state, "Innkeeper", `N${night}`)),
-                          ...atEnd])];
+                       () => holders(world, state, "Innkeeper", `N${night}`));
   return hs.flatMap(seat => anInnkeepersDrunk(world, state, night, seat,
                                               byOf(hs, seat)));
 });
