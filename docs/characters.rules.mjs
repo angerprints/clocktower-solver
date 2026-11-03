@@ -225,12 +225,13 @@ sourceRule(function aNoDashiiPoisonsItsTownsfolkNeighbours(world, state, night) 
   const stayed = new Set([...hit].filter(p => start.has(p)));
   if (stayed.size)
     out.push(new Source("No Dashii", stayed,
-                        {capacity: stayed.size, cost: 1.0, repeatCost: 1.0}));
+                        {capacity: stayed.size, cost: 1.0, repeatCost: 1.0,
+                         holder: seat}));
   const late = new Set([...hit].filter(p => !stayed.has(p)));
   if (late.size)
     out.push(new Source("No Dashii, since the change", late,
                         {capacity: late.size, cost: () => 1.0,
-                         repeatCost: () => 1.0}));
+                         repeatCost: () => 1.0, holder: seat}));
   // Whoever was beside it as the night began, and no longer is: "the
   // players who are poisoned may change immediately". On a night a
   // Pit-Hag turns its Townsfolk neighbour into something else, that
@@ -240,7 +241,7 @@ sourceRule(function aNoDashiiPoisonsItsTownsfolkNeighbours(world, state, night) 
   if (earlier.size)
     out.push(new Source("No Dashii, as the night began", earlier,
                         {capacity: earlier.size, cost: () => 1.0,
-                         repeatCost: () => 1.0}));
+                         repeatCost: () => 1.0, holder: then}));
   return out;
 });
 
@@ -268,7 +269,8 @@ sourceRule(function aVigormortisPoisonsBesideItsDeadMinions(world, state, night)
     const beside = nearestTownsfolk(world, state, who, phase);
     if (beside.size)
       out.push(new Source("Vigormortis", beside,
-                          {capacity: 1, cost: 1.0, repeatCost: 1.0}));
+                          {capacity: 1, cost: 1.0, repeatCost: 1.0,
+                           holder: seat}));
   }
   return out;
 });
@@ -391,6 +393,7 @@ sourceRule(function aPukkaPoisonsWhoeverItWillKill(world, state, night) {
     cost: who => (dueTomorrow.has(who) ? 1.0 : PRIORS.POISON_HIT_PENALTY),
     repeatCost: who =>
       (dueTomorrow.has(who) ? 1.0 : PRIORS.POISON_REPEAT_PENALTY),
+    holder: seat,
   })];
   const dueTonight = new Set(
     [...diedOn(state, night)].filter(who => alive.has(who)));
@@ -402,7 +405,8 @@ sourceRule(function aPukkaPoisonsWhoeverItWillKill(world, state, night) {
     (dueTonight.has(who) ? 1.0 : PRIORS.POISON_HIT_PENALTY);
   if (night >= 2)
     out.push(new Source("Pukka's token", alive,
-                        {capacity: 1, cost: carried, repeatCost: carried}));
+                        {capacity: 1, cost: carried, repeatCost: carried,
+                         holder: seat}));
   return out;
 });
 
@@ -1799,7 +1803,7 @@ function aGoonsChooser(world, state, night, goon) {
   // night whether or not it had pointed at the Goon (03.10.2026).
   const free = () => 1.0;
   return [new Source("Goon", pickers, {capacity: 1, cost: free,
-                                       repeatCost: free})];
+                                       repeatCost: free, holder: goon})];
 }
 
 /** Whoever holds the named character, drunk for three days and nights.
