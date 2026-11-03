@@ -6854,6 +6854,24 @@ def honest_info(d, night, rng):
     return out
 
 
+def _xaans_night(d, night, seat, out, by_day=False):
+    """Is this a Townsfolk the Xaan poisons tonight — its night X, the
+    Xaan alive and working (not in `out`)? The same test as the Xaan's
+    below, asked early for the Innkeeper and the Sailor."""
+    phase = f"N{night}"
+    if TEAM[d.role_at(seat, phase)] != "townsfolk":
+        return False
+    if night != sum(1 for r in d.roles if TEAM[r] == "outsider"):
+        return False
+    xaan = next((p for p in range(d.n)
+                 if d.role_at(p, phase) == "Xaan"), None)
+    if xaan is not None and xaan not in out \
+            and _has_its_ability(d, xaan, phase) \
+            and (not by_day or xaan in d.alive_at(f"D{night}")):
+        return True
+    return _st_has(d, "Xaan", before=phase)
+
+
 def droisoned_at(d, night, by_day=False):
     """Everybody whose ability is not working tonight, by any cause.
 
@@ -6969,8 +6987,12 @@ def droisoned_at(d, night, by_day=False):
             if by_day and holder is not None \
                     and d.deaths.get(holder) == phase:
                 continue
+            # Nor one the Xaan poisoned tonight, which is added further
+            # down: a poisoned Innkeeper or Sailor drunks nobody (Stelle
+            # 114, seeds 2320 and 2509).
             if holder is not None and holder in living \
                     and holder not in out \
+                    and not _xaans_night(d, night, holder, out, by_day) \
                     and not _drunk_by_its_philosopher(d, holder, role,
                                                       phase):
                 out.add(got)
