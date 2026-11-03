@@ -1119,14 +1119,14 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
   let stories = [[]];
   for (const info of made) {
     const phase = `N${info.night}`;
-    // The side when the Pit-Hag acted, as the night began. See solver.py.
     const before = info.night > 1 ? `B${info.night - 1}` : "N0";  // the deal, as Python's `_before`
     // A Cult Leader's side follows its neighbours; open stays open.
+    // Otherwise the side at the Pit-Hag's turn (Stelle 110).
     const sides = state.script.keys.includes("CultLeader")
         && actsAsCultLeader(world, state, info.target, before)
       ? [...cultSides(world, state, info.target, before)]
           .sort((a, b) => Number(a) - Number(b))
-      : [Boolean(world.evilAt(info.target, before))];
+      : [sideAtThePitHag(world, info.target, phase)];
     // A Demon made beside the Demon in play: a second one (Stelle 83).
     const make = besideTheDemon(world, info.target, info.role, phase)
       ? pitHagDemon : change;
@@ -1135,6 +1135,13 @@ transitionRule(function aPitHagMakesSomebodyElse(world, state) {
   }
   return stories.map(story => [story, 1.0]);
 });
+
+/** Is this seat evil when the Pit-Hag acts, read at its turn (the rule
+ * runs inside its turn), not as the night began (Stelle 110). See
+ * solver.py `_side_at_the_pit_hag`. */
+function sideAtThePitHag(world, seat, phase) {
+  return Boolean(world.evilAt(seat, phase));
+}
 
 /** Does making this seat this character make a second Demon? See
  * solver.py `_beside_the_demon`. */
@@ -1165,7 +1172,7 @@ transitionRule(function aPitHagNobodyWroteDown(world, state) {
     for (let p = 0; p < state.nPlayers; p++)
       if (world.roleAt(p, before) === info.role) held = true;
     if (held) continue;
-    const side = world.evilAt(info.player, before) ? "evil" : "good";
+    const side = sideAtThePitHag(world, info.player, phase) ? "evil" : "good";
     const made = (besideTheDemon(world, info.player, info.role, phase)
       ? pitHagDemon : change)(phase, info.player, info.role, side);
     stories = [...stories, ...stories.map(([c, w]) => [[...c, made], w])]
