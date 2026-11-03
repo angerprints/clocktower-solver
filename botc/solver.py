@@ -1225,10 +1225,6 @@ def a_pit_hag_makes_somebody_else(world, state):
     stories = [()]
     for info in made:
         phase = f"N{info.night}"
-        # The side as it stood when the Pit-Hag acted, at slot 16 — not
-        # after a Fang Gu jumped into the same seat later that night,
-        # which is what a story built a night at a time shows it on the
-        # next pass (29.09.2026).
         before = _before(info.night, phase)
         # A Cult Leader's side is not on the board: it follows its
         # neighbours, so it is read the way the Cult Leader reads it, and
@@ -1237,7 +1233,7 @@ def a_pit_hag_makes_somebody_else(world, state):
                 and acts_as_cult_leader(world, state, info.target, before):
             sides = sorted(cult_sides(world, state, info.target, before))
         else:
-            sides = [bool(world.evil_at(info.target, before))]
+            sides = [_side_at_the_pit_hag(world, info.target, phase)]
         # A Demon made beside the Demon in play: a second one (Stelle 83,
         # A Weg 1). The Demon made another Demon stays the one.
         kind = PitHagDemon if _beside_the_demon(world, info.target,
@@ -1247,6 +1243,16 @@ def a_pit_hag_makes_somebody_else(world, state):
                                  "evil" if evil else "good"),)
                    for story in stories for evil in sides]
     return [(story, 1.0) for story in stories]
+
+
+def _side_at_the_pit_hag(world, seat, phase):
+    """Is this seat evil when the Pit-Hag acts — read at its turn (the
+    rule runs inside `_turn`), not as the night began (Stelle 110, seed
+    1466): a Snake Charmer that swapped with the Demon at 220 left the
+    seat good before the Pit-Hag's 280. A Fang Gu's jump comes later that
+    night and is not seen here (29.09.2026). The Pit-Hag's own change
+    keeps the side, so a later pass that sees it reads the same."""
+    return bool(world.evil_at(seat, phase))
 
 
 def _beside_the_demon(world, target, role, phase):
@@ -1290,7 +1296,8 @@ def a_pit_hag_nobody_wrote_down(world, state):
         if any(world.role_at(p, before) == info.role
                for p in range(state.n_players)):
             continue
-        side = "evil" if world.evil_at(info.player, before) else "good"
+        side = "evil" if _side_at_the_pit_hag(world, info.player, phase) \
+            else "good"
         kind = PitHagDemon if _beside_the_demon(world, info.player,
                                                 info.role, phase) \
             else Change
