@@ -779,6 +779,12 @@ def hidden_from(deal, night, heard):
     made = row("PitHagChoice")
     if made:
         out[("pithag", night)] = (made[0].target, made[0].role)
+    # A Pit-Hag that chose the Goon first made nothing, and no row says
+    # so: the Goon its choice went to (Stelle 111, seed 1506).
+    gooned = getattr(deal, "goon_first", {}).get(night)
+    if not made and gooned is not None \
+            and deal.role_at(gooned[0], f"N{night}") == "PitHag":
+        out[("pithag_goon", night)] = gooned[1]
 
     guess = row("GamblerGuess")
     if guess:
@@ -1634,6 +1640,11 @@ def walk(deal, night, hidden):
                 # could act at the Demon's slot, and a Demon unmade before
                 # its slot never acts at all.
                 made = hidden.get(("pithag", night))
+                goon = hidden.get(("pithag_goon", night))
+                if made is None and goon is not None:
+                    state.choose(seat, goon, slot)
+                    _goon_answers(state, seat, goon, slot)
+                    continue
                 if made is None or not state.working(seat):
                     continue
                 target, became = made
@@ -1659,6 +1670,16 @@ def walk(deal, night, hidden):
                     if target in stops_being_droisoned:
                         state.droisoned.discard(target)
                         stops_being_droisoned.discard(target)
+                    # A Lleech chooses its host as it is made, poisoned
+                    # from here on — on a night whose deaths are the
+                    # Storyteller's too, as the simulator has it (Stelle
+                    # 111, seed 1341).
+                    if became == "Lleech":
+                        host = (hidden.get(("lleech", night)) or {}).get(
+                            target, (None,))[0]
+                        if host in becomes_droisoned:
+                            state.droison(host, slot, "Lleech")
+                            becomes_droisoned.discard(host)
 
             elif role == "Assassin":
                 # One kill, once a game, and it ignores protection. Acts at
