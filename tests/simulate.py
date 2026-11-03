@@ -2389,6 +2389,15 @@ def _acrobat_may_fall(d, night, heard, rng):
     # first to choose a Goon, which the night-walk saw (gate, seed 2276).
     phase = f"N{night}"
     droisoned = droisoned_at(d, night)
+    # "If they are or become drunk or poisoned tonight": the Demon a Snake
+    # Charmer swapped with tonight is poisoned from then on, tonight too.
+    # `droisoned_at` counts that poison from the next night (Stelle 111,
+    # seed 2064 of the line Pit-Hag, Scarlet Woman, Fang Gu).
+    droisoned = set(droisoned) | {
+        p for p in getattr(d, "perma_poisoned", ())
+        if p in d.alive_at(phase)
+        and any(at == phase and seat == p and role == "SnakeCharmer"
+                for at, seat, role in d.changes)}
     picks = getattr(d, "acrobat_picks", {})
     for seat in range(d.n):
         # Picked at its turn, early in the night (`early_choices`); one
@@ -5225,6 +5234,11 @@ def _pit_hag_makes_a_demon(d, night, seat, living, in_play, rng):
         return None
     target = rng.choice(living)
     became = rng.choice(free)
+    # The Goon it chose first: drunk at once, and the choice fails
+    # (Stelle 111, seed 1506). Asked after the draws, so every other game
+    # is dealt as before.
+    if _the_goon_answers(d, night, seat, target):
+        return False
     if not d.working(seat, night):
         return None
     kind = "type" if target == old \
@@ -7987,6 +8001,8 @@ def _for_role(d, seat, role, night, rng):
         if PIT_HAG_DEMONS and rng.random() < PIT_HAG_DEMONS:
             made = _pit_hag_makes_a_demon(d, night, seat, living, in_play,
                                           rng)
+            if made is False:
+                return None                   # it chose the Goon first
             if made is not None:
                 return made
         spare = [k for k in (d.script.townsfolk + d.script.outsiders
@@ -8019,6 +8035,11 @@ def _for_role(d, seat, role, night, rng):
             if not spare:
                 return None
         became = rng.choice(spare)
+        # The Goon it chose first: drunk at once, and the choice fails —
+        # the Goon turns even if the Pit-Hag was drunk already (Stelle
+        # 111, seed 1506).
+        if _the_goon_answers(d, night, seat, target):
+            return None
         # Drunk or poisoned it chooses and nothing happens. It made its
         # change all the same until a Widow poisoned one (10.10.2026): the
         # night-walk, which asks, kept the seat as it was. Asked after the
