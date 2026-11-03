@@ -70,7 +70,8 @@ export const minionStillActs = (world, state, seat, phase) =>
 
 export class Source {
   constructor(name, seats,
-              {capacity = 1, cost = 1.0, repeatCost = 1.0, actor = null} = {}) {
+              {capacity = 1, cost = 1.0, repeatCost = 1.0, actor = null,
+               holder = null} = {}) {
     this.name = name;
     this.seats = seats instanceof Set ? seats : new Set(seats);
     this.capacity = capacity;
@@ -80,6 +81,9 @@ export class Source {
     this.repeatCost = repeatCost;
     // The seat whose ability this is; see impairment.py.
     this.actor = actor;
+    // The seat whose death ends it, for a source with no actor (Stelle
+    // 113); see impairment.py.
+    this.holder = holder;
   }
 
   price(seat, again = false) {
