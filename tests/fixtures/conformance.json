@@ -118254,11 +118254,6 @@
       "b": 5
      },
      {
-      "type": "BansheeAnnounced",
-      "night": 2,
-      "player": 3
-     },
-     {
       "type": "InnkeeperChoice",
       "night": 3,
       "player": 6,
@@ -118304,63 +118299,63 @@
     "game_over": true
    },
    "expect": {
-    "valid": 154,
+    "valid": 206,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 31.8491,
+      "evil_pct": 30.1775,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 31.8491
+      "lying_pct": 30.1775
      },
      {
-      "evil_pct": 42.2387,
-      "demon_pct": 23.8819,
+      "evil_pct": 40.211,
+      "demon_pct": 22.8176,
       "drunk_pct": 0.0,
-      "lying_pct": 42.2387
+      "lying_pct": 40.211
      },
      {
-      "evil_pct": 1.4685,
+      "evil_pct": 4.8701,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 1.4685
+      "lying_pct": 4.8701
      },
      {
-      "evil_pct": 0.0,
+      "evil_pct": 1.7698,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "lying_pct": 1.7698
      },
      {
-      "evil_pct": 38.9345,
-      "demon_pct": 20.5777,
+      "evil_pct": 37.7759,
+      "demon_pct": 20.3825,
       "drunk_pct": 0.0,
-      "lying_pct": 38.9345
+      "lying_pct": 37.7759
      },
      {
-      "evil_pct": 84.9114,
-      "demon_pct": 55.5405,
+      "evil_pct": 84.6293,
+      "demon_pct": 56.7999,
       "drunk_pct": 0.0,
-      "lying_pct": 84.9114
+      "lying_pct": 84.6293
      },
      {
-      "evil_pct": 0.5977,
+      "evil_pct": 0.5663,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 0.5977
+      "lying_pct": 0.5663
      }
     ],
     "blame": {
      "2": {
       "3": {
-       "Demon": 0.9404,
-       "Yaggababble, again": 0.0596
+       "Demon": 0.9426,
+       "Yaggababble, again": 0.0574
       }
      },
      "3": {
       "6": {
-       "Demon": 0.9404,
-       "Yaggababble, again": 0.0596
+       "Demon": 0.9426,
+       "Yaggababble, again": 0.0574
       }
      }
     }
@@ -118373,7 +118368,7 @@
     "players": [
      {
       "name": "",
-      "claim": "King",
+      "claim": "Seamstress",
       "events": [
        "N3"
       ],
@@ -118381,8 +118376,7 @@
       "read": 0,
       "wake": "",
       "voted": [
-       1,
-       2
+       1
       ],
       "nominated": [
        1
@@ -118390,22 +118384,7 @@
      },
      {
       "name": "",
-      "claim": "",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "every",
-      "voted": [
-       1,
-       3
-      ],
-      "nominated": [
-       3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Moonchild",
+      "claim": "Sailor",
       "events": [],
       "certainty": "",
       "read": 0,
@@ -118415,13 +118394,25 @@
        2,
        3
       ],
-      "nominated": [
-       3
-      ]
+      "nominated": []
      },
      {
       "name": "",
-      "claim": "Damsel",
+      "claim": "Moonchild",
+      "events": [
+       "X2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Choirboy",
       "events": [
        "X1"
       ],
@@ -118435,13 +118426,14 @@
      },
      {
       "name": "",
-      "claim": "SnakeCharmer",
+      "claim": "Balloonist",
       "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       2
+       2,
+       3
       ],
       "nominated": [
        3
@@ -118450,6 +118442,38 @@
      {
       "name": "",
       "claim": "Hatter",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "SnakeCharmer",
+      "events": [
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Puzzlemaster",
       "events": [
        "X3"
       ],
@@ -118460,37 +118484,6 @@
        1,
        2,
        3
-      ],
-      "nominated": [
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Investigator",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2,
-       3
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Puzzlemaster",
-      "events": [
-       "X2"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
       ],
       "nominated": [
        1
@@ -118514,13 +118507,26 @@
       "type": "SailorChoice",
       "night": 3,
       "player": 1,
+      "target": 4
+     },
+     {
+      "type": "MoonchildChoice",
+      "night": 3,
+      "player": 2,
       "target": 0
+     },
+     {
+      "type": "PuzzlemasterGuess",
+      "night": 3,
+      "player": 7,
+      "guess": 2,
+      "shown": 5
      },
      {
       "type": "SailorChoice",
       "night": 4,
       "player": 1,
-      "target": 4
+      "target": 5
      }
     ],
     "script": {
@@ -118553,75 +118559,85 @@
       "pukka"
      ]
     },
-    "quiet_nights": [
-     2,
-     4
-    ],
+    "quiet_nights": [],
     "days_done": [
      1,
      2,
      3
     ],
-    "game_over": false
+    "game_over": true
    },
    "expect": {
-    "valid": 408,
+    "valid": 23,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 1.926,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 1.926
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 1.1686,
-      "demon_pct": 0.7733,
+      "evil_pct": 1.3934,
+      "demon_pct": 1.3934,
       "drunk_pct": 0.0,
-      "lying_pct": 0.6283
+      "lying_pct": 1.3934
      },
      {
-      "evil_pct": 46.9088,
-      "demon_pct": 34.0115,
-      "drunk_pct": 0.0,
-      "lying_pct": 46.9088
-     },
-     {
-      "evil_pct": 19.7873,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 19.7873
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 45.6209,
-      "demon_pct": 32.6841,
-      "drunk_pct": 0.0,
-      "lying_pct": 45.6209
-     },
-     {
-      "evil_pct": 19.6521,
+      "evil_pct": 100.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 19.6521
+      "lying_pct": 100.0
      },
      {
-      "evil_pct": 45.4284,
-      "demon_pct": 32.5311,
+      "evil_pct": 63.1082,
+      "demon_pct": 63.1082,
       "drunk_pct": 0.0,
-      "lying_pct": 45.4284
+      "lying_pct": 63.1082
      },
      {
-      "evil_pct": 19.5079,
+      "evil_pct": 35.4984,
+      "demon_pct": 35.4984,
+      "drunk_pct": 0.0,
+      "lying_pct": 35.4984
+     },
+     {
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 19.5079
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      }
     ],
     "blame": {
      "3": {
       "0": {
-       "Demon": 0.9151,
-       "Yaggababble, again": 0.0849
+       "Demon": 0.5266,
+       "Moonchild": 0.4411,
+       "Yaggababble, again": 0.0324
+      }
+     },
+     "4": {
+      "5": {
+       "Demon": 0.9461,
+       "Yaggababble, again": 0.0539
+      }
+     },
+     "2": {
+      "6": {
+       "Demon": 0.9461,
+       "Yaggababble, again": 0.0539
       }
      }
     }
@@ -119165,23 +119181,25 @@
     "players": [
      {
       "name": "",
-      "claim": "SnakeCharmer",
-      "events": [],
+      "claim": "Philosopher",
+      "events": [
+       "N4"
+      ],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
-       1,
-       2
+       1
       ],
       "nominated": [
        1,
-       2
+       2,
+       3
       ]
      },
      {
       "name": "",
-      "claim": "Choirboy",
+      "claim": "Hatter",
       "events": [
        "N2"
       ],
@@ -119205,32 +119223,36 @@
       "voted": [
        1
       ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Flowergirl",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
       "nominated": [
        2
       ]
      },
      {
       "name": "",
-      "claim": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2,
+       3
+      ],
+      "nominated": [
+       2,
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Goon",
       "events": [
        "X1"
       ],
       "certainty": "",
       "read": 0,
-      "wake": "never",
+      "wake": "",
       "voted": [
        1
       ],
@@ -119239,33 +119261,31 @@
      {
       "name": "",
       "claim": "King",
-      "events": [
-       "N3"
-      ],
+      "events": [],
       "certainty": "",
       "read": 0,
       "wake": "",
       "voted": [
        1,
-       2
+       2,
+       3
       ],
       "nominated": [
        1,
-       2
+       3
       ]
      },
      {
       "name": "",
-      "claim": "Sailor",
+      "claim": "",
       "events": [
-       "N3"
+       "N2"
       ],
       "certainty": "",
       "read": 0,
-      "wake": "",
+      "wake": "every",
       "voted": [
-       1,
-       2
+       1
       ],
       "nominated": [
        1
@@ -119286,10 +119306,9 @@
       "target": 0
      },
      {
-      "type": "SailorChoice",
+      "type": "LeviathanAnnounced",
       "night": 3,
-      "player": 6,
-      "target": 5
+      "player": 5
      }
     ],
     "script": {
@@ -119322,79 +119341,83 @@
       "lleech"
      ]
     },
-    "quiet_nights": [],
+    "quiet_nights": [
+     3
+    ],
     "days_done": [
      1,
-     2
+     2,
+     3
     ],
     "game_over": true
    },
    "expect": {
-    "valid": 252,
+    "valid": 0,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 82.6941,
-      "demon_pct": 54.1226,
-      "drunk_pct": 3.9699,
-      "lying_pct": 82.5918
-     },
-     {
-      "evil_pct": 2.6007,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 2.6007
-     },
-     {
-      "evil_pct": 19.7538,
-      "demon_pct": 0.0,
-      "drunk_pct": 3.4559,
-      "lying_pct": 16.2979
-     },
-     {
-      "evil_pct": 86.1501,
-      "demon_pct": 57.5785,
-      "drunk_pct": 3.9699,
-      "lying_pct": 86.0477
-     },
-     {
-      "evil_pct": 6.9487,
+      "evil_pct": 0.0,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 13.9058,
-      "demon_pct": 13.6919,
-      "drunk_pct": 0.0285,
-      "lying_pct": 0.967
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      },
      {
-      "evil_pct": 14.0229,
-      "demon_pct": 13.7212,
-      "drunk_pct": 0.0498,
-      "lying_pct": 1.0902
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 0.0,
+      "lying_pct": 0.0
      }
     ],
-    "blame": {
-     "2": {
-      "1": {
-       "Demon": 1.0
-      }
-     },
-     "3": {
-      "5": {
-       "Demon": 0.6965,
-       "Lleech's host": 0.0057,
-       "Demon 2": 0.1007,
-       "Summoner": 0.1971
+    "diagnosis": {
+     "culprits": [
+      {
+       "kind": "information",
+       "label": "LeviathanAnnounced on night 3, seat 6"
       },
-      "6": {
-       "Demon": 0.7022,
-       "Demon 2": 0.1007,
-       "Summoner": 0.1971
+      {
+       "kind": "death",
+       "label": "seat 1 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 2 dying"
+      },
+      {
+       "kind": "death",
+       "label": "seat 3 dying"
       }
-     }
+     ],
+     "complete": true
     }
    }
   },

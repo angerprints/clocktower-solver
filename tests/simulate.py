@@ -6854,7 +6854,7 @@ def honest_info(d, night, rng):
     return out
 
 
-def droisoned_at(d, night, by_day=False):
+def droisoned_at(d, night, by_day=False, _without_their_drunks=False):
     """Everybody whose ability is not working tonight, by any cause.
 
     Not just the Poisoner. Sects & Violets droisons four other ways and
@@ -6872,6 +6872,16 @@ def droisoned_at(d, night, by_day=False):
     phase = f"N{night}"
     living = d.alive_at(phase)
     out = set()
+    # Everybody droisoned before the Innkeeper and the Sailor chose,
+    # asked first where either chose tonight: whoever is in it drunks
+    # nobody (Stelle 114). Their own drunks are left out, and so is what
+    # lands later in the night — the Pukka's pick tonight, a Widow's or a
+    # Courtier's chosen tonight, a Lleech's host on the first night.
+    known = frozenset()
+    if not _without_their_drunks and (_choices(d, "InnkeeperDrunk", night)
+                                      or _choices(d, "SailorDrunk", night)):
+        known = frozenset(droisoned_at(d, night, by_day,
+                                       _without_their_drunks=True))
 
     # Handed the wrong token: wrong every night of the game.
     for p in range(d.n):
@@ -6961,6 +6971,8 @@ def droisoned_at(d, night, by_day=False):
     # (13.10.2026).
     for role, key in (("Innkeeper", "InnkeeperDrunk"),
                       ("Sailor", "SailorDrunk")):
+        if _without_their_drunks:
+            break
         for chooser, got in _choices(d, key, night).items():
             holder = _answering(d, chooser, role, phase)
             # Killed later that night, it leaves its drunk sober for the
@@ -6969,8 +6981,14 @@ def droisoned_at(d, night, by_day=False):
             if by_day and holder is not None \
                     and d.deaths.get(holder) == phase:
                 continue
+            # Nor one droisoned by what is added further down — the
+            # Xaan's night, a Lleech's host, a Widow's poison (`known`): a
+            # poisoned Innkeeper or Sailor drunks nobody (Stelle 114,
+            # seeds 2320, 2509 and 254). A Sailor that drunk itself still
+            # did.
             if holder is not None and holder in living \
                     and holder not in out \
+                    and (holder == got or holder not in known) \
                     and not _drunk_by_its_philosopher(d, holder, role,
                                                       phase):
                 out.add(got)
@@ -7102,6 +7120,9 @@ def droisoned_at(d, night, by_day=False):
     for since, holder, courtier in getattr(d, "courtier_drunks", ()):
         if not since <= night <= since + 2:
             continue
+        # Chosen tonight, at its turn — after the Sailor's (Stelle 114).
+        if _without_their_drunks and since == night:
+            continue
         # Tomorrow as well when it died tonight (Stelle 104).
         until = f"D{night}" if by_day else phase
         died = any(phase_index(f"N{since}") <= phase_index(at)
@@ -7166,6 +7187,9 @@ def droisoned_at(d, night, by_day=False):
     for widow, target, since in getattr(d, "widow_poison", ()):
         if since > night or d.role_at(widow, phase) != "Widow":
             continue
+        # Chosen tonight, after the Sailor's turn (Stelle 114).
+        if _without_their_drunks and since == night:
+            continue
         if widow not in (d.alive_at(f"D{night}") if by_day else living):
             continue
         if widow not in out:
@@ -7179,6 +7203,9 @@ def droisoned_at(d, night, by_day=False):
                 continue
             if lleech not in (d.alive_at(f"D{night}") if by_day
                               else living):
+                continue
+            # Chosen on the first night, after the Sailor (Stelle 114).
+            if _without_their_drunks and night == 1:
                 continue
             if lleech not in out and host in living:
                 out.add(host)
@@ -7194,7 +7221,11 @@ def droisoned_at(d, night, by_day=False):
     # why this is asked after everybody else is settled.
     pukka = _live_pukka(d, night)
     if pukka is not None and pukka not in out:
-        for marked in (d.pukka_marks.get(night), d.pukka_due.get(night)):
+        # Tonight's pick comes at the Pukka's turn, after the Sailor's and
+        # the Innkeeper's; only the token carried from before was there
+        # when they chose (Stelle 114).
+        fresh = None if _without_their_drunks else d.pukka_marks.get(night)
+        for marked in (fresh, d.pukka_due.get(night)):
             if marked is not None:
                 out.add(marked)
     return out
