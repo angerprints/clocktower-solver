@@ -24516,7 +24516,7 @@
       "name": "",
       "claim": "Fool",
       "events": [
-       "S3"
+       "X3"
       ],
       "certainty": "",
       "read": 0,
@@ -24562,7 +24562,7 @@
       "night": 4,
       "player": 0,
       "a": 1,
-      "b": 6
+      "b": 3
      }
     ],
     "script": {
@@ -24607,57 +24607,58 @@
     "game_over": false
    },
    "expect": {
-    "valid": 304,
+    "valid": 260,
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 0.1591,
-      "demon_pct": 0.0318,
-      "drunk_pct": 0.4345,
-      "lying_pct": 0.5935
-     },
-     {
-      "evil_pct": 70.0985,
-      "demon_pct": 40.0434,
-      "drunk_pct": 15.3154,
-      "lying_pct": 85.4139
-     },
-     {
-      "evil_pct": 16.5677,
-      "demon_pct": 3.3135,
-      "drunk_pct": 6.7887,
-      "lying_pct": 23.3565
-     },
-     {
-      "evil_pct": 26.5084,
-      "demon_pct": 13.2542,
-      "drunk_pct": 6.7887,
-      "lying_pct": 33.2971
-     },
-     {
-      "evil_pct": 16.5677,
-      "demon_pct": 3.3135,
-      "drunk_pct": 6.7887,
-      "lying_pct": 23.3565
-     },
-     {
-      "evil_pct": 0.0,
+      "evil_pct": 0.1112,
       "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
+      "drunk_pct": 0.3796,
+      "lying_pct": 0.4908
      },
      {
-      "evil_pct": 70.0985,
-      "demon_pct": 40.0434,
-      "drunk_pct": 15.3154,
-      "lying_pct": 85.4139
+      "evil_pct": 71.5384,
+      "demon_pct": 43.9994,
+      "drunk_pct": 14.3127,
+      "lying_pct": 85.8511
+     },
+     {
+      "evil_pct": 11.5799,
+      "demon_pct": 0.0,
+      "drunk_pct": 5.9312,
+      "lying_pct": 17.511
+     },
+     {
+      "evil_pct": 23.1597,
+      "demon_pct": 11.5799,
+      "drunk_pct": 5.9312,
+      "lying_pct": 29.0909
+     },
+     {
+      "evil_pct": 11.5799,
+      "demon_pct": 0.0,
+      "drunk_pct": 5.9312,
+      "lying_pct": 17.511
+     },
+     {
+      "evil_pct": 10.0712,
+      "demon_pct": 0.0,
+      "drunk_pct": 7.9082,
+      "lying_pct": 17.9794
+     },
+     {
+      "evil_pct": 71.9597,
+      "demon_pct": 44.4207,
+      "drunk_pct": 14.3621,
+      "lying_pct": 86.3218
      }
     ],
     "blame": {
      "4": {
       "0": {
-       "Demon": 0.9891,
-       "Assassin": 0.0109
+       "Demon": 0.9418,
+       "Assassin": 0.0137,
+       "Godfather": 0.0445
       }
      }
     }
@@ -37904,7 +37905,7 @@
       "player": 5,
       "a": 0,
       "b": 6,
-      "count": 2
+      "count": 1
      }
     ],
     "script": {
@@ -37952,21 +37953,21 @@
     "sampled": false,
     "rows": [
      {
-      "evil_pct": 93.0938,
-      "demon_pct": 55.2498,
-      "drunk_pct": 1.8108,
-      "lying_pct": 94.9046
+      "evil_pct": 93.9124,
+      "demon_pct": 60.2219,
+      "drunk_pct": 1.6664,
+      "lying_pct": 95.5788
      },
      {
-      "evil_pct": 5.381,
-      "demon_pct": 2.8694,
-      "drunk_pct": 0.2408,
-      "lying_pct": 5.6218
+      "evil_pct": 4.8404,
+      "demon_pct": 2.6154,
+      "drunk_pct": 0.372,
+      "lying_pct": 5.2125
      },
      {
       "evil_pct": 0.0,
       "demon_pct": 0.0,
-      "drunk_pct": 0.9509,
+      "drunk_pct": 1.1608,
       "lying_pct": 0.0
      },
      {
@@ -37978,20 +37979,20 @@
      {
       "evil_pct": 0.0,
       "demon_pct": 0.0,
-      "drunk_pct": 6.944,
-      "lying_pct": 6.944
+      "drunk_pct": 9.239,
+      "lying_pct": 9.239
      },
      {
-      "evil_pct": 11.9457,
-      "demon_pct": 5.9728,
-      "drunk_pct": 1.6058,
-      "lying_pct": 13.5515
+      "evil_pct": 10.2079,
+      "demon_pct": 5.104,
+      "drunk_pct": 1.3722,
+      "lying_pct": 11.5801
      },
      {
-      "evil_pct": 89.5795,
-      "demon_pct": 35.908,
-      "drunk_pct": 1.7004,
-      "lying_pct": 91.2799
+      "evil_pct": 91.0392,
+      "demon_pct": 32.0587,
+      "drunk_pct": 1.4543,
+      "lying_pct": 92.4935
      }
     ]
    }
