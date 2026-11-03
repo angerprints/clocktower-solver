@@ -54,6 +54,11 @@ class Source(NamedTuple):
     # seat is drunk or poisoned and is otherwise unavoidable: a Preacher's
     # Minions, a Xaan's night (10.10.2026). See `plan_night_resting`.
     actor: object = None
+    # The seat whose death ends it, for a source with no `actor`: the No
+    # Dashii, the Vigormortis, the Pukka, the Goon. Dying in the night,
+    # it covers the night and not the day after (Stelle 113, as Stelle
+    # 104 for the sources with an actor). Changes nothing else.
+    holder: object = None
 
     def price(self, seat, again=False):
         rate = self.repeat_cost if again else self.cost
