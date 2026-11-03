@@ -144,10 +144,6 @@ def _payloads():
     out = []
     with asked():
         for seed, (must, _kind) in PLAYED.items():
-            # Python and JavaScript part on this board already on main —
-            # even its legal deals (a new open item, not this one's).
-            if seed == 1593:
-                continue
             rng = random.Random(seed)
             script = play_games.an_awkward_script(rng, must_have=must)
             n = [7, 8, 9, 10, 11][seed % 5]
@@ -161,10 +157,14 @@ class BothLanguagesAgree(SolverTest):
     def test_on_the_played_games(self):
         import app
         cases = _payloads()
+        # Both with the limit the app solves with (Stelle 109): the page's
+        # default of 40,000 samples seed 1593's 47,248 legal deals, the
+        # app's 600,000 counts them, and the two counts part.
         script = ("import {solveBoard} from './js/api.mjs';"
                   "const ps=JSON.parse(process.argv[1]);"
                   "console.log(JSON.stringify(ps.map(p => {"
-                  " const r = solveBoard(p); return r.error || r.valid; })));")
+                  f" const r = solveBoard(p, {{maxWorlds: {app.MAX_WORLDS}}});"
+                  " return r.error || r.valid; })));")
         got = subprocess.run(["node", "--input-type=module", "-e", script,
                               json.dumps(cases)], cwd=ROOT,
                              capture_output=True, text=True, timeout=1800)
