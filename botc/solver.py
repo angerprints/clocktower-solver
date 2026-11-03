@@ -533,6 +533,10 @@ def possible_timelines(world, state, cap=128):
     # seed 1931).
     if _barber_on_board(state) and _on_board(state, "Farmer"):
         cap *= max(1, len(a_farmer_hands_it_on(world, state)))
+    # And for every swap of a Barber the Al-Hadikhia raised and killed
+    # again, told on after the first (Stelle 107): room for all of them.
+    if _barber_on_board(state) and barber_raised_and_fell(world, state):
+        cap = max(cap, len(a_barber_lets_the_demon_swap_two(world, state)))
     if _movers_in(world, state) < 2:
         return _all_nights_at_once(world, state, cap)
 
@@ -708,9 +712,12 @@ def _nights_it_acts(rule, state):
     name = rule.__name__
     if name == "a_barber_lets_the_demon_swap_two":
         # After any death: a Barber nobody claimed may have died too
-        # (Stelle 4, Weg 1).
+        # (Stelle 4, Weg 1). And on a night the Al-Hadikhia chose: a dead
+        # Barber it raised died again (Stelle 107).
         return {int(p[1:]) + 1 if p[0].upper() != "N" else int(p[1:])
-                for seat, p in state.death_phases() if p}
+                for seat, p in state.death_phases() if p} \
+            | {info.night for info in state.infos
+               if isinstance(info, AlHadikhiaChose)}
     if name == "a_pit_hag_makes_somebody_else":
         return rows("PitHag", "role")
     if name == "a_snake_charmer_takes_the_star":
@@ -992,57 +999,142 @@ def _barber_offers(world, state):
               for seat in range(state.n_players)
               for phase in state.died_at(seat)
               if falls_as(world, state, seat, "Barber", phase)]
-    if not deaths:
+    # And a dead Barber the Al-Hadikhia chose, raised and killed again the
+    # same night: no death on the record, which only says who lay dead at
+    # dawn (Stelle 107, seed 2955). Asked of each story's board below:
+    # whoever holds the Barber's character then.
+    raised = sorted({f"N{info.night}" for info in state.infos
+                     if isinstance(info, AlHadikhiaChose) and info.night >= 2
+                     and _in_bag(state, "AlHadikhia")}, key=phase_index)
+    if not deaths and not raised:
         return [((), 1.0)]
 
-    stories = [((), 1.0)]
+    # One swap for each Barber's death, night after night (Stelle 107): a
+    # story that already swapped is told on, on the board its swap left.
+    # A second swap there is the Demon with its own Minion, or a pair the
+    # night's rows say changed hands — every pair again, on top of every
+    # pair, would be thousands of stories for a case this rare. The
+    # night's every pair is still told on a story that has not swapped.
+    by_night = {}
     for _barber, phase, hidden in deaths:
         night = _barber_night(phase)
         if phase_index(night) > phase_index(state.final_phase()):
             continue                      # the game had already finished
-        view = world
-        seats = range(state.n_players)
-        demons = view.demons_at(night)
-        # "2 players (not another Demon)": a seat still holding a Demon's
-        # character that is not the Demon now — the one executed or shot
-        # before a Scarlet Woman stepped up — is never chosen (Stelle 53,
-        # Weg 1, 01.11.2026). The simulator swaps living seats only.
-        others = {s for s in seats if s not in demons
-                  and TEAM[view.role_at(s, night)] == "demon"}
-        for first in seats:
-            if first in others:
+        # Two Barbers dead the same night: the pairs once, as the less
+        # hidden of them allows.
+        by_night[night] = by_night.get(night, True) and hidden
+    stories = [((), 1.0)]
+    for night in sorted(set(by_night) | set(raised), key=phase_index):
+        if phase_index(night) > phase_index(state.final_phase()):
+            continue
+        grown = []
+        for told, cost in stories:
+            view = Timeline(world, told) if told else world
+            hidden = by_night.get(night)
+            for seat, _at in barber_raised_and_fell(view, state, night):
+                hidden = (True if hidden is None else hidden) \
+                    and seat not in claimed
+            if hidden is None:
                 continue
-            for second in seats:
-                if second <= first or second in others:
-                    continue
-                a, b = view.role_at(first, night), view.role_at(second, night)
-                if a == b:
-                    continue
-                # The Demon with one of its own Minions is the usual swap
-                # at this table and costs a world nothing; any other pair
-                # is a deliberate play priced as one (table habit,
-                # 30.09.2026). `_barber_share` splits the credit inside.
-                ours = ((first in demons and TEAM[b] == "minion")
-                        or (second in demons and TEAM[a] == "minion"))
-                if hidden and not ours:
-                    continue
-                kind = DemonMinionSwap if ours else OtherSwap
-                # Sides written out, not left to the new character: a
-                # Change with no side takes the character's, so a swapped
-                # Demon read as a good Flowergirl and an Oracle counting
-                # it dead and evil looked wrong (29.09.2026).
-                side_a = "evil" if view.evil_at(first, night) else "good"
-                side_b = "evil" if view.evil_at(second, night) else "good"
-                stories.append(((kind(night, first, b, side_a),
-                                 kind(night, second, a, side_b)),
-                                1.0 if ours else BARBER_SWAP_PENALTY))
+            for pair, price in _barber_pairs(view, state, night, hidden,
+                                             bool(told)):
+                grown.append((told + pair, cost * price))
+        stories += grown
     # The usual swap first. Stories are cut at a cap, and with a Farmer's
     # heirs beside it the pairs past the first few seats never reached
     # the search: in pair order the No Dashii and its Pit-Hag at seats 7
     # and 10 came long after every pair with seat 0 (Stelle 5, seed
-    # 2799). Stable, so the pairs keep their order within each kind.
-    stories.sort(key=lambda story: story[1] < 1.0)
+    # 2799). Stable, so the pairs keep their order within each kind; and
+    # by price, so two deliberate swaps come after one (Stelle 107).
+    stories.sort(key=lambda story: -story[1])
     return stories
+
+
+def barber_raised_and_fell(world, state, night=None):
+    """(seat, night) for a dead Barber the Al-Hadikhia chose (Stelle 107),
+    that night or every night.
+
+    A corpse it chose that chose to live came back, and if all three
+    chose life all three died — so the Barber died again tonight, and its
+    Demon may swap again. The record cannot say: a corpse that chose
+    death lies there too, and a return and a death at one moment leave
+    only the body at dawn. So it is offered, never required, whenever an
+    Al-Hadikhia stood to choose — which its row says (AlHadikhiaChose);
+    whether it was drunk is not asked, which is the permissive side of it.
+    """
+    if not _in_bag(state, "AlHadikhia"):
+        return []
+    out = []
+    for info in state.infos:
+        if not isinstance(info, AlHadikhiaChose) or info.night < 2:
+            continue
+        phase = f"N{info.night}"
+        if night is not None and phase != night:
+            continue
+        alive = state.alive_set(phase)
+        for seat in sorted(set(info.chosen())):
+            if seat in alive or (seat, phase) in out:
+                continue
+            if falls_as(world, state, seat, "Barber", phase):
+                out.append((seat, phase))
+    return out
+
+
+def _barber_pairs(view, state, night, hidden, again):
+    """Each swap the Demon could make tonight, with its price.
+
+    `again`: the story swapped before, so only the Demon with its own
+    Minion, or a pair the night's rows name (Stelle 107)."""
+    out = []
+    seats = range(state.n_players)
+    demons = view.demons_at(night)
+    # "2 players (not another Demon)": a seat still holding a Demon's
+    # character that is not the Demon now — the one executed or shot
+    # before a Scarlet Woman stepped up — is never chosen (Stelle 53,
+    # Weg 1, 01.11.2026). The simulator swaps living seats only.
+    others = {s for s in seats if s not in demons
+              and TEAM[view.role_at(s, night)] == "demon"}
+    for first in seats:
+        if first in others:
+            continue
+        for second in seats:
+            if second <= first or second in others:
+                continue
+            a, b = view.role_at(first, night), view.role_at(second, night)
+            if a == b:
+                continue
+            # The Demon with one of its own Minions is the usual swap
+            # at this table and costs a world nothing; any other pair
+            # is a deliberate play priced as one (table habit,
+            # 30.09.2026). `_barber_share` splits the credit inside.
+            ours = ((first in demons and TEAM[b] == "minion")
+                    or (second in demons and TEAM[a] == "minion"))
+            if hidden and not ours:
+                continue
+            if again and not ours and not _swap_written(
+                    state, night, first, b, second, a):
+                continue
+            kind = DemonMinionSwap if ours else OtherSwap
+            # Sides written out, not left to the new character: a
+            # Change with no side takes the character's, so a swapped
+            # Demon read as a good Flowergirl and an Oracle counting
+            # it dead and evil looked wrong (29.09.2026).
+            side_a = "evil" if view.evil_at(first, night) else "good"
+            side_b = "evil" if view.evil_at(second, night) else "good"
+            out.append(((kind(night, first, b, side_a),
+                         kind(night, second, a, side_b)),
+                        1.0 if ours else BARBER_SWAP_PENALTY))
+    return out
+
+
+def _swap_written(state, night, first, gets_first, second, gets_second):
+    """Does a row of that night say one of the two became what the swap
+    gave it?"""
+    n = int(night[1:])
+    return any(isinstance(info, BecameInfo) and info.night == n
+               and ((info.player == first and info.role == gets_first)
+                    or (info.player == second and info.role == gets_second))
+               for info in state.infos)
 
 
 def _barber_night(phase):
@@ -1087,7 +1179,9 @@ def _barber_share(world, changes, state):
     # for the whole night was otherwise handed to the turn, or back.
     for extra, _cost in _offers(a_barber_lets_the_demon_swap_two, view,
                                 state):
-        if extra:
+        # One swap each: a story told on after an earlier swap is no pair
+        # of its own night to share with (Stelle 107).
+        if len(extra) == 2:
             ours = isinstance(extra[0], DemonMinionSwap)
             got = counts.setdefault(extra[0].phase, [0, 0])
             got[0 if ours else 1] += 1
