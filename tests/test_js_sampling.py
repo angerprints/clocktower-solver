@@ -39,9 +39,17 @@ TB9 = ["Washerwoman", "Librarian", "Investigator", "Chef", "Empath",
        "FortuneTeller", "Undertaker", "Recluse", "Saint"]
 
 
+# Half an hour. The class below asks for about 180 estimates and takes
+# 450 to 600 seconds alone; with both halves of the suite running beside
+# it, it passed the old limit of 600 more than once (608 s at Stelle 101,
+# 604 s on 03.11.2026). The limit is there to catch a hang, not to time
+# the sampler.
+TIMEOUT = 1800
+
+
 def run(script):
     got = subprocess.run([NODE, "--input-type=module", "-e", script],
-                         capture_output=True, text=True, timeout=600,
+                         capture_output=True, text=True, timeout=TIMEOUT,
                          cwd=str(ROOT))
     if got.returncode:
         raise AssertionError(got.stderr)
