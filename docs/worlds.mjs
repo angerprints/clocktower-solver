@@ -211,8 +211,8 @@ export const plagueGift = (phase, seat, gift, slot = null) =>
 /** The Minion ability the Alchemist on this seat has, from the first
  * night before anybody acts (04.11.2026): a kind of Plague Doctor mark, so
  * it is kept and read the same way. `AlchemistGift` in Python. */
-export const alchemistGift = (seat, gift) =>
-  ({phase: "N1", seat, role: null, side: null, slot: SETUP_SLOT, gift,
+export const alchemistGift = (seat, gift, phase = "N1") =>
+  ({phase, seat, role: null, side: null, slot: SETUP_SLOT, gift,
     boffin: true, plague: true, alchemist: true});
 
 /** A seat the Storyteller's stage 2 ability made something (Pestdoktor
