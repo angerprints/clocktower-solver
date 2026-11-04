@@ -450,7 +450,7 @@ sourceRule(makePoisonerRule(() => PRIORS.POISON_HIT_PENALTY,
 /** An Alchemist with the Poisoner's ability (04.11.2026, group 1). See
  * solver.py `an_alchemist_poisons`. */
 sourceRule(function anAlchemistPoisons(world, state, night) {
-  if (!state.script.keys.includes("Alchemist")) return [];
+  if (!onBoard(state, "Alchemist")) return [];
   const phase = `N${night}`;
   return alchemistsWith(world, state, "Poisoner", phase).map(seat =>
     new Source("Alchemist (Poisoner)", state.aliveSet(phase),
@@ -496,7 +496,7 @@ const aDevilsAdvocateSavesFromTheGallows = survivesExecutionRule(
     if (storytellerHas(world, "DevilsAdvocate", `N${day}`))
       return [STORYTELLER_SAVES];
     // And an Alchemist with its ability (04.11.2026). See solver.py.
-    const alchemists = state.script.keys.includes("Alchemist")
+    const alchemists = onBoard(state, "Alchemist")
       ? alchemistsWith(world, state, "DevilsAdvocate", `N${day}`) : [];
     const advocate = acting(world, state, "DevilsAdvocate", day);
     if (advocate === null) return alchemists;
@@ -1015,12 +1015,17 @@ causeRule(function aGossipMayKill(world, state, night) {
  * seat that died was an Outsider is a question about the world rather
  * than about the board. */
 causeRule(function aGodfatherAnswersAnOutsider(world, state, night) {
-  if (!inBag(state, "Godfather") || night < 2) return [];
-  const seat = acting(world, state, "Godfather", night);
+  if (!(inBag(state, "Godfather") || onBoard(state, "Alchemist"))
+      || night < 2) return [];
+  const seat = inBag(state, "Godfather")
+    ? acting(world, state, "Godfather", night) : null;
   // The Storyteller's, the Plague Doctor's gift (28.10.2026): nothing
   // stops it.
   const told = storytellerHas(world, "Godfather", `N${night}`);
-  if (seat === null && !told) return [];
+  // And an Alchemist's (group 2, 04.11.2026). See solver.py.
+  const alchemists = onBoard(state, "Alchemist")
+    ? alchemistsWith(world, state, "Godfather", `N${night}`) : [];
+  if (seat === null && !told && !alchemists.length) return [];
   const day = `D${night - 1}`;
   const lost = Object.keys(state.deaths || {}).some(who =>
     state.diedAt(who).includes(day) &&
@@ -1035,6 +1040,9 @@ causeRule(function aGodfatherAnswersAnOutsider(world, state, night) {
   if (told)
     out.push(new Cause("Godfather (Storyteller)", OTHER, allSeats(state),
                        {capacity: 1, mustFire: true}));
+  for (const who of alchemists)
+    out.push(new Cause("Alchemist (Godfather)", OTHER, allSeats(state),
+                       {capacity: 1, mustFire: true, actor: who}));
   return out;
 });
 
@@ -1053,7 +1061,7 @@ causeRule(function anAssassinKillsThroughAnything(world, state, night) {
                   unstoppable: true})]
     : [];
   // An Alchemist with its ability (04.11.2026). See solver.py.
-  if (state.script.keys.includes("Alchemist"))
+  if (onBoard(state, "Alchemist"))
     for (const who of alchemistsWith(world, state, "Assassin", `N${night}`))
       out.push(new Cause("Alchemist (Assassin)", OTHER, allSeats(state),
                          {capacity: 1, cost: PRIORS.ASSASSIN_STRIKE_PENALTY,

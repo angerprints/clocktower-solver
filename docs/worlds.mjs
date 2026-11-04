@@ -742,6 +742,7 @@ export function bags(nPlayers, script = DEFAULT, fabled = []) {
 
   out = out.concat(marionetteToBe(out, script));
   out = out.concat(boffinBrackets(out, script));
+  const alchemy = alchemistBrackets(out, script);
   const room = Object.fromEntries(TEAMS.map(t => [t, script.byTeam(t).length]));
   const seen = new Set(), kept = [];
   for (const [present, counts] of out) {
@@ -758,7 +759,92 @@ export function bags(nPlayers, script = DEFAULT, fabled = []) {
     seen.add(key);
     kept.push([present, counts]);
   }
+  // The Alchemist's, where no other bag holds the same deals. See
+  // worlds.py `_bags`.
+  for (const [present, counts] of alchemy) {
+    if (TEAMS.reduce((s, t) => s + counts[t], 0) !== nPlayers) continue;
+    if (TEAMS.some(t => counts[t] < 0 || counts[t] > room[t])) continue;
+    const split = "|" + TEAMS.map(t => counts[t]).join(",");
+    const key = [...present].sort().join(",") + split;
+    const without = [...present].filter(p => p !== "Alchemist").sort()
+      .join(",") + split;
+    if (seen.has(key) || seen.has(without)) continue;
+    seen.add(key);
+    kept.push([present, counts]);
+  }
   return kept;
+}
+
+/** The Alchemist's setup (group 2, 04.11.2026): its Baron, Godfather and
+ * Xaan shift the bag as theirs do. See worlds.py. */
+export const ALCHEMY_SETUP = ["Baron", "Godfather", "Xaan"];
+
+function alchemistBrackets(bags, script) {
+  if (!script.keys.includes("Alchemist")) return [];
+  const out = [];
+  for (const key of ALCHEMY_SETUP) {
+    if (!script.keys.includes(key)) continue;
+    for (const [present, counts] of bags) {
+      if ([...present].some(p => p.startsWith("gift:") || p.includes("@")))
+        continue;
+      for (const shift of CHARACTERS[key].setup) {
+        if (!Object.keys(shift).length) continue;
+        const moved = {...counts};
+        for (const [team, delta] of Object.entries(shift)) moved[team] += delta;
+        out.push([new Set([...present, "Alchemist"]), moved]);
+      }
+    }
+  }
+  return out;
+}
+
+const ALCHEMY_CACHE = new Map();
+
+/** Which setup an Alchemist dealt here may have changed: [plain, keys], or
+ * null with no Alchemist dealt. See worlds.py `alchemy_brackets`. */
+export function alchemyBrackets(roles, script, fabled = []) {
+  if (!script.keys.includes("Alchemist") || !roles.includes("Alchemist"))
+    return null;
+  const movers = script.setupModifiers;
+  const dealt = [...new Set(roles.filter(r => r in movers))].sort();
+  const split = TEAMS.map(t => roles.filter(r => TEAM[r] === t).length);
+  const key = [script.keys.join(","), fabled.join(","), roles.length,
+               dealt.join(","), split.join(","), roles.includes("Damsel"),
+               roles.includes("Boffin")].join("|");
+  if (ALCHEMY_CACHE.has(key)) return ALCHEMY_CACHE.get(key);
+  // A dealt Xaan explains any split. See worlds.py.
+  if (dealt.includes("Xaan")) {
+    const answer = [true, new Set(ALCHEMY_SETUP.filter(k =>
+      script.keys.includes(k)))];
+    ALCHEMY_CACHE.set(key, answer);
+    return answer;
+  }
+  let plain = false;
+  const keys = new Set();
+  for (const [present, counts] of bags(roles.length, script, fabled)) {
+    if (present.has("Alchemist")) continue;
+    const real = [...present].filter(p => p in movers).sort();
+    if (real.join(",") !== dealt.join(",")) continue;
+    if ([...present].some(p => !(p in movers) && CHARACTERS[p]
+                          && !roles.includes(p))) continue;
+    const here = TEAMS.map(t => counts[t]);
+    if (here.every((c, i) => c === split[i])) plain = true;
+    for (const mover of ALCHEMY_SETUP) {
+      if (!script.keys.includes(mover)) continue;
+      for (const shift of CHARACTERS[mover].setup) {
+        if (!Object.keys(shift).length) {
+          // One that may move nothing fits the plain bag. See worlds.py.
+          if (here.every((c, i) => c === split[i])) keys.add(mover);
+          continue;
+        }
+        if (TEAMS.every((t, i) => here[i] + (shift[t] || 0) === split[i]))
+          keys.add(mover);
+      }
+    }
+  }
+  const answer = [plain, keys];
+  ALCHEMY_CACHE.set(key, answer);
+  return answer;
 }
 
 // Characters more than one seat may hold: the Village Idiot, up to three

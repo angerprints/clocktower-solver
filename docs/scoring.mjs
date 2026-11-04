@@ -25,7 +25,7 @@ import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
         summonerWorld, teaParty, turnedEvil, engineered, boffinGift,
         bracketGifts, plagueGift, plagueMade, plagueSummoned, pitHagDemon,
-        alchemistGift}
+        alchemistGift, ALCHEMY_SETUP, alchemyBrackets}
   from "./worlds.mjs";
 import {aLeviathanIsToldOf, demonHolding, summonedBeside, madeBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows, STORYTELLER_SAVES}
@@ -2893,7 +2893,7 @@ transitionRule(aPlagueDoctorGivesTheStoryteller);
 // ---------------------------------------------------------------------
 /** What an Alchemist holds that the town can see, group 1. */
 export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
-  "Cerenovus", "Assassin", "Fearmonger"]);
+  "Cerenovus", "Assassin", "Fearmonger", "Godfather"]);
 
 export const alchemistOnBoard = state => onBoard(state, "Alchemist");
 
@@ -2902,13 +2902,25 @@ export const alchemistOnBoard = state => onBoard(state, "Alchemist");
  * solver.py `alchemist_offers`. */
 export function alchemistOffers(world, state, seat, since = "N1") {
   let may = state.script.keys.filter(k => TEAM[k] === "minion").sort();
+  // Group 2: a dealt one's setup shift. See solver.py.
+  let seenHere = ALCHEMY_SEEN;
+  if (since === "N1" && world.roles[seat] === "Alchemist") {
+    const setup = alchemyBrackets(world.roles, state.script,
+                                  state.fabled || []);
+    if (setup !== null) {
+      const [plain, keys] = setup;
+      may = may.filter(k => !ALCHEMY_SETUP.includes(k) || keys.has(k));
+      if (!plain) may = may.filter(k => keys.has(k));
+      seenHere = new Set([...ALCHEMY_SEEN, ...keys]);
+    }
+  }
   const named = state.infos.filter(i => i.type === "AlchemistHas"
     && i.player === seat).map(i => alchemistGiven(i, state));
   if (named.length) {
     if (named[0] === null || !may.includes(named[0])) return [];
     may = [named[0]];
   }
-  const seen = may.filter(k => ALCHEMY_SEEN.has(k));
+  const seen = may.filter(k => seenHere.has(k));
   const unseen = may.length - seen.length;
   const out = [];
   if (unseen || !may.length)
