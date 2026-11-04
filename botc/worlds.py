@@ -300,6 +300,21 @@ def plague_gift_change(phase, seat, gift, slot=None):
     return PlagueGift(phase, seat, None, gift, slot)
 
 
+class AlchemistGift(PlagueGift):
+    """The Minion ability the Alchemist on this seat has (04.11.2026,
+    claude/alchemist-lesarten.md): from the first night, before anybody
+    acts. A kind of `PlagueGift`, so it is kept and read the same way
+    (`Timeline.plague_at`, `info.has_plague_ability`) — the seat holding
+    the Alchemist, not a Minion, is what has it. `PLAGUE_UNSEEN` for every
+    ability nothing on the board can show."""
+    __slots__ = ()
+
+
+def alchemist_gift_change(seat, gift):
+    """An `AlchemistGift` mark: the Alchemist's ability, from the start."""
+    return AlchemistGift("N1", seat, None, gift, SETUP_SLOT)
+
+
 class PlagueMade(Change):
     """A seat the Storyteller's stage 2 ability made something (Pestdoktor
     Stufe 2, 29.10.2026): its Pit-Hag's (A), the jinxes of the Baron, the

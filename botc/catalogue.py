@@ -735,6 +735,14 @@ _EXPERIMENTAL = [
     # changes an execution, and those five.
     _c("PlagueDoctor", "plaguedoctor", "Plague Doctor", "outsider",
        {NEVER}),
+    # The tenth (04.11.2026, claude/alchemist-lesarten.md). A good
+    # Townsfolk with a Minion ability of the script, in play or not (C Weg
+    # 1), learned on the first night. Which one is a story
+    # (solver.alchemist_told, worlds.AlchemistGift), told as each story is
+    # explained; a row ("Alchemist has …") names it (B Weg 1). It wakes
+    # when that Minion would, so its waking is open until it is known.
+    _c("Alchemist", "alchemist", "Alchemist", "townsfolk",
+       set(WAKE_PATTERNS), nights="conditional", chooses=True),
 ]
 
 

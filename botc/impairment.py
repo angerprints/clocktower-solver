@@ -179,7 +179,8 @@ SOURCE_TURNS = {"poisoner": "Poisoner",
                 "a_widow_poisons_one": "Widow",
                 "a_preacher_silences_its_minions": "Preacher",
                 "a_lleech_poisons_its_host": "Lleech",
-                "an_innkeeper_drunks_one_of_the_two_it_guards": "Innkeeper"}
+                "an_innkeeper_drunks_one_of_the_two_it_guards": "Innkeeper",
+                "an_alchemist_poisons": "Poisoner"}
 
 
 def _before_a_party(world, state, night, got):
