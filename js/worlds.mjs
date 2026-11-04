@@ -812,6 +812,13 @@ export function alchemyBrackets(roles, script, fabled = []) {
                dealt.join(","), split.join(","), roles.includes("Damsel"),
                roles.includes("Boffin")].join("|");
   if (ALCHEMY_CACHE.has(key)) return ALCHEMY_CACHE.get(key);
+  // A dealt Xaan explains any split. See worlds.py.
+  if (dealt.includes("Xaan")) {
+    const answer = [true, new Set(ALCHEMY_SETUP.filter(k =>
+      script.keys.includes(k)))];
+    ALCHEMY_CACHE.set(key, answer);
+    return answer;
+  }
   let plain = false;
   const keys = new Set();
   for (const [present, counts] of bags(roles.length, script, fabled)) {

@@ -1130,6 +1130,15 @@ def alchemy_brackets(roles, script, fabled=()):
     got = _ALCHEMY_CACHE.get(key)
     if got is not None:
         return got
+    # A dealt Xaan's "[X Outsiders]" explains any split, and the bags reach
+    # some only in one order of the shifts (a Baron's two before a Xaan's
+    # two fewer): with one dealt, nothing is ruled out (seed 2704 of the
+    # gate, 04.11.2026).
+    if "Xaan" in dealt:
+        answer = (True, frozenset(k for k in ALCHEMY_SETUP
+                                  if k in script.keys))
+        _ALCHEMY_CACHE[key] = answer
+        return answer
     plain, keys = False, set()
     base = _bags(len(roles), script, fabled)
     for present, counts in base:
