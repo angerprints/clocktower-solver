@@ -627,7 +627,9 @@ def woke(world, state, seat, night):
     # the Fearmonger's ability wakes for it as that one would (I Weg 1,
     # 28.10.2026). The Storyteller's own wakes nobody. An Alchemist wakes
     # for the Minion ability it holds the same way (04.11.2026).
-    if world.team_at(seat, phase) == "minion" or role == "Alchemist":
+    from .info import acts_as_alchemist     # local: info imports waking
+    if world.team_at(seat, phase) == "minion" \
+            or acts_as_alchemist(world, state, seat, phase):
         for got in world.plague_at(seat, phase):
             if got in CHARACTERS and woke_as(world, state, seat, night, got):
                 return True

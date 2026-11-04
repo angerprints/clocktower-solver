@@ -310,9 +310,11 @@ class AlchemistGift(PlagueGift):
     __slots__ = ()
 
 
-def alchemist_gift_change(seat, gift):
-    """An `AlchemistGift` mark: the Alchemist's ability, from the start."""
-    return AlchemistGift("N1", seat, None, gift, SETUP_SLOT)
+def alchemist_gift_change(seat, gift, phase="N1"):
+    """An `AlchemistGift` mark: the Alchemist's ability, from the start —
+    or, for a Philosopher that took the Alchemist, from the night it
+    chose (04.11.2026)."""
+    return AlchemistGift(phase, seat, None, gift, SETUP_SLOT)
 
 
 class PlagueMade(Change):

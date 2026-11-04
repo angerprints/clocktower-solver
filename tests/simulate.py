@@ -1224,6 +1224,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.alchemy = {}
     d.alch_poisoned = {}                # night -> (Alchemist, its pick)
     d.alch_kills = {}                   # night -> (Alchemist, its Assassin's)
+    d.alch_spared = {}                  # night -> (Alchemist, its Advocate's)
     for seat in range(n):
         if roles[seat] != "Alchemist":
             continue
@@ -1599,6 +1600,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # that line ends — and the game, if none stands (Hatter stage 2).
         if d.line2 and _demons_fall(d, f"N{night}"):
             d.ended_at, d.ended_why = f"N{night}", "demons dead"
+            d.game_ends_after = night
+            break
+
+        # The Alchemist's Assassin shot the Demon: good has won.
+        if _alchemist_killed_the_demon(d, night):
+            d.ended_at, d.ended_why = f"N{night}", "alchemist"
             d.game_ends_after = night
             break
 
@@ -2064,15 +2071,18 @@ def _assassin_strikes(d, night, rng):
     # game, and nothing stops it — nor does a Goon turn it, being no
     # player's choice.
     # An Alchemist with the Assassin's ability: once, at somebody it does
-    # not trust — never the Demon here, which would end the game.
+    # not trust — the Demon too, which ends the game (Patrick, 04.11.2026).
+    # Not yet where something else happens when the Demon dies: a Scarlet
+    # Woman standing, or a Demon that dies its own way.
     for alch in _alchemists(d, "Assassin", night):
         if alch in d.assassin_chose or d.deaths.get(alch) is not None:
             continue
         sitter = d.babysat.get(night) if d.babysat else None
         demon = d.demon_at(phase)
+        spare = (alch, sitter) if _alchemist_may_end_it(d, phase) \
+            else (alch, sitter, demon)
         targets = [p for p in d.alive_at(phase)
-                   if d.deaths.get(p) is None and p not in (alch, sitter,
-                                                             demon)]
+                   if d.deaths.get(p) is None and p not in spare]
         if not targets or rng.random() >= 0.3:
             continue
         target = rng.choice(targets)
@@ -2349,6 +2359,31 @@ def _a_vigormortis_killed(d, seat, phase):
     return now is not None and now in d.alive_at(phase)
 
 
+# The Demons whose death at night ends the game with nothing else to it.
+ALCHEMY_ENDS_IT = ("Imp", "Po", "Pukka", "Shabaloth", "FangGu", "NoDashii",
+                   "Vortox", "Vigormortis")
+
+
+def _alchemist_may_end_it(d, phase):
+    """May an Alchemist's Assassin shot at the Demon end the game here? One
+    Demon of the plain kind, and no Scarlet Woman to take over."""
+    demon = d.demon_at(phase)
+    if demon is None or d.line2 or d.lil_monsta \
+            or d.role_at(demon, phase) not in ALCHEMY_ENDS_IT:
+        return False
+    return not any(_scarlet(d, p, phase) for p in d.alive_at(phase))
+
+
+def _alchemist_killed_the_demon(d, night):
+    """The Alchemist's Assassin killed the Demon tonight: good has won."""
+    got = getattr(d, "alch_kills", {}).get(night)
+    if got is None:
+        return False
+    target = got[1]
+    return d.deaths.get(target) == f"N{night}" \
+        and d.role_at(target, f"N{night}") in ALCHEMY_ENDS_IT
+
+
 def _alchemist_undone(d, night):
     """A Philosopher took the Alchemist tonight, at its turn near the front
     of the night: what a dealt Alchemist chose earlier in this loop it chose
@@ -2360,21 +2395,33 @@ def _alchemist_undone(d, night):
     if d.cursed_by.get(night) in alchemists:
         del d.cursed_by[night]
         d.cursed.pop(night, None)
-    got = d.spared.get(night)
-    if got is not None and got[0] in alchemists:
-        del d.spared[night]
+    if d.alch_spared.get(night, (None,))[0] in alchemists:
+        del d.alch_spared[night]
 
 
 def _alchemist_advocates(d, night, rng):
     """An Alchemist with the Devil's Advocate's ability (04.11.2026): somebody
     it trusts, now and then itself. "Different to last night" is not held
-    to. A dealt Devil's Advocate choosing later tonight overrides it."""
+    to. Beside a dealt Devil's Advocate's pick, and both count (Patrick,
+    04.11.2026)."""
     phase = f"N{night}"
     for alch in _alchemists(d, "DevilsAdvocate", night):
         living = d.alive_at(phase)
         if living:
-            d.spared[night] = (alch, rng.choice(living))
+            d.alch_spared[night] = (alch, rng.choice(living))
             return
+
+
+def _alchemist_spared(d, seat, day, phase):
+    """Did an Alchemist with the Devil's Advocate's ability keep this seat
+    from the gallows today?"""
+    got = getattr(d, "alch_spared", {}).get(day)
+    if got is None or got[1] != seat:
+        return False
+    alch = got[0]
+    return alch in d.alive_at(phase) and d.deaths.get(alch) is None \
+        and _alchemy(d, alch, "DevilsAdvocate", phase) \
+        and d.working(alch, day, by_day=True)
 
 
 def _devils_advocate_picks(d, night, rng):
@@ -3005,9 +3052,18 @@ ALCHEMY_NEVER = ("Spy", "Widow", "Wraith", "Marionette", "Mastermind",
 
 
 def _alchemy(d, seat, key, phase):
-    """An Alchemist holding that Minion's ability then (04.11.2026)."""
-    return getattr(d, "alchemy", {}).get(seat) == key \
-        and d.role_at(seat, phase) == "Alchemist"
+    """An Alchemist holding that Minion's ability then (04.11.2026) — or a
+    Philosopher that took the Alchemist, from the night it chose, with one
+    of its own (Patrick, 04.11.2026)."""
+    if getattr(d, "alchemy", {}).get(seat) != key:
+        return False
+    role = d.role_at(seat, phase)
+    if role == "Alchemist":
+        return True
+    since = getattr(d, "alchemy_since", {}).get(seat)
+    return role == "Philosopher" and since is not None \
+        and d.philosophies.get(seat) == "Alchemist" \
+        and int(phase[1:]) >= since
 
 
 def _alchemists(d, key, night):
@@ -4629,6 +4685,8 @@ def _walks_away(d, seat, day, rng):
     advocate, chosen = d.spared.get(day) or (None, None)
     if chosen == seat and advocate == "ST":
         return "DevilsAdvocate"           # the Storyteller's (28.10.2026)
+    if _alchemist_spared(d, seat, day, phase):
+        return "DevilsAdvocate"
     if chosen == seat and advocate in d.alive_at(phase) \
             and d.deaths.get(advocate) is None \
             and _holds(d, advocate, "DevilsAdvocate", phase) \
@@ -4754,7 +4812,8 @@ def _execute(d, day, rng, allow_takeover=False):
                    advocate in d.alive_at(phase)
                    and d.deaths.get(advocate) is None
                    and _holds(d, advocate, "DevilsAdvocate", phase)
-                   and d.working(advocate, day))))
+                   and d.working(advocate, day)))) \
+        or (demon is not None and _alchemist_spared(d, demon, day, phase))
     # A Lleech whose host lives walks away from it (11.10.2026).
     lleech_stands = (demon is not None
                      and _a_lleech_holds(d, demon, f"D{day}", day,
@@ -8227,6 +8286,15 @@ def _for_role(d, seat, role, night, rng):
         d.philosophies[seat] = took
         if took == "Alchemist":
             _alchemist_undone(d, night)
+            # And it has a Minion ability of its own, maybe another than
+            # the one the Alchemist it drunk was shown (Patrick, 04.11.2026).
+            pool = [k for k in d.script.minions if k not in ALCHEMY_NEVER]
+            if pool:
+                d.alchemy[seat] = rng.choice(pool)
+                d.__dict__.setdefault("alchemy_since", {})[seat] = night
+                if rng.random() < 0.5:
+                    d.said_by_others.append(
+                        AlchemistHas(night, seat, role=d.alchemy[seat]))
         # The night it chose, when it woke to (Stelle 101): a made one
         # chooses after the first night, and a Chambermaid counts it.
         d.__dict__.setdefault("phil_night", {})[seat] = night

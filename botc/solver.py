@@ -40,6 +40,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    faux_paw_lycanthrope, side_open,
                    PlagueDoctorGave, PLAGUE_UNSEEN, STORYTELLER,
                    storyteller_has, has_plague_ability, plague_holders,
+                   acts_as_alchemist,
                    BecameInfo, EvilTwinPair, BoomdandyExploded,
                    AlchemistHas)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
@@ -3740,17 +3741,23 @@ ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
 
 
 def _alchemist_on_board(state):
-    """An Alchemist on the script."""
-    return "Alchemist" in state.script.keys
+    """An Alchemist on the script, or taken by a Philosopher."""
+    return _on_board(state, "Alchemist")
 
 
-def alchemist_seats(world):
-    """The seats dealt the Alchemist."""
-    return [seat for seat, role in enumerate(world.roles)
-            if role == "Alchemist"]
+def alchemist_seats(world, state):
+    """The seats dealt the Alchemist, and the Philosophers that took it
+    (Patrick, 04.11.2026), with when each has its ability from:
+    [(seat, phase)]."""
+    out = [(seat, "N1") for seat, role in enumerate(world.roles)
+           if role == "Alchemist"]
+    for seat, (took, since) in sorted((state.philosophies() or {}).items()):
+        if took == "Alchemist" and world.roles[seat] == "Philosopher":
+            out.append((seat, since))
+    return out
 
 
-def alchemist_offers(world, state, seat):
+def alchemist_offers(world, state, seat, since="N1"):
     """Every ability this Alchemist may have, as [((mark,), cost)]:
     "nothing the town sees" first, each seen one at one over how many
     that holds, so the shares go as a random pick would. A row from the
@@ -3766,9 +3773,11 @@ def alchemist_offers(world, state, seat):
     unseen = len(may) - len(seen)
     out = []
     if unseen or not may:
-        out.append(((alchemist_gift_change(seat, PLAGUE_UNSEEN),), 1.0))
+        out.append(((alchemist_gift_change(seat, PLAGUE_UNSEEN, since),),
+                    1.0))
     each = 1.0 / unseen if unseen else 1.0
-    out.extend(((alchemist_gift_change(seat, key),), each) for key in seen)
+    out.extend(((alchemist_gift_change(seat, key, since),), each)
+               for key in seen)
     return out
 
 
@@ -3776,8 +3785,8 @@ def alchemist_told(world, changes, state):
     """A story with every dealt Alchemist's ability told: [(changes,
     cost)]."""
     out = [(changes, 1.0)]
-    for seat in alchemist_seats(world):
-        offers = alchemist_offers(world, state, seat)
+    for seat, since in alchemist_seats(world, state):
+        offers = alchemist_offers(world, state, seat, since)
         out = [(got + way, cost * c) for got, cost in out
                for way, c in offers]
     return out
@@ -3786,9 +3795,9 @@ def alchemist_told(world, changes, state):
 def alchemists_with(world, state, role, phase):
     """The living seats holding the Alchemist with that ability then."""
     alive = state.alive_set(phase)
-    return [seat for seat in alchemist_seats(world)
+    return [seat for seat, _since in alchemist_seats(world, state)
             if seat in alive and role in world.plague_at(seat, phase)
-            and world.role_at(seat, phase) == "Alchemist"]
+            and acts_as_alchemist(world, state, seat, phase)]
 
 
 def plague_unreckoned(view, state):
@@ -9373,7 +9382,8 @@ def _best_story_told(world, state, outcome, viable):
     if not stories:
         return None, ()
     turning = _in_bag(state, "Mezepheles")
-    alchemy = _alchemist_on_board(state) and bool(alchemist_seats(world))
+    alchemy = _alchemist_on_board(state) \
+        and bool(alchemist_seats(world, state))
     if stories == [((), 1.0)] and not turning and not alchemy:
         cost = _explain(world, state, outcome)
         if viable is not None and cost is not None:

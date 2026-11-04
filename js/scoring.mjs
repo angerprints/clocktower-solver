@@ -2895,13 +2895,12 @@ transitionRule(aPlagueDoctorGivesTheStoryteller);
 export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
   "Cerenovus", "Assassin", "Fearmonger"]);
 
-export const alchemistOnBoard = state =>
-  state.script.keys.includes("Alchemist");
+export const alchemistOnBoard = state => onBoard(state, "Alchemist");
 
 
 /** Every ability this Alchemist may have, [[[mark], cost]]. See
  * solver.py `alchemist_offers`. */
-export function alchemistOffers(world, state, seat) {
+export function alchemistOffers(world, state, seat, since = "N1") {
   let may = state.script.keys.filter(k => TEAM[k] === "minion").sort();
   const named = state.infos.filter(i => i.type === "AlchemistHas"
     && i.player === seat).map(i => alchemistGiven(i, state));
@@ -2913,17 +2912,17 @@ export function alchemistOffers(world, state, seat) {
   const unseen = may.length - seen.length;
   const out = [];
   if (unseen || !may.length)
-    out.push([[alchemistGift(seat, PLAGUE_UNSEEN)], 1.0]);
+    out.push([[alchemistGift(seat, PLAGUE_UNSEEN, since)], 1.0]);
   const each = unseen ? 1.0 / unseen : 1.0;
-  for (const key of seen) out.push([[alchemistGift(seat, key)], each]);
+  for (const key of seen) out.push([[alchemistGift(seat, key, since)], each]);
   return out;
 }
 
 /** A story with every dealt Alchemist's ability told. See solver.py. */
 export function alchemistTold(world, changes, state) {
   let out = [[changes, 1.0]];
-  for (const seat of alchemistSeats(world)) {
-    const offers = alchemistOffers(world, state, seat);
+  for (const [seat, since] of alchemistSeats(world, state)) {
+    const offers = alchemistOffers(world, state, seat, since);
     out = out.flatMap(([got, cost]) =>
       offers.map(([way, c]) => [[...got, ...way], cost * c]));
   }
@@ -5058,7 +5057,7 @@ function bestStoryTold(world, state, outcome) {
   const stories = possibleTimelines(world, state);
   if (!stories.length) return {cost: null, changes: [], viable: []};
   const turning = inBag(state, "Mezepheles");
-  const alchemy = alchemistOnBoard(state) && alchemistSeats(world).length > 0;
+  const alchemy = alchemistOnBoard(state) && alchemistSeats(world, state).length > 0;
   if (stories.length === 1 && !stories[0][0].length && !turning
       && !alchemy) {
     const cost = explainOne(world, state, outcome);
