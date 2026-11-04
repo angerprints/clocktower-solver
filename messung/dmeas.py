@@ -1,4 +1,4 @@
-"""How often is the Demon found? python3 dmeas.py SCRIPT OUT.jsonl FIRST LAST NIGHTS"""
+"""How often (a script name ending in +A adds the Alchemist) is the Demon found? python3 dmeas.py SCRIPT OUT.jsonl FIRST LAST NIGHTS"""
 import sys, random, time, json
 sys.path.insert(0, "."); sys.path.insert(0, "tests")
 import simulate, claims as C
@@ -6,7 +6,10 @@ from botc import scripts, solver as S
 from botc.info import GameState
 from botc.worlds import World
 sc = {"BMR": scripts.BAD_MOON_RISING, "SV": scripts.SECTS_AND_VIOLETS,
-      "TB": scripts.TROUBLE_BREWING}[sys.argv[1]]
+      "TB": scripts.TROUBLE_BREWING}.get(sys.argv[1].rstrip("+A"))
+# "TB+A": the script with the Alchemist added (04.11.2026).
+if sys.argv[1].endswith("+A"):
+    sc = scripts.from_ids(sc.name + " + Alchemist", list(sc.keys) + ["Alchemist"])
 first, last, nights = int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])
 out = open(sys.argv[2], "a")
 for seed in range(first, last):
