@@ -181,6 +181,7 @@ const SOURCE_TURNS = {
   aPreacherSilencesItsMinions: "Preacher",
   aLleechPoisonsItsHost: "Lleech",
   anInnkeeperDrunksOneOfTheTwoItGuards: "Innkeeper",
+  anAlchemistPoisons: "Poisoner",
 };
 
 const sourceMark = s =>

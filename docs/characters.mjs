@@ -1687,6 +1687,21 @@ export const DATA = {
    ],
    "impairs": true,
    "other_night": 610
+  },
+  "Alchemist": {
+   "id": "alchemist",
+   "name": "Alchemist",
+   "team": "townsfolk",
+   "wake": [
+    "every",
+    "first",
+    "never",
+    "other",
+    "sometimes"
+   ],
+   "chooses": true,
+   "nights": "conditional",
+   "first_night": 140
   }
  },
  "scripts": {
