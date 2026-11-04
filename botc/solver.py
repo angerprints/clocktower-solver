@@ -40,7 +40,8 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    faux_paw_lycanthrope, side_open,
                    PlagueDoctorGave, PLAGUE_UNSEEN, STORYTELLER,
                    storyteller_has, has_plague_ability, plague_holders,
-                   BecameInfo, EvilTwinPair, BoomdandyExploded)
+                   BecameInfo, EvilTwinPair, BoomdandyExploded,
+                   AlchemistHas)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
                     INVERTED, registers_as_role, evil_registrations,
@@ -54,6 +55,7 @@ from .worlds import READ_AT, SETUP_SLOT, _row_slot, reading_at
 from .worlds import Engineered
 from .worlds import BOFFIN_UNSEEN, BoffinGift, boffin_gift_change, bracket_gifts
 from .worlds import PlagueGift, plague_gift_change, PlagueMade, PlagueSummoned
+from .worlds import AlchemistGift, alchemist_gift_change
 from .info import registers_of, evil_registrations_here
 from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
                      SUMMON_READS, Summoned, PitHagDemon, TEA_READS,
@@ -3718,6 +3720,77 @@ def plague_told_later(world, changes, state):
     return out
 
 
+# --------------------------------------------------------------------------
+# The Alchemist (04.11.2026, claude/alchemist-lesarten.md)
+# --------------------------------------------------------------------------
+# "You have a Minion ability. When using this, the Storyteller may prompt
+# you to choose differently." Patrick's answers of 04.11.2026: A Weg 1 (in
+# groups), B Weg 1 (a row names it), C Weg 1 (a Minion of the script, in
+# play or not), D Weg 2, E Weg 1, F Weg 1.
+#
+# Which ability is a story, told as each story is explained
+# (`alchemist_told`), as the Plague Doctor's are: each the board can show
+# is one of its own, the others are one, "nothing the town sees", weighed
+# as many as it holds. A dealt Alchemist only, stage 1.
+
+# What an Alchemist holds that the town can see, group 1 (claude/alchemist-
+# gruppen.md): the Minions that choose at night.
+ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
+                          "Cerenovus", "Assassin", "Fearmonger"})
+
+
+def _alchemist_on_board(state):
+    """An Alchemist on the script."""
+    return "Alchemist" in state.script.keys
+
+
+def alchemist_seats(world):
+    """The seats dealt the Alchemist."""
+    return [seat for seat, role in enumerate(world.roles)
+            if role == "Alchemist"]
+
+
+def alchemist_offers(world, state, seat):
+    """Every ability this Alchemist may have, as [((mark,), cost)]:
+    "nothing the town sees" first, each seen one at one over how many
+    that holds, so the shares go as a random pick would. A row from the
+    seat names it."""
+    may = sorted(k for k in state.script.keys if TEAM.get(k) == "minion")
+    named = [i.given(state) for i in state.infos
+             if isinstance(i, AlchemistHas) and i.player == seat]
+    if named:
+        if named[0] is None or named[0] not in may:
+            return []
+        may = [named[0]]
+    seen = [k for k in may if k in ALCHEMY_SEEN]
+    unseen = len(may) - len(seen)
+    out = []
+    if unseen or not may:
+        out.append(((alchemist_gift_change(seat, PLAGUE_UNSEEN),), 1.0))
+    each = 1.0 / unseen if unseen else 1.0
+    out.extend(((alchemist_gift_change(seat, key),), each) for key in seen)
+    return out
+
+
+def alchemist_told(world, changes, state):
+    """A story with every dealt Alchemist's ability told: [(changes,
+    cost)]."""
+    out = [(changes, 1.0)]
+    for seat in alchemist_seats(world):
+        offers = alchemist_offers(world, state, seat)
+        out = [(got + way, cost * c) for got, cost in out
+               for way, c in offers]
+    return out
+
+
+def alchemists_with(world, state, role, phase):
+    """The living seats holding the Alchemist with that ability then."""
+    alive = state.alive_set(phase)
+    return [seat for seat in alchemist_seats(world)
+            if seat in alive and role in world.plague_at(seat, phase)
+            and world.role_at(seat, phase) == "Alchemist"]
+
+
 def plague_unreckoned(view, state):
     """What the Plague Doctor leaves out that the solver does not reckon,
     or None: since stage 2 (29.10.2026) only a Summoner the Storyteller
@@ -4374,9 +4447,14 @@ def a_devils_advocate_saves_from_the_gallows(world, state, day, seat):
     # has to have been working. "Different to last night" is not held to.
     if storyteller_has(world, "DevilsAdvocate", phase):
         return [STORYTELLER_SAVES]
+    # And an Alchemist with its ability (04.11.2026, group 1): a saver of
+    # its own, working when it chose. "Different to last night" is not
+    # held to — a world is kept rather than lost.
+    alchemists = alchemists_with(world, state, "DevilsAdvocate", phase) \
+        if _alchemist_on_board(state) else []
     advocate = world.find_at("DevilsAdvocate", phase)
     if advocate is None or advocate not in state.alive_set(phase):
-        return []
+        return alchemists
     # "Different to last night": it cannot keep the same player from the
     # gallows two days running. If they walked away yesterday too and
     # nothing but the Advocate could have managed that, it was spent on
@@ -4384,8 +4462,8 @@ def a_devils_advocate_saves_from_the_gallows(world, state, day, seat):
     if _walked_away(state, day - 1, seat) and not survivals_of(
             world, state, day - 1, seat,
             but=a_devils_advocate_saves_from_the_gallows):
-        return []
-    return [advocate]
+        return alchemists
+    return [advocate] + alchemists
 
 
 @survives_execution_rule
@@ -5098,6 +5176,14 @@ def an_assassin_kills_through_anything(world, state, night):
             name="Assassin (Storyteller)", kind=death_causes.OTHER,
             seats=frozenset(range(state.n_players)), capacity=1,
             cost=ASSASSIN_STRIKE_PENALTY, unstoppable=True))
+    # An Alchemist with its ability (04.11.2026, group 1): its own, so a
+    # kill says it was working. Once a game is not held to here.
+    if _alchemist_on_board(state):
+        out.extend(death_causes.Cause(
+            name="Alchemist (Assassin)", kind=death_causes.OTHER,
+            seats=frozenset(range(state.n_players)), capacity=1,
+            cost=ASSASSIN_STRIKE_PENALTY, unstoppable=True, actor=who)
+            for who in alchemists_with(world, state, "Assassin", phase))
     seat = world.find_at("Assassin", phase)
     if seat is None or seat not in state.alive_set(phase):
         return out
@@ -6814,6 +6900,13 @@ def _plain_failures(world, state, outcome=None):
                 and len(state.alive_set(f"D{day}")) > 3:
             working.setdefault(day, set()).add(witch)
             continue
+        # Or an Alchemist with the Witch's ability (04.11.2026, group 1),
+        # working when it cursed.
+        cursers = alchemists_with(world, state, "Witch", f"N{day}") \
+            if _alchemist_on_board(state) else []
+        if cursers and len(state.alive_set(f"D{day}")) > 3:
+            working.setdefault(day, set()).add(cursers[0])
+            continue
         # Or a Yaggababble's kill by day, which is rare and costs: "for
         # each time you said it publicly today, a player might die", and
         # the Storyteller may take them there and then (table ruling,
@@ -6831,7 +6924,12 @@ def _plain_failures(world, state, outcome=None):
         maddener = world.find_at("Cerenovus", f"N{day}")
         if maddener is None or not minion_still_acts(world, state, maddener,
                                                      f"N{day}"):
-            return None, None, 1.0, None
+            # Or an Alchemist with its ability (04.11.2026, group 1).
+            mad = alchemists_with(world, state, "Cerenovus", f"N{day}") \
+                if _alchemist_on_board(state) else []
+            if not mad:
+                return None, None, 1.0, None
+            maddener = mad[0]
         working.setdefault(day, set()).add(maddener)
 
     # The good twin executed, and the game carried on. Evil wins on the
@@ -8146,6 +8244,21 @@ impairment.source_rule(
                                   lambda: POISON_REPEAT_PENALTY))
 
 
+@impairment.source_rule
+def an_alchemist_poisons(world, state, night):
+    """An Alchemist with the Poisoner's ability (04.11.2026, group 1):
+    each night a living player, priced as the Poisoner is, its own
+    ability — it does nothing once the Alchemist is dead."""
+    if not _alchemist_on_board(state):
+        return []
+    phase = f"N{night}"
+    return [impairment.Source(
+        "Alchemist (Poisoner)", state.alive_set(phase), capacity=1,
+        cost=POISON_HIT_PENALTY, repeat_cost=POISON_REPEAT_PENALTY,
+        actor=seat)
+        for seat in alchemists_with(world, state, "Poisoner", phase)]
+
+
 # A Storyteller treats the Sailor's drunkenness as the price the town pays
 # for having somebody who cannot die, not as a weapon to point at evil. So
 # the Sailor drunking itself is ordinary, and the Sailor drunking the evil
@@ -9260,7 +9373,8 @@ def _best_story_told(world, state, outcome, viable):
     if not stories:
         return None, ()
     turning = _in_bag(state, "Mezepheles")
-    if stories == [((), 1.0)] and not turning:
+    alchemy = _alchemist_on_board(state) and bool(alchemist_seats(world))
+    if stories == [((), 1.0)] and not turning and not alchemy:
         cost = _explain(world, state, outcome)
         if viable is not None and cost is not None:
             viable.append((cost, ()))
@@ -9334,6 +9448,12 @@ def _best_story_told(world, state, outcome, viable):
         if _plague_on_board(state):
             told = [(got, wt * c) for ch, wt in told
                     for got, c in plague_told_later(world, ch, state)]
+            if not told:
+                continue
+        # Each dealt Alchemist's ability (04.11.2026), told the same way.
+        if alchemy:
+            told = [(got, wt * c) for ch, wt in told
+                    for got, c in alchemist_told(world, ch, state)]
             if not told:
                 continue
         # Every story told so far, before a Mezepheles's turns are added.

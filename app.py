@@ -162,6 +162,8 @@ def build_info(d):
                                             for x in d.get("roles") or ()))
     if kind == "BoffinGave":
         return I.BoffinGave(night, player, trust, role=d.get("role") or "")
+    if kind == "AlchemistHas":
+        return I.AlchemistHas(night, player, trust, role=d.get("role") or "")
     if kind == "PlagueDoctorGave":
         return I.PlagueDoctorGave(night, player, trust,
                                   role=d.get("role") or "")
@@ -791,7 +793,7 @@ INFO_SOURCES = {
     "PsychopathRoshambo": "Psychopath", "WidowKnown": "Widow",
     "PreacherChoice": "Preacher", "HuntsmanChoice": "Huntsman",
     "EngineerChoice": "Engineer", "BoffinGave": "Boffin",
-    "PlagueDoctorGave": "PlagueDoctor",
+    "PlagueDoctorGave": "PlagueDoctor", "AlchemistHas": "Alchemist",
     "PuzzlemasterGuess": "Puzzlemaster",
     "BoomdandyExploded": "Boomdandy",
     "PixieLearned": "Pixie", "VillageIdiotInfo": "VillageIdiot",

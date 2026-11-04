@@ -953,7 +953,10 @@ def has_plague_ability(w, s, seat, role, phase):
         return False
     if role not in w.plague_at(seat, phase):
         return False
-    return TEAM.get(w.role_at(seat, phase)) == "minion"
+    # Or the Alchemist's own, from the first night (`AlchemistGift`): a
+    # good Townsfolk with it while it holds the Alchemist (04.11.2026).
+    return TEAM.get(w.role_at(seat, phase)) == "minion" \
+        or w.role_at(seat, phase) == "Alchemist"
 
 
 def plague_holders(w, s, role, phase):
@@ -2111,6 +2114,10 @@ class CerenovusMadness(Info):
         if TEAM.get(self.role) not in ("townsfolk", "outsider"):
             return False
         if seat is None or seat in s.alive_set(f"N{self.night}"):
+            return True
+        # Or an Alchemist with its ability, alive then (04.11.2026).
+        from .solver import alchemists_with
+        if alchemists_with(w, s, "Cerenovus", f"N{self.night}"):
             return True
         # Dead, and maddening people all the same: a Vigormortis's own
         # Minion keeps its ability.
@@ -4066,6 +4073,33 @@ class PlagueDoctorGave(Info):
 
     def source_seat(self, state):
         return None                       # the Storyteller's, not a seat's
+
+    def given(self, s):
+        """The Minion named, or None where it cannot be one."""
+        key = self.role or ""
+        if key not in s.script.keys or TEAM.get(key) != "minion":
+            return None
+        return key
+
+    def holds(self, w, s, rh, seat=None):
+        return self.given(s) is not None
+
+
+@dataclass
+class AlchemistHas(Info):
+    """Which Minion ability the Alchemist has, as it says when it shows
+    itself (04.11.2026, claude/alchemist-lesarten.md, B Weg 1). Learned
+    on the first night, so `night` is 1.
+
+    Without one, every Minion of the script is a story (C Weg 1: in play
+    or not), those nobody sees together; with one, only the named one —
+    on the seat that wrote it, where it is the Alchemist."""
+
+    role: str = ""
+    source_role = "Alchemist"
+
+    def is_information(self, state):
+        return False
 
     def given(self, s):
         """The Minion named, or None where it cannot be one."""

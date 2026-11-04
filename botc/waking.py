@@ -625,8 +625,9 @@ def woke(world, state, seat, night):
                 return True
     # A Minion the Plague Doctor's death gave the Spy's, the Wraith's or
     # the Fearmonger's ability wakes for it as that one would (I Weg 1,
-    # 28.10.2026). The Storyteller's own wakes nobody.
-    if world.team_at(seat, phase) == "minion":
+    # 28.10.2026). The Storyteller's own wakes nobody. An Alchemist wakes
+    # for the Minion ability it holds the same way (04.11.2026).
+    if world.team_at(seat, phase) == "minion" or role == "Alchemist":
         for got in world.plague_at(seat, phase):
             if got in CHARACTERS and woke_as(world, state, seat, night, got):
                 return True
@@ -734,6 +735,11 @@ def uncertain(world, state, seat, night):
     if acting == "Philosopher" and not took \
             and seat in state.alive_set(phase) \
             and _made_after_its_turn(world, seat, night, "Philosopher"):
+        return True
+    # An Alchemist with a Minion ability the town cannot see wakes when
+    # that one would, and which it is nobody knows (04.11.2026).
+    if acting == "Alchemist" and seat in state.alive_set(phase) \
+            and not world.plague_at(seat, phase):
         return True
     if acting == "Choirboy":
         # Woken if the Demon killed the King tonight. A King dead in the

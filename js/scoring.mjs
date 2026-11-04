@@ -24,7 +24,8 @@ import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
         summonerWorld, teaParty, turnedEvil, engineered, boffinGift,
-        bracketGifts, plagueGift, plagueMade, plagueSummoned, pitHagDemon}
+        bracketGifts, plagueGift, plagueMade, plagueSummoned, pitHagDemon,
+        alchemistGift}
   from "./worlds.mjs";
 import {aLeviathanIsToldOf, demonHolding, summonedBeside, madeBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows, STORYTELLER_SAVES}
@@ -38,7 +39,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         BOFFIN_UNSEEN, boffinGiftOf, boffinHolders, boffinSeat, soberSeat,
         boffinAbilities, boffinPhilosophy, hasBoffinAbility,
         PLAGUE_UNSEEN, STORYTELLER, plagueGiven, plagueHolders, storytellerHas,
-        boffinWorking, registersOf}
+        boffinWorking, registersOf, alchemistGiven, alchemistSeats,
+        alchemistsWith}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -2886,6 +2888,49 @@ export function plagueToldLater(world, changes, state) {
 }
 transitionRule(aPlagueDoctorGivesTheStoryteller);
 
+// ---------------------------------------------------------------------
+// The Alchemist (04.11.2026). See solver.py.
+// ---------------------------------------------------------------------
+/** What an Alchemist holds that the town can see, group 1. */
+export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
+  "Cerenovus", "Assassin", "Fearmonger"]);
+
+export const alchemistOnBoard = state =>
+  state.script.keys.includes("Alchemist");
+
+
+/** Every ability this Alchemist may have, [[[mark], cost]]. See
+ * solver.py `alchemist_offers`. */
+export function alchemistOffers(world, state, seat) {
+  let may = state.script.keys.filter(k => TEAM[k] === "minion").sort();
+  const named = state.infos.filter(i => i.type === "AlchemistHas"
+    && i.player === seat).map(i => alchemistGiven(i, state));
+  if (named.length) {
+    if (named[0] === null || !may.includes(named[0])) return [];
+    may = [named[0]];
+  }
+  const seen = may.filter(k => ALCHEMY_SEEN.has(k));
+  const unseen = may.length - seen.length;
+  const out = [];
+  if (unseen || !may.length)
+    out.push([[alchemistGift(seat, PLAGUE_UNSEEN)], 1.0]);
+  const each = unseen ? 1.0 / unseen : 1.0;
+  for (const key of seen) out.push([[alchemistGift(seat, key)], each]);
+  return out;
+}
+
+/** A story with every dealt Alchemist's ability told. See solver.py. */
+export function alchemistTold(world, changes, state) {
+  let out = [[changes, 1.0]];
+  for (const seat of alchemistSeats(world)) {
+    const offers = alchemistOffers(world, state, seat);
+    out = out.flatMap(([got, cost]) =>
+      offers.map(([way, c]) => [[...got, ...way], cost * c]));
+  }
+  return out;
+}
+
+
 /** What the Plague Doctor leaves out that stage 1 does not reckon, or
  * null. See solver.py. */
 export function plagueUnreckoned(view, state) {
@@ -3323,6 +3368,13 @@ function plainFailures(world, state, outcome = {}) {
       (working[day] = working[day] || new Set()).add(witch);
       continue;
     }
+    // Or an Alchemist with the Witch's ability (04.11.2026). See solver.py.
+    const cursers = alchemistOnBoard(state)
+      ? alchemistsWith(world, state, "Witch", `N${day}`) : [];
+    if (cursers.length && state.aliveSet(`D${day}`).size > 3) {
+      (working[day] = working[day] || new Set()).add(cursers[0]);
+      continue;
+    }
     // Or a Yaggababble's kill by day, which is rare and costs (table
     // ruling, 11.10.2026). Never itself.
     const yagga = inBag(state, "Yaggababble")
@@ -3334,9 +3386,14 @@ function plainFailures(world, state, outcome = {}) {
   for (const [day, ] of Object.entries(state.madnessExecutions || {})) {
     // The Storyteller's, the Plague Doctor's gift (28.10.2026).
     if (storytellerHas(world, "Cerenovus", `N${day}`)) continue;
-    const who = world.findAt("Cerenovus", `N${day}`);
-    if (who === null || !minionStillActs(world, state, who, `N${day}`))
-      return null;
+    let who = world.findAt("Cerenovus", `N${day}`);
+    if (who === null || !minionStillActs(world, state, who, `N${day}`)) {
+      // Or an Alchemist with its ability (04.11.2026). See solver.py.
+      const mad = alchemistOnBoard(state)
+        ? alchemistsWith(world, state, "Cerenovus", `N${day}`) : [];
+      if (!mad.length) return null;
+      who = mad[0];
+    }
     (working[day] = working[day] || new Set()).add(who);
   }
 
@@ -5001,7 +5058,9 @@ function bestStoryTold(world, state, outcome) {
   const stories = possibleTimelines(world, state);
   if (!stories.length) return {cost: null, changes: [], viable: []};
   const turning = inBag(state, "Mezepheles");
-  if (stories.length === 1 && !stories[0][0].length && !turning) {
+  const alchemy = alchemistOnBoard(state) && alchemistSeats(world).length > 0;
+  if (stories.length === 1 && !stories[0][0].length && !turning
+      && !alchemy) {
     const cost = explainOne(world, state, outcome);
     return {cost, changes: [], viable: cost === null ? [] : [[cost, []]]};
   }
@@ -5078,6 +5137,12 @@ function bestStoryTold(world, state, outcome) {
     // (the Plague Doctor, 28.10.2026), told the same way. See solver.py.
     if (plagueOnBoard(state)) {
       ways = ways.flatMap(([ch, wt]) => plagueToldLater(world, ch, state)
+        .map(([got, c]) => [got, wt * c]));
+      if (!ways.length) continue;
+    }
+    // Each dealt Alchemist's ability (04.11.2026), told the same way.
+    if (alchemy) {
+      ways = ways.flatMap(([ch, wt]) => alchemistTold(world, ch, state)
         .map(([got, c]) => [got, wt * c]));
       if (!ways.length) continue;
     }

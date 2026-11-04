@@ -439,7 +439,9 @@ export function woke(world, state, seat, night) {
   }
   // A Minion the Plague Doctor's death gave the Spy's, the Wraith's or the
   // Fearmonger's ability wakes for it (I Weg 1, 28.10.2026). See waking.py.
-  if (world.plagueAt && world.teamAt(seat, phase) === "minion")
+  // An Alchemist wakes for the Minion ability it holds (04.11.2026).
+  if (world.plagueAt && (world.teamAt(seat, phase) === "minion"
+                         || role === "Alchemist"))
     for (const got of world.plagueAt(seat, phase))
       if (CHARACTERS[got] && wokeAs(world, state, seat, night, got))
         return true;
@@ -523,6 +525,11 @@ export function uncertain(world, state, seat, night) {
   // wake it at once to choose, or not (Stelle 95, A Weg 1). See waking.py.
   if (acting === "Philosopher" && !took && state.aliveSet(phase).has(seat)
       && madeAfterItsTurn(world, seat, night, "Philosopher"))
+    return true;
+  // An Alchemist with a Minion ability the town cannot see wakes when that
+  // one would, and which it is nobody knows (04.11.2026). See waking.py.
+  if (acting === "Alchemist" && state.aliveSet(phase).has(seat)
+      && !(world.plagueAt ? world.plagueAt(seat, phase) : []).length)
     return true;
   if (acting === "Choirboy")
     // Woken if the Demon killed the King tonight, and whose kill a King's
