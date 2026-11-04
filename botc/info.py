@@ -956,7 +956,22 @@ def has_plague_ability(w, s, seat, role, phase):
     # Or the Alchemist's own, from the first night (`AlchemistGift`): a
     # good Townsfolk with it while it holds the Alchemist (04.11.2026).
     return TEAM.get(w.role_at(seat, phase)) == "minion" \
-        or w.role_at(seat, phase) == "Alchemist"
+        or acts_as_alchemist(w, s, seat, phase)
+
+
+def acts_as_alchemist(w, s, seat, phase):
+    """Holding the Alchemist then — or a Philosopher that took it, from the
+    night it chose, which gets a Minion ability of its own (Patrick,
+    04.11.2026)."""
+    role = w.role_at(seat, phase)
+    if role == "Alchemist":
+        return True
+    if role != "Philosopher":
+        return False
+    took = (s.philosophies() or {}).get(seat)
+    return bool(took) and took[0] == "Alchemist" \
+        and phase_index(phase) >= phase_index(took[1]) \
+        and not _back_since(s, seat, took[1], phase)
 
 
 def plague_holders(w, s, role, phase):

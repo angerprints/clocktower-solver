@@ -22,7 +22,7 @@ from botc.worlds import (AlchemistGift, Timeline, World,  # noqa: E402
                          alchemist_gift_change)
 
 IDS = ["chef", "empath", "fortuneteller", "washerwoman", "investigator",
-       "undertaker", "alchemist", "saint",
+       "undertaker", "alchemist", "saint", "philosopher",
        "poisoner", "witch", "assassin", "devilsadvocate", "cerenovus",
        "fearmonger", "spy", "baron", "imp"]
 SC = scripts.from_ids("Alchemist", IDS)
@@ -124,6 +124,47 @@ class WhatItDoes(SolverTest):
         self.assertIsNone(explained(rows=[row], **kw)[0])
 
 
+class APhilosopherThatTookIt(SolverTest):
+    """Patrick, 04.11.2026: it has a Minion ability of its own, maybe
+    another than the one the Alchemist it drunk was shown."""
+
+    ROLES = R[:3] + ["Philosopher"] + R[4:]
+    TOOK = I.PhilosopherChoice(1, 3, role="Alchemist")
+
+    def test_it_is_offered_one_from_its_night(self):
+        st = state([self.TOOK], claims=C[:3] + ["Philosopher"] + C[4:])
+        self.assertIn((3, "N1"), S.alchemist_seats(world(self.ROLES), st))
+        late = I.PhilosopherChoice(2, 3, role="Alchemist")
+        st = state([late], claims=C[:3] + ["Philosopher"] + C[4:])
+        self.assertIn((3, "N2"), S.alchemist_seats(world(self.ROLES), st))
+        marks = [way[0] for way, _c in S.alchemist_offers(
+            world(self.ROLES), st, 3, "N2")]
+        self.assertTrue(all(m.phase == "N2" for m in marks))
+
+    def test_its_curse_explains_a_death(self):
+        kw = dict(deaths={0: ("D2",)}, witch_deaths={2: 0})
+        # The dealt Alchemist shown the Poisoner: only the Philosopher's
+        # own can be the Witch's.
+        rows = [self.TOOK, I.AlchemistHas(1, 4, role="Poisoner")]
+        claims = C[:3] + ["Philosopher"] + C[4:]
+        cost, changes = S.best_story(world(self.ROLES),
+                                     state(rows, claims=claims, **kw))
+        self.assertIsNotNone(cost)
+        self.assertIn((3, "Witch"), {(c.seat, c.gift) for c in changes
+                                     if isinstance(c, AlchemistGift)})
+
+
+class BothSave(SolverTest):
+
+    def test_a_devils_advocate_and_an_alchemist_with_its_ability(self):
+        roles = R[:5] + ["DevilsAdvocate"] + R[6:]
+        # Two walk away from the gallows on two days running: the dealt one
+        # cannot keep the same player twice, but two players are two.
+        kw = dict(executions={1: 0, 2: 1})
+        cost, changes = S.best_story(world(roles), state(**kw))
+        self.assertIsNotNone(cost)
+
+
 class ItWakes(SolverTest):
 
     def woke(self, gift, night=2):
@@ -180,6 +221,11 @@ def _payloads():
         pay({0: ["W2"]}, [dict(has, role="Witch")]),
         pay({}, [dict(has, role="Poisoner"),
                  {"type": "Empath", "night": 2, "player": 1, "count": 2}]),
+        # A Philosopher that took the Alchemist (Patrick, 04.11.2026).
+        pay({0: ["W2"]}, [{"type": "PhilosopherChoice", "night": 1,
+                           "player": 3, "role": "Alchemist"},
+                          dict(has, role="Poisoner")],
+            claims=C[:3] + ["Philosopher"] + C[4:]),
     ]
 
 

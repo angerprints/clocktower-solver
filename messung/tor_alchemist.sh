@@ -37,5 +37,9 @@ if [ "$2" != base ]; then
   line torAC 4 0 Alchemist Cerenovus Fearmonger Harpy
   line torAW 4 0 Alchemist Chambermaid Philosopher
   line torAP 4 0 Alchemist PlagueDoctor
+  # Patrick's answers of 04.11.2026: its Assassin may hit the Demon, its
+  # save and a Devil's Advocate's both count, and a Philosopher that takes
+  # it has a Minion ability of its own.
+  line torAX 4 0 Alchemist Assassin DevilsAdvocate Philosopher
 fi
 echo done > "$OUT/alchemist.done"

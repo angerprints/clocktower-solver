@@ -219,23 +219,41 @@ export function hasPlagueAbility(w, s, seat, role, phase) {
   if (!w.plagueAt(seat, phase).includes(role)) return false;
   // Or the Alchemist's own, from the first night (04.11.2026).
   return TEAM[w.roleAt(seat, phase)] === "minion"
-    || w.roleAt(seat, phase) === "Alchemist";
+    || actsAsAlchemist(w, s, seat, phase);
 }
 
-/** The seats dealt the Alchemist. */
-export function alchemistSeats(world) {
+/** Holding the Alchemist then, or a Philosopher that took it, from the
+ * night it chose (Patrick, 04.11.2026). See info.py. */
+export function actsAsAlchemist(w, s, seat, phase) {
+  const role = w.roleAt(seat, phase);
+  if (role === "Alchemist") return true;
+  if (role !== "Philosopher") return false;
+  const took = (s.philosophies() || {})[seat];
+  return !!took && took[0] === "Alchemist"
+    && phaseIndex(phase) >= phaseIndex(took[1])
+    && !backSince(s, seat, took[1], phase);
+}
+
+/** The seats dealt the Alchemist, and the Philosophers that took it:
+ * [[seat, phase]]. See solver.py `alchemist_seats`. */
+export function alchemistSeats(world, state) {
   const out = [];
-  world.roles.forEach((r, i) => { if (r === "Alchemist") out.push(i); });
+  world.roles.forEach((r, i) => { if (r === "Alchemist") out.push([i, "N1"]); });
+  const took = (state && state.philosophies()) || {};
+  for (const seat of Object.keys(took).map(Number).sort((a, b) => a - b))
+    if (took[seat][0] === "Alchemist" && world.roles[seat] === "Philosopher")
+      out.push([seat, took[seat][1]]);
   return out;
 }
 
 /** The living seats holding the Alchemist with that ability then. */
 export function alchemistsWith(world, state, role, phase) {
   const alive = state.aliveSet(phase);
-  return alchemistSeats(world).filter(seat => alive.has(seat)
-    && world.plagueAt
-    && world.plagueAt(seat, phase).includes(role)
-    && world.roleAt(seat, phase) === "Alchemist");
+  return alchemistSeats(world, state).map(([seat]) => seat)
+    .filter(seat => alive.has(seat)
+      && world.plagueAt
+      && world.plagueAt(seat, phase).includes(role)
+      && actsAsAlchemist(world, state, seat, phase));
 }
 
 /** Every Minion with that ability through the Plague Doctor then. */
