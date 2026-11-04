@@ -57,6 +57,7 @@ from .worlds import Engineered
 from .worlds import BOFFIN_UNSEEN, BoffinGift, boffin_gift_change, bracket_gifts
 from .worlds import PlagueGift, plague_gift_change, PlagueMade, PlagueSummoned
 from .worlds import AlchemistGift, alchemist_gift_change
+from .worlds import ALCHEMY_SETUP, alchemy_brackets
 from .info import registers_of, evil_registrations_here
 from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
                      SUMMON_READS, Summoned, PitHagDemon, TEA_READS,
@@ -3737,7 +3738,9 @@ def plague_told_later(world, changes, state):
 # What an Alchemist holds that the town can see, group 1 (claude/alchemist-
 # gruppen.md): the Minions that choose at night.
 ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
-                          "Cerenovus", "Assassin", "Fearmonger"})
+                          "Cerenovus", "Assassin", "Fearmonger",
+                          # Group 2 (04.11.2026): its night kill.
+                          "Godfather"})
 
 
 def _alchemist_on_board(state):
@@ -3763,13 +3766,27 @@ def alchemist_offers(world, state, seat, since="N1"):
     that holds, so the shares go as a random pick would. A row from the
     seat names it."""
     may = sorted(k for k in state.script.keys if TEAM.get(k) == "minion")
+    # Group 2 (04.11.2026): a dealt one's Baron, Godfather or Xaan changed
+    # the setup, so the deal says whether it can have one — each the deal
+    # holds is a story of its own; where only such a shift explains the
+    # deal it has one of those. A Philosopher's comes too late for that.
+    seen_here = ALCHEMY_SEEN
+    if since == "N1" and world.roles[seat] == "Alchemist":
+        setup = alchemy_brackets(world.roles, state.script,
+                                 tuple(getattr(state, "fabled", ()) or ()))
+        if setup is not None:
+            plain, keys = setup
+            may = [k for k in may if k not in ALCHEMY_SETUP or k in keys]
+            if not plain:
+                may = [k for k in may if k in keys]
+            seen_here = ALCHEMY_SEEN | keys
     named = [i.given(state) for i in state.infos
              if isinstance(i, AlchemistHas) and i.player == seat]
     if named:
         if named[0] is None or named[0] not in may:
             return []
         may = [named[0]]
-    seen = [k for k in may if k in ALCHEMY_SEEN]
+    seen = [k for k in may if k in seen_here]
     unseen = len(may) - len(seen)
     out = []
     if unseen or not may:
@@ -5129,14 +5146,20 @@ def a_godfather_answers_an_outsider(world, state, night):
     not leave a body. And it is not the Demon's kill: a grandchild lost
     to it leaves the Grandmother standing.
     """
-    if not _in_bag(state, "Godfather") or night < 2:
+    if not (_in_bag(state, "Godfather") or _alchemist_on_board(state)) \
+            or night < 2:
         return []
     phase = f"N{night}"
     seat = world.find_at("Godfather", phase)
     # The Storyteller's, the Plague Doctor's gift (28.10.2026): nothing
     # stops it.
     told = storyteller_has(world, "Godfather", phase)
-    if (seat is None or seat not in state.alive_set(phase)) and not told:
+    # And an Alchemist's (group 2, 04.11.2026): its own, so it kills
+    # nobody drunk or poisoned.
+    alchemists = alchemists_with(world, state, "Godfather", phase) \
+        if _alchemist_on_board(state) else []
+    if (seat is None or seat not in state.alive_set(phase)) and not told \
+            and not alchemists:
         return []
     day = f"D{night - 1}"
     lost = any(day in state.died_at(who)
@@ -5158,6 +5181,10 @@ def a_godfather_answers_an_outsider(world, state, night):
             name="Godfather (Storyteller)", kind=death_causes.OTHER,
             seats=frozenset(range(state.n_players)), capacity=1,
             must_fire=True))
+    out.extend(death_causes.Cause(
+        name="Alchemist (Godfather)", kind=death_causes.OTHER,
+        seats=frozenset(range(state.n_players)), capacity=1,
+        must_fire=True, actor=who) for who in alchemists)
     return out
 
 

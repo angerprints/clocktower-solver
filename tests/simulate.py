@@ -1107,6 +1107,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     script = script or script_mod.TROUBLE_BREWING
     told = {}
     roles, believes = deal(n, rng, script, told)
+    # The Alchemist's ability is the Storyteller's choice at setup: a Baron's
+    # or a Godfather's changes the bag (group 2, 04.11.2026).
+    alch_gifts = _alchemist_setup(roles, believes, script, rng, told)
     # With a Summoner the Marionette enters play only after the Demon, as
     # its neighbour (their jinx, Patrick 22.10.2026): the token it would
     # believe is a real good character until then, and the seat holding
@@ -1225,15 +1228,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.alch_poisoned = {}                # night -> (Alchemist, its pick)
     d.alch_kills = {}                   # night -> (Alchemist, its Assassin's)
     d.alch_spared = {}                  # night -> (Alchemist, its Advocate's)
-    for seat in range(n):
-        if roles[seat] != "Alchemist":
-            continue
-        pool = [k for k in script.minions if k not in ALCHEMY_NEVER]
-        if not pool:
-            continue
-        d.alchemy[seat] = rng.choice(pool)
+    d.alch_gf_kills = {}                # night -> (Alchemist, its Godfather's)
+    for seat, key in sorted(alch_gifts.items()):
+        d.alchemy[seat] = key
         if rng.random() < 0.5:
-            heard.append(AlchemistHas(1, seat, role=d.alchemy[seat]))
+            heard.append(AlchemistHas(1, seat, role=key))
     # "1 player is drunk, even if you die": mostly a Townsfolk, now and
     # then an Outsider, never evil here (10.10.2026).
     if "Puzzlemaster" in roles:
@@ -2114,6 +2113,22 @@ def _godfather_kills(d, night, rng):
     if not any(TEAM[d.role_at(who, f"D{day}")] == "outsider"
                for who in d.died_on(f"D{day}", f"E{day}")):
         return
+    # An Alchemist with the Godfather's ability (group 2, C: at random, the
+    # Demon too where that ends the game), before a dealt one at the same
+    # turn, as the night-walk has it.
+    for alch in _alchemists(d, "Godfather", night):
+        sitter = d.babysat.get(night) if d.babysat else None
+        spare = (alch, sitter) if _alchemist_may_end_it(d, phase) \
+            else (alch, sitter, d.demon_at(phase))
+        targets = [p for p in d.alive_at(phase)
+                   if d.deaths.get(p) is None and p not in spare]
+        if not targets:
+            continue
+        target = rng.choice(targets)
+        d.alch_gf_kills[night] = (alch, target)
+        if d.working(alch, night) \
+                and not _kept_alive_at_night(d, night, target):
+            d.deaths[target] = phase
     for seat in range(d.n):
         if not _stands_to_act(d, seat, "Godfather", night):
             continue
@@ -2378,12 +2393,72 @@ def _alchemist_may_end_it(d, phase):
 
 def _alchemist_killed_the_demon(d, night):
     """The Alchemist's Assassin killed the Demon tonight: good has won."""
-    got = getattr(d, "alch_kills", {}).get(night)
-    if got is None:
-        return False
-    target = got[1]
-    return d.deaths.get(target) == f"N{night}" \
-        and d.role_at(target, f"N{night}") in ALCHEMY_ENDS_IT
+    for got in (getattr(d, "alch_kills", {}).get(night),
+                getattr(d, "alch_gf_kills", {}).get(night)):
+        if got is not None and d.deaths.get(got[1]) == f"N{night}" \
+                and d.role_at(got[1], f"N{night}") in ALCHEMY_ENDS_IT:
+            return True
+    return False
+
+
+def _alchemist_setup(roles, believes, script, rng, told):
+    """Each dealt Alchemist's Minion ability, {seat: key}, with the bag moved
+    for a Baron's or a Godfather's (group 2, 04.11.2026; A: beside a dealt
+    one's). One that cannot move the bag here is not handed out. A Xaan's
+    is the setup only (B), and here it moves nothing — its "[X Outsiders]"
+    allows the bag as it is."""
+    out = {}
+    for seat in range(len(roles)):
+        if roles[seat] != "Alchemist":
+            continue
+        pool = [k for k in script.minions if k not in ALCHEMY_NEVER]
+        while pool:
+            key = rng.choice(pool)
+            if key in ("Baron", "Godfather") \
+                    and not _alchemy_moves_the_bag(roles, believes, script,
+                                                    key, rng, told):
+                pool.remove(key)
+                continue
+            out[seat] = key
+            break
+    return out
+
+
+def _alchemy_moves_the_bag(roles, believes, script, key, rng, told):
+    """Move the bag by one of that Minion's shifts, if one can be made:
+    Townsfolk for Outsiders not in play, or back. Only plain ones move —
+    nothing that brings or believes another, or moves the bag itself."""
+    from botc.catalogue import CHARACTERS
+
+    def plain(role):
+        c = CHARACTERS[role]
+        return not c.believes and not c.setup and not c.brings \
+            and c.dealt and role not in ("Alchemist", "Damsel")
+
+    def movable(team):
+        return [p for p, r in enumerate(roles)
+                if TEAM[r] == team and plain(r) and believes[p] is None
+                and p not in told]
+
+    def spare(team):
+        return [k for k in (script.townsfolk if team == "townsfolk"
+                            else script.outsiders)
+                if k not in roles and plain(k)]
+
+    shifts = [s for s in CHARACTERS[key].setup if s]
+    rng.shuffle(shifts)
+    for shift in shifts:
+        more = shift.get("outsider", 0)
+        give, take = ("townsfolk", "outsider") if more > 0 \
+            else ("outsider", "townsfolk")
+        k = abs(more)
+        seats, fresh = movable(give), spare(take)
+        if len(seats) < k or len(fresh) < k:
+            continue
+        for p, new in zip(rng.sample(seats, k), rng.sample(fresh, k)):
+            roles[p] = new
+        return True
+    return False
 
 
 def _alchemist_undone(d, night):

@@ -41,5 +41,9 @@ if [ "$2" != base ]; then
   # save and a Devil's Advocate's both count, and a Philosopher that takes
   # it has a Minion ability of its own.
   line torAX 4 0 Alchemist Assassin DevilsAdvocate Philosopher
+  # Group 2 (04.11.2026): the Minions that change the setup, beside a dealt
+  # one (A: both count).
+  line torAB 4 0 Alchemist Baron Godfather
+  line torAG 4 0 Alchemist Godfather Xaan
 fi
 echo done > "$OUT/alchemist.done"

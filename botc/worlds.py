@@ -1001,6 +1001,7 @@ def _bags(n_players, script=DEFAULT, fabled=()):
 
     bags += _marionette_to_be(bags, script)
     bags += _boffin_brackets(bags, script)
+    alchemy = _alchemist_brackets(bags, script)
 
     # Whatever the shifts did, the bag still has to seat everybody. A
     # modifier that moves one number without moving another back is a
@@ -1023,6 +1024,19 @@ def _bags(n_players, script=DEFAULT, fabled=()):
         if signature in seen:
             continue
         seen.add(signature)
+        out.append((present, counts))
+    # The Alchemist's: searched only where no other bag holds the same
+    # deals already — a bag without the Alchemist in it holds those with it
+    # too, and two of its shifts can land on the same split.
+    for present, counts in alchemy:
+        if sum(counts.values()) != n_players \
+                or any(counts[t] < 0 or counts[t] > room[t] for t in counts):
+            continue
+        split = tuple(sorted(counts.items()))
+        if (present, split) in seen \
+                or (present - {"Alchemist"}, split) in seen:
+            continue
+        seen.add((present, split))
         out.append((present, counts))
     return out
 
@@ -1067,6 +1081,88 @@ def _boffin_brackets(bags, script):
                 out.append((present | {"Boffin", f"gift:{key}"} | brings,
                             moved))
     return out
+
+
+# The Alchemist's setup (Gruppe 2, 04.11.2026, claude/alchemist-gruppe-2-
+# lesarten.md): "if the Alchemist's Minion ability adds or removes
+# characters during setup, this still occurs during setup". Its Baron, its
+# Godfather and its Xaan shift the bag as theirs do, beside a dealt one's
+# (A: both count). Such a bag holds the Alchemist; which ability it took
+# is the solver's (`alchemy_brackets`).
+ALCHEMY_SETUP = ("Baron", "Godfather", "Xaan")
+
+
+def _alchemist_brackets(bags, script):
+    if "Alchemist" not in script.keys:
+        return []
+    out = []
+    for key in ALCHEMY_SETUP:
+        if key not in script.keys:
+            continue
+        for present, counts in bags:
+            if any(p.startswith("gift:") or "@" in p for p in present):
+                continue
+            for shift in CHARACTERS[key].setup:
+                if not shift:
+                    continue              # the plain bag already holds it
+                moved = dict(counts)
+                for team, delta in shift.items():
+                    moved[team] += delta
+                out.append((present | {"Alchemist"}, moved))
+    return out
+
+
+_ALCHEMY_CACHE = {}
+
+
+def alchemy_brackets(roles, script, fabled=()):
+    """Which setup an Alchemist dealt here may have changed: (plain, keys)
+    — whether a bag without its shift holds this deal, and the Minions
+    whose shift does — or None with no Alchemist dealt."""
+    if "Alchemist" not in script.keys or "Alchemist" not in roles:
+        return None
+    movers = script.setup_modifiers
+    dealt = frozenset(r for r in roles if r in movers)
+    split = tuple(sum(1 for r in roles if TEAM[r] == t)
+                  for t in ("townsfolk", "outsider", "minion", "demon"))
+    key = (tuple(script.keys), tuple(fabled), len(roles), dealt, split,
+           frozenset(r for r in roles if r in ("Damsel", "Boffin")))
+    got = _ALCHEMY_CACHE.get(key)
+    if got is not None:
+        return got
+    plain, keys = False, set()
+    base = _bags(len(roles), script, fabled)
+    for present, counts in base:
+        if "Alchemist" in present:
+            continue                      # one of its own
+        real = frozenset(p for p in present if p in movers)
+        if real != dealt:
+            continue
+        if any(p in CHARACTERS and p not in roles for p in present
+               if p not in movers):
+            continue
+        here = tuple(counts[t] for t in ("townsfolk", "outsider", "minion",
+                                         "demon"))
+        if here == split:
+            plain = True
+        for mover in ALCHEMY_SETUP:
+            if mover not in script.keys:
+                continue
+            for shift in CHARACTERS[mover].setup:
+                if not shift:
+                    # One that may move nothing — a Xaan's "[X Outsiders]"
+                    # — fits the plain bag.
+                    if here == split:
+                        keys.add(mover)
+                    continue
+                moved = tuple(here[i] + shift.get(t, 0) for i, t in
+                              enumerate(("townsfolk", "outsider", "minion",
+                                         "demon")))
+                if moved == split:
+                    keys.add(mover)
+    answer = (plain, frozenset(keys))
+    _ALCHEMY_CACHE[key] = answer
+    return answer
 
 
 _BRACKET_CACHE = {}

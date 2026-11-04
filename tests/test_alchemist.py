@@ -16,13 +16,14 @@ import unittest
 
 from helpers import SolverTest                    # sets up the import path
 import botc.solver as S                           # noqa: E402
-from botc import info as I, scripts, waking       # noqa: E402
+from botc import info as I, scripts, waking, worlds  # noqa: E402
 from botc.info import GameState                   # noqa: E402
 from botc.worlds import (AlchemistGift, Timeline, World,  # noqa: E402
                          alchemist_gift_change)
 
 IDS = ["chef", "empath", "fortuneteller", "washerwoman", "investigator",
-       "undertaker", "alchemist", "saint", "philosopher",
+       "undertaker", "alchemist", "saint", "philosopher", "butler",
+       "recluse", "godfather", "xaan",
        "poisoner", "witch", "assassin", "devilsadvocate", "cerenovus",
        "fearmonger", "spy", "baron", "imp"]
 SC = scripts.from_ids("Alchemist", IDS)
@@ -68,11 +69,13 @@ class WhatItMayHold(SolverTest):
         got = offers()
         self.assertEqual(set(got), {"*", "Poisoner", "Witch", "Assassin",
                                     "DevilsAdvocate", "Cerenovus",
-                                    "Fearmonger"})
-        # Two the town cannot see (the Spy, the Baron): each seen one
-        # costs one over two, the rest one.
+                                    "Fearmonger", "Xaan"})
+        # One the town cannot see (the Spy): each seen one costs one, the
+        # rest one. The Baron is not offered: the deal has no two Outsiders
+        # more (group 2, 04.11.2026).
         self.assertEqual(got["*"], 1.0)
-        self.assertAlmostEqual(got["Witch"], 0.5)
+        self.assertAlmostEqual(got["Witch"], 1.0)
+        self.assertNotIn("Baron", got)
 
     def test_a_row_names_it(self):
         self.assertEqual(offers([I.AlchemistHas(1, 4, role="Witch")]),
@@ -154,6 +157,58 @@ class APhilosopherThatTookIt(SolverTest):
                                      if isinstance(c, AlchemistGift)})
 
 
+class ItChangesTheSetup(SolverTest):
+    """Group 2 (04.11.2026, claude/alchemist-gruppe-2-lesarten.md)."""
+
+    # Eight seats: five Townsfolk and one Outsider dealt plainly.
+    BARONS = ["Chef", "Empath", "Alchemist", "Saint", "Butler", "Recluse",
+              "Spy", "Imp"]
+    PLAIN = ["Chef", "Empath", "FortuneTeller", "Washerwoman", "Alchemist",
+             "Butler", "Spy", "Imp"]
+
+    def test_two_outsiders_more_are_its_baron(self):
+        # Or its Xaan's "[X Outsiders]".
+        self.assertEqual(worlds.alchemy_brackets(self.BARONS, SC),
+                         (False, frozenset({"Baron", "Xaan"})))
+        claims = dict(enumerate(self.BARONS))
+        st = GameState(n_players=8, script=SC, claims=claims,
+                       days_done={1})
+        got = {way[0].gift for way, _c in S.alchemist_offers(
+            world(self.BARONS), st, 2)}
+        self.assertEqual(got, {"Baron", "Xaan"})
+        # The bag is there to search.
+        self.assertIn((frozenset({"Alchemist"}),
+                       {"townsfolk": 3, "outsider": 3, "minion": 1,
+                        "demon": 1}),
+                      [(p, c) for p, c in worlds._bags(8, SC)])
+
+    def test_a_plain_deal_has_no_baron_but_may_have_a_xaan(self):
+        plain, keys = worlds.alchemy_brackets(self.PLAIN, SC)
+        self.assertTrue(plain)
+        self.assertIn("Xaan", keys)
+        self.assertNotIn("Baron", keys)
+
+    def test_its_godfather_kills_after_an_outsider_was_executed(self):
+        # Its "[-1 or +1 Outsider]": two dealt, the Butler executed.
+        roles = ["Chef", "Empath", "FortuneTeller", "Alchemist", "Butler",
+                 "Recluse", "Spy", "Imp"]
+        kw = dict(deaths={4: ("D1",), 0: ("N2",), 1: ("N2",)},
+                  executions={1: 4})
+        claims = dict(enumerate(roles))
+
+        def best(rows):
+            st = GameState(n_players=8, script=SC, claims=claims,
+                           infos=list(rows), days_done={1, 2}, **kw)
+            return S.best_story(world(roles), st)
+
+        self.assertIn("Godfather", worlds.alchemy_brackets(roles, SC)[1])
+        cost, changes = best([I.AlchemistHas(1, 3, role="Godfather")])
+        self.assertIsNotNone(cost)
+        self.assertIn("Godfather", [c.gift for c in changes
+                                    if isinstance(c, AlchemistGift)])
+        self.assertIsNone(best([I.AlchemistHas(1, 3, role="Witch")])[0])
+
+
 class BothSave(SolverTest):
 
     def test_a_devils_advocate_and_an_alchemist_with_its_ability(self):
@@ -221,6 +276,13 @@ def _payloads():
         pay({0: ["W2"]}, [dict(has, role="Witch")]),
         pay({}, [dict(has, role="Poisoner"),
                  {"type": "Empath", "night": 2, "player": 1, "count": 2}]),
+        # Group 2: its Baron moved the bag, its Godfather kills.
+        pay({}, claims=["Chef", "Empath", "Alchemist", "Saint", "Butler",
+                        "Recluse", "Chef", "Empath"]),
+        pay({4: ["X1"], 0: ["N2"], 1: ["N2"]},
+            [dict(has, player=3, role="Godfather")],
+            claims=["Chef", "Empath", "FortuneTeller", "Alchemist",
+                    "Butler", "Recluse", "Chef", "Empath"]),
         # A Philosopher that took the Alchemist (Patrick, 04.11.2026).
         pay({0: ["W2"]}, [{"type": "PhilosopherChoice", "night": 1,
                            "player": 3, "role": "Alchemist"},
