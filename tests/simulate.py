@@ -1291,6 +1291,13 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # first night poisons nobody while that lasts (10.10.2026). It
         # poisoned all the same, and the night-walk, which asks, found a
         # Monk nobody had told it about.
+        # An Alchemist with the Poisoner's ability poisons somebody else —
+        # before a dealt Poisoner, as the night-walk has it.
+        for alch in _alchemists(d, "Poisoner", night):
+            others = [p for p in living if p != alch]
+            if others and d.working(alch, night):
+                d.alch_poisoned[night] = (alch, rng.choice(others))
+                break
         if (poisoner is not None and poisoner in living
                 and (d.demon_at(f"N{night}") != poisoner
                      or _babysits(d, poisoner, f"N{night}"))
@@ -1301,12 +1308,6 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # (28.10.2026): nothing stops them.
         if _st_has(d, "Poisoner"):
             d.st_poisoned[night] = rng.choice(living)
-        # An Alchemist with the Poisoner's ability poisons somebody else.
-        for alch in _alchemists(d, "Poisoner", night):
-            others = [p for p in living if p != alch]
-            if others and d.working(alch, night):
-                d.alch_poisoned[night] = (alch, rng.choice(others))
-                break
         if _st_has(d, "Widow") and d.st_widow is None:
             d.st_widow = (rng.choice(range(d.n)), night)
 
@@ -2053,6 +2054,27 @@ def _assassin_strikes(d, night, rng):
     if night < 2:
         return
     phase = f"N{night}"
+    # An Alchemist with the Assassin's ability: once, at somebody it does
+    # not trust — the Demon too, which ends the game (Patrick, 04.11.2026).
+    # Not yet where something else happens when the Demon dies: a Scarlet
+    # Woman standing, or a Demon that dies its own way. Before a dealt
+    # Assassin at the same turn, as the night-walk has it.
+    for alch in _alchemists(d, "Assassin", night):
+        if alch in d.assassin_chose or d.deaths.get(alch) is not None:
+            continue
+        sitter = d.babysat.get(night) if d.babysat else None
+        demon = d.demon_at(phase)
+        spare = (alch, sitter) if _alchemist_may_end_it(d, phase) \
+            else (alch, sitter, demon)
+        targets = [p for p in d.alive_at(phase)
+                   if d.deaths.get(p) is None and p not in spare]
+        if not targets or rng.random() >= 0.3:
+            continue
+        target = rng.choice(targets)
+        d.assassin_chose[alch] = night
+        d.alch_kills[night] = (alch, target)
+        if d.working(alch, night):
+            d.deaths[target] = phase
     for seat in range(d.n):
         if seat in d.assassin_chose \
                 or not _stands_to_act(d, seat, "Assassin", night):
@@ -2070,26 +2092,6 @@ def _assassin_strikes(d, night, rng):
     # The Storyteller's, the Plague Doctor's gift (28.10.2026): once a
     # game, and nothing stops it — nor does a Goon turn it, being no
     # player's choice.
-    # An Alchemist with the Assassin's ability: once, at somebody it does
-    # not trust — the Demon too, which ends the game (Patrick, 04.11.2026).
-    # Not yet where something else happens when the Demon dies: a Scarlet
-    # Woman standing, or a Demon that dies its own way.
-    for alch in _alchemists(d, "Assassin", night):
-        if alch in d.assassin_chose or d.deaths.get(alch) is not None:
-            continue
-        sitter = d.babysat.get(night) if d.babysat else None
-        demon = d.demon_at(phase)
-        spare = (alch, sitter) if _alchemist_may_end_it(d, phase) \
-            else (alch, sitter, demon)
-        targets = [p for p in d.alive_at(phase)
-                   if d.deaths.get(p) is None and p not in spare]
-        if not targets or rng.random() >= 0.3:
-            continue
-        target = rng.choice(targets)
-        d.assassin_chose[alch] = night
-        d.alch_kills[night] = (alch, target)
-        if d.working(alch, night):
-            d.deaths[target] = phase
     if _st_has(d, "Assassin") and not d.st_assassin_spent:
         targets = _good_and_standing(d, night)
         if targets and rng.random() < 0.3:
@@ -7076,7 +7078,7 @@ def droisoned_at(d, night, by_day=False, _without_their_drunks=False):
         out.add(d.st_poisoned[night])
     # An Alchemist's, until dusk, as long as it stands (04.11.2026).
     alch = getattr(d, "alch_poisoned", {}).get(night)
-    if alch is not None and d.role_at(alch[0], phase) == "Alchemist" \
+    if alch is not None and _alchemy(d, alch[0], "Poisoner", phase) \
             and not (by_day and alch[0] not in d.alive_at(f"D{night}")):
         out.add(alch[1])
     if getattr(d, "st_widow", None) is not None \
