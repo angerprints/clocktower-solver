@@ -39,7 +39,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         BOFFIN_UNSEEN, boffinGiftOf, boffinHolders, boffinSeat, soberSeat,
         boffinAbilities, boffinPhilosophy, hasBoffinAbility,
         PLAGUE_UNSEEN, STORYTELLER, plagueGiven, plagueHolders, storytellerHas,
-        boffinWorking, registersOf, alchemistGiven, alchemistSeats}
+        boffinWorking, registersOf, alchemistGiven, alchemistSeats,
+        alchemistsWith}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -2891,7 +2892,8 @@ transitionRule(aPlagueDoctorGivesTheStoryteller);
 // The Alchemist (04.11.2026). See solver.py.
 // ---------------------------------------------------------------------
 /** What an Alchemist holds that the town can see, group 1. */
-export const ALCHEMY_SEEN = new Set(["Poisoner"]);
+export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
+  "Cerenovus", "Assassin", "Fearmonger"]);
 
 export const alchemistOnBoard = state =>
   state.script.keys.includes("Alchemist");
@@ -3366,6 +3368,13 @@ function plainFailures(world, state, outcome = {}) {
       (working[day] = working[day] || new Set()).add(witch);
       continue;
     }
+    // Or an Alchemist with the Witch's ability (04.11.2026). See solver.py.
+    const cursers = alchemistOnBoard(state)
+      ? alchemistsWith(world, state, "Witch", `N${day}`) : [];
+    if (cursers.length && state.aliveSet(`D${day}`).size > 3) {
+      (working[day] = working[day] || new Set()).add(cursers[0]);
+      continue;
+    }
     // Or a Yaggababble's kill by day, which is rare and costs (table
     // ruling, 11.10.2026). Never itself.
     const yagga = inBag(state, "Yaggababble")
@@ -3377,9 +3386,14 @@ function plainFailures(world, state, outcome = {}) {
   for (const [day, ] of Object.entries(state.madnessExecutions || {})) {
     // The Storyteller's, the Plague Doctor's gift (28.10.2026).
     if (storytellerHas(world, "Cerenovus", `N${day}`)) continue;
-    const who = world.findAt("Cerenovus", `N${day}`);
-    if (who === null || !minionStillActs(world, state, who, `N${day}`))
-      return null;
+    let who = world.findAt("Cerenovus", `N${day}`);
+    if (who === null || !minionStillActs(world, state, who, `N${day}`)) {
+      // Or an Alchemist with its ability (04.11.2026). See solver.py.
+      const mad = alchemistOnBoard(state)
+        ? alchemistsWith(world, state, "Cerenovus", `N${day}`) : [];
+      if (!mad.length) return null;
+      who = mad[0];
+    }
     (working[day] = working[day] || new Set()).add(who);
   }
 

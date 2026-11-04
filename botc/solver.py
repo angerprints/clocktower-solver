@@ -3735,7 +3735,8 @@ def plague_told_later(world, changes, state):
 
 # What an Alchemist holds that the town can see, group 1 (claude/alchemist-
 # gruppen.md): the Minions that choose at night.
-ALCHEMY_SEEN = frozenset({"Poisoner"})
+ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
+                          "Cerenovus", "Assassin", "Fearmonger"})
 
 
 def _alchemist_on_board(state):
@@ -4446,9 +4447,14 @@ def a_devils_advocate_saves_from_the_gallows(world, state, day, seat):
     # has to have been working. "Different to last night" is not held to.
     if storyteller_has(world, "DevilsAdvocate", phase):
         return [STORYTELLER_SAVES]
+    # And an Alchemist with its ability (04.11.2026, group 1): a saver of
+    # its own, working when it chose. "Different to last night" is not
+    # held to — a world is kept rather than lost.
+    alchemists = alchemists_with(world, state, "DevilsAdvocate", phase) \
+        if _alchemist_on_board(state) else []
     advocate = world.find_at("DevilsAdvocate", phase)
     if advocate is None or advocate not in state.alive_set(phase):
-        return []
+        return alchemists
     # "Different to last night": it cannot keep the same player from the
     # gallows two days running. If they walked away yesterday too and
     # nothing but the Advocate could have managed that, it was spent on
@@ -4456,8 +4462,8 @@ def a_devils_advocate_saves_from_the_gallows(world, state, day, seat):
     if _walked_away(state, day - 1, seat) and not survivals_of(
             world, state, day - 1, seat,
             but=a_devils_advocate_saves_from_the_gallows):
-        return []
-    return [advocate]
+        return alchemists
+    return [advocate] + alchemists
 
 
 @survives_execution_rule
@@ -5170,6 +5176,14 @@ def an_assassin_kills_through_anything(world, state, night):
             name="Assassin (Storyteller)", kind=death_causes.OTHER,
             seats=frozenset(range(state.n_players)), capacity=1,
             cost=ASSASSIN_STRIKE_PENALTY, unstoppable=True))
+    # An Alchemist with its ability (04.11.2026, group 1): its own, so a
+    # kill says it was working. Once a game is not held to here.
+    if _alchemist_on_board(state):
+        out.extend(death_causes.Cause(
+            name="Alchemist (Assassin)", kind=death_causes.OTHER,
+            seats=frozenset(range(state.n_players)), capacity=1,
+            cost=ASSASSIN_STRIKE_PENALTY, unstoppable=True, actor=who)
+            for who in alchemists_with(world, state, "Assassin", phase))
     seat = world.find_at("Assassin", phase)
     if seat is None or seat not in state.alive_set(phase):
         return out
@@ -6886,6 +6900,13 @@ def _plain_failures(world, state, outcome=None):
                 and len(state.alive_set(f"D{day}")) > 3:
             working.setdefault(day, set()).add(witch)
             continue
+        # Or an Alchemist with the Witch's ability (04.11.2026, group 1),
+        # working when it cursed.
+        cursers = alchemists_with(world, state, "Witch", f"N{day}") \
+            if _alchemist_on_board(state) else []
+        if cursers and len(state.alive_set(f"D{day}")) > 3:
+            working.setdefault(day, set()).add(cursers[0])
+            continue
         # Or a Yaggababble's kill by day, which is rare and costs: "for
         # each time you said it publicly today, a player might die", and
         # the Storyteller may take them there and then (table ruling,
@@ -6903,7 +6924,12 @@ def _plain_failures(world, state, outcome=None):
         maddener = world.find_at("Cerenovus", f"N{day}")
         if maddener is None or not minion_still_acts(world, state, maddener,
                                                      f"N{day}"):
-            return None, None, 1.0, None
+            # Or an Alchemist with its ability (04.11.2026, group 1).
+            mad = alchemists_with(world, state, "Cerenovus", f"N{day}") \
+                if _alchemist_on_board(state) else []
+            if not mad:
+                return None, None, 1.0, None
+            maddener = mad[0]
         working.setdefault(day, set()).add(maddener)
 
     # The good twin executed, and the game carried on. Evil wins on the

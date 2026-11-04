@@ -495,16 +495,20 @@ const aDevilsAdvocateSavesFromTheGallows = survivesExecutionRule(
     // The Storyteller's, the Plague Doctor's gift (28.10.2026).
     if (storytellerHas(world, "DevilsAdvocate", `N${day}`))
       return [STORYTELLER_SAVES];
+    // And an Alchemist with its ability (04.11.2026). See solver.py.
+    const alchemists = state.script.keys.includes("Alchemist")
+      ? alchemistsWith(world, state, "DevilsAdvocate", `N${day}`) : [];
     const advocate = acting(world, state, "DevilsAdvocate", day);
-    if (advocate === null) return [];
+    if (advocate === null) return alchemists;
     // "Different to last night": it cannot keep the same player from the
     // gallows two days running. If they walked away yesterday too and
     // nothing but the Advocate could have managed that, it was spent on
     // them then.
     if (walkedAway(state, day - 1, seat) &&
         !survivalsOf(world, state, day - 1, seat,
-                     aDevilsAdvocateSavesFromTheGallows).length) return [];
-    return [advocate];
+                     aDevilsAdvocateSavesFromTheGallows).length)
+      return alchemists;
+    return [advocate, ...alchemists];
   });
 
 /** "You cannot die during the day." Working, it walks away from the
@@ -1048,6 +1052,12 @@ causeRule(function anAssassinKillsThroughAnything(world, state, night) {
                  {capacity: 1, cost: PRIORS.ASSASSIN_STRIKE_PENALTY,
                   unstoppable: true})]
     : [];
+  // An Alchemist with its ability (04.11.2026). See solver.py.
+  if (state.script.keys.includes("Alchemist"))
+    for (const who of alchemistsWith(world, state, "Assassin", `N${night}`))
+      out.push(new Cause("Alchemist (Assassin)", OTHER, allSeats(state),
+                         {capacity: 1, cost: PRIORS.ASSASSIN_STRIKE_PENALTY,
+                          unstoppable: true, actor: who}));
   if (acting(world, state, "Assassin", night) === null) return out;
   const spent = state.infos.filter(i => i.sourceRole === "Assassin")
                            .map(i => i.night);
