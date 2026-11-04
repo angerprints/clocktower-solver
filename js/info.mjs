@@ -217,7 +217,25 @@ export function hasPlagueAbility(w, s, seat, role, phase) {
   if (role === null || role === undefined || seat === null
       || seat === undefined || !w.plagueAt) return false;
   if (!w.plagueAt(seat, phase).includes(role)) return false;
-  return TEAM[w.roleAt(seat, phase)] === "minion";
+  // Or the Alchemist's own, from the first night (04.11.2026).
+  return TEAM[w.roleAt(seat, phase)] === "minion"
+    || w.roleAt(seat, phase) === "Alchemist";
+}
+
+/** The seats dealt the Alchemist. */
+export function alchemistSeats(world) {
+  const out = [];
+  world.roles.forEach((r, i) => { if (r === "Alchemist") out.push(i); });
+  return out;
+}
+
+/** The living seats holding the Alchemist with that ability then. */
+export function alchemistsWith(world, state, role, phase) {
+  const alive = state.aliveSet(phase);
+  return alchemistSeats(world).filter(seat => alive.has(seat)
+    && world.plagueAt
+    && world.plagueAt(seat, phase).includes(role)
+    && world.roleAt(seat, phase) === "Alchemist");
 }
 
 /** Every Minion with that ability through the Plague Doctor then. */
@@ -2165,6 +2183,14 @@ export const PlagueDoctorGave = define("PlagueDoctorGave", "PlagueDoctor",
     sourceSeat() { return null; },
   });
 
+/** Which Minion ability the Alchemist has, as it says (04.11.2026, B
+ * Weg 1): a Minion of the script. See info.py `AlchemistHas`. */
+export const alchemistGiven = plagueGiven;
+export const AlchemistHas = define("AlchemistHas", "Alchemist",
+  function (w, s) { return alchemistGiven(this, s) !== null; }, {
+    isInformation() { return false; },
+  });
+
 /** The Puzzlemaster's one guess, and whom it was then shown. Shown the
  * Demon: the guess was the drunk player, or it was off itself. */
 export const PuzzlemasterGuess = define("PuzzlemasterGuess", "Puzzlemaster",
@@ -2488,6 +2514,7 @@ export const KINDS = {
   ChoirboyInfo, PrincessNominated, GolemNomination, PsychopathKill,
   PsychopathRoshambo, WidowKnown,
   PreacherChoice, HuntsmanChoice, EngineerChoice, BoffinGave, PlagueDoctorGave,
+  AlchemistHas,
   PuzzlemasterGuess,
   BoomdandyExploded, MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,

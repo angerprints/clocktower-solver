@@ -21,7 +21,7 @@ import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
         takenByAPhilosopher, tookIt, boffinHolders, soberSeat,
         boffinAbilities, boffinGiftOf, boffinSeat, storytellerHas,
-        evilRegistrationsHere}
+        evilRegistrationsHere, alchemistsWith}
   from "./info.mjs";
 
 // --------------------------------------------------------------------
@@ -446,6 +446,17 @@ sourceRule(function aSweetheartLeavesSomebodyDrunk(world, state, night) {
 // constants above and have it mean something.
 sourceRule(makePoisonerRule(() => PRIORS.POISON_HIT_PENALTY,
                             () => PRIORS.POISON_REPEAT_PENALTY));
+
+/** An Alchemist with the Poisoner's ability (04.11.2026, group 1). See
+ * solver.py `an_alchemist_poisons`. */
+sourceRule(function anAlchemistPoisons(world, state, night) {
+  if (!state.script.keys.includes("Alchemist")) return [];
+  const phase = `N${night}`;
+  return alchemistsWith(world, state, "Poisoner", phase).map(seat =>
+    new Source("Alchemist (Poisoner)", state.aliveSet(phase),
+               {capacity: 1, cost: PRIORS.POISON_HIT_PENALTY,
+                repeatCost: PRIORS.POISON_REPEAT_PENALTY, actor: seat}));
+});
 
 // --------------------------------------------------------------------
 // Ways of walking away from your own execution
