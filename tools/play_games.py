@@ -417,7 +417,7 @@ SINCE_THE_NAMED_GAMES = ("Banshee", "Zealot", "Heretic", "Goblin", "Ojo",
 # Golem) became some other game. Each gets its own gate instead.
 ONLY_WHEN_ASKED = ("LordOfTyphon", "Kazali", "AlHadikhia", "LilMonsta",
                    "Summoner", "Hatter", "Engineer", "Boffin",
-                   "PlagueDoctor")
+                   "PlagueDoctor", "Alchemist")
 
 
 def an_awkward_script(rng, name="Mixed", must_have=(), as_named=False):

@@ -25,7 +25,7 @@ from botc.info import (registers_as_role,
                        SlayerShot, VirginNomination,
                        PreacherChoice, HuntsmanChoice, PuzzlemasterGuess,
                        EngineerChoice, BoffinGave, BOFFIN_NEVER_GIVES,
-                       PlagueDoctorGave,
+                       PlagueDoctorGave, AlchemistHas,
                        BoomdandyExploded, BecameInfo,
                        PixieLearned, VillageIdiotInfo, LycanthropeChose,
                        HarpyMadness,
@@ -1218,6 +1218,21 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     # handed first.
     d.first_tokens = dict(told)
     heard = []
+    # The Alchemist (04.11.2026, group 1): the Storyteller hands each one a
+    # Minion ability of the script, in play or not (C Weg 1); the table is
+    # told which half the time (B Weg 1). Never one of the jinxed (group 4).
+    d.alchemy = {}
+    d.alch_poisoned = {}                # night -> (Alchemist, its pick)
+    d.alch_kills = {}                   # night -> (Alchemist, its Assassin's)
+    for seat in range(n):
+        if roles[seat] != "Alchemist":
+            continue
+        pool = [k for k in script.minions if k not in ALCHEMY_NEVER]
+        if not pool:
+            continue
+        d.alchemy[seat] = rng.choice(pool)
+        if rng.random() < 0.5:
+            heard.append(AlchemistHas(1, seat, role=d.alchemy[seat]))
     # "1 player is drunk, even if you die": mostly a Townsfolk, now and
     # then an Outsider, never evil here (10.10.2026).
     if "Puzzlemaster" in roles:
@@ -1285,6 +1300,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # (28.10.2026): nothing stops them.
         if _st_has(d, "Poisoner"):
             d.st_poisoned[night] = rng.choice(living)
+        # An Alchemist with the Poisoner's ability poisons somebody else.
+        for alch in _alchemists(d, "Poisoner", night):
+            others = [p for p in living if p != alch]
+            if others and d.working(alch, night):
+                d.alch_poisoned[night] = (alch, rng.choice(others))
+                break
         if _st_has(d, "Widow") and d.st_widow is None:
             d.st_widow = (rng.choice(range(d.n)), night)
 
@@ -1311,6 +1332,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         # rules for them had nothing to check against.
         _monk_guards(d, night, rng)
         _witch_curses(d, night, rng)
+        _alchemist_advocates(d, night, rng)
 
         # Choices made before the Demon swings — an Innkeeper's guard, a
         # Monk's, a Sailor's drunk. By slot they are at 9, 12 and 4, so
@@ -2041,6 +2063,23 @@ def _assassin_strikes(d, night, rng):
     # The Storyteller's, the Plague Doctor's gift (28.10.2026): once a
     # game, and nothing stops it — nor does a Goon turn it, being no
     # player's choice.
+    # An Alchemist with the Assassin's ability: once, at somebody it does
+    # not trust — never the Demon here, which would end the game.
+    for alch in _alchemists(d, "Assassin", night):
+        if alch in d.assassin_chose or d.deaths.get(alch) is not None:
+            continue
+        sitter = d.babysat.get(night) if d.babysat else None
+        demon = d.demon_at(phase)
+        targets = [p for p in d.alive_at(phase)
+                   if d.deaths.get(p) is None and p not in (alch, sitter,
+                                                             demon)]
+        if not targets or rng.random() >= 0.3:
+            continue
+        target = rng.choice(targets)
+        d.assassin_chose[alch] = night
+        d.alch_kills[night] = (alch, target)
+        if d.working(alch, night):
+            d.deaths[target] = phase
     if _st_has(d, "Assassin") and not d.st_assassin_spent:
         targets = _good_and_standing(d, night)
         if targets and rng.random() < 0.3:
@@ -2272,6 +2311,14 @@ def _witch_curses(d, night, rng):
         if _st_has(d, "Witch") and len(d.alive_at(phase)) > 3:
             d.cursed[night] = rng.choice(d.alive_at(phase))
             d.cursed_by[night] = "ST"
+            return
+        # An Alchemist with the Witch's ability (04.11.2026).
+        for alch in _alchemists(d, "Witch", night):
+            others = [p for p in d.alive_at(phase) if p != alch]
+            if len(d.alive_at(phase)) > 3 and len(others) >= 2:
+                d.cursed[night] = rng.choice(others)
+                d.cursed_by[night] = alch
+                break
         return
     others = [p for p in d.alive_at(phase) if p != witch]
     # "If just 3 players live, you lose this ability."
@@ -2300,6 +2347,18 @@ def _a_vigormortis_killed(d, seat, phase):
         return False
     now = _demon_holding(d, phase, "Vigormortis")
     return now is not None and now in d.alive_at(phase)
+
+
+def _alchemist_advocates(d, night, rng):
+    """An Alchemist with the Devil's Advocate's ability (04.11.2026): somebody
+    it trusts, now and then itself. "Different to last night" is not held
+    to. A dealt Devil's Advocate choosing later tonight overrides it."""
+    phase = f"N{night}"
+    for alch in _alchemists(d, "DevilsAdvocate", night):
+        living = d.alive_at(phase)
+        if living:
+            d.spared[night] = (alch, rng.choice(living))
+            return
 
 
 def _devils_advocate_picks(d, night, rng):
@@ -2923,6 +2982,31 @@ def _plague_check(d, rng, heard):
                 _plague_stage_2_gained(d, key, phase, rng, heard)
 
 
+# The jinxed ones (claude/alchemist-gruppen.md, group 4): not handed out
+# yet.
+ALCHEMY_NEVER = ("Spy", "Widow", "Wraith", "Marionette", "Mastermind",
+                 "OrganGrinder", "Boffin", "Summoner")
+
+
+def _alchemy(d, seat, key, phase):
+    """An Alchemist holding that Minion's ability then (04.11.2026)."""
+    return getattr(d, "alchemy", {}).get(seat) == key \
+        and d.role_at(seat, phase) == "Alchemist"
+
+
+def _alchemists(d, key, night):
+    """The living Alchemists holding that ability tonight."""
+    phase = f"N{night}"
+    return [seat for seat in sorted(getattr(d, "alchemy", {}))
+            if _alchemy(d, seat, key, phase) and seat in d.alive_at(phase)
+            and d.deaths.get(seat) is None]
+
+
+def _holds(d, seat, key, phase):
+    """Holding that Minion, or an Alchemist with its ability."""
+    return d.role_at(seat, phase) == key or _alchemy(d, seat, key, phase)
+
+
 def _st_has(d, key, before=None):
     """Has the Storyteller gained that ability — by now, or strictly
     before that phase?"""
@@ -2949,7 +3033,8 @@ def _scarlet(d, seat, phase):
 def _fearmonger_at(d, p, phase):
     """Holding the Fearmonger, or a Minion given its ability (E)."""
     return d.role_at(p, phase) == "Fearmonger" \
-        or _plague_minion(d, p, "Fearmonger", phase)
+        or _plague_minion(d, p, "Fearmonger", phase) \
+        or _alchemy(d, p, "Fearmonger", phase)
 
 
 def _plague_fearmongers_choose(d, night, rng, heard):
@@ -2958,7 +3043,8 @@ def _plague_fearmongers_choose(d, night, rng, heard):
     phase = f"N{night}"
     for seat in d.alive_at(phase):
         if d.role_at(seat, phase) == "Fearmonger" \
-                or not _plague_minion(d, seat, "Fearmonger", phase) \
+                or not (_plague_minion(d, seat, "Fearmonger", phase)
+                        or _alchemy(d, seat, "Fearmonger", phase)) \
                 or d.deaths.get(seat) is not None:
             continue
         others = [p for p in d.alive_at(phase) if p != seat]
@@ -4482,7 +4568,7 @@ def _the_curse_bites(d, seat, day):
     witch = d.cursed_by.get(day)
     if witch == "ST":
         pass                              # the Storyteller's (28.10.2026)
-    elif witch is None or d.role_at(witch, phase) != "Witch":
+    elif witch is None or not _holds(d, witch, "Witch", phase):
         return False
     elif not _has_its_ability(d, witch, phase) \
             or not d.working(witch, day):
@@ -4529,7 +4615,7 @@ def _walks_away(d, seat, day, rng):
         return "DevilsAdvocate"           # the Storyteller's (28.10.2026)
     if chosen == seat and advocate in d.alive_at(phase) \
             and d.deaths.get(advocate) is None \
-            and d.role_at(advocate, phase) == "DevilsAdvocate" \
+            and _holds(d, advocate, "DevilsAdvocate", phase) \
             and d.working(advocate, day, by_day=True):
         return "DevilsAdvocate"
     # "If executed, you only die if you lose roshambo." Played only by a
@@ -4651,7 +4737,7 @@ def _execute(d, day, rng, allow_takeover=False):
                and (advocate == "ST" or (
                    advocate in d.alive_at(phase)
                    and d.deaths.get(advocate) is None
-                   and d.role_at(advocate, phase) == "DevilsAdvocate"
+                   and _holds(d, advocate, "DevilsAdvocate", phase)
                    and d.working(advocate, day))))
     # A Lleech whose host lives walks away from it (11.10.2026).
     lleech_stands = (demon is not None
@@ -6145,10 +6231,15 @@ def _woke_for_own_ability(d, p, night, shown=False):
     # A Minion the Plague Doctor's death gave the Spy's, the Wraith's or
     # the Fearmonger's ability wakes for it (I Weg 1, 28.10.2026).
     phase = f"N{night}"
-    return any(_plague_minion(d, p, key, phase)
-               and _woke_itself(d, p, night, shown, as_role=key)
-               for _at, seat, key in getattr(d, "plague", ())
-               if seat == p)
+    if any(_plague_minion(d, p, key, phase)
+           and _woke_itself(d, p, night, shown, as_role=key)
+           for _at, seat, key in getattr(d, "plague", ())
+           if seat == p):
+        return True
+    # An Alchemist wakes when its Minion would (04.11.2026).
+    key = getattr(d, "alchemy", {}).get(p)
+    return key is not None and _alchemy(d, p, key, phase) \
+        and _woke_itself(d, p, night, shown, as_role=key)
 
 
 def _woke_itself(d, p, night, shown=False, as_role=None):
@@ -6907,6 +6998,11 @@ def droisoned_at(d, night, by_day=False, _without_their_drunks=False):
     # (28.10.2026): nothing stops them, and the Widow's lasts.
     if getattr(d, "st_poisoned", {}).get(night) is not None:
         out.add(d.st_poisoned[night])
+    # An Alchemist's, until dusk, as long as it stands (04.11.2026).
+    alch = getattr(d, "alch_poisoned", {}).get(night)
+    if alch is not None and d.role_at(alch[0], phase) == "Alchemist" \
+            and not (by_day and alch[0] not in d.alive_at(f"D{night}")):
+        out.add(alch[1])
     if getattr(d, "st_widow", None) is not None \
             and d.st_widow[1] <= night:
         out.add(d.st_widow[0])
@@ -8595,7 +8691,8 @@ def _cerenovus_maddens(d, night, heard, rng):
     from botc.info import CerenovusMadness
     phase = f"N{night}"
     for seat in range(d.n):
-        if d.role_at(seat, phase) != "Cerenovus":
+        if d.role_at(seat, phase) != "Cerenovus" \
+                and not _alchemy(d, seat, "Cerenovus", phase):
             continue
         if seat not in d.alive_at(phase):
             continue

@@ -649,6 +649,15 @@ def hidden_from(deal, night, heard):
     st_kills = getattr(deal, "st_kills", {}).get(night)
     if st_kills:
         out[("st_kills", night)] = dict(st_kills)
+    # What an Alchemist poisoned or killed with its Minion's ability
+    # (04.11.2026): {ability: (Alchemist, whom)}.
+    alch = {}
+    if getattr(deal, "alch_poisoned", {}).get(night) is not None:
+        alch["Poisoner"] = deal.alch_poisoned[night]
+    if getattr(deal, "alch_kills", {}).get(night) is not None:
+        alch["Assassin"] = deal.alch_kills[night]
+    if alch:
+        out[("alchemy", night)] = alch
     # Whom its jinxes made something as tonight began (stage 2).
     jinx = getattr(deal, "st_jinx", {}).get(night)
     if jinx:
@@ -1031,6 +1040,7 @@ def walk(deal, night, hidden):
     acrobats = []
     acrobats_fall = getattr(CHARACTERS["Gossip"], field, 0)
     st_kills = dict(hidden.get(("st_kills", night)) or {})
+    alchemy = dict(hidden.get(("alchemy", night)) or {})
 
     def _acrobat_falls_now(slot):
         only = hidden.get(("preached_only", night)) or set()
@@ -1150,6 +1160,16 @@ def walk(deal, night, hidden):
             if was == "Drunk" and target in stops_being_droisoned:
                 state.droisoned.discard(target)
                 stops_being_droisoned.discard(target)
+        # An Alchemist's Poisoner and Assassin (04.11.2026), at their
+        # turn, working then.
+        for key, (alch, target) in alchemy.items():
+            if slot != getattr(CHARACTERS[key], field, 0) \
+                    or alch not in state.alive or not state.working(alch):
+                continue
+            if key == "Poisoner":
+                state.droison(target, slot, "Poisoner")
+            elif target in state.alive:
+                state.kill(target, slot, "Assassin", unstoppable=True)
         # The Storyteller's Assassin and Godfather, the Plague Doctor's
         # gift (28.10.2026): at their turn, nobody's ability to stop.
         for key, target in st_kills.items():

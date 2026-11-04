@@ -138,6 +138,12 @@ class ItWakes(SolverTest):
         # sees and nothing at all wake nobody.
         self.assertFalse(self.woke("*"))
 
+    def test_an_unseen_one_may_have_woken(self):
+        view = Timeline(world(), (alchemist_gift_change(4, "*"),))
+        self.assertTrue(waking.uncertain(view, state(), 4, 2))
+        view = Timeline(world(), (alchemist_gift_change(4, "Poisoner"),))
+        self.assertFalse(waking.uncertain(view, state(), 4, 2))
+
     def test_without_a_gift_it_sleeps(self):
         self.assertFalse(waking.woke(Timeline(world(), ()), state(), 4, 2))
 

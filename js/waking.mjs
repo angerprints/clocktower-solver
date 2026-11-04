@@ -526,6 +526,11 @@ export function uncertain(world, state, seat, night) {
   if (acting === "Philosopher" && !took && state.aliveSet(phase).has(seat)
       && madeAfterItsTurn(world, seat, night, "Philosopher"))
     return true;
+  // An Alchemist with a Minion ability the town cannot see wakes when that
+  // one would, and which it is nobody knows (04.11.2026). See waking.py.
+  if (acting === "Alchemist" && state.aliveSet(phase).has(seat)
+      && !(world.plagueAt ? world.plagueAt(seat, phase) : []).length)
+    return true;
   if (acting === "Choirboy")
     // Woken if the Demon killed the King tonight, and whose kill a King's
     // death was is not known here (10.10.2026).

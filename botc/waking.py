@@ -736,6 +736,11 @@ def uncertain(world, state, seat, night):
             and seat in state.alive_set(phase) \
             and _made_after_its_turn(world, seat, night, "Philosopher"):
         return True
+    # An Alchemist with a Minion ability the town cannot see wakes when
+    # that one would, and which it is nobody knows (04.11.2026).
+    if acting == "Alchemist" and seat in state.alive_set(phase) \
+            and not world.plague_at(seat, phase):
+        return True
     if acting == "Choirboy":
         # Woken if the Demon killed the King tonight. A King dead in the
         # night may have been the Demon's or anybody else's (10.10.2026).
