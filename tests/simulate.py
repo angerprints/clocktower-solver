@@ -2349,6 +2349,22 @@ def _a_vigormortis_killed(d, seat, phase):
     return now is not None and now in d.alive_at(phase)
 
 
+def _alchemist_undone(d, night):
+    """A Philosopher took the Alchemist tonight, at its turn near the front
+    of the night: what a dealt Alchemist chose earlier in this loop it chose
+    drunk (04.11.2026). Its Assassin's shot is spent all the same."""
+    alchemists = set(getattr(d, "alchemy", {}))
+    got = d.alch_poisoned.get(night)
+    if got is not None and got[0] in alchemists:
+        del d.alch_poisoned[night]
+    if d.cursed_by.get(night) in alchemists:
+        del d.cursed_by[night]
+        d.cursed.pop(night, None)
+    got = d.spared.get(night)
+    if got is not None and got[0] in alchemists:
+        del d.spared[night]
+
+
 def _alchemist_advocates(d, night, rng):
     """An Alchemist with the Devil's Advocate's ability (04.11.2026): somebody
     it trusts, now and then itself. "Different to last night" is not held
@@ -6219,6 +6235,12 @@ def _woke_for_own_ability(d, p, night, shown=False):
     night on, whenever that character would (F Weg 1, 26.10.2026)."""
     if _woke_itself(d, p, night, shown):
         return True
+    # An Alchemist wakes when its Minion would, the first night too
+    # (04.11.2026).
+    key = getattr(d, "alchemy", {}).get(p)
+    if key is not None and _alchemy(d, p, key, f"N{night}") \
+            and _woke_itself(d, p, night, shown, as_role=key):
+        return True
     if night < 2:
         return False
     from botc.catalogue import CHARACTERS
@@ -6231,15 +6253,10 @@ def _woke_for_own_ability(d, p, night, shown=False):
     # A Minion the Plague Doctor's death gave the Spy's, the Wraith's or
     # the Fearmonger's ability wakes for it (I Weg 1, 28.10.2026).
     phase = f"N{night}"
-    if any(_plague_minion(d, p, key, phase)
-           and _woke_itself(d, p, night, shown, as_role=key)
-           for _at, seat, key in getattr(d, "plague", ())
-           if seat == p):
-        return True
-    # An Alchemist wakes when its Minion would (04.11.2026).
-    key = getattr(d, "alchemy", {}).get(p)
-    return key is not None and _alchemy(d, p, key, phase) \
-        and _woke_itself(d, p, night, shown, as_role=key)
+    return any(_plague_minion(d, p, key, phase)
+               and _woke_itself(d, p, night, shown, as_role=key)
+               for _at, seat, key in getattr(d, "plague", ())
+               if seat == p)
 
 
 def _woke_itself(d, p, night, shown=False, as_role=None):
@@ -8208,6 +8225,8 @@ def _for_role(d, seat, role, night, rng):
             return None
         took = rng.choice(pool)
         d.philosophies[seat] = took
+        if took == "Alchemist":
+            _alchemist_undone(d, night)
         # The night it chose, when it woke to (Stelle 101): a made one
         # chooses after the first night, and a Chambermaid counts it.
         d.__dict__.setdefault("phil_night", {})[seat] = night

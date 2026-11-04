@@ -1162,6 +1162,9 @@ export const CerenovusMadness = define("CerenovusMadness", "Cerenovus",
       return false;
     if (seat === null || seat === undefined ||
         s.aliveSet(`N${this.night}`).has(seat)) return true;
+    // Or an Alchemist with its ability, alive then (04.11.2026).
+    if (alchemistsWith(w, s, "Cerenovus", `N${this.night}`).length)
+      return true;
     // Dead, and maddening people all the same: a Vigormortis's own Minion
     // keeps its ability.
     return killedByAVigormortis(w, s, seat, `N${this.night}`);

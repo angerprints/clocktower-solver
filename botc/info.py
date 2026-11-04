@@ -2115,6 +2115,10 @@ class CerenovusMadness(Info):
             return False
         if seat is None or seat in s.alive_set(f"N{self.night}"):
             return True
+        # Or an Alchemist with its ability, alive then (04.11.2026).
+        from .solver import alchemists_with
+        if alchemists_with(w, s, "Cerenovus", f"N{self.night}"):
+            return True
         # Dead, and maddening people all the same: a Vigormortis's own
         # Minion keeps its ability.
         from .solver import killed_by_a_vigormortis
