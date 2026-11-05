@@ -1127,11 +1127,21 @@ export const ArtistInfo = define("ArtistInfo", "Artist", () => true,
  * is the Evil Twin itself and the other is good.
  */
 export const EvilTwinPair = define("EvilTwinPair", "EvilTwin",
-  function (w) {
+  function (w, s) {
     // On its first night as the Evil Twin: the first, or the night it
     // took the character at a tea party (M Weg 1). See info.py.
     const phase = `N${this.night}`;
     const first = w.roleAt(this.a, phase), second = w.roleAt(this.b, phase);
+    // Or an Alchemist with its ability (group 3, I). See info.py.
+    for (const [twin, other] of [[this.a, this.b], [this.b, this.a]]) {
+      if (first !== "EvilTwin" && second !== "EvilTwin"
+          && alchemyHolds(w, s, twin, "EvilTwin", phase)) {
+        if (this.night > 1
+            && alchemyHolds(w, s, twin, "EvilTwin", `N${this.night - 1}`))
+          return false;
+        return w.evilAt(twin, phase) !== w.evilAt(other, phase);
+      }
+    }
     if (first !== "EvilTwin" && second !== "EvilTwin") return false;
     const twin = first === "EvilTwin" ? this.a : this.b;
     // Or the night the Storyteller's Evil Twin made it (the jinx,

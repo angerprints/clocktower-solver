@@ -2910,7 +2910,7 @@ transitionRule(aPlagueDoctorGivesTheStoryteller);
 export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
   "Cerenovus", "Assassin", "Fearmonger", "Godfather",
   // Group 3 (05.11.2026).
-  "Vizier", "Psychopath", "Goblin", "Boomdandy", "ScarletWoman"]);
+  "Vizier", "Psychopath", "Goblin", "Boomdandy", "ScarletWoman", "EvilTwin"]);
 
 export const alchemistOnBoard = state => onBoard(state, "Alchemist");
 
@@ -3473,7 +3473,8 @@ function plainFailures(world, state, outcome = {}) {
       const phase = `D${day}`;
       // A good Evil Twin, the Storyteller's jinx (Pestdoktor Stufe 2, F
       // Weg 1): it is the good player, and the ability its own.
-      if (world.roleAt(hanged, phase) === "EvilTwin"
+      if ((world.roleAt(hanged, phase) === "EvilTwin"
+           || alchemyHolds(world, state, hanged, "EvilTwin", phase))
           && !world.evilAt(hanged, phase) && world.evilAt(other, phase)) {
         failByDay(day, hanged);
         continue;

@@ -1253,6 +1253,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         living = d.alive_at(f"N{night}")
         # A Plague Doctor that died by day (28.10.2026).
         _plague_check(d, rng, heard)
+        # An Alchemist with the Evil Twin's ability and an evil player
+        # learn each other (group 3, I).
+        _alchemist_twin(d, night, rng, heard)
         # Its Evil Twin and the twin learn each other tonight (stage 2, F).
         pending = getattr(d, "st_twin_row", None)
         if pending is not None and pending[0] == night:
@@ -2485,6 +2488,27 @@ def _alchemist_undone(d, night):
         d.cursed.pop(night, None)
     if d.alch_spared.get(night, (None,))[0] in alchemists:
         del d.alch_spared[night]
+
+
+def _alchemist_twin(d, night, rng, heard):
+    """An Alchemist with the Evil Twin's ability, on the night it has it
+    from: it and an evil player know each other (group 3, I, 05.11.2026).
+    It is the good twin."""
+    phase = f"N{night}"
+    twins = d.__dict__.setdefault("alch_twins", {})
+    for alch in sorted(getattr(d, "alchemy", {})):
+        if alch in twins or not _alchemy(d, alch, "EvilTwin", phase):
+            continue
+        since = getattr(d, "alchemy_since", {}).get(alch, 1)
+        if night != since:
+            continue
+        evil = [p for p in d.alive_at(phase) if p != alch
+                and d.side_at(p, phase) == "evil" and d.deaths.get(p) is None]
+        if not evil:
+            continue
+        other = rng.choice(evil)
+        twins[alch] = other
+        heard.append(EvilTwinPair(night, alch, a=alch, b=other))
 
 
 def _alchemist_advocates(d, night, rng):
@@ -4899,6 +4923,11 @@ def _execute(d, day, rng, allow_takeover=False):
     st_twins = getattr(d, "st_twins", None)
     if st_twins is not None and d.role_at(st_twins[0], phase) == "EvilTwin":
         living = [p for p in living if p != st_twins[0]]
+    # And an Alchemist with the Evil Twin's ability: the good player itself,
+    # its ability its own, so its twin need not be standing (group 3, I).
+    for alch in getattr(d, "alch_twins", {}):
+        if _alchemy(d, alch, "EvilTwin", phase):
+            living = [p for p in living if p != alch]
     heir = _heir(d, phase, rng)
     takeover = (allow_takeover and heir is not None
                 and _scarlet(d, heir, phase)

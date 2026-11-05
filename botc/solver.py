@@ -3766,7 +3766,7 @@ ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
                           "Godfather",
                           # Group 3 (05.11.2026): by day and on the gallows.
                           "Vizier", "Psychopath", "Goblin", "Boomdandy",
-                          "ScarletWoman"})
+                          "ScarletWoman", "EvilTwin"})
 
 
 def _alchemist_on_board(state):
@@ -7062,7 +7062,10 @@ def _plain_failures(world, state, outcome=None):
             phase = f"D{day}"
             # A good Evil Twin, the Storyteller's jinx (Pestdoktor Stufe 2,
             # F Weg 1): it is the good player, and the ability its own.
-            if world.role_at(hanged, phase) == "EvilTwin" \
+            # And an Alchemist with its ability (group 3, I).
+            if (world.role_at(hanged, phase) == "EvilTwin"
+                    or alchemy_holds(world, state, hanged, "EvilTwin",
+                                     phase)) \
                     and not world.evil_at(hanged, phase) \
                     and world.evil_at(other, phase):
                 day_failures[day].add(hanged)

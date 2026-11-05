@@ -24,7 +24,7 @@ from botc.worlds import (AlchemistGift, Timeline, World,  # noqa: E402
 IDS = ["chef", "empath", "fortuneteller", "washerwoman", "investigator",
        "undertaker", "alchemist", "saint", "philosopher", "butler",
        "recluse", "godfather", "xaan", "vizier", "psychopath", "goblin",
-       "boomdandy", "scarletwoman",
+       "boomdandy", "scarletwoman", "eviltwin",
        "poisoner", "witch", "assassin", "devilsadvocate", "cerenovus",
        "fearmonger", "spy", "baron", "imp"]
 SC = scripts.from_ids("Alchemist", IDS)
@@ -72,7 +72,7 @@ class WhatItMayHold(SolverTest):
                                     "DevilsAdvocate", "Cerenovus",
                                     "Fearmonger", "Xaan", "Vizier",
                                     "Psychopath", "Goblin", "Boomdandy",
-                                    "ScarletWoman"})
+                                    "ScarletWoman", "EvilTwin"})
         # One the town cannot see (the Spy): each seen one costs one, the
         # rest one. The Baron is not offered: the deal has no two Outsiders
         # more (group 2, 04.11.2026).
@@ -281,6 +281,26 @@ class ItBecomesTheDemon(SolverTest):
         self.assertIsNone(S.best_story(world(), st)[0])
 
 
+class ItIsTheGoodTwin(SolverTest):
+    """Group 3, I: its twin is an evil player; hanged, it hands evil the
+    game."""
+
+    def test_it_and_an_evil_player_know_each_other(self):
+        st = state()
+        view = Timeline(world(), (alchemist_gift_change(4, "EvilTwin"),))
+        self.assertTrue(I.EvilTwinPair(1, 4, a=4, b=6).holds(view, st, None))
+        self.assertFalse(I.EvilTwinPair(1, 4, a=4, b=0).holds(view, st, None))
+        # Only on the night it has it from.
+        self.assertFalse(I.EvilTwinPair(2, 4, a=4, b=6).holds(view, st, None))
+
+    def test_hanged_and_the_game_went_on(self):
+        rows = [I.EvilTwinPair(1, 4, a=4, b=6),
+                I.AlchemistHas(1, 4, role="EvilTwin")]
+        self.assertIsNotNone(S.best_story(world(), state(rows))[0])
+        self.assertIsNone(S.best_story(world(), state(
+            rows, executions={1: 4}, deaths={4: ("E1",)}))[0])
+
+
 class BothSave(SolverTest):
 
     def test_a_devils_advocate_and_an_alchemist_with_its_ability(self):
@@ -362,6 +382,9 @@ def _payloads():
                            "player": 4, "target": 0, "died": True}]),
         # Its Scarlet Woman's: the Demon executed, the game went on.
         pay({6: ["X1"], 0: ["N2"]}),
+        # Its Evil Twin's: an evil twin.
+        pay({}, [{"type": "EvilTwinPair", "night": 1, "player": 4, "a": 4,
+                  "b": 6}]),
         # A Philosopher that took the Alchemist (Patrick, 04.11.2026).
         pay({0: ["W2"]}, [{"type": "PhilosopherChoice", "night": 1,
                            "player": 3, "role": "Alchemist"},

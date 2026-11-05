@@ -2309,6 +2309,15 @@ class EvilTwinPair(Info):
         # other side at once (M Weg 1, 22.10.2026).
         phase = f"N{self.night}"
         first, second = w.role_at(self.a, phase), w.role_at(self.b, phase)
+        # Or an Alchemist with its ability, on the night it has it from: it
+        # is the good twin, the other an evil player (group 3, I).
+        for twin, other in ((self.a, self.b), (self.b, self.a)):
+            if first != "EvilTwin" and second != "EvilTwin" \
+                    and alchemy_holds(w, s, twin, "EvilTwin", phase):
+                since = f"N{self.night - 1}" if self.night > 1 else None
+                if since and alchemy_holds(w, s, twin, "EvilTwin", since):
+                    return False
+                return w.evil_at(twin, phase) != w.evil_at(other, phase)
         if "EvilTwin" not in (first, second):
             return False
         twin = self.a if first == "EvilTwin" else self.b
