@@ -3064,9 +3064,19 @@ def boffin_may_give(view, state, phase, setup=False):
     script, nobody holding it (alive or dead), none their jinxes forbid,
     a Village Idiot only while one of its tokens is spare (B Weg 1). At
     the setup its bracket holds (E Weg 1): what it brings is in play — a
-    King for the Choirboy, the Damsel for the Huntsman."""
+    King for the Choirboy, the Damsel for the Huntsman.
+
+    At the setup, who holds what **as dealt**: the Boffin gives before
+    anybody acts. Read at the first night, the board already had what that
+    night made — a Huntsman's Damsel become the Snake Charmer the Boffin
+    gave — and the gift was refused, the true world with it (Stelle 117,
+    05.11.2026, seeds 414 and 909 of the gate line torAF)."""
     n = state.n_players
-    held = [view.role_at(p, phase) for p in range(n)]
+    if setup:
+        base = view.world if isinstance(view, Timeline) else view
+        held = list(base.roles)
+    else:
+        held = [view.role_at(p, phase) for p in range(n)]
     out = []
     for key in state.script.keys:
         if TEAM.get(key) not in ("townsfolk", "outsider"):
@@ -3105,7 +3115,8 @@ def boffin_offers(view, state, phase, seat, slot, setup=False,
     given that only a row tells (6, Patrick 05.11.2026). `bracket`: a deal
     only a gift's bracket explains has this gift — not where two give."""
     if alchemist:
-        return _alchemist_boffin_offers(view, state, phase, seat, slot)
+        return _alchemist_boffin_offers(view, state, phase, seat, slot,
+                                        setup)
     may = boffin_may_give(view, state, phase, setup)
     named = _boffin_named(state, int(phase[1:]), setup)
     # A deal only a gift's bracket explains has that gift (E Weg 1).
@@ -3150,11 +3161,11 @@ def boffin_offers(view, state, phase, seat, slot, setup=False,
     return out
 
 
-def _alchemist_boffin_offers(view, state, phase, seat, slot):
+def _alchemist_boffin_offers(view, state, phase, seat, slot, setup):
     """What an Alchemist's Boffin may have given (group 4b): as the
     Boffin's, "nothing the town sees" first, with no row and never the
     Barber's, the Hatter's or the Philosopher's."""
-    may = [k for k in boffin_may_give(view, state, phase, phase == "N1")
+    may = [k for k in boffin_may_give(view, state, phase, setup)
            if k not in BOFFIN_ROW_ONLY and k != "Philosopher"]
     seen = _sampled_gifts(view, phase, seat,
                           [k for k in may if k in BOFFIN_SEEN])
