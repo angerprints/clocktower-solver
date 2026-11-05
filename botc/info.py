@@ -860,6 +860,12 @@ def boffin_seat(w, s, phase):
     for seat in range(len(w.roles)):
         if seat in alive and w.role_at(seat, phase) == "Boffin":
             return seat
+    # Or an Alchemist with its ability (group 4, K, 05.11.2026): its
+    # sobriety, while it lives and holds the Alchemist.
+    if getattr(w, "_plagues_by_seat", None):
+        for seat in range(len(w.roles)):
+            if seat in alive and alchemy_holds(w, s, seat, "Boffin", phase):
+                return seat
     return None
 
 
@@ -954,9 +960,20 @@ def has_plague_ability(w, s, seat, role, phase):
     if role not in w.plague_at(seat, phase):
         return False
     # Or the Alchemist's own, from the first night (`AlchemistGift`): a
-    # good Townsfolk with it while it holds the Alchemist (04.11.2026).
-    return TEAM.get(w.role_at(seat, phase)) == "minion" \
-        or acts_as_alchemist(w, s, seat, phase)
+    # good Townsfolk with it while it holds the Alchemist (04.11.2026) —
+    # none their jinxes say it has not (group 4, 05.11.2026).
+    if TEAM.get(w.role_at(seat, phase)) == "minion":
+        return True
+    return role not in ALCHEMY_NOT_HELD \
+        and acts_as_alchemist(w, s, seat, phase)
+
+
+# Their jinxes (group 4, 05.11.2026, claude/alchemist-gruppe-4-lesarten.md):
+# an Alchemist with one of these has no such ability — the Spy's, the
+# Widow's and the Wraith's give it a guess instead (`AlchemistGuess`).
+ALCHEMY_NOT_HELD = frozenset({"Spy", "Widow", "Wraith", "Marionette",
+                              "Mastermind"})
+ALCHEMY_GUESSES = frozenset({"Spy", "Widow", "Wraith"})
 
 
 def alchemy_holds(w, s, seat, key, phase):
@@ -3682,10 +3699,26 @@ class BlindVote(Info):
             return None
         return seat
 
+    def _alchemists(self, w, s):
+        """The living Alchemists with the Organ Grinder's ability that day
+        (group 4, 05.11.2026): its jinx says "if both are sober, both are
+        drunk", so either of the two may have closed the eyes."""
+        phase = f"D{self.night}"
+        alive = s.alive_set(phase)
+        if not getattr(w, "_plagues_by_seat", None):
+            return ()
+        return tuple(p for p in range(len(w.roles)) if p in alive
+                     and alchemy_holds(w, s, p, "OrganGrinder", phase))
+
     def holds(self, w, s, rh, seat=None):
-        return self._grinder(w, s) is not None
+        return self._grinder(w, s) is not None \
+            or bool(self._alchemists(w, s))
 
     def leaned_on(self, w, s, seat=None):
+        # Beside an Alchemist with its ability either may be the one: no
+        # demand then, permissive and never wrong.
+        if self._alchemists(w, s):
+            return ()
         got = self._grinder(w, s)
         return () if got is None else (got,)
 
@@ -4159,6 +4192,38 @@ class AlchemistHas(Info):
 
     def holds(self, w, s, rh, seat=None):
         return self.given(s) is not None
+
+
+@dataclass
+class AlchemistGuess(Info):
+    """After an execution, a living Alchemist publicly guessed a living
+    player as the Spy, the Widow or the Wraith (group 4, 05.11.2026,
+    claude/alchemist-gruppe-4-lesarten.md). `night` is the day.
+
+    Their jinxes: "An Alchemist-Spy has no Spy ability & a Spy is in play.
+    After each execution, a living Alchemist-Spy may publicly guess a
+    living player as the Spy. If correct, the Demon must choose the Spy
+    tonight." The Widow's and the Wraith's are the same. Patrick's L: the
+    Demon attacks the one guessed that night — they die, unless something
+    keeps them alive (`solver.alchemist_guessed`). Anybody may say it, so
+    the row itself always holds: what it sets off is the Demon's."""
+
+    target: int = 0
+    is_a_choice = True
+    event = True
+    source_role = "Alchemist"
+
+    def hard(self):
+        return True
+
+    def is_information(self, state):
+        return False
+
+    def source_seat(self, state):
+        return None                       # what everybody saw
+
+    def holds(self, w, s, rh, seat=None):
+        return True
 
 
 # Their jinxes (26.10.2026): the Demon cannot have the Drunk's, the

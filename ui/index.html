@@ -792,6 +792,9 @@ const SCHEMA = {
   // A Minion of the script: the ability the Alchemist was told it has
   // on the first night (04.11.2026).
   AlchemistHas:       [["role","role:minions"]],
+  // After an execution: whom a living Alchemist publicly guessed as the
+  // Spy, the Widow or the Wraith (group 4, 05.11.2026).
+  AlchemistGuess:     [["target","player"]],
   PuzzlemasterGuess:  [["guess","player"],["shown","player"]],
   BoomdandyExploded:  [["pointed","playerOrNone"]],
   // The seventh five. The Pixie says which Townsfolk it was shown; a
@@ -882,6 +885,7 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
   PreacherChoice:"Preacher", HuntsmanChoice:"Huntsman",
   EngineerChoice:"Engineer", BoffinGave:"Boffin",
   PlagueDoctorGave:"PlagueDoctor", AlchemistHas:"Alchemist",
+  AlchemistGuess:"Alchemist",
   PuzzlemasterGuess:"Puzzlemaster", BoomdandyExploded:"Boomdandy",
   PixieLearned:"Pixie", VillageIdiotInfo:"VillageIdiot",
   LycanthropeChose:"Lycanthrope", HarpyMadness:"Harpy",
@@ -906,7 +910,7 @@ const SOURCE_ROLE  = { SlayerShot:"Slayer", VirginNomination:"Virgin",
 const DAY_EVENTS   = ["SlayerShot","VirginNomination","GoblinClaim",
   "DamselGuess","VizierAnnounced","BlindVote",
   "PrincessNominated","GolemNomination","PsychopathKill","PsychopathRoshambo",
-  "PuzzlemasterGuess","BoomdandyExploded",
+  "PuzzlemasterGuess","BoomdandyExploded","AlchemistGuess",
   "CultCalled","LeviathanAnnounced","ExecutionNomination",
   "SavantInfo","ArtistInfo","Alsaahir","FishermanAdvice"];
 const SPEAKER_LABEL= { SlayerShot:"shooter", VirginNomination:"virgin",
@@ -956,7 +960,7 @@ const TYPE_LABEL   = { SlayerShot:"Slayer shot",
   PreacherChoice:"Preacher chose", HuntsmanChoice:"Huntsman chose",
   EngineerChoice:"Engineer chose", BoffinGave:"Boffin gave the Demon",
   PlagueDoctorGave:"Plague Doctor's death",
-  AlchemistHas:"Alchemist has",
+  AlchemistHas:"Alchemist has", AlchemistGuess:"Alchemist guess",
   PuzzlemasterGuess:"Puzzlemaster guess", BoomdandyExploded:"Boomdandy exploded",
   PixieLearned:"Pixie shown", VillageIdiotInfo:"Village Idiot",
   LycanthropeChose:"Lycanthrope chose", HarpyMadness:"Harpy madness",
@@ -1813,6 +1817,8 @@ function describeRow(r){
     case "AlchemistHas":
       return r.role ? `has the ${role(r.role)}'s ability`
                     : `has a Minion ability — pick it`;
+    case "AlchemistGuess":
+      return `publicly guessed ${who(r.target)} as the Spy, the Widow or the Wraith`;
     case "PuzzlemasterGuess":
       return `guessed ${who(r.guess)} is the drunk one, and was shown ${
         who(r.shown)} as the Demon`;

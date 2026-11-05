@@ -21,7 +21,7 @@ import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
         takenByAPhilosopher, tookIt, boffinHolders, soberSeat,
         boffinAbilities, boffinGiftOf, boffinSeat, storytellerHas,
-        evilRegistrationsHere, alchemistsWith, alchemyHolds}
+        evilRegistrationsHere, alchemistsWith, alchemyHolds, ALCHEMY_GUESSES}
   from "./info.mjs";
 
 // --------------------------------------------------------------------
@@ -780,10 +780,39 @@ function demonKillsAs(world, state, night, demon) {
   for (let p = 0; p < state.nPlayers; p++)
     if (state.diedAt(p).includes(`N${night}`) &&
         fallsAs(world, state, p, "Sweetheart", `N${night}`)) reachable = false;
-  return [new Cause("Demon", DEMON, allSeats(state),
+  // An Alchemist guessed right by day (group 4, L). See solver.py.
+  const forced = alchemistGuessed(world, state, night);
+  return [new Cause("Demon", DEMON,
+                    forced === null ? allSeats(state) : new Set([forced]),
                     {demon, capacity: 1, mustFire: true,
                      actor: reachable ? demon : null,
                      actorCost: PRIORS.DEMON_POISONED_PENALTY})];
+}
+
+/** The player the Demon must choose tonight, or null (group 4, L): an
+ * Alchemist with the Spy's, the Widow's or the Wraith's ability guessed
+ * them right yesterday, and nothing could have impaired it. See solver.py
+ * `alchemist_guessed`. */
+export function alchemistGuessed(world, state, night) {
+  const day = night - 1;
+  if (day < 1) return null;
+  const phase = `D${day}`;
+  const hanged = state.executedOn(day);
+  if (hanged === null || hanged === undefined) return null;
+  const alive = state.aliveSet(phase);
+  for (const info of state.infos) {
+    if (info.type !== "AlchemistGuess" || info.night !== day) continue;
+    const seat = info.player, target = info.target;
+    if (seat === hanged || target === hanged || seat === target
+        || !alive.has(seat) || !alive.has(target)) continue;
+    const key = world.roleAt(target, phase);
+    if (!ALCHEMY_GUESSES.has(key)
+        || !alchemyHolds(world, state, seat, key, phase)) continue;
+    if (sourcesOn(world, state, day).some(src => src.seats.has(seat)))
+      continue;
+    return target;
+  }
+  return null;
 }
 
 /** Could anything have made this seat drunk or poisoned that night?
