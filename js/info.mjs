@@ -222,6 +222,13 @@ export function hasPlagueAbility(w, s, seat, role, phase) {
     || actsAsAlchemist(w, s, seat, phase);
 }
 
+/** An Alchemist, or a Philosopher that took it, with that Minion's ability
+ * then (group 3, 05.11.2026). See info.py. */
+export function alchemyHolds(w, s, seat, key, phase) {
+  return !!w.plagueAt && w.plagueAt(seat, phase).includes(key)
+    && actsAsAlchemist(w, s, seat, phase);
+}
+
 /** Holding the Alchemist then, or a Philosopher that took it, from the
  * night it chose (Patrick, 04.11.2026). See info.py. */
 export function actsAsAlchemist(w, s, seat, phase) {
@@ -1968,9 +1975,12 @@ export const FearmongerChose = define("FearmongerChose", "Fearmonger",
 export const VizierAnnounced = define("VizierAnnounced", "Vizier",
   function (w, s) {
     const day = this.night;
-    if (w.roleAt(this.player, `D${day}`) !== "Vizier") return false;
+    // Or an Alchemist with its ability (group 3, G). See info.py.
+    const vizier = phase => w.roleAt(this.player, phase) === "Vizier"
+      || alchemyHolds(w, s, this.player, "Vizier", phase);
+    if (!vizier(`D${day}`)) return false;
     if (!s.aliveSet(`D${day}`).has(this.player)) return false;
-    return day === 1 || w.roleAt(this.player, `D${day - 1}`) !== "Vizier";
+    return day === 1 || !vizier(`D${day - 1}`);
   }, {
     hard() { return true; },
     isInformation() { return false; },
@@ -2005,7 +2015,8 @@ const couldRegisterAsDemon = role =>
  * a Sailor, a Fool, a Vizier, a Tea Lady's neighbour. See info.py. */
 function cannotDieByDay(w, s, seat, phase) {
   const role = w.roleAt(seat, phase);
-  if (["Sailor", "Fool", "Vizier"].includes(role)) return true;
+  if (["Sailor", "Fool", "Vizier"].includes(role)
+      || alchemyHolds(w, s, seat, "Vizier", phase)) return true;
   // Or a Philosopher with one of those, or with the Tea Lady (13.10.2026).
   if (["Sailor", "Fool"].some(taken => tookIt(w, s, seat, taken, phase)))
     return true;
@@ -2078,7 +2089,8 @@ export const PsychopathKill = define("PsychopathKill", "Psychopath",
   function (w, s) {
     const phase = `D${this.night}`;
     if (this.died)
-      return w.roleAt(this.player, phase) === "Psychopath"
+      return (w.roleAt(this.player, phase) === "Psychopath"
+              || alchemyHolds(w, s, this.player, "Psychopath", phase))
         && s.aliveSet(phase).has(this.player);
     return cannotDieByDay(w, s, this.target, phase);
   }, {
@@ -2092,7 +2104,9 @@ export const PsychopathKill = define("PsychopathKill", "Psychopath",
 export const PsychopathRoshambo = define("PsychopathRoshambo", "Psychopath",
   function (w, s) {
     return s.executedOn(this.night) === this.player
-      && w.roleAt(this.player, `D${this.night}`) === "Psychopath";
+      && (w.roleAt(this.player, `D${this.night}`) === "Psychopath"
+          || alchemyHolds(w, s, this.player, "Psychopath",
+                          `D${this.night}`));
   }, {
     hard() { return true; },
     isInformation() { return false; },
@@ -2229,7 +2243,9 @@ export const BoomdandyExploded = define("BoomdandyExploded", "Boomdandy",
   function (w, s) {
     const day = this.night, phase = `D${day}`;
     if (s.executedOn(day) !== this.player
-        || w.roleAt(this.player, phase) !== "Boomdandy") return false;
+        || !(w.roleAt(this.player, phase) === "Boomdandy"
+             || alchemyHolds(w, s, this.player, "Boomdandy", phase)))
+      return false;
     const pointed = typeof this.pointed === "number" ? this.pointed : -1;
     if (pointed < 0) return true;
     // Every living Demon among the three left (Hatter stage 2).
