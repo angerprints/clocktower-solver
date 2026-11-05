@@ -2333,8 +2333,11 @@ export function boffinRows(state) {
 /** Every good character the Boffin could give at that moment (B Weg 1);
  * at the setup only where what its bracket brings is in play (E Weg 1). */
 export function boffinMayGive(view, state, phase, setup = false) {
-  const held = Array.from({length: state.nPlayers},
-                          (_, p) => view.roleAt(p, phase));
+  // At the setup, as dealt: the Boffin gives before anybody acts (Stelle
+  // 117). See solver.py.
+  const base = view.world || view;
+  const held = setup ? [...base.roles]
+    : Array.from({length: state.nPlayers}, (_, p) => view.roleAt(p, phase));
   const out = [];
   for (const key of state.script.keys) {
     if (TEAM[key] !== "townsfolk" && TEAM[key] !== "outsider") continue;
@@ -2363,7 +2366,8 @@ function boffinNamed(state, night, setup) {
  * [[mark], cost] — "nothing the town sees" first. */
 export function boffinOffers(view, state, phase, seat, slot, setup = false,
                              alchemist = false, bracket = true) {
-  if (alchemist) return alchemistBoffinOffers(view, state, phase, seat, slot);
+  if (alchemist)
+    return alchemistBoffinOffers(view, state, phase, seat, slot, setup);
   const may = boffinMayGive(view, state, phase, setup);
   const named = boffinNamed(state, parseInt(phase.slice(1), 10), setup);
   // A deal only a gift's bracket explains has that gift (E Weg 1) — not
@@ -2407,8 +2411,8 @@ export function boffinOffers(view, state, phase, seat, slot, setup = false,
 
 /** What an Alchemist's Boffin may have given (group 4b): no row, and
  * none only a row tells. See solver.py `_alchemist_boffin_offers`. */
-function alchemistBoffinOffers(view, state, phase, seat, slot) {
-  const may = boffinMayGive(view, state, phase, phase === "N1")
+function alchemistBoffinOffers(view, state, phase, seat, slot, setup) {
+  const may = boffinMayGive(view, state, phase, setup)
     .filter(k => !BOFFIN_ROW_ONLY.has(k) && k !== "Philosopher");
   const seen = sampledGifts(view, phase, seat,
                            may.filter(k => BOFFIN_SEEN.has(k)));
