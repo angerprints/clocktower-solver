@@ -2317,7 +2317,15 @@ class EvilTwinPair(Info):
                 since = f"N{self.night - 1}" if self.night > 1 else None
                 if since and alchemy_holds(w, s, twin, "EvilTwin", since):
                     return False
-                return w.evil_at(twin, phase) != w.evil_at(other, phase)
+                # Its twin as the night began, or by its end: a Snake
+                # Charmer's swap later that night (seed 1902 of line AP).
+                began = f"B{self.night - 1}" if self.night > 1 else None
+                start = (w.evil_at(twin, began) != w.evil_at(other, began)
+                         if began else
+                         is_evil(getattr(w, "world", w).roles[twin])
+                         != is_evil(getattr(w, "world", w).roles[other]))
+                return start or w.evil_at(twin, phase) != w.evil_at(other,
+                                                                   phase)
         if "EvilTwin" not in (first, second):
             return False
         twin = self.a if first == "EvilTwin" else self.b

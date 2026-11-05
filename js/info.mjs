@@ -1139,7 +1139,12 @@ export const EvilTwinPair = define("EvilTwinPair", "EvilTwin",
         if (this.night > 1
             && alchemyHolds(w, s, twin, "EvilTwin", `N${this.night - 1}`))
           return false;
-        return w.evilAt(twin, phase) !== w.evilAt(other, phase);
+        // As the night began, or by its end. See info.py.
+        const roles = (w.world || w).roles;
+        const start = this.night > 1
+          ? w.evilAt(twin, `B${this.night - 1}`) !== w.evilAt(other, `B${this.night - 1}`)
+          : isEvil(roles[twin]) !== isEvil(roles[other]);
+        return start || w.evilAt(twin, phase) !== w.evilAt(other, phase);
       }
     }
     if (first !== "EvilTwin" && second !== "EvilTwin") return false;

@@ -636,7 +636,8 @@ export function wokeForOwnAbility(world, state, seat, night) {
   if (!woke(world, state, seat, night)) return false;
   // An Alchemist woken for an Evil Twin's ability. See waking.py.
   const phase = `N${night}`;
-  if (actsAsAlchemist(world, state, seat, phase) && world.plagueAt) {
+  if (world.roleAt(seat, phase) === "Alchemist"
+      && actsAsAlchemist(world, state, seat, phase) && world.plagueAt) {
     const gifts = world.plagueAt(seat, phase);
     if (gifts.length && gifts.every(g => SHOWN_NOT_ACTING.has(g))) return false;
   }
