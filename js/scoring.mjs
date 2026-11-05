@@ -71,7 +71,8 @@ export const inventionCost = info =>
  * 1), where she is not alive to have it. See solver.py. */
 export function scarletSeat(world, state, phase) {
   const seat = world.findAt("ScarletWoman", phase);
-  if (!plagueOnBoard(state)
+  // Or an Alchemist with her ability (group 3). See solver.py.
+  if (!(plagueOnBoard(state) || onBoard(state, "Alchemist"))
       || (seat !== null && state.aliveSet(phase).has(seat))) return seat;
   for (const who of plagueHolders(world, state, "ScarletWoman", phase))
     if (state.aliveSet(phase).has(who)) return who;
@@ -96,10 +97,18 @@ export function starpassHeirs(world, state, phase) {
   const minions = [];
   for (let m = 0; m < state.nPlayers; m++)
     if (world.teamAt(m, phase) === "minion" && alive.has(m)) minions.push(m);
-  if (!minions.length) return [];
-  if (scarletWomanTakesOver(world, state, phase))
+  if ((minions.length || onBoard(state, "Alchemist"))
+      && scarletWomanTakesOver(world, state, phase))
     return [scarletSeat(world, state, phase)];
   return minions;
+}
+
+/** The side an heir to the Demon keeps. See solver.py `_heir_side`. */
+function heirSide(view, state, phase, seat) {
+  if (onBoard(state, "Alchemist") && view.teamAt(seat, phase) !== "minion"
+      && alchemyHolds(view, state, seat, "ScarletWoman", phase))
+    return "good";
+  return null;
 }
 
 // --------------------------------------------------------------------
@@ -158,6 +167,8 @@ const ACTS_AT = {
   // The Plague Doctor's death gives the Storyteller an ability
   // (28.10.2026): after every change but the handovers. See solver.py.
   aPlagueDoctorGivesTheStoryteller: 98,
+  // An Alchemist's ability, from the setup (group 3). See solver.py.
+  anAlchemistHoldsAMinionAbility: -1,
 };
 
 export const transitionRule = fn => (
@@ -305,6 +316,8 @@ export function possibleTimelines(world, state, cap = 128) {
   // as many times as this world tells. See solver.py.
   if (plagueOnBoard(state))
     cap *= Math.max(1, plagueStories(world, state).length);
+  if (alchemistOnBoard(state))
+    cap *= Math.max(1, anAlchemistHoldsAMinionAbility(world, state).length);
   // And for every Townsfolk the Huntsman's Damsel may have become, beside
   // every Barber's swap (Stelle 97, 30.10.2026). See solver.py.
   if (onBoard(state, "Huntsman"))
@@ -806,7 +819,8 @@ export const STARPASSES = new Set(["Imp"]);
 heirRule(function aMinionCatchesTheStar(view, state, phase, character) {
   if (phase[0].toUpperCase() !== "N" || !STARPASSES.has(character)) return [];
   return starpassHeirs(view, state, phase)
-    .map(seat => change(phase, seat, character));
+    .map(seat => change(phase, seat, character,
+                        heirSide(view, state, phase, seat)));
 });
 
 /** The Fang Gu killed an Outsider, and they took its place.
@@ -843,7 +857,8 @@ heirRule(function anOutsiderBecomesTheFangGu(view, state, phase, character) {
 heirRule(function theScarletWomanStepsUp(view, state, phase, character) {
   if (phase[0].toUpperCase() === "N" && STARPASSES.has(character)) return [];
   if (!scarletWomanTakesOver(view, state, phase)) return [];
-  return [change(phase, scarletSeat(view, state, phase), character)];
+  const seat = scarletSeat(view, state, phase);
+  return [change(phase, seat, character, heirSide(view, state, phase, seat))];
 });
 
 /** Was this seat executed on this day by any route the rules call an
@@ -2895,7 +2910,7 @@ transitionRule(aPlagueDoctorGivesTheStoryteller);
 export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
   "Cerenovus", "Assassin", "Fearmonger", "Godfather",
   // Group 3 (05.11.2026).
-  "Vizier", "Psychopath", "Goblin", "Boomdandy"]);
+  "Vizier", "Psychopath", "Goblin", "Boomdandy", "ScarletWoman"]);
 
 export const alchemistOnBoard = state => onBoard(state, "Alchemist");
 
@@ -2933,10 +2948,40 @@ export function alchemistOffers(world, state, seat, since = "N1") {
 }
 
 /** A story with every dealt Alchemist's ability told. See solver.py. */
-export function alchemistTold(world, changes, state) {
-  let out = [[changes, 1.0]];
+/** What an Alchemist may hold that a transition rule asks about, and the
+ * mark for the rest. See solver.py. */
+export const ALCHEMY_IN_TRANSITIONS = new Set(["ScarletWoman"]);
+export const ALCHEMY_LATER = "?";
+
+function anAlchemistHoldsAMinionAbility(world, state) {
+  if (!alchemistOnBoard(state)) return [[[], 1.0]];
+  let stories = [[[], 1.0]];
   for (const [seat, since] of alchemistSeats(world, state)) {
     const offers = alchemistOffers(world, state, seat, since);
+    if (!offers.length) return [];
+    const now = offers.filter(([way]) => ALCHEMY_IN_TRANSITIONS.has(way[0].gift));
+    if (now.length < offers.length)
+      now.push([[alchemistGift(seat, ALCHEMY_LATER, since)], 1.0]);
+    stories = stories.flatMap(([changes, cost]) =>
+      now.map(([way, c]) => [[...changes, ...way], cost * c]));
+  }
+  return stories;
+}
+transitionRule(anAlchemistHoldsAMinionAbility);
+
+/** A story with every Alchemist's ability told. See solver.py. */
+export function alchemistTold(world, changes, state) {
+  const later = new Set(changes.filter(c => c.alchemist
+    && c.gift === ALCHEMY_LATER).map(c => c.seat));
+  const told = new Set(changes.filter(c => c.alchemist
+    && c.gift !== ALCHEMY_LATER).map(c => c.seat));
+  const rest = changes.filter(c => !(c.alchemist && c.gift === ALCHEMY_LATER));
+  let out = [[rest, 1.0]];
+  for (const [seat, since] of alchemistSeats(world, state)) {
+    if (told.has(seat)) continue;
+    let offers = alchemistOffers(world, state, seat, since);
+    if (later.has(seat))
+      offers = offers.filter(([way]) => !ALCHEMY_IN_TRANSITIONS.has(way[0].gift));
     out = out.flatMap(([got, cost]) =>
       offers.map(([way, c]) => [[...got, ...way], cost * c]));
   }

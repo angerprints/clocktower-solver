@@ -24,7 +24,7 @@ from botc.worlds import (AlchemistGift, Timeline, World,  # noqa: E402
 IDS = ["chef", "empath", "fortuneteller", "washerwoman", "investigator",
        "undertaker", "alchemist", "saint", "philosopher", "butler",
        "recluse", "godfather", "xaan", "vizier", "psychopath", "goblin",
-       "boomdandy",
+       "boomdandy", "scarletwoman",
        "poisoner", "witch", "assassin", "devilsadvocate", "cerenovus",
        "fearmonger", "spy", "baron", "imp"]
 SC = scripts.from_ids("Alchemist", IDS)
@@ -71,7 +71,8 @@ class WhatItMayHold(SolverTest):
         self.assertEqual(set(got), {"*", "Poisoner", "Witch", "Assassin",
                                     "DevilsAdvocate", "Cerenovus",
                                     "Fearmonger", "Xaan", "Vizier",
-                                    "Psychopath", "Goblin", "Boomdandy"})
+                                    "Psychopath", "Goblin", "Boomdandy",
+                                    "ScarletWoman"})
         # One the town cannot see (the Spy): each seen one costs one, the
         # rest one. The Baron is not offered: the deal has no two Outsiders
         # more (group 2, 04.11.2026).
@@ -260,6 +261,26 @@ class ByDayAndOnTheGallows(SolverTest):
         self.assertEqual(gifts, {"Boomdandy"})
 
 
+class ItBecomesTheDemon(SolverTest):
+    """Group 3, D Weg 2 and H: with the Scarlet Woman's ability it becomes
+    the Demon and stays good, and the game goes on."""
+
+    def test_the_demon_executed_and_the_game_went_on(self):
+        st = state(executions={1: 6}, deaths={6: ("E1",), 0: ("N2",)},
+                   claims=C[:5] + ["Undertaker", "Chef"])
+        cost, changes = S.best_story(world(), st)
+        self.assertIsNotNone(cost)
+        self.assertIn("ScarletWoman", {c.gift for c in changes
+                                       if isinstance(c, AlchemistGift)})
+        view = Timeline(world(), changes)
+        self.assertEqual(view.demon_at("N2"), 4)
+        self.assertFalse(view.evil_at(4, "N2"))
+        # Shown something else, it cannot have.
+        st = state([I.AlchemistHas(1, 4, role="Witch")], executions={1: 6},
+                   deaths={6: ("E1",), 0: ("N2",)})
+        self.assertIsNone(S.best_story(world(), st)[0])
+
+
 class BothSave(SolverTest):
 
     def test_a_devils_advocate_and_an_alchemist_with_its_ability(self):
@@ -339,6 +360,8 @@ def _payloads():
                            "player": 4}]),
         pay({0: ["D2"]}, [{"type": "PsychopathKill", "night": 2,
                            "player": 4, "target": 0, "died": True}]),
+        # Its Scarlet Woman's: the Demon executed, the game went on.
+        pay({6: ["X1"], 0: ["N2"]}),
         # A Philosopher that took the Alchemist (Patrick, 04.11.2026).
         pay({0: ["W2"]}, [{"type": "PhilosopherChoice", "night": 1,
                            "player": 3, "role": "Alchemist"},
