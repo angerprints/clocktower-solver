@@ -45,5 +45,11 @@ if [ "$2" != base ]; then
   # one (A: both count).
   line torAB 4 0 Alchemist Baron Godfather
   line torAG 4 0 Alchemist Godfather Xaan
+  # Group 3 (05.11.2026): by day and on the gallows, the handover, the
+  # twin, the turn and the remaking.
+  line torAV 4 0 Alchemist Vizier Psychopath
+  line torAO 4 0 Alchemist Goblin Boomdandy
+  line torAS 4 0 Alchemist ScarletWoman EvilTwin
+  line torAM 4 0 Alchemist Mezepheles PitHag
 fi
 echo done > "$OUT/alchemist.done"

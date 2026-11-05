@@ -2920,7 +2920,7 @@ export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
   "Cerenovus", "Assassin", "Fearmonger", "Godfather",
   // Group 3 (05.11.2026).
   "Vizier", "Psychopath", "Goblin", "Boomdandy", "ScarletWoman", "EvilTwin",
-  "Mezepheles"]);
+  "Mezepheles", "PitHag"]);
 
 export const alchemistOnBoard = state => onBoard(state, "Alchemist");
 

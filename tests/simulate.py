@@ -6931,6 +6931,9 @@ def _in_night_order(d, night):
         if what == "Philosopher" and _phil(d, seat, f"N{night}") \
                 and night > 1:
             what = _phil(d, seat, f"N{night}")
+        # An Alchemist with the Pit-Hag's ability, at the Pit-Hag's turn.
+        if night > 1 and _alchemy(d, seat, "PitHag", f"N{night}"):
+            what = "PitHag"
         got = getattr(CHARACTERS[what], field, 0) if what in CHARACTERS else 0
         return (got if got else 10_000, seat)
 
@@ -7064,6 +7067,11 @@ def early_choices(d, night, rng):
         if role == "Philosopher" and night > 1 \
                 and _phil(d, seat, f"N{night}") in CHOOSES_EARLY:
             role = _phil(d, seat, f"N{night}")
+        # An Alchemist with the Pit-Hag's ability uses it at its turn
+        # (group 3, 05.11.2026).
+        if role in ("Alchemist", "Philosopher") and night > 1 \
+                and _alchemy(d, seat, "PitHag", f"N{night}"):
+            role = "PitHag"
         # The Fearmonger acts at 17, after the Pit-Hag at 16 — so a seat
         # the Pit-Hag has just unmade chooses nothing, and one it has just
         # made a Fearmonger chooses tonight (the gate, seeds 898 and 2928,
