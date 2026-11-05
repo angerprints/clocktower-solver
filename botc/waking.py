@@ -124,6 +124,13 @@ def woke_for_own_ability(world, state, seat, night):
     if not woke(world, state, seat, night):
         return False
     phase = f"N{night}"
+    # An Alchemist woken for an Evil Twin's ability was only shown its
+    # twin (group 3, 05.11.2026): it counts for what else it holds.
+    from .info import acts_as_alchemist     # local: info imports waking
+    if acts_as_alchemist(world, state, seat, phase):
+        gifts = world.plague_at(seat, phase)
+        if gifts and all(g in SHOWN_NOT_ACTING for g in gifts):
+            return False
     return world.role_at(seat, phase) not in SHOWN_NOT_ACTING
 
 

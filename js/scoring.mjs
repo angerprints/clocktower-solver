@@ -2961,7 +2961,7 @@ export function alchemistOffers(world, state, seat, since = "N1") {
 /** What an Alchemist may hold that a transition rule asks about, and the
  * mark for the rest. See solver.py. */
 export const ALCHEMY_IN_TRANSITIONS = new Set(["ScarletWoman"]);
-export const ALCHEMY_LATER = "?";
+export const ALCHEMY_LATER = "?alchemy";   // not the Plague Doctor's "?"
 
 function anAlchemistHoldsAMinionAbility(world, state) {
   if (!alchemistOnBoard(state)) return [[[], 1.0]];

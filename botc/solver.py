@@ -3847,7 +3847,10 @@ def alchemist_offers(world, state, seat, since="N1"):
 # as one mark `ALCHEMY_LATER`, told with each story as the Plague Doctor's
 # are (`alchemist_told`).
 ALCHEMY_IN_TRANSITIONS = frozenset({"ScarletWoman"})
-ALCHEMY_LATER = "?"
+# Not the Plague Doctor's "?": an Alchemist's mark is a PlagueGift too, and
+# `plague_told_later` would fill it with the Storyteller's offers (the
+# gate of group 3, seeds 190 and 2782 of line AP).
+ALCHEMY_LATER = "?alchemy"
 
 
 @transition_rule
