@@ -43,7 +43,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    acts_as_alchemist, alchemy_holds,
                    BecameInfo, EvilTwinPair, BoomdandyExploded,
                    AlchemistHas)
-from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
+from .roles import (ABSENT, ARBITRARY, GENUINE, GOOD, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
                     INVERTED, registers_as_role, evil_registrations,
                     is_evil, must_hide, show, wake_fits)
@@ -214,7 +214,9 @@ def scarlet_seat(world, state, phase):
     Minion the Plague Doctor's death gave it (their jinx, 28.10.2026, E
     Weg 1), where she is not alive to have it."""
     seat = world.find_at("ScarletWoman", phase)
-    if not _plague_on_board(state) \
+    # Or an Alchemist with her ability (group 3, 05.11.2026), which stays
+    # good when it becomes the Demon (D Weg 2).
+    if not (_plague_on_board(state) or _alchemist_on_board(state)) \
             or (seat is not None and seat in state.alive_set(phase)):
         return seat
     for who in plague_holders(world, state, "ScarletWoman", phase):
@@ -248,11 +250,22 @@ def starpass_heirs(world, state, phase):
     alive = set(state.alive_at(phase))
     minions = [m for m in range(state.n_players)
                if world.team_at(m, phase) == "minion" and m in alive]
-    if not minions:
-        return []
-    if scarlet_woman_takes_over(world, state, phase):
+    # An Alchemist with her ability takes it with no Minion left (group 3).
+    if (minions or _alchemist_on_board(state)) \
+            and scarlet_woman_takes_over(world, state, phase):
         return [scarlet_seat(world, state, phase)]
     return minions
+
+
+def _heir_side(view, state, phase, seat):
+    """The side an heir to the Demon keeps: its own, for an Alchemist with
+    the Scarlet Woman's ability (D Weg 2, group 3, 05.11.2026); otherwise
+    the Demon's."""
+    if _alchemist_on_board(state) \
+            and view.team_at(seat, phase) != "minion" \
+            and alchemy_holds(view, state, seat, "ScarletWoman", phase):
+        return GOOD
+    return None
 
 
 # --------------------------------------------------------------------------
@@ -329,6 +342,9 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             # night). What it gives a new Demon is told with each story
             # (`boffin_new_demon_stories`, 26.10.2026).
             "a_boffin_gives_the_demon": -1,
+            # An Alchemist's ability (group 3, 05.11.2026), from the setup:
+            # first, so a handover sees the Scarlet Woman's.
+            "an_alchemist_holds_a_minion_ability": -1,
             # The Plague Doctor's death gives the Storyteller an ability
             # (28.10.2026): read off the deaths on the board, after every
             # change but the handovers — whoever holds it when it dies may
@@ -527,6 +543,10 @@ def possible_timelines(world, state, cap=128):
     if _plague_on_board(state):
         cap *= max(1, len(a_plague_doctor_gives_the_storyteller(world,
                                                                 state)))
+    # And for each Alchemist ability a transition rule asks about.
+    if _alchemist_on_board(state):
+        cap *= max(1, len(an_alchemist_holds_a_minion_ability(world,
+                                                              state)))
     # And for every Townsfolk the Huntsman's Damsel may have become: up to
     # seventeen stories, each beside every Barber's swap, and the true
     # swap fell off the end (Stelle 97, seed 2327, 30.10.2026).
@@ -856,7 +876,8 @@ def a_minion_catches_the_star(view, state, phase, character):
     """
     if phase[0].upper() != "N" or character not in STARPASSES:
         return []
-    return [Change(phase, seat, character)
+    return [Change(phase, seat, character,
+                   _heir_side(view, state, phase, seat))
             for seat in starpass_heirs(view, state, phase)]
 
 
@@ -911,7 +932,9 @@ def the_scarlet_woman_steps_up(view, state, phase, character):
         return []
     if not scarlet_woman_takes_over(view, state, phase):
         return []
-    return [Change(phase, scarlet_seat(view, state, phase), character)]
+    seat = scarlet_seat(view, state, phase)
+    return [Change(phase, seat, character,
+                   _heir_side(view, state, phase, seat))]
 
 
 @transition_rule
@@ -3742,7 +3765,8 @@ ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
                           # Group 2 (04.11.2026): its night kill.
                           "Godfather",
                           # Group 3 (05.11.2026): by day and on the gallows.
-                          "Vizier", "Psychopath", "Goblin", "Boomdandy"})
+                          "Vizier", "Psychopath", "Goblin", "Boomdandy",
+                          "ScarletWoman"})
 
 
 def _alchemist_on_board(state):
@@ -3800,12 +3824,55 @@ def alchemist_offers(world, state, seat, since="N1"):
     return out
 
 
-def alchemist_told(world, changes, state):
-    """A story with every dealt Alchemist's ability told: [(changes,
-    cost)]."""
-    out = [(changes, 1.0)]
+# What an Alchemist may hold that a transition rule asks about (group 3,
+# 05.11.2026): the Scarlet Woman's, a handover. Told in
+# `possible_timelines` (`an_alchemist_holds_a_minion_ability`); the rest
+# as one mark `ALCHEMY_LATER`, told with each story as the Plague Doctor's
+# are (`alchemist_told`).
+ALCHEMY_IN_TRANSITIONS = frozenset({"ScarletWoman"})
+ALCHEMY_LATER = "?"
+
+
+@transition_rule
+def an_alchemist_holds_a_minion_ability(world, state):
+    """Each Alchemist's ability that a transition rule asks about, the rest
+    as one mark `ALCHEMY_LATER`: [(changes, cost)]."""
+    if not _alchemist_on_board(state):
+        return [((), 1.0)]
+    stories = [((), 1.0)]
     for seat, since in alchemist_seats(world, state):
         offers = alchemist_offers(world, state, seat, since)
+        if not offers:
+            return []                     # a row names what it cannot be
+        now = [(way, c) for way, c in offers
+               if way[0].gift in ALCHEMY_IN_TRANSITIONS]
+        if len(now) < len(offers):
+            now.append(((alchemist_gift_change(seat, ALCHEMY_LATER,
+                                               since),), 1.0))
+        stories = [(changes + way, cost * c)
+                   for changes, cost in stories for way, c in now]
+    return stories
+
+
+def alchemist_told(world, changes, state):
+    """A story with every Alchemist's ability told: [(changes, cost)] —
+    each `ALCHEMY_LATER` mark filled with the offers no transition rule
+    asks about, and every seat without a mark with all of them."""
+    later = {c.seat: c for c in changes
+             if isinstance(c, AlchemistGift) and c.gift == ALCHEMY_LATER}
+    told = {c.seat for c in changes
+            if isinstance(c, AlchemistGift) and c.gift != ALCHEMY_LATER}
+    rest = tuple(c for c in changes
+                 if not (isinstance(c, AlchemistGift)
+                         and c.gift == ALCHEMY_LATER))
+    out = [(rest, 1.0)]
+    for seat, since in alchemist_seats(world, state):
+        if seat in told:
+            continue
+        offers = alchemist_offers(world, state, seat, since)
+        if seat in later:
+            offers = [(way, c) for way, c in offers
+                      if way[0].gift not in ALCHEMY_IN_TRANSITIONS]
         out = [(got + way, cost * c) for got, cost in out
                for way, c in offers]
     return out

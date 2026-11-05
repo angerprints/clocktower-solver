@@ -1079,11 +1079,14 @@ def _heir(d, phase, rng):
     alive = [p for p in d.alive_at(phase) if p != d.demon_at(phase)
              and d.deaths.get(p) is None]
     minions = [m for m in alive if TEAM[d.role_at(m, phase)] == "minion"]
-    if not minions:
+    # An Alchemist with her ability, after the Minions with it (group 3).
+    alch = [p for p in alive if p not in minions
+            and _alchemy(d, p, "ScarletWoman", phase)]
+    if not minions and not (alch and len(d.alive_at(phase)) >= 5):
         return None
     sw = [m for m in minions if d.roles[m] == "ScarletWoman"] \
         + [m for m in minions if d.roles[m] != "ScarletWoman"
-           and _plague_minion(d, m, "ScarletWoman", phase)]
+           and _plague_minion(d, m, "ScarletWoman", phase)] + alch
     if sw and len(d.alive_at(phase)) >= 5:
         return sw[0]
     return rng.choice(minions)
@@ -1398,6 +1401,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 d.deaths[demon] = f"N{night}"
                 d.handovers.append((f"N{night}", heir))
                 d.changes.append((f"N{night}", heir, d.roles[demon]))
+                _alchemist_heir_stays_good(d, f"N{night}", heir,
+                                           d.roles[demon])
             else:
                 # An Al-Hadikhia's three choose for themselves; whoever
                 # dies of it has died to the Demon all the same, and a
@@ -1986,6 +1991,7 @@ def _moonchild_takes_one(d, night, heard, rng):
                     and not _sw_stays_by_jinx(d, phase, target):
                 d.handovers.append((phase, heir))
                 d.changes.append((phase, heir, held))
+                _alchemist_heir_stays_good(d, phase, heir, held)
             elif not _another_demon_stands(d, phase, target):
                 d.moon_ended = phase
 
@@ -3179,9 +3185,20 @@ def _plague_minion(d, seat, key, phase):
 
 
 def _scarlet(d, seat, phase):
-    """The Scarlet Woman dealt — or a Minion given her ability (E)."""
+    """The Scarlet Woman dealt — or a Minion given her ability (E), or an
+    Alchemist with it (group 3, 05.11.2026)."""
     return d.roles[seat] == "ScarletWoman" \
-        or _plague_minion(d, seat, "ScarletWoman", phase)
+        or _plague_minion(d, seat, "ScarletWoman", phase) \
+        or _alchemy(d, seat, "ScarletWoman", phase)
+
+
+def _alchemist_heir_stays_good(d, phase, heir, held):
+    """An Alchemist with the Scarlet Woman's ability becomes the Demon and
+    stays good (D Weg 2); the game goes on as with any Demon (H)."""
+    # Asked once the change is on the record, so by what it was dealt.
+    if getattr(d, "alchemy", {}).get(heir) == "ScarletWoman" \
+            and TEAM[d.roles[heir]] != "minion":
+        d.side_changes.append((phase, heir, held, "good"))
 
 
 def _fearmonger_at(d, p, phase):
@@ -3587,6 +3604,7 @@ def _slayer_shoots(d, day, rng, heard):
                 d.deaths[target] = phase
                 d.handovers.append((phase, heir))
                 d.changes.append((phase, heir, held))
+                _alchemist_heir_stays_good(d, phase, heir, held)
                 return False
             d.deaths[target] = phase
             # Good has won — unless a second Demon stands (Hatter stage 2).
@@ -4046,6 +4064,7 @@ def _lycanthrope_hunts(d, night, rng):
                     and not _sw_stays_by_jinx(d, phase, target):
                 d.handovers.append((phase, heir))
                 d.changes.append((phase, heir, held))
+                _alchemist_heir_stays_good(d, phase, heir, held)
             elif not _another_demon_stands(d, phase, target):
                 d.lyc_ended = phase
             continue
@@ -5000,6 +5019,7 @@ def _execute(d, day, rng, allow_takeover=False):
         else:
             d.handovers.append((phase, heir))
             d.changes.append((phase, heir, d.roles[victim]))
+            _alchemist_heir_stays_good(d, phase, heir, d.roles[victim])
     return victim
 
 
