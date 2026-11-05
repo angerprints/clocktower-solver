@@ -56,5 +56,10 @@ if [ "$2" != base ]; then
   line torAJ 4 0 Alchemist Spy Widow Wraith
   line torAN 4 0 Alchemist Marionette Mastermind OrganGrinder
   line torAL 4 0 Alchemist Boffin
+  # Group 4b (05.11.2026, Patrick's answers): every Demon chooses the one
+  # guessed, two Boffin gifts, a Philosopher's in mid-game.
+  line torAD 4 0 Alchemist Spy Widow Wraith Pukka Shabaloth Po
+  line torAZ 4 0 Alchemist Spy Widow Wraith AlHadikhia Zombuul
+  line torAF 4 0 Alchemist Boffin Philosopher
 fi
 echo done > "$OUT/alchemist.done"

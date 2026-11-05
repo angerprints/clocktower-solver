@@ -97,6 +97,10 @@ class World:
         """No story, no Boffin ability (`Timeline.gift_at`)."""
         return None
 
+    def alch_gift_at(self, seat, phase):
+        """No story, no Alchemist's Boffin ability (`Timeline.alch_gift_at`)."""
+        return None
+
     def plague_at(self, seat, phase):
         """No story, nothing the Plague Doctor gave (`Timeline.plague_at`)."""
         return ()
@@ -296,6 +300,29 @@ class PlagueGift(BoffinGift):
     __slots__ = ()
 
 
+class AlchemistBoffinGift(BoffinGift):
+    """A good character's ability the Demon on this seat has through an
+    Alchemist with the Boffin's (group 4b, 05.11.2026, Patrick's 3 and 4):
+    beside a real Boffin's, which is a mark of its own. Kept in `side` as
+    `ALCH_BOFFIN_MARK` and the gift, so it never equals a Boffin's own
+    mark on the same seat and moment."""
+    __slots__ = ()
+
+    @property
+    def gift(self):
+        return self.side[len(ALCH_BOFFIN_MARK):]
+
+
+ALCH_BOFFIN_MARK = "alchemist:"
+
+
+def alchemist_boffin_gift_change(phase, seat, gift, slot=None):
+    """An `AlchemistBoffinGift` mark: this seat's ability through an
+    Alchemist's Boffin from that moment."""
+    return AlchemistBoffinGift(phase, seat, None, ALCH_BOFFIN_MARK + gift,
+                               slot)
+
+
 def plague_gift_change(phase, seat, gift, slot=None):
     """A `PlagueGift` mark: an ability gained at that moment."""
     return PlagueGift(phase, seat, None, gift, slot)
@@ -492,9 +519,13 @@ class Timeline:
         # order; only the walk is shorter.
         roles, sides, demons, held = {}, {}, [], set()
         handed, gifts = {}, {}
-        plagues = {}
+        plagues, alch_gifts = {}, {}
         for change in self.changes:
             at = _at(change)
+            if isinstance(change, AlchemistBoffinGift):
+                alch_gifts.setdefault(change.seat, []).append(
+                    (at, change.gift))
+                continue
             if isinstance(change, PlagueGift):
                 plagues.setdefault(change.seat, []).append((at, change.gift))
                 continue
@@ -528,6 +559,7 @@ class Timeline:
         object.__setattr__(self, "_roles_by_seat", roles)
         object.__setattr__(self, "_sides_by_seat", sides)
         object.__setattr__(self, "_gifts_by_seat", gifts)
+        object.__setattr__(self, "_alch_gifts_by_seat", alch_gifts)
         object.__setattr__(self, "_plagues_by_seat", plagues)
         # Seats the Storyteller made the Marionette, and what each believes
         # it is: what it held, or believed, just before.
@@ -745,7 +777,16 @@ class Timeline:
     def gift_at(self, seat, phase):
         """The Boffin ability marked on this seat at this moment, or None
         (`BoffinGift`). Whether it works is `info.boffin_gift`'s."""
-        mine = self._gifts_by_seat.get(seat)
+        return self._last_gift(self._gifts_by_seat, seat, phase)
+
+    def alch_gift_at(self, seat, phase):
+        """The ability an Alchemist's Boffin marked on this seat at this
+        moment, or None (`AlchemistBoffinGift`, group 4b)."""
+        return self._last_gift(self._alch_gifts_by_seat, seat, phase)
+
+    @staticmethod
+    def _last_gift(by_seat, seat, phase):
+        mine = by_seat.get(seat)
         if not mine:
             return None
         here = moment(phase)

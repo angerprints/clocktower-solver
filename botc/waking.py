@@ -625,13 +625,16 @@ def woke(world, state, seat, night):
     # would — but not on the first night, where it is woken to be told
     # rather than to act (F Weg 1, 26.10.2026).
     if night >= 2 and "Boffin" in state.script.keys:
-        from .info import boffin_abilities, boffin_gift
-        gift = boffin_gift(world, state, seat, phase)
-        for got in boffin_abilities(gift, phase):
-            if got in CHARACTERS and got != BOFFIN_UNSEEN_KEY \
-                    and not CHARACTERS[got].believes \
-                    and woke_as(world, state, seat, night, got):
-                return True
+        from .info import (alchemist_boffin_gift, boffin_abilities,
+                           boffin_gift)
+        # And what an Alchemist's Boffin gave it (group 4b).
+        for gift in (boffin_gift(world, state, seat, phase),
+                     alchemist_boffin_gift(world, state, seat, phase)):
+            for got in boffin_abilities(gift, phase):
+                if got in CHARACTERS and got != BOFFIN_UNSEEN_KEY \
+                        and not CHARACTERS[got].believes \
+                        and woke_as(world, state, seat, night, got):
+                    return True
     # A Minion the Plague Doctor's death gave the Spy's, the Wraith's or
     # the Fearmonger's ability wakes for it as that one would (I Weg 1,
     # 28.10.2026). The Storyteller's own wakes nobody. An Alchemist wakes

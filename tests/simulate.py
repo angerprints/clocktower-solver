@@ -971,13 +971,16 @@ def _al_hadikhia_chooses(d, night, rng, heard):
     """
     phase = f"N{night}"
     ah = d.demon_at(phase)
-    if _exorcised(d, night) or rng.random() < 0.1:
+    # An Alchemist guessed right (group 4b, Patrick's 2): it chooses, and
+    # that player first.
+    forced = getattr(d, "alch_forced", {}).get(night)
+    if _exorcised(d, night) or (forced is None and rng.random() < 0.1):
         return []                         # it chose nobody
     others = [p for p in range(d.n) if p != ah]
     dead = [p for p in others if d.deaths.get(p) is not None]
     living = [p for p in others if d.deaths.get(p) is None]
-    picks = []
-    for _ in range(3):
+    picks = [forced] if forced is not None and forced != ah else []
+    for _ in range(3 - len(picks)):
         if picks and rng.random() < 0.1:
             picks.append(rng.choice(picks))
             continue
@@ -1180,10 +1183,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.boffin_gift = None
     d.boffin_row = False
     d.boffin_took = None
-    # Or an Alchemist with its ability (group 4, K): it does not learn
-    # which, so nothing that needs its row is given.
-    alch_boffin = "Boffin" not in roles and "Boffin" in alch_gifts.values()
-    if "Boffin" in roles or alch_boffin:
+    if "Boffin" in roles:
         from botc.catalogue import CHARACTERS as _C
         demon = next((p for p in range(n) if TEAM[roles[p]] == "demon"), None)
         if demon is not None:
@@ -1194,12 +1194,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                     if TEAM[k] in ("townsfolk", "outsider")
                     and k not in BOFFIN_NEVER_GIVES
                     and roles.count(k) < _C[k].copies
-                    and all(other in roles for other in _C[k].brings)
-                    and not (alch_boffin and k in ("Barber", "Hatter",
-                                                   "Philosopher"))]
+                    and all(other in roles for other in _C[k].brings)]
             if pool:
                 d.boffin_gift = (demon, rng.choice(pool))
-                d.boffin_row = rng.random() < 0.5 and not alch_boffin
+                d.boffin_row = rng.random() < 0.5
                 # Only with its row (R Weg 1, stage 2): the Barber, the
                 # Hatter, and the Philosopher's choice, which it writes
                 # down itself on the first night.
@@ -1213,6 +1211,15 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                     from botc.info import boffin_philosophy
                     d.boffin_gift = (demon, boffin_philosophy(took, "N1"))
                     d.boffin_took = took
+    # An Alchemist with the Boffin's ability (group 4, K; 4b, Patrick's 3):
+    # a gift of its own to the Demon dealt, beside a real Boffin's — none
+    # it would need a row for, since it does not learn which, and not the
+    # one the Boffin gave. (Demon, character, night, the Alchemist.)
+    d.alch_boffin_gift = None
+    giver = next((p for p, k in sorted(alch_gifts.items()) if k == "Boffin"),
+                 None)
+    if giver is not None:
+        _alchemist_gives_the_demon(d, giver, 1, roles, rng)
     # The Plague Doctor (28.10.2026): what the Storyteller gained —
     # [(phase, a Minion or None, ability)] — and what it did with it.
     d.plague = []
@@ -2822,20 +2829,65 @@ def _took(d, seat, role, phase):
 
 def _gifted(d, seat, role, phase):
     """Has this seat that ability through the Boffin then — the gift, or
-    what a Philosopher's ability it was given took (stage 2)?"""
+    what a Philosopher's ability it was given took (stage 2) — or through
+    an Alchemist's Boffin (group 4b)?"""
     from botc.info import boffin_abilities
-    return role is not None and role in boffin_abilities(
-        _gift(d, seat, phase), phase)
+    return role is not None and (
+        role in boffin_abilities(_gift(d, seat, phase), phase)
+        or role in boffin_abilities(_alch_gift(d, seat, phase), phase))
 
 
 def _boffin_at(d, phase):
-    """The living Boffin then — or an Alchemist with its ability (group 4,
-    K) — or None."""
+    """The living Boffin then, or None."""
     alive = d.alive_at(phase)
     return next((p for p in range(d.n)
-                 if p in alive and (d.role_at(p, phase) == "Boffin"
-                                    or _alchemy(d, p, "Boffin", phase))),
-                None)
+                 if p in alive and d.role_at(p, phase) == "Boffin"), None)
+
+
+def _alchemist_gives_the_demon(d, giver, night, held, rng):
+    """An Alchemist with the Boffin's ability gives the Demon a good
+    character's ability (group 4, K; 4b, Patrick's 3 and 4): the Demon
+    dealt, still in its dealt character — at the setup for a dealt one,
+    when it chooses for a Philosopher that took it. Nothing a row would
+    tell, and not the real Boffin's."""
+    from botc.catalogue import CHARACTERS as _C
+    phase = f"N{night}"
+    demon = next((p for p in range(d.n) if TEAM[d.roles[p]] == "demon"),
+                 None) if night == 1 else d.demon_at(phase)
+    if demon is None or getattr(d, "alch_boffin_gift", None) is not None \
+            or TEAM[d.roles[demon]] != "demon" \
+            or (night > 1 and d.role_at(demon, phase) != d.roles[demon]):
+        return
+    held = list(held)
+    real = getattr(d, "boffin_gift", None)
+    pool = [k for k in d.script.keys
+            if TEAM[k] in ("townsfolk", "outsider")
+            and k not in BOFFIN_NEVER_GIVES
+            and k not in ("Barber", "Hatter", "Philosopher")
+            and held.count(k) < _C[k].copies
+            and (night > 1 or all(o in held for o in _C[k].brings))
+            and (real is None or real[1].split(">")[0] != k)]
+    if pool:
+        d.alch_boffin_gift = (demon, rng.choice(pool), night, giver)
+
+
+def _alch_gift(d, seat, phase):
+    """What an Alchemist's Boffin gave this seat, working then, or None
+    (group 4b): as `_gift`, only what the solver reckons; from the night
+    it gave it, while that Alchemist lives and holds it."""
+    from botc.solver import BOFFIN_SEEN
+    got = getattr(d, "alch_boffin_gift", None)
+    if got is None or got[0] != seat or got[1] not in BOFFIN_SEEN:
+        return None
+    if d.role_at(seat, phase) != d.roles[seat]:
+        return None
+    if phase_index(phase) < phase_index(f"N{got[2]}"):
+        return None
+    giver = got[3]
+    if giver not in d.alive_at(phase) \
+            or not _alchemy(d, giver, "Boffin", phase):
+        return None
+    return got[1]
 
 
 def _gift(d, seat, phase):
@@ -2872,6 +2924,10 @@ def _sober(d, seat, role, phase):
     """Whose sobriety this seat's ability as that character rests on: the
     Boffin's for a Demon it gave the ability, else its own."""
     if d.role_at(seat, phase) != role and _gifted(d, seat, role, phase):
+        from botc.info import boffin_abilities
+        if role not in boffin_abilities(_gift(d, seat, phase), phase):
+            # An Alchemist's Boffin gave it: its sobriety (group 4b).
+            return d.alch_boffin_gift[3]
         if getattr(d, "st_boffin_since", None) is not None:
             return None                   # the Storyteller's: never drunk
         boffin = _boffin_at(d, phase)
@@ -3174,11 +3230,10 @@ def _plague_check(d, rng, heard):
 # The Summoner's comes later, a stage of its own (group 4, J, 05.11.2026).
 ALCHEMY_NEVER = ("Summoner",)
 # Their jinxes (group 4, claude/alchemist-gruppe-4-lesarten.md): the real
-# one is in play, or none is — and beside a real Boffin no Boffin's, as
-# the solver has it.
+# one is in play, or none is. A Boffin's beside a real one too (4b).
 ALCHEMY_REAL_IN_PLAY = ("Spy", "Widow", "Wraith", "Marionette",
                         "OrganGrinder")
-ALCHEMY_NONE_IN_PLAY = ("Mastermind", "Boffin")
+ALCHEMY_NONE_IN_PLAY = ("Mastermind",)
 ALCHEMY_GUESSES = ("Spy", "Widow", "Wraith")
 # What it does not wake for: none of these it has, and the Boffin's gift
 # it does not learn.
@@ -3188,11 +3243,10 @@ ALCHEMY_ASLEEP = ("Spy", "Widow", "Wraith", "Marionette", "Mastermind",
 
 def _alchemy_pool(script, held, dealt=True):
     """The Minion abilities an Alchemist may be given, beside these
-    characters in play. A Philosopher's gets no Boffin's (group 4)."""
+    characters in play (group 4)."""
     return [k for k in script.minions if k not in ALCHEMY_NEVER
             and (k not in ALCHEMY_REAL_IN_PLAY or k in held)
-            and (k not in ALCHEMY_NONE_IN_PLAY or k not in held)
-            and (dealt or k != "Boffin")]
+            and (k not in ALCHEMY_NONE_IN_PLAY or k not in held)]
 
 
 def _alchemist_guesses(d, day, hanged, rng, heard):
@@ -4331,6 +4385,9 @@ def _the_eighth_five_set_up(d, rng):
     start. Any of them, now and then the Bounty Hunter itself (table
     ruling, 11.10.2026, way 2 of C)."""
     gift = getattr(d, "boffin_gift", None)
+    alch = getattr(d, "alch_boffin_gift", None)
+    if alch is not None and alch[1] == "BountyHunter" and alch[2] == 1:
+        gift = alch                       # an Alchemist's (group 4b)
     if gift is not None and gift[1] == "BountyHunter" \
             and "BountyHunter" not in d.roles:
         # The Demon the Boffin gave it: its bracket holds (E Weg 1, stage
@@ -6279,9 +6336,14 @@ def _demon_kills(d, night, rng):
     others = [p for p in living if p != demon and d.deaths.get(p) is None]
     # An Alchemist guessed right by day (group 4, L): the Demon must choose
     # that player tonight — an ordinary kill only, as the solver has it.
+    # Every Demon that chooses players (group 4b, Patrick's 2): the Pukka,
+    # the Shabaloth and the Po have it as one of their choices below.
     forced = getattr(d, "alch_forced", {}).get(night)
-    if forced is not None and forced in others \
-            and TEAM.get(kind) == "demon" and kind not in ALCHEMY_OWN_WAY:
+    if forced is not None and forced not in others:
+        forced = None
+    if forced is not None and TEAM.get(kind) == "demon" \
+            and kind not in ALCHEMY_OWN_WAY \
+            and kind not in ("Pukka", "Shabaloth", "Po"):
         others = [forced]
 
     # The Monk guards, whoever is swinging — or a Philosopher that took
@@ -6355,6 +6417,8 @@ def _demon_kills(d, night, rng):
         if not _exorcised(d, night):
             pool = [p for p in others if p != stale]
             fresh = rng.choice(pool) if pool else None
+            if forced is not None:
+                fresh = forced
         # It chose the Goon, first: drunk on the spot. Nobody is
         # poisoned, the old token stays where it is and rests, and there
         # is no attack — the flowchart's drunk Pukka, arrived at halfway
@@ -6422,8 +6486,10 @@ def _demon_kills(d, night, rng):
         # Two a night, and either may be sunk into somebody already dead,
         # so the table often sees one body.
         out = []
-        for _ in range(2):
+        for i in range(2):
             pool = [p for p in others if p not in out]
+            if i == 0 and forced is not None:
+                pool = [forced]
             got = take(pool, out)
             if got is not None:
                 out.append(got)
@@ -6435,12 +6501,17 @@ def _demon_kills(d, night, rng):
         if d.po_charged:
             d.po_charged = False
             out = []
-            for _ in range(3):
+            for i in range(3):
                 pool = [p for p in others if p not in out]
+                if i == 0 and forced is not None:
+                    pool = [forced]
                 got = take(pool, out)
                 if got is not None:
                     out.append(got)
             return out
+        if forced is not None:
+            got = take([forced])
+            return [got] if got is not None else []
         if rng.random() < 0.3:
             d.po_charged = True
             return []
@@ -6539,9 +6610,9 @@ def _demon_kills(d, night, rng):
     return [got] if got is not None else []
 
 
-# The Demons that kill their own way: a guess forces none of them.
-ALCHEMY_OWN_WAY = ("Zombuul", "Pukka", "Shabaloth", "Po", "Leviathan",
-                   "Yaggababble", "AlHadikhia", "LilMonsta")
+# The Demons a guess does not force here: three choose nobody they kill, and
+# the Al-Hadikhia has the one guessed among its three (`_al_hadikhia_chooses`).
+ALCHEMY_OWN_WAY = ("Leviathan", "Yaggababble", "AlHadikhia", "LilMonsta")
 
 
 def _demon_kill(d, night, rng):
@@ -6593,8 +6664,9 @@ def _woke_for_own_ability(d, p, night, shown=False):
     from botc.info import boffin_abilities
     if any(got in CHARACTERS and not CHARACTERS[got].believes
            and _woke_itself(d, p, night, shown, as_role=got)
-           for got in boffin_abilities(_gift(d, p, f"N{night}"),
-                                       f"N{night}")):
+           for gift in (_gift(d, p, f"N{night}"),
+                        _alch_gift(d, p, f"N{night}"))
+           for got in boffin_abilities(gift, f"N{night}")):
         return True
     # A Minion the Plague Doctor's death gave the Spy's, the Wraith's or
     # the Fearmonger's ability wakes for it (I Weg 1, 28.10.2026).
@@ -8589,6 +8661,11 @@ def _for_role(d, seat, role, night, rng):
             if pool:
                 d.alchemy[seat] = rng.choice(pool)
                 d.__dict__.setdefault("alchemy_since", {})[seat] = night
+                # With the Boffin's it gives the Demon one now (4b, 4).
+                if d.alchemy[seat] == "Boffin":
+                    _alchemist_gives_the_demon(
+                        d, seat, night,
+                        [d.role_at(p, f"N{night}") for p in range(d.n)], rng)
                 if rng.random() < 0.5:
                     d.said_by_others.append(
                         AlchemistHas(night, seat, role=d.alchemy[seat]))

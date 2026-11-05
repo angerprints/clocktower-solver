@@ -860,13 +860,37 @@ def boffin_seat(w, s, phase):
     for seat in range(len(w.roles)):
         if seat in alive and w.role_at(seat, phase) == "Boffin":
             return seat
-    # Or an Alchemist with its ability (group 4, K, 05.11.2026): its
-    # sobriety, while it lives and holds the Alchemist.
-    if getattr(w, "_plagues_by_seat", None):
-        for seat in range(len(w.roles)):
-            if seat in alive and alchemy_holds(w, s, seat, "Boffin", phase):
-                return seat
     return None
+
+
+def alchemist_boffin_seat(w, s, phase):
+    """The living Alchemist with the Boffin's ability then, or None (group
+    4, K; 4b, 05.11.2026): its gift is a mark of its own beside a real
+    Boffin's, and rests on its sobriety."""
+    if "Boffin" not in s.script.keys \
+            or not getattr(w, "_plagues_by_seat", None):
+        return None
+    alive = s.alive_set(phase)
+    for seat in range(len(w.roles)):
+        if seat in alive and alchemy_holds(w, s, seat, "Boffin", phase):
+            return seat
+    return None
+
+
+def alchemist_boffin_gift(w, s, seat, phase):
+    """The good character whose ability this seat has through an
+    Alchemist's Boffin then, or None: marked in this story, a Demon then,
+    and that Alchemist alive (group 4b)."""
+    if "Boffin" not in s.script.keys:
+        return None
+    got = w.alch_gift_at(seat, phase)
+    if not got or got == BOFFIN_UNSEEN:
+        return None
+    if TEAM.get(w.role_at(seat, phase)) != "demon":
+        return None
+    if alchemist_boffin_seat(w, s, phase) is None:
+        return None
+    return got
 
 
 def boffin_gift(w, s, seat, phase):
@@ -919,12 +943,18 @@ def has_boffin_ability(w, s, seat, role, phase):
     if role is None:
         return False
     got = boffin_gift(w, s, seat, phase)
+    if got is not None and role in boffin_abilities(got, phase):
+        return True
+    # Or an Alchemist's Boffin gave it (group 4b).
+    got = alchemist_boffin_gift(w, s, seat, phase)
     return got is not None and role in boffin_abilities(got, phase)
 
 
 def boffin_holders(w, s, role, phase):
-    """Every seat with that ability through the Boffin at that moment."""
-    marked = getattr(w, "_gifts_by_seat", None)
+    """Every seat with that ability through the Boffin at that moment — a
+    real one's or an Alchemist's."""
+    marked = set(getattr(w, "_gifts_by_seat", None) or ()) \
+        | set(getattr(w, "_alch_gifts_by_seat", None) or ())
     if not marked or role is None:
         return []
     return [seat for seat in sorted(marked)
@@ -1054,6 +1084,11 @@ def sober_seat(w, s, seat, role, phase):
             or w.role_at(seat, phase) == role:
         return seat
     if has_boffin_ability(w, s, seat, role, phase):
+        given = boffin_gift(w, s, seat, phase)
+        if given is None or role not in boffin_abilities(given, phase):
+            # An Alchemist's Boffin gave it: its sobriety (group 4b).
+            got = alchemist_boffin_seat(w, s, phase)
+            return seat if got is None else got
         got = boffin_seat(w, s, phase)
         if got is None and storyteller_has(w, "Boffin", phase):
             return STORYTELLER            # nothing can stop it (D Weg 1)

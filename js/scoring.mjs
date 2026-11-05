@@ -24,6 +24,7 @@ import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
         summonerWorld, teaParty, turnedEvil, engineered, boffinGift,
+        alchemistBoffinGift,
         bracketGifts, plagueGift, plagueMade, plagueSummoned, pitHagDemon,
         alchemistGift, ALCHEMY_SETUP, alchemyBrackets}
   from "./worlds.mjs";
@@ -40,7 +41,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         boffinAbilities, boffinPhilosophy, hasBoffinAbility,
         PLAGUE_UNSEEN, STORYTELLER, plagueGiven, plagueHolders, storytellerHas,
         boffinWorking, registersOf, alchemistGiven, alchemistSeats,
-        alchemistsWith, alchemyHolds, ALCHEMY_GUESSES}
+        alchemistsWith, alchemyHolds, ALCHEMY_GUESSES,
+        alchemistBoffinSeat, alchemistBoffinGiftOf}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -490,12 +492,14 @@ const sameChange = (a, b) => a === b || (a.phase === b.phase &&
   a.seat === b.seat && (a.role ?? null) === (b.role ?? null) &&
   (a.side ?? null) === (b.side ?? null) &&
   (a.slot ?? null) === (b.slot ?? null) &&
-  (a.boffin ? a.gift : undefined) === (b.boffin ? b.gift : undefined));
+  (a.boffin ? a.gift : undefined) === (b.boffin ? b.gift : undefined) &&
+  !!a.alchBoffin === !!b.alchBoffin);
 const changeKey = c => {
   let k = KEYS.get(c);
   if (k === undefined)
     KEYS.set(c, k = `${c.phase}|${c.seat}|${c.role}|${c.side}|${c.slot ?? null}`
-                    + (c.boffin ? `|gift:${c.gift}` : ""));
+                    + (c.boffin ? `|gift:${c.gift}` : "")
+                    + (c.alchBoffin ? "|alchemist" : ""));
   return k;
 };
 const momentOf = c => {
@@ -1424,7 +1428,8 @@ transitionRule(function aBountyHunterBringsAnEvilTownsfolk(world, state) {
     return town.map(p => [[turnedEvil("N0", p, "bountyhunter")], 1.0]);
   // A Demon the Boffin gave it at the setup (E Weg 1, stage 2).
   const demon = world.demonAt("N1");
-  if (demon !== null && boffinGiftOf(world, state, demon, "N1") === "BountyHunter")
+  if (demon !== null && (boffinGiftOf(world, state, demon, "N1") === "BountyHunter"
+      || alchemistBoffinGiftOf(world, state, demon, "N1") === "BountyHunter"))
     return town.map(p => [[turnedEvil("N0", p, "bountyhunter")], 1.0]);
   const stories = [[[], 1.0]];
   for (const info of state.infos) {
@@ -2356,12 +2361,15 @@ function boffinNamed(state, night, setup) {
 
 /** Every ability the Boffin may have given this seat at that moment, as
  * [[mark], cost] — "nothing the town sees" first. */
-export function boffinOffers(view, state, phase, seat, slot, setup = false) {
+export function boffinOffers(view, state, phase, seat, slot, setup = false,
+                             alchemist = false, bracket = true) {
+  if (alchemist) return alchemistBoffinOffers(view, state, phase, seat, slot);
   const may = boffinMayGive(view, state, phase, setup);
   const named = boffinNamed(state, parseInt(phase.slice(1), 10), setup);
-  // A deal only a gift's bracket explains has that gift (E Weg 1).
+  // A deal only a gift's bracket explains has that gift (E Weg 1) — not
+  // where two give (group 4b).
   let forced = null;
-  if (setup) {
+  if (setup && bracket) {
     const base = view instanceof Timeline ? view.world : view;
     forced = bracketGifts(base.roles, state.script, state.fabled || []);
   }
@@ -2394,6 +2402,25 @@ export function boffinOffers(view, state, phase, seat, slot, setup = false) {
       out.push(...philosopherChoices(view, state, phase, seat, slot, each));
     else out.push([[boffinGift(phase, seat, k, slot)], each]);
   }
+  return out;
+}
+
+/** What an Alchemist's Boffin may have given (group 4b): no row, and
+ * none only a row tells. See solver.py `_alchemist_boffin_offers`. */
+function alchemistBoffinOffers(view, state, phase, seat, slot) {
+  const may = boffinMayGive(view, state, phase, phase === "N1")
+    .filter(k => !BOFFIN_ROW_ONLY.has(k) && k !== "Philosopher");
+  const seen = sampledGifts(view, phase, seat,
+                           may.filter(k => BOFFIN_SEEN.has(k)));
+  const said = readingsOf(state, seat)
+    .filter(k => may.includes(k) && !BOFFIN_SEEN.has(k));
+  const unseen = may.filter(k => !BOFFIN_SEEN.has(k)).length;
+  const out = [];
+  if (unseen)
+    out.push([[alchemistBoffinGift(phase, seat, BOFFIN_UNSEEN, slot)], 1.0]);
+  const each = unseen ? 1.0 / unseen : 1.0;
+  for (const k of [...seen, ...said])
+    out.push([[alchemistBoffinGift(phase, seat, k, slot)], each]);
   return out;
 }
 
@@ -2468,19 +2495,29 @@ function boffinMoments(view, state, setup) {
   const base = view instanceof Timeline ? view.world : view;
   const out = [];
   if (setup) {
-    if (base.roles.includes("Boffin") || alchemistBoffin(view, state)) {
-      const start = base.demonAt("N1");
-      if (start !== null) out.push(["N1", SETUP_SLOT, start, null]);
+    const start = base.demonAt("N1");
+    if (start !== null) {
+      if (base.roles.includes("Boffin"))
+        out.push(["N1", SETUP_SLOT, start, null, "boffin"]);
+      // And an Alchemist's (group 4, K; 4b): its own.
+      if (alchemistBoffin(view, state))
+        out.push(["N1", SETUP_SLOT, start, null, "alchemist"]);
     }
     return out;
   }
+  // A Philosopher that took the Alchemist and has the Boffin's gives one
+  // when it chooses (group 4b). See solver.py.
+  for (const c of view.changes || [])
+    if (c.alchemist && c.gift === "Boffin" && view.roles[c.seat] !== "Alchemist")
+      for (const d of view.demonsAt(c.phase))
+        out.push([c.phase, c.slot ?? null, d, null, "alchemist"]);
   // The Storyteller gaining the Boffin's ability (Pestdoktor Stufe 2, D
   // Weg 1). See solver.py.
   for (const c of view.changes || [])
     if (c.plague && (c.seat ?? null) === STORYTELLER && c.gift === "Boffin"
         && boffinSeat(view, state, c.phase) === null)
       for (const d of view.demonsAt(c.phase))
-        out.push([c.phase, c.slot ?? null, d, null]);
+        out.push([c.phase, c.slot ?? null, d, null, "boffin"]);
   const changes = (view.changes || []).filter(c => !c.boffin)
     .map((c, i) => [c, i, changeAt(c)])
     .sort((a, b) => a[2] - b[2] || a[1] - b[1]).map(([c]) => c);
@@ -2495,11 +2532,14 @@ function boffinMoments(view, state, setup) {
       const others = after.demonsAt(c.phase).filter(
         d => d !== c.seat && state.aliveSet(c.phase).has(d));
       const beside = c.summoned && others.length ? others[0] : null;
-      out.push([c.phase, c.slot ?? null, c.seat, beside]);
+      out.push([c.phase, c.slot ?? null, c.seat, beside, "boffin"]);
+      // And from an Alchemist's Boffin then (group 4b).
+      if (alchemistBoffinSeat(after, state, c.phase) !== null)
+        out.push([c.phase, c.slot ?? null, c.seat, beside, "alchemist"]);
     } else if (c.role === "Boffin" && was !== "Boffin"
                && !boffinWorking(prior, state, c.phase)) {
       for (const d of after.demonsAt(c.phase))
-        out.push([c.phase, c.slot ?? null, d, null]);
+        out.push([c.phase, c.slot ?? null, d, null, "boffin"]);
     }
   });
   return out;
@@ -2512,13 +2552,21 @@ function boffinMoments(view, state, setup) {
 function boffinStories(world, state, setup) {
   if (!boffinOnBoard(state)) return [[[], 1.0]];
   const moments = [];
-  for (const [phase, slot, seat, beside] of boffinMoments(world, state, setup)) {
-    if (!boffinWorking(world, state, phase) && phase !== "N1") continue;
-    let offers = boffinOffers(world, state, phase, seat, slot, setup);
+  const found = boffinMoments(world, state, setup);
+  // Two givers at the setup: neither is held to a bracket (group 4b).
+  const both = new Set(found.filter(m => m[0] === "N1").map(m => m[4])).size > 1;
+  for (const [phase, slot, seat, beside, giver] of found) {
+    const alchemist = giver === "alchemist";
+    if (alchemist) {
+      if (alchemistBoffinSeat(world, state, phase) === null) continue;
+    } else if (!boffinWorking(world, state, phase) && phase !== "N1") continue;
+    let offers = boffinOffers(world, state, phase, seat, slot, setup,
+                              alchemist, !both);
     if (beside !== null) {
       // The Storyteller decides (D Weg 2): the first keeps it, or the
       // second gets one and the first's ends.
-      const end = boffinGift(phase, beside, "", slot);
+      const end = (alchemist ? alchemistBoffinGift : boffinGift)(
+        phase, beside, "", slot);
       offers = [[[], 1.0], ...offers.map(([way, c]) => [[...way, end], c])];
     }
     if (!offers.length) return [];        // a row names what it cannot be
@@ -2937,7 +2985,7 @@ export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
 /** Their jinxes (group 4): the real one in play, or none. See solver.py. */
 export const ALCHEMY_REAL_IN_PLAY = new Set(["Spy", "Widow", "Wraith",
   "Marionette", "OrganGrinder"]);
-export const ALCHEMY_NONE_IN_PLAY = new Set(["Mastermind", "Boffin"]);
+export const ALCHEMY_NONE_IN_PLAY = new Set(["Mastermind"]);
 export const ALCHEMY_NOT_YET = new Set(["Summoner"]);
 
 function alchemyJinxAllows(world, key, since) {
@@ -2969,10 +3017,8 @@ export function alchemistOffers(world, state, seat, since = "N1") {
       seenHere = new Set([...ALCHEMY_SEEN, ...keys]);
     }
   }
-  // Group 4: the Boffin's a dealt one's only, a guess makes three seen,
-  // a vote with the eyes closed the Organ Grinder's. See solver.py.
-  if (since !== "N1" || world.roles[seat] !== "Alchemist")
-    seenHere = new Set([...seenHere].filter(k => k !== "Boffin"));
+  // Group 4: a guess makes three seen, a vote with the eyes closed the
+  // Organ Grinder's. See solver.py.
   if (state.infos.some(i => i.type === "AlchemistGuess" && i.player === seat))
     seenHere = new Set([...seenHere, ...ALCHEMY_GUESSES]);
   if (state.infos.some(i => i.type === "BlindVote"))
