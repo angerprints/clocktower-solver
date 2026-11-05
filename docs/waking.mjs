@@ -634,7 +634,14 @@ export const SHOWN_NOT_ACTING = new Set(["Spy", "EvilTwin"]);
 /** What a Chambermaid counts — narrower than `woke`. */
 export function wokeForOwnAbility(world, state, seat, night) {
   if (!woke(world, state, seat, night)) return false;
-  return !SHOWN_NOT_ACTING.has(world.roleAt(seat, `N${night}`));
+  // An Alchemist woken for an Evil Twin's ability. See waking.py.
+  const phase = `N${night}`;
+  if (world.roleAt(seat, phase) === "Alchemist"
+      && actsAsAlchemist(world, state, seat, phase) && world.plagueAt) {
+    const gifts = world.plagueAt(seat, phase);
+    if (gifts.length && gifts.every(g => SHOWN_NOT_ACTING.has(g))) return false;
+  }
+  return !SHOWN_NOT_ACTING.has(world.roleAt(seat, phase));
 }
 
 /** `asleep` are seats taken as impaired tonight and so not woken — only
