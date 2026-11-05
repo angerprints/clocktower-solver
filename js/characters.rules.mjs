@@ -21,7 +21,7 @@ import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
         takenByAPhilosopher, tookIt, boffinHolders, soberSeat,
         boffinAbilities, boffinGiftOf, boffinSeat, storytellerHas,
-        evilRegistrationsHere, alchemistsWith}
+        evilRegistrationsHere, alchemistsWith, alchemyHolds}
   from "./info.mjs";
 
 // --------------------------------------------------------------------
@@ -517,7 +517,8 @@ const aDevilsAdvocateSavesFromTheGallows = survivesExecutionRule(
  * (10.10.2026). See solver.py. */
 survivesExecutionRule(function aVizierCannotDieByDay(world, state, day, seat) {
   if (!inBag(state, "Vizier")) return [];
-  if (world.roleAt(seat, `D${day}`) !== "Vizier") return [];
+  if (world.roleAt(seat, `D${day}`) !== "Vizier"
+      && !alchemyHolds(world, state, seat, "Vizier", `D${day}`)) return [];
   // Babysitting Lil' Monsta, it dies when executed (their jinx).
   if (babysitterAt(world, `D${day}`) === seat) return [];
   const out = [seat];
@@ -564,7 +565,9 @@ survivesExecutionRule(function aLleechOutlivesTheGallows(
 survivesExecutionRule(function aPsychopathWinsAtRoshambo(
     world, state, day, seat) {
   if (!inBag(state, "Psychopath")) return [];
-  if (world.roleAt(seat, `D${day}`) !== "Psychopath") return [];
+  if (world.roleAt(seat, `D${day}`) !== "Psychopath"
+      && !alchemyHolds(world, state, seat, "Psychopath", `D${day}`))
+    return [];
   // Babysitting Lil' Monsta, it dies when executed (their jinx).
   if (babysitterAt(world, `D${day}`) === seat) return [];
   return [seat];

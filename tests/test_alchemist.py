@@ -23,7 +23,9 @@ from botc.worlds import (AlchemistGift, Timeline, World,  # noqa: E402
 
 IDS = ["chef", "empath", "fortuneteller", "washerwoman", "investigator",
        "undertaker", "alchemist", "saint", "philosopher", "butler",
-       "recluse", "godfather", "xaan",
+       "recluse", "godfather", "xaan", "vizier", "psychopath", "goblin",
+       "boomdandy", "scarletwoman", "eviltwin", "mezepheles", "pithag",
+       "dreamer",
        "poisoner", "witch", "assassin", "devilsadvocate", "cerenovus",
        "fearmonger", "spy", "baron", "imp"]
 SC = scripts.from_ids("Alchemist", IDS)
@@ -69,7 +71,10 @@ class WhatItMayHold(SolverTest):
         got = offers()
         self.assertEqual(set(got), {"*", "Poisoner", "Witch", "Assassin",
                                     "DevilsAdvocate", "Cerenovus",
-                                    "Fearmonger", "Xaan"})
+                                    "Fearmonger", "Xaan", "Vizier",
+                                    "Psychopath", "Goblin", "Boomdandy",
+                                    "ScarletWoman", "EvilTwin",
+                                    "Mezepheles", "PitHag"})
         # One the town cannot see (the Spy): each seen one costs one, the
         # rest one. The Baron is not offered: the deal has no two Outsiders
         # more (group 2, 04.11.2026).
@@ -209,6 +214,123 @@ class ItChangesTheSetup(SolverTest):
         self.assertIsNone(best([I.AlchemistHas(1, 3, role="Witch")])[0])
 
 
+class ByDayAndOnTheGallows(SolverTest):
+    """Group 3 (05.11.2026, claude/alchemist-gruppe-3-lesarten.md)."""
+
+    def gifts(self, rows=(), **kw):
+        cost, changes = S.best_story(world(), state(rows, **kw))
+        return cost, {c.gift for c in changes
+                      if isinstance(c, AlchemistGift)}
+
+    def test_everybody_knows_its_vizier(self):
+        cost, gifts = self.gifts([I.VizierAnnounced(1, 4)])
+        self.assertIsNotNone(cost)
+        self.assertEqual(gifts, {"Vizier"})
+        self.assertIsNone(self.gifts([I.VizierAnnounced(1, 4),
+                                      I.AlchemistHas(1, 4,
+                                                     role="Witch")])[0])
+
+    def test_its_vizier_walks_away_from_the_gallows(self):
+        cost, gifts = self.gifts([I.VizierAnnounced(1, 4)],
+                                 executions={1: 4})
+        self.assertIsNotNone(cost)
+
+    def test_its_psychopath_kills_in_the_open(self):
+        cost, gifts = self.gifts([I.PsychopathKill(2, 4, target=0,
+                                                   died=True)],
+                                 deaths={0: ("D2",)})
+        self.assertIsNotNone(cost)
+        self.assertEqual(gifts, {"Psychopath"})
+
+    def test_its_goblin_wins_for_good(self):
+        rows = [I.GoblinClaim(1, 4), I.AlchemistHas(1, 4, role="Goblin")]
+        # Executed after saying so, and the game ended: good won.
+        cost, gifts = self.gifts(rows, executions={1: 4},
+                                 deaths={4: ("E1",)}, days=(),
+                                 game_over=True)
+        self.assertIsNotNone(cost)
+        self.assertEqual(gifts, {"Goblin"})
+        # The game went on: its ability cannot have been working.
+        self.assertIsNone(self.gifts(rows, executions={1: 4},
+                                     deaths={4: ("E1",)})[0])
+
+    def test_its_boomdandy_explodes(self):
+        cost, gifts = self.gifts(
+            [I.BoomdandyExploded(1, 4, pointed=0)], executions={1: 4},
+            deaths={4: ("E1",), 0: ("D1",), 1: ("D1",), 2: ("D1",),
+                    3: ("D1",)}, days=(), game_over=True)
+        self.assertIsNotNone(cost)
+        self.assertEqual(gifts, {"Boomdandy"})
+
+
+class ItBecomesTheDemon(SolverTest):
+    """Group 3, D Weg 2 and H: with the Scarlet Woman's ability it becomes
+    the Demon and stays good, and the game goes on."""
+
+    def test_the_demon_executed_and_the_game_went_on(self):
+        st = state(executions={1: 6}, deaths={6: ("E1",), 0: ("N2",)},
+                   claims=C[:5] + ["Undertaker", "Chef"])
+        cost, changes = S.best_story(world(), st)
+        self.assertIsNotNone(cost)
+        self.assertIn("ScarletWoman", {c.gift for c in changes
+                                       if isinstance(c, AlchemistGift)})
+        view = Timeline(world(), changes)
+        self.assertEqual(view.demon_at("N2"), 4)
+        self.assertFalse(view.evil_at(4, "N2"))
+        # Shown something else, it cannot have.
+        st = state([I.AlchemistHas(1, 4, role="Witch")], executions={1: 6},
+                   deaths={6: ("E1",), 0: ("N2",)})
+        self.assertIsNone(S.best_story(world(), st)[0])
+
+
+class ItIsTheGoodTwin(SolverTest):
+    """Group 3, I: its twin is an evil player; hanged, it hands evil the
+    game."""
+
+    def test_it_and_an_evil_player_know_each_other(self):
+        st = state()
+        view = Timeline(world(), (alchemist_gift_change(4, "EvilTwin"),))
+        self.assertTrue(I.EvilTwinPair(1, 4, a=4, b=6).holds(view, st, None))
+        self.assertFalse(I.EvilTwinPair(1, 4, a=4, b=0).holds(view, st, None))
+        # Only on the night it has it from.
+        self.assertFalse(I.EvilTwinPair(2, 4, a=4, b=6).holds(view, st, None))
+
+    def test_hanged_and_the_game_went_on(self):
+        rows = [I.EvilTwinPair(1, 4, a=4, b=6),
+                I.AlchemistHas(1, 4, role="EvilTwin")]
+        self.assertIsNotNone(S.best_story(world(), state(rows))[0])
+        self.assertIsNone(S.best_story(world(), state(
+            rows, executions={1: 4}, deaths={4: ("E1",)}))[0])
+
+
+class ItTurnsSomebodyEvil(SolverTest):
+    """Group 3, E Weg 1: with the Mezepheles's ability a good player turns
+    evil; the Alchemist stays good."""
+
+    def test_a_wrong_reading_from_a_player_it_turned(self):
+        # The Empath's third-night reading is wrong, and nothing could
+        # have poisoned it: turned evil, it may lie.
+        def cost(key):
+            rows = [I.AlchemistHas(1, 4, role=key), I.Empath(3, 1, count=2)]
+            return S.best_story(world(), state(rows, days=(1, 2, 3)))[0]
+        self.assertIsNotNone(cost("Mezepheles"))
+        self.assertIsNone(cost("Witch"))
+
+
+class ItRemakesSomebody(SolverTest):
+    """Group 3: with the Pit-Hag's ability it makes a player a character not
+    in play, and says so."""
+
+    def test_the_chef_it_made_a_dreamer(self):
+        rows = [I.AlchemistHas(1, 4, role="PitHag"),
+                I.PitHagChoice(2, 4, target=0, role="Dreamer")]
+        cost, changes = S.best_story(world(), state(rows))
+        self.assertIsNotNone(cost)
+        view = Timeline(world(), changes)
+        self.assertEqual(view.role_at(0, "D2"), "Dreamer")
+        self.assertFalse(view.evil_at(0, "D2"))
+
+
 class BothSave(SolverTest):
 
     def test_a_devils_advocate_and_an_alchemist_with_its_ability(self):
@@ -252,8 +374,12 @@ class APoisonedReading(SolverTest):
         row = I.Empath(2, 1, count=2)
         cost, gift = explained(rows=[row])
         self.assertIsNotNone(cost)
-        self.assertEqual(gift, ("Poisoner",))
+        # Poisoned — or, with a Mezepheles's ability, turned evil that
+        # night before it read (group 3).
+        self.assertIn(gift, (("Poisoner",), ("Mezepheles",)))
         self.assertIsNone(explained(PLAIN, rows=[row])[0])
+        self.assertIsNotNone(explained(rows=[
+            row, I.AlchemistHas(1, 4, role="Poisoner")])[0])
 
 
 def _payloads():
@@ -283,6 +409,20 @@ def _payloads():
             [dict(has, player=3, role="Godfather")],
             claims=["Chef", "Empath", "FortuneTeller", "Alchemist",
                     "Butler", "Recluse", "Chef", "Empath"]),
+        # Group 3: its Vizier, its Psychopath.
+        pay({4: ["S1"]}, [{"type": "VizierAnnounced", "night": 1,
+                           "player": 4}]),
+        pay({0: ["D2"]}, [{"type": "PsychopathKill", "night": 2,
+                           "player": 4, "target": 0, "died": True}]),
+        # Its Scarlet Woman's: the Demon executed, the game went on.
+        pay({6: ["X1"], 0: ["N2"]}),
+        # Its Evil Twin's: an evil twin.
+        pay({}, [{"type": "EvilTwinPair", "night": 1, "player": 4, "a": 4,
+                  "b": 6}]),
+        # Its Mezepheles's: a turned Empath lies.
+        pay({}, [dict(has, role="Mezepheles"),
+                 {"type": "Empath", "night": 3, "player": 1, "count": 2}],
+            days=(1, 2, 3)),
         # A Philosopher that took the Alchemist (Patrick, 04.11.2026).
         pay({0: ["W2"]}, [{"type": "PhilosopherChoice", "night": 1,
                            "player": 3, "role": "Alchemist"},

@@ -658,6 +658,12 @@ def hidden_from(deal, night, heard):
         alch["Assassin"] = deal.alch_kills[night]
     if getattr(deal, "alch_gf_kills", {}).get(night) is not None:
         alch["Godfather"] = deal.alch_gf_kills[night]
+    for who, (seat, day) in getattr(deal, "alch_mez_marked", {}).items():
+        if day == night - 1:
+            alch["Mezepheles"] = (who, seat)
+    for r in row("PitHagChoice"):
+        if r.player in getattr(deal, "alchemy", {}):
+            alch["PitHag"] = (r.player, (r.target, r.role))
     if alch:
         out[("alchemy", night)] = alch
     # Whom its jinxes made something as tonight began (stage 2).
@@ -787,7 +793,9 @@ def hidden_from(deal, night, heard):
     # the character and nothing ever filled it: the comparisons happened
     # to draw no game where it mattered until the deal changed shape
     # (02.10.2026), and then a Dreamer at 56 read the seat as it had been.
-    made = row("PitHagChoice")
+    # An Alchemist's is its own (group 3, 05.11.2026).
+    alchemists = set(getattr(deal, "alchemy", {}))
+    made = [r for r in row("PitHagChoice") if r.player not in alchemists]
     if made:
         out[("pithag", night)] = (made[0].target, made[0].role)
     # A Pit-Hag that chose the Goon first made nothing, and no row says
@@ -1170,6 +1178,15 @@ def walk(deal, night, hidden):
                 continue
             if key == "Poisoner":
                 state.droison(target, slot, "Poisoner")
+            elif key == "PitHag":
+                seat, became = target
+                state.lets_go(seat, slot)
+                state.roles[seat] = became        # the side does not move
+                state.log.append((slot, "made", seat, became))
+            elif key == "Mezepheles":
+                if state.sides.get(target) == "good":
+                    state.sides[target] = "evil"
+                    state.log.append((slot, "turned", target, "Mezepheles"))
             elif target in state.alive:
                 state.kill(target, slot, key, unstoppable=key == "Assassin")
         # The Storyteller's Assassin and Godfather, the Plague Doctor's

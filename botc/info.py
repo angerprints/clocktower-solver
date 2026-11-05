@@ -959,6 +959,13 @@ def has_plague_ability(w, s, seat, role, phase):
         or acts_as_alchemist(w, s, seat, phase)
 
 
+def alchemy_holds(w, s, seat, key, phase):
+    """An Alchemist — or a Philosopher that took it — with that Minion's
+    ability then (group 3, 05.11.2026)."""
+    return key in w.plague_at(seat, phase) \
+        and acts_as_alchemist(w, s, seat, phase)
+
+
 def acts_as_alchemist(w, s, seat, phase):
     """Holding the Alchemist then — or a Philosopher that took it, from the
     night it chose, which gets a Minion ability of its own (Patrick,
@@ -2302,6 +2309,23 @@ class EvilTwinPair(Info):
         # other side at once (M Weg 1, 22.10.2026).
         phase = f"N{self.night}"
         first, second = w.role_at(self.a, phase), w.role_at(self.b, phase)
+        # Or an Alchemist with its ability, on the night it has it from: it
+        # is the good twin, the other an evil player (group 3, I).
+        for twin, other in ((self.a, self.b), (self.b, self.a)):
+            if first != "EvilTwin" and second != "EvilTwin" \
+                    and alchemy_holds(w, s, twin, "EvilTwin", phase):
+                since = f"N{self.night - 1}" if self.night > 1 else None
+                if since and alchemy_holds(w, s, twin, "EvilTwin", since):
+                    return False
+                # Its twin as the night began, or by its end: a Snake
+                # Charmer's swap later that night (seed 1902 of line AP).
+                began = f"B{self.night - 1}" if self.night > 1 else None
+                start = (w.evil_at(twin, began) != w.evil_at(other, began)
+                         if began else
+                         is_evil(getattr(w, "world", w).roles[twin])
+                         != is_evil(getattr(w, "world", w).roles[other]))
+                return start or w.evil_at(twin, phase) != w.evil_at(other,
+                                                                   phase)
         if "EvilTwin" not in (first, second):
             return False
         twin = self.a if first == "EvilTwin" else self.b
@@ -3614,11 +3638,16 @@ class VizierAnnounced(Info):
 
     def holds(self, w, s, rh, seat=None):
         day = self.night
-        if w.role_at(self.player, f"D{day}") != "Vizier":
+        # Or an Alchemist with its ability: everybody knows that too
+        # (group 3, G, Patrick 05.11.2026).
+        def vizier(phase):
+            return w.role_at(self.player, phase) == "Vizier" \
+                or alchemy_holds(w, s, self.player, "Vizier", phase)
+        if not vizier(f"D{day}"):
             return False
         if self.player not in s.alive_set(f"D{day}"):
             return False
-        return day == 1 or w.role_at(self.player, f"D{day - 1}") != "Vizier"
+        return day == 1 or not vizier(f"D{day - 1}")
 
     def leaned_on(self, w, s, seat=None):
         return (self.player,)
@@ -3679,7 +3708,8 @@ def _cannot_die_by_day(w, s, seat, phase):
     was working is the plan's question; this only says it could have
     been, which is the direction that keeps worlds."""
     role = w.role_at(seat, phase)
-    if role in ("Sailor", "Fool", "Vizier"):
+    if role in ("Sailor", "Fool", "Vizier") \
+            or alchemy_holds(w, s, seat, "Vizier", phase):
         return True
     # Or a Philosopher with one of those, or with the Tea Lady (13.10.2026).
     if any(took_it(w, s, seat, taken, phase) for taken in ("Sailor", "Fool")):
@@ -3836,7 +3866,9 @@ class PsychopathKill(Info):
     def holds(self, w, s, rh, seat=None):
         phase = f"D{self.night}"
         if self.died:
-            return (w.role_at(self.player, phase) == "Psychopath"
+            return ((w.role_at(self.player, phase) == "Psychopath"
+                     or alchemy_holds(w, s, self.player, "Psychopath",
+                                      phase))
                     and self.player in s.alive_set(phase))
         return _cannot_die_by_day(w, s, self.target, phase)
 
@@ -3867,7 +3899,9 @@ class PsychopathRoshambo(Info):
     def holds(self, w, s, rh, seat=None):
         day = self.night
         return (s.executed_on(day) == self.player
-                and w.role_at(self.player, f"D{day}") == "Psychopath")
+                and (w.role_at(self.player, f"D{day}") == "Psychopath"
+                     or alchemy_holds(w, s, self.player, "Psychopath",
+                                      f"D{day}")))
 
     def leaned_on(self, w, s, seat=None):
         return (self.player,)
@@ -4200,7 +4234,9 @@ class BoomdandyExploded(Info):
         day = self.night
         phase = f"D{day}"
         if s.executed_on(day) != self.player \
-                or w.role_at(self.player, phase) != "Boomdandy":
+                or not (w.role_at(self.player, phase) == "Boomdandy"
+                        or alchemy_holds(w, s, self.player, "Boomdandy",
+                                         phase)):
             return False
         if self.pointed < 0:
             return True

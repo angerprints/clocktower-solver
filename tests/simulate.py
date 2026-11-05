@@ -1079,11 +1079,14 @@ def _heir(d, phase, rng):
     alive = [p for p in d.alive_at(phase) if p != d.demon_at(phase)
              and d.deaths.get(p) is None]
     minions = [m for m in alive if TEAM[d.role_at(m, phase)] == "minion"]
-    if not minions:
+    # An Alchemist with her ability, after the Minions with it (group 3).
+    alch = [p for p in alive if p not in minions
+            and _alchemy(d, p, "ScarletWoman", phase)]
+    if not minions and not (alch and len(d.alive_at(phase)) >= 5):
         return None
     sw = [m for m in minions if d.roles[m] == "ScarletWoman"] \
         + [m for m in minions if d.roles[m] != "ScarletWoman"
-           and _plague_minion(d, m, "ScarletWoman", phase)]
+           and _plague_minion(d, m, "ScarletWoman", phase)] + alch
     if sw and len(d.alive_at(phase)) >= 5:
         return sw[0]
     return rng.choice(minions)
@@ -1250,6 +1253,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         living = d.alive_at(f"N{night}")
         # A Plague Doctor that died by day (28.10.2026).
         _plague_check(d, rng, heard)
+        # An Alchemist with the Evil Twin's ability and an evil player
+        # learn each other (group 3, I).
+        _alchemist_twin(d, night, rng, heard)
         # Its Evil Twin and the twin learn each other tonight (stage 2, F).
         pending = getattr(d, "st_twin_row", None)
         if pending is not None and pending[0] == night:
@@ -1351,6 +1357,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         _harpy_chooses(d, night, rng, heard)
         # The Mezepheles at 18 too: whoever said its word turns evil.
         _mezepheles_turns(d, night, rng)
+        _alchemist_mezepheles_turns(d, night)
         # And what the Storyteller does with an ability the Plague
         # Doctor's death gave it (stage 2, 29.10.2026).
         _storyteller_acts(d, night, rng, heard)
@@ -1398,6 +1405,8 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 d.deaths[demon] = f"N{night}"
                 d.handovers.append((f"N{night}", heir))
                 d.changes.append((f"N{night}", heir, d.roles[demon]))
+                _alchemist_heir_stays_good(d, f"N{night}", heir,
+                                           d.roles[demon])
             else:
                 # An Al-Hadikhia's three choose for themselves; whoever
                 # dies of it has died to the Demon all the same, and a
@@ -1683,6 +1692,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             _leviathan_is_announced(d, night, heard)
             _yaggababble_speaks(d, night, rng)
             _mezepheles_hears(d, night, rng)
+            _alchemist_mezepheles_hears(d, night, rng)
             _cult_is_called(d, night, rng, heard)
             if _a_minion_guesses_the_damsel(d, night, rng, heard):
                 d.ended_at, d.ended_why = f"D{night}", "damsel"
@@ -1692,6 +1702,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # A Psychopath may kill somebody in the open, before the
             # nominations (10.10.2026).
             _psychopath_strikes(d, night, rng, heard)
+            # An Alchemist with its ability, the Demon too (group 3).
+            if _alchemist_psychopath_strikes(d, night, rng, heard):
+                d.ended_at, d.ended_why = f"D{night}", "alchemist"
+                d.game_ends_after = night
+                break
             # A Slayer may shoot, before the nominations (Stelle 59).
             if _slayer_shoots(d, night, rng, heard):
                 d.ended_at, d.ended_why = f"D{night}", "slayer"
@@ -1981,6 +1996,7 @@ def _moonchild_takes_one(d, night, heard, rng):
                     and not _sw_stays_by_jinx(d, phase, target):
                 d.handovers.append((phase, heir))
                 d.changes.append((phase, heir, held))
+                _alchemist_heir_stays_good(d, phase, heir, held)
             elif not _another_demon_stands(d, phase, target):
                 d.moon_ended = phase
 
@@ -2474,6 +2490,27 @@ def _alchemist_undone(d, night):
         d.cursed.pop(night, None)
     if d.alch_spared.get(night, (None,))[0] in alchemists:
         del d.alch_spared[night]
+
+
+def _alchemist_twin(d, night, rng, heard):
+    """An Alchemist with the Evil Twin's ability, on the night it has it
+    from: it and an evil player know each other (group 3, I, 05.11.2026).
+    It is the good twin."""
+    phase = f"N{night}"
+    twins = d.__dict__.setdefault("alch_twins", {})
+    for alch in sorted(getattr(d, "alchemy", {})):
+        if alch in twins or not _alchemy(d, alch, "EvilTwin", phase):
+            continue
+        since = getattr(d, "alchemy_since", {}).get(alch, 1)
+        if night != since:
+            continue
+        evil = [p for p in d.alive_at(phase) if p != alch
+                and d.side_at(p, phase) == "evil" and d.deaths.get(p) is None]
+        if not evil:
+            continue
+        other = rng.choice(evil)
+        twins[alch] = other
+        heard.append(EvilTwinPair(night, alch, a=alch, b=other))
 
 
 def _alchemist_advocates(d, night, rng):
@@ -3174,9 +3211,20 @@ def _plague_minion(d, seat, key, phase):
 
 
 def _scarlet(d, seat, phase):
-    """The Scarlet Woman dealt — or a Minion given her ability (E)."""
+    """The Scarlet Woman dealt — or a Minion given her ability (E), or an
+    Alchemist with it (group 3, 05.11.2026)."""
     return d.roles[seat] == "ScarletWoman" \
-        or _plague_minion(d, seat, "ScarletWoman", phase)
+        or _plague_minion(d, seat, "ScarletWoman", phase) \
+        or _alchemy(d, seat, "ScarletWoman", phase)
+
+
+def _alchemist_heir_stays_good(d, phase, heir, held):
+    """An Alchemist with the Scarlet Woman's ability becomes the Demon and
+    stays good (D Weg 2); the game goes on as with any Demon (H)."""
+    # Asked once the change is on the record, so by what it was dealt.
+    if getattr(d, "alchemy", {}).get(heir) == "ScarletWoman" \
+            and TEAM[d.roles[heir]] != "minion":
+        d.side_changes.append((phase, heir, held, "good"))
 
 
 def _fearmonger_at(d, p, phase):
@@ -3399,7 +3447,8 @@ def _vizier_is_announced(d, day, heard):
         return
     phase = f"D{day}"
     for seat in d.alive_at(phase):
-        if d.role_at(seat, phase) != "Vizier" or seat in d.vizier_seen:
+        # An Alchemist with its ability too: everybody knows (group 3, G).
+        if not _holds(d, seat, "Vizier", phase) or seat in d.vizier_seen:
             continue
         d.vizier_seen.add(seat)
         if "Investigator" in d.script.keys or "Alsaahir" in d.script.keys:
@@ -3411,7 +3460,7 @@ def _vizier_is_announced(d, day, heard):
 def _a_vizier_stands(d, seat, day):
     """A Vizier cannot die during the day — working, or drunk by a
     Courtier (their jinx). Drunk or poisoned otherwise, it can."""
-    if d.role_at(seat, f"D{day}") != "Vizier":
+    if not _holds(d, seat, "Vizier", f"D{day}"):
         return False
     if d.working(seat, day, by_day=True):
         return True
@@ -3485,6 +3534,39 @@ def _psychopath_strikes(d, day, rng, heard):
     heard.append(PsychopathKill(day, psycho, target=target, died=died))
 
 
+def _alchemist_psychopath_strikes(d, day, rng, heard):
+    """An Alchemist with the Psychopath's ability (group 3, 05.11.2026): now
+    and then, at somebody it does not trust — the Demon too where that
+    ends the game, as its Assassin (Patrick, 04.11.2026). Drunk or
+    poisoned it says so all the same and nobody dies. True when good has
+    won."""
+    if "Psychopath" not in d.script.keys:
+        return False
+    phase = f"D{day}"
+    living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    for alch in sorted(getattr(d, "alchemy", {})):
+        if alch not in living or not _alchemy(d, alch, "Psychopath", phase):
+            continue
+        if len(living) < 4 or rng.random() >= 0.3:
+            continue
+        demon = d.demon_at(phase)
+        spare = (alch,) if _alchemist_may_end_it(d, phase) else (alch, demon)
+        pool = [p for p in living if p not in spare]
+        if not pool:
+            continue
+        target = rng.choice(pool)
+        died = d.working(alch, day, by_day=True) \
+            and _can_die_by_day(d, target, day)
+        if died:
+            d.deaths[target] = phase
+        d.psychopath_struck[day] = (alch, target)
+        heard.append(PsychopathKill(day, alch, target=target, died=died))
+        if died and target == demon:
+            return True
+        living = [p for p in living if p != target or not died]
+    return False
+
+
 def _slayer_shoots(d, day, rng, heard):
     """ "Once per game, during the day, publicly choose a player: if they
     are the Demon, they die." Now and then, at the Demon one time in three
@@ -3548,6 +3630,7 @@ def _slayer_shoots(d, day, rng, heard):
                 d.deaths[target] = phase
                 d.handovers.append((phase, heir))
                 d.changes.append((phase, heir, held))
+                _alchemist_heir_stays_good(d, phase, heir, held)
                 return False
             d.deaths[target] = phase
             # Good has won — unless a second Demon stands (Hatter stage 2).
@@ -3848,7 +3931,7 @@ def _boomdandy_explodes(d, day, hanged, rng, heard):
     if "Boomdandy" not in d.script.keys:
         return False
     phase = f"D{day}"
-    if d.role_at(hanged, phase) != "Boomdandy" \
+    if not _holds(d, hanged, "Boomdandy", phase) \
             or not d.working(hanged, day, by_day=True):
         return False
     demon = d.demon_at(f"E{day}")
@@ -4007,6 +4090,7 @@ def _lycanthrope_hunts(d, night, rng):
                     and not _sw_stays_by_jinx(d, phase, target):
                 d.handovers.append((phase, heir))
                 d.changes.append((phase, heir, held))
+                _alchemist_heir_stays_good(d, phase, heir, held)
             elif not _another_demon_stands(d, phase, target):
                 d.lyc_ended = phase
             continue
@@ -4396,6 +4480,44 @@ def _mezepheles_turns(d, night, rng):
     d.mez_turned = (seat, night)
 
 
+def _alchemist_mezepheles_hears(d, day, rng):
+    """An Alchemist with the Mezepheles's ability knows a word too: somebody
+    good says it now and then, once a game (group 3, E Weg 1)."""
+    if "Mezepheles" not in d.script.keys:
+        return
+    phase = f"D{day}"
+    marked = d.__dict__.setdefault("alch_mez_marked", {})
+    for alch in sorted(getattr(d, "alchemy", {})):
+        if alch in marked or alch not in d.alive_at(phase) \
+                or not _alchemy(d, alch, "Mezepheles", phase):
+            continue
+        if rng.random() >= 0.3:
+            continue
+        good = [p for p in d.alive_at(phase) if d.deaths.get(p) is None
+                and p != alch and d.side_at(p, phase) == "good"]
+        if good:
+            marked[alch] = (rng.choice(good), day)
+
+
+def _alchemist_mezepheles_turns(d, night):
+    """ "...becomes evil that night", at the Mezepheles's turn, if the
+    Alchemist still has the ability and it works; the Alchemist stays good
+    (E Weg 1). Drunk or poisoned, nobody turns and it is spent."""
+    for alch, (seat, day) in sorted(getattr(d, "alch_mez_marked",
+                                            {}).items()):
+        if day != night - 1:
+            continue
+        phase = f"N{night}"
+        if alch not in d.alive_at(phase) or d.deaths.get(alch) == phase \
+                or not _alchemy(d, alch, "Mezepheles", phase) \
+                or not d.working(alch, night):
+            continue
+        if d.side_at(seat, phase) != "good":
+            continue
+        d.side_changes.append((phase, seat, d.role_at(seat, phase), "evil"))
+        d.__dict__.setdefault("alch_mez_turned", {})[alch] = (seat, night)
+
+
 def _living_leviathan(d, phase):
     """The seat holding the Leviathan now, standing and the Demon."""
     seat = _demon_holding(d, phase, "Leviathan")
@@ -4696,7 +4818,8 @@ def _a_goblin_said_so(d, day, executed, rng, heard):
     if "Goblin" not in d.script.keys:
         return False
     if d.role_at(executed, f"D{day}") == "Goblin" \
-            or _plague_minion(d, executed, "Goblin", f"D{day}"):
+            or _plague_minion(d, executed, "Goblin", f"D{day}") \
+            or _alchemy(d, executed, "Goblin", f"D{day}"):
         if rng.random() >= 0.7:
             return False                  # kept quiet, and simply died
         heard.append(GoblinClaim(day, executed))
@@ -4771,7 +4894,8 @@ def _walks_away(d, seat, day, rng):
         return "DevilsAdvocate"
     # "If executed, you only die if you lose roshambo." Played only by a
     # Psychopath with its ability, and won two times in three.
-    if role == "Psychopath" and d.working(seat, day, by_day=True):
+    if (role == "Psychopath" or _alchemy(d, seat, "Psychopath", phase)) \
+            and d.working(seat, day, by_day=True):
         d.roshambo[day] = seat
         if rng.random() < 2 / 3:
             return "Psychopath"
@@ -4839,6 +4963,11 @@ def _execute(d, day, rng, allow_takeover=False):
     st_twins = getattr(d, "st_twins", None)
     if st_twins is not None and d.role_at(st_twins[0], phase) == "EvilTwin":
         living = [p for p in living if p != st_twins[0]]
+    # And an Alchemist with the Evil Twin's ability: the good player itself,
+    # its ability its own, so its twin need not be standing (group 3, I).
+    for alch in getattr(d, "alch_twins", {}):
+        if _alchemy(d, alch, "EvilTwin", phase):
+            living = [p for p in living if p != alch]
     heir = _heir(d, phase, rng)
     takeover = (allow_takeover and heir is not None
                 and _scarlet(d, heir, phase)
@@ -4912,7 +5041,7 @@ def _execute(d, day, rng, allow_takeover=False):
     forced = None
     if "Vizier" in d.script.keys:
         vizier = next((p for p in d.alive_at(phase)
-                       if d.role_at(p, phase) == "Vizier"
+                       if _holds(d, p, "Vizier", phase)
                        and d.deaths.get(p) is None), None)
         if vizier is not None and d.working(vizier, day, by_day=True):
             backed = sorted(
@@ -4959,6 +5088,7 @@ def _execute(d, day, rng, allow_takeover=False):
         else:
             d.handovers.append((phase, heir))
             d.changes.append((phase, heir, d.roles[victim]))
+            _alchemist_heir_stays_good(d, phase, heir, d.roles[victim])
     return victim
 
 
@@ -6801,6 +6931,9 @@ def _in_night_order(d, night):
         if what == "Philosopher" and _phil(d, seat, f"N{night}") \
                 and night > 1:
             what = _phil(d, seat, f"N{night}")
+        # An Alchemist with the Pit-Hag's ability, at the Pit-Hag's turn.
+        if night > 1 and _alchemy(d, seat, "PitHag", f"N{night}"):
+            what = "PitHag"
         got = getattr(CHARACTERS[what], field, 0) if what in CHARACTERS else 0
         return (got if got else 10_000, seat)
 
@@ -6934,6 +7067,11 @@ def early_choices(d, night, rng):
         if role == "Philosopher" and night > 1 \
                 and _phil(d, seat, f"N{night}") in CHOOSES_EARLY:
             role = _phil(d, seat, f"N{night}")
+        # An Alchemist with the Pit-Hag's ability uses it at its turn
+        # (group 3, 05.11.2026).
+        if role in ("Alchemist", "Philosopher") and night > 1 \
+                and _alchemy(d, seat, "PitHag", f"N{night}"):
+            role = "PitHag"
         # The Fearmonger acts at 17, after the Pit-Hag at 16 — so a seat
         # the Pit-Hag has just unmade chooses nothing, and one it has just
         # made a Fearmonger chooses tonight (the gate, seeds 898 and 2928,
