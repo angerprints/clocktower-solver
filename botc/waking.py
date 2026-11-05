@@ -639,10 +639,20 @@ def woke(world, state, seat, night):
     from .info import acts_as_alchemist     # local: info imports waking
     if world.team_at(seat, phase) == "minion" \
             or acts_as_alchemist(world, state, seat, phase):
+        alchemist = world.team_at(seat, phase) != "minion"
         for got in world.plague_at(seat, phase):
+            # Not for an ability its jinx says it has not, nor the
+            # Boffin's, whose gift it does not learn (group 4).
+            if alchemist and got in ALCHEMY_ASLEEP:
+                continue
             if got in CHARACTERS and woke_as(world, state, seat, night, got):
                 return True
     return False
+
+
+# What an Alchemist holds and does not wake for (group 4, 05.11.2026).
+ALCHEMY_ASLEEP = frozenset({"Spy", "Widow", "Wraith", "Marionette",
+                            "Mastermind", "Boffin", "Summoner"})
 
 
 BOFFIN_UNSEEN_KEY = "*"

@@ -51,5 +51,10 @@ if [ "$2" != base ]; then
   line torAO 4 0 Alchemist Goblin Boomdandy
   line torAS 4 0 Alchemist ScarletWoman EvilTwin
   line torAM 4 0 Alchemist Mezepheles PitHag
+  # Group 4 (05.11.2026): the jinxes — the guess (L), the ones it has not
+  # or whose real one it drunks, and its gift to the Demon (K).
+  line torAJ 4 0 Alchemist Spy Widow Wraith
+  line torAN 4 0 Alchemist Marionette Mastermind OrganGrinder
+  line torAL 4 0 Alchemist Boffin
 fi
 echo done > "$OUT/alchemist.done"

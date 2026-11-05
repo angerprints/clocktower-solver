@@ -40,7 +40,7 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         boffinAbilities, boffinPhilosophy, hasBoffinAbility,
         PLAGUE_UNSEEN, STORYTELLER, plagueGiven, plagueHolders, storytellerHas,
         boffinWorking, registersOf, alchemistGiven, alchemistSeats,
-        alchemistsWith, alchemyHolds}
+        alchemistsWith, alchemyHolds, ALCHEMY_GUESSES}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -167,8 +167,9 @@ const ACTS_AT = {
   // The Plague Doctor's death gives the Storyteller an ability
   // (28.10.2026): after every change but the handovers. See solver.py.
   aPlagueDoctorGivesTheStoryteller: 98,
-  // An Alchemist's ability, from the setup (group 3). See solver.py.
-  anAlchemistHoldsAMinionAbility: -1,
+  // An Alchemist's ability, from the setup (group 3), before the Boffin's
+  // (group 4). See solver.py.
+  anAlchemistHoldsAMinionAbility: -2,
 };
 
 export const transitionRule = fn => (
@@ -2467,7 +2468,7 @@ function boffinMoments(view, state, setup) {
   const base = view instanceof Timeline ? view.world : view;
   const out = [];
   if (setup) {
-    if (base.roles.includes("Boffin")) {
+    if (base.roles.includes("Boffin") || alchemistBoffin(view, state)) {
       const start = base.demonAt("N1");
       if (start !== null) out.push(["N1", SETUP_SLOT, start, null]);
     }
@@ -2556,8 +2557,17 @@ export function boffinNewDemonStories(world, state) {
 
 /** What the Boffin leaves out that the solver does not reckon, or null:
  * Lil' Monsta, whose babysitter changes every night. */
+/** A dealt Alchemist with the Boffin's ability in this story (group 4,
+ * K). See solver.py `_alchemist_boffin`. */
+function alchemistBoffin(view, state) {
+  if (!alchemistOnBoard(state) || !view.plagueAt) return false;
+  return view.roles.some((role, seat) => role === "Alchemist"
+    && alchemyHolds(view, state, seat, "Boffin", "N1"));
+}
+
 export function boffinUnreckoned(view, state) {
-  if (!boffinOnBoard(state) || !view.roles.includes("Boffin")) return null;
+  if (!boffinOnBoard(state) || (!view.roles.includes("Boffin")
+                                && !alchemistBoffin(view, state))) return null;
   if (inBag(state, "LilMonsta")
       && lilMonstaWorld(view instanceof Timeline ? view.world : view))
     return "boffin";
@@ -2920,7 +2930,24 @@ export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
   "Cerenovus", "Assassin", "Fearmonger", "Godfather",
   // Group 3 (05.11.2026).
   "Vizier", "Psychopath", "Goblin", "Boomdandy", "ScarletWoman", "EvilTwin",
-  "Mezepheles", "PitHag"]);
+  "Mezepheles", "PitHag",
+  // Group 4 (05.11.2026): its gift to the Demon, a dealt one's only.
+  "Boffin"]);
+
+/** Their jinxes (group 4): the real one in play, or none. See solver.py. */
+export const ALCHEMY_REAL_IN_PLAY = new Set(["Spy", "Widow", "Wraith",
+  "Marionette", "OrganGrinder"]);
+export const ALCHEMY_NONE_IN_PLAY = new Set(["Mastermind", "Boffin"]);
+export const ALCHEMY_NOT_YET = new Set(["Summoner"]);
+
+function alchemyJinxAllows(world, key, since) {
+  if (ALCHEMY_NOT_YET.has(key)) return false;
+  if (!ALCHEMY_REAL_IN_PLAY.has(key) && !ALCHEMY_NONE_IN_PLAY.has(key))
+    return true;
+  const held = since === "N1" ? new Set(world.roles)
+    : new Set(world.roles.map((_, p) => world.roleAt(p, since)));
+  return held.has(key) === ALCHEMY_REAL_IN_PLAY.has(key);
+}
 
 export const alchemistOnBoard = state => onBoard(state, "Alchemist");
 
@@ -2928,7 +2955,8 @@ export const alchemistOnBoard = state => onBoard(state, "Alchemist");
 /** Every ability this Alchemist may have, [[[mark], cost]]. See
  * solver.py `alchemist_offers`. */
 export function alchemistOffers(world, state, seat, since = "N1") {
-  let may = state.script.keys.filter(k => TEAM[k] === "minion").sort();
+  let may = state.script.keys.filter(k => TEAM[k] === "minion"
+    && alchemyJinxAllows(world, k, since)).sort();
   // Group 2: a dealt one's setup shift. See solver.py.
   let seenHere = ALCHEMY_SEEN;
   if (since === "N1" && world.roles[seat] === "Alchemist") {
@@ -2941,6 +2969,14 @@ export function alchemistOffers(world, state, seat, since = "N1") {
       seenHere = new Set([...ALCHEMY_SEEN, ...keys]);
     }
   }
+  // Group 4: the Boffin's a dealt one's only, a guess makes three seen,
+  // a vote with the eyes closed the Organ Grinder's. See solver.py.
+  if (since !== "N1" || world.roles[seat] !== "Alchemist")
+    seenHere = new Set([...seenHere].filter(k => k !== "Boffin"));
+  if (state.infos.some(i => i.type === "AlchemistGuess" && i.player === seat))
+    seenHere = new Set([...seenHere, ...ALCHEMY_GUESSES]);
+  if (state.infos.some(i => i.type === "BlindVote"))
+    seenHere = new Set([...seenHere, "OrganGrinder"]);
   const named = state.infos.filter(i => i.type === "AlchemistHas"
     && i.player === seat).map(i => alchemistGiven(i, state));
   if (named.length) {
@@ -2960,7 +2996,7 @@ export function alchemistOffers(world, state, seat, since = "N1") {
 /** A story with every dealt Alchemist's ability told. See solver.py. */
 /** What an Alchemist may hold that a transition rule asks about, and the
  * mark for the rest. See solver.py. */
-export const ALCHEMY_IN_TRANSITIONS = new Set(["ScarletWoman"]);
+export const ALCHEMY_IN_TRANSITIONS = new Set(["ScarletWoman", "Boffin"]);
 export const ALCHEMY_LATER = "?alchemy";   // not the Plague Doctor's "?"
 
 function anAlchemistHoldsAMinionAbility(world, state) {

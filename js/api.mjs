@@ -61,6 +61,7 @@ export const INFO_SOURCES = {
   PreacherChoice: "Preacher", HuntsmanChoice: "Huntsman",
   EngineerChoice: "Engineer", BoffinGave: "Boffin",
   PlagueDoctorGave: "PlagueDoctor", AlchemistHas: "Alchemist",
+  AlchemistGuess: "Alchemist",
   PuzzlemasterGuess: "Puzzlemaster", BoomdandyExploded: "Boomdandy",
   PixieLearned: "Pixie", VillageIdiotInfo: "VillageIdiot",
   LycanthropeChose: "Lycanthrope", HarpyMadness: "Harpy",

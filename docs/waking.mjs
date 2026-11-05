@@ -441,12 +441,22 @@ export function woke(world, state, seat, night) {
   // Fearmonger's ability wakes for it (I Weg 1, 28.10.2026). See waking.py.
   // An Alchemist wakes for the Minion ability it holds (04.11.2026).
   if (world.plagueAt && (world.teamAt(seat, phase) === "minion"
-                         || actsAsAlchemist(world, state, seat, phase)))
-    for (const got of world.plagueAt(seat, phase))
+                         || actsAsAlchemist(world, state, seat, phase))) {
+    const alchemist = world.teamAt(seat, phase) !== "minion";
+    for (const got of world.plagueAt(seat, phase)) {
+      // Not for an ability its jinx says it has not, nor the Boffin's
+      // (group 4). See waking.py.
+      if (alchemist && ALCHEMY_ASLEEP.has(got)) continue;
       if (CHARACTERS[got] && wokeAs(world, state, seat, night, got))
         return true;
+    }
+  }
   return false;
 }
+
+/** What an Alchemist holds and does not wake for (group 4). */
+export const ALCHEMY_ASLEEP = new Set(["Spy", "Widow", "Wraith", "Marionette",
+  "Mastermind", "Boffin", "Summoner"]);
 
 const ASLEEP = "asleep", OPEN = "open";
 

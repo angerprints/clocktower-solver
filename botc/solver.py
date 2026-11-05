@@ -42,7 +42,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    storyteller_has, has_plague_ability, plague_holders,
                    acts_as_alchemist, alchemy_holds,
                    BecameInfo, EvilTwinPair, BoomdandyExploded,
-                   AlchemistHas)
+                   AlchemistHas, AlchemistGuess, ALCHEMY_GUESSES)
 from .roles import (ABSENT, ARBITRARY, GENUINE, GOOD, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
                     INVERTED, registers_as_role, evil_registrations,
@@ -343,8 +343,9 @@ _ACTS_AT = {"a_bounty_hunter_brings_an_evil_townsfolk": 0,   # the setup
             # (`boffin_new_demon_stories`, 26.10.2026).
             "a_boffin_gives_the_demon": -1,
             # An Alchemist's ability (group 3, 05.11.2026), from the setup:
-            # first, so a handover sees the Scarlet Woman's.
-            "an_alchemist_holds_a_minion_ability": -1,
+            # first, so a handover sees the Scarlet Woman's — and before
+            # the Boffin's, so its gift sees an Alchemist's (group 4).
+            "an_alchemist_holds_a_minion_ability": -2,
             # The Plague Doctor's death gives the Storyteller an ability
             # (28.10.2026): read off the deaths on the board, after every
             # change but the handovers — whoever holds it when it dies may
@@ -3219,7 +3220,7 @@ def _boffin_moments(view, state, setup):
     base = view.world if isinstance(view, Timeline) else view
     out = []
     if setup:
-        if "Boffin" in base.roles:
+        if "Boffin" in base.roles or _alchemist_boffin(view, state):
             start = base.demon_at("N1")
             if start is not None:
                 out.append(("N1", SETUP_SLOT, start, None))
@@ -3318,10 +3319,24 @@ def _boffin_stories(world, state, setup):
     return stories
 
 
+def _alchemist_boffin(view, state):
+    """A dealt Alchemist with the Boffin's ability in this story (group 4,
+    K, 05.11.2026): it gives the Demon one at the setup, as a Boffin
+    does, and does not learn which."""
+    if not _alchemist_on_board(state) \
+            or not getattr(view, "_plagues_by_seat", None):
+        return False
+    return any(alchemy_holds(view, state, seat, "Boffin", "N1")
+               for seat, role in enumerate(view.roles)
+               if role == "Alchemist")
+
+
 def boffin_unreckoned(view, state):
     """What the Boffin leaves out that the solver does not reckon, or
     None: Lil' Monsta, whose babysitter changes every night."""
-    if not _boffin_on_board(state) or "Boffin" not in view.roles:
+    if not _boffin_on_board(state) or ("Boffin" not in view.roles
+                                       and not _alchemist_boffin(view,
+                                                                 state)):
         return None
     if _in_bag(state, "LilMonsta") and lil_monsta_world(
             view.world if isinstance(view, Timeline) else view):
@@ -3783,7 +3798,33 @@ ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
                           # Group 3 (05.11.2026): by day and on the gallows.
                           "Vizier", "Psychopath", "Goblin", "Boomdandy",
                           "ScarletWoman", "EvilTwin", "Mezepheles",
-                          "PitHag"})
+                          "PitHag",
+                          # Group 4 (05.11.2026): its gift to the Demon,
+                          # a dealt one's only (K).
+                          "Boffin"})
+
+# Group 4 (05.11.2026, claude/alchemist-gruppe-4-lesarten.md), their
+# jinxes: the real one is in play — the Spy, the Widow, the Wraith, the
+# Marionette, the Organ Grinder — or none is, the Mastermind. Beside a
+# real Boffin none either: the Demon would have two gifts, which nothing
+# reckons (decided here, to be checked). The Summoner's comes later (J).
+ALCHEMY_REAL_IN_PLAY = frozenset({"Spy", "Widow", "Wraith", "Marionette",
+                                  "OrganGrinder"})
+ALCHEMY_NONE_IN_PLAY = frozenset({"Mastermind", "Boffin"})
+ALCHEMY_NOT_YET = frozenset({"Summoner"})
+
+
+def _alchemy_jinx_allows(world, key, since):
+    """May an Alchemist have that ability from then, by its jinx?"""
+    if key in ALCHEMY_NOT_YET:
+        return False
+    if key not in ALCHEMY_REAL_IN_PLAY and key not in ALCHEMY_NONE_IN_PLAY:
+        return True
+    if since == "N1":
+        held = set(world.roles)
+    else:
+        held = {world.role_at(p, since) for p in range(len(world.roles))}
+    return (key in held) == (key in ALCHEMY_REAL_IN_PLAY)
 
 
 def _alchemist_on_board(state):
@@ -3808,7 +3849,8 @@ def alchemist_offers(world, state, seat, since="N1"):
     "nothing the town sees" first, each seen one at one over how many
     that holds, so the shares go as a random pick would. A row from the
     seat names it."""
-    may = sorted(k for k in state.script.keys if TEAM.get(k) == "minion")
+    may = sorted(k for k in state.script.keys if TEAM.get(k) == "minion"
+                 and _alchemy_jinx_allows(world, k, since))
     # Group 2 (04.11.2026): a dealt one's Baron, Godfather or Xaan changed
     # the setup, so the deal says whether it can have one — each the deal
     # holds is a story of its own; where only such a shift explains the
@@ -3823,6 +3865,17 @@ def alchemist_offers(world, state, seat, since="N1"):
             if not plain:
                 may = [k for k in may if k in keys]
             seen_here = ALCHEMY_SEEN | keys
+    # Group 4: the Boffin's gift is a dealt one's only (K) — a
+    # Philosopher's is "nothing the town sees" (decided here) — and a
+    # guess makes the Spy's, the Widow's and the Wraith's seen (L).
+    if since != "N1" or world.roles[seat] != "Alchemist":
+        seen_here = seen_here - {"Boffin"}
+    if any(isinstance(i, AlchemistGuess) and i.player == seat
+           for i in state.infos):
+        seen_here = seen_here | ALCHEMY_GUESSES
+    # And a vote with the eyes closed the Organ Grinder's.
+    if any(type(i).__name__ == "BlindVote" for i in state.infos):
+        seen_here = seen_here | {"OrganGrinder"}
     named = [i.given(state) for i in state.infos
              if isinstance(i, AlchemistHas) and i.player == seat]
     if named:
@@ -3846,7 +3899,9 @@ def alchemist_offers(world, state, seat, since="N1"):
 # `possible_timelines` (`an_alchemist_holds_a_minion_ability`); the rest
 # as one mark `ALCHEMY_LATER`, told with each story as the Plague Doctor's
 # are (`alchemist_told`).
-ALCHEMY_IN_TRANSITIONS = frozenset({"ScarletWoman"})
+ALCHEMY_IN_TRANSITIONS = frozenset({"ScarletWoman",
+                                    # Group 4: its gift at the setup.
+                                    "Boffin"})
 # Not the Plague Doctor's "?": an Alchemist's mark is a PlagueGift too, and
 # `plague_told_later` would fill it with the Storyteller's offers (the
 # gate of group 3, seeds 190 and 2782 of line AP).
@@ -4471,12 +4526,50 @@ def _the_demon_kills(world, state, night, demon):
            and falls_as(world, state, p, "Sweetheart", f"N{night}")
            for p in range(state.n_players)):
         reachable = False
+    # An Alchemist guessed right by day (group 4, L): the Demon must
+    # choose that player tonight.
+    forced = alchemist_guessed(world, state, night)
+    seats = frozenset({forced}) if forced is not None \
+        else frozenset(range(state.n_players))   # a corpse is a valid aim
     return [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON,
-        seats=frozenset(range(state.n_players)),   # a corpse is a valid aim
+        seats=seats,
         capacity=1, must_fire=True,
         actor=demon if reachable else None,
         actor_cost=DEMON_POISONED_PENALTY)]
+
+
+def alchemist_guessed(world, state, night):
+    """The player the Demon must choose tonight, or None (group 4, L,
+    05.11.2026): yesterday, after the execution, a living Alchemist with
+    the Spy's, the Widow's or the Wraith's ability publicly guessed a
+    living player, and that player is the one. Only where nothing could
+    have made that Alchemist drunk or poisoned yesterday — otherwise the
+    Demon chooses as ever: permissive, never wrong."""
+    day = night - 1
+    if day < 1:
+        return None
+    phase = f"D{day}"
+    hanged = state.executed_on(day)
+    if hanged is None:
+        return None
+    alive = state.alive_set(phase)
+    for info in state.infos:
+        if not isinstance(info, AlchemistGuess) or info.night != day:
+            continue
+        seat, target = info.player, info.target
+        if seat == hanged or target == hanged or seat == target \
+                or seat not in alive or target not in alive:
+            continue
+        key = world.role_at(target, phase)
+        if key not in ALCHEMY_GUESSES \
+                or not alchemy_holds(world, state, seat, key, phase):
+            continue
+        if any(seat in source.seats
+               for source in impairment.sources_on(world, state, day)):
+            continue
+        return target
+    return None
 
 
 @death_causes.immunity_rule

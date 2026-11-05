@@ -164,6 +164,9 @@ def build_info(d):
         return I.BoffinGave(night, player, trust, role=d.get("role") or "")
     if kind == "AlchemistHas":
         return I.AlchemistHas(night, player, trust, role=d.get("role") or "")
+    if kind == "AlchemistGuess":
+        return I.AlchemistGuess(night, player, trust,
+                                target=_int(d, "target"))
     if kind == "PlagueDoctorGave":
         return I.PlagueDoctorGave(night, player, trust,
                                   role=d.get("role") or "")
@@ -794,6 +797,7 @@ INFO_SOURCES = {
     "PreacherChoice": "Preacher", "HuntsmanChoice": "Huntsman",
     "EngineerChoice": "Engineer", "BoffinGave": "Boffin",
     "PlagueDoctorGave": "PlagueDoctor", "AlchemistHas": "Alchemist",
+    "AlchemistGuess": "Alchemist",
     "PuzzlemasterGuess": "Puzzlemaster",
     "BoomdandyExploded": "Boomdandy",
     "PixieLearned": "Pixie", "VillageIdiotInfo": "VillageIdiot",

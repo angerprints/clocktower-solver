@@ -25,7 +25,7 @@ from botc.info import (registers_as_role,
                        SlayerShot, VirginNomination,
                        PreacherChoice, HuntsmanChoice, PuzzlemasterGuess,
                        EngineerChoice, BoffinGave, BOFFIN_NEVER_GIVES,
-                       PlagueDoctorGave, AlchemistHas,
+                       PlagueDoctorGave, AlchemistHas, AlchemistGuess,
                        BoomdandyExploded, BecameInfo,
                        PixieLearned, VillageIdiotInfo, LycanthropeChose,
                        HarpyMadness,
@@ -197,6 +197,10 @@ class Deal:
         self.vizier_forced = {}             # day -> whom it executed at once
         self.grinder_drunk = set()          # nights the Organ Grinder chose drink
         self.blind_days = set()             # days voted with eyes closed
+        self.blind_by = {}                  # day -> whose eyes closed them
+        # Group 4 (05.11.2026): night -> whom the Demon must choose, an
+        # Alchemist having guessed them right by day.
+        self.alch_forced = {}
         self.hidden_votes = {}              # {day: {seat, ...}} on those days
         self.voted_for = {}                 # {day: {nominee: {seat, ...}}}
         # The fifth five (10.10.2026).
@@ -1176,7 +1180,10 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     d.boffin_gift = None
     d.boffin_row = False
     d.boffin_took = None
-    if "Boffin" in roles:
+    # Or an Alchemist with its ability (group 4, K): it does not learn
+    # which, so nothing that needs its row is given.
+    alch_boffin = "Boffin" not in roles and "Boffin" in alch_gifts.values()
+    if "Boffin" in roles or alch_boffin:
         from botc.catalogue import CHARACTERS as _C
         demon = next((p for p in range(n) if TEAM[roles[p]] == "demon"), None)
         if demon is not None:
@@ -1187,10 +1194,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                     if TEAM[k] in ("townsfolk", "outsider")
                     and k not in BOFFIN_NEVER_GIVES
                     and roles.count(k) < _C[k].copies
-                    and all(other in roles for other in _C[k].brings)]
+                    and all(other in roles for other in _C[k].brings)
+                    and not (alch_boffin and k in ("Barber", "Hatter",
+                                                   "Philosopher"))]
             if pool:
                 d.boffin_gift = (demon, rng.choice(pool))
-                d.boffin_row = rng.random() < 0.5
+                d.boffin_row = rng.random() < 0.5 and not alch_boffin
                 # Only with its row (R Weg 1, stage 2): the Barber, the
                 # Hatter, and the Philosopher's choice, which it writes
                 # down itself on the first night.
@@ -1398,6 +1407,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # A Princess that had her nominee executed yesterday: the
             # Demon kills nobody tonight, itself included (10.10.2026).
             if heir is not None and rng.random() < starpass_chance \
+                    and d.alch_forced.get(night) is None \
                     and d.role_at(demon, f"N{night}") == "Imp" \
                     and not _the_princess_stops(d, night):
                 # The Imp kills itself and the star passes on. This always
@@ -1722,9 +1732,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             heard += d.day_heard
             d.day_heard = []
             if night in d.blind_days:
-                grinder = next(p for p in d.alive_at(f"E{night}")
-                               if d.role_at(p, f"E{night}") == "OrganGrinder")
-                heard.append(BlindVote(night, grinder))
+                heard.append(BlindVote(night, d.blind_by[night]))
             # A Witch's curse can take the third from last in daylight.
             if _evil_has_won(d, f"D{night}"):
                 d.ended_at, d.ended_why = f"D{night}", "two alive"
@@ -1740,6 +1748,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 executed = _execute(d, night, rng, allow_takeover)
             if executed is not None:
                 d.deaths[executed] = f"E{night}"
+                _alchemist_guesses(d, night, executed, rng, heard)
             # The Lleech's host on the gallows takes the Lleech with it.
             if _lleech_follows(d, f"D{night}", night, rng, by_day=True,
                                hanged=executed):
@@ -2427,7 +2436,7 @@ def _alchemist_setup(roles, believes, script, rng, told):
     for seat in range(len(roles)):
         if roles[seat] != "Alchemist":
             continue
-        pool = [k for k in script.minions if k not in ALCHEMY_NEVER]
+        pool = _alchemy_pool(script, set(roles))
         while pool:
             key = rng.choice(pool)
             if key in ("Baron", "Godfather") \
@@ -2820,10 +2829,13 @@ def _gifted(d, seat, role, phase):
 
 
 def _boffin_at(d, phase):
-    """The living Boffin then, or None."""
+    """The living Boffin then — or an Alchemist with its ability (group 4,
+    K) — or None."""
     alive = d.alive_at(phase)
     return next((p for p in range(d.n)
-                 if p in alive and d.role_at(p, phase) == "Boffin"), None)
+                 if p in alive and (d.role_at(p, phase) == "Boffin"
+                                    or _alchemy(d, p, "Boffin", phase))),
+                None)
 
 
 def _gift(d, seat, phase):
@@ -3159,10 +3171,55 @@ def _plague_check(d, rng, heard):
                 _plague_stage_2_gained(d, key, phase, rng, heard)
 
 
-# The jinxed ones (claude/alchemist-gruppen.md, group 4): not handed out
-# yet.
-ALCHEMY_NEVER = ("Spy", "Widow", "Wraith", "Marionette", "Mastermind",
-                 "OrganGrinder", "Boffin", "Summoner")
+# The Summoner's comes later, a stage of its own (group 4, J, 05.11.2026).
+ALCHEMY_NEVER = ("Summoner",)
+# Their jinxes (group 4, claude/alchemist-gruppe-4-lesarten.md): the real
+# one is in play, or none is — and beside a real Boffin no Boffin's, as
+# the solver has it.
+ALCHEMY_REAL_IN_PLAY = ("Spy", "Widow", "Wraith", "Marionette",
+                        "OrganGrinder")
+ALCHEMY_NONE_IN_PLAY = ("Mastermind", "Boffin")
+ALCHEMY_GUESSES = ("Spy", "Widow", "Wraith")
+# What it does not wake for: none of these it has, and the Boffin's gift
+# it does not learn.
+ALCHEMY_ASLEEP = ("Spy", "Widow", "Wraith", "Marionette", "Mastermind",
+                  "Boffin", "Summoner")
+
+
+def _alchemy_pool(script, held, dealt=True):
+    """The Minion abilities an Alchemist may be given, beside these
+    characters in play. A Philosopher's gets no Boffin's (group 4)."""
+    return [k for k in script.minions if k not in ALCHEMY_NEVER
+            and (k not in ALCHEMY_REAL_IN_PLAY or k in held)
+            and (k not in ALCHEMY_NONE_IN_PLAY or k not in held)
+            and (dealt or k != "Boffin")]
+
+
+def _alchemist_guesses(d, day, hanged, rng, heard):
+    """After an execution, a living Alchemist with the Spy's, the Widow's
+    or the Wraith's ability may publicly guess a living player as that one
+    (group 4, L, 05.11.2026) — now and then, and right more often than
+    chance. Right and working, the Demon must choose them tonight."""
+    phase = f"D{day}"
+    living = [p for p in d.alive_at(phase)
+              if p != hanged and d.deaths.get(p) is None]
+    for alch in sorted(getattr(d, "alchemy", {})):
+        key = d.alchemy[alch]
+        if key not in ALCHEMY_GUESSES or alch not in living \
+                or not _alchemy(d, alch, key, phase):
+            continue
+        if rng.random() >= 0.5:
+            continue
+        others = [p for p in living if p != alch]
+        if not others:
+            continue
+        real = [p for p in others if d.role_at(p, phase) == key]
+        target = rng.choice(real) if real and rng.random() < 0.4 \
+            else rng.choice(others)
+        heard.append(AlchemistGuess(day, alch, target=target))
+        if target in real and d.working(alch, day, by_day=True) \
+                and day + 1 not in d.alch_forced:
+            d.alch_forced[day + 1] = target
 
 
 def _alchemy(d, seat, key, phase):
@@ -4658,6 +4715,17 @@ def _hold_a_day(d, day, rng):
                         if d.role_at(p, phase) == "OrganGrinder"), None)
         blind = (grinder is not None and day not in d.grinder_drunk
                  and d.working(grinder, day, by_day=True))
+        if blind:
+            d.blind_by[day] = grinder
+        # An Alchemist with its ability (group 4): "if both are sober, both
+        # are drunk" — so exactly one of them closes the eyes.
+        alch = next((p for p in living
+                     if _alchemy(d, p, "OrganGrinder", phase)), None)
+        if alch is not None:
+            mine = d.working(alch, day, by_day=True)
+            if mine and not blind:
+                d.blind_by[day] = alch
+            blind = blind != mine
     # A Fearmonger may go for its pick: nominated by the Fearmonger itself,
     # and if the town executes them, their team loses.
     fear = fear_pick = None
@@ -6209,6 +6277,12 @@ def _demon_kills(d, night, rng):
     # second time — and its Grandmother died of grief for a grandchild
     # the Demon never killed (03.10.2026, the night-walk again).
     others = [p for p in living if p != demon and d.deaths.get(p) is None]
+    # An Alchemist guessed right by day (group 4, L): the Demon must choose
+    # that player tonight — an ordinary kill only, as the solver has it.
+    forced = getattr(d, "alch_forced", {}).get(night)
+    if forced is not None and forced in others \
+            and TEAM.get(kind) == "demon" and kind not in ALCHEMY_OWN_WAY:
+        others = [forced]
 
     # The Monk guards, whoever is swinging — or a Philosopher that took
     # it, while the Monk it drunk does not (13.10.2026).
@@ -6465,6 +6539,11 @@ def _demon_kills(d, night, rng):
     return [got] if got is not None else []
 
 
+# The Demons that kill their own way: a guess forces none of them.
+ALCHEMY_OWN_WAY = ("Zombuul", "Pukka", "Shabaloth", "Po", "Leviathan",
+                   "Yaggababble", "AlHadikhia", "LilMonsta")
+
+
 def _demon_kill(d, night, rng):
     """One victim, for the callers that still expect a single seat."""
     demon = d.demon_at(f"N{night}")
@@ -6504,7 +6583,8 @@ def _woke_for_own_ability(d, p, night, shown=False):
     # An Alchemist wakes when its Minion would, the first night too
     # (04.11.2026).
     key = getattr(d, "alchemy", {}).get(p)
-    if key is not None and _alchemy(d, p, key, f"N{night}") \
+    if key is not None and key not in ALCHEMY_ASLEEP \
+            and _alchemy(d, p, key, f"N{night}") \
             and _woke_itself(d, p, night, shown, as_role=key):
         return True
     if night < 2:
@@ -8503,7 +8583,9 @@ def _for_role(d, seat, role, night, rng):
             _alchemist_undone(d, night)
             # And it has a Minion ability of its own, maybe another than
             # the one the Alchemist it drunk was shown (Patrick, 04.11.2026).
-            pool = [k for k in d.script.minions if k not in ALCHEMY_NEVER]
+            pool = _alchemy_pool(d.script,
+                                 {d.role_at(p, f"N{night}")
+                                  for p in range(d.n)}, dealt=False)
             if pool:
                 d.alchemy[seat] = rng.choice(pool)
                 d.__dict__.setdefault("alchemy_since", {})[seat] = night

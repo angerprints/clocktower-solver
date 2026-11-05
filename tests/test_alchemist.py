@@ -382,13 +382,114 @@ class APoisonedReading(SolverTest):
             row, I.AlchemistHas(1, 4, role="Poisoner")])[0])
 
 
+# Group 4 (05.11.2026, claude/alchemist-gruppe-4-lesarten.md): the jinxes.
+IDS4 = IDS + ["widow", "wraith", "marionette", "mastermind", "organgrinder",
+              "boffin", "soldier"]
+SC4 = scripts.from_ids("Alchemist 4", IDS4)
+# The Organ Grinder where the Spy sits.
+OG = R[:5] + ["OrganGrinder", "Imp"]
+
+
+def state4(rows=(), claims=C, days=(1, 2), **kw):
+    return GameState(n_players=len(claims), script=SC4,
+                     claims=dict(enumerate(claims)), infos=list(rows),
+                     days_done=set(days), **kw)
+
+
+class TheJinxes(SolverTest):
+    """Group 4: J the Summoner later, K the Boffin as in the wiki, L the
+    Demon attacks the one guessed."""
+
+    def allowed(self, roles=R):
+        return {k for k in ("Spy", "Widow", "Wraith", "Marionette",
+                            "Mastermind", "OrganGrinder", "Boffin",
+                            "Summoner", "Poisoner")
+                if S._alchemy_jinx_allows(world(roles), k, "N1")}
+
+    def test_beside_the_real_one_or_none(self):
+        # The Spy is dealt: its own, none of the others that need theirs;
+        # no Mastermind or Boffin dealt, so theirs; never the Summoner's.
+        self.assertEqual(self.allowed(), {"Spy", "Mastermind", "Boffin",
+                                          "Poisoner"})
+        self.assertEqual(self.allowed(R[:5] + ["Mastermind", "Imp"]),
+                         {"Boffin", "Poisoner"})
+        self.assertEqual(self.allowed(OG), {"OrganGrinder", "Mastermind",
+                                            "Boffin", "Poisoner"})
+
+    def gifts(self, roles=R, rows=(), **kw):
+        cost, changes = S.best_story(world(roles), state4(rows, **kw))
+        return cost, {c.gift for c in changes
+                      if isinstance(c, AlchemistGift)}
+
+    SPY = I.AlchemistHas(1, 4, role="Spy")
+
+    def test_a_right_guess_makes_the_demon_choose_them(self):
+        rows = [self.SPY, I.AlchemistGuess(1, 4, target=5)]
+        hanged = dict(executions={1: 0}, deaths={0: ("E1",)})
+        # The Spy guessed, and the night was quiet: nothing kept it alive.
+        self.assertIsNone(self.gifts(rows=rows, quiet_nights={2},
+                                     **hanged)[0])
+        # It died that night: as it must.
+        cost, gifts = self.gifts(rows=rows, executions={1: 0},
+                                 deaths={0: ("E1",), 5: ("N2",)})
+        self.assertIsNotNone(cost)
+        self.assertEqual(gifts, {"Spy"})
+        # Somebody else died: the Demon did not choose the Spy.
+        self.assertIsNone(self.gifts(rows=rows, executions={1: 0},
+                                     deaths={0: ("E1",), 1: ("N2",)})[0])
+        # A wrong guess changes nothing: a Demon aims at a corpse.
+        self.assertIsNotNone(self.gifts(rows=[
+            self.SPY, I.AlchemistGuess(1, 4, target=1)], quiet_nights={2},
+            **hanged)[0])
+        # Without the row it holds something else.
+        cost, gifts = self.gifts(rows=rows[1:], quiet_nights={2}, **hanged)
+        self.assertIsNotNone(cost)
+        self.assertNotIn("Spy", gifts)
+
+    def test_no_guess_without_an_execution(self):
+        rows = [self.SPY, I.AlchemistGuess(1, 4, target=5)]
+        self.assertIsNotNone(self.gifts(rows=rows, deaths={0: ("N2",)})[0])
+
+    def test_its_organ_grinder_closes_the_eyes(self):
+        rows = [I.BlindVote(2, 4)]
+        hanged = dict(executions={1: 5}, deaths={5: ("E1",)})
+        cost, gifts = self.gifts(OG, rows, **hanged)
+        self.assertIsNotNone(cost)
+        self.assertEqual(gifts, {"OrganGrinder"})
+        self.assertIsNone(self.gifts(OG, rows + [I.AlchemistHas(
+            1, 4, role="Witch")], **hanged)[0])
+
+    def test_its_boffin_gives_the_demon_one(self):
+        view = Timeline(world(), (alchemist_gift_change(4, "Boffin"),))
+        st = state4()
+        self.assertEqual(I.boffin_seat(view, st, "N2"), 4)
+        stories = S.a_boffin_gives_the_demon(view, st)
+        self.assertTrue(any(isinstance(c, worlds.BoffinGift)
+                            and not isinstance(c, AlchemistGift)
+                            and c.seat == 6
+                            for changes, _ in stories for c in changes))
+        plain = Timeline(world(), (alchemist_gift_change(4, "Poisoner"),))
+        self.assertEqual(S.a_boffin_gives_the_demon(plain, st),
+                         [((), 1.0)])
+
+    def test_it_does_not_wake_for_what_it_has_not(self):
+        for gift, woke in (("Spy", False), ("Widow", False),
+                           ("Boffin", False), ("OrganGrinder", True)):
+            view = Timeline(world(), (alchemist_gift_change(4, gift),))
+            self.assertEqual(waking.woke(view, state4(), 4, 2), woke, gift)
+        # And has none of their abilities.
+        view = Timeline(world(), (alchemist_gift_change(4, "Spy"),))
+        self.assertFalse(I.has_plague_ability(view, state4(), 4, "Spy",
+                                              "N2"))
+
+
 def _payloads():
-    def pay(events, rows=(), claims=C, days=(1, 2)):
+    def pay(events, rows=(), claims=C, days=(1, 2), ids=IDS):
         players = [{"claim": c, "events": events.get(i, [])}
                    for i, c in enumerate(claims)]
         return {"n_players": len(claims), "players": players,
                 "infos": list(rows),
-                "script": {"name": "Alchemist", "characters": IDS},
+                "script": {"name": "Alchemist", "characters": ids},
                 "days_done": list(days)}
 
     has = {"type": "AlchemistHas", "night": 1, "player": 4}
@@ -428,6 +529,20 @@ def _payloads():
                            "player": 3, "role": "Alchemist"},
                           dict(has, role="Poisoner")],
             claims=C[:3] + ["Philosopher"] + C[4:]),
+        # Group 4: the jinxes, a guess, the Spy guessed dying, an Organ
+        # Grinder's closed eyes.
+        pay({}, ids=IDS4),
+        pay({0: ["X1"]}, [{"type": "AlchemistGuess", "night": 1,
+                           "player": 4, "target": 5}], ids=IDS4),
+        pay({0: ["X1"], 5: ["N2"]},
+            [{"type": "AlchemistGuess", "night": 1, "player": 4,
+              "target": 5}, dict(has, role="Spy")], ids=IDS4),
+        pay({5: ["X1"]}, [{"type": "BlindVote", "night": 2, "player": 4}],
+            ids=IDS4),
+        dict(pay({0: ["X1"]}, [{"type": "AlchemistGuess", "night": 1,
+                                "player": 4, "target": 5},
+                               dict(has, role="Spy")], ids=IDS4),
+             quiet_nights=[2]),
     ]
 
 
