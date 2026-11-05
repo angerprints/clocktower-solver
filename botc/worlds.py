@@ -9,6 +9,7 @@ Worlds are produced by a generator, so the caller can score them one at a
 time and never hold millions of them in memory at once.
 """
 
+import itertools
 import random
 from dataclasses import dataclass
 from typing import NamedTuple
@@ -955,33 +956,36 @@ def _bags(n_players, script=DEFAULT, fabled=()):
     """
     base = dict(zip(("townsfolk", "outsider", "minion", "demon"),
                     SETUP[n_players]))
-    bags = [(frozenset(), base)]
-    for role, shifts in script.setup_modifiers.items():
-        grown = []
-        for present, counts in bags:
-            grown.append((present, counts))       # this one stayed out
-            # A shift that would take a team below nought cannot be made.
-            # Where there is another to choose — a Godfather's "-1 or +1"
-            # at a table with no Outsiders — that one is taken. Where
-            # there is not, the character is in play and changes nothing:
-            # a Vigormortis removes an Outsider "if there is one".
-            #
-            # What another character in the bag brings is not there to be
-            # taken away: a Huntsman's Damsel is no Outsider a Vigormortis
-            # can remove (gate of the Boffin, stage 2, 27.10.2026 — the
-            # deal had a Huntsman, his Damsel and a Vigormortis, and no
-            # bag held it).
-            kept = _brought(present)
-            possible = [shift for shift in shifts
-                        if all(counts[team] + delta >= (kept.get(team, 0)
-                                                        if delta < 0 else 0)
-                               for team, delta in shift.items())] or [{}]
-            for shift in possible:
-                moved = dict(counts)
+    bags = []
+    movers = list(script.setup_modifiers.items())
+    # Which of them are in the bag, and then what each of them did. The
+    # shifts add up whatever order they are reckoned in, so a shift is
+    # judged by where the counts end up, not by where they stand half way
+    # (Stelle 116, 05.11.2026: with the Xaan reckoned before the Baron,
+    # "Baron +2, Xaan -2" was lost at a table with one Outsider, because
+    # the Xaan's -2 would have gone below nought first).
+    #
+    # A shift that would take a team below nought cannot be made. Where
+    # there is another to choose — a Godfather's "-1 or +1" at a table with
+    # no Outsiders — that one is taken. Where there is not, the character
+    # is in play and changes nothing: a Vigormortis removes an Outsider
+    # "if there is one".
+    #
+    # What another character in the bag brings is not there to be taken
+    # away: a Huntsman's Damsel is no Outsider a Vigormortis can remove
+    # (gate of the Boffin, stage 2, 27.10.2026 — the deal had a Huntsman,
+    # his Damsel and a Vigormortis, and no bag held it).
+    for mask in itertools.product((False, True), repeat=len(movers)):
+        chosen = [(role, shifts) for (role, shifts), inside
+                  in zip(movers, mask) if inside]
+        present = frozenset(role for role, _shifts in chosen)
+        kept = _brought(present)
+        for picks in _shift_picks(chosen, base, kept):
+            moved = dict(base)
+            for shift in picks:
                 for team, delta in shift.items():
                     moved[team] += delta
-                grown.append((present | {role}, moved))
-        bags = grown
+            bags.append((present, moved))
 
     # A Fabled is on the table, not in the bag. It is in play because the
     # Storyteller said so and showed everybody, so there is no "it stayed
@@ -1038,6 +1042,45 @@ def _bags(n_players, script=DEFAULT, fabled=()):
             continue
         seen.add((present, split))
         out.append((present, counts))
+    return out
+
+
+def _shift_picks(chosen, base, kept):
+    """Every way the characters in a bag may each have shifted it: one of
+    its shifts each, judged by the counts at the end; or nothing, for one
+    none of whose shifts can be made beside the others' (Stelle 116)."""
+    def fits(picks):
+        final = dict(base)
+        for shift in picks:
+            for team, delta in shift.items():
+                final[team] += delta
+        low = set()
+        for shift in picks:
+            low.update(team for team, delta in shift.items() if delta < 0)
+        return all(final[team] >= kept.get(team, 0) for team in low) \
+            and all(final[team] >= 0 for team in final)
+
+    options = [list(shifts) + ([None] if {} not in shifts else [])
+               for _role, shifts in chosen]
+    out = []
+    seen = set()
+    for picks in itertools.product(*options):
+        real = [shift or {} for shift in picks]
+        if any(shift is None for shift in picks):
+            # Changing nothing is only for one that could not shift at all.
+            if not fits(real):
+                continue
+            if any(fits(real[:i] + [other] + real[i + 1:])
+                   for i, shift in enumerate(picks) if shift is None
+                   for other in options[i] if other is not None):
+                continue
+        elif not fits(real):
+            continue
+        key = tuple(sorted(tuple(sorted(s.items())) for s in real))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(real)
     return out
 
 

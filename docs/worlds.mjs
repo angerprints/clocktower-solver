@@ -698,31 +698,21 @@ export function candidates(claim, allowGoodLies = false, certainty = "",
 export function bags(nPlayers, script = DEFAULT, fabled = []) {
   const base = {};
   TEAMS.forEach((t, i) => (base[t] = SETUP[nPlayers][i]));
-  let out = [[new Set(), base]];
-
-  for (const [role, shifts] of Object.entries(script.setupModifiers)) {
-    const grown = [];
-    for (const [present, counts] of out) {
-      grown.push([present, counts]);              // this one stayed out
-      // A shift that would take a team below nought cannot be made. Where
-      // there is another to choose, that one is taken; where there is
-      // not, the character is in play and changes nothing — a Vigormortis
-      // removes an Outsider "if there is one".
-      // What another character in the bag brings is not there to be
-      // taken away: a Huntsman's Damsel is no Outsider a Vigormortis can
-      // remove (stage 2 of the Boffin). See worlds.py.
-      const kept = brought(present);
-      let possible = shifts.filter(shift =>
-        Object.entries(shift).every(([team, delta]) =>
-          counts[team] + delta >= (delta < 0 ? kept[team] || 0 : 0)));
-      if (!possible.length) possible = [{}];
-      for (const shift of possible) {
-        const moved = {...counts};
+  let out = [];
+  // Which of them are in the bag, and what each of them did — judged by
+  // where the counts end up, whatever order the shifts are reckoned in
+  // (Stelle 116, 05.11.2026). See worlds.py `_bags`.
+  const movers = Object.entries(script.setupModifiers);
+  for (const mask of product(movers.map(() => [false, true]))) {
+    const chosen = movers.filter((_m, i) => mask[i]);
+    const present = new Set(chosen.map(([role]) => role));
+    const kept = brought(present);
+    for (const picks of shiftPicks(chosen, base, kept)) {
+      const moved = {...base};
+      for (const shift of picks)
         for (const [team, delta] of Object.entries(shift)) moved[team] += delta;
-        grown.push([new Set([...present, role]), moved]);
-      }
+      out.push([present, moved]);
     }
-    out = grown;
   }
 
   // A Fabled is on the table, not in the bag. It is in play because the
@@ -953,6 +943,57 @@ function prune(options, count, target, look, order, k, used) {
 // extra bags, marked with the kind the Marionette's player held. See
 // worlds.py.
 /** How many of each team the characters in this bag bring along. */
+/** Every combination, the first list varying slowest (itertools.product). */
+function product(lists) {
+  let out = [[]];
+  for (const list of lists) {
+    const next = [];
+    for (const head of out) for (const x of list) next.push([...head, x]);
+    out = next;
+  }
+  return out;
+}
+
+/** Every way the characters in a bag may each have shifted it. See
+ * worlds.py `_shift_picks` (Stelle 116). */
+function shiftPicks(chosen, base, kept) {
+  const fits = picks => {
+    const final = {...base};
+    const low = new Set();
+    for (const shift of picks)
+      for (const [team, delta] of Object.entries(shift)) {
+        final[team] += delta;
+        if (delta < 0) low.add(team);
+      }
+    return [...low].every(team => final[team] >= (kept[team] || 0))
+      && Object.values(final).every(c => c >= 0);
+  };
+  const options = chosen.map(([_role, shifts]) =>
+    shifts.some(s => !Object.keys(s).length) ? [...shifts] : [...shifts, null]);
+  const out = [];
+  const seen = new Set();
+  for (const picks of product(options)) {
+    const real = picks.map(s => s || {});
+    if (picks.some(s => s === null)) {
+      if (!fits(real)) continue;
+      let other = false;
+      picks.forEach((s, i) => {
+        if (s !== null) return;
+        for (const o of options[i])
+          if (o !== null && fits([...real.slice(0, i), o, ...real.slice(i + 1)]))
+            other = true;
+      });
+      if (other) continue;
+    } else if (!fits(real)) continue;
+    const key = real.map(s => Object.entries(s).sort().map(e => e.join(":"))
+      .join(",")).sort().join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(real);
+  }
+  return out;
+}
+
 function brought(present) {
   const out = {};
   for (const key of present)
