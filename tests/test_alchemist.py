@@ -462,10 +462,10 @@ class TheJinxes(SolverTest):
     def test_its_boffin_gives_the_demon_one(self):
         view = Timeline(world(), (alchemist_gift_change(4, "Boffin"),))
         st = state4()
-        self.assertEqual(I.boffin_seat(view, st, "N2"), 4)
+        self.assertEqual(I.alchemist_boffin_seat(view, st, "N2"), 4)
+        self.assertIsNone(I.boffin_seat(view, st, "N2"))
         stories = S.a_boffin_gives_the_demon(view, st)
-        self.assertTrue(any(isinstance(c, worlds.BoffinGift)
-                            and not isinstance(c, AlchemistGift)
+        self.assertTrue(any(isinstance(c, worlds.AlchemistBoffinGift)
                             and c.seat == 6
                             for changes, _ in stories for c in changes))
         plain = Timeline(world(), (alchemist_gift_change(4, "Poisoner"),))
@@ -481,6 +481,99 @@ class TheJinxes(SolverTest):
         view = Timeline(world(), (alchemist_gift_change(4, "Spy"),))
         self.assertFalse(I.has_plague_ability(view, state4(), 4, "Spy",
                                               "N2"))
+
+
+IDS4B = IDS4 + ["shabaloth", "po", "pukka", "zombuul", "alhadikhia"]
+SC4B = scripts.from_ids("Alchemist 4b", IDS4B)
+
+
+class EveryDemonChoosesTheOneGuessed(SolverTest):
+    """Group 4b, Patrick's 2: every Demon that chooses players has the one
+    guessed as one of its choices."""
+
+    ROWS = [I.AlchemistHas(1, 4, role="Spy"), I.AlchemistGuess(1, 4, target=5)]
+
+    def cost(self, demon, deaths, days=(1, 2), rows=(), **kw):
+        roles = R[:6] + [demon]
+        st = GameState(n_players=7, script=SC4B, claims=dict(enumerate(C)),
+                       infos=self.ROWS + list(rows), days_done=set(days),
+                       executions={1: 0}, deaths={0: ("E1",), **deaths},
+                       **kw)
+        return S.best_story(world(roles), st)[0]
+
+    def test_a_shabaloth_takes_it_as_one_of_two(self):
+        self.assertIsNone(self.cost("Shabaloth", {1: ("N2",)}))
+        self.assertIsNotNone(self.cost("Shabaloth", {1: ("N2",),
+                                                     5: ("N2",)}))
+        self.assertIsNotNone(self.cost("Shabaloth", {5: ("N2",)}))
+
+    def test_a_po_may_not_choose_nobody(self):
+        self.assertIsNone(self.cost("Po", {}, quiet_nights={2}))
+        self.assertIsNotNone(self.cost("Po", {5: ("N2",)}))
+
+    def test_a_zombuul_takes_it(self):
+        # Nobody died on day 2, so it kills on night 3 — the guess of day 2.
+        rows = [I.AlchemistGuess(2, 4, target=5)]
+        st = dict(days=(1, 2, 3))
+        self.assertIsNotNone(self.cost("Zombuul", {5: ("N3",)}, rows=rows,
+                                       **st))
+
+    def test_a_pukka_poisons_it_and_it_dies_the_night_after(self):
+        # Its own poison could reach the Alchemist, so with a Pukka the
+        # guess binds nothing (decision 1) ...
+        days = (1, 2, 3)
+        self.assertIsNotNone(self.cost("Pukka", {1: ("N3",)}, days=days))
+        # ... but where it binds, the one poisoned on night 2 dies on 3:
+        # anybody else only if the Pukka itself was off that night.
+        from unittest import mock
+        guessed = (lambda w, s, night: 5 if night == 2 else None)
+        with mock.patch.object(S, "alchemist_guessed", guessed):
+            other = self.cost("Pukka", {1: ("N3",)}, days=days)
+            right = self.cost("Pukka", {5: ("N3",)}, days=days)
+        self.assertEqual(right, 1.0)
+        self.assertLess(other, 0.5)
+
+    def test_an_al_hadikhia_names_it_among_its_three(self):
+        named = I.AlHadikhiaChose(2, 1, a=1, b=2, c=3)
+        self.assertIsNone(self.cost("AlHadikhia", {1: ("N2",)},
+                                    rows=[named]))
+        named = I.AlHadikhiaChose(2, 1, a=1, b=5, c=3)
+        self.assertIsNotNone(self.cost("AlHadikhia", {1: ("N2",)},
+                                       rows=[named]))
+
+
+class TwoBoffinGifts(SolverTest):
+    """Group 4b, Patrick's 3 and 4: an Alchemist's Boffin gift beside a
+    real Boffin's, and a Philosopher's when it chooses."""
+
+    def test_beside_a_real_boffin_the_demon_has_two(self):
+        roles = R[:5] + ["Boffin", "Imp"]
+        self.assertIn("Boffin", {k for k in ("Boffin",)
+                                 if S._alchemy_jinx_allows(world(roles), k,
+                                                           "N1")})
+        view = Timeline(world(roles), (alchemist_gift_change(4, "Boffin"),))
+        stories = S.a_boffin_gives_the_demon(view, state4())
+        both = [changes for changes, _ in stories
+                if any(isinstance(c, worlds.AlchemistBoffinGift)
+                       for c in changes)
+                and any(type(c) is worlds.BoffinGift for c in changes)]
+        self.assertTrue(both)
+        # Each rests on its own giver.
+        mark = next(c for changes in both for c in changes
+                    if isinstance(c, worlds.AlchemistBoffinGift)
+                    and c.gift not in ("*", ""))
+        told = Timeline(world(roles), (alchemist_gift_change(4, "Boffin"),
+                                       mark))
+        self.assertEqual(I.sober_seat(told, state4(), 6, mark.gift, "N2"), 4)
+
+    def test_a_philosopher_that_took_it_gives_one_when_it_chooses(self):
+        roles = R[:3] + ["Philosopher", "Chef", "Spy", "Imp"]
+        took = I.PhilosopherChoice(1, 3, role="Alchemist")
+        st = state4([took], claims=C[:3] + ["Philosopher"] + C[4:])
+        view = Timeline(world(roles), (alchemist_gift_change(3, "Boffin",
+                                                             "N1"),))
+        moments = S._boffin_moments(view, st, False)
+        self.assertIn(6, [m[2] for m in moments if m[4] == "alchemist"])
 
 
 def _payloads():
@@ -543,6 +636,12 @@ def _payloads():
                                 "player": 4, "target": 5},
                                dict(has, role="Spy")], ids=IDS4),
              quiet_nights=[2]),
+        # Group 4b: every Demon chooses the one guessed; two gifts.
+        pay({0: ["X1"], 1: ["N2"]},
+            [{"type": "AlchemistGuess", "night": 1, "player": 4,
+              "target": 5}, dict(has, role="Spy")], ids=IDS4B),
+        pay({}, [dict(has, role="Boffin")],
+            claims=C[:5] + ["Boffin", "Chef"], ids=IDS4),
     ]
 
 

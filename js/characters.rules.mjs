@@ -849,7 +849,10 @@ causeRule(function aZombuulKillsOnAQuietDay(world, state, night) {
   const seat = holdingNow(world, state, "Zombuul", phase);
   if (seat === null || !zombuulStillGoing(world, state, seat, phase)) return [];
   if (anyDiedAt(state, `D${night - 1}`)) return [];   // somebody went by day
-  return [new Cause("Demon", DEMON, allSeats(state),
+  // An Alchemist guessed right (group 4b). See solver.py.
+  const forced = alchemistGuessed(world, state, night);
+  return [new Cause("Demon", DEMON,
+                    forced === null ? allSeats(state) : new Set([forced]),
                     {demon: seat, capacity: 1, mustFire: true,
                      actor: couldBeStopped(world, state, seat, night) ? seat : null,
                      actorKillsWorking: false})];
@@ -887,7 +890,13 @@ causeRule(function aPukkaKillsWhatItPoisoned(world, state, night) {
     if (acting(world, state, "Pukka", chose) !== seat) break;
     excuses.push([state.aliveSet(`N${chose}`), demands]);
   }
-  const out = [new Cause("Demon", DEMON, state.aliveSet(`N${night - 1}`),
+  // An Alchemist guessed right two days ago (group 4b): last night's
+  // choice was that player. See solver.py.
+  let chosen = state.aliveSet(`N${night - 1}`);
+  const forced = alchemistGuessed(world, state, night - 1);
+  if (forced !== null)
+    chosen = new Set(chosen.has(forced) ? [forced] : []);
+  const out = [new Cause("Demon", DEMON, chosen,
                          {demon: seat, capacity: 1, mustFire: true,
                           victimImpairedAt: night - 1,
                           actor: couldBeStopped(world, state, seat, night)
@@ -929,6 +938,11 @@ causeRule(function anAlHadikhiaChooses(world, state, night) {
   if (seat === null || seat === undefined
       || world.roleAt(seat, phase) !== "AlHadikhia"
       || !state.aliveSet(phase).has(seat)) return [];
+  // An Alchemist guessed right (group 4b): among the three, or no world.
+  const forced = alchemistGuessed(world, state, night);
+  if (forced !== null && !chosen.includes(forced))
+    return [new Cause("AlHadikhia", DEMON, [],
+                      {demon: seat, capacity: 1, mustFire: true})];
   const alive = state.aliveSet(phase);
   // A corpse that chose death leaves it nobody to kill — and so does one
   // that died earlier tonight by another hand, a Gambler's wrong guess
@@ -964,9 +978,20 @@ causeRule(function aShabalothKillsTwice(world, state, night) {
   if (!inBag(state, "Shabaloth") || night < 2) return [];
   const seat = acting(world, state, "Shabaloth", night);
   if (seat === null) return [];
+  const actor = couldBeStopped(world, state, seat, night) ? seat : null;
+  // An Alchemist guessed right (group 4b): one of the two. See solver.py.
+  const forced = alchemistGuessed(world, state, night);
+  if (forced !== null) {
+    const rest = [...allSeats(state)].filter(p => p !== forced);
+    return [new Cause("Demon", DEMON, [forced],
+                      {demon: seat, capacity: 1, mustFire: true, actor,
+                       actorKillsWorking: false}),
+            new Cause("Demon, the second", DEMON, rest,
+                      {demon: seat, capacity: 1, actorKillsWorking: false})];
+  }
   return [new Cause("Demon", DEMON, allSeats(state),
                     {demon: seat, capacity: 2, mustFire: true,
-                     actor: couldBeStopped(world, state, seat, night) ? seat : null,
+                     actor,
                      actorKillsWorking: false})];
 });
 
@@ -993,6 +1018,20 @@ causeRule(function aPoKillsNoneOrThree(world, state, night) {
   //
   // Except on the second night: three is for the night after it chose
   // nobody, and the first night is not a choice.
+  // An Alchemist guessed right (group 4b): it chooses, that player among
+  // them. See solver.py.
+  const forced = alchemistGuessed(world, state, night);
+  if (forced !== null) {
+    const out = [new Cause("Demon", DEMON, [forced],
+                           {demon: seat, capacity: 1, mustFire: true,
+                            actor: couldBeStopped(world, state, seat, night)
+                              ? seat : null, actorKillsWorking: false})];
+    if (night > 2)
+      out.push(new Cause("Demon, the others", DEMON,
+                         [...allSeats(state)].filter(p => p !== forced),
+                         {demon: seat, capacity: 2}));
+    return out;
+  }
   return [new Cause("Demon", DEMON, allSeats(state),
                     {demon: seat, capacity: night === 2 ? 1 : 3,
                      mustFire: false})];

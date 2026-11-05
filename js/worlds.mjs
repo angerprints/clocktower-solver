@@ -86,6 +86,8 @@ export class World {
   /** No story, no Boffin ability. See worlds.py. */
   giftAt(seat, phase) { return null; }
   giftedSeats() { return []; }
+  alchGiftAt(seat, phase) { return null; }
+  alchGiftedSeats() { return []; }
   /** No story, nothing the Plague Doctor gave. See worlds.py. */
   plagueAt(seat, phase) { return []; }
   plaguedSeats() { return []; }
@@ -204,6 +206,13 @@ export const boffinGift = (phase, seat, gift, slot = null) =>
  * Storyteller (`seat` null), or to a Minion for the five jinxed ones (E
  * Weg 1). A kind of Boffin mark, so every place that passes those by
  * passes this one by too; they add up (G Weg 1). `PlagueGift` in Python. */
+/** A good character's ability the Demon on this seat has through an
+ * Alchemist's Boffin (group 4b): a mark of its own beside a real
+ * Boffin's. `AlchemistBoffinGift` in Python. */
+export const alchemistBoffinGift = (phase, seat, gift, slot = null) =>
+  ({phase, seat, role: null, side: null, slot, gift, boffin: true,
+    alchBoffin: true});
+
 export const plagueGift = (phase, seat, gift, slot = null) =>
   ({phase, seat, role: null, side: null, slot, gift, boffin: true,
     plague: true});
@@ -312,9 +321,15 @@ export class Timeline {
     if (this._index) return this._index;
     const roles = new Map(), sides = new Map(), demons = [], held = new Set();
     const handed = new Map(), gifts = new Map(), plagues = new Map();
+    const alchGifts = new Map();
     let summonAt = null;
     for (const c of this.changes) {
       const at = changeAt(c);
+      if (c.alchBoffin) {
+        if (!alchGifts.has(c.seat)) alchGifts.set(c.seat, []);
+        alchGifts.get(c.seat).push([at, c.gift]);
+        continue;
+      }
       if (c.plague) {
         const key = c.seat ?? null;
         if (!plagues.has(key)) plagues.set(key, []);
@@ -348,7 +363,8 @@ export class Timeline {
           demons.push([at, c.seat, null, !!(c.summoned || c.pitHagDemon)]);
       }
     }
-    this._index = {roles, sides, demons, held, summonAt, gifts, plagues};
+    this._index = {roles, sides, demons, held, summonAt, gifts, plagues,
+                   alchGifts};
     this._index.steps = this._demonSteps(demons, handed);
     return this._index;
   }
@@ -522,8 +538,24 @@ export class Timeline {
     return got;
   }
 
+  /** The ability an Alchemist's Boffin marked on this seat at this moment,
+   * or null (group 4b). */
+  alchGiftAt(seat, phase) {
+    const mine = this._indexed().alchGifts.get(seat);
+    if (!mine) return null;
+    const here = moment(phase);
+    let got = null;
+    for (const [at, gift] of mine) if (at <= here) got = gift;
+    return got;
+  }
+
   /** The seats with any Boffin mark. */
   giftedSeats() { return [...this._indexed().gifts.keys()].sort((a, b) => a - b); }
+
+  /** The seats with an Alchemist's Boffin mark (group 4b). */
+  alchGiftedSeats() {
+    return [...this._indexed().alchGifts.keys()].sort((a, b) => a - b);
+  }
 
   /** The Minion abilities the Plague Doctor gave this seat — or the
    * Storyteller, seat null — by this moment. See worlds.py. */

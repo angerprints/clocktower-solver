@@ -41,6 +41,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    PlagueDoctorGave, PLAGUE_UNSEEN, STORYTELLER,
                    storyteller_has, has_plague_ability, plague_holders,
                    acts_as_alchemist, alchemy_holds,
+                   alchemist_boffin_seat, alchemist_boffin_gift,
                    BecameInfo, EvilTwinPair, BoomdandyExploded,
                    AlchemistHas, AlchemistGuess, ALCHEMY_GUESSES)
 from .roles import (ABSENT, ARBITRARY, GENUINE, GOOD, SETUP, TEAM,
@@ -55,6 +56,7 @@ from .worlds import _at as moment_of
 from .worlds import READ_AT, SETUP_SLOT, _row_slot, reading_at
 from .worlds import Engineered
 from .worlds import BOFFIN_UNSEEN, BoffinGift, boffin_gift_change, bracket_gifts
+from .worlds import AlchemistBoffinGift, alchemist_boffin_gift_change
 from .worlds import PlagueGift, plague_gift_change, PlagueMade, PlagueSummoned
 from .worlds import AlchemistGift, alchemist_gift_change
 from .worlds import ALCHEMY_SETUP, alchemy_brackets
@@ -1610,8 +1612,9 @@ def a_bounty_hunter_brings_an_evil_townsfolk(world, state):
     # A Demon the Boffin gave it at the setup: its bracket holds in that
     # story (E Weg 1, stage 2, 27.10.2026).
     demon = world.demon_at("N1")
-    if demon is not None and boffin_gift(world, state, demon,
-                                         "N1") == "BountyHunter":
+    if demon is not None and "BountyHunter" in (
+            boffin_gift(world, state, demon, "N1"),
+            alchemist_boffin_gift(world, state, demon, "N1")):
         return [((TurnedEvil("N0", p, None, "evil"),), 1.0) for p in town]
     stories = [((), 1.0)]
     for info in state.infos:
@@ -3094,14 +3097,20 @@ def _boffin_named(state, night, setup):
     return named
 
 
-def boffin_offers(view, state, phase, seat, slot, setup=False):
+def boffin_offers(view, state, phase, seat, slot, setup=False,
+                  alchemist=False, bracket=True):
     """Every ability the Boffin may have given this seat at that moment,
-    as ((mark,), cost) — "nothing the town sees" first."""
+    as ((mark,), cost) — "nothing the town sees" first. `alchemist`: an
+    Alchemist's Boffin gave it (group 4b) — no row names it, and none is
+    given that only a row tells (6, Patrick 05.11.2026). `bracket`: a deal
+    only a gift's bracket explains has this gift — not where two give."""
+    if alchemist:
+        return _alchemist_boffin_offers(view, state, phase, seat, slot)
     may = boffin_may_give(view, state, phase, setup)
     named = _boffin_named(state, int(phase[1:]), setup)
     # A deal only a gift's bracket explains has that gift (E Weg 1).
     forced = None
-    if setup:
+    if setup and bracket:
         base = view.world if isinstance(view, Timeline) else view
         forced = bracket_gifts(base.roles, state.script,
                                getattr(state, "fabled", ()) or ())
@@ -3138,6 +3147,27 @@ def boffin_offers(view, state, phase, seat, slot, setup=False):
                                             each))
         else:
             out.append(((boffin_gift_change(phase, seat, k, slot),), each))
+    return out
+
+
+def _alchemist_boffin_offers(view, state, phase, seat, slot):
+    """What an Alchemist's Boffin may have given (group 4b): as the
+    Boffin's, "nothing the town sees" first, with no row and never the
+    Barber's, the Hatter's or the Philosopher's."""
+    may = [k for k in boffin_may_give(view, state, phase, phase == "N1")
+           if k not in BOFFIN_ROW_ONLY and k != "Philosopher"]
+    seen = _sampled_gifts(view, phase, seat,
+                          [k for k in may if k in BOFFIN_SEEN])
+    said = [k for k in _readings_of(state, seat)
+            if k in may and k not in BOFFIN_SEEN]
+    unseen = len([k for k in may if k not in BOFFIN_SEEN])
+    out = []
+    if unseen:
+        out.append(((alchemist_boffin_gift_change(phase, seat, BOFFIN_UNSEEN,
+                                                  slot),), 1.0))
+    each = 1.0 / unseen if unseen else 1.0
+    out.extend(((alchemist_boffin_gift_change(phase, seat, k, slot),), each)
+               for k in seen + said)
     return out
 
 
@@ -3220,11 +3250,21 @@ def _boffin_moments(view, state, setup):
     base = view.world if isinstance(view, Timeline) else view
     out = []
     if setup:
-        if "Boffin" in base.roles or _alchemist_boffin(view, state):
-            start = base.demon_at("N1")
-            if start is not None:
-                out.append(("N1", SETUP_SLOT, start, None))
+        start = base.demon_at("N1")
+        if start is not None:
+            if "Boffin" in base.roles:
+                out.append(("N1", SETUP_SLOT, start, None, "boffin"))
+            # And an Alchemist's (group 4, K; 4b, Patrick's 3): its own.
+            if _alchemist_boffin(view, state):
+                out.append(("N1", SETUP_SLOT, start, None, "alchemist"))
         return out
+    # A Philosopher that took the Alchemist and has the Boffin's gives one
+    # when it chooses (group 4b, Patrick's 4).
+    for c in getattr(view, "changes", ()):
+        if isinstance(c, AlchemistGift) and c.gift == "Boffin" \
+                and view.roles[c.seat] != "Alchemist":
+            for d in view.demons_at(c.phase):
+                out.append((c.phase, c.slot, d, None, "alchemist"))
     # The Storyteller gaining the Boffin's ability (Pestdoktor Stufe 2, D
     # Weg 1): the Demons then get one, unless a living Boffin gave them
     # theirs already.
@@ -3233,7 +3273,7 @@ def _boffin_moments(view, state, setup):
                 and c.gift == "Boffin" \
                 and boffin_seat(view, state, c.phase) is None:
             for d in view.demons_at(c.phase):
-                out.append((c.phase, c.slot, d, None))
+                out.append((c.phase, c.slot, d, None, "boffin"))
     changes = sorted((c for c in getattr(view, "changes", ())
                       if not isinstance(c, BoffinGift)), key=moment_of)
     for i, c in enumerate(changes):
@@ -3250,11 +3290,14 @@ def _boffin_moments(view, state, setup):
                       if d != c.seat and d in state.alive_set(c.phase)]
             beside = others[0] if isinstance(c, Summoned) and others \
                 else None
-            out.append((c.phase, c.slot, c.seat, beside))
+            out.append((c.phase, c.slot, c.seat, beside, "boffin"))
+            # And from an Alchemist's Boffin then (group 4b).
+            if alchemist_boffin_seat(after, state, c.phase) is not None:
+                out.append((c.phase, c.slot, c.seat, beside, "alchemist"))
         elif c.role == "Boffin" and was != "Boffin" \
                 and not boffin_working(prior, state, c.phase):
             for d in after.demons_at(c.phase):
-                out.append((c.phase, c.slot, d, None))
+                out.append((c.phase, c.slot, d, None, "boffin"))
     return out
 
 
@@ -3286,14 +3329,24 @@ def _boffin_stories(world, state, setup):
     if not _boffin_on_board(state):
         return [((), 1.0)]
     moments = []
-    for phase, slot, seat, beside in _boffin_moments(world, state, setup):
-        if not boffin_working(world, state, phase) and phase != "N1":
+    found = _boffin_moments(world, state, setup)
+    # Two givers at the setup: a deal only a bracket explains may have it
+    # from either (group 4b) — so neither is held to it.
+    both = len({m[4] for m in found if m[0] == "N1"}) > 1
+    for phase, slot, seat, beside, giver in found:
+        alchemist = giver == "alchemist"
+        if alchemist:
+            if alchemist_boffin_seat(world, state, phase) is None:
+                continue                  # nobody to give it
+        elif not boffin_working(world, state, phase) and phase != "N1":
             continue                      # nobody to give it
-        offers = boffin_offers(world, state, phase, seat, slot, setup)
+        offers = boffin_offers(world, state, phase, seat, slot, setup,
+                               alchemist=alchemist, bracket=not both)
         if beside is not None:
             # The Storyteller decides (D Weg 2): the first keeps it, or the
             # second gets one and the first's ends.
-            end = boffin_gift_change(phase, beside, "", slot)
+            end = (alchemist_boffin_gift_change if alchemist
+                   else boffin_gift_change)(phase, beside, "", slot)
             offers = [((), 1.0)] + [(way + (end,), c) for way, c in offers]
         if not offers:
             return []                     # a row names what it cannot be
@@ -3806,11 +3859,11 @@ ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
 # Group 4 (05.11.2026, claude/alchemist-gruppe-4-lesarten.md), their
 # jinxes: the real one is in play — the Spy, the Widow, the Wraith, the
 # Marionette, the Organ Grinder — or none is, the Mastermind. Beside a
-# real Boffin none either: the Demon would have two gifts, which nothing
-# reckons (decided here, to be checked). The Summoner's comes later (J).
+# real Boffin too: the Demon then has two gifts (4b, Patrick's 3). The
+# Summoner's comes later (J).
 ALCHEMY_REAL_IN_PLAY = frozenset({"Spy", "Widow", "Wraith", "Marionette",
                                   "OrganGrinder"})
-ALCHEMY_NONE_IN_PLAY = frozenset({"Mastermind", "Boffin"})
+ALCHEMY_NONE_IN_PLAY = frozenset({"Mastermind"})
 ALCHEMY_NOT_YET = frozenset({"Summoner"})
 
 
@@ -3865,11 +3918,8 @@ def alchemist_offers(world, state, seat, since="N1"):
             if not plain:
                 may = [k for k in may if k in keys]
             seen_here = ALCHEMY_SEEN | keys
-    # Group 4: the Boffin's gift is a dealt one's only (K) — a
-    # Philosopher's is "nothing the town sees" (decided here) — and a
-    # guess makes the Spy's, the Widow's and the Wraith's seen (L).
-    if since != "N1" or world.roles[seat] != "Alchemist":
-        seen_here = seen_here - {"Boffin"}
+    # Group 4: a guess makes the Spy's, the Widow's and the Wraith's seen
+    # (L). The Boffin's is seen for a Philosopher's too (4b, Patrick's 4).
     if any(isinstance(i, AlchemistGuess) and i.player == seat
            for i in state.infos):
         seen_here = seen_here | ALCHEMY_GUESSES
@@ -5010,9 +5060,12 @@ def a_zombuul_kills_on_a_quiet_day(world, state, night):
     if any(f"D{night - 1}" in state.died_at(who)
            for who in (state.deaths or {})):
         return []                         # somebody went in daylight
+    # An Alchemist guessed right (group 4b, Patrick's 2): that player.
+    forced = alchemist_guessed(world, state, night)
     return [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON, demon=seat,
-        seats=frozenset(range(state.n_players)), capacity=1, must_fire=True,
+        seats=frozenset({forced}) if forced is not None
+        else frozenset(range(state.n_players)), capacity=1, must_fire=True,
         actor=seat if _could_be_stopped(world, state, seat, night) else None,
         actor_kills_working=False)]
 
@@ -5065,9 +5118,15 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
                 or seat not in state.alive_set(f"N{chose}"):
             break
         excuses.append((frozenset(state.alive_set(f"N{chose}")), demands))
+    # An Alchemist guessed right two days ago (group 4b, Patrick's 2):
+    # the Pukka chose that player last night, and its poison comes due.
+    chosen = frozenset(state.alive_set(f"N{night - 1}"))
+    forced = alchemist_guessed(world, state, night - 1)
+    if forced is not None:
+        chosen = chosen & {forced}
     out = [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON, demon=seat,
-        seats=frozenset(state.alive_set(f"N{night - 1}")),
+        seats=chosen,
         capacity=1, must_fire=True, victim_impaired_at=night - 1,
         actor=seat if _could_be_stopped(world, state, seat, night) else None,
         actor_kills_working=False, excuses=tuple(excuses))]
@@ -5131,6 +5190,13 @@ def an_al_hadikhia_chooses(world, state, night):
     if seat is None or world.role_at(seat, phase) != "AlHadikhia" \
             or seat not in state.alive_set(phase):
         return []
+    # An Alchemist guessed right (group 4b, Patrick's 2): the one guessed
+    # is among the three — or this is no world. Drunk or not, it chose.
+    forced = alchemist_guessed(world, state, night)
+    if forced is not None and forced not in chosen:
+        return [death_causes.Cause(
+            name="AlHadikhia", kind=death_causes.DEMON, demon=seat,
+            seats=frozenset(), capacity=1, must_fire=True)]
     alive = state.alive_set(phase)
     # A corpse that chose death leaves it nobody to kill — and so does one
     # that died earlier tonight by another hand, a Gambler's wrong guess
@@ -5183,10 +5249,23 @@ def a_shabaloth_kills_twice(world, state, night):
     seat = holding_now(world, state, "Shabaloth", phase)
     if seat is None or seat not in state.alive_set(phase):
         return []
+    actor = seat if _could_be_stopped(world, state, seat, night) else None
+    # An Alchemist guessed right (group 4b, Patrick's 2): one of its two
+    # is that player, the other anybody.
+    forced = alchemist_guessed(world, state, night)
+    if forced is not None:
+        return [death_causes.Cause(
+            name="Demon", kind=death_causes.DEMON, demon=seat,
+            seats=frozenset({forced}), capacity=1, must_fire=True,
+            actor=actor, actor_kills_working=False),
+            death_causes.Cause(
+            name="Demon, the second", kind=death_causes.DEMON, demon=seat,
+            seats=frozenset(range(state.n_players)) - {forced}, capacity=1,
+            actor_kills_working=False)]
     return [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON, demon=seat,
         seats=frozenset(range(state.n_players)), capacity=2, must_fire=True,
-        actor=seat if _could_be_stopped(world, state, seat, night) else None,
+        actor=actor,
         actor_kills_working=False)]
 
 
@@ -5229,6 +5308,21 @@ def a_po_kills_none_or_three(world, state, night):
     # Except on the second night. Three is for the night after it chose
     # nobody, and the first night is not a choice — so its first kill is
     # always a single one.
+    # An Alchemist guessed right (group 4b, Patrick's 2): it chooses, so
+    # not nobody, and that player is one of them.
+    forced = alchemist_guessed(world, state, night)
+    if forced is not None:
+        out = [death_causes.Cause(
+            name="Demon", kind=death_causes.DEMON, demon=seat,
+            seats=frozenset({forced}), capacity=1, must_fire=True,
+            actor=seat if _could_be_stopped(world, state, seat, night)
+            else None, actor_kills_working=False)]
+        if night > 2:
+            out.append(death_causes.Cause(
+                name="Demon, the others", kind=death_causes.DEMON,
+                demon=seat, capacity=2,
+                seats=frozenset(range(state.n_players)) - {forced}))
+        return out
     return [death_causes.Cause(
         name="Demon", kind=death_causes.DEMON, demon=seat,
         seats=frozenset(range(state.n_players)),

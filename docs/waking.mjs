@@ -30,7 +30,8 @@
 import {CHARACTERS, slotOf} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {readingAt, teaMade} from "./worlds.mjs";
-import {actsAsAlchemist, backSince, babysitterAt, boffinAbilities, boffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt}
+import {actsAsAlchemist, backSince, babysitterAt, boffinAbilities, boffinGiftOf,
+        alchemistBoffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt}
   from "./info.mjs";
 
 export const NEVER = "never";
@@ -434,6 +435,11 @@ export function woke(world, state, seat, night) {
   if (night >= 2 && state.script.keys.includes("Boffin")) {
     const gift = boffinGiftOf(world, state, seat, phase);
     for (const got of boffinAbilities(gift, phase))
+      if (CHARACTERS[got] && !CHARACTERS[got].believes
+          && wokeAs(world, state, seat, night, got)) return true;
+    // And what an Alchemist's Boffin gave it (group 4b).
+    const alt = alchemistBoffinGiftOf(world, state, seat, phase);
+    for (const got of boffinAbilities(alt, phase))
       if (CHARACTERS[got] && !CHARACTERS[got].believes
           && wokeAs(world, state, seat, night, got)) return true;
   }

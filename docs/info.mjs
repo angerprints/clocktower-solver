@@ -319,12 +319,28 @@ export function boffinSeat(w, s, phase) {
   const alive = s.aliveSet(phase);
   for (let seat = 0; seat < w.roles.length; seat++)
     if (alive.has(seat) && w.roleAt(seat, phase) === "Boffin") return seat;
-  // Or an Alchemist with its ability (group 4, K). See info.py.
-  if (w.plagueAt)
-    for (let seat = 0; seat < w.roles.length; seat++)
-      if (alive.has(seat) && alchemyHolds(w, s, seat, "Boffin", phase))
-        return seat;
   return null;
+}
+
+/** The living Alchemist with the Boffin's ability then, or null (group 4,
+ * K; 4b). See info.py. */
+export function alchemistBoffinSeat(w, s, phase) {
+  if (!s.script.keys.includes("Boffin") || !w.plagueAt) return null;
+  const alive = s.aliveSet(phase);
+  for (let seat = 0; seat < w.roles.length; seat++)
+    if (alive.has(seat) && alchemyHolds(w, s, seat, "Boffin", phase))
+      return seat;
+  return null;
+}
+
+/** What an Alchemist's Boffin gave this seat then, or null (group 4b). */
+export function alchemistBoffinGiftOf(w, s, seat, phase) {
+  if (!s.script.keys.includes("Boffin")) return null;
+  const got = w.alchGiftAt ? w.alchGiftAt(seat, phase) : null;
+  if (!got || got === BOFFIN_UNSEEN) return null;
+  if (TEAM[w.roleAt(seat, phase)] !== "demon") return null;
+  if (alchemistBoffinSeat(w, s, phase) === null) return null;
+  return got;
 }
 
 /** The good character whose ability this seat has through the Boffin at
@@ -362,13 +378,19 @@ export function boffinAbilities(gift, phase) {
 export function hasBoffinAbility(w, s, seat, role, phase) {
   if (role === null || role === undefined) return false;
   const got = boffinGiftOf(w, s, seat, phase);
-  return got !== null && boffinAbilities(got, phase).includes(role);
+  if (got !== null && boffinAbilities(got, phase).includes(role)) return true;
+  // Or an Alchemist's Boffin gave it (group 4b).
+  const alt = alchemistBoffinGiftOf(w, s, seat, phase);
+  return alt !== null && boffinAbilities(alt, phase).includes(role);
 }
 
 /** Every seat with that ability through the Boffin at that moment. */
 export function boffinHolders(w, s, role, phase) {
   if (role === null || role === undefined || !w.giftedSeats) return [];
-  return w.giftedSeats().filter(seat => hasBoffinAbility(w, s, seat, role, phase));
+  const marked = [...new Set([...w.giftedSeats(),
+                              ...(w.alchGiftedSeats ? w.alchGiftedSeats() : [])])]
+    .sort((a, b) => a - b);
+  return marked.filter(seat => hasBoffinAbility(w, s, seat, role, phase));
 }
 
 /** Whose sobriety this seat's ability as that character rests on: its
@@ -378,6 +400,12 @@ export function soberSeat(w, s, seat, role, phase) {
       || !s.script.keys.includes("Boffin")
       || w.roleAt(seat, phase) === role) return seat;
   if (hasBoffinAbility(w, s, seat, role, phase)) {
+    const given = boffinGiftOf(w, s, seat, phase);
+    if (given === null || !boffinAbilities(given, phase).includes(role)) {
+      // An Alchemist's Boffin gave it: its sobriety (group 4b).
+      const alch = alchemistBoffinSeat(w, s, phase);
+      return alch === null ? seat : alch;
+    }
     const got = boffinSeat(w, s, phase);
     if (got === null && storytellerHas(w, "Boffin", phase))
       return STORYTELLER;                 // nothing can stop it (D Weg 1)
