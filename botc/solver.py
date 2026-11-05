@@ -3782,7 +3782,8 @@ ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
                           "Godfather",
                           # Group 3 (05.11.2026): by day and on the gallows.
                           "Vizier", "Psychopath", "Goblin", "Boomdandy",
-                          "ScarletWoman", "EvilTwin", "Mezepheles"})
+                          "ScarletWoman", "EvilTwin", "Mezepheles",
+                          "PitHag"})
 
 
 def _alchemist_on_board(state):

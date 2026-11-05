@@ -24,7 +24,8 @@ from botc.worlds import (AlchemistGift, Timeline, World,  # noqa: E402
 IDS = ["chef", "empath", "fortuneteller", "washerwoman", "investigator",
        "undertaker", "alchemist", "saint", "philosopher", "butler",
        "recluse", "godfather", "xaan", "vizier", "psychopath", "goblin",
-       "boomdandy", "scarletwoman", "eviltwin", "mezepheles",
+       "boomdandy", "scarletwoman", "eviltwin", "mezepheles", "pithag",
+       "dreamer",
        "poisoner", "witch", "assassin", "devilsadvocate", "cerenovus",
        "fearmonger", "spy", "baron", "imp"]
 SC = scripts.from_ids("Alchemist", IDS)
@@ -73,7 +74,7 @@ class WhatItMayHold(SolverTest):
                                     "Fearmonger", "Xaan", "Vizier",
                                     "Psychopath", "Goblin", "Boomdandy",
                                     "ScarletWoman", "EvilTwin",
-                                    "Mezepheles"})
+                                    "Mezepheles", "PitHag"})
         # One the town cannot see (the Spy): each seen one costs one, the
         # rest one. The Baron is not offered: the deal has no two Outsiders
         # more (group 2, 04.11.2026).
@@ -314,6 +315,20 @@ class ItTurnsSomebodyEvil(SolverTest):
             return S.best_story(world(), state(rows, days=(1, 2, 3)))[0]
         self.assertIsNotNone(cost("Mezepheles"))
         self.assertIsNone(cost("Witch"))
+
+
+class ItRemakesSomebody(SolverTest):
+    """Group 3: with the Pit-Hag's ability it makes a player a character not
+    in play, and says so."""
+
+    def test_the_chef_it_made_a_dreamer(self):
+        rows = [I.AlchemistHas(1, 4, role="PitHag"),
+                I.PitHagChoice(2, 4, target=0, role="Dreamer")]
+        cost, changes = S.best_story(world(), state(rows))
+        self.assertIsNotNone(cost)
+        view = Timeline(world(), changes)
+        self.assertEqual(view.role_at(0, "D2"), "Dreamer")
+        self.assertFalse(view.evil_at(0, "D2"))
 
 
 class BothSave(SolverTest):
