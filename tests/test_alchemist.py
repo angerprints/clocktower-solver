@@ -24,7 +24,7 @@ from botc.worlds import (AlchemistGift, Timeline, World,  # noqa: E402
 IDS = ["chef", "empath", "fortuneteller", "washerwoman", "investigator",
        "undertaker", "alchemist", "saint", "philosopher", "butler",
        "recluse", "godfather", "xaan", "vizier", "psychopath", "goblin",
-       "boomdandy", "scarletwoman", "eviltwin",
+       "boomdandy", "scarletwoman", "eviltwin", "mezepheles",
        "poisoner", "witch", "assassin", "devilsadvocate", "cerenovus",
        "fearmonger", "spy", "baron", "imp"]
 SC = scripts.from_ids("Alchemist", IDS)
@@ -72,7 +72,8 @@ class WhatItMayHold(SolverTest):
                                     "DevilsAdvocate", "Cerenovus",
                                     "Fearmonger", "Xaan", "Vizier",
                                     "Psychopath", "Goblin", "Boomdandy",
-                                    "ScarletWoman", "EvilTwin"})
+                                    "ScarletWoman", "EvilTwin",
+                                    "Mezepheles"})
         # One the town cannot see (the Spy): each seen one costs one, the
         # rest one. The Baron is not offered: the deal has no two Outsiders
         # more (group 2, 04.11.2026).
@@ -301,6 +302,20 @@ class ItIsTheGoodTwin(SolverTest):
             rows, executions={1: 4}, deaths={4: ("E1",)}))[0])
 
 
+class ItTurnsSomebodyEvil(SolverTest):
+    """Group 3, E Weg 1: with the Mezepheles's ability a good player turns
+    evil; the Alchemist stays good."""
+
+    def test_a_wrong_reading_from_a_player_it_turned(self):
+        # The Empath's third-night reading is wrong, and nothing could
+        # have poisoned it: turned evil, it may lie.
+        def cost(key):
+            rows = [I.AlchemistHas(1, 4, role=key), I.Empath(3, 1, count=2)]
+            return S.best_story(world(), state(rows, days=(1, 2, 3)))[0]
+        self.assertIsNotNone(cost("Mezepheles"))
+        self.assertIsNone(cost("Witch"))
+
+
 class BothSave(SolverTest):
 
     def test_a_devils_advocate_and_an_alchemist_with_its_ability(self):
@@ -344,8 +359,12 @@ class APoisonedReading(SolverTest):
         row = I.Empath(2, 1, count=2)
         cost, gift = explained(rows=[row])
         self.assertIsNotNone(cost)
-        self.assertEqual(gift, ("Poisoner",))
+        # Poisoned — or, with a Mezepheles's ability, turned evil that
+        # night before it read (group 3).
+        self.assertIn(gift, (("Poisoner",), ("Mezepheles",)))
         self.assertIsNone(explained(PLAIN, rows=[row])[0])
+        self.assertIsNotNone(explained(rows=[
+            row, I.AlchemistHas(1, 4, role="Poisoner")])[0])
 
 
 def _payloads():
@@ -385,6 +404,10 @@ def _payloads():
         # Its Evil Twin's: an evil twin.
         pay({}, [{"type": "EvilTwinPair", "night": 1, "player": 4, "a": 4,
                   "b": 6}]),
+        # Its Mezepheles's: a turned Empath lies.
+        pay({}, [dict(has, role="Mezepheles"),
+                 {"type": "Empath", "night": 3, "player": 1, "count": 2}],
+            days=(1, 2, 3)),
         # A Philosopher that took the Alchemist (Patrick, 04.11.2026).
         pay({0: ["W2"]}, [{"type": "PhilosopherChoice", "night": 1,
                            "player": 3, "role": "Alchemist"},
