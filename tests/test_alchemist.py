@@ -23,7 +23,8 @@ from botc.worlds import (AlchemistGift, Timeline, World,  # noqa: E402
 
 IDS = ["chef", "empath", "fortuneteller", "washerwoman", "investigator",
        "undertaker", "alchemist", "saint", "philosopher", "butler",
-       "recluse", "godfather", "xaan",
+       "recluse", "godfather", "xaan", "vizier", "psychopath", "goblin",
+       "boomdandy",
        "poisoner", "witch", "assassin", "devilsadvocate", "cerenovus",
        "fearmonger", "spy", "baron", "imp"]
 SC = scripts.from_ids("Alchemist", IDS)
@@ -69,7 +70,8 @@ class WhatItMayHold(SolverTest):
         got = offers()
         self.assertEqual(set(got), {"*", "Poisoner", "Witch", "Assassin",
                                     "DevilsAdvocate", "Cerenovus",
-                                    "Fearmonger", "Xaan"})
+                                    "Fearmonger", "Xaan", "Vizier",
+                                    "Psychopath", "Goblin", "Boomdandy"})
         # One the town cannot see (the Spy): each seen one costs one, the
         # rest one. The Baron is not offered: the deal has no two Outsiders
         # more (group 2, 04.11.2026).
@@ -209,6 +211,55 @@ class ItChangesTheSetup(SolverTest):
         self.assertIsNone(best([I.AlchemistHas(1, 3, role="Witch")])[0])
 
 
+class ByDayAndOnTheGallows(SolverTest):
+    """Group 3 (05.11.2026, claude/alchemist-gruppe-3-lesarten.md)."""
+
+    def gifts(self, rows=(), **kw):
+        cost, changes = S.best_story(world(), state(rows, **kw))
+        return cost, {c.gift for c in changes
+                      if isinstance(c, AlchemistGift)}
+
+    def test_everybody_knows_its_vizier(self):
+        cost, gifts = self.gifts([I.VizierAnnounced(1, 4)])
+        self.assertIsNotNone(cost)
+        self.assertEqual(gifts, {"Vizier"})
+        self.assertIsNone(self.gifts([I.VizierAnnounced(1, 4),
+                                      I.AlchemistHas(1, 4,
+                                                     role="Witch")])[0])
+
+    def test_its_vizier_walks_away_from_the_gallows(self):
+        cost, gifts = self.gifts([I.VizierAnnounced(1, 4)],
+                                 executions={1: 4})
+        self.assertIsNotNone(cost)
+
+    def test_its_psychopath_kills_in_the_open(self):
+        cost, gifts = self.gifts([I.PsychopathKill(2, 4, target=0,
+                                                   died=True)],
+                                 deaths={0: ("D2",)})
+        self.assertIsNotNone(cost)
+        self.assertEqual(gifts, {"Psychopath"})
+
+    def test_its_goblin_wins_for_good(self):
+        rows = [I.GoblinClaim(1, 4), I.AlchemistHas(1, 4, role="Goblin")]
+        # Executed after saying so, and the game ended: good won.
+        cost, gifts = self.gifts(rows, executions={1: 4},
+                                 deaths={4: ("E1",)}, days=(),
+                                 game_over=True)
+        self.assertIsNotNone(cost)
+        self.assertEqual(gifts, {"Goblin"})
+        # The game went on: its ability cannot have been working.
+        self.assertIsNone(self.gifts(rows, executions={1: 4},
+                                     deaths={4: ("E1",)})[0])
+
+    def test_its_boomdandy_explodes(self):
+        cost, gifts = self.gifts(
+            [I.BoomdandyExploded(1, 4, pointed=0)], executions={1: 4},
+            deaths={4: ("E1",), 0: ("D1",), 1: ("D1",), 2: ("D1",),
+                    3: ("D1",)}, days=(), game_over=True)
+        self.assertIsNotNone(cost)
+        self.assertEqual(gifts, {"Boomdandy"})
+
+
 class BothSave(SolverTest):
 
     def test_a_devils_advocate_and_an_alchemist_with_its_ability(self):
@@ -283,6 +334,11 @@ def _payloads():
             [dict(has, player=3, role="Godfather")],
             claims=["Chef", "Empath", "FortuneTeller", "Alchemist",
                     "Butler", "Recluse", "Chef", "Empath"]),
+        # Group 3: its Vizier, its Psychopath.
+        pay({4: ["S1"]}, [{"type": "VizierAnnounced", "night": 1,
+                           "player": 4}]),
+        pay({0: ["D2"]}, [{"type": "PsychopathKill", "night": 2,
+                           "player": 4, "target": 0, "died": True}]),
         # A Philosopher that took the Alchemist (Patrick, 04.11.2026).
         pay({0: ["W2"]}, [{"type": "PhilosopherChoice", "night": 1,
                            "player": 3, "role": "Alchemist"},

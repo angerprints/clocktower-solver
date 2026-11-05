@@ -40,7 +40,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    faux_paw_lycanthrope, side_open,
                    PlagueDoctorGave, PLAGUE_UNSEEN, STORYTELLER,
                    storyteller_has, has_plague_ability, plague_holders,
-                   acts_as_alchemist,
+                   acts_as_alchemist, alchemy_holds,
                    BecameInfo, EvilTwinPair, BoomdandyExploded,
                    AlchemistHas)
 from .roles import (ABSENT, ARBITRARY, GENUINE, SETUP, TEAM,
@@ -3740,7 +3740,9 @@ def plague_told_later(world, changes, state):
 ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
                           "Cerenovus", "Assassin", "Fearmonger",
                           # Group 2 (04.11.2026): its night kill.
-                          "Godfather"})
+                          "Godfather",
+                          # Group 3 (05.11.2026): by day and on the gallows.
+                          "Vizier", "Psychopath", "Goblin", "Boomdandy"})
 
 
 def _alchemist_on_board(state):
@@ -4502,7 +4504,8 @@ def a_vizier_cannot_die_by_day(world, state, day, seat):
     if not _in_bag(state, "Vizier"):
         return []
     phase = f"D{day}"
-    if world.role_at(seat, phase) != "Vizier":
+    if world.role_at(seat, phase) != "Vizier" \
+            and not alchemy_holds(world, state, seat, "Vizier", phase):
         return []
     # Babysitting Lil' Monsta, it dies when executed (their jinx).
     if babysitter_at(world, phase) == seat:
@@ -4542,7 +4545,9 @@ def a_psychopath_wins_at_roshambo(world, state, day, seat):
     walk away from the gallows, and that costs nothing (10.10.2026)."""
     if not _in_bag(state, "Psychopath"):
         return []
-    if world.role_at(seat, f"D{day}") != "Psychopath":
+    if world.role_at(seat, f"D{day}") != "Psychopath" \
+            and not alchemy_holds(world, state, seat, "Psychopath",
+                                  f"D{day}"):
         return []
     # Babysitting Lil' Monsta, it dies when executed (their jinx).
     if babysitter_at(world, f"D{day}") == seat:
@@ -7153,7 +7158,9 @@ def _plain_failures(world, state, outcome=None):
     if _in_bag(state, "Vizier"):
         for seat, phase in state.death_phases():
             if phase[:1] == "D" \
-                    and world.role_at(seat, phase) == "Vizier" \
+                    and (world.role_at(seat, phase) == "Vizier"
+                         or alchemy_holds(world, state, seat, "Vizier",
+                                          phase)) \
                     and not (_executed(state, int(phase[1:]), seat)
                              and babysitter_at(world, phase) == seat):
                 day_failures[int(phase[1:])].add(seat)

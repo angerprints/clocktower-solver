@@ -40,7 +40,7 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         boffinAbilities, boffinPhilosophy, hasBoffinAbility,
         PLAGUE_UNSEEN, STORYTELLER, plagueGiven, plagueHolders, storytellerHas,
         boffinWorking, registersOf, alchemistGiven, alchemistSeats,
-        alchemistsWith}
+        alchemistsWith, alchemyHolds}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -2893,7 +2893,9 @@ transitionRule(aPlagueDoctorGivesTheStoryteller);
 // ---------------------------------------------------------------------
 /** What an Alchemist holds that the town can see, group 1. */
 export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
-  "Cerenovus", "Assassin", "Fearmonger", "Godfather"]);
+  "Cerenovus", "Assassin", "Fearmonger", "Godfather",
+  // Group 3 (05.11.2026).
+  "Vizier", "Psychopath", "Goblin", "Boomdandy"]);
 
 export const alchemistOnBoard = state => onBoard(state, "Alchemist");
 
@@ -3559,7 +3561,9 @@ function plainFailures(world, state, outcome = {}) {
   // drunk or poisoned it dies like anybody (table ruling, 10.10.2026).
   if (inBag(state, "Vizier"))
     for (const [seat, phase] of state.deathPhases())
-      if (phase[0] === "D" && world.roleAt(seat, phase) === "Vizier"
+      if (phase[0] === "D" && (world.roleAt(seat, phase) === "Vizier"
+                               || alchemyHolds(world, state, seat, "Vizier",
+                                               phase))
           && !(executed(state, Number(phase.slice(1)), seat)
                && babysitterAt(world, phase) === seat))
         failByDay(Number(phase.slice(1)), seat);

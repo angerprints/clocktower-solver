@@ -1692,6 +1692,11 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             # A Psychopath may kill somebody in the open, before the
             # nominations (10.10.2026).
             _psychopath_strikes(d, night, rng, heard)
+            # An Alchemist with its ability, the Demon too (group 3).
+            if _alchemist_psychopath_strikes(d, night, rng, heard):
+                d.ended_at, d.ended_why = f"D{night}", "alchemist"
+                d.game_ends_after = night
+                break
             # A Slayer may shoot, before the nominations (Stelle 59).
             if _slayer_shoots(d, night, rng, heard):
                 d.ended_at, d.ended_why = f"D{night}", "slayer"
@@ -3399,7 +3404,8 @@ def _vizier_is_announced(d, day, heard):
         return
     phase = f"D{day}"
     for seat in d.alive_at(phase):
-        if d.role_at(seat, phase) != "Vizier" or seat in d.vizier_seen:
+        # An Alchemist with its ability too: everybody knows (group 3, G).
+        if not _holds(d, seat, "Vizier", phase) or seat in d.vizier_seen:
             continue
         d.vizier_seen.add(seat)
         if "Investigator" in d.script.keys or "Alsaahir" in d.script.keys:
@@ -3411,7 +3417,7 @@ def _vizier_is_announced(d, day, heard):
 def _a_vizier_stands(d, seat, day):
     """A Vizier cannot die during the day — working, or drunk by a
     Courtier (their jinx). Drunk or poisoned otherwise, it can."""
-    if d.role_at(seat, f"D{day}") != "Vizier":
+    if not _holds(d, seat, "Vizier", f"D{day}"):
         return False
     if d.working(seat, day, by_day=True):
         return True
@@ -3483,6 +3489,39 @@ def _psychopath_strikes(d, day, rng, heard):
         d.deaths[target] = phase
     d.psychopath_struck[day] = (psycho, target)
     heard.append(PsychopathKill(day, psycho, target=target, died=died))
+
+
+def _alchemist_psychopath_strikes(d, day, rng, heard):
+    """An Alchemist with the Psychopath's ability (group 3, 05.11.2026): now
+    and then, at somebody it does not trust — the Demon too where that
+    ends the game, as its Assassin (Patrick, 04.11.2026). Drunk or
+    poisoned it says so all the same and nobody dies. True when good has
+    won."""
+    if "Psychopath" not in d.script.keys:
+        return False
+    phase = f"D{day}"
+    living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
+    for alch in sorted(getattr(d, "alchemy", {})):
+        if alch not in living or not _alchemy(d, alch, "Psychopath", phase):
+            continue
+        if len(living) < 4 or rng.random() >= 0.3:
+            continue
+        demon = d.demon_at(phase)
+        spare = (alch,) if _alchemist_may_end_it(d, phase) else (alch, demon)
+        pool = [p for p in living if p not in spare]
+        if not pool:
+            continue
+        target = rng.choice(pool)
+        died = d.working(alch, day, by_day=True) \
+            and _can_die_by_day(d, target, day)
+        if died:
+            d.deaths[target] = phase
+        d.psychopath_struck[day] = (alch, target)
+        heard.append(PsychopathKill(day, alch, target=target, died=died))
+        if died and target == demon:
+            return True
+        living = [p for p in living if p != target or not died]
+    return False
 
 
 def _slayer_shoots(d, day, rng, heard):
@@ -3848,7 +3887,7 @@ def _boomdandy_explodes(d, day, hanged, rng, heard):
     if "Boomdandy" not in d.script.keys:
         return False
     phase = f"D{day}"
-    if d.role_at(hanged, phase) != "Boomdandy" \
+    if not _holds(d, hanged, "Boomdandy", phase) \
             or not d.working(hanged, day, by_day=True):
         return False
     demon = d.demon_at(f"E{day}")
@@ -4696,7 +4735,8 @@ def _a_goblin_said_so(d, day, executed, rng, heard):
     if "Goblin" not in d.script.keys:
         return False
     if d.role_at(executed, f"D{day}") == "Goblin" \
-            or _plague_minion(d, executed, "Goblin", f"D{day}"):
+            or _plague_minion(d, executed, "Goblin", f"D{day}") \
+            or _alchemy(d, executed, "Goblin", f"D{day}"):
         if rng.random() >= 0.7:
             return False                  # kept quiet, and simply died
         heard.append(GoblinClaim(day, executed))
@@ -4771,7 +4811,8 @@ def _walks_away(d, seat, day, rng):
         return "DevilsAdvocate"
     # "If executed, you only die if you lose roshambo." Played only by a
     # Psychopath with its ability, and won two times in three.
-    if role == "Psychopath" and d.working(seat, day, by_day=True):
+    if (role == "Psychopath" or _alchemy(d, seat, "Psychopath", phase)) \
+            and d.working(seat, day, by_day=True):
         d.roshambo[day] = seat
         if rng.random() < 2 / 3:
             return "Psychopath"
@@ -4912,7 +4953,7 @@ def _execute(d, day, rng, allow_takeover=False):
     forced = None
     if "Vizier" in d.script.keys:
         vizier = next((p for p in d.alive_at(phase)
-                       if d.role_at(p, phase) == "Vizier"
+                       if _holds(d, p, "Vizier", phase)
                        and d.deaths.get(p) is None), None)
         if vizier is not None and d.working(vizier, day, by_day=True):
             backed = sorted(
