@@ -244,7 +244,8 @@ class TwoDemons(SolverTest):
         view = Timeline(world(roles), changes)
         st = state(days=(1, 2, 3))
         moments = S._boffin_moments(view, st, False)
-        self.assertEqual(moments, [("N3", 190, 1, 6)])
+        # Whose gift: the Boffin's, not an Alchemist's (group 4b).
+        self.assertEqual(moments, [("N3", 190, 1, 6, "boffin")])
         got = S._boffin_stories(view, st, False)
         self.assertEqual(got[0], ((), 1.0))           # the first keeps it
         ends = [c for way, _c in got[1:] for c in way
