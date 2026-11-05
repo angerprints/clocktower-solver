@@ -471,7 +471,8 @@ function whoTurned(changes) {
       const had = flips.get(c.seat);
       flips.set(c.seat, had === undefined ? at : Math.min(at, had));
       if (c.turned === "mezepheles")
-        turns += c.phase + (c.storyteller ? "st" : "") + ";";
+        turns += c.phase + (c.alchemist ? "al" : c.storyteller ? "st" : "")
+          + ";";
     } else restKey += changeKey(c) + (c.barber ? "b" + c.barber : "") + ";";
   }
   return {flips, turns, restKey};
@@ -1542,7 +1543,12 @@ export function aMezephelesMayHaveTurned(world, state) {
     const mine = mez !== null && mez !== undefined
       && minionStillActs(world, state, mez, phase);
     const theirs = first !== null && night >= first;
-    if (!mine && !theirs) continue;
+    // An Alchemist's (group 3). See solver.py.
+    const alchs = onBoard(state, "Alchemist")
+      ? alchemistsWith(world, state, "Mezepheles", `B${night - 1}`).filter(a =>
+          alchemyHolds(world, state, a, "Mezepheles", `D${night - 1}`))
+      : [];
+    if (!mine && !theirs && !alchs.length) continue;
     if (seats === null)
       seats = [...seatsTheBoardLooksAt(world, state)].sort((a, b) => a - b);
     for (const seat of seats) {
@@ -1556,6 +1562,9 @@ export function aMezephelesMayHaveTurned(world, state) {
       if (theirs)
         stories.push([{...turnedEvil(phase, seat, "mezepheles"), slot,
                        storyteller: true}]);
+      if (alchs.length && !alchs.includes(seat))
+        stories.push([{...turnedEvil(phase, seat, "mezepheles"), slot,
+                       storyteller: true, alchemist: true}]);
     }
   }
   return stories;
@@ -2910,7 +2919,8 @@ transitionRule(aPlagueDoctorGivesTheStoryteller);
 export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
   "Cerenovus", "Assassin", "Fearmonger", "Godfather",
   // Group 3 (05.11.2026).
-  "Vizier", "Psychopath", "Goblin", "Boomdandy", "ScarletWoman", "EvilTwin"]);
+  "Vizier", "Psychopath", "Goblin", "Boomdandy", "ScarletWoman", "EvilTwin",
+  "Mezepheles"]);
 
 export const alchemistOnBoard = state => onBoard(state, "Alchemist");
 
@@ -3753,6 +3763,15 @@ function plainFailures(world, state, outcome = {}) {
   // something later that night may have reached it.
   for (const c of world.changes || []) {
     if (c.turned !== "mezepheles") continue;
+    // An Alchemist's: its own, working (group 3). See solver.py.
+    if (c.alchemist) {
+      const night = parseInt(c.phase.slice(1), 10);
+      const alchs = alchemistsWith(world, state, "Mezepheles", `B${night - 1}`);
+      if (!alchs.length) return null;
+      if (!actedBeforeTheDemonOnly(world, state, night))
+        (working[night] = working[night] || new Set()).add(alchs[0]);
+      continue;
+    }
     // The Storyteller's: nothing can stop it (Pestdoktor Stufe 2, B).
     if (c.storyteller) continue;
     const night = parseInt(c.phase.slice(1), 10);

@@ -1636,6 +1636,13 @@ class StorytellerTurn(MezephelesTurn):
     __slots__ = ()
 
 
+class AlchemistTurn(StorytellerTurn):
+    """The good player an Alchemist with the Mezepheles's ability turned
+    (group 3, E Weg 1, 05.11.2026): once, beside a real one's, like the
+    Storyteller's — but the Alchemist's own, so it had to be working."""
+    __slots__ = ()
+
+
 _SEAT_FIELDS = ("a", "b", "c", "target", "guess", "shown", "second",
                 "nominator", "pointed")
 _SEAT_SETS = ("joined", "demons", "minions")
@@ -1772,7 +1779,13 @@ def a_mezepheles_may_have_turned(world, state):
         mine = mez is not None and minion_still_acts(world, state, mez,
                                                      phase)
         theirs = first is not None and night >= first
-        if not mine and not theirs:
+        # An Alchemist's, from the night after it has it, standing as the
+        # night began (group 3, E Weg 1); it does not turn itself.
+        alchs = [a for a in alchemists_with(world, state, "Mezepheles", began)
+                 if alchemy_holds(world, state, a, "Mezepheles",
+                                  f"D{night - 1}")] \
+            if _alchemist_on_board(state) else []
+        if not mine and not theirs and not alchs:
             continue
         if seats is None:
             seats = sorted(_seats_the_board_looks_at(world, state))
@@ -1791,6 +1804,9 @@ def a_mezepheles_may_have_turned(world, state):
             if theirs:
                 stories.append((StorytellerTurn(phase, seat, None, "evil",
                                                 slot),))
+            if alchs and seat not in alchs:
+                stories.append((AlchemistTurn(phase, seat, None, "evil",
+                                              slot),))
     return stories
 
 
@@ -3766,7 +3782,7 @@ ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
                           "Godfather",
                           # Group 3 (05.11.2026): by day and on the gallows.
                           "Vizier", "Psychopath", "Goblin", "Boomdandy",
-                          "ScarletWoman", "EvilTwin"})
+                          "ScarletWoman", "EvilTwin", "Mezepheles"})
 
 
 def _alchemist_on_board(state):
@@ -7387,6 +7403,16 @@ def _plain_failures(world, state, outcome=None):
     for change in getattr(world, "changes", ()):
         if not isinstance(change, MezephelesTurn):
             continue
+        # An Alchemist's: its own, working (group 3).
+        if isinstance(change, AlchemistTurn):
+            night = int(change.phase[1:])
+            alchs = alchemists_with(world, state, "Mezepheles",
+                                    _before(night, change.phase))
+            if not alchs:
+                return None, None, 1.0, None
+            if not _acted_before_the_demon_only(world, state, night):
+                working.setdefault(night, set()).add(alchs[0])
+            continue
         # The Storyteller's: nothing can stop it (Pestdoktor Stufe 2, B).
         if isinstance(change, StorytellerTurn):
             continue
@@ -9663,7 +9689,9 @@ def _who_turned(changes):
         if isinstance(change, TurnedEvil):
             at = phase_index(change.phase)
             flips[change.seat] = min(at, flips.get(change.seat, at))
-            if isinstance(change, StorytellerTurn):
+            if isinstance(change, AlchemistTurn):
+                turns.append(change.phase + "al")
+            elif isinstance(change, StorytellerTurn):
                 # Apart from a real one's: nothing has to be working.
                 turns.append(change.phase + "st")
             elif isinstance(change, MezephelesTurn):

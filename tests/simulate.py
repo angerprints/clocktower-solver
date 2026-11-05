@@ -1357,6 +1357,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         _harpy_chooses(d, night, rng, heard)
         # The Mezepheles at 18 too: whoever said its word turns evil.
         _mezepheles_turns(d, night, rng)
+        _alchemist_mezepheles_turns(d, night)
         # And what the Storyteller does with an ability the Plague
         # Doctor's death gave it (stage 2, 29.10.2026).
         _storyteller_acts(d, night, rng, heard)
@@ -1691,6 +1692,7 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             _leviathan_is_announced(d, night, heard)
             _yaggababble_speaks(d, night, rng)
             _mezepheles_hears(d, night, rng)
+            _alchemist_mezepheles_hears(d, night, rng)
             _cult_is_called(d, night, rng, heard)
             if _a_minion_guesses_the_damsel(d, night, rng, heard):
                 d.ended_at, d.ended_why = f"D{night}", "damsel"
@@ -4476,6 +4478,44 @@ def _mezepheles_turns(d, night, rng):
         return
     d.side_changes.append((phase, seat, d.role_at(seat, phase), "evil"))
     d.mez_turned = (seat, night)
+
+
+def _alchemist_mezepheles_hears(d, day, rng):
+    """An Alchemist with the Mezepheles's ability knows a word too: somebody
+    good says it now and then, once a game (group 3, E Weg 1)."""
+    if "Mezepheles" not in d.script.keys:
+        return
+    phase = f"D{day}"
+    marked = d.__dict__.setdefault("alch_mez_marked", {})
+    for alch in sorted(getattr(d, "alchemy", {})):
+        if alch in marked or alch not in d.alive_at(phase) \
+                or not _alchemy(d, alch, "Mezepheles", phase):
+            continue
+        if rng.random() >= 0.3:
+            continue
+        good = [p for p in d.alive_at(phase) if d.deaths.get(p) is None
+                and p != alch and d.side_at(p, phase) == "good"]
+        if good:
+            marked[alch] = (rng.choice(good), day)
+
+
+def _alchemist_mezepheles_turns(d, night):
+    """ "...becomes evil that night", at the Mezepheles's turn, if the
+    Alchemist still has the ability and it works; the Alchemist stays good
+    (E Weg 1). Drunk or poisoned, nobody turns and it is spent."""
+    for alch, (seat, day) in sorted(getattr(d, "alch_mez_marked",
+                                            {}).items()):
+        if day != night - 1:
+            continue
+        phase = f"N{night}"
+        if alch not in d.alive_at(phase) or d.deaths.get(alch) == phase \
+                or not _alchemy(d, alch, "Mezepheles", phase) \
+                or not d.working(alch, night):
+            continue
+        if d.side_at(seat, phase) != "good":
+            continue
+        d.side_changes.append((phase, seat, d.role_at(seat, phase), "evil"))
+        d.__dict__.setdefault("alch_mez_turned", {})[alch] = (seat, night)
 
 
 def _living_leviathan(d, phase):

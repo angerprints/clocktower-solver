@@ -658,6 +658,9 @@ def hidden_from(deal, night, heard):
         alch["Assassin"] = deal.alch_kills[night]
     if getattr(deal, "alch_gf_kills", {}).get(night) is not None:
         alch["Godfather"] = deal.alch_gf_kills[night]
+    for who, (seat, day) in getattr(deal, "alch_mez_marked", {}).items():
+        if day == night - 1:
+            alch["Mezepheles"] = (who, seat)
     if alch:
         out[("alchemy", night)] = alch
     # Whom its jinxes made something as tonight began (stage 2).
@@ -1170,6 +1173,10 @@ def walk(deal, night, hidden):
                 continue
             if key == "Poisoner":
                 state.droison(target, slot, "Poisoner")
+            elif key == "Mezepheles":
+                if state.sides.get(target) == "good":
+                    state.sides[target] = "evil"
+                    state.log.append((slot, "turned", target, "Mezepheles"))
             elif target in state.alive:
                 state.kill(target, slot, key, unstoppable=key == "Assassin")
         # The Storyteller's Assassin and Godfather, the Plague Doctor's
