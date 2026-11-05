@@ -217,10 +217,17 @@ export function hasPlagueAbility(w, s, seat, role, phase) {
   if (role === null || role === undefined || seat === null
       || seat === undefined || !w.plagueAt) return false;
   if (!w.plagueAt(seat, phase).includes(role)) return false;
-  // Or the Alchemist's own, from the first night (04.11.2026).
-  return TEAM[w.roleAt(seat, phase)] === "minion"
-    || actsAsAlchemist(w, s, seat, phase);
+  // Or the Alchemist's own, from the first night (04.11.2026) — none its
+  // jinxes say it has not (group 4).
+  if (TEAM[w.roleAt(seat, phase)] === "minion") return true;
+  return !ALCHEMY_NOT_HELD.has(role) && actsAsAlchemist(w, s, seat, phase);
 }
+
+/** Their jinxes (group 4, 05.11.2026): an Alchemist with one of these has
+ * no such ability — three give it a guess. See info.py. */
+export const ALCHEMY_NOT_HELD = new Set(["Spy", "Widow", "Wraith",
+  "Marionette", "Mastermind"]);
+export const ALCHEMY_GUESSES = new Set(["Spy", "Widow", "Wraith"]);
 
 /** An Alchemist, or a Philosopher that took it, with that Minion's ability
  * then (group 3, 05.11.2026). See info.py. */
@@ -312,6 +319,11 @@ export function boffinSeat(w, s, phase) {
   const alive = s.aliveSet(phase);
   for (let seat = 0; seat < w.roles.length; seat++)
     if (alive.has(seat) && w.roleAt(seat, phase) === "Boffin") return seat;
+  // Or an Alchemist with its ability (group 4, K). See info.py.
+  if (w.plagueAt)
+    for (let seat = 0; seat < w.roles.length; seat++)
+      if (alive.has(seat) && alchemyHolds(w, s, seat, "Boffin", phase))
+        return seat;
   return null;
 }
 
@@ -2010,12 +2022,28 @@ function grinderToday(row, w, s) {
   const seat = w.findAt("OrganGrinder", phase);
   return seat !== null && s.aliveSet(phase).has(seat) ? seat : null;
 }
+/** The living Alchemists with the Organ Grinder's ability that day
+ * (group 4). See info.py `BlindVote._alchemists`. */
+function grindingAlchemists(row, w, s) {
+  const phase = `D${row.night}`;
+  if (!w.plagueAt) return [];
+  const alive = s.aliveSet(phase);
+  const out = [];
+  for (let p = 0; p < w.roles.length; p++)
+    if (alive.has(p) && alchemyHolds(w, s, p, "OrganGrinder", phase))
+      out.push(p);
+  return out;
+}
 export const BlindVote = define("BlindVote", "OrganGrinder",
-  function (w, s) { return grinderToday(this, w, s) !== null; }, {
+  function (w, s) {
+    return grinderToday(this, w, s) !== null
+      || grindingAlchemists(this, w, s).length > 0;
+  }, {
     hard() { return true; },
     isInformation() { return false; },
     sourceSeat() { return null; },
     leanedOn(w, s) {
+      if (grindingAlchemists(this, w, s).length) return [];
       const got = grinderToday(this, w, s);
       return got === null ? [] : [got];
     },
@@ -2240,6 +2268,18 @@ export const AlchemistHas = define("AlchemistHas", "Alchemist",
   function (w, s) { return alchemistGiven(this, s) !== null; }, {
     isInformation() { return false; },
   });
+
+/** After an execution, a living Alchemist publicly guessed a living
+ * player as the Spy, the Widow or the Wraith (group 4, L). Always holds:
+ * what it sets off is the Demon's. See info.py `AlchemistGuess`. */
+export const AlchemistGuess = define("AlchemistGuess", "Alchemist",
+  () => true, {
+    event: true,
+    hard() { return true; },
+    isInformation() { return false; },
+    sourceSeat() { return null; },
+  });
+AlchemistGuess.isAChoice = true;
 
 /** The Puzzlemaster's one guess, and whom it was then shown. Shown the
  * Demon: the guess was the drunk player, or it was off itself. */
@@ -2566,7 +2606,7 @@ export const KINDS = {
   ChoirboyInfo, PrincessNominated, GolemNomination, PsychopathKill,
   PsychopathRoshambo, WidowKnown,
   PreacherChoice, HuntsmanChoice, EngineerChoice, BoffinGave, PlagueDoctorGave,
-  AlchemistHas,
+  AlchemistHas, AlchemistGuess,
   PuzzlemasterGuess,
   BoomdandyExploded, MoonchildChoice, ExorcistChoice, InnkeeperChoice, SailorChoice,
   OgreChoice, CerenovusMadness,
