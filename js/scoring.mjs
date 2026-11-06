@@ -26,7 +26,8 @@ import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         summonerWorld, teaParty, turnedEvil, engineered, boffinGift,
         alchemistBoffinGift,
         bracketGifts, plagueGift, plagueMade, plagueSummoned, pitHagDemon,
-        alchemistGift, ALCHEMY_SETUP, alchemyBrackets}
+        alchemistGift, ALCHEMY_SETUP, alchemyBrackets, alchemistSummoner,
+        summonerSeat}
   from "./worlds.mjs";
 import {aLeviathanIsToldOf, demonHolding, summonedBeside, madeBeside, fauxPaw, inBag, leviathanAt, lleechHost, onBoard,
         pixieGain, survivalsOf, teaLadyFailedAtTheGallows, STORYTELLER_SAVES}
@@ -1828,7 +1829,7 @@ function typhonNeighbours(world, state, night, seat, demon) {
 
 /** Every way the Summoner's ability can have gone. See solver.py. */
 export function summonOptions(world, state) {
-  const summoner = world.roles.indexOf("Summoner");
+  const summoner = summonerSeat(world);
   const final = state.finalPhase();
   const reached = night => phaseIndex(final) >= phaseIndex(`N${night}`);
   const died = [...state.diedAt(summoner)]
@@ -1839,7 +1840,9 @@ export function summonOptions(world, state) {
     || phaseIndex(gone) >= phaseIndex(`N${night}`);
   // An Engineer that may have taken its character: the Storyteller
   // summons then (their jinx, 26.10.2026). See solver.py.
-  const jinxed = engineerOnBoard(state) && engineerMayTakeTheSummoner(state);
+  // Not an Alchemist's (05.11.2026).
+  const jinxed = engineerOnBoard(state) && engineerMayTakeTheSummoner(state)
+    && alchemistSummoner(world) === null;
   const out = [];
   for (const demon of summonable(state))
     for (const night of (demon === "Pukka" ? [2, 3] : [3])) {
@@ -2990,7 +2993,7 @@ export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
 export const ALCHEMY_REAL_IN_PLAY = new Set(["Spy", "Widow", "Wraith",
   "Marionette", "OrganGrinder"]);
 export const ALCHEMY_NONE_IN_PLAY = new Set(["Mastermind"]);
-export const ALCHEMY_NOT_YET = new Set(["Summoner"]);
+export const ALCHEMY_NOT_YET = new Set();
 
 function alchemyJinxAllows(world, key, since) {
   if (ALCHEMY_NOT_YET.has(key)) return false;
@@ -3020,6 +3023,9 @@ export function alchemistOffers(world, state, seat, since = "N1") {
       if (!plain) may = may.filter(k => keys.has(k));
       seenHere = new Set([...ALCHEMY_SEEN, ...keys]);
     }
+  } else {
+    // A Philosopher's: never the Summoner's (05.11.2026). See solver.py.
+    may = may.filter(k => k !== "Summoner");
   }
   // Group 4: a guess makes three seen, a vote with the eyes closed the
   // Organ Grinder's. See solver.py.
@@ -3634,6 +3640,17 @@ function plainFailures(world, state, outcome = {}) {
                    && state.aliveSet("N3").has(summoner)) {
           fail(night, summoner);
         }
+      }
+    // An Alchemist with its ability (05.11.2026, O). See solver.py.
+    const alch = alchemistSummoner(world);
+    if (alch !== null)
+      for (const c of world.changes || []) {
+        const night = parseInt(c.phase.slice(1), 10);
+        if (c.summoned)
+          (working[night] = working[night] || new Set()).add(alch);
+        else if (c.notSummoned && c.phase === "N3"
+                 && state.aliveSet("N3").has(alch))
+          fail(night, alch);
       }
   }
 

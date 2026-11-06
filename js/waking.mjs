@@ -29,7 +29,7 @@
 
 import {CHARACTERS, slotOf} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
-import {readingAt, teaMade} from "./worlds.mjs";
+import {alchemistSummoner, readingAt, teaMade} from "./worlds.mjs";
 import {actsAsAlchemist, backSince, babysitterAt, boffinAbilities, boffinGiftOf,
         alchemistBoffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt}
   from "./info.mjs";
@@ -67,7 +67,8 @@ condition("ScarletWoman", (world, state, seat, night) =>
  * 21.10.2026), and woken on the night it makes the Demon: the third, or
  * the second for a Pukka. See waking.py. */
 condition("Summoner", (world, state, seat, night) => {
-  if (night === 1) return true;
+  // An Alchemist with its ability gets no bluffs (their jinx, 05.11.2026).
+  if (night === 1) return alchemistSummoner(world) !== seat;
   const made = (world.changes || []).find(c => c.summoned);
   return night === (made ? parseInt(made.phase.slice(1), 10) : 3);
 });
@@ -462,7 +463,7 @@ export function woke(world, state, seat, night) {
 
 /** What an Alchemist holds and does not wake for (group 4). */
 export const ALCHEMY_ASLEEP = new Set(["Spy", "Widow", "Wraith", "Marionette",
-  "Mastermind", "Boffin", "Summoner"]);
+  "Mastermind", "Boffin"]);
 
 const ASLEEP = "asleep", OPEN = "open";
 

@@ -869,6 +869,9 @@ causeRule(function aPukkaKillsWhatItPoisoned(world, state, night) {
   if (seat === null) return [];
   // Made the Pukka tonight, it only poisons (26.10.2026). See solver.py.
   if (teaMade(world, seat, night)) return [];
+  // Or summoned tonight (05.11.2026). See solver.py.
+  if ((world.changes || []).some(c => c.summoned && c.seat === seat
+                                 && c.phase === `N${night}`)) return [];
   // Three ways a Pukka's night passes without a body besides "the one
   // it poisoned could not die". Drunk or poisoned tonight: no attack,
   // and that is the actor. Or it was last night: it poisoned nobody

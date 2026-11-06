@@ -154,7 +154,27 @@ export const BABYSAT_READS = {now: null};
 
 export const lilMonstaWorld = world =>
   !world.roles.some(r => TEAM[r] === "demon")
-  && !world.roles.includes("Summoner");
+  && !world.roles.includes("Summoner")
+  && alchemistSummoner(world) === null;
+
+/** The seat of an Alchemist dealt the Summoner's ability (05.11.2026, M):
+ * no Demon dealt, no Summoner, the table's usual Minions — or null. Lil'
+ * Monsta's bag has one Minion more. See worlds.py. */
+export const alchemistSummoner = world => alchemistSummonerIn(world.roles);
+
+function alchemistSummonerIn(roles) {
+  if (!roles.includes("Alchemist") || roles.includes("Summoner")
+      || roles.some(r => TEAM[r] === "demon")) return null;
+  const usual = SETUP[roles.length];
+  if (!usual || roles.filter(r => TEAM[r] === "minion").length !== usual[2])
+    return null;
+  return roles.indexOf("Alchemist");
+}
+
+/** The seat whose Summoner's ability makes the Demon: the dealt Summoner,
+ * or the Alchemist with its ability — or null. */
+export const summonerSeat = world => world.roles.includes("Summoner")
+  ? world.roles.indexOf("Summoner") : alchemistSummoner(world);
 
 /** The player the Summoner made an evil Demon of its choice
  * (21.10.2026). `Summoned` in Python. */
@@ -182,7 +202,7 @@ export const notSummoned = (phase, seat) =>
  * was told (scoring.mjs bestSummonedStory). See worlds.py. */
 export const SUMMON_READS = {now: null};
 
-export const summonerWorld = world => world.roles.includes("Summoner");
+export const summonerWorld = world => summonerSeat(world) !== null;
 
 /** A Minion or the Demon that chose a new character when the Hatter
  * died (22.10.2026). `TeaParty` in Python. */
@@ -799,7 +819,9 @@ export function bags(nPlayers, script = DEFAULT, fabled = []) {
 
 /** The Alchemist's setup (group 2, 04.11.2026): its Baron, Godfather and
  * Xaan shift the bag as theirs do. See worlds.py. */
-export const ALCHEMY_SETUP = ["Baron", "Godfather", "Xaan"];
+export const ALCHEMY_SETUP = ["Baron", "Godfather", "Xaan",
+  // Its Summoner's "[No Demon]" (05.11.2026, M).
+  "Summoner"];
 
 function alchemistBrackets(bags, script) {
   if (!script.keys.includes("Alchemist")) return [];
@@ -845,7 +867,9 @@ export function alchemyBrackets(roles, script, fabled = []) {
   const keys = new Set();
   for (const [present, counts] of bags(roles.length, script, fabled)) {
     if (present.has("Alchemist")) continue;
-    const real = [...present].filter(p => p in movers).sort();
+    // Lil' Monsta is nobody's character (05.11.2026). See worlds.py.
+    const real = [...present].filter(p => p in movers
+                                     && CHARACTERS[p].dealt !== false).sort();
     if (real.join(",") !== dealt.join(",")) continue;
     if ([...present].some(p => !(p in movers) && CHARACTERS[p]
                           && !roles.includes(p))) continue;
@@ -1173,6 +1197,10 @@ export function seatedLegally(roles, believes = null) {
   // No Demon dealt is Lil' Monsta's bag: a Marionette sits beside the
   // first babysitter instead (scoring.mjs theMinionsChooseABabysitter).
   const noDemon = !roles.some(r => TEAM[r] === "demon");
+  // Beside an Alchemist with the Summoner's ability no Marionette is dealt
+  // (05.11.2026, not reckoned).
+  if (noDemon && roles.includes("Marionette")
+      && alchemistSummonerIn(roles) !== null) return false;
   for (let seat = 0; seat < n; seat++) {
     const team = CHARACTERS[roles[seat]].beside;
     if (team === "demon" && noDemon) continue;

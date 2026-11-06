@@ -408,13 +408,15 @@ class TheJinxes(SolverTest):
 
     def test_beside_the_real_one_or_none(self):
         # The Spy is dealt: its own, none of the others that need theirs;
-        # no Mastermind or Boffin dealt, so theirs; never the Summoner's.
+        # no Mastermind or Boffin dealt, so theirs. The Summoner's since
+        # 05.11.2026: the deal decides it (test_alchemist_summoner.py).
         self.assertEqual(self.allowed(), {"Spy", "Mastermind", "Boffin",
-                                          "Poisoner"})
+                                          "Poisoner", "Summoner"})
         self.assertEqual(self.allowed(R[:5] + ["Mastermind", "Imp"]),
-                         {"Boffin", "Poisoner"})
+                         {"Boffin", "Poisoner", "Summoner"})
         self.assertEqual(self.allowed(OG), {"OrganGrinder", "Mastermind",
-                                            "Boffin", "Poisoner"})
+                                            "Boffin", "Poisoner",
+                                            "Summoner"})
 
     def gifts(self, roles=R, rows=(), **kw):
         cost, changes = S.best_story(world(roles), state4(rows, **kw))
