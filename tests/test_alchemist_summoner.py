@@ -190,15 +190,101 @@ class ItWakes(SolverTest):
         self.assertTrue(rule(world(real), state(), 6, 1))
 
 
-class TheClockmaker(SolverTest):
+class APhilosophersSecondDemon(SolverTest):
+    """Patrick, 06.11.2026: a Philosopher that takes the Alchemist may get
+    the Summoner's ability. A Demon is in play already: holding it on the
+    third night, the Storyteller makes a living player a second Demon
+    then. Taken later, it does nothing."""
 
-    def test_counts_from_the_alchemist(self):
+    SCRIPT = scripts.from_ids("Philosoph-Beschwörer",
+                              IDS + ["philosopher"])
+    #        0       1         2               3       4
+    ROLES = ["Chef", "Empath", "FortuneTeller", "Philosopher", "Imp",
+             "Washerwoman", "Poisoner"]
+    CLAIMS = ["Chef", "Empath", "FortuneTeller", "Philosopher", "Monk",
+              "Washerwoman", "Soldier"]
+    TOOK = I.PhilosopherChoice(1, 3, role="Alchemist")
+    HAS = I.AlchemistHas(1, 3, role="Summoner")
+
+    def state(self, rows=(), days=(1, 2, 3), **kw):
+        return GameState(n_players=7, script=self.SCRIPT,
+                         claims=dict(enumerate(self.CLAIMS)),
+                         infos=[self.TOOK] + list(rows),
+                         days_done=set(days), **kw)
+
+    def test_it_may_have_it(self):
+        got = {way[0].gift for way, _c in
+               S.alchemist_offers(world(self.ROLES), self.state(), 3, "N1")}
+        self.assertIn("Summoner", got)
+
+    def test_a_second_demon_on_the_third_night(self):
+        st = self.state([self.HAS])
+        st._final_phase_held = st.final_phase()
+        tl = S.Timeline(world(self.ROLES),
+                        (S.alchemist_gift_change(3, "Summoner", "N1"),))
+        made = {(c.phase, c.seat, c.role if c.phase == "N2" else None)
+                for way, _c in S.a_hatted_summoner_summons(tl, st)
+                for c in way if type(c).__name__ == "Summoned"}
+        # Any living player, on the third night — a Pukka on the second:
+        # the Demon and the Philosopher too.
+        self.assertEqual(made, {(ph, p, demon) for p in range(7)
+                                for ph, demon in (("N3", None),
+                                                  ("N2", "Pukka"))})
+        # Two deaths on the third night: the second Demon's night.
+        two = dict(deaths={0: ("N3",), 1: ("N3",)})
+        self.assertIsNotNone(S.explanation_cost(world(self.ROLES),
+                                                self.state([self.HAS],
+                                                           **two)))
+
+    def test_taken_after_the_third_night_it_does_nothing(self):
+        late = I.PhilosopherChoice(4, 3, role="Alchemist")
+        st = GameState(n_players=7, script=self.SCRIPT,
+                       claims=dict(enumerate(self.CLAIMS)),
+                       infos=[late, I.AlchemistHas(4, 3, role="Summoner")],
+                       days_done={1, 2, 3, 4})
+        st._final_phase_held = st.final_phase()
+        tl = S.Timeline(world(self.ROLES),
+                        (S.alchemist_gift_change(3, "Summoner", "N4"),))
+        ways = S.a_hatted_summoner_summons(tl, st)
+        self.assertEqual(ways, [((), 1.0)])
+
+    def test_both_languages_agree(self):
+        case = {"n_players": 7,
+                "players": [{"claim": c, "events": []}
+                            for c in self.CLAIMS],
+                "infos": [{"type": "PhilosopherChoice", "night": 1,
+                           "player": 3, "role": "Alchemist"},
+                          {"type": "AlchemistHas", "night": 1, "player": 3,
+                           "role": "Summoner"}],
+                "deaths": {"0": ["N3"], "1": ["N3"]},
+                "days_done": [1, 2, 3],
+                "script": {"name": "Philosoph-Beschwörer",
+                           "characters": IDS + ["philosopher"]}}
+        compare(self, case)
+
+
+class TheClockmaker(SolverTest):
+    """Patrick, 06.11.2026: the Alchemist is neither Minion nor Demon and
+    registers as neither. No Demon on the first night: 0."""
+
+    def test_learns_nothing_but_zero(self):
         roles = ["Clockmaker"] + R[1:6] + ["ScarletWoman"]
         claims = ["Clockmaker"] + C[1:]
-        one = I.ClockmakerInfo(1, 0, count=1)
-        two = I.ClockmakerInfo(1, 0, count=2)
-        self.assertIsNotNone(cost([one], roles=roles, claims=claims))
-        self.assertIsNone(cost([two], roles=roles, claims=claims))
+        for count, fits in ((0, True), (1, False), (2, False)):
+            got = cost([I.ClockmakerInfo(1, 0, count=count)],
+                       roles=roles, claims=claims)
+            self.assertEqual(got is not None, fits, count)
+
+    def test_both_languages_agree(self):
+        claims = ["Clockmaker"] + C[1:]
+        case = {"n_players": 7,
+                "players": [{"claim": c, "events": []} for c in claims],
+                "infos": [{"type": "ClockmakerInfo", "night": 1,
+                           "player": 0, "count": 0}],
+                "days_done": [1],
+                "script": {"name": "Alchemist-Beschwörer",
+                           "characters": IDS}}
+        compare(self, case)
 
 
 def compare(test, case):

@@ -3285,9 +3285,8 @@ ALCHEMY_ASLEEP = ("Spy", "Widow", "Wraith", "Marionette", "Mastermind",
 
 def _alchemy_pool(script, held, dealt=True):
     """The Minion abilities an Alchemist may be given, beside these
-    characters in play (group 4). The Summoner's only at the setup."""
+    characters in play (group 4)."""
     return [k for k in script.minions if k not in ALCHEMY_NEVER
-            and (dealt or k != "Summoner")
             and (k not in ALCHEMY_REAL_IN_PLAY or k in held)
             and (k not in ALCHEMY_NONE_IN_PLAY or k not in held)]
 
@@ -5558,7 +5557,7 @@ def _summoner_has_it(d, night, seat=None):
     if d.working(s, night):
         return True
     # No jinx hands an Alchemist's to the Storyteller.
-    if s == getattr(d, "alch_summoner", None):
+    if s in (getattr(d, "alch_summoner", None), getattr(d, "tea_alch", None)):
         return False
     courtier = any(holder == s and n <= night <= n + 2
                    for n, holder, _c in d.courtier_drunks)
@@ -5706,8 +5705,12 @@ def _hatted_summoner_summons(d, night, rng, heard):
                       and slot > slot_of("Summoner", night)):
         return
     phase = f"N{night}"
+    alch = seat == getattr(d, "tea_alch", None)
+    holds = (d.role_at(seat, phase) == "Philosopher"
+             and d.alchemy.get(seat) == "Summoner") if alch \
+        else d.role_at(seat, phase) == "Summoner"
     if seat not in d.alive_at(phase) or d.deaths.get(seat) is not None \
-            or d.role_at(seat, phase) != "Summoner":
+            or not holds:
         return
     held = {d.role_at(p, phase) for p in range(d.n)}
     allowed = [k for k in d.script.demons
@@ -5724,6 +5727,9 @@ def _hatted_summoner_summons(d, night, rng, heard):
     n = d.n
     living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
     pool = [p for p in living if d.side_at(p, phase) == "good"]
+    # A Philosopher's Alchemist: the Storyteller, any living player (N).
+    if alch:
+        pool = list(living)
     minion = lambda p: TEAM[d.role_at(p, phase)] == "minion"
     if demon == "LordOfTyphon":
         pool = [p for p in pool
@@ -8379,6 +8385,11 @@ def _for_role(d, seat, role, night, rng):
         # jinx): counted from it, and 0 with no other Minion (F,
         # 21.10.2026).
         summoner = getattr(d, "summoner", None)
+        # An Alchemist's is neither Minion nor Demon and registers as
+        # neither: no Demon, 0 (Patrick, 06.11.2026).
+        if demon is None and summoner is not None \
+                and summoner == getattr(d, "alch_summoner", None):
+            return ClockmakerInfo(1, seat, count=0)
         if demon is None and summoner is not None:
             demon = summoner
         if demon is None:
@@ -8702,6 +8713,10 @@ def _for_role(d, seat, role, night, rng):
         if not pool:
             return None
         took = rng.choice(pool)
+        # For a gate line: the Alchemist more often (`SIM_PHIL_FAVOUR`).
+        favour = os.environ.get("SIM_PHIL_FAVOUR")
+        if favour in pool and took != favour and rng.random() < 0.6:
+            took = favour
         d.philosophies[seat] = took
         if took == "Alchemist":
             _alchemist_undone(d, night)
@@ -8710,8 +8725,22 @@ def _for_role(d, seat, role, night, rng):
             pool = _alchemy_pool(d.script,
                                  {d.role_at(p, f"N{night}")
                                   for p in range(d.n)}, dealt=False)
+            # The Summoner's makes a second Demon on the third night
+            # (Patrick, 06.11.2026) — not where none was dealt, and one
+            # such Summoner a game.
+            if d.summoner is not None or d.lil_monsta \
+                    or d.tea_summoner is not None or night > 3:
+                pool = [k for k in pool if k != "Summoner"]
             if pool:
                 d.alchemy[seat] = rng.choice(pool)
+                # For a gate line (`SIM_ALCH_FAVOUR`).
+                favour = os.environ.get("SIM_ALCH_FAVOUR")
+                if favour in pool and d.alchemy[seat] != favour \
+                        and rng.random() < 0.6:
+                    d.alchemy[seat] = favour
+                if d.alchemy[seat] == "Summoner":
+                    d.tea_summoner = (seat, night, None)
+                    d.tea_alch = seat
                 d.__dict__.setdefault("alchemy_since", {})[seat] = night
                 # With the Boffin's it gives the Demon one now (4b, 4).
                 if d.alchemy[seat] == "Boffin":

@@ -3093,11 +3093,13 @@ class ClockmakerInfo(Info):
             # (26.10.2026).
             if demon is None:
                 return True
-        # An Alchemist with the Summoner's ability is counted as the
-        # Summoner is (05.11.2026, claude/alchemist-5.md).
+        # An Alchemist with the Summoner's ability is neither Minion nor
+        # Demon and registers as neither: no Demon, always 0 (Patrick,
+        # 06.11.2026, claude/alchemist-5b.md).
         if demon is None:
             from .worlds import alchemist_summoner
-            summoner = demon = alchemist_summoner(w)
+            if alchemist_summoner(w) is not None:
+                return self.count == 0
         if demon is None:
             return False
         n = len(w.roles)

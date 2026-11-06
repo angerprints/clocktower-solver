@@ -1655,10 +1655,10 @@ export const ClockmakerInfo = define("ClockmakerInfo", "Clockmaker",
       // says (26.10.2026). See info.py.
       if (demon === null || demon === undefined) return true;
     }
-    // An Alchemist with the Summoner's ability counts as the Summoner does
-    // (05.11.2026). See info.py.
-    if (demon === null || demon === undefined)
-      summoner = demon = alchemistSummoner(w);
+    // An Alchemist with the Summoner's ability registers as neither: no
+    // Demon, always 0 (06.11.2026). See info.py.
+    if ((demon === null || demon === undefined)
+        && alchemistSummoner(w) !== null) return this.count === 0;
     if (demon === null || demon === undefined) return false;
     const n = w.roles.length;
     let nearest = null;

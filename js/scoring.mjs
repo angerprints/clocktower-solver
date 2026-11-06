@@ -2987,7 +2987,9 @@ export const ALCHEMY_SEEN = new Set(["Poisoner", "Witch", "DevilsAdvocate",
   "Vizier", "Psychopath", "Goblin", "Boomdandy", "ScarletWoman", "EvilTwin",
   "Mezepheles", "PitHag",
   // Group 4 (05.11.2026): its gift to the Demon, a dealt one's only.
-  "Boffin"]);
+  "Boffin",
+  // A Philosopher's (06.11.2026): a second Demon.
+  "Summoner"]);
 
 /** Their jinxes (group 4): the real one in play, or none. See solver.py. */
 export const ALCHEMY_REAL_IN_PLAY = new Set(["Spy", "Widow", "Wraith",
@@ -3023,8 +3025,9 @@ export function alchemistOffers(world, state, seat, since = "N1") {
       if (!plain) may = may.filter(k => keys.has(k));
       seenHere = new Set([...ALCHEMY_SEEN, ...keys]);
     }
-  } else {
-    // A Philosopher's: never the Summoner's (05.11.2026). See solver.py.
+  } else if (summonerWorld(world) || lilMonstaWorld(world)) {
+    // A Philosopher's makes a second Demon (06.11.2026); not where none
+    // was dealt. See solver.py.
     may = may.filter(k => k !== "Summoner");
   }
   // Group 4: a guess makes three seen, a vote with the eyes closed the
@@ -3052,7 +3055,9 @@ export function alchemistOffers(world, state, seat, since = "N1") {
 /** A story with every dealt Alchemist's ability told. See solver.py. */
 /** What an Alchemist may hold that a transition rule asks about, and the
  * mark for the rest. See solver.py. */
-export const ALCHEMY_IN_TRANSITIONS = new Set(["ScarletWoman", "Boffin"]);
+export const ALCHEMY_IN_TRANSITIONS = new Set(["ScarletWoman", "Boffin",
+  // A Philosopher's second Demon (06.11.2026).
+  "Summoner"]);
 export const ALCHEMY_LATER = "?alchemy";   // not the Plague Doctor's "?"
 
 function anAlchemistHoldsAMinionAbility(world, state) {
@@ -3110,9 +3115,18 @@ export function plagueUnreckoned(view, state) {
 // Two living Demons (Hatter stage 2, 25.10.2026). See solver.py.
 // --------------------------------------------------------------------
 
-/** The tea-party changes that made somebody the Summoner. */
+/** The tea-party changes that made somebody the Summoner — and the marks
+ * of a Philosopher that took the Alchemist and has its ability
+ * (06.11.2026). See solver.py. */
 export const hattedSummoners = view =>
-  (view.changes || []).filter(c => c.tea && c.role === "Summoner");
+  (view.changes || []).filter(c => (c.tea && c.role === "Summoner")
+    || (c.alchemist && c.plague && c.gift === "Summoner"
+        && view.roles[c.seat] !== "Alchemist"));
+
+/** Does the seat of this change hold the Summoner's ability then? */
+const holdsHatted = (world, state, c, phase) => c.alchemist
+  ? alchemyHolds(world, state, c.seat, "Summoner", phase)
+  : world.roleAt(c.seat, phase) === "Summoner";
 
 /** Could a Summoner chosen at this tea party act on this night? */
 function summonsOn(c, night) {
@@ -3138,7 +3152,7 @@ const hattedSummonerRule = transitionRule(
         const phase = `N${night}`;
         if (final < phaseIndex(phase) || !summonsOn(c, night)) continue;
         if (!state.aliveSet(phase).has(seat)
-            || world.roleAt(seat, phase) !== "Summoner") continue;
+            || !holdsHatted(world, state, c, phase)) continue;
         const held = new Set();
         for (let p = 0; p < n; p++) held.add(world.roleAt(p, phase));
         for (const demon of summonable(state)) {
@@ -3181,8 +3195,9 @@ function sampledWays(world, c, ways) {
  * summoned, for a story where it did; 1 otherwise. See solver.py. */
 function summonShare(world, changes, state) {
   if (!changes.some(c => c.summoned)) return 1.0;
-  const tea = changes.filter(c => c.tea);
-  if (!tea.some(c => c.role === "Summoner")) return 1.0;
+  const tea = changes.filter(c => c.tea
+    || (c.alchemist && c.plague && c.gift === "Summoner"));
+  if (!hattedSummoners(new Timeline(world, tea)).length) return 1.0;
   const ways = offersOf(hattedSummonerRule, new Timeline(world, tea),
                         state).length - 1;
   return ways > 0 ? 1.0 / ways : 1.0;
@@ -3657,20 +3672,23 @@ function plainFailures(world, state, outcome = {}) {
   // A Summoner chosen at a tea party (Hatter stage 2): working when it
   // made a Demon, drunk or poisoned on a third night it reached holding
   // it, alive, with none made. See solver.py.
-  if (inBag(state, "Summoner") && teaOnBoard(state)) {
+  // And a Philosopher's Alchemist (06.11.2026).
+  if (inBag(state, "Summoner")
+      && (teaOnBoard(state) || alchemistOnBoard(state))) {
     const made = (world.changes || []).find(c => c.summoned) || null;
     const final = phaseIndex(state.finalPhase());
     for (const c of hattedSummoners(world)) {
       const seat = c.seat;
       if (made) {
-        if (!(onBoard(state, "Courtier") || onBoard(state, "Preacher"))) {
+        if (c.alchemist
+            || !(onBoard(state, "Courtier") || onBoard(state, "Preacher"))) {
           const night = parseInt(made.phase.slice(1), 10);
           (working[night] = working[night] || new Set()).add(seat);
         }
       } else if (final >= phaseIndex("D3") && summonsOn(c, 3)
                  && state.aliveSet("N3").has(seat)
                  && !state.diedAt(seat).includes("N3")
-                 && world.roleAt(seat, "N3") === "Summoner") {
+                 && holdsHatted(world, state, c, "N3")) {
         fail(3, seat);
       }
     }
@@ -5428,7 +5446,8 @@ export function storyShares(world, viable, state = null) {
       [cost * barberShare(world, changes, state), changes]);
   // A Summoner chosen at a tea party is one choice, however many ways it
   // then summoned (Hatter stage 2). See solver.py.
-  if (state && viable.length > 1 && teaOnBoard(state)
+  if (state && viable.length > 1
+      && (teaOnBoard(state) || alchemistOnBoard(state))
       && state.script.keys.includes("Summoner"))
     viable = viable.map(([cost, changes]) =>
       [cost * summonShare(world, changes, state), changes]);

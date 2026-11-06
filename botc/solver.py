@@ -2670,9 +2670,21 @@ def tea_parties(world):
 
 
 def hatted_summoners(view):
-    """The tea-party changes that made somebody the Summoner."""
+    """The tea-party changes that made somebody the Summoner — and the
+    marks of a Philosopher that took the Alchemist and has its ability
+    (Patrick, 06.11.2026, claude/alchemist-5b.md): it summons the same
+    way, the Storyteller choosing the player."""
     return [c for c in getattr(view, "changes", ())
-            if isinstance(c, TeaParty) and c.role == "Summoner"]
+            if (isinstance(c, TeaParty) and c.role == "Summoner")
+            or (isinstance(c, AlchemistGift) and c.gift == "Summoner"
+                and view.roles[c.seat] != "Alchemist")]
+
+
+def _holds_hatted(world, state, change, phase):
+    """Does the seat of this change hold the Summoner's ability then?"""
+    if isinstance(change, AlchemistGift):
+        return alchemy_holds(world, state, change.seat, "Summoner", phase)
+    return world.role_at(change.seat, phase) == "Summoner"
 
 
 def _summons_on(change, night):
@@ -2730,7 +2742,7 @@ def a_hatted_summoner_summons(world, state):
             if final < phase_index(phase) or not _summons_on(change, night):
                 continue
             if seat not in state.alive_set(phase) \
-                    or world.role_at(seat, phase) != "Summoner":
+                    or not _holds_hatted(world, state, change, phase):
                 continue
             held = {world.role_at(p, phase) for p in range(n)}
             for demon in _summonable(state):
@@ -3871,7 +3883,9 @@ ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
                           "PitHag",
                           # Group 4 (05.11.2026): its gift to the Demon,
                           # a dealt one's only (K).
-                          "Boffin"})
+                          "Boffin",
+                          # A Philosopher's (06.11.2026): a second Demon.
+                          "Summoner"})
 
 # Group 4 (05.11.2026, claude/alchemist-gruppe-4-lesarten.md), their
 # jinxes: the real one is in play — the Spy, the Widow, the Wraith, the
@@ -3936,9 +3950,10 @@ def alchemist_offers(world, state, seat, since="N1"):
             if not plain:
                 may = [k for k in may if k in keys]
             seen_here = ALCHEMY_SEEN | keys
-    else:
-        # A Philosopher's comes after the setup: never the Summoner's,
-        # whose "[No Demon]" is the deal (05.11.2026).
+    elif summoner_world(world) or lil_monsta_world(world):
+        # A Philosopher's comes after the setup, beside the Demon in play:
+        # it makes a second one on the third night (Patrick, 06.11.2026,
+        # claude/alchemist-5b.md). Not where none was dealt (not reckoned).
         may = [k for k in may if k != "Summoner"]
     # Group 4: a guess makes the Spy's, the Widow's and the Wraith's seen
     # (L). The Boffin's is seen for a Philosopher's too (4b, Patrick's 4).
@@ -3973,7 +3988,10 @@ def alchemist_offers(world, state, seat, since="N1"):
 # are (`alchemist_told`).
 ALCHEMY_IN_TRANSITIONS = frozenset({"ScarletWoman",
                                     # Group 4: its gift at the setup.
-                                    "Boffin"})
+                                    "Boffin",
+                                    # A Philosopher's second Demon
+                                    # (06.11.2026, `hatted_summoners`).
+                                    "Summoner"})
 # Not the Plague Doctor's "?": an Alchemist's mark is a PlagueGift too, and
 # `plague_told_later` would fill it with the Storyteller's offers (the
 # gate of group 3, seeds 190 and 2782 of line AP).
@@ -7394,20 +7412,24 @@ def _plain_failures(world, state, outcome=None):
     # A Summoner chosen at a tea party (Hatter stage 2, 25.10.2026): working
     # when it made a Demon, and drunk or poisoned on a third night it
     # reached holding it, alive, with none made.
-    if _in_bag(state, "Summoner") and _tea_on_board(state):
+    # And a Philosopher's Alchemist with its ability (06.11.2026): no jinx
+    # hands it to the Storyteller.
+    if _in_bag(state, "Summoner") and (_tea_on_board(state)
+                                       or _alchemist_on_board(state)):
         made = next((c for c in getattr(world, "changes", ())
                      if isinstance(c, Summoned)), None)
         final = phase_index(state.final_phase())
         for change in hatted_summoners(world):
             seat = change.seat
+            alch = isinstance(change, AlchemistGift)
             if made is not None:
-                if not (_on_board(state, "Courtier")
-                        or _on_board(state, "Preacher")):
+                if alch or not (_on_board(state, "Courtier")
+                                or _on_board(state, "Preacher")):
                     working.setdefault(int(made.phase[1:]), set()).add(seat)
             elif final >= phase_index("D3") and _summons_on(change, 3) \
                     and seat in state.alive_set("N3") \
                     and "N3" not in state.died_at(seat) \
-                    and world.role_at(seat, "N3") == "Summoner":
+                    and _holds_hatted(world, state, change, "N3"):
                 failures[3].add(seat)
 
     # The Hatter (22.10.2026): whoever chose a new character did so
@@ -10064,7 +10086,8 @@ def _story_shares(world, viable, state=None):
     # A Summoner chosen at a tea party is one choice, however many ways it
     # then summoned: each way gets its share of that one (Hatter stage 2,
     # 25.10.2026), as a random pick of player and Demon would.
-    if state is not None and len(viable) > 1 and _tea_on_board(state) \
+    if state is not None and len(viable) > 1 \
+            and (_tea_on_board(state) or _alchemist_on_board(state)) \
             and "Summoner" in state.script.keys:
         viable = [(cost * _summon_share(world, changes, state), changes)
                   for cost, changes in viable]
@@ -10080,8 +10103,9 @@ def _summon_share(world, changes, state):
     summoned, for a story where it did; 1 otherwise."""
     if not any(isinstance(c, Summoned) for c in changes):
         return 1.0
-    tea = tuple(c for c in changes if isinstance(c, TeaParty))
-    if not any(c.role == "Summoner" for c in tea):
+    tea = tuple(c for c in changes if isinstance(c, TeaParty)
+                or (isinstance(c, AlchemistGift) and c.gift == "Summoner"))
+    if not hatted_summoners(Timeline(world, tea)):
         return 1.0
     ways = len(_offers(a_hatted_summoner_summons, Timeline(world, tea),
                        state)) - 1
