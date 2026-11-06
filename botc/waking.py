@@ -82,10 +82,12 @@ def _summoner(world, state, seat, night):
     """Shown its three bluffs on the first night, which is its own
     ability (G, Weg 1, 21.10.2026), and woken on the night it makes the
     Demon: the third, or the second for a Pukka (their jinx). Drunk or
-    poisoned it is woken and chooses all the same."""
+    poisoned it is woken and chooses all the same. An Alchemist with its
+    ability gets no bluffs (their jinx) and is woken only on that night
+    (05.11.2026)."""
+    from .worlds import Summoned, alchemist_summoner
     if night == 1:
-        return True
-    from .worlds import Summoned
+        return alchemist_summoner(world) != seat
     made = next((c for c in getattr(world, "changes", ())
                  if isinstance(c, Summoned)), None)
     return night == (int(made.phase[1:]) if made is not None else 3)
@@ -653,9 +655,10 @@ def woke(world, state, seat, night):
     return False
 
 
-# What an Alchemist holds and does not wake for (group 4, 05.11.2026).
+# What an Alchemist holds and does not wake for (group 4, 05.11.2026). Its
+# Summoner's wakes on the night the Demon comes (`_summoner`).
 ALCHEMY_ASLEEP = frozenset({"Spy", "Widow", "Wraith", "Marionette",
-                            "Mastermind", "Boffin", "Summoner"})
+                            "Mastermind", "Boffin"})
 
 
 BOFFIN_UNSEEN_KEY = "*"

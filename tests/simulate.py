@@ -9,6 +9,7 @@ character sees from the seating and the roles, so a shared misreading of
 a rule cannot hide in both.
 """
 
+import os
 import random
 
 from botc.info import (registers_as_role,
@@ -1145,9 +1146,15 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
     # was played with babysitters as well (Stelle 78, 30.10.2026).
     d.lil_monsta = "LilMonsta" in script.keys \
         and not any(TEAM[r] == "demon" for r in roles) \
-        and "Summoner" not in roles
-    # The Summoner, and what it made when (21.10.2026).
+        and "Summoner" not in roles \
+        and "Summoner" not in alch_gifts.values()
+    # The Summoner, and what it made when (21.10.2026) — or the Alchemist
+    # with its ability (05.11.2026).
     d.summoner = roles.index("Summoner") if "Summoner" in roles else None
+    d.alch_summoner = next((seat for seat, key in alch_gifts.items()
+                            if key == "Summoner"), None)
+    if d.alch_summoner is not None:
+        d.summoner = d.alch_summoner
     d.marionette_slot = marionette_slot
     d.marionette_made = None
     d.summoned = None                   # (night, seat, Demon)
@@ -2444,11 +2451,20 @@ def _alchemist_setup(roles, believes, script, rng, told):
         if roles[seat] != "Alchemist":
             continue
         pool = _alchemy_pool(script, set(roles))
+        # For a gate line: one ability more often (`SIM_ALCH_FAVOUR`).
+        favour = os.environ.get("SIM_ALCH_FAVOUR")
         while pool:
             key = rng.choice(pool)
+            if favour in pool and key != favour and rng.random() < 0.6:
+                key = favour
             if key in ("Baron", "Godfather") \
                     and not _alchemy_moves_the_bag(roles, believes, script,
                                                     key, rng, told):
+                pool.remove(key)
+                continue
+            if key == "Summoner" \
+                    and not _alchemist_summons(roles, believes, script, rng,
+                                               told):
                 pool.remove(key)
                 continue
             out[seat] = key
@@ -2491,6 +2507,31 @@ def _alchemy_moves_the_bag(roles, believes, script, key, rng, told):
             roles[p] = new
         return True
     return False
+
+
+def _alchemist_summons(roles, believes, script, rng, told):
+    """The Alchemist's Summoner (05.11.2026, M): "[No Demon]", a Townsfolk
+    not in play instead of the one dealt. Only a Demon that moved nothing
+    else, and never beside a Marionette (not reckoned)."""
+    from botc.catalogue import CHARACTERS
+    if "Marionette" in roles or "Summoner" in roles:
+        return False
+    demons = [p for p, r in enumerate(roles) if TEAM[r] == "demon"]
+    if len(demons) != 1:
+        return False
+    p = demons[0]
+    c = CHARACTERS[roles[p]]
+    if c.setup or c.believes or c.brings or believes[p] is not None \
+            or p in told:
+        return False
+    fresh = [k for k in script.townsfolk if k not in roles
+             and k not in believes and k != "Alchemist"
+             and not CHARACTERS[k].believes and not CHARACTERS[k].setup
+             and not CHARACTERS[k].brings and CHARACTERS[k].dealt]
+    if not fresh:
+        return False
+    roles[p] = rng.choice(fresh)
+    return True
 
 
 def _alchemist_undone(d, night):
@@ -3227,8 +3268,9 @@ def _plague_check(d, rng, heard):
                 _plague_stage_2_gained(d, key, phase, rng, heard)
 
 
-# The Summoner's comes later, a stage of its own (group 4, J, 05.11.2026).
-ALCHEMY_NEVER = ("Summoner",)
+# The Summoner's is a dealt one's only, a setup of its own (05.11.2026,
+# claude/alchemist-5.md): "[No Demon]" (`_alchemist_summons`).
+ALCHEMY_NEVER = ()
 # Their jinxes (group 4, claude/alchemist-gruppe-4-lesarten.md): the real
 # one is in play, or none is. A Boffin's beside a real one too (4b).
 ALCHEMY_REAL_IN_PLAY = ("Spy", "Widow", "Wraith", "Marionette",
@@ -3238,13 +3280,14 @@ ALCHEMY_GUESSES = ("Spy", "Widow", "Wraith")
 # What it does not wake for: none of these it has, and the Boffin's gift
 # it does not learn.
 ALCHEMY_ASLEEP = ("Spy", "Widow", "Wraith", "Marionette", "Mastermind",
-                  "Boffin", "Summoner")
+                  "Boffin")
 
 
 def _alchemy_pool(script, held, dealt=True):
     """The Minion abilities an Alchemist may be given, beside these
-    characters in play (group 4)."""
+    characters in play (group 4). The Summoner's only at the setup."""
     return [k for k in script.minions if k not in ALCHEMY_NEVER
+            and (dealt or k != "Summoner")
             and (k not in ALCHEMY_REAL_IN_PLAY or k in held)
             and (k not in ALCHEMY_NONE_IN_PLAY or k not in held)]
 
@@ -5514,6 +5557,9 @@ def _summoner_has_it(d, night, seat=None):
     s = d.summoner if seat is None else seat
     if d.working(s, night):
         return True
+    # No jinx hands an Alchemist's to the Storyteller.
+    if s == getattr(d, "alch_summoner", None):
+        return False
     courtier = any(holder == s and n <= night <= n + 2
                    for n, holder, _c in d.courtier_drunks)
     preached = any(minion == s for _p, minion, _n in d.preached)
@@ -5553,9 +5599,14 @@ def _summoner_summons(d, night, rng, heard):
     living = [p for p in d.alive_at(phase) if d.deaths.get(p) is None]
     good = [p for p in living if d.side_at(p, phase) == "good"]
     pool = good
+    # An Alchemist's: the Storyteller makes any living player the Demon
+    # (05.11.2026, N) — itself or a Minion too.
+    alch = s == getattr(d, "alch_summoner", None)
+    if alch:
+        pool = list(living)
     # A Zombuul may be made of somebody dead, who has then died once.
     dead = [p for p in range(n) if p not in living
-            and d.side_at(p, phase) == "good"]
+            and (alch or d.side_at(p, phase) == "good")]
     if demon == "Zombuul" and dead and rng.random() < 0.15:
         pool = dead
     # A living Poppy Grower: the Storyteller picks the player.
@@ -6829,8 +6880,9 @@ def _conditionally_woke(d, seat, role, night):
     # G, Weg 1) and woken on the night it summons — drunk or not
     # (21.10.2026).
     if role == "Summoner":
+        # An Alchemist with its ability gets no bluffs (their jinx).
         if night == 1:
-            return True
+            return seat != getattr(d, "alch_summoner", None)
         made = getattr(d, "summoned", None)
         return night == (made[0] if made is not None else 3)
     if role in ("Ravenkeeper", "Sage") and seat == getattr(

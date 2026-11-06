@@ -15,7 +15,7 @@ import {TEAM, evilRegistrations, isEvil, isReallyRole, registersAsRole} from "./
 import {ORGAN_GRINDER_BY_CHOICE, killedByAVigormortis, minionStillActs, sourcesOn}
   from "./impairment.mjs";
 import {LISTENING, noteSideRead, phaseIndex} from "./phases.mjs";
-import {Timeline, readingAt} from "./worlds.mjs";
+import {Timeline, alchemistSummoner, readingAt} from "./worlds.mjs";
 import {possibleCounts, reallyLiving, theDeadOutnumberOrEqual, wokenWraiths}
   from "./waking.mjs";
 import {OTHER, shieldsOn} from "./deaths.mjs";
@@ -1655,6 +1655,10 @@ export const ClockmakerInfo = define("ClockmakerInfo", "Clockmaker",
       // says (26.10.2026). See info.py.
       if (demon === null || demon === undefined) return true;
     }
+    // An Alchemist with the Summoner's ability counts as the Summoner does
+    // (05.11.2026). See info.py.
+    if (demon === null || demon === undefined)
+      summoner = demon = alchemistSummoner(w);
     if (demon === null || demon === undefined) return false;
     const n = w.roles.length;
     let nearest = null;

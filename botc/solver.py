@@ -60,6 +60,7 @@ from .worlds import AlchemistBoffinGift, alchemist_boffin_gift_change
 from .worlds import PlagueGift, plague_gift_change, PlagueMade, PlagueSummoned
 from .worlds import AlchemistGift, alchemist_gift_change
 from .worlds import ALCHEMY_SETUP, alchemy_brackets
+from .worlds import alchemist_summoner, summoner_seat
 from .info import registers_of, evil_registrations_here
 from .worlds import (BABYSAT_READS, Babysits, Change, HandedOn, NotSummoned,
                      SUMMON_READS, Summoned, PitHagDemon, TEA_READS,
@@ -2283,7 +2284,7 @@ def summon_options(world, state):
     writes: a `Summoned` (and what a Lord of Typhon brings), a
     `NotSummoned` mark where no Demon came and the game ended, or nothing
     where the board has not reached the summoning yet. [] if none fits."""
-    summoner = world.roles.index("Summoner")
+    summoner = summoner_seat(world)
     final = state.final_phase()
     reached = lambda night: phase_index(final) >= phase_index(f"N{night}")
     died = sorted(state.died_at(summoner), key=phase_index)
@@ -2295,8 +2296,10 @@ def summon_options(world, state):
     # summons then, alive or dead as the player is (their jinx,
     # 26.10.2026). Offered beside the Summoner's own; the plan keeps the
     # one the story fits.
+    # Not an Alchemist's (05.11.2026): an Engineer changes no Townsfolk.
     jinxed = _engineer_on_board(state) \
-        and _engineer_may_take_the_summoner(state)
+        and _engineer_may_take_the_summoner(state) \
+        and alchemist_summoner(world) is None
     out = []
     for demon in _summonable(state):
         for night in ((2, 3) if demon == "Pukka" else (3,)):
@@ -2311,10 +2314,13 @@ def summon_options(world, state):
         if not reached(3):
             out.insert(0, ())             # not yet: nothing to say
         elif over and phase_index(final) == phase_index("N3"):
-            # Drunk or poisoned on its turn: no Demon, good won at dawn.
+            # Drunk or poisoned on its turn: no Demon, good won at dawn —
+            # an Alchemist's too (05.11.2026, O).
             out.append((NotSummoned("N3", summoner),))
     elif over and phase_index(final) == phase_index(gone):
-        # Dead before its turn: nothing can come, good won there.
+        # Dead before its turn: nothing can come, good won there. An
+        # Alchemist's: evil won (their jinx). The game ends there either
+        # way, and that is all the board can show.
         out.append((NotSummoned(gone, summoner),))
     return [way + enters for way in out
             for enters in _marionette_enters(
@@ -3871,11 +3877,12 @@ ALCHEMY_SEEN = frozenset({"Poisoner", "Witch", "DevilsAdvocate",
 # jinxes: the real one is in play — the Spy, the Widow, the Wraith, the
 # Marionette, the Organ Grinder — or none is, the Mastermind. Beside a
 # real Boffin too: the Demon then has two gifts (4b, Patrick's 3). The
-# Summoner's comes later (J).
+# Summoner's since 05.11.2026 (claude/alchemist-5.md): a setup of its own,
+# "[No Demon]" (`worlds.ALCHEMY_SETUP`), so only a dealt Alchemist's.
 ALCHEMY_REAL_IN_PLAY = frozenset({"Spy", "Widow", "Wraith", "Marionette",
                                   "OrganGrinder"})
 ALCHEMY_NONE_IN_PLAY = frozenset({"Mastermind"})
-ALCHEMY_NOT_YET = frozenset({"Summoner"})
+ALCHEMY_NOT_YET = frozenset()
 
 
 def _alchemy_jinx_allows(world, key, since):
@@ -3929,6 +3936,10 @@ def alchemist_offers(world, state, seat, since="N1"):
             if not plain:
                 may = [k for k in may if k in keys]
             seen_here = ALCHEMY_SEEN | keys
+    else:
+        # A Philosopher's comes after the setup: never the Summoner's,
+        # whose "[No Demon]" is the deal (05.11.2026).
+        may = [k for k in may if k != "Summoner"]
     # Group 4: a guess makes the Spy's, the Widow's and the Wraith's seen
     # (L). The Boffin's is seen for a Philosopher's too (4b, Patrick's 4).
     if any(isinstance(i, AlchemistGuess) and i.player == seat
@@ -5101,6 +5112,11 @@ def a_pukka_kills_what_it_poisoned(world, state, night):
     # (26.10.2026).
     from .worlds import tea_made
     if tea_made(world, seat, night):
+        return []
+    # Or summoned tonight (05.11.2026, found with the Alchemist's Summoner):
+    # no token of its own is due — not a Poisoner's from last night.
+    if any(isinstance(c, Summoned) and c.seat == seat and c.phase == phase
+           for c in getattr(world, "changes", ())):
         return []
     # Three ways a Pukka's night passes without a body besides "the one
     # it poisoned could not die".
@@ -7362,6 +7378,18 @@ def _plain_failures(world, state, outcome=None):
             elif isinstance(change, NotSummoned) and change.phase == "N3" \
                     and summoner in state.alive_set("N3"):
                 failures[night].add(summoner)
+        # An Alchemist with its ability (05.11.2026): working when the
+        # Demon came, drunk or poisoned on a third night that made none
+        # (O). No jinx hands an Alchemist's to the Storyteller.
+        alch = alchemist_summoner(world)
+        for change in (getattr(world, "changes", ())
+                       if alch is not None else ()):
+            night = int(change.phase[1:])
+            if isinstance(change, Summoned):
+                working.setdefault(night, set()).add(alch)
+            elif isinstance(change, NotSummoned) and change.phase == "N3" \
+                    and alch in state.alive_set("N3"):
+                failures[night].add(alch)
 
     # A Summoner chosen at a tea party (Hatter stage 2, 25.10.2026): working
     # when it made a Demon, and drunk or poisoned on a third night it

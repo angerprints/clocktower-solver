@@ -191,9 +191,39 @@ BABYSAT_READS = [None]
 
 def lil_monsta_world(world):
     """Was this world dealt with Lil' Monsta in the bag — nobody holding a
-    Demon? The only other bag without one has a Summoner in it."""
+    Demon? The only other bags without one have a Summoner in them, or an
+    Alchemist with the Summoner's ability (`alchemist_summoner`)."""
     return not any(TEAM[r] == "demon" for r in world.roles) \
-        and "Summoner" not in world.roles
+        and "Summoner" not in world.roles \
+        and alchemist_summoner(world) is None
+
+
+def alchemist_summoner(world):
+    """The seat of an Alchemist dealt the Summoner's ability (05.11.2026,
+    claude/alchemist-beschwoerer-lesarten.md, M): "[No Demon]", a
+    Townsfolk more — or None. Read off the deal: no Demon dealt, no
+    Summoner, and the table's usual Minions. Lil' Monsta's bag, the only
+    other without a Demon, has one Minion more."""
+    return _alchemist_summoner_in(world.roles)
+
+
+def _alchemist_summoner_in(roles):
+    if "Alchemist" not in roles or "Summoner" in roles \
+            or any(TEAM[r] == "demon" for r in roles):
+        return None
+    usual = SETUP.get(len(roles))
+    if usual is None \
+            or sum(1 for r in roles if TEAM[r] == "minion") != usual[2]:
+        return None
+    return roles.index("Alchemist")
+
+
+def summoner_seat(world):
+    """The seat whose Summoner's ability makes the Demon: the dealt
+    Summoner, or the Alchemist with its ability — or None."""
+    if "Summoner" in world.roles:
+        return world.roles.index("Summoner")
+    return alchemist_summoner(world)
 
 
 class Summoned(Change):
@@ -238,9 +268,9 @@ SUMMON_READS = [None]
 
 
 def summoner_world(world):
-    """Was the Summoner dealt in this world? Then nobody was dealt the
-    Demon."""
-    return "Summoner" in world.roles
+    """Was the Summoner dealt in this world, or an Alchemist its ability?
+    Then nobody was dealt the Demon."""
+    return summoner_seat(world) is not None
 
 
 class TeaParty(Change):
@@ -1173,7 +1203,10 @@ def _boffin_brackets(bags, script):
 # Godfather and its Xaan shift the bag as theirs do, beside a dealt one's
 # (A: both count). Such a bag holds the Alchemist; which ability it took
 # is the solver's (`alchemy_brackets`).
-ALCHEMY_SETUP = ("Baron", "Godfather", "Xaan")
+ALCHEMY_SETUP = ("Baron", "Godfather", "Xaan",
+                 # Its Summoner's "[No Demon]" (05.11.2026, M): a Townsfolk
+                 # instead of the Demon.
+                 "Summoner")
 
 
 def _alchemist_brackets(bags, script):
@@ -1228,7 +1261,10 @@ def alchemy_brackets(roles, script, fabled=()):
     for present, counts in base:
         if "Alchemist" in present:
             continue                      # one of its own
-        real = frozenset(p for p in present if p in movers)
+        # Lil' Monsta is in the bag and nobody's character (05.11.2026,
+        # found with the Alchemist's Summoner): not asked of the deal.
+        real = frozenset(p for p in present if p in movers
+                         and CHARACTERS[p].dealt)
         if real != dealt:
             continue
         if any(p in CHARACTERS and p not in roles for p in present
@@ -1560,6 +1596,11 @@ def seated_legally(roles, believes=None):
     # first babysitter instead, which the Minions choose on the first
     # night (its jinx, solver.the_minions_choose_a_babysitter).
     no_demon = not any(TEAM[r] == "demon" for r in roles)
+    # Beside an Alchemist with the Summoner's ability no Marionette is
+    # dealt (05.11.2026, not reckoned: claude/alchemist-5.md).
+    if no_demon and "Marionette" in roles \
+            and _alchemist_summoner_in(roles) is not None:
+        return False
     for seat, role in enumerate(roles):
         team = CHARACTERS[role].beside
         if team == "demon" and no_demon:
