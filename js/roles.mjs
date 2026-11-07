@@ -67,6 +67,7 @@ export const mustHide = role => !!CHARACTERS[role].hides;
  * Empty for everybody who knows what they are.
  */
 export function believedTokens(role, script) {
+  if (role === "Hermit") return hermitTokens(script);
   const c = CHARACTERS[role];
   if (!c.believes) return [];
   const out = [];
@@ -160,7 +161,7 @@ export function abilityState(world, seat, role, phase, gained = null,
     if (vortoxed && TEAM[role] === "townsfolk") return INVERTED;
     return GENUINE;
   }
-  if (believesAnother(world.roleAt(seat, phase)) &&
+  if (believesHere(world.roleAt(seat, phase), world.believes[seat]) &&
       world.believes[seat] === role) return ARBITRARY;
   // A Philosopher keeps its own character and gains another's ability,
   // so a seat can be working two at once. `gained` is
@@ -180,4 +181,22 @@ export function abilityState(world, seat, role, phase, gained = null,
         && world.roleAt(seat, phase) === "Philosopher") return ARBITRARY;
   }
   return ABSENT;
+}
+
+/** What a Hermit of this script may think it is (Eremit Stufe 2, B and C):
+ * a Townsfolk with the Drunk's ability, the Demon with the Lunatic's;
+ * [] if it knows. See roles.py. */
+export function hermitTokens(script) {
+  const keys = script.keys;
+  if (!keys.includes("Hermit")) return [];
+  let out = [];
+  if (keys.includes("Drunk")) out = out.concat(believedTokens("Drunk", script));
+  if (keys.includes("Lunatic"))
+    out = out.concat(believedTokens("Lunatic", script));
+  return out;
+}
+
+/** A believer, or a Hermit handed a token. See roles.py. */
+export function believesHere(role, believed) {
+  return believesAnother(role) || (role === "Hermit" && !!believed);
 }

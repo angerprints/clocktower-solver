@@ -166,6 +166,11 @@ def _hermit(world, state, seat, night):
     """When any Outsider whose ability it has would wake (07.11.2026): the
     Butler's every night, the Ogre's on the first."""
     from .info import hermit_abilities      # local: info imports waking
+    # One that thinks it is somebody else lives that one's nights, as the
+    # Drunk or the Lunatic does (stage 2, B and C).
+    token = world.believes[seat]
+    if token:
+        return woke_as(world, state, seat, night, token)
     return any(not CHARACTERS[k].believes
                and woke_as(world, state, seat, night, k)
                for k in sorted(hermit_abilities(state.script)))

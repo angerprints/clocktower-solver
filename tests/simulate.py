@@ -609,6 +609,10 @@ class Deal:
         # stops it.
         if seat is None:
             return True
+        # A Hermit using the ability it only thinks it has (Eremit Stufe
+        # 2, B): that one does nothing.
+        if seat == getattr(self, "_hermit_as_token", None):
+            return False
         phase = f"D{night}" if by_day else f"N{night}"
         if self.philosophies.get(seat) == "Drunk" \
                 and self.role_at(seat, phase) == "Philosopher":
@@ -753,9 +757,19 @@ def deal(n, rng, script=None, told=None):
         if room:
             out = rng.choice(room)
             tf = n - mi - de - out
-    picked_outsiders = rng.sample(outsiders, out)
+    # A Hermit with the Heretic's ability is never dealt beside a Baron, a
+    # Godfather, a Pit-Hag, a Spy, a Widow or a Lleech: "only one of them
+    # may be in play" (their jinxes, Eremit Stufe 2, D Weg 1).
+    heretic_block = "Hermit" in outsiders and "Heretic" in outsiders \
+        and bool({"Baron", "Godfather", "PitHag", "Spy", "Widow",
+                  "Lleech"} & set(picked_minions + picked_demons))
+    may = [o for o in outsiders if not (heretic_block and o == "Hermit")]
+    picked_outsiders = rng.sample(may if len(may) >= out else outsiders,
+                                  out) if heretic_block \
+        else rng.sample(outsiders, out)
     # For a gate line: the Hermit dealt more often (`SIM_HERMIT_FAVOUR`).
     if os.environ.get("SIM_HERMIT_FAVOUR") and "Hermit" in outsiders \
+            and not heretic_block \
             and "Hermit" not in picked_outsiders and picked_outsiders \
             and rng.random() < 0.7:
         picked_outsiders[rng.randrange(len(picked_outsiders))] = "Hermit"
@@ -774,6 +788,17 @@ def deal(n, rng, script=None, told=None):
         chosen.append(o)
         if o == "Drunk":
             believes_for[o] = spare.pop()      # a token nobody else can hold
+        # A Hermit with the Drunk's ability thinks it is a Townsfolk nobody
+        # holds, with the Lunatic's the Demon; with both the Storyteller's
+        # pick (Eremit Stufe 2, B and C).
+        if o == "Hermit" and ("Drunk" in outsiders or "Lunatic" in outsiders):
+            as_demon = "Lunatic" in outsiders and (
+                "Drunk" not in outsiders or rng.random() < 0.5)
+            if as_demon:
+                believes_for[o] = (picked_demons[0] if picked_demons
+                                   else rng.choice(demons))
+            elif spare:
+                believes_for[o] = spare.pop()
     chosen += spare[:tf]
     # "[+the King]": a Choirboy in the bag brings the King with it, in
     # place of another Townsfolk (10.10.2026). A script with a Choirboy
@@ -1978,7 +2003,8 @@ def _ogre_picks(d, heard, rng):
         target = rng.choice([p for p in range(d.n) if p != ogre])
         role = d.role_at(target, "N1")
         if d.side_at(target, "N1") == "evil" \
-                or {"minion", "demon"} & CHARACTERS[role].registers:
+                or any({"minion", "demon"} & CHARACTERS[r].registers
+                       for r in _reg_roles(d, target, "N1")):
             d.side_changes.append(("D1", ogre, "Ogre", "evil"))
         if rng.random() < 0.5:
             heard.append(OgreChoice(1, ogre, target=target))
@@ -2896,6 +2922,47 @@ def _phil(d, seat, phase):
     return took
 
 
+def _reg_roles(d, seat, phase):
+    """The characters this seat registers as it pleases the Storyteller:
+    its own, and the Recluse's for a Hermit with that ability (Patrick,
+    07.11.2026: "der Eremit kann falsch registrieren, falls er eine
+    Fähigkeit hat, die falsch registrieren kann")."""
+    role = d.role_at(seat, phase)
+    if role == "Hermit" and _took(d, seat, "Recluse", phase):
+        return [role, "Recluse"]
+    return [role]
+
+
+def _evil_regs(d, seat, phase, side=None):
+    """`evil_registrations` over `_reg_roles`."""
+    out = []
+    for r in _reg_roles(d, seat, phase):
+        for got in (evil_registrations(r, side) if side is not None
+                    else evil_registrations(r)):
+            if got not in out:
+                out.append(got)
+    return out
+
+
+def _hermit_token(d, seat, phase):
+    """What a Hermit thinks it is then, or None (Eremit Stufe 2)."""
+    if d.role_at(seat, phase) != "Hermit":
+        return None
+    return d.token(seat, phase)
+
+
+def _hermits_the_damsel_jinx_poisons(d, night):
+    """The Hermits with the Damsel's ability a Spy's or a Widow's jinx
+    poisons tonight (Eremit Stufe 2, D Weg 1): the whole Hermit."""
+    from botc.info import hermit_abilities
+    if "Damsel" not in hermit_abilities(d.script):
+        return set()
+    if not any(d.role_at(p, f"N{k}") in ("Spy", "Widow")
+               for k in range(1, night + 1) for p in range(d.n)):
+        return set()
+    return {p for p in range(d.n) if d.role_at(p, f"N{night}") == "Hermit"}
+
+
 def _took(d, seat, role, phase):
     """A Philosopher that took that character, and still the Philosopher
     then. It chooses on its first night, so it has it from night one.
@@ -2908,9 +2975,12 @@ def _took(d, seat, role, phase):
             return True
     # A Hermit with that Outsider's ability (07.11.2026), as the solver's
     # `info.has_hermit_ability`.
+    # Not one it would have to choose with, if it thinks it is somebody
+    # else (B Weg 1).
     if role is not None and d.role_at(seat, phase) == "Hermit":
-        from botc.info import hermit_abilities
-        if role in hermit_abilities(d.script):
+        from botc.info import HERMIT_CHOOSES, hermit_abilities
+        if role in hermit_abilities(d.script) and not (
+                role in HERMIT_CHOOSES and d.token(seat, phase)):
             return True
     return _gifted(d, seat, role, phase)
 
@@ -3807,7 +3877,7 @@ def _slayer_shoots(d, day, rng, heard):
         if working and (TEAM[held] == "demon"
                         or _babysits(d, target, phase)):
             died = True
-        elif working and held == "Recluse" \
+        elif working and "Recluse" in _reg_roles(d, target, phase) \
                 and d.working(target, day, by_day=True) \
                 and _can_die_by_day(d, target, day) and rng.random() < 0.5:
             died = True
@@ -3869,7 +3939,8 @@ def _golem_strikes(d, golem, nominee, day, rng):
     held = d.role_at(nominee, phase)
     if TEAM[held] == "demon" or _babysits(d, nominee, phase):
         return False
-    if held == "Recluse" and d.working(nominee, day, by_day=True) \
+    if "Recluse" in _reg_roles(d, nominee, phase) \
+            and d.working(nominee, day, by_day=True) \
             and rng.random() < 0.5:
         return False
     if not _can_die_by_day(d, nominee, day):
@@ -4537,7 +4608,9 @@ def _may_register_either_way(d, seat, night):
     role = d.role_at(seat, f"N{night}")
     # A Minion given the Spy's ability (Pestdoktor Stufe 2, H).
     spy = _plague_minion(d, seat, "Spy", f"N{night}")
-    return (bool(CHARACTERS[role].registers) or spy) and d.working(seat, night)
+    return (any(CHARACTERS[r].registers
+                for r in _reg_roles(d, seat, f"N{night}")) or spy) \
+        and d.working(seat, night)
 
 
 def _bounty_hunter_is_shown(d, seat, night, rng):
@@ -4555,7 +4628,7 @@ def _bounty_hunter_is_shown(d, seat, night, rng):
     maybe = [p for p in others if p not in evil
              and d.side_at(p, phase) == "good"
              and _may_register_either_way(d, p, night)
-             and True in evil_registrations(d.role_at(p, phase))]
+             and True in _evil_regs(d, p, phase)]
     demon = d.demon_at(phase)
     pool = [p for p in evil if p != demon] or evil
     if maybe and (not pool or rng.random() < 0.2):
@@ -4610,7 +4683,7 @@ def _cult_leader_turns(d, night, rng):
             side = "good"
         if not _acts_as_cult_leader(d, other, phase) \
                 and _may_register_either_way(d, other, night) \
-                and len(set(evil_registrations(d.role_at(other, phase)))) > 1:
+                and len(set(_evil_regs(d, other, phase))) > 1:
             side = rng.choice(["evil", "good"])
         if side != d.side_at(seat, f"D{night}"):
             d.side_changes.append((f"D{night}", seat,
@@ -7390,6 +7463,17 @@ def honest_info(d, night, rng):
                 and d.role_at(seat, f"N{night}") not in ON_DEATH \
                 and not _took(d, seat, "Klutz", f"N{night}"):
             continue
+        # A Hermit that thinks it is a Townsfolk or the Demon is told, as
+        # that one, whatever the Storyteller likes (Eremit Stufe 2, B).
+        if _hermit_token(d, seat, f"N{night}"):
+            d._hermit_as_token = seat
+            try:
+                made = _droisoned_info(d, seat, night, rng)
+            finally:
+                d._hermit_as_token = None
+            if made is not None:
+                out.append(made)
+            continue
         if not d.working(seat, night):
             # A droisoned seat is not silent. It wakes on the schedule of
             # the character it *believes* it is and is told something —
@@ -7539,10 +7623,16 @@ def droisoned_at(d, night, by_day=False, _without_their_drunks=False):
         known = frozenset(droisoned_at(d, night, by_day,
                                        _without_their_drunks=True))
 
-    # Handed the wrong token: wrong every night of the game.
+    # Handed the wrong token: wrong every night of the game. Not a Hermit:
+    # its Outsider abilities work, and what it is told as the one it
+    # thinks it is was made up (Eremit Stufe 2, B; `_hermit_token`).
     for p in range(d.n):
-        if d.token(p, phase) is not None:
+        if d.token(p, phase) is not None \
+                and d.role_at(p, phase) != "Hermit":
             out.add(p)
+    # The Damsel's jinxes, on a Hermit with its ability: poisoned once a
+    # Spy or a Widow is or has been in play (D Weg 1).
+    out |= _hermits_the_damsel_jinx_poisons(d, night)
 
     # While the seat that did it is still the Poisoner. Made something
     # else by a Pit-Hag later the same night, its poison is gone with
@@ -7932,7 +8022,7 @@ def _make_false(d, info, night, rng):
         phase = f"N{night}"
         good = [p for p in range(d.n) if p != info.player
                 and not _reads_evil(d, p, phase)
-                and True not in evil_registrations(d.role_at(p, phase))]
+                and True not in _evil_regs(d, p, phase)]
         if not good:
             return None
         d.bh_seen.setdefault(info.player, set()).discard(info.target)
@@ -8259,8 +8349,7 @@ def _for_role(d, seat, role, night, rng):
             # and a Cult Leader as whichever it is tonight (11.10.2026).
             if _acts_as_cult_leader(d, p, phase):
                 return d.side_at(p, phase) == "evil"
-            opts = sorted(evil_registrations(d.role_at(p, phase),
-                                             d.side_at(p, phase)))
+            opts = sorted(_evil_regs(d, p, phase, d.side_at(p, phase)))
             return rng.choice(opts) if len(opts) > 1 else opts[0]
         evil = [p for p in range(d.n) if shown_evil(p)]
         good = [p for p in range(d.n) if p not in evil]
@@ -8288,7 +8377,7 @@ def _for_role(d, seat, role, night, rng):
         # poisoned Spy is a Spy and reads as one.
         spies = [p for p in range(d.n) if p != seat
                  and d.side_at(p, phase) == "evil"
-                 and False in evil_registrations(d.role_at(p, phase), "evil")
+                 and False in _evil_regs(d, p, phase, "evil")
                  and not _acts_as_cult_leader(d, p, phase)
                  and d.working(p, night)]
         if spies and rng.random() < 0.25:
@@ -8399,7 +8488,8 @@ def _for_role(d, seat, role, night, rng):
             table says otherwise.
             """
             r = d.role_at(p, when)
-            return {TEAM[r]} | set(CHARACTERS[r].registers)
+            return {TEAM[r]} | {t for x in _reg_roles(d, p, when)
+                                for t in CHARACTERS[x].registers}
 
         others = [p for p in range(d.n) if p != seat]
         if last is not None and d.working(seat, night):
@@ -8432,7 +8522,7 @@ def _for_role(d, seat, role, night, rng):
         # reason a Recluse is a nuisance to its own team, and something
         # the simulator never produced.
         recluse = [p for p in (a, b)
-                   if d.role_at(p, f"N{night}") == "Recluse"]
+                   if "Recluse" in _reg_roles(d, p, f"N{night}")]
         # Either of two Demons (Hatter stage 2, B Weg 1).
         yes = (demon in (a, b) or d.red_herring in (a, b)
                or any(p in (a, b) for p in d.demons_at(f"N{night}"))
@@ -8542,7 +8632,8 @@ def _for_role(d, seat, role, night, rng):
             # lower than the solver could reach — and the board had no
             # legal world, because no impairment can make a Juggler
             # *undercount*.
-            if registers_as_role(d.role_at(who, f"D{night - 1}"), said):
+            if any(registers_as_role(r, said)
+                   for r in _reg_roles(d, who, f"D{night - 1}")):
                 right += 1
         return JugglerInfo(night, seat, guesses=tuple(guesses), count=right)
 
@@ -9467,7 +9558,8 @@ def _pair_info(d, seat, night, rng, cls, matches, team=None,
     if team is not None:
         liars = [p for p in range(d.n)
                  if p != seat and p not in honest
-                 and (_registers_as(d.role_at(p, f"N{night}"), team)
+                 and (any(_registers_as(r, team)
+                          for r in _reg_roles(d, p, f"N{night}"))
                       # A Minion given the Spy's ability (Pestdoktor
                       # Stufe 2, H).
                       or (team in ("townsfolk", "outsider")

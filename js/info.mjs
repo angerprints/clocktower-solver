@@ -202,6 +202,10 @@ export function tookIt(w, s, seat, role, phase) {
 // The Hermit (07.11.2026). See info.py.
 // ---------------------------------------------------------------------
 export const HERMIT_NOT_YET = new Set(["Drunk", "Lunatic"]);
+/** What a Hermit that thinks it is somebody else would have to choose
+ * itself, and so does not (B Weg 1). See info.py. */
+export const HERMIT_CHOOSES = new Set(["Butler", "Ogre", "Moonchild", "Klutz",
+                                       "Golem", "Zealot"]);
 const HERMIT_CACHE = new Map();
 
 /** The Outsider abilities a Hermit of this script has. */
@@ -221,7 +225,8 @@ export function hermitAbilities(script) {
 /** Is this seat the Hermit then, with that Outsider's ability? */
 export function hasHermitAbility(w, s, seat, role, phase) {
   return !!s && hermitAbilities(s.script).has(role)
-    && w.roleAt(seat, phase) === "Hermit";
+    && w.roleAt(seat, phase) === "Hermit"
+    && !(HERMIT_CHOOSES.has(role) && w.believes[seat]);
 }
 
 /** The seats holding the Hermit then, if it has that ability. */
@@ -229,7 +234,8 @@ export function hermitHolders(w, s, role, phase) {
   if (!s || !hermitAbilities(s.script).has(role)) return [];
   const out = [];
   for (let seat = 0; seat < w.roles.length; seat++)
-    if (w.roleAt(seat, phase) === "Hermit") out.push(seat);
+    if (w.roleAt(seat, phase) === "Hermit"
+        && !(HERMIT_CHOOSES.has(role) && w.believes[seat])) out.push(seat);
   return out;
 }
 

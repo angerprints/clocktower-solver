@@ -197,6 +197,13 @@ def claims_for(deal, rng, script=None):
             notes[seat] = f"good {role}, shown in the open, claiming it"
             continue
 
+        # A Hermit that thinks it is the Demon bluffs as the Demon would
+        # (Eremit Stufe 2, C), from the bluffs the team holds.
+        if role == "Hermit" and TEAM.get(honest) == "demon":
+            claims[seat] = spare.pop() if spare else rng.choice(pool)
+            notes[seat] = f"the Hermit, thinking it is the {honest}, bluffing"
+            continue
+
         if rng.random() < GOOD_LIE_CHANCE:
             if TEAM[role] == "outsider" and rng.random() < HIDING_SHARE:
                 hidden = _hiding_claim(deal, seat, rng, script)

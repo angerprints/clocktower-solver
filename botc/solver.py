@@ -47,6 +47,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    AlchemistHas, AlchemistGuess, ALCHEMY_GUESSES)
 from .roles import (ABSENT, ARBITRARY, GENUINE, GOOD, SETUP, TEAM,
                     ability_state, believed_tokens, believes_another,
+                    believes_here,
                     INVERTED, registers_as_role, evil_registrations,
                     is_evil, must_hide, show, wake_fits)
 from . import deaths as death_causes
@@ -7723,8 +7724,17 @@ def _plain_failures(world, state, outcome=None):
                     outcome[idx] = INVENTED
                 continue
             if info.hard():
+                # Or it holds with a Hermit that has the Recluse's ability
+                # read as the Recluse — a Slayer's shot that landed on it
+                # (Eremit Stufe 2, Patrick 07.11.2026, 1): it was working.
                 if not info.holds(world, state, None):
-                    return None, None, 1.0, None   # this cannot have happened
+                    who = next((w for w in hermit_holders(
+                        world, state, "Recluse", f"N{info.night}")
+                        if info.holds(_AsRecluse(world, w), state, None)),
+                        None)
+                    if who is None:
+                        return None, None, 1.0, None   # cannot have happened
+                    working.setdefault(info.night, set()).add(who)
                 outcome[idx] = HELD
                 # A fact can lean on somebody too: a Banshee announced was a
                 # Banshee whose ability worked that night — or the Boffin
@@ -8960,6 +8970,28 @@ def a_widow_poisons_one(world, state, night):
     return [impairment.Source("Widow", frozenset(range(state.n_players)),
                               capacity=1, cost=free, repeat_cost=free,
                               actor=seat)]
+
+
+@impairment.source_rule
+def a_spy_or_widow_poisons_the_hermit(world, state, night):
+    """The Damsel's jinxes reach a Hermit with its ability (Eremit Stufe 2,
+    D Weg 1, 07.11.2026): "If the Spy (or the Widow) is or has been in
+    play, the Damsel is poisoned" — the whole Hermit, every ability of it.
+    Free and on offer rather than forced: it keeps worlds."""
+    if not _in_bag(state, "Hermit") \
+            or "Damsel" not in hermit_abilities(state.script):
+        return []
+    if not any(world.find_at(key, f"N{k}") is not None
+               for k in range(1, night + 1) for key in ("Spy", "Widow")):
+        return []
+    phase = f"N{night}"
+    seats = frozenset(p for p in range(state.n_players)
+                      if world.role_at(p, phase) == "Hermit")
+    if not seats:
+        return []
+    free = lambda who: 1.0
+    return [impairment.Source("Hermit (Damsel)", seats, capacity=len(seats),
+                              cost=free, repeat_cost=free)]
 
 
 @impairment.source_rule
@@ -10564,7 +10596,8 @@ def is_lying(world, state, p):
     # a Marionette believes what it says as sincerely as the Drunk does.
     claim = state.dealt_claims().get(p)
     if claim and not (role == claim
-                      or (believes_another(role) and believed == claim)):
+                      or (believes_here(role, believed)
+                          and believed == claim)):
         return True
 
     said = (getattr(state, "wakes", None) or {}).get(p)
@@ -10749,7 +10782,8 @@ def prior_weight(world, state):
         step = reads.get(p, 0)
         if step and evil:
             w *= READ_ODDS_STEP ** step
-        if suspects.get(p) and believes_another(world.roles[p]):
+        if suspects.get(p) and believes_here(world.roles[p],
+                                             world.believes[p]):
             w *= DRUNK_SUSPICION_STEP
 
     for p, phase in state.death_phases():
@@ -10993,7 +11027,7 @@ def summarize(valid, state, weights=None):
                 evil += wt
             if TEAM[role] == "demon":
                 demon += wt
-            if believes_another(role):
+            if believes_here(role, w.believes[p]):
                 drunk += wt
             if is_lying(w, state, p):
                 lying += wt
@@ -11032,7 +11066,7 @@ def print_report(valid, state, show_worlds=5):
             parts = []
             for p, r in enumerate(w.roles):
                 tag = show(r)
-                if believes_another(r):
+                if believes_here(r, w.believes[p]):
                     tag += f"(thinks {show(w.believes[p])})"
                 parts.append(f"{p}={tag}")
             print("  " + "  ".join(parts))
@@ -11222,7 +11256,7 @@ def _tally(acc, world, view, state, weight, n, phase):
             acc["evil"][p] += weight
         if p in demons:
             acc["demon"][p] += weight
-        if believes_another(role):
+        if believes_here(role, world.believes[p]):
             acc["drunk"][p] += weight
         if is_lying(world, state, p):
             acc["lying"][p] += weight
@@ -11525,7 +11559,7 @@ def claims_cannot_fill_the_bag(state, allow_good_lies=False):
             claimed_outsider += 1
         else:
             for key in state.script.outsiders:
-                if believes_another(key) \
+                if (believes_another(key) or key == "Hermit") \
                         and claim in believed_tokens(key, state.script):
                     hidden.add(key)       # one seat each, however many claim it
     could = min(claimed_outsider + open_seats + len(hidden),

@@ -971,9 +971,17 @@ def boffin_holders(w, s, role, phase):
 # held the way a Philosopher holds what it took (`took_it`): the seat is
 # the Hermit, ability-wise it is each of them. One that works after death
 # goes on (the Recluse's, the Puzzlemaster's), one that fires at death
-# fires then, and the rest stop with it, as for anybody. Stage 1 leaves
-# the Drunk's and the Lunatic's (what it believes) to stage 2.
+# fires then, and the rest stop with it, as for anybody. The Drunk's and
+# the Lunatic's are what it believes, a token (`roles.hermit_tokens`,
+# stage 2), and no ability of their own here.
 HERMIT_NOT_YET = frozenset({"Drunk", "Lunatic"})
+# What a Hermit that thinks it is a Townsfolk or the Demon would have to
+# choose itself, and so does not (B Weg 1, 07.11.2026): the Butler's
+# master, the Ogre's pick, the Moonchild's and the Klutz's on dying, the
+# Golem's nomination, the Zealot's hands. The Puzzlemaster's drunk is
+# none of its doing and stays; it guesses nothing.
+HERMIT_CHOOSES = frozenset({"Butler", "Ogre", "Moonchild", "Klutz",
+                            "Golem", "Zealot"})
 _HERMIT_CACHE = {}
 
 
@@ -990,9 +998,11 @@ def hermit_abilities(script):
 
 
 def has_hermit_ability(w, s, seat, role, phase):
-    """Is this seat the Hermit then, with that Outsider's ability?"""
+    """Is this seat the Hermit then, with that Outsider's ability? Not one
+    it would have to choose with, if it thinks it is somebody else."""
     return s is not None and role in hermit_abilities(s.script) \
-        and w.role_at(seat, phase) == "Hermit"
+        and w.role_at(seat, phase) == "Hermit" \
+        and not (role in HERMIT_CHOOSES and w.believes[seat])
 
 
 def hermit_holders(w, s, role, phase):
@@ -1000,7 +1010,8 @@ def hermit_holders(w, s, role, phase):
     if s is None or role not in hermit_abilities(s.script):
         return []
     return [seat for seat in range(len(w.roles))
-            if w.role_at(seat, phase) == "Hermit"]
+            if w.role_at(seat, phase) == "Hermit"
+            and not (role in HERMIT_CHOOSES and w.believes[seat])]
 
 
 # --------------------------------------------------------------------------

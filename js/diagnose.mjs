@@ -105,7 +105,7 @@ export function claimsCannotFillTheBag(state, allowGoodLies = false) {
       claimedOutsider += 1;
     } else {
       for (const key of state.script.outsiders)
-        if (believesAnother(key) &&
+        if ((believesAnother(key) || key === "Hermit") &&
             believedTokens(key, state.script).includes(claim))
           hidden.add(key);              // one seat each, however many claim it
     }

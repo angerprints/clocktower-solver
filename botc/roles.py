@@ -99,8 +99,11 @@ def must_hide(role):
 def believed_tokens(role, script):
     """Which characters this one could have been handed to believe in.
 
-    Empty for everybody who knows what they are.
+    Empty for everybody who knows what they are. The Hermit believes on a
+    script with the Drunk or the Lunatic (`hermit_tokens`).
     """
+    if role == "Hermit":
+        return hermit_tokens(script)
     character = CHARACTERS[role]
     if not character.believes:
         return []
@@ -108,6 +111,29 @@ def believed_tokens(role, script):
     for team in character.believes_from:
         out.extend(script.by_team(team))
     return [k for k in out if not CHARACTERS[k].believes]
+
+
+# The Hermit (Eremit Stufe 2, 07.11.2026, claude/eremit-lesarten.md): with
+# the Drunk's ability it thinks it is a Townsfolk (B), with the Lunatic's
+# the Demon; with both the Storyteller's choice (C). Without either it
+# knows what it is.
+def hermit_tokens(script):
+    """What a Hermit of this script may think it is: [] if it knows."""
+    keys = script.keys
+    if "Hermit" not in keys:
+        return []
+    out = []
+    if "Drunk" in keys:
+        out += believed_tokens("Drunk", script)
+    if "Lunatic" in keys:
+        out += believed_tokens("Lunatic", script)
+    return out
+
+
+def believes_here(role, believed):
+    """Does this seat think it is somebody else: a believer, or a Hermit
+    handed a token?"""
+    return believes_another(role) or (role == "Hermit" and bool(believed))
 
 
 def knows_what_it_is(role):
@@ -237,7 +263,7 @@ def ability_state(world, seat, role, phase, gained=None,
         if vortoxed and TEAM[role] == "townsfolk":
             return INVERTED
         return GENUINE
-    if believes_another(world.role_at(seat, phase)) \
+    if believes_here(world.role_at(seat, phase), world.believes[seat]) \
             and world.believes[seat] == role:
         return ARBITRARY          # they were woken on this role's schedule
     # A Philosopher keeps its own character and gains another's ability,

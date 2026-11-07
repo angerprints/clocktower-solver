@@ -95,9 +95,13 @@ condition("Lunatic", (world, state, seat, night) =>
 // beside one was read differently by the two (02.10.2026).
 /** When any Outsider whose ability it has would wake (07.11.2026): the
  * Butler's every night, the Ogre's on the first. See waking.py. */
-condition("Hermit", (world, state, seat, night) =>
-  [...hermitAbilities(state.script)].sort().some(k =>
-    !CHARACTERS[k].believes && wokeAs(world, state, seat, night, k)));
+condition("Hermit", (world, state, seat, night) => {
+  // One that thinks it is somebody else lives that one's nights (stage 2).
+  const token = world.believes[seat];
+  if (token) return wokeAs(world, state, seat, night, token);
+  return [...hermitAbilities(state.script)].sort().some(k =>
+    !CHARACTERS[k].believes && wokeAs(world, state, seat, night, k));
+});
 
 condition("Philosopher", (world, state, seat, night) => {
   let took = state.philosophies()[seat];
