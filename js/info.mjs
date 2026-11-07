@@ -194,7 +194,43 @@ export function tookIt(w, s, seat, role, phase) {
       && phaseIndex(phase) >= phaseIndex(taken[1])
       && !backSince(s, seat, taken[1], phase)) return true;
   return hasBoffinAbility(w, s, seat, role, phase)
-    || hasPlagueAbility(w, s, seat, role, phase);
+    || hasPlagueAbility(w, s, seat, role, phase)
+    || hasHermitAbility(w, s, seat, role, phase);
+}
+
+// ---------------------------------------------------------------------
+// The Hermit (07.11.2026). See info.py.
+// ---------------------------------------------------------------------
+export const HERMIT_NOT_YET = new Set(["Drunk", "Lunatic"]);
+const HERMIT_CACHE = new Map();
+
+/** The Outsider abilities a Hermit of this script has. */
+export function hermitAbilities(script) {
+  const key = script.keys.join(",");
+  let got = HERMIT_CACHE.get(key);
+  if (got === undefined) {
+    got = new Set(script.keys.includes("Hermit")
+      ? script.keys.filter(k => TEAM[k] === "outsider" && k !== "Hermit"
+                                && !HERMIT_NOT_YET.has(k))
+      : []);
+    HERMIT_CACHE.set(key, got);
+  }
+  return got;
+}
+
+/** Is this seat the Hermit then, with that Outsider's ability? */
+export function hasHermitAbility(w, s, seat, role, phase) {
+  return !!s && hermitAbilities(s.script).has(role)
+    && w.roleAt(seat, phase) === "Hermit";
+}
+
+/** The seats holding the Hermit then, if it has that ability. */
+export function hermitHolders(w, s, role, phase) {
+  if (!s || !hermitAbilities(s.script).has(role)) return [];
+  const out = [];
+  for (let seat = 0; seat < w.roles.length; seat++)
+    if (w.roleAt(seat, phase) === "Hermit") out.push(seat);
+  return out;
 }
 
 // ---------------------------------------------------------------------
@@ -386,11 +422,14 @@ export function hasBoffinAbility(w, s, seat, role, phase) {
 
 /** Every seat with that ability through the Boffin at that moment. */
 export function boffinHolders(w, s, role, phase) {
-  if (role === null || role === undefined || !w.giftedSeats) return [];
+  // And a Hermit with it (07.11.2026). See info.py.
+  const out = hermitHolders(w, s, role, phase);
+  if (role === null || role === undefined || !w.giftedSeats) return out;
   const marked = [...new Set([...w.giftedSeats(),
                               ...(w.alchGiftedSeats ? w.alchGiftedSeats() : [])])]
     .sort((a, b) => a - b);
-  return marked.filter(seat => hasBoffinAbility(w, s, seat, role, phase));
+  return out.concat(marked.filter(seat => !out.includes(seat)
+    && hasBoffinAbility(w, s, seat, role, phase)));
 }
 
 /** Whose sobriety this seat's ability as that character rests on: its
@@ -2267,7 +2306,9 @@ EngineerChoice.isAChoice = true;
  * Boffin (26.10.2026): a good character of the script, none of the four
  * its jinxes forbid. What follows is aBoffinGivesTheDemon's. See info.py. */
 export const BOFFIN_NEVER_GIVES = new Set(["Drunk", "Heretic", "Ogre",
-                                           "Politician"]);
+                                           "Politician",
+                                           // Not yet (Eremit, decision 3).
+                                           "Hermit"]);
 export const boffinGiven = (row, s) => {
   const key = row.role || "";
   if (!s.script.keys.includes(key)) return null;

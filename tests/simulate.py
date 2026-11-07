@@ -176,6 +176,9 @@ class Deal:
         # The Goon, and the three that kill besides the Demon. All four
         # were dealt and never acted until 03.10.2026.
         self.goon_first = {}                # night -> (who chose it first, Goon)
+        # And for a second Goon that night — a Hermit's beside the real
+        # one (07.11.2026): night -> [(who chose it first, Goon)].
+        self.goon_more = {}
         self.assassin_chose = {}            # Assassin seat -> the night it struck
         self.assassin_aimed = {}            # night -> whom
         self.godfather_aimed = {}           # night -> whom
@@ -751,6 +754,18 @@ def deal(n, rng, script=None, told=None):
             out = rng.choice(room)
             tf = n - mi - de - out
     picked_outsiders = rng.sample(outsiders, out)
+    # For a gate line: the Hermit dealt more often (`SIM_HERMIT_FAVOUR`).
+    if os.environ.get("SIM_HERMIT_FAVOUR") and "Hermit" in outsiders \
+            and "Hermit" not in picked_outsiders and picked_outsiders \
+            and rng.random() < 0.7:
+        picked_outsiders[rng.randrange(len(picked_outsiders))] = "Hermit"
+    # "[-0 or -1 Outsider]": a Hermit in the bag (07.11.2026,
+    # claude/eremit-lesarten.md, A). Half the time an Outsider goes for a
+    # Townsfolk, and it may be the Hermit itself.
+    if "Hermit" in picked_outsiders and tf + 1 <= len(townsfolk) \
+            and rng.random() < 0.5:
+        picked_outsiders.remove(rng.choice(picked_outsiders))
+        out, tf = out - 1, tf + 1
     spare = list(townsfolk)
     rng.shuffle(spare)
 
@@ -1268,6 +1283,14 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         pool = town if (town and (not outs or rng.random() < 0.8)) else outs
         if pool:
             d.puzzle_drunk = rng.choice(pool)
+    # A Hermit with the Puzzlemaster's ability: one drunk of its own, as a
+    # Philosopher that took it has (07.11.2026).
+    for p in range(n):
+        if roles[p] == "Hermit" and _took(d, p, "Puzzlemaster", "N1"):
+            town = [q for q in range(n) if TEAM[roles[q]] == "townsfolk"]
+            if town:
+                d.puzzle_drunks = dict(getattr(d, "puzzle_drunks", {}))
+                d.puzzle_drunks[p] = rng.choice(town)
     _the_eighth_five_set_up(d, rng)
     _the_seventh_five_set_up(d, rng)
 
@@ -1946,7 +1969,9 @@ def _ogre_picks(d, heard, rng):
     # The holder, then a Philosopher that took it: it chooses on the night
     # it took it, the first (ruling G, 13.10.2026).
     ogres = [d.seat_of("Ogre")] + [
-        p for p in sorted(d.philosophies) if _took(d, p, "Ogre", "N1")]
+        p for p in sorted(d.philosophies) if _took(d, p, "Ogre", "N1")] + [
+        p for p in range(d.n)
+        if d.role_at(p, "N1") == "Hermit" and _took(d, p, "Ogre", "N1")]
     for ogre in ogres:
         if ogre is None:
             continue
@@ -2042,7 +2067,14 @@ def _the_goon_answers(d, night, chooser, target):
     Dealt in a quarter of all games and never played until 03.10.2026.
     """
     phase = f"N{night}"
-    if night in d.goon_first or target is None or chooser == target:
+    if target is None or chooser == target:
+        return False
+    # Each Goon answers its own first chooser: a Hermit with the Goon's
+    # ability beside the real one is two (07.11.2026). One Goon a night was
+    # all this knew, so whoever chose the second never went drunk.
+    if any(goon == target for _who, goon
+           in [d.goon_first.get(night, (None, None))]
+           + d.goon_more.get(night, [])):
         return False
     # Or a Philosopher that took it: it turns as well (ruling G,
     # 13.10.2026).
@@ -2051,7 +2083,10 @@ def _the_goon_answers(d, night, chooser, target):
         return False
     if not d.working(_sober(d, target, "Goon", phase), night):
         return False
-    d.goon_first[night] = (chooser, target)
+    if night in d.goon_first:
+        d.goon_more.setdefault(night, []).append((chooser, target))
+    else:
+        d.goon_first[night] = (chooser, target)
     side = d.side_at(chooser, phase)
     # A Demon the Boffin gave it does not turn good by it (their jinx,
     # 26.10.2026).
@@ -2341,6 +2376,12 @@ def _tinker_may_go(d, night, rng):
         # Not a Demon the Boffin gave it: the Storyteller does not end the
         # game that way here (26.10.2026).
         if _gifted(d, seat, "Tinker", phase):
+            continue
+        # Not a Hermit that has the Barber's too, on the first night: a
+        # swap then has no turn on the night sheet (07.11.2026, my
+        # decision 3 of claude/eremit-1.md).
+        if night == 1 and d.role_at(seat, phase) == "Hermit" \
+                and _took(d, seat, "Barber", phase):
             continue
         if seat not in d.alive_at(phase):
             continue
@@ -2864,6 +2905,12 @@ def _took(d, seat, role, phase):
         lost = (getattr(d, "phil_lost", None) or {}).get(seat)
         from botc.info import phase_index
         if lost is None or phase_index(phase) < phase_index(lost):
+            return True
+    # A Hermit with that Outsider's ability (07.11.2026), as the solver's
+    # `info.has_hermit_ability`.
+    if role is not None and d.role_at(seat, phase) == "Hermit":
+        from botc.info import hermit_abilities
+        if role in hermit_abilities(d.script):
             return True
     return _gifted(d, seat, role, phase)
 
@@ -6708,6 +6755,16 @@ def _woke_for_own_ability(d, p, night, shown=False):
     night on, whenever that character would (F Weg 1, 26.10.2026)."""
     if _woke_itself(d, p, night, shown):
         return True
+    # A Hermit wakes when an Outsider whose ability it has would: the
+    # Butler's every night, the Ogre's on the first (07.11.2026). And a
+    # Marionette that thinks it is one, on its token.
+    if (d.token(p, f"N{night}") or d.role_at(p, f"N{night}")) == "Hermit":
+        from botc.catalogue import CHARACTERS
+        from botc.info import hermit_abilities
+        if any(not CHARACTERS[k].believes
+               and _woke_itself(d, p, night, shown, as_role=k)
+               for k in sorted(hermit_abilities(d.script))):
+            return True
     # An Alchemist wakes when its Minion would, the first night too
     # (04.11.2026).
     key = getattr(d, "alchemy", {}).get(p)
@@ -7379,7 +7436,9 @@ def honest_info(d, night, rng):
         if (d.deaths.get(seat) == f"N{night}"
                 and role_now not in ON_DEATH
                 and not (role_now == "Philosopher"
-                         and _phil(d, seat, f"N{night}") == "Klutz")):
+                         and _phil(d, seat, f"N{night}") == "Klutz")
+                and not (role_now == "Hermit"
+                         and _took(d, seat, "Klutz", f"N{night}"))):
             continue
         # The character it holds *now*, not the one it was dealt. A
         # Pit-Hag turns somebody into the Sage and the Sage should then
@@ -7410,6 +7469,11 @@ def honest_info(d, night, rng):
             # An early chooser it took has already acted, in the early pass.
             if took and not (took in CHOOSES_EARLY and night > 1):
                 made = _for_role(d, seat, took, night, rng)
+        # A Hermit with the Klutz's ability points on dying (07.11.2026).
+        if made is None and role == "Hermit" \
+                and d.deaths.get(seat) == f"N{night}" \
+                and _took(d, seat, "Klutz", f"N{night}"):
+            made = _for_role(d, seat, "Klutz", night, rng)
         # A mad Pixie whose Townsfolk died has that ability, from the
         # night after (11.10.2026).
         if made is None and role == "Pixie" and night > 1:
@@ -7517,8 +7581,8 @@ def droisoned_at(d, night, by_day=False, _without_their_drunks=False):
     # 03.10.2026): a Goon killed in the night leaves its chooser sober
     # for the day.
     first = getattr(d, "goon_first", {}).get(night)
-    if first is not None:
-        chooser, goon = first
+    for chooser, goon in ([first] if first is not None else []) \
+            + getattr(d, "goon_more", {}).get(night, []):
         if not (by_day and d.deaths.get(goon) == phase):
             out.add(chooser)
 
@@ -8397,7 +8461,11 @@ def _for_role(d, seat, role, night, rng):
         # The Minions at its turn, after a Snake Charmer that swapped
         # with Lil' Monsta's babysitter (21.10.2026); the deal otherwise,
         # as always.
+        # And after a Barber's swap on the first night — a Hermit with the
+        # Tinker's and the Barber's abilities that went then (07.11.2026):
+        # the Demon is counted where the swap put it, so its Minions too.
         held = (d.role_at if getattr(d, "lil_monsta", False)
+                or (getattr(d, "barber_swaps", None) or {}).get(1)
                 else lambda m, _phase: d.roles[m])
         gaps = [min((m - demon) % d.n, (demon - m) % d.n)
                 for m in range(d.n)
@@ -8708,8 +8776,9 @@ def _for_role(d, seat, role, night, rng):
         # of character — it stays the Philosopher and works two at once —
         # so this records the choice and nothing else. The gained
         # readings are the solver's business.
+        # Not the Hermit, for now (Eremit Stufe 1, my decision 3).
         pool = [k for k in d.script.townsfolk + d.script.outsiders
-                if k != "Philosopher"]
+                if k not in ("Philosopher", "Hermit")]
         if not pool:
             return None
         took = rng.choice(pool)

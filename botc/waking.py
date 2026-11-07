@@ -161,6 +161,16 @@ def _lunatic(world, state, seat, night):
                    _acts_as(world, seat, f"N{night}"))
 
 
+@condition("Hermit")
+def _hermit(world, state, seat, night):
+    """When any Outsider whose ability it has would wake (07.11.2026): the
+    Butler's every night, the Ogre's on the first."""
+    from .info import hermit_abilities      # local: info imports waking
+    return any(not CHARACTERS[k].believes
+               and woke_as(world, state, seat, night, k)
+               for k in sorted(hermit_abilities(state.script)))
+
+
 @condition("Philosopher")
 def _philosopher(world, state, seat, night):
     """The night it chooses, and thereafter on its gained schedule.

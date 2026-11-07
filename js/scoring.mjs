@@ -43,7 +43,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         PLAGUE_UNSEEN, STORYTELLER, plagueGiven, plagueHolders, storytellerHas,
         boffinWorking, registersOf, alchemistGiven, alchemistSeats,
         alchemistsWith, alchemyHolds, ALCHEMY_GUESSES,
-        alchemistBoffinSeat, alchemistBoffinGiftOf}
+        alchemistBoffinSeat, alchemistBoffinGiftOf,
+        hermitAbilities, hermitHolders, hasHermitAbility}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -370,6 +371,13 @@ function moversIn(world, state) {
   // And whatever a Philosopher took (13.10.2026). See solver.py.
   for (const [taken] of Object.values(state.philosophies() || {}))
     roles.add(taken);
+  // And a Hermit's Outsiders (07.11.2026). See solver.py.
+  let barberGone = barberDied;
+  if (roles.has("Hermit")) {
+    for (const k of hermitAbilities(state.script)) roles.add(k);
+    barberGone = barberGone
+      || deaths.some(([s]) => world.roles[Number(s)] === "Hermit");
+  }
   let count = (swapped ? 1 : 0) + (made.size ? 1 : 0);
   // The Storyteller's Pit-Hag or a jinx after a Plague Doctor's death
   // (Pestdoktor Stufe 2): seen night by night. See solver.py.
@@ -387,7 +395,7 @@ function moversIn(world, state) {
   }
   // The same for the Barber (Stelle 53, 01.11.2026): a dealt Demon dead
   // by the night of a Barber's swap. See solver.py.
-  if (barberDied) {
+  if (barberGone) {
     const dealt = new Set();
     world.roles.forEach((r, seat) => { if (TEAM[r] === "demon") dealt.add(seat); });
     const until = Math.max(...deaths.map(([, p]) => phaseIndex(barberNight(p))));
@@ -407,7 +415,7 @@ function moversIn(world, state) {
   }
   // The Engineer's choice: night by night, always (26.10.2026).
   if (engineerOnBoard(state)) count += 2;
-  for (const [key, needs] of [["Barber", barberDied], ["Farmer", atNight],
+  for (const [key, needs] of [["Barber", barberGone], ["Farmer", atNight],
                               ["FangGu", atNight], ["Ogre", true]])
     if (needs && roles.has(key)
         && (key === "Barber" ? barberOnBoard(state) : onBoard(state, key)))
@@ -665,6 +673,20 @@ const barberRule = transitionRule(function aBarberLetsTheDemonSwapTwo(world, sta
 /** Seats that said they were the Barber — as their claim, or in a row
  * saying they became it or had been it. A swap is only considered once
  * one of them has died (table ruling). See solver.py. */
+/** Seats that said they were the Hermit, or became or had been it, where a
+ * Hermit of this script has that Outsider's ability (07.11.2026). See
+ * solver.py. */
+function hermitClaimants(state, role) {
+  const out = new Set();
+  if (!hermitAbilities(state.script).has(role)) return out;
+  for (const [seat, said] of Object.entries(state.claims || {}))
+    if (said === "Hermit") out.add(Number(seat));
+  for (const info of state.infos)
+    if (info.type === "Became" && (info.role === "Hermit" || info.was === "Hermit"))
+      out.add(Number(info.player));
+  return out;
+}
+
 export function barberClaimants(state) {
   const out = new Set();
   for (const [seat, role] of Object.entries(state.claims || {}))
@@ -675,6 +697,8 @@ export function barberClaimants(state) {
   // A Philosopher that wrote down taking the Barber (13.10.2026).
   for (const [who, [taken]] of Object.entries(state.philosophies() || {}))
     if (taken === "Barber") out.add(Number(who));
+  // A Hermit that said so (07.11.2026). See solver.py.
+  for (const p of hermitClaimants(state, "Barber")) out.add(p);
   // A Boffin row naming it (L Weg 1): every seat. See solver.py.
   if (boffinNames(state, "Barber"))
     for (let p = 0; p < state.nPlayers; p++) out.add(p);
@@ -1380,6 +1404,8 @@ transitionRule(function anOgrePicksASide(world, state) {
   for (const who of Object.keys(state.philosophies() || {}).map(Number)
          .sort((a, b) => a - b))
     if (tookIt(world, state, who, "Ogre", "N1")) ogres.push(who);
+  // And a Hermit with it (07.11.2026).
+  ogres.push(...hermitHolders(world, state, "Ogre", "N1"));
   let stories = [[[], 1.0]];
   for (const ogre of ogres) {
     if (ogre === null || ogre === undefined) continue;
@@ -1913,6 +1939,8 @@ export function hatterClaimants(state) {
       out.add(Number(info.player));
   for (const [who, [taken]] of Object.entries(state.philosophies() || {}))
     if (taken === "Hatter") out.add(Number(who));
+  // A Hermit that said so (07.11.2026), as for the Barber.
+  for (const p of hermitClaimants(state, "Hatter")) out.add(p);
   // A Boffin row naming it (L Weg 1), as for the Barber.
   if (boffinNames(state, "Hatter"))
     for (let p = 0; p < state.nPlayers; p++) out.add(p);
@@ -3462,7 +3490,9 @@ function asRecluse(world, who) {
 function philosopherRecluses(world, state, phase) {
   return Object.keys(state.philosophies() || {}).map(Number)
     .sort((a, b) => a - b)
-    .filter(who => tookIt(world, state, who, "Recluse", phase));
+    .filter(who => tookIt(world, state, who, "Recluse", phase))
+    // And a Hermit with its ability (07.11.2026), dead or alive.
+    .concat(hermitHolders(world, state, "Recluse", phase));
 }
 
 /** Sort every ledger row into: fits, contradicts, or was invented.
@@ -3963,7 +3993,9 @@ function plainFailures(world, state, outcome = {}) {
       // Idiots are one character (seed 91, 30.10.2026). See solver.py.
       seat = Number.isInteger(info.player) && info.player >= 0
           && info.player < state.nPlayers
-          && world.roleAt(info.player, began) === role
+          && (world.roleAt(info.player, began) === role
+              // A Hermit's own row as that Outsider (07.11.2026).
+              || hasHermitAbility(world, state, info.player, role, began))
         ? info.player : world.findAt(role, began);
       if (seat === null) seat = world.findAt(role, phase);
       // Nobody holds it, and the one who said it believes it does: a
@@ -4038,6 +4070,10 @@ function plainFailures(world, state, outcome = {}) {
     if (held === ABSENT && seat !== null && role !== null && role !== undefined
         && hasBoffinAbility(world, state, seat, role, givenAt))
       held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
+    // A Hermit with that Outsider's ability (07.11.2026): its own.
+    if (held === ABSENT && seat !== null && role !== null && role !== undefined
+        && hasHermitAbility(world, state, seat, role, givenAt))
+      held = GENUINE;
     const sober = seat === null ? seat
       : soberSeat(world, state, seat, role, givenAt);
     // A row told to somebody other than the holder. A Drunk holding the

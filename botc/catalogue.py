@@ -743,6 +743,16 @@ _EXPERIMENTAL = [
     # when that Minion would, so its waking is open until it is known.
     _c("Alchemist", "alchemist", "Alchemist", "townsfolk",
        set(WAKE_PATTERNS), nights="conditional", chooses=True),
+    # The eleventh (07.11.2026, claude/eremit-lesarten.md). Every Outsider
+    # ability of the script at once (`info.hermit_abilities`), held the way
+    # a Philosopher holds what it took (`info.took_it`). "[-0 or -1
+    # Outsider]", and the Outsider taken out may be the Hermit itself (A,
+    # `worlds.HERMIT_GONE`). It wakes when those Outsiders would (the
+    # Butler's every night, the Ogre's on the first). Stage 1: all but the
+    # Drunk's and the Lunatic's.
+    _c("Hermit", "hermit", "Hermit", "outsider", set(WAKE_PATTERNS),
+       nights="conditional", chooses=True,
+       setup=({}, {"townsfolk": 1, "outsider": -1})),
 ]
 
 
@@ -774,6 +784,8 @@ IMPAIRS = frozenset({
     "Boffin",
     # Through the Storyteller: a Poisoner's, a Widow's, a Xaan's.
     "PlagueDoctor",
+    # Through a Sweetheart's, a Goon's, a Puzzlemaster's ability.
+    "Hermit",
 })
 
 CHARACTERS = {c.key: c for c in _TB + _SV + _UNMODELLED + _FABLED
