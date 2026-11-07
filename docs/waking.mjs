@@ -31,7 +31,8 @@ import {CHARACTERS, slotOf} from "./catalogue.mjs";
 import {phaseIndex} from "./phases.mjs";
 import {alchemistSummoner, readingAt, teaMade} from "./worlds.mjs";
 import {actsAsAlchemist, backSince, babysitterAt, boffinAbilities, boffinGiftOf,
-        alchemistBoffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt}
+        alchemistBoffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt,
+        hermitAbilities}
   from "./info.mjs";
 
 export const NEVER = "never";
@@ -92,6 +93,12 @@ condition("Lunatic", (world, state, seat, night) =>
 // one that took the Clockmaker wakes on the first night and never again.
 // This said "always" here while Python had the schedule — a Chambermaid
 // beside one was read differently by the two (02.10.2026).
+/** When any Outsider whose ability it has would wake (07.11.2026): the
+ * Butler's every night, the Ogre's on the first. See waking.py. */
+condition("Hermit", (world, state, seat, night) =>
+  [...hermitAbilities(state.script)].sort().some(k =>
+    !CHARACTERS[k].believes && wokeAs(world, state, seat, night, k)));
+
 condition("Philosopher", (world, state, seat, night) => {
   let took = state.philosophies()[seat];
   // Back from the dead, it is a new one that has not chosen (Stelle 69).
