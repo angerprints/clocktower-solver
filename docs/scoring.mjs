@@ -3950,7 +3950,19 @@ function plainFailures(world, state, outcome = {}) {
       return;
     }
     if (info.hard()) {
-      if (!info.holds(world, state, null)) { impossible = true; }
+      // Or with a Hermit that has the Recluse's ability read as the
+      // Recluse (Eremit Stufe 2): it was working. See solver.py.
+      let held = info.holds(world, state, null);
+      if (!held) {
+        const who = hermitHolders(world, state, "Recluse", `N${info.night}`)
+          .find(w => info.holds(asRecluse(world, w), state, null));
+        if (who !== undefined) {
+          held = true;
+          working[info.night] = working[info.night] || new Set();
+          working[info.night].add(who);
+        }
+      }
+      if (!held) { impossible = true; }
       else {
         outcome[idx] = HELD;
         // A fact can lean on somebody too: a Banshee announced was a

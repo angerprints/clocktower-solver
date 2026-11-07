@@ -21,7 +21,8 @@ import {LEVIATHAN_CHOOSES_FOR} from "./waking.mjs";
 import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
         takenByAPhilosopher, tookIt, boffinHolders, soberSeat,
         boffinAbilities, boffinGiftOf, boffinSeat, storytellerHas,
-        evilRegistrationsHere, alchemistsWith, alchemyHolds, ALCHEMY_GUESSES}
+        evilRegistrationsHere, alchemistsWith, alchemyHolds, ALCHEMY_GUESSES,
+        hermitAbilities}
   from "./info.mjs";
 
 // --------------------------------------------------------------------
@@ -2016,6 +2017,27 @@ sourceRule(function aWidowPoisonsOne(world, state, night) {
   return [new Source("Widow", everyone,
                      {capacity: 1, cost: () => 1.0, repeatCost: () => 1.0,
                       actor: seat})];
+});
+
+/** The Damsel's jinxes reach a Hermit with its ability (Eremit Stufe 2,
+ * D Weg 1): the whole Hermit poisoned once a Spy or a Widow is or has been
+ * in play. Free, on offer. See solver.py. */
+sourceRule(function aSpyOrWidowPoisonsTheHermit(world, state, night) {
+  if (!inBag(state, "Hermit") || !hermitAbilities(state.script).has("Damsel"))
+    return [];
+  let seen = false;
+  for (let k = 1; k <= night && !seen; k++)
+    seen = world.findAt("Spy", `N${k}`) !== null
+      || world.findAt("Widow", `N${k}`) !== null;
+  if (!seen) return [];
+  const phase = `N${night}`;
+  const seats = new Set();
+  for (let p = 0; p < state.nPlayers; p++)
+    if (world.roleAt(p, phase) === "Hermit") seats.add(p);
+  if (!seats.size) return [];
+  return [new Source("Hermit (Damsel)", seats,
+                     {capacity: seats.size, cost: () => 1.0,
+                      repeatCost: () => 1.0})];
 });
 
 /** A Minion the Preacher chose while working has no ability while the

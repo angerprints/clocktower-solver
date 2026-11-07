@@ -11,7 +11,7 @@
 
 import {CHARACTERS, SETUP} from "./catalogue.mjs";
 import {LISTENING, noteSideRead, phaseIndex} from "./phases.mjs";
-import {EVIL, TEAM, alignment, believedTokens, believesAnother, isEvil,
+import {EVIL, TEAM, alignment, believedTokens, believesAnother, hermitTokens, isEvil,
         knowsWhatItIs, mustHide, thinksItIsEvil, wakeFits} from "./roles.mjs";
 import {DEFAULT} from "./scripts.mjs";
 
@@ -608,7 +608,7 @@ export class Timeline {
 function anything(script) {
   const out = [];
   for (const key of script.seatedKeys) {
-    if (believesAnother(key))
+    if (believesAnother(key) || (key === "Hermit" && hermitTokens(script).length))
       for (const token of believedTokens(key, script)) out.push([key, token]);
     else out.push([key, null]);
   }
@@ -621,7 +621,7 @@ function anything(script) {
  * with no token behind it produces a world that is not a game.
  */
 function itself(key, script) {
-  return believesAnother(key)
+  return believesAnother(key) || (key === "Hermit" && hermitTokens(script).length)
     ? believedTokens(key, script).map(token => [key, token])
     : [[key, null]];
 }
@@ -642,6 +642,11 @@ function evilOptions(evil, script) {
   for (const key of script.keys)
     if (thinksItIsEvil(key))
       for (const token of believedTokens(key, script)) out.push([key, token]);
+  // A Hermit with the Lunatic's ability bluffs the same way (Eremit
+  // Stufe 2, C). See worlds.py.
+  if (script.keys.includes("Hermit") && script.keys.includes("Lunatic"))
+    for (const token of hermitTokens(script))
+      if (TEAM[token] === "demon") out.push(["Hermit", token]);
   // A Lunatic beside the Summoner's Demon becomes its Marionette and goes
   // on thinking it is a Demon (22.10.2026). See worlds.py.
   if (["Summoner", "Marionette", "Lunatic"].every(k => script.keys.includes(k)))
@@ -652,7 +657,8 @@ function evilOptions(evil, script) {
 
 function candidatesFromClaim(claim, allowGoodLies, certainty, script) {
   const evil = script.minions.concat(script.demons);
-  const believers = script.keys.filter(believesAnother);
+  const believers = script.keys.filter(k => believesAnother(k)
+    || (k === "Hermit" && hermitTokens(script).length));
 
   if (claim && certainty === "confirmed") return itself(claim, script);
 
