@@ -97,8 +97,10 @@ condition("Lunatic", (world, state, seat, night) =>
  * Butler's every night, the Ogre's on the first. See waking.py. */
 condition("Hermit", (world, state, seat, night) => {
   // One that thinks it is somebody else lives that one's nights (stage 2).
+  // Only the Hermit itself, not a Marionette that thinks it is one.
   const token = world.believes[seat];
-  if (token) return wokeAs(world, state, seat, night, token);
+  if (token && token !== "Hermit" && world.roleAt(seat, `N${night}`) === "Hermit")
+    return wokeAs(world, state, seat, night, token);
   return [...hermitAbilities(state.script)].sort().some(k =>
     !CHARACTERS[k].believes && wokeAs(world, state, seat, night, k));
 });

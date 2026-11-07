@@ -168,8 +168,11 @@ def _hermit(world, state, seat, night):
     from .info import hermit_abilities      # local: info imports waking
     # One that thinks it is somebody else lives that one's nights, as the
     # Drunk or the Lunatic does (stage 2, B and C).
+    # Only the Hermit itself: a Marionette that thinks it is the Hermit
+    # holds that token, and asked again it recursed without end.
     token = world.believes[seat]
-    if token:
+    if token and token != "Hermit" \
+            and world.role_at(seat, f"N{night}") == "Hermit":
         return woke_as(world, state, seat, night, token)
     return any(not CHARACTERS[k].believes
                and woke_as(world, state, seat, night, k)
