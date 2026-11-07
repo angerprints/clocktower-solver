@@ -143,9 +143,13 @@ for seed in range(start, start + N):
             lost_to_new.append(seed)
         if "Hatter" in NEW and getattr(deal, "tea_made", None):
             said = S.hatter_claimants(state)
+            # And a Hermit with the Hatter's ability (07.11.2026).
             if not any(seat in said for seat in range(n)
                        if deal.roles[seat] == "Hatter"
-                       or deal.philosophies.get(seat) == "Hatter"):
+                       or deal.philosophies.get(seat) == "Hatter"
+                       or (deal.roles[seat] == "Hermit"
+                           and simulate._took(deal, seat, "Hatter",
+                                              "N1"))):
                 lost_hidden.append(seed)
 
     # How far the game really got. `game_ends_after` is only set when

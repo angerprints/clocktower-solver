@@ -2377,6 +2377,12 @@ def _tinker_may_go(d, night, rng):
         # game that way here (26.10.2026).
         if _gifted(d, seat, "Tinker", phase):
             continue
+        # Not a Hermit that has the Barber's too, on the first night: a
+        # swap then has no turn on the night sheet (07.11.2026, my
+        # decision 3 of claude/eremit-1.md).
+        if night == 1 and d.role_at(seat, phase) == "Hermit" \
+                and _took(d, seat, "Barber", phase):
+            continue
         if seat not in d.alive_at(phase):
             continue
         # Not on the night it came back: down, up and down again before
