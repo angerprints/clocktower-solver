@@ -814,10 +814,13 @@ def deal(n, rng, script=None, told=None):
                 j = spare.index("King")
                 spare[i], spare[j] = "King", gone
             else:
-                # A Drunk was handed the King's token. It takes the one
-                # that just left the bag instead: the King is in play now.
+                # A Drunk was handed the King's token — or a Hermit with
+                # the Drunk's ability (07.11.2026). It takes the one that
+                # just left the bag instead: the King is in play now.
                 spare[i] = "King"
-                believes_for["Drunk"] = gone
+                who = "Drunk" if believes_for.get("Drunk") == "King" \
+                    else "Hermit"
+                believes_for[who] = gone
     # "[+the Damsel]": a Huntsman brings her in place of a Townsfolk,
     # unless she is in the bag anyway (10.10.2026).
     if "Huntsman" in chosen and "Damsel" not in chosen \
