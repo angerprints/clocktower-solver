@@ -599,7 +599,12 @@ class Timeline:
                     and change.role == "Marionette":
                 was = self.world.believes[change.seat]
                 for at, role in roles.get(change.seat, ()):
-                    if at < _at(change):
+                    # Not a Marionette it was made before — two Plague
+                    # Doctors' deaths, a Hermit's beside the real one
+                    # (07.11.2026): it believed the same, and believing
+                    # itself the Marionette woke it on its own schedule
+                    # without end.
+                    if at < _at(change) and role != "Marionette":
                         was = role
                 puppets.append((change.seat, was or self.world.roles[
                     change.seat]))

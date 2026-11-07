@@ -8455,7 +8455,11 @@ def _for_role(d, seat, role, night, rng):
         # The Minions at its turn, after a Snake Charmer that swapped
         # with Lil' Monsta's babysitter (21.10.2026); the deal otherwise,
         # as always.
+        # And after a Barber's swap on the first night — a Hermit with the
+        # Tinker's and the Barber's abilities that went then (07.11.2026):
+        # the Demon is counted where the swap put it, so its Minions too.
         held = (d.role_at if getattr(d, "lil_monsta", False)
+                or (getattr(d, "barber_swaps", None) or {}).get(1)
                 else lambda m, _phase: d.roles[m])
         gaps = [min((m - demon) % d.n, (demon - m) % d.n)
                 for m in range(d.n)
@@ -8766,8 +8770,9 @@ def _for_role(d, seat, role, night, rng):
         # of character — it stays the Philosopher and works two at once —
         # so this records the choice and nothing else. The gained
         # readings are the solver's business.
+        # Not the Hermit, for now (Eremit Stufe 1, my decision 3).
         pool = [k for k in d.script.townsfolk + d.script.outsiders
-                if k != "Philosopher"]
+                if k not in ("Philosopher", "Hermit")]
         if not pool:
             return None
         took = rng.choice(pool)

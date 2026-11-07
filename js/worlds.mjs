@@ -445,8 +445,9 @@ export class Timeline {
       for (const c of this.changes) {
         if (!c.plagueMade || c.role !== "Marionette") continue;
         let was = this.world.believes[c.seat];
+        // Not a Marionette it was made before (07.11.2026). See worlds.py.
         for (const [at, role] of ix.roles.get(c.seat) || [])
-          if (at < changeAt(c)) was = role;
+          if (at < changeAt(c) && role !== "Marionette") was = role;
         ix.puppets.push([c.seat, was || this.world.roles[c.seat]]);
       }
     }

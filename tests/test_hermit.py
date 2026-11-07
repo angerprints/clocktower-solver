@@ -163,6 +163,19 @@ class WhatItDoes(SolverTest):
         self.assertIsNotNone(cost([I.KlutzChoice(2, 5, target=0)], **kw))
 
 
+class TwoPlagueDoctors(SolverTest):
+    """Found with this stage: the real Plague Doctor's death and a
+    Hermit's both gave the Storyteller the Marionette, and the same good
+    neighbour was made it twice. It then believed it was the Marionette
+    and woke on its own schedule without end."""
+
+    def test_it_believes_what_it_was(self):
+        from botc.worlds import PlagueMade, Timeline
+        tl = Timeline(world(), (PlagueMade("N2", 0, "Marionette", "good", -1),
+                                PlagueMade("D2", 0, "Marionette", "good")))
+        self.assertEqual(tl.believes[0], "Chef")
+
+
 def compare(test, case):
     """Python and JavaScript give the same shares on this board."""
     import app
