@@ -233,7 +233,8 @@ sourceRule(function alwaysImpaired(world, state, night) {
     // is one from then on, and not before. See impairment.py.
     const puppet = !!world.plagueMade && world.plagueMade(seat)
       .some(([, role]) => role === "Marionette");
-    if (token !== null && token !== undefined
+    // Not a Hermit that thinks it is somebody else (Eremit Stufe 2, B).
+    if (token !== null && token !== undefined && world.roles[seat] !== "Hermit"
         && (puppet ? now === "Marionette"
             : (now === world.roles[seat]
                || (world.roles[seat] === "Marionette"

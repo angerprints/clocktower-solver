@@ -176,6 +176,69 @@ class TwoPlagueDoctors(SolverTest):
         self.assertEqual(tl.believes[0], "Chef")
 
 
+# Stage 2 (07.11.2026): the Drunk's and the Lunatic's ability are what it
+# believes (B, C), and the Damsel's jinxes poison it whole (D).
+DS = scripts.from_ids("Eremit-Trunkenbold", IDS + ["drunk"])
+LS = scripts.from_ids("Eremit-Verrückte", IDS + ["lunatic", "po"])
+
+
+class WhatItBelieves(SolverTest):
+
+    def test_with_the_drunks_a_townsfolk_with_the_lunatics_the_demon(self):
+        from botc.roles import hermit_tokens
+        self.assertEqual(hermit_tokens(HS), [])
+        self.assertIn("Chef", hermit_tokens(DS))
+        self.assertNotIn("Imp", hermit_tokens(DS))
+        self.assertIn("Imp", hermit_tokens(LS))
+        self.assertNotIn("Chef", hermit_tokens(LS))
+
+    def test_a_townsfolk_claim_may_be_a_hermit_that_thinks_so(self):
+        claims = dict(enumerate(C[:5] + ["Soldier", "Mayor", "Slayer"]))
+        got = {(r, b) for w in enumerate_worlds(8, claims, script=DS)
+               for r, b in zip(w.roles, w.believes) if r == "Hermit"}
+        self.assertIn(("Hermit", "Chef"), got)
+        # Never a Hermit that knows it: the Drunk's ability says it does not.
+        self.assertNotIn(("Hermit", None), got)
+
+    def test_it_chooses_nothing_believing_it_is_somebody_else(self):
+        w = World(tuple(R), (None,) * 5 + ("Soldier",) + (None,) * 2)
+        st = state(script=DS)
+        self.assertFalse(I.has_hermit_ability(w, st, 5, "Klutz", "N2"))
+        self.assertFalse(I.has_hermit_ability(w, st, 5, "Butler", "N2"))
+        self.assertTrue(I.has_hermit_ability(w, st, 5, "Saint", "D1"))
+        self.assertTrue(I.has_hermit_ability(world(), st, 5, "Klutz", "N2"))
+
+    def test_it_wakes_as_what_it_thinks_it_is(self):
+        w = World(tuple(R), (None,) * 5 + ("Chef",) + (None,) * 2)
+        self.assertTrue(waking.woke(w, state(script=DS), 5, 1))
+        self.assertFalse(waking.woke(w, state(script=DS), 5, 2))
+
+    def test_what_it_is_told_as_that_one_is_made_up(self):
+        from botc.roles import ARBITRARY, ability_state
+        w = World(tuple(R), (None,) * 5 + ("Chef",) + (None,) * 2)
+        self.assertEqual(ability_state(w, 5, "Chef", "N1"), ARBITRARY)
+
+
+class TheDamselsJinx(SolverTest):
+
+    def test_a_spy_poisons_the_whole_hermit(self):
+        sc = scripts.from_ids("Eremit-Unschuld",
+                              ["hermit", "damsel", "spy", "imp", "chef",
+                               "empath", "washerwoman", "librarian", "monk",
+                               "soldier", "mayor"])
+        roles = R[:6] + ["Spy", "Imp"]
+        st = state(script=sc)
+        got = S.a_spy_or_widow_poisons_the_hermit(world(roles), st, 2)
+        self.assertEqual([sorted(x.seats) for x in got], [[5]])
+        plain = R[:6] + ["ScarletWoman", "Imp"]
+        sc2 = scripts.from_ids("Eremit-Unschuld-2",
+                               ["hermit", "damsel", "scarletwoman", "imp",
+                                "chef", "empath", "washerwoman", "librarian",
+                                "monk", "soldier", "mayor"])
+        self.assertEqual(S.a_spy_or_widow_poisons_the_hermit(
+            world(plain), state(script=sc2), 2), [])
+
+
 def compare(test, case):
     """Python and JavaScript give the same shares on this board."""
     import app
@@ -219,6 +282,15 @@ class BothLanguagesAgree(SolverTest):
                 "deaths": {"5": ["E2"]}, "executions": {"2": 5},
                 "days_done": [1, 2],
                 "script": {"name": "Eremit", "characters": IDS}}
+        compare(self, case)
+
+    def test_a_hermit_that_thinks_it_is_a_townsfolk(self):
+        case = {"n_players": 8,
+                "players": [{"claim": c, "events": []}
+                            for c in C[:5] + ["Soldier", "Mayor", "Slayer"]],
+                "infos": [], "days_done": [1],
+                "script": {"name": "Eremit-Trunkenbold",
+                           "characters": IDS + ["drunk"]}}
         compare(self, case)
 
     def test_its_klutz_row(self):

@@ -238,8 +238,12 @@ def always_impaired(world, state, night):
     def puppet(seat):
         return any(role == "Marionette" for _at, role in
                    world.plague_made(seat))
+    # Not a Hermit that thinks it is somebody else (Eremit Stufe 2, B):
+    # its Outsider abilities work, and what it is told as that one is made
+    # up (`roles.ability_state`).
     seats = frozenset(seat for seat, token in enumerate(world.believes)
                       if token is not None
+                      and world.roles[seat] != "Hermit"
                       and ((world.role_at(seat, phase) == "Marionette")
                            if puppet(seat) else
                            (world.role_at(seat, phase) == world.roles[seat]

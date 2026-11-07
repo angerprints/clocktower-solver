@@ -8,7 +8,7 @@
 import {CHARACTERS} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
 import {minionStillActs} from "./impairment.mjs";
-import {TEAM, believesAnother, isEvil, mustHide, show, wakeFits} from "./roles.mjs";
+import {TEAM, believesAnother, believesHere, isEvil, mustHide, show, wakeFits} from "./roles.mjs";
 import {SUMMON_SAMPLE, TEA, hatterUnreckoned} from "./scoring.mjs";
 import {bestStory, storyShares, explanationCost, forcedRoles, nightDeaths,
         worldConsistent} from "./scoring.mjs";
@@ -67,7 +67,7 @@ export function isLying(world, state, p) {
   const believed = world.believes[p];
   const claim = state.dealtClaims()[p];
   if (claim && !(role === claim ||
-                 (believesAnother(role) && believed === claim))) return true;
+                 (believesHere(role, believed) && believed === claim))) return true;
   const said = (state.wakes || {})[p];
   return !!(said && !wakeFits(role, believed, said));
 }
@@ -171,7 +171,7 @@ export function priorWeight(world, state) {
     }
     const step = reads[p] || 0;
     if (step && evil) w *= Math.pow(PRIORS.READ_ODDS_STEP, step);
-    if (suspects[p] && believesAnother(world.roles[p]))
+    if (suspects[p] && believesHere(world.roles[p], world.believes[p]))
       w *= PRIORS.DRUNK_SUSPICION_STEP;
   }
 
@@ -236,7 +236,7 @@ export function summarize(valid, state) {
       roles[role] = (roles[role] || 0) + wt;
       if (isEvil(role)) evil += wt;
       if (TEAM[role] === "demon") demon += wt;
-      if (believesAnother(role)) drunk += wt;
+      if (believesHere(role, w.believes[p])) drunk += wt;
       if (isLying(w, state, p)) lying += wt;
     });
     rows.push({
@@ -311,7 +311,7 @@ function tallySeats(perSeat, world, view, state, wt, now) {
       if (sides.has(true)) seat.evil += wt / sides.size;
     } else if (view.evilAt(p, now)) seat.evil += wt;
     if (demons.includes(p)) seat.demon += wt;
-    if (believesAnother(role)) seat.drunk += wt;
+    if (believesHere(role, world.believes[p])) seat.drunk += wt;
     if (isLying(world, state, p)) seat.lying += wt;
   }
 }

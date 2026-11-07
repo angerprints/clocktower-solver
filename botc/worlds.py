@@ -19,6 +19,7 @@ from .info import (BOFFIN_UNSEEN, PLAGUE_UNSEEN, STORYTELLER, _READS,
                    note_side_read, phase_index)
 from .roles import (EVIL, TEAM, SETUP, alignment, believed_tokens,
                     believes_another, is_evil, knows_what_it_is,
+                    hermit_tokens,
                     must_hide, thinks_it_is_evil, wake_fits)
 from .scripts import DEFAULT
 
@@ -841,7 +842,8 @@ def _anything(script):
     """
     out = []
     for key in script.seated_keys:
-        if believes_another(key):
+        if believes_another(key) or (key == "Hermit"
+                                     and hermit_tokens(script)):
             out.extend((key, token) for token in believed_tokens(key, script))
         else:
             out.append((key, None))
@@ -911,7 +913,7 @@ def _itself(key, script):
     to *be* the Drunk is a legal thing to say, and dealing one with no
     token behind it produces a world that is not a game.
     """
-    if believes_another(key):
+    if believes_another(key) or (key == "Hermit" and hermit_tokens(script)):
         return [(key, token) for token in believed_tokens(key, script)]
     return [(key, None)]
 
@@ -938,6 +940,11 @@ def _evil_options(evil, script):
     # on thinking it is a Demon (22.10.2026): a Marionette holding a Demon
     # token, bluffing like the Lunatic it was. Only with a Summoner dealt
     # (`believes_legally`).
+    # A Hermit with the Lunatic's ability bluffs the same way (Eremit
+    # Stufe 2, C).
+    if {"Hermit", "Lunatic"} <= set(script.keys):
+        out.extend(("Hermit", token) for token in hermit_tokens(script)
+                   if TEAM[token] == "demon")
     if {"Summoner", "Marionette", "Lunatic"} <= set(script.keys):
         out.extend(("Marionette", token)
                    for token in believed_tokens("Lunatic", script))
@@ -951,7 +958,8 @@ def _candidates_from_claim(claim, allow_good_lies, certainty="",
     townsfolk = script.townsfolk
     outsiders = script.outsiders
     evil = script.minions + script.demons
-    believers = [k for k in script.keys if believes_another(k)]
+    believers = [k for k in script.keys if believes_another(k)
+                 or (k == "Hermit" and hermit_tokens(script))]
 
     if claim and certainty == "confirmed":
         return _itself(claim, script)
