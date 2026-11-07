@@ -1702,6 +1702,28 @@ export const DATA = {
    "chooses": true,
    "nights": "conditional",
    "first_night": 140
+  },
+  "Hermit": {
+   "id": "hermit",
+   "name": "Hermit",
+   "team": "outsider",
+   "wake": [
+    "every",
+    "first",
+    "never",
+    "other",
+    "sometimes"
+   ],
+   "setup": [
+    {},
+    {
+     "townsfolk": 1,
+     "outsider": -1
+    }
+   ],
+   "chooses": true,
+   "nights": "conditional",
+   "impairs": true
   }
  },
  "scripts": {

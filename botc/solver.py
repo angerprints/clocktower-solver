@@ -40,6 +40,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    faux_paw_lycanthrope, side_open,
                    PlagueDoctorGave, PLAGUE_UNSEEN, STORYTELLER,
                    storyteller_has, has_plague_ability, plague_holders,
+                   hermit_holders, has_hermit_ability, hermit_abilities,
                    acts_as_alchemist, alchemy_holds,
                    alchemist_boffin_seat, alchemist_boffin_gift,
                    BecameInfo, EvilTwinPair, BoomdandyExploded,
@@ -611,6 +612,11 @@ def _movers_in(world, state):
     # And whatever a Philosopher took: a Barber, a Farmer, an Ogre, a
     # Huntsman (13.10.2026).
     roles |= {taken for taken, _since in (state.philosophies() or {}).values()}
+    # And a Hermit's Outsiders (07.11.2026): its Barber, its Ogre.
+    if "Hermit" in roles:
+        roles |= hermit_abilities(state.script)
+        barber_died = barber_died or any(world.roles[s] == "Hermit"
+                                         for s in dead)
     count = int(swapped) + int(bool(made))
     # The Storyteller's Pit-Hag or a jinx after a Plague Doctor's death
     # (Pestdoktor Stufe 2): told by the last rule of all, so a Snake
@@ -972,6 +978,19 @@ def a_barber_lets_the_demon_swap_two(world, state):
     return list(got)
 
 
+def _hermit_claimants(state, role):
+    """Seats that said they were the Hermit, or became or had been it, where
+    a Hermit of this script has that Outsider's ability (07.11.2026)."""
+    if role not in hermit_abilities(state.script):
+        return set()
+    out = {seat for seat, said in (state.claims or {}).items()
+           if said == "Hermit"}
+    for info in state.infos:
+        if isinstance(info, BecameInfo) and "Hermit" in (info.role, info.was):
+            out.add(info.player)
+    return out
+
+
 def _barber_on_board(state):
     """A Barber on the script, or a Philosopher that took one (13.10.2026)."""
     return _in_bag(state, "Barber") or taken_by_a_philosopher(state, "Barber")
@@ -1004,6 +1023,8 @@ def barber_claimants(state):
     for who, (taken, _since) in (state.philosophies() or {}).items():
         if taken == "Barber":
             out.add(who)
+    # A Hermit that said so (07.11.2026): as good as a claim.
+    out |= _hermit_claimants(state, "Barber")
     # A Boffin row naming it (L Weg 1, 27.10.2026): whichever seat is the
     # Demon then, so every seat; only one holding it can die as one.
     if _boffin_names(state, "Barber"):
@@ -1551,7 +1572,8 @@ def an_ogre_picks_a_side(world, state):
     # drunk or poisoned", so the holder it drunk chooses too.
     ogres = [world.find_at("Ogre", "N1")] + [
         who for who in sorted(state.philosophies() or {})
-        if took_it(world, state, who, "Ogre", "N1")]
+        if took_it(world, state, who, "Ogre", "N1")] \
+        + hermit_holders(world, state, "Ogre", "N1")
     stories = [((), 1.0)]
     for ogre in ogres:
         if ogre is None:
@@ -2419,6 +2441,8 @@ def hatter_claimants(state):
     for who, (taken, _since) in (state.philosophies() or {}).items():
         if taken == "Hatter":
             out.add(who)
+    # A Hermit that said so (07.11.2026), as for the Barber.
+    out |= _hermit_claimants(state, "Hatter")
     # A Boffin row naming it (L Weg 1, 27.10.2026), as for the Barber.
     if _boffin_names(state, "Hatter"):
         out |= set(range(state.n_players))
@@ -7156,9 +7180,12 @@ class _AsRecluse:
 
 
 def _philosopher_recluses(world, state, phase):
-    """Philosophers that took the Recluse, by then — alive or dead (F)."""
+    """Philosophers that took the Recluse, by then — alive or dead (F).
+    And a Hermit with its ability (07.11.2026), dead or alive: the
+    Recluse's goes on after death."""
     return [who for who in sorted(state.philosophies() or {})
-            if took_it(world, state, who, "Recluse", phase)]
+            if took_it(world, state, who, "Recluse", phase)] \
+        + hermit_holders(world, state, "Recluse", phase)
 
 
 def _plain_failures(world, state, outcome=None):
@@ -7754,6 +7781,13 @@ def _plain_failures(world, state, outcome=None):
                         and 0 <= info.player < state.n_players \
                         and world.role_at(info.player, began) == role:
                     seat = info.player
+                # A Hermit's own row as that Outsider (07.11.2026): its own,
+                # not the real holder's.
+                elif isinstance(info.player, int) \
+                        and 0 <= info.player < state.n_players \
+                        and has_hermit_ability(world, state, info.player,
+                                               role, began):
+                    seat = info.player
                 else:
                     seat = world.find_at(role, began)
                 if seat is None:
@@ -7830,6 +7864,11 @@ def _plain_failures(world, state, outcome=None):
                                            given_at):
                 held = (INVERTED if vortoxed and TEAM[role] == "townsfolk"
                         else GENUINE)
+            # A Hermit with that Outsider's ability (07.11.2026): its own.
+            if held is ABSENT and seat is not None and role is not None \
+                    and has_hermit_ability(world, state, seat, role,
+                                           given_at):
+                held = GENUINE
             sober = seat if seat is None \
                 else sober_seat(world, state, seat, role, given_at)
             # A row told to somebody *other* than the holder — the player a

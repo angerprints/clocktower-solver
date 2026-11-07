@@ -48,6 +48,8 @@ class Night:
         self.guarded = set()                # safe from the Demon tonight
         self.guards = {}                    # seat -> who is guarding it
         self.gained = {}                    # seat -> ability it took
+        # A Hermit's Outsider abilities (07.11.2026): seat -> those.
+        self.hermit = {}
         # The Boffin's (26.10.2026): the Demon's seat -> the good ability
         # it has tonight, and the Boffin whose sobriety it rests on.
         self.boffin = {}
@@ -107,6 +109,8 @@ class Night:
         return self.roles.get(seat) == role or (
             self.roles.get(seat) == "Philosopher"
             and self.gained.get(seat) == role) or (
+            self.roles.get(seat) == "Hermit"
+            and role in self.hermit.get(seat, ())) or (
             role in self.boffin_has.get(seat, ())
             and self.roles.get(seat) != "Philosopher")
 
@@ -450,12 +454,19 @@ def hidden_from(deal, night, heard):
     try:
         standing = set(simulate.droisoned_at(deal, night)) - derives
         gooned = getattr(deal, "goon_first", {}).pop(night, None)
-        if gooned is not None:
+        more = getattr(deal, "goon_more", {}).pop(night, None)
+        if gooned is not None or more:
             try:
-                if gooned[0] not in simulate.droisoned_at(deal, night):
-                    standing.discard(gooned[0])
+                now = simulate.droisoned_at(deal, night)
+                for who, _goon in ([gooned] if gooned else []) \
+                        + (more or []):
+                    if who not in now:
+                        standing.discard(who)
             finally:
-                deal.goon_first[night] = gooned
+                if gooned is not None:
+                    deal.goon_first[night] = gooned
+                if more:
+                    deal.goon_more[night] = more
     finally:
         if fresh is not None:
             deal.pukka_marks[night] = fresh
@@ -506,6 +517,12 @@ def hidden_from(deal, night, heard):
     # until then that night, it had nothing to use before either.
     from botc.info import phase_index as _pi
     lost = getattr(deal, "phil_lost", None) or {}
+    # A Hermit's Outsider abilities, tonight (07.11.2026).
+    from botc.info import hermit_abilities as _ha
+    got = _ha(deal.script)
+    if got:
+        out["hermit"] = {p: got for p in range(deal.n)
+                         if deal.role_at(p, phase) == "Hermit"}
     out.update({"red_herring": deal.red_herring,
                 "gained": {seat: took for seat, took in (
                     getattr(deal, "philosophies", {}) or {}).items()
@@ -843,7 +860,9 @@ def hidden_from(deal, night, heard):
     went = {p for p in range(deal.n) if p in deal.died_on(phase)
             and (deal.role_at(p, phase) == "Tinker"
                  or (deal.role_at(p, phase) == "Philosopher"
-                     and took.get(p) == "Tinker"))}
+                     and took.get(p) == "Tinker")
+                 or (deal.role_at(p, phase) == "Hermit"
+                     and simulate._took(deal, p, "Tinker", phase)))}
     if went:
         out[("tinker", night)] = went
 
@@ -915,6 +934,25 @@ TAKEN_ACTS = ("Sailor", "Innkeeper", "Monk", "Exorcist",
               "Preacher",
               # Group 4: character and side (13.10.2026).
               "Huntsman", "Professor")
+
+
+# What a Hermit acts as in the night (07.11.2026): the Outsiders the walk
+# plays. A Barber's swap only where nobody else holds the Barber, since it
+# is one swap and played twice it would swap back.
+HERMIT_ACTS = ("Tinker", "Moonchild", "Sweetheart", "Barber")
+
+
+def _hermit_turn(state, seat, slot, field):
+    """The Outsider whose turn this is for that Hermit, or None."""
+    for key in HERMIT_ACTS:
+        if key in state.hermit.get(seat, ()) \
+                and getattr(CHARACTERS[key], field, 0) == slot:
+            if key == "Barber" and any(
+                    r == "Barber" for p, r in state.roles.items()
+                    if p != seat):
+                continue
+            return key
+    return None
 
 
 def _by_seat(hidden, key, night, seat):
@@ -991,6 +1029,8 @@ def walk(deal, night, hidden):
     # which is a smell: the walk should take everything it is told
     # through `hidden`, like every other thing it does not derive.
     state.gained.update(hidden.get("gained") or {})
+    # And a Hermit's Outsider abilities (07.11.2026).
+    state.hermit = dict(hidden.get("hermit") or {})
     # And what the Boffin gave the Demon, tonight (26.10.2026).
     # A Philosopher's ability given (stage 2): it has both, and acts as
     # what it took at that character's turn.
@@ -1233,6 +1273,9 @@ def walk(deal, night, hidden):
                     and state.gained.get(p) in taken_slot
                     and taken_slot[state.gained[p]]
                     and slot == taken_slot[state.gained[p]])
+                # A Hermit acts as its Outsiders at their turns.
+                or (state.roles[p] == "Hermit"
+                    and _hermit_turn(state, p, slot, field) is not None)
                 # A Demon the Boffin gave one of these acts at its turn
                 # (26.10.2026).
                 or (state.boffin.get(p) in taken_slot
@@ -1264,6 +1307,8 @@ def walk(deal, night, hidden):
             if role == "Philosopher" and state.gained.get(seat) in taken_slot \
                     and slot == taken_slot[state.gained[seat]]:
                 role = state.gained[seat]
+            if role == "Hermit":
+                role = _hermit_turn(state, seat, slot, field) or role
 
             if role == "Poisoner":
                 target = hidden.get(("poisoner", night))

@@ -1074,6 +1074,7 @@ def _bags(n_players, script=DEFAULT, fabled=()):
                 grown.append((present, moved))
         bags = grown
 
+    bags += _hermit_gone(bags)
     bags += _marionette_to_be(bags, script)
     bags += _boffin_brackets(bags, script)
     alchemy = _alchemist_brackets(bags, script)
@@ -1113,6 +1114,32 @@ def _bags(n_players, script=DEFAULT, fabled=()):
             continue
         seen.add((present, split))
         out.append((present, counts))
+    return out
+
+
+# The Hermit may take itself out (07.11.2026, claude/eremit-lesarten.md,
+# A): "[-0 or -1 Outsider]", the Outsider swapped for a Townsfolk being the
+# Hermit's own token. Then it is not in play and there is one Outsider
+# fewer. Such a bag is marked `Hermit@gone`, which deals nothing.
+HERMIT_GONE = "Hermit@gone"
+
+
+def _hermit_gone(bags):
+    """The bags in which the Hermit took itself out: each bag with the
+    Hermit in it, without it — where no bag without it holds that split
+    already (its "-0" one is the plain bag again)."""
+    have = {(present, tuple(sorted(counts.items())))
+            for present, counts in bags}
+    out = []
+    for present, counts in bags:
+        if "Hermit" not in present:
+            continue
+        rest = present - {"Hermit"}
+        split = tuple(sorted(counts.items()))
+        if (rest, split) in have:
+            continue
+        have.add((rest, split))
+        out.append((rest | {HERMIT_GONE}, dict(counts)))
     return out
 
 

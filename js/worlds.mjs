@@ -782,6 +782,7 @@ export function bags(nPlayers, script = DEFAULT, fabled = []) {
     out = grown;
   }
 
+  out = out.concat(hermitGone(out));
   out = out.concat(marionetteToBe(out, script));
   out = out.concat(boffinBrackets(out, script));
   const alchemy = alchemistBrackets(out, script);
@@ -815,6 +816,26 @@ export function bags(nPlayers, script = DEFAULT, fabled = []) {
     kept.push([present, counts]);
   }
   return kept;
+}
+
+/** The Hermit may take itself out (07.11.2026, A): marked `Hermit@gone`,
+ * which deals nothing. See worlds.py `_hermit_gone`. */
+export const HERMIT_GONE = "Hermit@gone";
+
+function hermitGone(bags) {
+  const keyOf = (present, counts) => [...present].sort().join(",") + "|"
+    + Object.keys(counts).sort().map(t => `${t}:${counts[t]}`).join(",");
+  const have = new Set(bags.map(([present, counts]) => keyOf(present, counts)));
+  const out = [];
+  for (const [present, counts] of bags) {
+    if (!present.has("Hermit")) continue;
+    const rest = new Set([...present].filter(p => p !== "Hermit"));
+    const key = keyOf(rest, counts);
+    if (have.has(key)) continue;
+    have.add(key);
+    out.push([new Set([...rest, HERMIT_GONE]), {...counts}]);
+  }
+  return out;
 }
 
 /** The Alchemist's setup (group 2, 04.11.2026): its Baron, Godfather and

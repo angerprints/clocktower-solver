@@ -823,7 +823,8 @@ def took_it(w, s, seat, role, phase):
         return True
     return role is not None and (
         has_boffin_ability(w, s, seat, role, phase)
-        or has_plague_ability(w, s, seat, role, phase))
+        or has_plague_ability(w, s, seat, role, phase)
+        or has_hermit_ability(w, s, seat, role, phase))
 
 
 def _back_since(s, seat, since, phase):
@@ -952,13 +953,54 @@ def has_boffin_ability(w, s, seat, role, phase):
 
 def boffin_holders(w, s, role, phase):
     """Every seat with that ability through the Boffin at that moment — a
-    real one's or an Alchemist's."""
+    real one's or an Alchemist's. And a Hermit with it (07.11.2026): every
+    place that asks who else has an ability asks this."""
+    out = hermit_holders(w, s, role, phase)
     marked = set(getattr(w, "_gifts_by_seat", None) or ()) \
         | set(getattr(w, "_alch_gifts_by_seat", None) or ())
     if not marked or role is None:
+        return out
+    return out + [seat for seat in sorted(marked)
+                  if seat not in out
+                  and has_boffin_ability(w, s, seat, role, phase)]
+
+
+# --------------------------------------------------------------------------
+# The Hermit (07.11.2026, claude/eremit-lesarten.md): "You have all
+# Outsider abilities." Every Outsider of the script but itself, at once,
+# held the way a Philosopher holds what it took (`took_it`): the seat is
+# the Hermit, ability-wise it is each of them. One that works after death
+# goes on (the Recluse's, the Puzzlemaster's), one that fires at death
+# fires then, and the rest stop with it, as for anybody. Stage 1 leaves
+# the Drunk's and the Lunatic's (what it believes) to stage 2.
+HERMIT_NOT_YET = frozenset({"Drunk", "Lunatic"})
+_HERMIT_CACHE = {}
+
+
+def hermit_abilities(script):
+    """The Outsider abilities a Hermit of this script has."""
+    keys = tuple(script.keys)
+    got = _HERMIT_CACHE.get(keys)
+    if got is None:
+        got = frozenset(k for k in keys if TEAM.get(k) == "outsider"
+                        and k != "Hermit" and k not in HERMIT_NOT_YET) \
+            if "Hermit" in keys else frozenset()
+        _HERMIT_CACHE[keys] = got
+    return got
+
+
+def has_hermit_ability(w, s, seat, role, phase):
+    """Is this seat the Hermit then, with that Outsider's ability?"""
+    return s is not None and role in hermit_abilities(s.script) \
+        and w.role_at(seat, phase) == "Hermit"
+
+
+def hermit_holders(w, s, role, phase):
+    """The seats holding the Hermit then, if it has that ability."""
+    if s is None or role not in hermit_abilities(s.script):
         return []
-    return [seat for seat in sorted(marked)
-            if has_boffin_ability(w, s, seat, role, phase)]
+    return [seat for seat in range(len(w.roles))
+            if w.role_at(seat, phase) == "Hermit"]
 
 
 # --------------------------------------------------------------------------
@@ -4270,7 +4312,9 @@ class AlchemistGuess(Info):
 
 # Their jinxes (26.10.2026): the Demon cannot have the Drunk's, the
 # Heretic's, the Ogre's or the Politician's ability.
-BOFFIN_NEVER_GIVES = frozenset({"Drunk", "Heretic", "Ogre", "Politician"})
+BOFFIN_NEVER_GIVES = frozenset({"Drunk", "Heretic", "Ogre", "Politician",
+                                # Not yet (Eremit, my decision 3).
+                                "Hermit"})
 
 
 @dataclass
