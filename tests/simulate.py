@@ -2982,8 +2982,10 @@ def _took(d, seat, role, phase):
     # else (B Weg 1).
     if role is not None and d.role_at(seat, phase) == "Hermit":
         from botc.info import HERMIT_CHOOSES, hermit_abilities
+        token = d.token(seat, phase)
         if role in hermit_abilities(d.script) and not (
-                role in HERMIT_CHOOSES and d.token(seat, phase)):
+                role in HERMIT_CHOOSES and token
+                and TEAM.get(token) == "townsfolk"):
             return True
     return _gifted(d, seat, role, phase)
 
@@ -6834,10 +6836,14 @@ def _woke_for_own_ability(d, p, night, shown=False):
     # A Hermit wakes when an Outsider whose ability it has would: the
     # Butler's every night, the Ogre's on the first (07.11.2026). And a
     # Marionette that thinks it is one, on its token.
-    if (d.token(p, f"N{night}") or d.role_at(p, f"N{night}")) == "Hermit":
+    # A Hermit that thinks it is the Demon wakes as its Butler and Ogre
+    # too, one that thinks it is a Townsfolk not (Patrick, 12.11.2026).
+    mine = d.role_at(p, f"N{night}") == "Hermit"
+    if mine or d.token(p, f"N{night}") == "Hermit":
         from botc.catalogue import CHARACTERS
         from botc.info import hermit_abilities
         if any(not CHARACTERS[k].believes
+               and (not mine or _took(d, p, k, f"N{night}"))
                and _woke_itself(d, p, night, shown, as_role=k)
                for k in sorted(hermit_abilities(d.script))):
             return True
@@ -7468,7 +7474,7 @@ def honest_info(d, night, rng):
             continue
         # A Hermit that thinks it is a Townsfolk or the Demon is told, as
         # that one, whatever the Storyteller likes (Eremit Stufe 2, B).
-        if _hermit_token(d, seat, f"N{night}"):
+        if TEAM.get(_hermit_token(d, seat, f"N{night}")) == "townsfolk":
             d._hermit_as_token = seat
             try:
                 made = _droisoned_info(d, seat, night, rng)
@@ -8607,8 +8613,14 @@ def _for_role(d, seat, role, night, rng):
         # Only the living: a dead player has no ability to go wrong. See
         # the solver's `_possible_impairment_counts`.
         living = set(d.alive_at(f"N{night}"))
+        # And a Hermit that thinks it is a Townsfolk, as the Drunk's jinx
+        # with the Mathematician says (Patrick, 12.11.2026).
+        hermits = {p for p in living if "Drunk" in d.script.keys
+                   and TEAM.get(_hermit_token(d, p, f"N{night}"))
+                   == "townsfolk"}
         return MathematicianInfo(
-            night, seat, count=len(droisoned_at(d, night) & living))
+            night, seat,
+            count=len((droisoned_at(d, night) & living) | hermits))
 
     if role == "Juggler" and night == 2:
         # Guessed publicly on the first day, answered the night after —

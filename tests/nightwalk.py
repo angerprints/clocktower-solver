@@ -524,7 +524,8 @@ def hidden_from(deal, night, heard):
         from botc.info import HERMIT_CHOOSES as _hc
         # Not what it would choose with, if it thinks it is somebody else
         # (stage 2, B).
-        out["hermit"] = {p: (got - _hc if deal.token(p, phase) else got)
+        out["hermit"] = {p: (got - _hc if TEAM.get(deal.token(p, phase))
+                             == "townsfolk" else got)
                          for p in range(deal.n)
                          if deal.role_at(p, phase) == "Hermit"}
     out.update({"red_herring": deal.red_herring,

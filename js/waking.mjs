@@ -32,7 +32,7 @@ import {phaseIndex} from "./phases.mjs";
 import {alchemistSummoner, readingAt, teaMade} from "./worlds.mjs";
 import {actsAsAlchemist, backSince, babysitterAt, boffinAbilities, boffinGiftOf,
         alchemistBoffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt,
-        hermitAbilities}
+        hermitAbilities, hasHermitAbility}
   from "./info.mjs";
 
 export const NEVER = "never";
@@ -97,12 +97,17 @@ condition("Lunatic", (world, state, seat, night) =>
  * Butler's every night, the Ogre's on the first. See waking.py. */
 condition("Hermit", (world, state, seat, night) => {
   // One that thinks it is somebody else lives that one's nights (stage 2).
-  // Only the Hermit itself, not a Marionette that thinks it is one.
+  // Only the Hermit itself, not a Marionette that thinks it is one. As
+  // the Demon it wakes as its Butler and Ogre too. See waking.py.
+  const phase = `N${night}`;
   const token = world.believes[seat];
-  if (token && token !== "Hermit" && world.roleAt(seat, `N${night}`) === "Hermit")
-    return wokeAs(world, state, seat, night, token);
+  const mine = world.roleAt(seat, phase) === "Hermit";
+  if (token && token !== "Hermit" && mine
+      && wokeAs(world, state, seat, night, token)) return true;
   return [...hermitAbilities(state.script)].sort().some(k =>
-    !CHARACTERS[k].believes && wokeAs(world, state, seat, night, k));
+    !CHARACTERS[k].believes
+    && (!mine || hasHermitAbility(world, state, seat, k, phase))
+    && wokeAs(world, state, seat, night, k));
 });
 
 condition("Philosopher", (world, state, seat, night) => {
