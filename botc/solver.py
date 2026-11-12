@@ -7953,6 +7953,7 @@ def _plain_failures(world, state, outcome=None):
             # one stage 1 leaves out (D); and a world where it ate a good
             # somebody else cannot have given this row (C).
             if held is ABSENT and seat is not None and role is not None \
+                    and seat == info.player \
                     and _cannibals_row(info, role) \
                     and world.role_at(seat, given_at) == "Cannibal" \
                     and not _made_it_tonight(world, seat, role, info.night,

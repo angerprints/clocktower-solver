@@ -4131,6 +4131,7 @@ function plainFailures(world, state, outcome = {}) {
     // made up after an evil meal or one stage 1 leaves out, and a world
     // where it ate a good somebody else cannot have given it (C).
     if (held === ABSENT && seat !== null && role !== null && role !== undefined
+        && seat === info.player
         && cannibalsRow(info, role) && world.roleAt(seat, givenAt) === "Cannibal"
         // Not one the Pit-Hag made that character tonight. See solver.py.
         && turnOf(role, info.night, () => world.roleAt(seat, phase)) !== role
