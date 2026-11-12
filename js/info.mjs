@@ -195,7 +195,66 @@ export function tookIt(w, s, seat, role, phase) {
       && !backSince(s, seat, taken[1], phase)) return true;
   return hasBoffinAbility(w, s, seat, role, phase)
     || hasPlagueAbility(w, s, seat, role, phase)
-    || hasHermitAbility(w, s, seat, role, phase);
+    || hasHermitAbility(w, s, seat, role, phase)
+    || hasCannibalAbility(w, s, seat, role, phase);
+}
+
+// ---------------------------------------------------------------------
+// The Cannibal (12.11.2026). See info.py.
+// ---------------------------------------------------------------------
+export const CANNIBAL_NOT_YET = new Set(["Philosopher", "Hermit", "Alchemist",
+                                         "Drunk", "Lunatic"]);
+
+/** [executee, character, side] of the last execution death before then,
+ * or null; a dead Cannibal keeps what it had. See info.py. */
+export function cannibalMeal(w, s, seat, phase) {
+  if (!s) return null;
+  // The last day whose execution counts by then. See info.py.
+  const by = p => ["B", "E"].includes(p[0].toUpperCase())
+    ? Number(p.slice(1)) : Number(p.slice(1)) - 1;
+  let last = by(phase);
+  for (const died of s.diedAt(seat)) last = Math.min(last, by(died));
+  for (let d = last; d >= 1; d--) {
+    const who = s.executionDeath(d);
+    if (who !== null && who !== undefined)
+      return [who, w.roleAt(who, `D${d}`), w.alignmentAt(who, `D${d}`)];
+  }
+  return null;
+}
+
+/** The good character whose ability the Cannibal here has then, or null. */
+export function cannibalAte(w, s, seat, phase) {
+  if (w.roleAt(seat, phase) !== "Cannibal") return null;
+  const meal = cannibalMeal(w, s, seat, phase);
+  if (!meal || meal[2] !== "good") return null;
+  const role = meal[1];
+  if (!["townsfolk", "outsider"].includes(TEAM[role])
+      || CANNIBAL_NOT_YET.has(role)) return null;
+  return role;
+}
+
+/** Is the Cannibal here poisoned by an evil meal then? */
+export function cannibalPoisoned(w, s, seat, phase) {
+  if (w.roleAt(seat, phase) !== "Cannibal") return false;
+  const meal = cannibalMeal(w, s, seat, phase);
+  return !!meal && meal[2] !== "good";
+}
+
+/** Is this seat the Cannibal then, having eaten that character? */
+export function hasCannibalAbility(w, s, seat, role, phase) {
+  return !!s && role !== null && role !== undefined
+    && s.script.keys.includes("Cannibal")
+    && cannibalAte(w, s, seat, phase) === role;
+}
+
+/** The Cannibals that have eaten that character, then. */
+export function cannibalHolders(w, s, role, phase) {
+  if (!s || role === null || role === undefined
+      || !s.script.keys.includes("Cannibal")) return [];
+  const out = [];
+  for (let p = 0; p < w.roles.length; p++)
+    if (cannibalAte(w, s, p, phase) === role) out.push(p);
+  return out;
 }
 
 // ---------------------------------------------------------------------
@@ -438,6 +497,8 @@ export function hasBoffinAbility(w, s, seat, role, phase) {
 export function boffinHolders(w, s, role, phase) {
   // And a Hermit with it (07.11.2026). See info.py.
   const out = hermitHolders(w, s, role, phase);
+  for (const p of cannibalHolders(w, s, role, phase))
+    if (!out.includes(p)) out.push(p);
   if (role === null || role === undefined || !w.giftedSeats) return out;
   const marked = [...new Set([...w.giftedSeats(),
                               ...(w.alchGiftedSeats ? w.alchGiftedSeats() : [])])]

@@ -22,7 +22,7 @@ import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
         takenByAPhilosopher, tookIt, boffinHolders, soberSeat,
         boffinAbilities, boffinGiftOf, boffinSeat, storytellerHas,
         evilRegistrationsHere, alchemistsWith, alchemyHolds, ALCHEMY_GUESSES,
-        hermitAbilities}
+        hermitAbilities, cannibalPoisoned}
   from "./info.mjs";
 
 // --------------------------------------------------------------------
@@ -2036,6 +2036,20 @@ sourceRule(function aSpyOrWidowPoisonsTheHermit(world, state, night) {
     if (world.roleAt(p, phase) === "Hermit") seats.add(p);
   if (!seats.size) return [];
   return [new Source("Hermit (Damsel)", seats,
+                     {capacity: seats.size, cost: () => 1.0,
+                      repeatCost: () => 1.0})];
+});
+
+/** "If they are evil, you are poisoned until a good player dies by
+ * execution" (Kannibale, 12.11.2026). See solver.py. */
+sourceRule(function anEvilMealPoisonsTheCannibal(world, state, night) {
+  if (!state.script.keys.includes("Cannibal")) return [];
+  const phase = `N${night}`;
+  const seats = new Set();
+  for (let p = 0; p < state.nPlayers; p++)
+    if (cannibalPoisoned(world, state, p, phase)) seats.add(p);
+  if (!seats.size) return [];
+  return [new Source("Cannibal (evil meal)", seats,
                      {capacity: seats.size, cost: () => 1.0,
                       repeatCost: () => 1.0})];
 });

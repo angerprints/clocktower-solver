@@ -184,6 +184,15 @@ def _hermit(world, state, seat, night):
                for k in sorted(hermit_abilities(state.script)))
 
 
+@condition("Cannibal")
+def _cannibal(world, state, seat, night):
+    """When the character it ate would (12.11.2026). Poisoned by an evil
+    meal it is not woken: the Storyteller may, and does not here."""
+    from .info import cannibal_ate          # local: info imports waking
+    ate = cannibal_ate(world, state, seat, f"N{night}")
+    return ate is not None and woke_as(world, state, seat, night, ate)
+
+
 @condition("Philosopher")
 def _philosopher(world, state, seat, night):
     """The night it chooses, and thereafter on its gained schedule.

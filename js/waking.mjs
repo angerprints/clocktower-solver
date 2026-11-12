@@ -32,7 +32,7 @@ import {phaseIndex} from "./phases.mjs";
 import {alchemistSummoner, readingAt, teaMade} from "./worlds.mjs";
 import {actsAsAlchemist, backSince, babysitterAt, boffinAbilities, boffinGiftOf,
         alchemistBoffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt,
-        hermitAbilities, hasHermitAbility}
+        hermitAbilities, hasHermitAbility, cannibalAte}
   from "./info.mjs";
 
 export const NEVER = "never";
@@ -108,6 +108,13 @@ condition("Hermit", (world, state, seat, night) => {
     !CHARACTERS[k].believes
     && (!mine || hasHermitAbility(world, state, seat, k, phase))
     && wokeAs(world, state, seat, night, k));
+});
+
+/** When the character it ate would; not after an evil meal (12.11.2026).
+ * See waking.py. */
+condition("Cannibal", (world, state, seat, night) => {
+  const ate = cannibalAte(world, state, seat, `N${night}`);
+  return ate !== null && wokeAs(world, state, seat, night, ate);
 });
 
 condition("Philosopher", (world, state, seat, night) => {

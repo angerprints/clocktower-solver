@@ -50,6 +50,8 @@ class Night:
         self.gained = {}                    # seat -> ability it took
         # A Hermit's Outsider abilities (07.11.2026): seat -> those.
         self.hermit = {}
+        # What a Cannibal ate (12.11.2026): seat -> character.
+        self.cannibal = {}
         # The Boffin's (26.10.2026): the Demon's seat -> the good ability
         # it has tonight, and the Boffin whose sobriety it rests on.
         self.boffin = {}
@@ -111,6 +113,8 @@ class Night:
             and self.gained.get(seat) == role) or (
             self.roles.get(seat) == "Hermit"
             and role in self.hermit.get(seat, ())) or (
+            self.roles.get(seat) == "Cannibal"
+            and self.cannibal.get(seat) == role) or (
             role in self.boffin_has.get(seat, ())
             and self.roles.get(seat) != "Philosopher")
 
@@ -517,6 +521,11 @@ def hidden_from(deal, night, heard):
     # until then that night, it had nothing to use before either.
     from botc.info import phase_index as _pi
     lost = getattr(deal, "phil_lost", None) or {}
+    # What each Cannibal ate, tonight (12.11.2026).
+    ate = {p: simulate._cannibal_ate(deal, p, phase) for p in range(deal.n)
+           if deal.role_at(p, phase) == "Cannibal"}
+    if any(ate.values()):
+        out["cannibal"] = {p: r for p, r in ate.items() if r}
     # A Hermit's Outsider abilities, tonight (07.11.2026).
     from botc.info import hermit_abilities as _ha
     got = _ha(deal.script)
@@ -1036,6 +1045,8 @@ def walk(deal, night, hidden):
     state.gained.update(hidden.get("gained") or {})
     # And a Hermit's Outsider abilities (07.11.2026).
     state.hermit = dict(hidden.get("hermit") or {})
+    # And what each Cannibal ate (12.11.2026).
+    state.cannibal = dict(hidden.get("cannibal") or {})
     # And what the Boffin gave the Demon, tonight (26.10.2026).
     # A Philosopher's ability given (stage 2): it has both, and acts as
     # what it took at that character's turn.
@@ -1281,6 +1292,11 @@ def walk(deal, night, hidden):
                 # A Hermit acts as its Outsiders at their turns.
                 or (state.roles[p] == "Hermit"
                     and _hermit_turn(state, p, slot, field) is not None)
+                # A Cannibal as what it ate, at its turn (12.11.2026).
+                or (state.roles[p] == "Cannibal"
+                    and state.cannibal.get(p) is not None
+                    and getattr(CHARACTERS[state.cannibal[p]], field, 0)
+                    == slot)
                 # A Demon the Boffin gave one of these acts at its turn
                 # (26.10.2026).
                 or (state.boffin.get(p) in taken_slot
@@ -1314,6 +1330,8 @@ def walk(deal, night, hidden):
                 role = state.gained[seat]
             if role == "Hermit":
                 role = _hermit_turn(state, seat, slot, field) or role
+            if role == "Cannibal" and state.cannibal.get(seat):
+                role = state.cannibal[seat]
 
             if role == "Poisoner":
                 target = hidden.get(("poisoner", night))

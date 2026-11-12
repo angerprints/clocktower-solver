@@ -41,6 +41,8 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    PlagueDoctorGave, PLAGUE_UNSEEN, STORYTELLER,
                    storyteller_has, has_plague_ability, plague_holders,
                    hermit_holders, has_hermit_ability, hermit_abilities,
+                   cannibal_ate, cannibal_meal, cannibal_poisoned,
+                   CANNIBAL_NOT_YET,
                    acts_as_alchemist, alchemy_holds,
                    alchemist_boffin_seat, alchemist_boffin_gift,
                    BecameInfo, EvilTwinPair, BoomdandyExploded,
@@ -977,6 +979,15 @@ def a_barber_lets_the_demon_swap_two(world, state):
     if got is None:
         got = memo[key] = _barber_offers(world, state)
     return list(got)
+
+
+def _cannibals_row(info, role):
+    """Could this row be a Cannibal's own, told as what it ate? A good
+    character's, and not words somebody else was told (a Widow's
+    messenger) — 12.11.2026."""
+    return role is not None and role != "Cannibal" \
+        and TEAM.get(role) in ("townsfolk", "outsider") \
+        and not getattr(info, "witnessed", False)
 
 
 def _hermit_claimants(state, role):
@@ -7766,12 +7777,22 @@ def _plain_failures(world, state, outcome=None):
             # is that one's own. A silent Snake Charmer's row went to the
             # old Demon it had swapped into a Snake Charmer, which claimed
             # it (Stelle 48 a, seed 1679, 30.10.2026).
+            # And a Cannibal's or a Hermit's row: its own, though somebody
+            # else claims that character (12.11.2026).
             if seat is not None and seat != info.player \
                     and isinstance(info.player, int) \
                     and 0 <= info.player < state.n_players \
                     and role in CHARACTERS \
-                    and world.role_at(info.player,
-                                      _before(info.night, phase)) == role:
+                    and (world.role_at(info.player,
+                                       _before(info.night, phase)) == role
+                         or (_cannibals_row(info, role)
+                             and "Cannibal" in state.script.keys
+                             and world.role_at(info.player,
+                                               _before(info.night, phase))
+                             == "Cannibal")
+                         or has_hermit_ability(world, state, info.player,
+                                               role,
+                                               _before(info.night, phase))):
                 seat = info.player
             if seat is None:
                 # Who *acted*, not who holds the character now.
@@ -7797,6 +7818,15 @@ def _plain_failures(world, state, outcome=None):
                         and 0 <= info.player < state.n_players \
                         and has_hermit_ability(world, state, info.player,
                                                role, began):
+                    seat = info.player
+                # A Cannibal's own row, whatever it ate (12.11.2026): it is
+                # told as that character, and whether it fits is asked
+                # below (C).
+                elif isinstance(info.player, int) \
+                        and 0 <= info.player < state.n_players \
+                        and _cannibals_row(info, role) \
+                        and "Cannibal" in state.script.keys \
+                        and world.role_at(info.player, began) == "Cannibal":
                     seat = info.player
                 else:
                     seat = world.find_at(role, began)
@@ -7879,6 +7909,31 @@ def _plain_failures(world, state, outcome=None):
                     and has_hermit_ability(world, state, seat, role,
                                            given_at):
                 held = GENUINE
+            # A Cannibal's row (12.11.2026): its own if it ate that
+            # character; made up while an evil meal poisons it, or after
+            # one stage 1 leaves out (D); and a world where it ate a good
+            # somebody else cannot have given this row (C).
+            if held is ABSENT and seat is not None and role is not None \
+                    and _cannibals_row(info, role) \
+                    and world.role_at(seat, given_at) == "Cannibal":
+                # The meal asked of the night itself: "before it acted" is
+                # the end of the day of the execution, which ate nothing
+                # yet. Whether it is the Cannibal, as it acted: one that
+                # swapped with the Demon tonight is not by morning.
+                meal = cannibal_meal(world, state, seat, phase)
+                ate = (meal[1] if meal is not None and meal[2] == "good"
+                       and TEAM.get(meal[1]) in ("townsfolk", "outsider")
+                       and meal[1] not in CANNIBAL_NOT_YET else None)
+                if ate == role:
+                    held = (INVERTED if vortoxed
+                            and TEAM[role] == "townsfolk" else GENUINE)
+                elif meal is not None and (
+                        meal[2] != "good" or meal[1] in CANNIBAL_NOT_YET
+                        or TEAM.get(meal[1]) not in ("townsfolk",
+                                                     "outsider")):
+                    held = ARBITRARY
+                else:
+                    return None, None, 1.0, None
             sober = seat if seat is None \
                 else sober_seat(world, state, seat, role, given_at)
             # A row told to somebody *other* than the holder — the player a
@@ -8992,6 +9047,24 @@ def a_spy_or_widow_poisons_the_hermit(world, state, night):
     free = lambda who: 1.0
     return [impairment.Source("Hermit (Damsel)", seats, capacity=len(seats),
                               cost=free, repeat_cost=free)]
+
+
+@impairment.source_rule
+def an_evil_meal_poisons_the_cannibal(world, state, night):
+    """"If they are evil, you are poisoned until a good player dies by
+    execution" (Kannibale, 12.11.2026). Certain while it lasts: offered
+    free for the whole reach, so the Mathematician counts it."""
+    if "Cannibal" not in state.script.keys:
+        return []
+    phase = f"N{night}"
+    seats = frozenset(p for p in range(state.n_players)
+                      if cannibal_poisoned(world, state, p, phase))
+    if not seats:
+        return []
+    free = lambda who: 1.0
+    return [impairment.Source("Cannibal (evil meal)", seats,
+                              capacity=len(seats), cost=free,
+                              repeat_cost=free)]
 
 
 @impairment.source_rule
