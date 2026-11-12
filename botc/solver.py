@@ -981,6 +981,16 @@ def a_barber_lets_the_demon_swap_two(world, state):
     return list(got)
 
 
+def _made_it_tonight(world, seat, role, night, phase):
+    """That character tonight: one the Pit-Hag made it, whose row is its
+    own as any new character's (12.11.2026) — even made it after that
+    character's turn, as the simulator lets it choose."""
+    with _turn_of(role, night):
+        if world.role_at(seat, phase) == role:
+            return True
+    return world.role_at(seat, f"D{night}") == role
+
+
 def _cannibals_row(info, role):
     """Could this row be a Cannibal's own, told as what it ate? A good
     character's, and not words somebody else was told (a Widow's
@@ -7926,7 +7936,9 @@ def _plain_failures(world, state, outcome=None):
             # somebody else cannot have given this row (C).
             if held is ABSENT and seat is not None and role is not None \
                     and _cannibals_row(info, role) \
-                    and world.role_at(seat, given_at) == "Cannibal":
+                    and world.role_at(seat, given_at) == "Cannibal" \
+                    and not _made_it_tonight(world, seat, role, info.night,
+                                             phase):
                 # The meal asked of the night itself: "before it acted" is
                 # the end of the day of the execution, which ate nothing
                 # yet. Whether it is the Cannibal, as it acted: one that
