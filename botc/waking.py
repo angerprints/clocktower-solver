@@ -782,6 +782,13 @@ def uncertain(world, state, seat, night):
     if took and night > int(took[1][1:]) and took[0] != "Philosopher" \
             and not CHARACTERS[took[0]].believes:
         acting = took[0]
+    # A Cannibal with the Professor's ability has its own raise (B,
+    # 12.11.2026), and which return was whose nobody writes down: it may
+    # have woken any night it had that ability.
+    if acting == "Cannibal" and night > 1:
+        from .info import cannibal_ate      # local: info imports waking
+        if cannibal_ate(world, state, seat, phase) == "Professor":
+            return seat in state.alive_set(phase)
     # One that took the Drunk or the Lunatic lives by a token it was
     # shown, which nobody wrote down: it may have woken (I, 14.10.2026).
     if took and night > int(took[1][1:]) and took[0] != "Philosopher" \
@@ -875,9 +882,15 @@ def uncertain(world, state, seat, night):
             return True
         # Nor with an Al-Hadikhia about: a dead one it chose may have
         # chosen life (21.10.2026).
-        from .info import holding_now
-        return any(holding_now(world, state, who, f"N{raised}") is not None
-                   for who in ("Shabaloth", "AlHadikhia"))
+        from .info import holding_now, cannibal_holders
+        if any(holding_now(world, state, who, f"N{raised}") is not None
+               for who in ("Shabaloth", "AlHadikhia")):
+            return True
+        # Nor where a Cannibal had the Professor's ability that night:
+        # it or the Professor raised, and the other may wake on
+        # (12.11.2026).
+        return bool(cannibal_holders(world, state, "Professor",
+                                     f"N{raised}"))
     from .info import taken_by_a_philosopher, took_it
     if "Exorcist" not in state.script.keys \
             and not taken_by_a_philosopher(state, "Exorcist"):

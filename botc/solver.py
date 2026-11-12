@@ -5867,8 +5867,12 @@ def a_gambler_may_lose(world, state, night):
         with _turn_of("Gambler", night):
             if all(world.role_at(g.target, phase) == g.role for g in mine):
                 continue
+        # Each its own name: the death machinery counts a name's kills,
+        # and two of one name were one guess killing twice — a Cannibal's
+        # and a raised Gambler's both lost (12.11.2026).
         causes.append(death_causes.Cause(
-            name="Gambler", kind=death_causes.OTHER,
+            name="Gambler" if not causes else f"Gambler {seat}",
+            kind=death_causes.OTHER,
             seats=frozenset({seat}), capacity=1))
     return causes
 
@@ -7650,23 +7654,30 @@ def _plain_failures(world, state, outcome=None):
         back = _returned_at(state, phase)
         # And a Demon the Boffin gave it (stage 2, 27.10.2026).
         with _turn_of("Professor", night):
-            prof = next((who for who in sorted(state.philosophies() or {})
-                         if who in state.alive_set(phase) and who != seat
-                         and who not in back
-                         and took_it(world, state, who, "Professor", phase)),
-                        None)
-            # The holder; or, when there is none that can raise — dead, or
-            # the one raised — a Demon the Boffin gave it, or a Cannibal
+            alive = state.alive_set(phase)
+            cands = [who for who in sorted(state.philosophies() or {})
+                     if who in alive and who != seat and who not in back
+                     and took_it(world, state, who, "Professor", phase)]
+            # The holder; and a Demon the Boffin gave it, or a Cannibal
             # that ate it (12.11.2026: a Cannibal that ate the Professor
             # raised it).
-            if prof is None:
-                real = world.find_at("Professor", phase)
-                prof = real
-                if real is None or real == seat \
-                        or real not in state.alive_set(phase):
-                    prof = next((who for who in boffin_holders(
-                        world, state, "Professor", phase)
-                        if who != seat and who not in back), real)
+            real = world.find_at("Professor", phase)
+            if real is not None and real != seat and real in alive \
+                    and real not in cands:
+                cands.append(real)
+            cands += [who for who in boffin_holders(
+                world, state, "Professor", phase)
+                if who != seat and who not in back and who not in cands]
+
+            def spent(who):
+                return who in used and not any(
+                    used[who] < int(at[1:]) <= night
+                    for at in (state.resurrections or {}).get(who, ())
+                    if at[1:].isdigit())
+            # The first that has its raise left (a Philosopher's spent,
+            # the Cannibal's own, B).
+            prof = next((who for who in cands if not spent(who)),
+                        cands[0] if cands else real)
         if prof is None or not _on_board(state, "Professor"):
             return None, None, 1.0, None
         if prof not in state.alive_set(phase) or night < 2:
@@ -7675,7 +7686,14 @@ def _plain_failures(world, state, outcome=None):
         if TEAM[raised] != "townsfolk" \
                 and "townsfolk" not in CHARACTERS[raised].registers:
             return None, None, 1.0, None
-        working.setdefault(night, set()).add(prof)
+        # Beside a Cannibal that ate the Professor, which of the two
+        # raised nobody writes down: neither has to have worked
+        # (12.11.2026).
+        shared = "Cannibal" in state.script.keys and len({
+            who for who in _holders(world, state, "Professor", phase)
+            if who in alive and who != seat and who not in back}) > 1
+        if not shared:
+            working.setdefault(night, set()).add(prof)
         if prof in used and not any(
                 used[prof] < int(at[1:]) <= night
                 for at in (state.resurrections or {}).get(prof, ())

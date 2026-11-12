@@ -3869,28 +3869,48 @@ function plainFailures(world, state, outcome = {}) {
       // The holder, or a Philosopher that took it, ahead (13.10.2026).
       const back = returnedAtPhase(state, phase);
       const prof = turnOf("Professor", night, () => {
-        let got = null;
-        for (const who of Object.keys(state.philosophies() || {}).map(Number)
-               .sort((a, b) => b - a))
-          if (state.aliveSet(phase).has(who) && who !== seat && !back.has(who)
-              && tookIt(world, state, who, "Professor", phase)) got = who;
-        if (got !== null) return got;
-        // The holder; or a Demon the Boffin gave it, a Cannibal that ate
-        // it, when the holder cannot raise (12.11.2026). See solver.py.
+        const alive = state.aliveSet(phase);
+        const cands = Object.keys(state.philosophies() || {}).map(Number)
+          .sort((a, b) => a - b)
+          .filter(who => alive.has(who) && who !== seat && !back.has(who)
+                  && tookIt(world, state, who, "Professor", phase));
+        // The holder; and a Demon the Boffin gave it, or a Cannibal that
+        // ate it (12.11.2026). See solver.py.
         const real = world.findAt("Professor", phase);
-        got = real;
-        if (real === null || real === undefined || real === seat
-            || !state.aliveSet(phase).has(real))
-          got = boffinHolders(world, state, "Professor", phase)
-            .find(who => who !== seat && !back.has(who)) ?? (real ?? null);
-        return got;
+        if (real !== null && real !== undefined && real !== seat
+            && alive.has(real) && !cands.includes(real)) cands.push(real);
+        for (const who of boffinHolders(world, state, "Professor", phase))
+          if (who !== seat && !back.has(who) && !cands.includes(who))
+            cands.push(who);
+        const spent = who => used.has(who) && !(
+          (state.resurrections || {})[who] || []).some(at => {
+            const k = parseInt(String(at).slice(1), 10);
+            return used.get(who) < k && k <= night;
+          });
+        // The first that has its raise left. See solver.py.
+        const fresh = cands.find(who => !spent(who));
+        if (fresh !== undefined) return fresh;
+        return cands.length ? cands[0] : (real ?? null);
       });
       if (prof === null || !onBoard(state, "Professor")) return null;
       if (!state.aliveSet(phase).has(prof) || night < 2) return null;
       const raised = world.roleAt(seat, phase);
       if (TEAM[raised] !== "townsfolk" &&
           !CHARACTERS[raised].registers.includes("townsfolk")) return null;
-      (working[night] = working[night] || new Set()).add(prof);
+      // Beside a Cannibal that ate the Professor, neither has to have
+      // worked (12.11.2026). See solver.py.
+      const alive = state.aliveSet(phase);
+      const hs = new Set();
+      const realP = world.findAt("Professor", phase);
+      if (realP !== null && realP !== undefined) hs.add(realP);
+      for (const p of Object.keys(state.philosophies() || {}).map(Number))
+        if (tookIt(world, state, p, "Professor", phase)) hs.add(p);
+      for (const p of boffinHolders(world, state, "Professor", phase)) hs.add(p);
+      const shared = state.script.keys.includes("Cannibal")
+        && [...hs].filter(p => alive.has(p) && p !== seat && !back.has(p))
+          .length > 1;
+      if (!shared)
+        (working[night] = working[night] || new Set()).add(prof);
       if (used.has(prof) && !((state.resurrections || {})[prof] || []).some(
             at => used.get(prof) < parseInt(String(at).slice(1), 10)
                   && parseInt(String(at).slice(1), 10) <= night))

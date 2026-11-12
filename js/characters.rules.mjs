@@ -1282,7 +1282,9 @@ causeRule(function aGamblerMayLose(world, state, night) {
                   slotOf("Gambler", night) || 0,
                   () => mine.every(g => world.roleAt(g.target, phase) === g.role)))
       continue;
-    causes.push(new Cause("Gambler", OTHER, new Set([seat]), {capacity: 1}));
+    // Each its own name (12.11.2026). See solver.py.
+    causes.push(new Cause(causes.length ? `Gambler ${seat}` : "Gambler", OTHER,
+                          new Set([seat]), {capacity: 1}));
   }
   return causes;
 });

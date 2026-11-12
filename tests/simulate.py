@@ -7964,6 +7964,10 @@ def droisoned_at(d, night, by_day=False, _without_their_drunks=False):
                 or d.role_at(courtier, phase) != d.role_at(
                     courtier, f"N{since}"):
             continue
+        # Nor a Cannibal that has eaten somebody else since (12.11.2026).
+        if d.role_at(courtier, phase) == "Cannibal" \
+                and _cannibal_ate(d, courtier, phase) != "Courtier":
+            continue
         if not died:
             out.add(holder)
 

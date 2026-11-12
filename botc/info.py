@@ -804,6 +804,12 @@ def faux_paw_lycanthrope(w, s, phase, living=True):
                 and took_it(w, s, who, "Lycanthrope", phase):
             return who
     lyc = w.find_at("Lycanthrope", phase)
+    # Or a Cannibal that ate it, the holder dead (12.11.2026): the faux
+    # paw reads evil while that one works.
+    eaters = [p for p in cannibal_holders(w, s, "Lycanthrope", phase)
+              if p in alive]
+    if eaters and (lyc is None or lyc not in alive):
+        return eaters[0]
     return lyc if lyc is not None and (lyc in alive or not living) \
         else None
 

@@ -174,6 +174,11 @@ export function fauxPawLycanthrope(w, s, phase, living = true) {
     if ((alive.has(p) || !living) && tookIt(w, s, p, "Lycanthrope", phase))
       return p;
   const lyc = w.findAt("Lycanthrope", phase);
+  // Or a Cannibal that ate it, the holder dead (12.11.2026). See info.py.
+  const eaters = cannibalHolders(w, s, "Lycanthrope", phase)
+    .filter(p => alive.has(p));
+  if (eaters.length && (lyc === null || lyc === undefined || !alive.has(lyc)))
+    return eaters[0];
   return lyc !== null && lyc !== undefined && (alive.has(lyc) || !living)
     ? lyc : null;
 }
