@@ -165,16 +165,21 @@ def _lunatic(world, state, seat, night):
 def _hermit(world, state, seat, night):
     """When any Outsider whose ability it has would wake (07.11.2026): the
     Butler's every night, the Ogre's on the first."""
-    from .info import hermit_abilities      # local: info imports waking
+    from .info import hermit_abilities, has_hermit_ability
     # One that thinks it is somebody else lives that one's nights, as the
-    # Drunk or the Lunatic does (stage 2, B and C).
+    # Drunk or the Lunatic does (stage 2, B and C). Thinking it is the
+    # Demon it wakes as its Butler and its Ogre too (Patrick, 12.11.2026).
     # Only the Hermit itself: a Marionette that thinks it is the Hermit
     # holds that token, and asked again it recursed without end.
+    phase = f"N{night}"
     token = world.believes[seat]
-    if token and token != "Hermit" \
-            and world.role_at(seat, f"N{night}") == "Hermit":
-        return woke_as(world, state, seat, night, token)
+    mine = world.role_at(seat, phase) == "Hermit"
+    if token and token != "Hermit" and mine \
+            and woke_as(world, state, seat, night, token):
+        return True
     return any(not CHARACTERS[k].believes
+               and (not mine or has_hermit_ability(world, state, seat, k,
+                                                   phase))
                and woke_as(world, state, seat, night, k)
                for k in sorted(hermit_abilities(state.script)))
 

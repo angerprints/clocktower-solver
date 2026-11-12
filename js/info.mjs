@@ -222,11 +222,18 @@ export function hermitAbilities(script) {
   return got;
 }
 
+/** Does the Hermit in this seat think it is a Townsfolk (B)? Only then
+ * does it choose nothing as an Outsider (Patrick, 12.11.2026). */
+export function hermitThinksTownsfolk(w, seat) {
+  const token = w.believes[seat];
+  return !!token && TEAM[token] === "townsfolk";
+}
+
 /** Is this seat the Hermit then, with that Outsider's ability? */
 export function hasHermitAbility(w, s, seat, role, phase) {
   return !!s && hermitAbilities(s.script).has(role)
     && w.roleAt(seat, phase) === "Hermit"
-    && !(HERMIT_CHOOSES.has(role) && w.believes[seat]);
+    && !(HERMIT_CHOOSES.has(role) && hermitThinksTownsfolk(w, seat));
 }
 
 /** The seats holding the Hermit then, if it has that ability. */
@@ -235,7 +242,8 @@ export function hermitHolders(w, s, role, phase) {
   const out = [];
   for (let seat = 0; seat < w.roles.length; seat++)
     if (w.roleAt(seat, phase) === "Hermit"
-        && !(HERMIT_CHOOSES.has(role) && w.believes[seat])) out.push(seat);
+        && !(HERMIT_CHOOSES.has(role) && hermitThinksTownsfolk(w, seat)))
+      out.push(seat);
   return out;
 }
 
@@ -1620,6 +1628,15 @@ export function possibleImpairmentCounts(world, state, night) {
         && (source.actor === null || source.actor === undefined)) {
       for (const seat of source.seats) if (living.has(seat)) always.add(seat);
     } else movable.push(source);
+  }
+  // The Drunk's jinx with the Mathematician reaches a Hermit that thinks
+  // it is a Townsfolk, where the Drunk is on the script (Patrick,
+  // 12.11.2026). See info.py.
+  if (state.script.keys.includes("Drunk")) {
+    const phase = `N${night}`;
+    for (const p of living)
+      if (world.roleAt(p, phase) === "Hermit"
+          && TEAM[world.believes[p]] === "townsfolk") always.add(p);
   }
   let most = always.size;
   for (const source of movable) {

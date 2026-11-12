@@ -208,6 +208,23 @@ class WhatItBelieves(SolverTest):
         self.assertTrue(I.has_hermit_ability(w, st, 5, "Saint", "D1"))
         self.assertTrue(I.has_hermit_ability(world(), st, 5, "Klutz", "N2"))
 
+    def test_thinking_it_is_the_demon_it_still_chooses(self):
+        # Patrick, 12.11.2026: only the Townsfolk belief stops it.
+        w = World(tuple(R), (None,) * 5 + ("Imp",) + (None,) * 2)
+        st = state(script=LS)
+        self.assertTrue(I.has_hermit_ability(w, st, 5, "Klutz", "N2"))
+        self.assertTrue(I.has_hermit_ability(w, st, 5, "Butler", "N2"))
+        # And wakes as its Butler on the first night, too.
+        self.assertTrue(waking.woke(w, st, 5, 1))
+
+    def test_the_mathematician_counts_it_where_the_drunk_is_on_the_script(self):
+        w = World(tuple(R), (None,) * 5 + ("Chef",) + (None,) * 2)
+        low, _high = I._possible_impairment_counts(w, state(script=DS), 2)
+        self.assertEqual(low, 1)
+        w = World(tuple(R), (None,) * 5 + ("Imp",) + (None,) * 2)
+        low, _high = I._possible_impairment_counts(w, state(script=LS), 2)
+        self.assertEqual(low, 0)
+
     def test_it_wakes_as_what_it_thinks_it_is(self):
         w = World(tuple(R), (None,) * 5 + ("Chef",) + (None,) * 2)
         self.assertTrue(waking.woke(w, state(script=DS), 5, 1))

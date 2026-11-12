@@ -980,6 +980,8 @@ HERMIT_NOT_YET = frozenset({"Drunk", "Lunatic"})
 # master, the Ogre's pick, the Moonchild's and the Klutz's on dying, the
 # Golem's nomination, the Zealot's hands. The Puzzlemaster's drunk is
 # none of its doing and stays; it guesses nothing.
+# Only while it thinks it is a Townsfolk (Patrick, 12.11.2026): thinking
+# it is the Demon, it still uses them.
 HERMIT_CHOOSES = frozenset({"Butler", "Ogre", "Moonchild", "Klutz",
                             "Golem", "Zealot"})
 _HERMIT_CACHE = {}
@@ -997,12 +999,19 @@ def hermit_abilities(script):
     return got
 
 
+def hermit_thinks_townsfolk(w, seat):
+    """Does the Hermit in this seat think it is a Townsfolk (the Drunk's
+    ability, B)? Then it chooses nothing as an Outsider."""
+    token = w.believes[seat]
+    return bool(token) and TEAM.get(token) == "townsfolk"
+
+
 def has_hermit_ability(w, s, seat, role, phase):
     """Is this seat the Hermit then, with that Outsider's ability? Not one
     it would have to choose with, if it thinks it is somebody else."""
     return s is not None and role in hermit_abilities(s.script) \
         and w.role_at(seat, phase) == "Hermit" \
-        and not (role in HERMIT_CHOOSES and w.believes[seat])
+        and not (role in HERMIT_CHOOSES and hermit_thinks_townsfolk(w, seat))
 
 
 def hermit_holders(w, s, role, phase):
@@ -1011,7 +1020,8 @@ def hermit_holders(w, s, role, phase):
         return []
     return [seat for seat in range(len(w.roles))
             if w.role_at(seat, phase) == "Hermit"
-            and not (role in HERMIT_CHOOSES and w.believes[seat])]
+            and not (role in HERMIT_CHOOSES
+                     and hermit_thinks_townsfolk(w, seat))]
 
 
 # --------------------------------------------------------------------------
@@ -1691,6 +1701,14 @@ def _possible_impairment_counts(world, state, night):
         else:
             movable.append(source)
 
+    # The Drunk's jinx with the Mathematician reaches a Hermit that thinks
+    # it is a Townsfolk, where the Drunk is on the script (Patrick,
+    # 12.11.2026): counted as the Drunk is, every night it lives. Not
+    # impaired for that — its Outsider abilities work.
+    if "Drunk" in state.script.keys:
+        phase = f"N{night}"
+        always |= {p for p in living if world.role_at(p, phase) == "Hermit"
+                   and TEAM.get(world.believes[p]) == "townsfolk"}
     most = len(always)
     for source in movable:
         most += min(source.capacity, len(set(source.seats) & living - always))
