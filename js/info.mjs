@@ -203,7 +203,7 @@ export function tookIt(w, s, seat, role, phase) {
 // The Cannibal (12.11.2026). See info.py.
 // ---------------------------------------------------------------------
 export const CANNIBAL_NOT_YET = new Set(["Philosopher", "Hermit", "Alchemist",
-                                         "Drunk", "Lunatic"]);
+                                         "Drunk", "Lunatic", "Cannibal"]);
 
 /** [executee, character, side] of the last execution death before then,
  * or null; a dead Cannibal keeps what it had. See info.py. */
@@ -213,7 +213,12 @@ export function cannibalMeal(w, s, seat, phase) {
   const by = p => ["B", "E"].includes(p[0].toUpperCase())
     ? Number(p.slice(1)) : Number(p.slice(1)) - 1;
   let last = by(phase);
-  for (const died of s.diedAt(seat)) last = Math.min(last, by(died));
+  // Dead now: what it ate before it died. See info.py.
+  if (!s.aliveSet(phase).has(seat)) {
+    const caps = [...s.diedAt(seat)].map(d => Number(d.slice(1)) - 1)
+      .filter(k => k <= last);
+    if (caps.length) last = Math.max(...caps);
+  }
   for (let d = last; d >= 1; d--) {
     const who = s.executionDeath(d);
     if (who !== null && who !== undefined)

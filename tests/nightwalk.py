@@ -522,8 +522,11 @@ def hidden_from(deal, night, heard):
     from botc.info import phase_index as _pi
     lost = getattr(deal, "phil_lost", None) or {}
     # What each Cannibal ate, tonight (12.11.2026).
-    ate = {p: simulate._cannibal_ate(deal, p, phase) for p in range(deal.n)
-           if deal.role_at(p, phase) == "Cannibal"}
+    # Asked as the night starts: a Cannibal with the Snake Charmer's
+    # ability that swaps tonight is a Demon by morning.
+    dusk = f"E{night - 1}" if night > 1 else phase
+    ate = {p: simulate._cannibal_ate(deal, p, dusk) for p in range(deal.n)
+           if deal.role_at(p, dusk) == "Cannibal"}
     if any(ate.values()):
         out["cannibal"] = {p: r for p, r in ate.items() if r}
     # A Hermit's Outsider abilities, tonight (07.11.2026).

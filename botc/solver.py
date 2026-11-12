@@ -6005,6 +6005,9 @@ def _cause_name(world, holders, role, seat, phase):
     the death machinery counts each name's kills, and two of one name
     were one Lycanthrope firing twice (13.10.2026)."""
     if len(holders) > 1 and world.role_at(seat, phase) != role:
+        # A Cannibal's beside a Philosopher's is a third (12.11.2026).
+        if world.role_at(seat, phase) == "Cannibal":
+            return f"{role} (Cannibal)"
         return f"{role} (Philosopher)"
     return role
 
@@ -7641,11 +7644,19 @@ def _plain_failures(world, state, outcome=None):
                          if who in state.alive_set(phase) and who != seat
                          and who not in back
                          and took_it(world, state, who, "Professor", phase)),
-                        world.find_at("Professor", phase))
+                        None)
+            # The holder; or, when there is none that can raise — dead, or
+            # the one raised — a Demon the Boffin gave it, or a Cannibal
+            # that ate it (12.11.2026: a Cannibal that ate the Professor
+            # raised it).
             if prof is None:
-                prof = next((who for who in boffin_holders(
-                    world, state, "Professor", phase)
-                    if who != seat and who not in back), None)
+                real = world.find_at("Professor", phase)
+                prof = real
+                if real is None or real == seat \
+                        or real not in state.alive_set(phase):
+                    prof = next((who for who in boffin_holders(
+                        world, state, "Professor", phase)
+                        if who != seat and who not in back), real)
         if prof is None or not _on_board(state, "Professor"):
             return None, None, 1.0, None
         if prof not in state.alive_set(phase) or night < 2:

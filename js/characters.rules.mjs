@@ -1183,7 +1183,9 @@ causeRule(function aMoonchildTakesSomebodyWithIt(world, state, night) {
  * death machinery counts each name's kills (13.10.2026). See solver.py. */
 function causeName(world, hs, role, seat, phase) {
   if (hs.length > 1 && world.roleAt(seat, phase) !== role)
-    return `${role} (Philosopher)`;
+    // A Cannibal's beside a Philosopher's is a third (12.11.2026).
+    return world.roleAt(seat, phase) === "Cannibal"
+      ? `${role} (Cannibal)` : `${role} (Philosopher)`;
   return role;
 }
 

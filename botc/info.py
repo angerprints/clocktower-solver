@@ -1024,8 +1024,10 @@ def has_hermit_ability(w, s, seat, role, phase):
 # the Philosopher's from the night it took it; B its own once-per-game use,
 # once per character; C a row that does not fit a good executee rules the
 # world out, a poisoned Cannibal's fit anything; D these come in stage 2.
+# A Cannibal is no meal: an executed Cannibal has eaten itself, and its
+# ability has ended with it.
 CANNIBAL_NOT_YET = frozenset({"Philosopher", "Hermit", "Alchemist",
-                              "Drunk", "Lunatic"})
+                              "Drunk", "Lunatic", "Cannibal"})
 
 
 def cannibal_meal(w, s, seat, phase):
@@ -1035,8 +1037,13 @@ def cannibal_meal(w, s, seat, phase):
     if s is None:
         return None
     last = _days_eaten_by(phase)
-    for died in s.died_at(seat):
-        last = min(last, _days_eaten_by(died))
+    # Dead now: what it ate before it died, its own execution not among
+    # it. One the Professor brought back eats again.
+    if seat not in s.alive_set(phase):
+        caps = [int(died[1:]) - 1 for died in s.died_at(seat)
+                if int(died[1:]) - 1 <= last]
+        if caps:
+            last = max(caps)
     for d in range(last, 0, -1):
         who = s.execution_death(d)
         if who is not None:

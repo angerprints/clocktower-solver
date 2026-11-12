@@ -2935,10 +2935,9 @@ def _cannibal_meal(d, seat, phase):
     — what the Cannibal here ate — as the solver's `info.cannibal_meal`."""
     from botc.info import _days_eaten_by
     last = _days_eaten_by(phase)
+    # Dead: what it ate before it died (a revived one has no death here).
     if d.deaths.get(seat) is not None:
-        died = d.deaths[seat]
-        last = min(last, _days_eaten_by(f"D{died[1:]}" if died[0] == "E"
-                                        else died))
+        last = min(last, int(d.deaths[seat][1:]) - 1)
     for day in range(last, 0, -1):
         who = d.died_on(f"E{day}")
         if who:

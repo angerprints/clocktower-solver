@@ -3869,15 +3869,20 @@ function plainFailures(world, state, outcome = {}) {
       // The holder, or a Philosopher that took it, ahead (13.10.2026).
       const back = returnedAtPhase(state, phase);
       const prof = turnOf("Professor", night, () => {
-        let got = world.findAt("Professor", phase);
+        let got = null;
         for (const who of Object.keys(state.philosophies() || {}).map(Number)
                .sort((a, b) => b - a))
           if (state.aliveSet(phase).has(who) && who !== seat && !back.has(who)
               && tookIt(world, state, who, "Professor", phase)) got = who;
-        // And a Demon the Boffin gave it (stage 2). See solver.py.
-        if (got === null)
+        if (got !== null) return got;
+        // The holder; or a Demon the Boffin gave it, a Cannibal that ate
+        // it, when the holder cannot raise (12.11.2026). See solver.py.
+        const real = world.findAt("Professor", phase);
+        got = real;
+        if (real === null || real === undefined || real === seat
+            || !state.aliveSet(phase).has(real))
           got = boffinHolders(world, state, "Professor", phase)
-            .find(who => who !== seat && !back.has(who)) ?? null;
+            .find(who => who !== seat && !back.has(who)) ?? (real ?? null);
         return got;
       });
       if (prof === null || !onBoard(state, "Professor")) return null;
