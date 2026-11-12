@@ -221,8 +221,13 @@ export function cannibalMeal(w, s, seat, phase) {
   }
   for (let d = last; d >= 1; d--) {
     const who = s.executionDeath(d);
-    if (who !== null && who !== undefined)
-      return [who, w.roleAt(who, `D${d}`), w.alignmentAt(who, `D${d}`)];
+    if (who !== null && who !== undefined) {
+      let side = w.alignmentAt(who, `D${d}`);
+      // A Cult Leader that may have turned. See info.py.
+      if (side === "good" && actsAsCultLeader(w, s, who, `D${d}`)
+          && cultSides(w, s, who, `D${d}`).has(true)) side = "either";
+      return [who, w.roleAt(who, `D${d}`), side];
+    }
   }
   return null;
 }

@@ -7335,6 +7335,10 @@ def _in_night_order(d, night):
         # An Alchemist with the Pit-Hag's ability, at the Pit-Hag's turn.
         if night > 1 and _alchemy(d, seat, "PitHag", f"N{night}"):
             what = "PitHag"
+        # A Cannibal at the turn of what it ate: one with the Innkeeper's
+        # ability guards before the Gambler guesses (12.11.2026).
+        if what == "Cannibal" and night > 1:
+            what = _cannibal_ate(d, seat, f"N{night}") or what
         got = getattr(CHARACTERS[what], field, 0) if what in CHARACTERS else 0
         return (got if got else 10_000, seat)
 

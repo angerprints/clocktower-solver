@@ -1032,7 +1032,8 @@ CANNIBAL_NOT_YET = frozenset({"Philosopher", "Hermit", "Alchemist",
 
 def cannibal_meal(w, s, seat, phase):
     """(executee, character, side) of the last execution death before then
-    — what the Cannibal in this seat ate — or None. A dead Cannibal keeps
+    — what the Cannibal in this seat ate — or None. The side is "good",
+    "evil", or "either" for a Cult Leader that may have turned. A dead Cannibal keeps
     what it had when it died: the Cannibal's own ability ends there."""
     if s is None:
         return None
@@ -1047,7 +1048,13 @@ def cannibal_meal(w, s, seat, phase):
     for d in range(last, 0, -1):
         who = s.execution_death(d)
         if who is not None:
-            return who, w.role_at(who, f"D{d}"), w.alignment_at(who, f"D{d}")
+            side = w.alignment_at(who, f"D{d}")
+            # A Cult Leader may have turned evil by then; the board does
+            # not say, so the meal is either (12.11.2026).
+            if side == "good" and acts_as_cult_leader(w, s, who, f"D{d}") \
+                    and True in cult_sides(w, s, who, f"D{d}"):
+                side = "either"
+            return who, w.role_at(who, f"D{d}"), side
     return None
 
 
