@@ -44,7 +44,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         boffinWorking, registersOf, alchemistGiven, alchemistSeats,
         alchemistsWith, alchemyHolds, ALCHEMY_GUESSES,
         alchemistBoffinSeat, alchemistBoffinGiftOf,
-        hermitAbilities, hermitHolders, hasHermitAbility}
+        hermitAbilities, hermitHolders, hasHermitAbility,
+        cannibalAte, cannibalMeal, CANNIBAL_NOT_YET}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -676,6 +677,12 @@ const barberRule = transitionRule(function aBarberLetsTheDemonSwapTwo(world, sta
 /** Seats that said they were the Hermit, or became or had been it, where a
  * Hermit of this script has that Outsider's ability (07.11.2026). See
  * solver.py. */
+/** Could this row be a Cannibal's own? See solver.py `_cannibals_row`. */
+function cannibalsRow(info, role) {
+  return role !== null && role !== undefined && role !== "Cannibal"
+    && ["townsfolk", "outsider"].includes(TEAM[role]) && !info.witnessed;
+}
+
 function hermitClaimants(state, role) {
   const out = new Set();
   if (!hermitAbilities(state.script).has(role)) return out;
@@ -3862,23 +3869,48 @@ function plainFailures(world, state, outcome = {}) {
       // The holder, or a Philosopher that took it, ahead (13.10.2026).
       const back = returnedAtPhase(state, phase);
       const prof = turnOf("Professor", night, () => {
-        let got = world.findAt("Professor", phase);
-        for (const who of Object.keys(state.philosophies() || {}).map(Number)
-               .sort((a, b) => b - a))
-          if (state.aliveSet(phase).has(who) && who !== seat && !back.has(who)
-              && tookIt(world, state, who, "Professor", phase)) got = who;
-        // And a Demon the Boffin gave it (stage 2). See solver.py.
-        if (got === null)
-          got = boffinHolders(world, state, "Professor", phase)
-            .find(who => who !== seat && !back.has(who)) ?? null;
-        return got;
+        const alive = state.aliveSet(phase);
+        const cands = Object.keys(state.philosophies() || {}).map(Number)
+          .sort((a, b) => a - b)
+          .filter(who => alive.has(who) && who !== seat && !back.has(who)
+                  && tookIt(world, state, who, "Professor", phase));
+        // The holder; and a Demon the Boffin gave it, or a Cannibal that
+        // ate it (12.11.2026). See solver.py.
+        const real = world.findAt("Professor", phase);
+        if (real !== null && real !== undefined && real !== seat
+            && alive.has(real) && !cands.includes(real)) cands.push(real);
+        for (const who of boffinHolders(world, state, "Professor", phase))
+          if (who !== seat && !back.has(who) && !cands.includes(who))
+            cands.push(who);
+        const spent = who => used.has(who) && !(
+          (state.resurrections || {})[who] || []).some(at => {
+            const k = parseInt(String(at).slice(1), 10);
+            return used.get(who) < k && k <= night;
+          });
+        // The first that has its raise left. See solver.py.
+        const fresh = cands.find(who => !spent(who));
+        if (fresh !== undefined) return fresh;
+        return cands.length ? cands[0] : (real ?? null);
       });
       if (prof === null || !onBoard(state, "Professor")) return null;
       if (!state.aliveSet(phase).has(prof) || night < 2) return null;
       const raised = world.roleAt(seat, phase);
       if (TEAM[raised] !== "townsfolk" &&
           !CHARACTERS[raised].registers.includes("townsfolk")) return null;
-      (working[night] = working[night] || new Set()).add(prof);
+      // Beside a Cannibal that ate the Professor, neither has to have
+      // worked (12.11.2026). See solver.py.
+      const alive = state.aliveSet(phase);
+      const hs = new Set();
+      const realP = world.findAt("Professor", phase);
+      if (realP !== null && realP !== undefined) hs.add(realP);
+      for (const p of Object.keys(state.philosophies() || {}).map(Number))
+        if (tookIt(world, state, p, "Professor", phase)) hs.add(p);
+      for (const p of boffinHolders(world, state, "Professor", phase)) hs.add(p);
+      const shared = state.script.keys.includes("Cannibal")
+        && [...hs].filter(p => alive.has(p) && p !== seat && !back.has(p))
+          .length > 1;
+      if (!shared)
+        (working[night] = working[night] || new Set()).add(prof);
       if (used.has(prof) && !((state.resurrections || {})[prof] || []).some(
             at => used.get(prof) < parseInt(String(at).slice(1), 10)
                   && parseInt(String(at).slice(1), 10) <= night))
@@ -3994,8 +4026,14 @@ function plainFailures(world, state, outcome = {}) {
     // in this world: its own (Stelle 48 a, seed 1679). See solver.py.
     if (seat !== null && seat !== info.player && Number.isInteger(info.player)
         && info.player >= 0 && info.player < state.nPlayers
-        && world.roleAt(info.player,
-                        info.night > 1 ? `B${info.night - 1}` : "N0") === role)
+        && (world.roleAt(info.player,
+                         info.night > 1 ? `B${info.night - 1}` : "N0") === role
+            // And a Cannibal's or a Hermit's row (12.11.2026). See solver.py.
+            || (cannibalsRow(info, role) && state.script.keys.includes("Cannibal")
+                && world.roleAt(info.player, info.night > 1
+                                ? `B${info.night - 1}` : "N0") === "Cannibal")
+            || hasHermitAbility(world, state, info.player, role,
+                                info.night > 1 ? `B${info.night - 1}` : "N0")))
       seat = info.player;
     if (seat === null) {
       // Who acted, not who holds the character now — a swap dated at
@@ -4007,7 +4045,10 @@ function plainFailures(world, state, outcome = {}) {
           && info.player < state.nPlayers
           && (world.roleAt(info.player, began) === role
               // A Hermit's own row as that Outsider (07.11.2026).
-              || hasHermitAbility(world, state, info.player, role, began))
+              || hasHermitAbility(world, state, info.player, role, began)
+              // A Cannibal's own row, whatever it ate (12.11.2026).
+              || (cannibalsRow(info, role) && state.script.keys.includes("Cannibal")
+                  && world.roleAt(info.player, began) === "Cannibal"))
         ? info.player : world.findAt(role, began);
       if (seat === null) seat = world.findAt(role, phase);
       // Nobody holds it, and the one who said it believes it does: a
@@ -4086,6 +4127,28 @@ function plainFailures(world, state, outcome = {}) {
     if (held === ABSENT && seat !== null && role !== null && role !== undefined
         && hasHermitAbility(world, state, seat, role, givenAt))
       held = GENUINE;
+    // A Cannibal's row (12.11.2026): its own if it ate that character,
+    // made up after an evil meal or one stage 1 leaves out, and a world
+    // where it ate a good somebody else cannot have given it (C).
+    if (held === ABSENT && seat !== null && role !== null && role !== undefined
+        && seat === info.player
+        && cannibalsRow(info, role) && world.roleAt(seat, givenAt) === "Cannibal"
+        // Not one the Pit-Hag made that character tonight. See solver.py.
+        && turnOf(role, info.night, () => world.roleAt(seat, phase)) !== role
+        && world.roleAt(seat, `D${info.night}`) !== role) {
+      // The meal asked of the night itself; whether it is the Cannibal, as
+      // it acted. See solver.py.
+      const meal = cannibalMeal(world, state, seat, phase);
+      const ate = meal && meal[2] === "good"
+        && ["townsfolk", "outsider"].includes(TEAM[meal[1]])
+        && !CANNIBAL_NOT_YET.has(meal[1]) ? meal[1] : null;
+      if (ate === role)
+        held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
+      else if (meal && (meal[2] !== "good" || CANNIBAL_NOT_YET.has(meal[1])
+                        || !["townsfolk", "outsider"].includes(TEAM[meal[1]])))
+        held = ARBITRARY;
+      else { impossible = true; return; }
+    }
     const sober = seat === null ? seat
       : soberSeat(world, state, seat, role, givenAt);
     // A row told to somebody other than the holder. A Drunk holding the

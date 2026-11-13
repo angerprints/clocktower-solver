@@ -125484,7 +125484,7 @@
     "game_over": true
    },
    "expect": {
-    "valid": 89,
+    "valid": 90,
     "sampled": false,
     "rows": [
      {
@@ -125503,7 +125503,7 @@
       "evil_pct": 80.0317,
       "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 80.0651
+      "lying_pct": 80.065
      },
      {
       "evil_pct": 0.0,
@@ -125512,7 +125512,7 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 5.8602,
+      "evil_pct": 5.8603,
       "demon_pct": 3.5402,
       "drunk_pct": 0.0,
       "lying_pct": 100.0
@@ -125533,21 +125533,27 @@
     "blame": {
      "3": {
       "0": {
-       "Demon": 1.0
+       "Demon": 1.0,
+       "Yaggababble, again": 0.0
       },
       "4": {
-       "Demon": 1.0
+       "Demon": 1.0,
+       "Yaggababble, again": 0.0
       }
      },
      "2": {
       "1": {
-       "Demon": 1.0
+       "Demon": 1.0,
+       "Yaggababble, again": 0.0
       },
       "3": {
-       "Gambler": 1.0
+       "Gambler": 1.0,
+       "Yaggababble, again": 0.0,
+       "Demon": 0.0
       },
       "5": {
-       "Demon": 1.0
+       "Demon": 1.0,
+       "Yaggababble, again": 0.0
       }
      }
     }

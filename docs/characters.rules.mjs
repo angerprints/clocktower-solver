@@ -22,7 +22,7 @@ import {alHadikhiaChosen, babysitterAt, fallsAs, holdingNow, sideOpen,
         takenByAPhilosopher, tookIt, boffinHolders, soberSeat,
         boffinAbilities, boffinGiftOf, boffinSeat, storytellerHas,
         evilRegistrationsHere, alchemistsWith, alchemyHolds, ALCHEMY_GUESSES,
-        hermitAbilities}
+        hermitAbilities, cannibalPoisoned}
   from "./info.mjs";
 
 // --------------------------------------------------------------------
@@ -1183,7 +1183,9 @@ causeRule(function aMoonchildTakesSomebodyWithIt(world, state, night) {
  * death machinery counts each name's kills (13.10.2026). See solver.py. */
 function causeName(world, hs, role, seat, phase) {
   if (hs.length > 1 && world.roleAt(seat, phase) !== role)
-    return `${role} (Philosopher)`;
+    // A Cannibal's beside a Philosopher's is a third (12.11.2026).
+    return world.roleAt(seat, phase) === "Cannibal"
+      ? `${role} (Cannibal)` : `${role} (Philosopher)`;
   return role;
 }
 
@@ -1280,7 +1282,9 @@ causeRule(function aGamblerMayLose(world, state, night) {
                   slotOf("Gambler", night) || 0,
                   () => mine.every(g => world.roleAt(g.target, phase) === g.role)))
       continue;
-    causes.push(new Cause("Gambler", OTHER, new Set([seat]), {capacity: 1}));
+    // Each its own name (12.11.2026). See solver.py.
+    causes.push(new Cause(causes.length ? `Gambler ${seat}` : "Gambler", OTHER,
+                          new Set([seat]), {capacity: 1}));
   }
   return causes;
 });
@@ -2036,6 +2040,20 @@ sourceRule(function aSpyOrWidowPoisonsTheHermit(world, state, night) {
     if (world.roleAt(p, phase) === "Hermit") seats.add(p);
   if (!seats.size) return [];
   return [new Source("Hermit (Damsel)", seats,
+                     {capacity: seats.size, cost: () => 1.0,
+                      repeatCost: () => 1.0})];
+});
+
+/** "If they are evil, you are poisoned until a good player dies by
+ * execution" (Kannibale, 12.11.2026). See solver.py. */
+sourceRule(function anEvilMealPoisonsTheCannibal(world, state, night) {
+  if (!state.script.keys.includes("Cannibal")) return [];
+  const phase = `N${night}`;
+  const seats = new Set();
+  for (let p = 0; p < state.nPlayers; p++)
+    if (cannibalPoisoned(world, state, p, phase)) seats.add(p);
+  if (!seats.size) return [];
+  return [new Source("Cannibal (evil meal)", seats,
                      {capacity: seats.size, cost: () => 1.0,
                       repeatCost: () => 1.0})];
 });

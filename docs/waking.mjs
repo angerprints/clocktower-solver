@@ -32,7 +32,7 @@ import {phaseIndex} from "./phases.mjs";
 import {alchemistSummoner, readingAt, teaMade} from "./worlds.mjs";
 import {actsAsAlchemist, backSince, babysitterAt, boffinAbilities, boffinGiftOf,
         alchemistBoffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt,
-        hermitAbilities, hasHermitAbility}
+        hermitAbilities, hasHermitAbility, cannibalAte, cannibalHolders}
   from "./info.mjs";
 
 export const NEVER = "never";
@@ -108,6 +108,13 @@ condition("Hermit", (world, state, seat, night) => {
     !CHARACTERS[k].believes
     && (!mine || hasHermitAbility(world, state, seat, k, phase))
     && wokeAs(world, state, seat, night, k));
+});
+
+/** When the character it ate would; not after an evil meal (12.11.2026).
+ * See waking.py. */
+condition("Cannibal", (world, state, seat, night) => {
+  const ate = cannibalAte(world, state, seat, `N${night}`);
+  return ate !== null && wokeAs(world, state, seat, night, ate);
 });
 
 condition("Philosopher", (world, state, seat, night) => {
@@ -551,6 +558,11 @@ export function uncertain(world, state, seat, night) {
   if (took && night > Number(took[1].slice(1)) && took[0] !== "Philosopher"
       && !CHARACTERS[took[0]].believes)
     acting = took[0];
+  // A Cannibal with the Professor's ability: its own raise, and which
+  // return was whose nobody writes down (12.11.2026). See waking.py.
+  if (acting === "Cannibal" && night > 1
+      && cannibalAte(world, state, seat, phase) === "Professor")
+    return state.aliveSet(phase).has(seat);
   // One that took the Drunk or the Lunatic lives by a token it was shown,
   // which nobody wrote down: it may have woken (I, 14.10.2026).
   if (took && night > Number(took[1].slice(1)) && took[0] !== "Philosopher"
@@ -632,8 +644,10 @@ export function uncertain(world, state, seat, night) {
     if (raised === null) return true;
     // Nor with an Al-Hadikhia about: a dead one it chose may have chosen
     // life (21.10.2026).
-    return ["Shabaloth", "AlHadikhia"].some(
-      who => holdingNow(world, state, who, `N${raised}`) !== null);
+    if (["Shabaloth", "AlHadikhia"].some(
+      who => holdingNow(world, state, who, `N${raised}`) !== null)) return true;
+    // Nor where a Cannibal had the Professor's ability. See waking.py.
+    return cannibalHolders(world, state, "Professor", `N${raised}`).length > 0;
   }
   if (!state.script.keys.includes("Exorcist")
       && !takenByAPhilosopher(state, "Exorcist")) return false;

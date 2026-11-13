@@ -782,6 +782,11 @@ def deal(n, rng, script=None, told=None):
         out, tf = out - 1, tf + 1
     spare = list(townsfolk)
     rng.shuffle(spare)
+    # For a gate line: the Cannibal dealt more often (`SIM_CANNIBAL_FAVOUR`).
+    if os.environ.get("SIM_CANNIBAL_FAVOUR") and "Cannibal" in spare \
+            and rng.random() < 0.8:
+        spare.remove("Cannibal")
+        spare.insert(0, "Cannibal")
 
     chosen, believes_for = [], {}
     for o in picked_outsiders:
@@ -2925,6 +2930,44 @@ def _phil(d, seat, phase):
     return took
 
 
+def _cannibal_meal(d, seat, phase):
+    """(executee, character, side) of the last execution death before then
+    — what the Cannibal here ate — as the solver's `info.cannibal_meal`."""
+    from botc.info import _days_eaten_by
+    last = _days_eaten_by(phase)
+    # Dead: what it ate before it died (a revived one has no death here).
+    if d.deaths.get(seat) is not None:
+        last = min(last, int(d.deaths[seat][1:]) - 1)
+    for day in range(last, 0, -1):
+        who = d.died_on(f"E{day}")
+        if who:
+            p = sorted(who)[0]
+            return p, d.role_at(p, f"D{day}"), d.side_at(p, f"D{day}")
+    return None
+
+
+def _cannibal_ate(d, seat, phase):
+    """The good character whose ability the Cannibal here has then, or None
+    (12.11.2026, stage 1)."""
+    from botc.info import CANNIBAL_NOT_YET
+    if d.role_at(seat, phase) != "Cannibal":
+        return None
+    meal = _cannibal_meal(d, seat, phase)
+    if meal is None or meal[2] != "good":
+        return None
+    if TEAM.get(meal[1]) not in ("townsfolk", "outsider") \
+            or meal[1] in CANNIBAL_NOT_YET:
+        return None
+    return meal[1]
+
+
+def _cannibal_poisoned(d, seat, phase):
+    if d.role_at(seat, phase) != "Cannibal":
+        return False
+    meal = _cannibal_meal(d, seat, phase)
+    return meal is not None and meal[2] != "good"
+
+
 def _reg_roles(d, seat, phase):
     """The characters this seat registers as it pleases the Storyteller:
     its own, and the Recluse's for a Hermit with that ability (Patrick,
@@ -2976,6 +3019,9 @@ def _took(d, seat, role, phase):
         from botc.info import phase_index
         if lost is None or phase_index(phase) < phase_index(lost):
             return True
+    # A Cannibal that ate it (12.11.2026).
+    if role is not None and role == _cannibal_ate(d, seat, phase):
+        return True
     # A Hermit with that Outsider's ability (07.11.2026), as the solver's
     # `info.has_hermit_ability`.
     # Not one it would have to choose with, if it thinks it is somebody
@@ -6833,6 +6879,12 @@ def _woke_for_own_ability(d, p, night, shown=False):
     night on, whenever that character would (F Weg 1, 26.10.2026)."""
     if _woke_itself(d, p, night, shown):
         return True
+    # A Cannibal wakes when what it ate would; not after an evil meal
+    # (12.11.2026).
+    if d.role_at(p, f"N{night}") == "Cannibal":
+        ate = _cannibal_ate(d, p, f"N{night}")
+        if ate and _woke_itself(d, p, night, shown, as_role=ate):
+            return True
     # A Hermit wakes when an Outsider whose ability it has would: the
     # Butler's every night, the Ogre's on the first (07.11.2026). And a
     # Marionette that thinks it is one, on its token.
@@ -7283,6 +7335,10 @@ def _in_night_order(d, night):
         # An Alchemist with the Pit-Hag's ability, at the Pit-Hag's turn.
         if night > 1 and _alchemy(d, seat, "PitHag", f"N{night}"):
             what = "PitHag"
+        # A Cannibal at the turn of what it ate: one with the Innkeeper's
+        # ability guards before the Gambler guesses (12.11.2026).
+        if what == "Cannibal" and night > 1:
+            what = _cannibal_ate(d, seat, f"N{night}") or what
         got = getattr(CHARACTERS[what], field, 0) if what in CHARACTERS else 0
         return (got if got else 10_000, seat)
 
@@ -7416,6 +7472,10 @@ def early_choices(d, night, rng):
         if role == "Philosopher" and night > 1 \
                 and _phil(d, seat, f"N{night}") in CHOOSES_EARLY:
             role = _phil(d, seat, f"N{night}")
+        # So does a Cannibal that ate one (12.11.2026).
+        if role == "Cannibal" \
+                and _cannibal_ate(d, seat, f"N{night}") in CHOOSES_EARLY:
+            role = _cannibal_ate(d, seat, f"N{night}")
         # An Alchemist with the Pit-Hag's ability uses it at its turn
         # (group 3, 05.11.2026).
         if role in ("Alchemist", "Philosopher") and night > 1 \
@@ -7562,6 +7622,12 @@ def honest_info(d, night, rng):
             # An early chooser it took has already acted, in the early pass.
             if took and not (took in CHOOSES_EARLY and night > 1):
                 made = _for_role(d, seat, took, night, rng)
+        # A Cannibal is told as what it ate (12.11.2026); an early chooser
+        # it ate has acted in the early pass.
+        if made is None and role == "Cannibal":
+            ate = _cannibal_ate(d, seat, f"N{night}")
+            if ate and ate not in CHOOSES_EARLY:
+                made = _for_role(d, seat, ate, night, rng)
         # A Hermit with the Klutz's ability points on dying (07.11.2026).
         if made is None and role == "Hermit" \
                 and d.deaths.get(seat) == f"N{night}" \
@@ -7642,6 +7708,8 @@ def droisoned_at(d, night, by_day=False, _without_their_drunks=False):
     # The Damsel's jinxes, on a Hermit with its ability: poisoned once a
     # Spy or a Widow is or has been in play (D Weg 1).
     out |= _hermits_the_damsel_jinx_poisons(d, night)
+    # A Cannibal that ate an evil executee (12.11.2026).
+    out |= {p for p in range(d.n) if _cannibal_poisoned(d, p, phase)}
 
     # While the seat that did it is still the Poisoner. Made something
     # else by a Pit-Hag later the same night, its poison is gone with
@@ -7895,6 +7963,10 @@ def droisoned_at(d, night, by_day=False, _without_their_drunks=False):
         if d.role_at(holder, phase) != named \
                 or d.role_at(courtier, phase) != d.role_at(
                     courtier, f"N{since}"):
+            continue
+        # Nor a Cannibal that has eaten somebody else since (12.11.2026).
+        if d.role_at(courtier, phase) == "Cannibal" \
+                and _cannibal_ate(d, courtier, phase) != "Courtier":
             continue
         if not died:
             out.add(holder)

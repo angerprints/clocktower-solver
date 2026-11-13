@@ -41,6 +41,8 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    PlagueDoctorGave, PLAGUE_UNSEEN, STORYTELLER,
                    storyteller_has, has_plague_ability, plague_holders,
                    hermit_holders, has_hermit_ability, hermit_abilities,
+                   cannibal_ate, cannibal_meal, cannibal_poisoned,
+                   CANNIBAL_NOT_YET,
                    acts_as_alchemist, alchemy_holds,
                    alchemist_boffin_seat, alchemist_boffin_gift,
                    BecameInfo, EvilTwinPair, BoomdandyExploded,
@@ -977,6 +979,25 @@ def a_barber_lets_the_demon_swap_two(world, state):
     if got is None:
         got = memo[key] = _barber_offers(world, state)
     return list(got)
+
+
+def _made_it_tonight(world, seat, role, night, phase):
+    """That character tonight: one the Pit-Hag made it, whose row is its
+    own as any new character's (12.11.2026) — even made it after that
+    character's turn, as the simulator lets it choose."""
+    with _turn_of(role, night):
+        if world.role_at(seat, phase) == role:
+            return True
+    return world.role_at(seat, f"D{night}") == role
+
+
+def _cannibals_row(info, role):
+    """Could this row be a Cannibal's own, told as what it ate? A good
+    character's, and not words somebody else was told (a Widow's
+    messenger) — 12.11.2026."""
+    return role is not None and role != "Cannibal" \
+        and TEAM.get(role) in ("townsfolk", "outsider") \
+        and not getattr(info, "witnessed", False)
 
 
 def _hermit_claimants(state, role):
@@ -5846,8 +5867,12 @@ def a_gambler_may_lose(world, state, night):
         with _turn_of("Gambler", night):
             if all(world.role_at(g.target, phase) == g.role for g in mine):
                 continue
+        # Each its own name: the death machinery counts a name's kills,
+        # and two of one name were one guess killing twice — a Cannibal's
+        # and a raised Gambler's both lost (12.11.2026).
         causes.append(death_causes.Cause(
-            name="Gambler", kind=death_causes.OTHER,
+            name="Gambler" if not causes else f"Gambler {seat}",
+            kind=death_causes.OTHER,
             seats=frozenset({seat}), capacity=1))
     return causes
 
@@ -5994,6 +6019,9 @@ def _cause_name(world, holders, role, seat, phase):
     the death machinery counts each name's kills, and two of one name
     were one Lycanthrope firing twice (13.10.2026)."""
     if len(holders) > 1 and world.role_at(seat, phase) != role:
+        # A Cannibal's beside a Philosopher's is a third (12.11.2026).
+        if world.role_at(seat, phase) == "Cannibal":
+            return f"{role} (Cannibal)"
         return f"{role} (Philosopher)"
     return role
 
@@ -7626,15 +7654,30 @@ def _plain_failures(world, state, outcome=None):
         back = _returned_at(state, phase)
         # And a Demon the Boffin gave it (stage 2, 27.10.2026).
         with _turn_of("Professor", night):
-            prof = next((who for who in sorted(state.philosophies() or {})
-                         if who in state.alive_set(phase) and who != seat
-                         and who not in back
-                         and took_it(world, state, who, "Professor", phase)),
-                        world.find_at("Professor", phase))
-            if prof is None:
-                prof = next((who for who in boffin_holders(
-                    world, state, "Professor", phase)
-                    if who != seat and who not in back), None)
+            alive = state.alive_set(phase)
+            cands = [who for who in sorted(state.philosophies() or {})
+                     if who in alive and who != seat and who not in back
+                     and took_it(world, state, who, "Professor", phase)]
+            # The holder; and a Demon the Boffin gave it, or a Cannibal
+            # that ate it (12.11.2026: a Cannibal that ate the Professor
+            # raised it).
+            real = world.find_at("Professor", phase)
+            if real is not None and real != seat and real in alive \
+                    and real not in cands:
+                cands.append(real)
+            cands += [who for who in boffin_holders(
+                world, state, "Professor", phase)
+                if who != seat and who not in back and who not in cands]
+
+            def spent(who):
+                return who in used and not any(
+                    used[who] < int(at[1:]) <= night
+                    for at in (state.resurrections or {}).get(who, ())
+                    if at[1:].isdigit())
+            # The first that has its raise left (a Philosopher's spent,
+            # the Cannibal's own, B).
+            prof = next((who for who in cands if not spent(who)),
+                        cands[0] if cands else real)
         if prof is None or not _on_board(state, "Professor"):
             return None, None, 1.0, None
         if prof not in state.alive_set(phase) or night < 2:
@@ -7643,7 +7686,14 @@ def _plain_failures(world, state, outcome=None):
         if TEAM[raised] != "townsfolk" \
                 and "townsfolk" not in CHARACTERS[raised].registers:
             return None, None, 1.0, None
-        working.setdefault(night, set()).add(prof)
+        # Beside a Cannibal that ate the Professor, which of the two
+        # raised nobody writes down: neither has to have worked
+        # (12.11.2026).
+        shared = "Cannibal" in state.script.keys and len({
+            who for who in _holders(world, state, "Professor", phase)
+            if who in alive and who != seat and who not in back}) > 1
+        if not shared:
+            working.setdefault(night, set()).add(prof)
         if prof in used and not any(
                 used[prof] < int(at[1:]) <= night
                 for at in (state.resurrections or {}).get(prof, ())
@@ -7766,12 +7816,22 @@ def _plain_failures(world, state, outcome=None):
             # is that one's own. A silent Snake Charmer's row went to the
             # old Demon it had swapped into a Snake Charmer, which claimed
             # it (Stelle 48 a, seed 1679, 30.10.2026).
+            # And a Cannibal's or a Hermit's row: its own, though somebody
+            # else claims that character (12.11.2026).
             if seat is not None and seat != info.player \
                     and isinstance(info.player, int) \
                     and 0 <= info.player < state.n_players \
                     and role in CHARACTERS \
-                    and world.role_at(info.player,
-                                      _before(info.night, phase)) == role:
+                    and (world.role_at(info.player,
+                                       _before(info.night, phase)) == role
+                         or (_cannibals_row(info, role)
+                             and "Cannibal" in state.script.keys
+                             and world.role_at(info.player,
+                                               _before(info.night, phase))
+                             == "Cannibal")
+                         or has_hermit_ability(world, state, info.player,
+                                               role,
+                                               _before(info.night, phase))):
                 seat = info.player
             if seat is None:
                 # Who *acted*, not who holds the character now.
@@ -7797,6 +7857,15 @@ def _plain_failures(world, state, outcome=None):
                         and 0 <= info.player < state.n_players \
                         and has_hermit_ability(world, state, info.player,
                                                role, began):
+                    seat = info.player
+                # A Cannibal's own row, whatever it ate (12.11.2026): it is
+                # told as that character, and whether it fits is asked
+                # below (C).
+                elif isinstance(info.player, int) \
+                        and 0 <= info.player < state.n_players \
+                        and _cannibals_row(info, role) \
+                        and "Cannibal" in state.script.keys \
+                        and world.role_at(info.player, began) == "Cannibal":
                     seat = info.player
                 else:
                     seat = world.find_at(role, began)
@@ -7879,6 +7948,34 @@ def _plain_failures(world, state, outcome=None):
                     and has_hermit_ability(world, state, seat, role,
                                            given_at):
                 held = GENUINE
+            # A Cannibal's row (12.11.2026): its own if it ate that
+            # character; made up while an evil meal poisons it, or after
+            # one stage 1 leaves out (D); and a world where it ate a good
+            # somebody else cannot have given this row (C).
+            if held is ABSENT and seat is not None and role is not None \
+                    and seat == info.player \
+                    and _cannibals_row(info, role) \
+                    and world.role_at(seat, given_at) == "Cannibal" \
+                    and not _made_it_tonight(world, seat, role, info.night,
+                                             phase):
+                # The meal asked of the night itself: "before it acted" is
+                # the end of the day of the execution, which ate nothing
+                # yet. Whether it is the Cannibal, as it acted: one that
+                # swapped with the Demon tonight is not by morning.
+                meal = cannibal_meal(world, state, seat, phase)
+                ate = (meal[1] if meal is not None and meal[2] == "good"
+                       and TEAM.get(meal[1]) in ("townsfolk", "outsider")
+                       and meal[1] not in CANNIBAL_NOT_YET else None)
+                if ate == role:
+                    held = (INVERTED if vortoxed
+                            and TEAM[role] == "townsfolk" else GENUINE)
+                elif meal is not None and (
+                        meal[2] != "good" or meal[1] in CANNIBAL_NOT_YET
+                        or TEAM.get(meal[1]) not in ("townsfolk",
+                                                     "outsider")):
+                    held = ARBITRARY
+                else:
+                    return None, None, 1.0, None
             sober = seat if seat is None \
                 else sober_seat(world, state, seat, role, given_at)
             # A row told to somebody *other* than the holder — the player a
@@ -8992,6 +9089,24 @@ def a_spy_or_widow_poisons_the_hermit(world, state, night):
     free = lambda who: 1.0
     return [impairment.Source("Hermit (Damsel)", seats, capacity=len(seats),
                               cost=free, repeat_cost=free)]
+
+
+@impairment.source_rule
+def an_evil_meal_poisons_the_cannibal(world, state, night):
+    """"If they are evil, you are poisoned until a good player dies by
+    execution" (Kannibale, 12.11.2026). Certain while it lasts: offered
+    free for the whole reach, so the Mathematician counts it."""
+    if "Cannibal" not in state.script.keys:
+        return []
+    phase = f"N{night}"
+    seats = frozenset(p for p in range(state.n_players)
+                      if cannibal_poisoned(world, state, p, phase))
+    if not seats:
+        return []
+    free = lambda who: 1.0
+    return [impairment.Source("Cannibal (evil meal)", seats,
+                              capacity=len(seats), cost=free,
+                              repeat_cost=free)]
 
 
 @impairment.source_rule

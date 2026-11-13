@@ -753,6 +753,14 @@ _EXPERIMENTAL = [
     _c("Hermit", "hermit", "Hermit", "outsider", set(WAKE_PATTERNS),
        nights="conditional", chooses=True,
        setup=({}, {"townsfolk": 1, "outsider": -1})),
+    # The twelfth (12.11.2026, claude/kannibale-lesarten.md). The ability
+    # of whoever died of the last execution (`info.cannibal_meal`), held
+    # the way a Philosopher holds what it took (`info.took_it`); poisoned
+    # after an evil one until a good one dies of an execution. It wakes
+    # when that character would. Stage 1: every good character but the
+    # Philosopher, the Hermit, the Alchemist, the Drunk and the Lunatic (D).
+    _c("Cannibal", "cannibal", "Cannibal", "townsfolk", set(WAKE_PATTERNS),
+       nights="conditional", chooses=True),
 ]
 
 
@@ -786,6 +794,8 @@ IMPAIRS = frozenset({
     "PlagueDoctor",
     # Through a Sweetheart's, a Goon's, a Puzzlemaster's ability.
     "Hermit",
+    # Through whatever it ate: a Sailor's, an Innkeeper's, a Courtier's.
+    "Cannibal",
 })
 
 CHARACTERS = {c.key: c for c in _TB + _SV + _UNMODELLED + _FABLED

@@ -804,6 +804,12 @@ def faux_paw_lycanthrope(w, s, phase, living=True):
                 and took_it(w, s, who, "Lycanthrope", phase):
             return who
     lyc = w.find_at("Lycanthrope", phase)
+    # Or a Cannibal that ate it, the holder dead (12.11.2026): the faux
+    # paw reads evil while that one works.
+    eaters = [p for p in cannibal_holders(w, s, "Lycanthrope", phase)
+              if p in alive]
+    if eaters and (lyc is None or lyc not in alive):
+        return eaters[0]
     return lyc if lyc is not None and (lyc in alive or not living) \
         else None
 
@@ -824,7 +830,8 @@ def took_it(w, s, seat, role, phase):
     return role is not None and (
         has_boffin_ability(w, s, seat, role, phase)
         or has_plague_ability(w, s, seat, role, phase)
-        or has_hermit_ability(w, s, seat, role, phase))
+        or has_hermit_ability(w, s, seat, role, phase)
+        or has_cannibal_ability(w, s, seat, role, phase))
 
 
 def _back_since(s, seat, since, phase):
@@ -956,6 +963,7 @@ def boffin_holders(w, s, role, phase):
     real one's or an Alchemist's. And a Hermit with it (07.11.2026): every
     place that asks who else has an ability asks this."""
     out = hermit_holders(w, s, role, phase)
+    out += [p for p in cannibal_holders(w, s, role, phase) if p not in out]
     marked = set(getattr(w, "_gifts_by_seat", None) or ()) \
         | set(getattr(w, "_alch_gifts_by_seat", None) or ())
     if not marked or role is None:
@@ -1012,6 +1020,92 @@ def has_hermit_ability(w, s, seat, role, phase):
     return s is not None and role in hermit_abilities(s.script) \
         and w.role_at(seat, phase) == "Hermit" \
         and not (role in HERMIT_CHOOSES and hermit_thinks_townsfolk(w, seat))
+
+
+# --------------------------------------------------------------------------
+# The Cannibal (12.11.2026, claude/kannibale-lesarten.md): "You have the
+# ability of the recently killed executee. If they are evil, you are
+# poisoned until a good player dies by execution." Patrick's answers: A a
+# "you start knowing" ability works from the night after the execution, as
+# the Philosopher's from the night it took it; B its own once-per-game use,
+# once per character; C a row that does not fit a good executee rules the
+# world out, a poisoned Cannibal's fit anything; D these come in stage 2.
+# A Cannibal is no meal: an executed Cannibal has eaten itself, and its
+# ability has ended with it.
+CANNIBAL_NOT_YET = frozenset({"Philosopher", "Hermit", "Alchemist",
+                              "Drunk", "Lunatic", "Cannibal"})
+
+
+def cannibal_meal(w, s, seat, phase):
+    """(executee, character, side) of the last execution death before then
+    — what the Cannibal in this seat ate — or None. The side is "good",
+    "evil", or "either" for a Cult Leader that may have turned. A dead Cannibal keeps
+    what it had when it died: the Cannibal's own ability ends there."""
+    if s is None:
+        return None
+    last = _days_eaten_by(phase)
+    # Dead now: what it ate before it died, its own execution not among
+    # it. One the Professor brought back eats again.
+    if seat not in s.alive_set(phase):
+        caps = [int(died[1:]) - 1 for died in s.died_at(seat)
+                if int(died[1:]) - 1 <= last]
+        if caps:
+            last = max(caps)
+    for d in range(last, 0, -1):
+        who = s.execution_death(d)
+        if who is not None:
+            side = w.alignment_at(who, f"D{d}")
+            # A Cult Leader may have turned evil by then; the board does
+            # not say, so the meal is either (12.11.2026).
+            if side == "good" and acts_as_cult_leader(w, s, who, f"D{d}") \
+                    and True in cult_sides(w, s, who, f"D{d}"):
+                side = "either"
+            return who, w.role_at(who, f"D{d}"), side
+    return None
+
+
+def _days_eaten_by(phase):
+    """The last day whose execution counts by then: a night, or a day
+    itself, the day before; the end of a day (`B`, `E`), that day."""
+    kind, day = phase[0].upper(), int(phase[1:])
+    return day if kind in ("B", "E") else day - 1
+
+
+def cannibal_ate(w, s, seat, phase):
+    """The good character whose ability the Cannibal here has then, or None
+    (nothing eaten yet, an evil executee, or one stage 1 leaves out)."""
+    if w.role_at(seat, phase) != "Cannibal":
+        return None
+    meal = cannibal_meal(w, s, seat, phase)
+    if meal is None or meal[2] != "good":
+        return None
+    role = meal[1]
+    if TEAM.get(role) not in ("townsfolk", "outsider") \
+            or role in CANNIBAL_NOT_YET:
+        return None
+    return role
+
+
+def cannibal_poisoned(w, s, seat, phase):
+    """Is the Cannibal here poisoned by an evil meal then?"""
+    if w.role_at(seat, phase) != "Cannibal":
+        return False
+    meal = cannibal_meal(w, s, seat, phase)
+    return meal is not None and meal[2] != "good"
+
+
+def has_cannibal_ability(w, s, seat, role, phase):
+    """Is this seat the Cannibal then, having eaten that character?"""
+    return s is not None and role is not None and "Cannibal" in s.script.keys \
+        and cannibal_ate(w, s, seat, phase) == role
+
+
+def cannibal_holders(w, s, role, phase):
+    """The Cannibals that have eaten that character, then."""
+    if s is None or role is None or "Cannibal" not in s.script.keys:
+        return []
+    return [p for p in range(len(w.roles))
+            if cannibal_ate(w, s, p, phase) == role]
 
 
 def hermit_holders(w, s, role, phase):
