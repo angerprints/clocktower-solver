@@ -3038,9 +3038,14 @@ def _took(d, seat, role, phase):
         from botc.info import phase_index
         if lost is None or phase_index(phase) < phase_index(lost):
             return True
-    # A Cannibal that ate it (12.11.2026).
+    # A Cannibal that ate it (12.11.2026); every Outsider's, having eaten
+    # the Hermit (stage 2, D, 13.11.2026).
     if role is not None and role == _cannibal_ate(d, seat, phase):
         return True
+    if role is not None and _cannibal_ate(d, seat, phase) == "Hermit":
+        from botc.info import hermit_abilities
+        if role in hermit_abilities(d.script):
+            return True
     # A Cannibal that ate the Philosopher and chose, while it has the
     # Philosopher's ability (stage 2, C, 13.11.2026).
     if role is not None and role != "Philosopher" \
@@ -5053,10 +5058,11 @@ def _hold_a_day(d, day, rng):
             nominators = [princess] + [p for p in nominators if p != princess]
         else:
             princess = None
-    # The Cannibal's jinx with the Princess (13.11.2026): now and then a
-    # Cannibal puts her up, so that the gate sees it.
+    # The Cannibal's jinx with the Princess (13.11.2026): for a gate line
+    # (`SIM_CANNIBAL_FAVOUR`) a Cannibal now and then puts her up.
     eats = None
-    if "Cannibal" in d.script.keys and "Princess" in d.script.keys:
+    if os.environ.get("SIM_CANNIBAL_FAVOUR") \
+            and "Cannibal" in d.script.keys and "Princess" in d.script.keys:
         eater = next((p for p in living
                       if d.role_at(p, phase) == "Cannibal"), None)
         her = next((p for p in living
@@ -6941,8 +6947,18 @@ def _woke_for_own_ability(d, p, night, shown=False):
         if ate == "Philosopher" \
                 and getattr(d, "phil_night", {}).get(p) == night:
             return True
-        if ate and _woke_itself(d, p, night, shown, as_role=ate):
+        if ate and ate != "Hermit" \
+                and _woke_itself(d, p, night, shown, as_role=ate):
             return True
+        # Having eaten the Hermit, when an Outsider whose ability it has
+        # would (stage 2, D).
+        if ate == "Hermit":
+            from botc.catalogue import CHARACTERS
+            from botc.info import hermit_abilities
+            if any(not CHARACTERS[k].believes
+                   and _woke_itself(d, p, night, shown, as_role=k)
+                   for k in sorted(hermit_abilities(d.script))):
+                return True
     # A Hermit wakes when an Outsider whose ability it has would: the
     # Butler's every night, the Ogre's on the first (07.11.2026). And a
     # Marionette that thinks it is one, on its token.

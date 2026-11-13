@@ -42,7 +42,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    storyteller_has, has_plague_ability, plague_holders,
                    hermit_holders, has_hermit_ability, hermit_abilities,
                    cannibal_ate, cannibal_meal, cannibal_poisoned,
-                   has_cannibal_ability,
+                   has_cannibal_ability, cannibal_has, cannibal_holders,
                    CANNIBAL_NOT_YET,
                    acts_as_alchemist, alchemy_holds,
                    alchemist_boffin_seat, alchemist_boffin_gift,
@@ -7229,7 +7229,8 @@ def _philosopher_recluses(world, state, phase):
     Recluse's goes on after death."""
     return [who for who in sorted(state.philosophies() or {})
             if took_it(world, state, who, "Recluse", phase)] \
-        + hermit_holders(world, state, "Recluse", phase)
+        + hermit_holders(world, state, "Recluse", phase) \
+        + cannibal_holders(world, state, "Recluse", phase)
 
 
 def _plain_failures(world, state, outcome=None):
@@ -7964,13 +7965,15 @@ def _plain_failures(world, state, outcome=None):
                                            given_at):
                 held = GENUINE
             # A Cannibal that ate the Philosopher and chose this character
-            # (stage 2, C, 13.11.2026): its own, as a Philosopher's.
+            # (stage 2, C, 13.11.2026): its own, as a Philosopher's. Asked
+            # as it acted: one that swapped with the Demon as the Snake
+            # Charmer is no Cannibal by morning.
             if held is ABSENT and seat is not None and role is not None \
                     and role != "Philosopher" \
-                    and world.role_at(seat, phase) == "Cannibal" \
-                    and cannibal_ate(world, state, seat, phase) \
+                    and world.role_at(seat, given_at) == "Cannibal" \
+                    and cannibal_ate(world, state, seat, given_at) \
                     == "Philosopher" \
-                    and took_it(world, state, seat, role, phase):
+                    and took_it(world, state, seat, role, given_at):
                 held = (INVERTED if vortoxed and TEAM[role] == "townsfolk"
                         else GENUINE)
             # A Cannibal's row (12.11.2026): its own if it ate that
@@ -7995,7 +7998,7 @@ def _plain_failures(world, state, outcome=None):
                        and meal[1] not in CANNIBAL_NOT_YET else None)
                 if isinstance(info, PrincessNominated):
                     held = GENUINE
-                elif ate == role:
+                elif cannibal_has(state, ate, role):
                     held = (INVERTED if vortoxed
                             and TEAM[role] == "townsfolk" else GENUINE)
                 elif meal is not None and (

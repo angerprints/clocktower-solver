@@ -45,7 +45,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         alchemistsWith, alchemyHolds, ALCHEMY_GUESSES,
         alchemistBoffinSeat, alchemistBoffinGiftOf,
         hermitAbilities, hermitHolders, hasHermitAbility,
-        cannibalAte, cannibalMeal, CANNIBAL_NOT_YET}
+        cannibalAte, cannibalMeal, CANNIBAL_NOT_YET, cannibalHas,
+        cannibalHolders}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -3499,7 +3500,9 @@ function philosopherRecluses(world, state, phase) {
     .sort((a, b) => a - b)
     .filter(who => tookIt(world, state, who, "Recluse", phase))
     // And a Hermit with its ability (07.11.2026), dead or alive.
-    .concat(hermitHolders(world, state, "Recluse", phase));
+    .concat(hermitHolders(world, state, "Recluse", phase))
+    // And a Cannibal with it (13.11.2026). See solver.py.
+    .concat(cannibalHolders(world, state, "Recluse", phase));
 }
 
 /** Sort every ledger row into: fits, contradicts, or was invented.
@@ -4131,9 +4134,9 @@ function plainFailures(world, state, outcome = {}) {
     // 2, C, 13.11.2026). See solver.py.
     if (held === ABSENT && seat !== null && role !== null
         && role !== "Philosopher"
-        && world.roleAt(seat, phase) === "Cannibal"
-        && cannibalAte(world, state, seat, phase) === "Philosopher"
-        && tookIt(world, state, seat, role, phase))
+        && world.roleAt(seat, givenAt) === "Cannibal"
+        && cannibalAte(world, state, seat, givenAt) === "Philosopher"
+        && tookIt(world, state, seat, role, givenAt))
       held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
     // A Cannibal's row (12.11.2026): its own if it ate that character,
     // made up after an evil meal or one stage 1 leaves out, and a world
@@ -4152,7 +4155,7 @@ function plainFailures(world, state, outcome = {}) {
         && !CANNIBAL_NOT_YET.has(meal[1]) ? meal[1] : null;
       // Its nomination of the Princess is a fact (the jinx, 13.11.2026).
       if (info.type === "PrincessNominated") held = GENUINE;
-      else if (ate === role)
+      else if (cannibalHas(state, ate, role))
         held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
       else if (meal && (meal[2] !== "good" || CANNIBAL_NOT_YET.has(meal[1])
                         || !["townsfolk", "outsider"].includes(TEAM[meal[1]])))

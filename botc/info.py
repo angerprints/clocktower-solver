@@ -1043,7 +1043,11 @@ def has_hermit_ability(w, s, seat, role, phase):
 # world out, a poisoned Cannibal's fit anything; D these come in stage 2.
 # A Cannibal is no meal: an executed Cannibal has eaten itself, and its
 # ability has ended with it.
-CANNIBAL_NOT_YET = frozenset({"Hermit", "Alchemist",
+# Stage 2 (13.11.2026, claude/kannibale-2-lesarten.md): the Philosopher's
+# choice (C) and the Hermit's Outsiders (D) are its own. After the Drunk
+# or the Lunatic (A, B) what it is told is made up, so their rows fit
+# anything, as here. The Alchemist comes in stage 2b (Patrick, 13.11.2026).
+CANNIBAL_NOT_YET = frozenset({"Alchemist",
                               "Drunk", "Lunatic", "Cannibal"})
 
 
@@ -1117,10 +1121,21 @@ def cannibal_made_up(w, s, seat, phase):
         and meal[1] in ("Drunk", "Lunatic")
 
 
+def cannibal_has(s, ate, role):
+    """Does a Cannibal that ate `ate` have that character's ability? The
+    character itself; and every Outsider's, having eaten the Hermit, as
+    the Hermit has them (stage 2, D, 13.11.2026). It believes nothing, so
+    none of them is barred."""
+    if ate is None or role is None:
+        return False
+    return ate == role or (ate == "Hermit"
+                           and role in hermit_abilities(s.script))
+
+
 def has_cannibal_ability(w, s, seat, role, phase):
     """Is this seat the Cannibal then, having eaten that character?"""
     return s is not None and role is not None and "Cannibal" in s.script.keys \
-        and cannibal_ate(w, s, seat, phase) == role
+        and cannibal_has(s, cannibal_ate(w, s, seat, phase), role)
 
 
 def cannibal_holders(w, s, role, phase):
@@ -1128,7 +1143,7 @@ def cannibal_holders(w, s, role, phase):
     if s is None or role is None or "Cannibal" not in s.script.keys:
         return []
     return [p for p in range(len(w.roles))
-            if cannibal_ate(w, s, p, phase) == role]
+            if cannibal_has(s, cannibal_ate(w, s, p, phase), role)]
 
 
 def hermit_holders(w, s, role, phase):

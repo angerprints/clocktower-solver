@@ -92,11 +92,14 @@ class WhatItAte(SolverTest):
         st = state(**executed(5))
         self.assertIsNone(I.cannibal_ate(world(), st, 5, "N2"))
 
-    def test_stage_two_executees_give_nothing_yet(self):
-        roles = R[:3] + ["Philosopher"] + R[4:]
+    def test_the_alchemist_gives_nothing_yet(self):
+        # Stage 2b (Patrick, 13.11.2026).
+        roles = R[:3] + ["Alchemist"] + R[4:]
         st = state(**executed(3))
         self.assertIsNone(I.cannibal_ate(world(roles), st, 5, "N2"))
-        self.assertIn("Philosopher", I.CANNIBAL_NOT_YET)
+        self.assertIn("Alchemist", I.CANNIBAL_NOT_YET)
+        self.assertNotIn("Philosopher", I.CANNIBAL_NOT_YET)
+        self.assertNotIn("Hermit", I.CANNIBAL_NOT_YET)
 
     def test_held_as_a_philosopher_holds_what_it_took(self):
         st = state(**executed(1))
@@ -151,6 +154,114 @@ class TheProfessor(SolverTest):
         self.assertIsNone(cost(roles=no, **kw))
 
 
+# Stage 2 (13.11.2026, claude/kannibale-2-lesarten.md).
+IDS2 = IDS + ["hermit", "princess", "drunk", "lunatic", "klutz"]
+CS2 = scripts.from_ids("Kannibale 2", IDS2)
+
+
+def state2(rows=(), **kw):
+    return state(rows, script=CS2, **kw)
+
+
+def cost2(rows=(), roles=R, **kw):
+    return S.explanation_cost(world(roles), state2(rows, **kw))
+
+
+class TheDrunkAndTheLunatic(SolverTest):
+    """A and B: what it is told is made up; it may have been woken."""
+
+    def test_after_the_drunk_it_is_as_drunk(self):
+        roles = R[:3] + ["Drunk"] + R[4:]
+        st = state2(**executed(3))
+        self.assertTrue(I.cannibal_poisoned(world(roles), st, 5, "N2"))
+        self.assertTrue(I.cannibal_made_up(world(roles), st, 5, "N2"))
+        self.assertIsNotNone(cost2([I.Empath(2, 5, count=0)], roles=roles,
+                                   **executed(3)))
+        self.assertTrue(waking.uncertain(world(roles), st, 5, 2))
+
+    def test_after_the_lunatic_any_row_fits(self):
+        roles = R[:3] + ["Lunatic"] + R[4:]
+        st = state2(**executed(3))
+        self.assertFalse(I.cannibal_poisoned(world(roles), st, 5, "N2"))
+        self.assertTrue(I.cannibal_made_up(world(roles), st, 5, "N2"))
+        self.assertIsNotNone(cost2([I.Empath(2, 5, count=0)], roles=roles,
+                                   **executed(3)))
+        self.assertTrue(waking.uncertain(world(roles), st, 5, 2))
+
+
+class ThePhilosopher(SolverTest):
+    """C: it chooses once, and has it until the next execution death."""
+
+    ROLES = R[:3] + ["Philosopher"] + R[4:]
+
+    def test_what_it_chose_is_its_own(self):
+        rows = [I.PhilosopherChoice(2, 5, role="Chef")]
+        st = state(rows, days=(1, 2), **executed(3))
+        w = world(self.ROLES)
+        self.assertTrue(I.took_it(w, st, 5, "Chef", "N2"))
+        self.assertFalse(I.took_it(w, st, 5, "Chef", "N1"))
+
+    def test_until_the_next_execution_death(self):
+        rows = [I.PhilosopherChoice(2, 5, role="Chef")]
+        st = state(rows, days=(1, 2, 3), executions={1: 3, 2: 1},
+                   deaths={3: ("E1",), 1: ("E2",)})
+        w = world(self.ROLES)
+        self.assertTrue(I.took_it(w, st, 5, "Chef", "N2"))
+        self.assertFalse(I.took_it(w, st, 5, "Chef", "N3"))
+
+    def test_it_drunks_whoever_holds_it(self):
+        rows = [I.PhilosopherChoice(2, 5, role="Empath")]
+        st = state(rows, days=(1, 2), **executed(3))
+        got = [src for src in S.a_cannibal_philosopher_drunks_whoever_had_it(
+            world(self.ROLES), st, 2)]
+        self.assertEqual([sorted(src.seats) for src in got], [[1]])
+
+    def test_its_rows_as_what_it_chose(self):
+        # Seat 5 between the Monk and the Scarlet Woman: one evil.
+        rows = [I.PhilosopherChoice(2, 5, role="Empath"),
+                I.Empath(3, 5, count=1)]
+        self.assertIsNotNone(cost(rows, roles=self.ROLES,
+                                  days=(1, 2, 3), **executed(3)))
+        rows[1] = I.Empath(3, 5, count=0)
+        self.assertIsNone(cost(rows, roles=self.ROLES,
+                               days=(1, 2, 3), **executed(3)))
+
+
+class TheHermit(SolverTest):
+    """D: every Outsider's ability, as the Hermit has them."""
+
+    def test_it_has_the_outsiders(self):
+        roles = R[:3] + ["Hermit"] + R[4:]
+        st = state2(**executed(3))
+        w = world(roles)
+        self.assertEqual(I.cannibal_ate(w, st, 5, "N2"), "Hermit")
+        for role in ("Saint", "Klutz", "Butler"):
+            self.assertTrue(I.has_cannibal_ability(w, st, 5, role, "N2"),
+                            role)
+        self.assertFalse(I.has_cannibal_ability(w, st, 5, "Empath", "N2"))
+        self.assertIn(5, I.cannibal_holders(w, st, "Saint", "N2"))
+
+
+class ThePrincess(SolverTest):
+    """The jinx: it nominated, executed and killed her, and the Demon
+    kills nobody that night."""
+
+    ROLES = R[:3] + ["Princess"] + R[4:]
+
+    def test_the_demon_does_not_kill(self):
+        kw = dict(days=(1, 2), executions={1: 3},
+                  deaths={3: ("E1",), 0: ("N2",)})
+        self.assertIsNotNone(cost2(roles=self.ROLES, **kw))
+        self.assertIsNone(cost2([I.PrincessNominated(1, 5, target=3)],
+                                roles=self.ROLES, **kw))
+
+    def test_not_if_she_was_somebody_else(self):
+        kw = dict(days=(1, 2), executions={1: 3},
+                  deaths={3: ("E1",), 0: ("N2",)})
+        self.assertIsNotNone(cost2([I.PrincessNominated(1, 5, target=3)],
+                                   **kw))
+
+
 def compare(test, case):
     """Python and JavaScript give the same shares on this board."""
     import app
@@ -176,11 +287,19 @@ def compare(test, case):
     return py
 
 
-def board(infos=(), claims=C, **extra):
-    return {"n_players": 8,
-            "players": [{"claim": c, "events": []} for c in claims],
-            "infos": list(infos), "days_done": [1, 2],
-            "script": {"name": "Kannibale", "characters": IDS}, **extra}
+def board(infos=(), claims=C, events=None, **extra):
+    """A page-shaped board. `events` per seat as the page writes them:
+    "X1" executed and dead on day 1, "N2" dead in night 2. (The stage 1
+    boards passed `deaths` and `executions`, which the page does not
+    read, so they were quiet boards; 13.11.2026.)"""
+    events = events or {}
+    out = {"n_players": 8,
+           "players": [{"claim": c, "events": list(events.get(i, ()))}
+                       for i, c in enumerate(claims)],
+           "infos": list(infos), "days_done": [1, 2],
+           "script": {"name": "Kannibale", "characters": IDS}}
+    out.update(extra)
+    return out
 
 
 class BothLanguagesAgree(SolverTest):
@@ -191,14 +310,33 @@ class BothLanguagesAgree(SolverTest):
     def test_an_empath_eaten(self):
         compare(self, board(
             [{"type": "Empath", "night": 2, "player": 5, "count": 1}],
-            deaths={"1": ["E1"]}, executions={"1": 1}))
+            events={1: ["X1"]}))
 
     def test_an_executee_that_may_be_evil(self):
         # The Mayor claim: good, and the row must fit; evil, and the
         # Cannibal was poisoned.
         compare(self, board(
             [{"type": "Empath", "night": 2, "player": 5, "count": 0}],
-            deaths={"6": ["E1"]}, executions={"1": 6}))
+            events={6: ["X1"]}))
+
+
+class BothLanguagesAgreeOnStageTwo(SolverTest):
+
+    def test_a_philosopher_eaten(self):
+        claims = C[:3] + ["Philosopher"] + C[4:]
+        compare(self, board(
+            [{"type": "PhilosopherChoice", "night": 2, "player": 5,
+              "role": "Empath"},
+             {"type": "Empath", "night": 3, "player": 5, "count": 1}],
+            claims=claims, events={3: ["X1"]}, days_done=[1, 2, 3]))
+
+    def test_a_princess_eaten(self):
+        claims = C[:3] + ["Princess"] + C[4:]
+        compare(self, board(
+            [{"type": "PrincessNominated", "night": 1, "player": 5,
+              "target": 3}],
+            claims=claims, events={3: ["X1"], 0: ["N2"]},
+            script={"name": "Kannibale 2", "characters": IDS2}))
 
 
 if __name__ == "__main__":

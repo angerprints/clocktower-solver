@@ -214,7 +214,7 @@ export function tookIt(w, s, seat, role, phase) {
 // ---------------------------------------------------------------------
 // The Cannibal (12.11.2026). See info.py.
 // ---------------------------------------------------------------------
-export const CANNIBAL_NOT_YET = new Set(["Hermit", "Alchemist",
+export const CANNIBAL_NOT_YET = new Set(["Alchemist",
                                          "Drunk", "Lunatic", "Cannibal"]);
 
 /** [executee, character, side] of the last execution death before then,
@@ -271,11 +271,20 @@ export function cannibalMadeUp(w, s, seat, phase) {
     && (meal[1] === "Drunk" || meal[1] === "Lunatic");
 }
 
+/** Does a Cannibal that ate `ate` have that character's ability? Every
+ * Outsider's, having eaten the Hermit (stage 2, D). See info.py. */
+export function cannibalHas(s, ate, role) {
+  if (ate === null || ate === undefined || role === null
+      || role === undefined) return false;
+  return ate === role || (ate === "Hermit"
+                          && hermitAbilities(s.script).has(role));
+}
+
 /** Is this seat the Cannibal then, having eaten that character? */
 export function hasCannibalAbility(w, s, seat, role, phase) {
   return !!s && role !== null && role !== undefined
     && s.script.keys.includes("Cannibal")
-    && cannibalAte(w, s, seat, phase) === role;
+    && cannibalHas(s, cannibalAte(w, s, seat, phase), role);
 }
 
 /** The Cannibals that have eaten that character, then. */
@@ -284,7 +293,7 @@ export function cannibalHolders(w, s, role, phase) {
       || !s.script.keys.includes("Cannibal")) return [];
   const out = [];
   for (let p = 0; p < w.roles.length; p++)
-    if (cannibalAte(w, s, p, phase) === role) out.push(p);
+    if (cannibalHas(s, cannibalAte(w, s, p, phase), role)) out.push(p);
   return out;
 }
 
