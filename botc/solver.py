@@ -9169,10 +9169,15 @@ def a_cannibal_philosopher_drunks_whoever_had_it(world, state, night):
             continue
         had = frozenset(p for p in range(state.n_players)
                         if p != who and world.role_at(p, phase) == taken)
+        # Dying tonight or coming back, it had it for part of the night
+        # only: on offer, as the Philosopher's (the gate, seed 1707).
+        went = any(at in state.died_at(who) for at in (phase, f"D{night}")) \
+            or who in _returned_at(state, phase)
+        free = (lambda seat: 1.0) if went else 1.0
         if had:
             out.append(impairment.Source("Philosopher", had,
-                                         capacity=len(had), cost=1.0,
-                                         repeat_cost=1.0, actor=who))
+                                         capacity=len(had), cost=free,
+                                         repeat_cost=free, actor=who))
     return out
 
 

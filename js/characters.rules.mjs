@@ -2086,9 +2086,14 @@ sourceRule(function aCannibalPhilosopherDrunksWhoeverHadIt(world, state, night) 
     const had = new Set();
     for (let p = 0; p < state.nPlayers; p++)
       if (p !== who && world.roleAt(p, phase) === taken) had.add(p);
+    // Dying tonight or coming back: on offer. See solver.py.
+    const died = state.diedAt(who);
+    const went = died.includes(phase) || died.includes(`D${night}`)
+      || ((state.resurrections || {})[who] || []).includes(phase);
+    const free = went ? () => 1.0 : 1.0;
     if (had.size)
       out.push(new Source("Philosopher", had,
-                          {capacity: had.size, cost: 1.0, repeatCost: 1.0,
+                          {capacity: had.size, cost: free, repeatCost: free,
                            actor: who}));
   }
   return out;

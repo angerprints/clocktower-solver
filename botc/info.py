@@ -790,8 +790,16 @@ def side_open(w, s, seat, phase):
         return True
     # Not a Demon the Boffin gave it: it cannot turn good by it (their
     # jinx, 26.10.2026).
-    return s is not None and took_it(w, s, seat, "Goon", phase) \
-        and not has_boffin_ability(w, s, seat, "Goon", phase)
+    if s is not None and took_it(w, s, seat, "Goon", phase) \
+            and not has_boffin_ability(w, s, seat, "Goon", phase):
+        return True
+    # A Cannibal that had the Goon's ability, eaten or chosen as the
+    # Philosopher, keeps the side it turned to after a new meal (the gate
+    # of stage 2, seed 1443, 13.11.2026).
+    return s is not None and "Cannibal" in s.script.keys \
+        and w.role_at(seat, phase) == "Cannibal" \
+        and any(took_it(w, s, seat, "Goon", f"N{k}")
+                for k in range(2, int(phase[1:]) + 1))
 
 
 def faux_paw_lycanthrope(w, s, phase, living=True):

@@ -132,8 +132,16 @@ export function sideOpen(w, s, seat, phase) {
   if (CHARACTERS[w.roleAt(seat, phase)].alignment_open) return true;
   // Not a Demon the Boffin gave it: it cannot turn good by it (their
   // jinx, 26.10.2026).
-  return !!s && tookIt(w, s, seat, "Goon", phase)
-    && !hasBoffinAbility(w, s, seat, "Goon", phase);
+  if (!!s && tookIt(w, s, seat, "Goon", phase)
+      && !hasBoffinAbility(w, s, seat, "Goon", phase)) return true;
+  // A Cannibal that had the Goon's ability keeps the side it turned to
+  // (13.11.2026). See info.py.
+  if (!s || !s.script.keys.includes("Cannibal")
+      || w.roleAt(seat, phase) !== "Cannibal") return false;
+  const last = Number(phase.slice(1));
+  for (let k = 2; k <= last; k++)
+    if (tookIt(w, s, seat, "Goon", `N${k}`)) return true;
+  return false;
 }
 
 /** The world once for every way the sides nobody follows could really be
