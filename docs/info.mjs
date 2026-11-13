@@ -132,8 +132,16 @@ export function sideOpen(w, s, seat, phase) {
   if (CHARACTERS[w.roleAt(seat, phase)].alignment_open) return true;
   // Not a Demon the Boffin gave it: it cannot turn good by it (their
   // jinx, 26.10.2026).
-  return !!s && tookIt(w, s, seat, "Goon", phase)
-    && !hasBoffinAbility(w, s, seat, "Goon", phase);
+  if (!!s && tookIt(w, s, seat, "Goon", phase)
+      && !hasBoffinAbility(w, s, seat, "Goon", phase)) return true;
+  // A Cannibal that had the Goon's ability keeps the side it turned to
+  // (13.11.2026). See info.py.
+  if (!s || !s.script.keys.includes("Cannibal")
+      || w.roleAt(seat, phase) !== "Cannibal") return false;
+  const last = Number(phase.slice(1));
+  for (let k = 2; k <= last; k++)
+    if (tookIt(w, s, seat, "Goon", `N${k}`)) return true;
+  return false;
 }
 
 /** The world once for every way the sides nobody follows could really be
@@ -198,6 +206,13 @@ export function tookIt(w, s, seat, role, phase) {
   if (taken && taken[0] === role && w.roleAt(seat, phase) === "Philosopher"
       && phaseIndex(phase) >= phaseIndex(taken[1])
       && !backSince(s, seat, taken[1], phase)) return true;
+  // A Cannibal that ate the Philosopher and chose (stage 2, C). See info.py.
+  if (taken && taken[0] === role && role !== "Philosopher"
+      && w.roleAt(seat, phase) === "Cannibal"
+      && phaseIndex(phase) >= phaseIndex(taken[1])
+      && !backSince(s, seat, taken[1], phase)
+      && cannibalAte(w, s, seat, taken[1]) === "Philosopher"
+      && cannibalAte(w, s, seat, phase) === "Philosopher") return true;
   return hasBoffinAbility(w, s, seat, role, phase)
     || hasPlagueAbility(w, s, seat, role, phase)
     || hasHermitAbility(w, s, seat, role, phase)
@@ -207,7 +222,7 @@ export function tookIt(w, s, seat, role, phase) {
 // ---------------------------------------------------------------------
 // The Cannibal (12.11.2026). See info.py.
 // ---------------------------------------------------------------------
-export const CANNIBAL_NOT_YET = new Set(["Philosopher", "Hermit", "Alchemist",
+export const CANNIBAL_NOT_YET = new Set(["Alchemist",
                                          "Drunk", "Lunatic", "Cannibal"]);
 
 /** [executee, character, side] of the last execution death before then,
@@ -226,7 +241,8 @@ export function cannibalMeal(w, s, seat, phase) {
   }
   for (let d = last; d >= 1; d--) {
     const who = s.executionDeath(d);
-    if (who !== null && who !== undefined) {
+    // Its own execution eats nothing (13.11.2026). See info.py.
+    if (who !== null && who !== undefined && who !== seat) {
       let side = w.alignmentAt(who, `D${d}`);
       // A Cult Leader that may have turned. See info.py.
       if (side === "good" && actsAsCultLeader(w, s, who, `D${d}`)
@@ -248,18 +264,36 @@ export function cannibalAte(w, s, seat, phase) {
   return role;
 }
 
-/** Is the Cannibal here poisoned by an evil meal then? */
+/** Is the Cannibal here poisoned by an evil meal then — or as drunk,
+ * having eaten the Drunk (stage 2, A, 13.11.2026)? */
 export function cannibalPoisoned(w, s, seat, phase) {
   if (w.roleAt(seat, phase) !== "Cannibal") return false;
   const meal = cannibalMeal(w, s, seat, phase);
-  return !!meal && meal[2] !== "good";
+  return !!meal && (meal[2] !== "good" || meal[1] === "Drunk");
+}
+
+/** Has the Cannibal here eaten the Drunk or the Lunatic? See info.py. */
+export function cannibalMadeUp(w, s, seat, phase) {
+  if (w.roleAt(seat, phase) !== "Cannibal") return false;
+  const meal = cannibalMeal(w, s, seat, phase);
+  return !!meal && meal[2] === "good"
+    && (meal[1] === "Drunk" || meal[1] === "Lunatic");
+}
+
+/** Does a Cannibal that ate `ate` have that character's ability? Every
+ * Outsider's, having eaten the Hermit (stage 2, D). See info.py. */
+export function cannibalHas(s, ate, role) {
+  if (ate === null || ate === undefined || role === null
+      || role === undefined) return false;
+  return ate === role || (ate === "Hermit"
+                          && hermitAbilities(s.script).has(role));
 }
 
 /** Is this seat the Cannibal then, having eaten that character? */
 export function hasCannibalAbility(w, s, seat, role, phase) {
   return !!s && role !== null && role !== undefined
     && s.script.keys.includes("Cannibal")
-    && cannibalAte(w, s, seat, phase) === role;
+    && cannibalHas(s, cannibalAte(w, s, seat, phase), role);
 }
 
 /** The Cannibals that have eaten that character, then. */
@@ -268,7 +302,7 @@ export function cannibalHolders(w, s, role, phase) {
       || !s.script.keys.includes("Cannibal")) return [];
   const out = [];
   for (let p = 0; p < w.roles.length; p++)
-    if (cannibalAte(w, s, p, phase) === role) out.push(p);
+    if (cannibalHas(s, cannibalAte(w, s, p, phase), role)) out.push(p);
   return out;
 }
 
