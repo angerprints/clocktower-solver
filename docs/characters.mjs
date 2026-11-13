@@ -1724,6 +1724,21 @@ export const DATA = {
    "chooses": true,
    "nights": "conditional",
    "impairs": true
+  },
+  "Cannibal": {
+   "id": "cannibal",
+   "name": "Cannibal",
+   "team": "townsfolk",
+   "wake": [
+    "every",
+    "first",
+    "never",
+    "other",
+    "sometimes"
+   ],
+   "chooses": true,
+   "nights": "conditional",
+   "impairs": true
   }
  },
  "scripts": {
