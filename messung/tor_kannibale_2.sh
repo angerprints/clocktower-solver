@@ -38,8 +38,8 @@ new)
   SIM_CANNIBAL_MEAL=Philosopher line torP3 4 0 Cannibal Philosopher Chambermaid Mathematician
   SIM_CANNIBAL_MEAL=Drunk,Lunatic line torD1 4 0 Cannibal Drunk Lunatic Chambermaid
   SIM_CANNIBAL_MEAL=Drunk line torD2 4 0 Cannibal Drunk Mathematician Empath
-  SIM_CANNIBAL_MEAL=Hermit line torE1 4 0 Cannibal Hermit Klutz Butler
-  SIM_CANNIBAL_MEAL=Hermit line torE2 4 0 Cannibal Hermit Recluse Saint
+  SIM_HERMIT_FAVOUR=1 SIM_CANNIBAL_MEAL=Hermit line torE1 4 0 Cannibal Hermit Klutz Butler
+  SIM_HERMIT_FAVOUR=1 SIM_CANNIBAL_MEAL=Hermit line torE2 4 0 Cannibal Hermit Recluse Chef
   SIM_CANNIBAL_MEAL=Princess,Juggler,Zealot line torJ1 4 0 Cannibal Princess Zealot Juggler
   ;;
 esac
