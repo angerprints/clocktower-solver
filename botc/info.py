@@ -1068,7 +1068,9 @@ def cannibal_meal(w, s, seat, phase):
             last = max(caps)
     for d in range(last, 0, -1):
         who = s.execution_death(d)
-        if who is not None:
+        # Its own execution eats nothing: what it had goes on, to fire at
+        # its death (a Sweetheart's, a Moonchild's), found 13.11.2026.
+        if who is not None and who != seat:
             side = w.alignment_at(who, f"D{d}")
             # A Cult Leader may have turned evil by then; the board does
             # not say, so the meal is either (12.11.2026).

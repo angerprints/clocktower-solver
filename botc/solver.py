@@ -7684,6 +7684,12 @@ def _plain_failures(world, state, outcome=None):
             cands += [who for who in boffin_holders(
                 world, state, "Professor", phase)
                 if who != seat and who not in back and who not in cands]
+            # A Cannibal last: its raise is one a character (B), so one
+            # that chose the Professor as the Philosopher and later ate the
+            # Professor has one between them. Asked first, it took a raise
+            # the real Professor made (gate of stage 2, seed 2113).
+            cands.sort(key=lambda who: world.role_at(who, phase)
+                       == "Cannibal")
 
             def spent(who):
                 return who in used and not any(
@@ -7968,12 +7974,15 @@ def _plain_failures(world, state, outcome=None):
             # (stage 2, C, 13.11.2026): its own, as a Philosopher's. Asked
             # as it acted: one that swapped with the Demon as the Snake
             # Charmer is no Cannibal by morning.
+            # A day's row (a shot, a guess) is dated at the day, so also
+            # asked of the night it names.
             if held is ABSENT and seat is not None and role is not None \
                     and role != "Philosopher" \
-                    and world.role_at(seat, given_at) == "Cannibal" \
-                    and cannibal_ate(world, state, seat, given_at) \
-                    == "Philosopher" \
-                    and took_it(world, state, seat, role, given_at):
+                    and any(world.role_at(seat, at) == "Cannibal"
+                            and cannibal_ate(world, state, seat, at)
+                            == "Philosopher"
+                            and took_it(world, state, seat, role, at)
+                            for at in (given_at, phase)):
                 held = (INVERTED if vortoxed and TEAM[role] == "townsfolk"
                         else GENUINE)
             # A Cannibal's row (12.11.2026): its own if it ate that

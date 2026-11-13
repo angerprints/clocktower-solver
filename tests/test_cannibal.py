@@ -92,6 +92,13 @@ class WhatItAte(SolverTest):
         st = state(**executed(5))
         self.assertIsNone(I.cannibal_ate(world(), st, 5, "N2"))
 
+    def test_its_own_execution_is_no_meal(self):
+        # What it had goes on, to fire at its death (13.11.2026).
+        st = state(days=(1, 2, 3), executions={1: 1, 2: 5},
+                   deaths={1: ("E1",), 5: ("E2",)})
+        self.assertEqual(I.cannibal_meal(world(), st, 5, "E2"),
+                         (1, "Empath", "good"))
+
     def test_the_alchemist_gives_nothing_yet(self):
         # Stage 2b (Patrick, 13.11.2026).
         roles = R[:3] + ["Alchemist"] + R[4:]

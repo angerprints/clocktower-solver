@@ -7553,6 +7553,17 @@ def early_choices(d, night, rng):
                 and _phil(d, seat, f"N{night}") in CHOOSES_EARLY:
             role = _phil(d, seat, f"N{night}")
         # So does a Cannibal that ate one (12.11.2026).
+        # A Cannibal that ate the Philosopher chooses at the Philosopher's
+        # turn, near the front of the night, before any Demon: whoever it
+        # drunk was drunk when killed (stage 2, C; the gate, seed 788).
+        if role == "Cannibal" and night > 1 \
+                and _cannibal_ate(d, seat, f"N{night}") == "Philosopher" \
+                and seat not in d.philosophies \
+                and seat in d.alive_at(f"N{night}"):
+            made = _for_role(d, seat, "Philosopher", night, rng)
+            if made is not None:
+                out.append(made)
+            continue
         if role == "Cannibal" \
                 and _cannibal_ate(d, seat, f"N{night}") in CHOOSES_EARLY:
             role = _cannibal_ate(d, seat, f"N{night}")

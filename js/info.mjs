@@ -233,7 +233,8 @@ export function cannibalMeal(w, s, seat, phase) {
   }
   for (let d = last; d >= 1; d--) {
     const who = s.executionDeath(d);
-    if (who !== null && who !== undefined) {
+    // Its own execution eats nothing (13.11.2026). See info.py.
+    if (who !== null && who !== undefined && who !== seat) {
       let side = w.alignmentAt(who, `D${d}`);
       // A Cult Leader that may have turned. See info.py.
       if (side === "good" && actsAsCultLeader(w, s, who, `D${d}`)

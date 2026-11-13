@@ -3885,6 +3885,9 @@ function plainFailures(world, state, outcome = {}) {
         for (const who of boffinHolders(world, state, "Professor", phase))
           if (who !== seat && !back.has(who) && !cands.includes(who))
             cands.push(who);
+        // A Cannibal last (stage 2). See solver.py. Stable, as Python's.
+        const late = who => world.roleAt(who, phase) === "Cannibal" ? 1 : 0;
+        cands.sort((a, b) => late(a) - late(b));
         const spent = who => used.has(who) && !(
           (state.resurrections || {})[who] || []).some(at => {
             const k = parseInt(String(at).slice(1), 10);
@@ -4134,9 +4137,9 @@ function plainFailures(world, state, outcome = {}) {
     // 2, C, 13.11.2026). See solver.py.
     if (held === ABSENT && seat !== null && role !== null
         && role !== "Philosopher"
-        && world.roleAt(seat, givenAt) === "Cannibal"
-        && cannibalAte(world, state, seat, givenAt) === "Philosopher"
-        && tookIt(world, state, seat, role, givenAt))
+        && [givenAt, phase].some(at => world.roleAt(seat, at) === "Cannibal"
+          && cannibalAte(world, state, seat, at) === "Philosopher"
+          && tookIt(world, state, seat, role, at)))
       held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
     // A Cannibal's row (12.11.2026): its own if it ate that character,
     // made up after an evil meal or one stage 1 leaves out, and a world
