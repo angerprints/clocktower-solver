@@ -789,6 +789,12 @@ def uncertain(world, state, seat, night):
         from .info import cannibal_ate      # local: info imports waking
         if cannibal_ate(world, state, seat, phase) == "Professor":
             return seat in state.alive_set(phase)
+        # One that ate the Drunk or the Lunatic may have been woken as
+        # the Drunk's Townsfolk or as the Demon, or not (stage 2, A and B,
+        # 13.11.2026), as a Philosopher that took them (I).
+        from .info import cannibal_made_up
+        if cannibal_made_up(world, state, seat, phase):
+            return seat in state.alive_set(phase)
     # One that took the Drunk or the Lunatic lives by a token it was
     # shown, which nobody wrote down: it may have woken (I, 14.10.2026).
     if took and night > int(took[1][1:]) and took[0] != "Philosopher" \

@@ -198,6 +198,13 @@ export function tookIt(w, s, seat, role, phase) {
   if (taken && taken[0] === role && w.roleAt(seat, phase) === "Philosopher"
       && phaseIndex(phase) >= phaseIndex(taken[1])
       && !backSince(s, seat, taken[1], phase)) return true;
+  // A Cannibal that ate the Philosopher and chose (stage 2, C). See info.py.
+  if (taken && taken[0] === role && role !== "Philosopher"
+      && w.roleAt(seat, phase) === "Cannibal"
+      && phaseIndex(phase) >= phaseIndex(taken[1])
+      && !backSince(s, seat, taken[1], phase)
+      && cannibalAte(w, s, seat, taken[1]) === "Philosopher"
+      && cannibalAte(w, s, seat, phase) === "Philosopher") return true;
   return hasBoffinAbility(w, s, seat, role, phase)
     || hasPlagueAbility(w, s, seat, role, phase)
     || hasHermitAbility(w, s, seat, role, phase)
@@ -207,7 +214,7 @@ export function tookIt(w, s, seat, role, phase) {
 // ---------------------------------------------------------------------
 // The Cannibal (12.11.2026). See info.py.
 // ---------------------------------------------------------------------
-export const CANNIBAL_NOT_YET = new Set(["Philosopher", "Hermit", "Alchemist",
+export const CANNIBAL_NOT_YET = new Set(["Hermit", "Alchemist",
                                          "Drunk", "Lunatic", "Cannibal"]);
 
 /** [executee, character, side] of the last execution death before then,
@@ -248,11 +255,20 @@ export function cannibalAte(w, s, seat, phase) {
   return role;
 }
 
-/** Is the Cannibal here poisoned by an evil meal then? */
+/** Is the Cannibal here poisoned by an evil meal then — or as drunk,
+ * having eaten the Drunk (stage 2, A, 13.11.2026)? */
 export function cannibalPoisoned(w, s, seat, phase) {
   if (w.roleAt(seat, phase) !== "Cannibal") return false;
   const meal = cannibalMeal(w, s, seat, phase);
-  return !!meal && meal[2] !== "good";
+  return !!meal && (meal[2] !== "good" || meal[1] === "Drunk");
+}
+
+/** Has the Cannibal here eaten the Drunk or the Lunatic? See info.py. */
+export function cannibalMadeUp(w, s, seat, phase) {
+  if (w.roleAt(seat, phase) !== "Cannibal") return false;
+  const meal = cannibalMeal(w, s, seat, phase);
+  return !!meal && meal[2] === "good"
+    && (meal[1] === "Drunk" || meal[1] === "Lunatic");
 }
 
 /** Is this seat the Cannibal then, having eaten that character? */

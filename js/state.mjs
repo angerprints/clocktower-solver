@@ -153,7 +153,8 @@ export class GameState {
     // A Philosopher that took the Drunk claims the Townsfolk it was shown;
     // it was dealt the Philosopher (I and S, 14.10.2026).
     for (const [seat, [taken]] of Object.entries(this.philosophies()))
-      if (taken === "Drunk" && seat in out && !(seat in first))
+      if (taken === "Drunk" && seat in out && !(seat in first)
+          && out[seat] !== "Cannibal")
         out[seat] = "Philosopher";
     this._dealtClaims = [key, out];
     return out;

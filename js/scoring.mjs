@@ -4127,6 +4127,14 @@ function plainFailures(world, state, outcome = {}) {
     if (held === ABSENT && seat !== null && role !== null && role !== undefined
         && hasHermitAbility(world, state, seat, role, givenAt))
       held = GENUINE;
+    // A Cannibal that ate the Philosopher and chose this character (stage
+    // 2, C, 13.11.2026). See solver.py.
+    if (held === ABSENT && seat !== null && role !== null
+        && role !== "Philosopher"
+        && world.roleAt(seat, phase) === "Cannibal"
+        && cannibalAte(world, state, seat, phase) === "Philosopher"
+        && tookIt(world, state, seat, role, phase))
+      held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
     // A Cannibal's row (12.11.2026): its own if it ate that character,
     // made up after an evil meal or one stage 1 leaves out, and a world
     // where it ate a good somebody else cannot have given it (C).
@@ -4142,7 +4150,9 @@ function plainFailures(world, state, outcome = {}) {
       const ate = meal && meal[2] === "good"
         && ["townsfolk", "outsider"].includes(TEAM[meal[1]])
         && !CANNIBAL_NOT_YET.has(meal[1]) ? meal[1] : null;
-      if (ate === role)
+      // Its nomination of the Princess is a fact (the jinx, 13.11.2026).
+      if (info.type === "PrincessNominated") held = GENUINE;
+      else if (ate === role)
         held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
       else if (meal && (meal[2] !== "good" || CANNIBAL_NOT_YET.has(meal[1])
                         || !["townsfolk", "outsider"].includes(TEAM[meal[1]])))
