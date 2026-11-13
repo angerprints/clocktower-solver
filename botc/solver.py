@@ -43,6 +43,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    hermit_holders, has_hermit_ability, hermit_abilities,
                    cannibal_ate, cannibal_meal, cannibal_poisoned,
                    has_cannibal_ability, cannibal_has, cannibal_holders,
+                   alchemy_gifts,
                    CANNIBAL_NOT_YET,
                    acts_as_alchemist, alchemy_holds,
                    alchemist_boffin_seat, alchemist_boffin_gift,
@@ -4093,8 +4094,13 @@ def alchemist_told(world, changes, state):
 def alchemists_with(world, state, role, phase):
     """The living seats holding the Alchemist with that ability then."""
     alive = state.alive_set(phase)
-    return [seat for seat, _since in alchemist_seats(world, state)
-            if seat in alive and role in world.plague_at(seat, phase)
+    # And a Cannibal that ate the Alchemist (stage 2b, 13.11.2026).
+    seats = [seat for seat, _since in alchemist_seats(world, state)] \
+        + [seat for seat in cannibal_holders(world, state, "Alchemist", phase)
+           if world.roles[seat] != "Alchemist"]
+    return [seat for seat in seats
+            if seat in alive and role in alchemy_gifts(world, state, seat,
+                                                       phase)
             and acts_as_alchemist(world, state, seat, phase)]
 
 

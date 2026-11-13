@@ -1054,9 +1054,9 @@ def has_hermit_ability(w, s, seat, role, phase):
 # Stage 2 (13.11.2026, claude/kannibale-2-lesarten.md): the Philosopher's
 # choice (C) and the Hermit's Outsiders (D) are its own. After the Drunk
 # or the Lunatic (A, B) what it is told is made up, so their rows fit
-# anything, as here. The Alchemist comes in stage 2b (Patrick, 13.11.2026).
-CANNIBAL_NOT_YET = frozenset({"Alchemist",
-                              "Drunk", "Lunatic", "Cannibal"})
+# anything, as here. The Alchemist's Minion ability is its own too (stage
+# 2b, 13.11.2026, `alchemy_gifts`).
+CANNIBAL_NOT_YET = frozenset({"Drunk", "Lunatic", "Cannibal"})
 
 
 def cannibal_meal(w, s, seat, phase):
@@ -1192,14 +1192,15 @@ def has_plague_ability(w, s, seat, role, phase):
     then: it rests while the Minion is drunk or poisoned."""
     if role is None or seat is None:
         return False
-    if role not in w.plague_at(seat, phase):
-        return False
+    if role in w.plague_at(seat, phase) \
+            and TEAM.get(w.role_at(seat, phase)) == "minion":
+        return True
     # Or the Alchemist's own, from the first night (`AlchemistGift`): a
     # good Townsfolk with it while it holds the Alchemist (04.11.2026) —
-    # none their jinxes say it has not (group 4, 05.11.2026).
-    if TEAM.get(w.role_at(seat, phase)) == "minion":
-        return True
+    # none their jinxes say it has not (group 4, 05.11.2026); a Cannibal
+    # that ate it, the one that Alchemist had (stage 2b, 13.11.2026).
     return role not in ALCHEMY_NOT_HELD \
+        and role in alchemy_gifts(w, s, seat, phase) \
         and acts_as_alchemist(w, s, seat, phase)
 
 
@@ -1214,17 +1215,32 @@ ALCHEMY_GUESSES = frozenset({"Spy", "Widow", "Wraith"})
 def alchemy_holds(w, s, seat, key, phase):
     """An Alchemist — or a Philosopher that took it — with that Minion's
     ability then (group 3, 05.11.2026)."""
-    return key in w.plague_at(seat, phase) \
+    return key in alchemy_gifts(w, s, seat, phase) \
         and acts_as_alchemist(w, s, seat, phase)
+
+
+def alchemy_gifts(w, s, seat, phase):
+    """The Minion abilities this seat has as the Alchemist then: marked on
+    its seat in this story — or, a Cannibal that ate the Alchemist, the
+    one marked on that Alchemist's (stage 2b, D, 13.11.2026)."""
+    if w.role_at(seat, phase) == "Cannibal":
+        meal = cannibal_meal(w, s, seat, phase) \
+            if cannibal_ate(w, s, seat, phase) == "Alchemist" else None
+        return w.plague_at(meal[0], phase) if meal is not None else ()
+    return w.plague_at(seat, phase)
 
 
 def acts_as_alchemist(w, s, seat, phase):
     """Holding the Alchemist then — or a Philosopher that took it, from the
     night it chose, which gets a Minion ability of its own (Patrick,
-    04.11.2026)."""
+    04.11.2026); or a Cannibal that ate it, with the one the Alchemist had
+    (stage 2b, D, 13.11.2026)."""
     role = w.role_at(seat, phase)
     if role == "Alchemist":
         return True
+    if role == "Cannibal":
+        return s is not None and "Cannibal" in s.script.keys \
+            and cannibal_ate(w, s, seat, phase) == "Alchemist"
     if role != "Philosopher":
         return False
     took = (s.philosophies() or {}).get(seat)
@@ -1238,7 +1254,11 @@ def plague_holders(w, s, role, phase):
     marked = getattr(w, "_plagues_by_seat", None)
     if not marked or role is None:
         return []
-    return [seat for seat in sorted(k for k in marked if k is not None)
+    # And a Cannibal with the ability of the Alchemist it ate (stage 2b,
+    # 13.11.2026): the mark is on that Alchemist's seat, not its own.
+    seats = set(k for k in marked if k is not None) \
+        | set(cannibal_holders(w, s, "Alchemist", phase))
+    return [seat for seat in sorted(seats)
             if has_plague_ability(w, s, seat, role, phase)]
 
 

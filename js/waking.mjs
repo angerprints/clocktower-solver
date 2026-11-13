@@ -33,7 +33,7 @@ import {alchemistSummoner, readingAt, teaMade} from "./worlds.mjs";
 import {actsAsAlchemist, backSince, babysitterAt, boffinAbilities, boffinGiftOf,
         alchemistBoffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt,
         hermitAbilities, hasHermitAbility, cannibalAte, cannibalHolders,
-        cannibalMadeUp}
+        cannibalMadeUp, alchemyGifts}
   from "./info.mjs";
 
 export const NEVER = "never";
@@ -476,7 +476,10 @@ export function woke(world, state, seat, night) {
   if (world.plagueAt && (world.teamAt(seat, phase) === "minion"
                          || actsAsAlchemist(world, state, seat, phase))) {
     const alchemist = world.teamAt(seat, phase) !== "minion";
-    for (const got of world.plagueAt(seat, phase)) {
+    // A Cannibal that ate the Alchemist, for the one it had (2b).
+    const gifts = alchemist ? alchemyGifts(world, state, seat, phase)
+      : world.plagueAt(seat, phase);
+    for (const got of gifts) {
       // Not for an ability its jinx says it has not, nor the Boffin's
       // (group 4). See waking.py.
       if (alchemist && ALCHEMY_ASLEEP.has(got)) continue;
@@ -568,6 +571,12 @@ export function uncertain(world, state, seat, night) {
   // (stage 2, A and B, 13.11.2026). See waking.py.
   if (acting === "Cannibal" && night > 1
       && cannibalMadeUp(world, state, seat, phase))
+    return state.aliveSet(phase).has(seat);
+  // One that ate an Alchemist whose Minion ability the town cannot see
+  // (stage 2b). See waking.py.
+  if (acting === "Cannibal" && night > 1
+      && actsAsAlchemist(world, state, seat, phase)
+      && !alchemyGifts(world, state, seat, phase).length)
     return state.aliveSet(phase).has(seat);
   // One that took the Drunk or the Lunatic lives by a token it was shown,
   // which nobody wrote down: it may have woken (I, 14.10.2026).

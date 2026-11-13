@@ -222,8 +222,7 @@ export function tookIt(w, s, seat, role, phase) {
 // ---------------------------------------------------------------------
 // The Cannibal (12.11.2026). See info.py.
 // ---------------------------------------------------------------------
-export const CANNIBAL_NOT_YET = new Set(["Alchemist",
-                                         "Drunk", "Lunatic", "Cannibal"]);
+export const CANNIBAL_NOT_YET = new Set(["Drunk", "Lunatic", "Cannibal"]);
 
 /** [executee, character, side] of the last execution death before then,
  * or null; a dead Cannibal keeps what it had. See info.py. */
@@ -374,11 +373,13 @@ export function storytellerHas(w, role, phase) {
 export function hasPlagueAbility(w, s, seat, role, phase) {
   if (role === null || role === undefined || seat === null
       || seat === undefined || !w.plagueAt) return false;
-  if (!w.plagueAt(seat, phase).includes(role)) return false;
+  if (w.plagueAt(seat, phase).includes(role)
+      && TEAM[w.roleAt(seat, phase)] === "minion") return true;
   // Or the Alchemist's own, from the first night (04.11.2026) — none its
-  // jinxes say it has not (group 4).
-  if (TEAM[w.roleAt(seat, phase)] === "minion") return true;
-  return !ALCHEMY_NOT_HELD.has(role) && actsAsAlchemist(w, s, seat, phase);
+  // jinxes say it has not (group 4); a Cannibal's that ate it (2b).
+  return !ALCHEMY_NOT_HELD.has(role)
+    && alchemyGifts(w, s, seat, phase).includes(role)
+    && actsAsAlchemist(w, s, seat, phase);
 }
 
 /** Their jinxes (group 4, 05.11.2026): an Alchemist with one of these has
@@ -390,8 +391,20 @@ export const ALCHEMY_GUESSES = new Set(["Spy", "Widow", "Wraith"]);
 /** An Alchemist, or a Philosopher that took it, with that Minion's ability
  * then (group 3, 05.11.2026). See info.py. */
 export function alchemyHolds(w, s, seat, key, phase) {
-  return !!w.plagueAt && w.plagueAt(seat, phase).includes(key)
+  return !!w.plagueAt && alchemyGifts(w, s, seat, phase).includes(key)
     && actsAsAlchemist(w, s, seat, phase);
+}
+
+/** The Minion abilities this seat has as the Alchemist then — a Cannibal
+ * that ate it, the one that Alchemist had (stage 2b). See info.py. */
+export function alchemyGifts(w, s, seat, phase) {
+  if (!w.plagueAt) return [];
+  if (w.roleAt(seat, phase) === "Cannibal") {
+    if (cannibalAte(w, s, seat, phase) !== "Alchemist") return [];
+    const meal = cannibalMeal(w, s, seat, phase);
+    return meal ? [...w.plagueAt(meal[0], phase)] : [];
+  }
+  return [...w.plagueAt(seat, phase)];
 }
 
 /** Holding the Alchemist then, or a Philosopher that took it, from the
@@ -399,6 +412,10 @@ export function alchemyHolds(w, s, seat, key, phase) {
 export function actsAsAlchemist(w, s, seat, phase) {
   const role = w.roleAt(seat, phase);
   if (role === "Alchemist") return true;
+  // A Cannibal that ate it (stage 2b, 13.11.2026). See info.py.
+  if (role === "Cannibal")
+    return !!s && s.script.keys.includes("Cannibal")
+      && cannibalAte(w, s, seat, phase) === "Alchemist";
   if (role !== "Philosopher") return false;
   const took = (s.philosophies() || {})[seat];
   return !!took && took[0] === "Alchemist"
@@ -421,17 +438,25 @@ export function alchemistSeats(world, state) {
 /** The living seats holding the Alchemist with that ability then. */
 export function alchemistsWith(world, state, role, phase) {
   const alive = state.aliveSet(phase);
-  return alchemistSeats(world, state).map(([seat]) => seat)
-    .filter(seat => alive.has(seat)
+  // And a Cannibal that ate the Alchemist (stage 2b). See solver.py.
+  const seats = alchemistSeats(world, state).map(([seat]) => seat)
+    .concat(cannibalHolders(world, state, "Alchemist", phase)
+      .filter(seat => world.roles[seat] !== "Alchemist"));
+  return seats.filter(seat => alive.has(seat)
       && world.plagueAt
-      && world.plagueAt(seat, phase).includes(role)
+      && alchemyGifts(world, state, seat, phase).includes(role)
       && actsAsAlchemist(world, state, seat, phase));
 }
 
 /** Every Minion with that ability through the Plague Doctor then. */
 export function plagueHolders(w, s, role, phase) {
   if (role === null || role === undefined || !w.plaguedSeats) return [];
-  return w.plaguedSeats().filter(seat => hasPlagueAbility(w, s, seat, role, phase));
+  // And a Cannibal with the ability of the Alchemist it ate (2b).
+  const seats = new Set(w.plaguedSeats());
+  if (!seats.size) return [];
+  for (const seat of cannibalHolders(w, s, "Alchemist", phase)) seats.add(seat);
+  return [...seats].sort((a, b) => a - b)
+    .filter(seat => hasPlagueAbility(w, s, seat, role, phase));
 }
 
 /** A Minion with the Spy's ability through the Plague Doctor then: it

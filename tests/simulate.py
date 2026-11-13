@@ -1332,6 +1332,9 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
         living = d.alive_at(f"N{night}")
         # A Plague Doctor that died by day (28.10.2026).
         _plague_check(d, rng, heard)
+        # A Cannibal that ate the Alchemist has its Minion ability from
+        # tonight (stage 2b, 13.11.2026).
+        _cannibal_takes_alchemy(d, night)
         # An Alchemist with the Evil Twin's ability and an evil player
         # learn each other (group 3, I).
         _alchemist_twin(d, night, rng, heard)
@@ -2624,7 +2627,9 @@ def _alchemist_undone(d, night):
     """A Philosopher took the Alchemist tonight, at its turn near the front
     of the night: what a dealt Alchemist chose earlier in this loop it chose
     drunk (04.11.2026). Its Assassin's shot is spent all the same."""
-    alchemists = set(getattr(d, "alchemy", {}))
+    # The dealt ones: not a Cannibal with the ability (stage 2b).
+    alchemists = {p for p in getattr(d, "alchemy", {})
+                  if d.roles[p] == "Alchemist"}
     got = d.alch_poisoned.get(night)
     if got is not None and got[0] in alchemists:
         del d.alch_poisoned[night]
@@ -3531,10 +3536,41 @@ def _alchemy(d, seat, key, phase):
     role = d.role_at(seat, phase)
     if role == "Alchemist":
         return True
+    # A Cannibal that ate it, while it has its ability (stage 2b).
+    if role == "Cannibal":
+        since = getattr(d, "alchemy_since", {}).get(seat)
+        return since is not None and int(phase[1:]) >= since \
+            and _cannibal_ate(d, seat, phase) == "Alchemist"
     since = getattr(d, "alchemy_since", {}).get(seat)
     return role == "Philosopher" and since is not None \
         and d.philosophies.get(seat) == "Alchemist" \
         and int(phase[1:]) >= since
+
+
+# What a Cannibal does not take over from an Alchemist here: each is set up
+# at the start in this simulator (stage 2b, 13.11.2026).
+CANNIBAL_ALCH_SKIPS = frozenset({"Summoner", "Boffin", "EvilTwin"})
+
+
+def _cannibal_takes_alchemy(d, night):
+    """A Cannibal that ate an Alchemist has the Minion ability that one had
+    (stage 2b, D, 13.11.2026): from the night after the execution, until
+    the next execution death takes it (`_alchemy`)."""
+    if "Cannibal" not in d.script.keys or not getattr(d, "alchemy", None):
+        return
+    phase = f"N{night}"
+    for seat in range(d.n):
+        if d.role_at(seat, phase) != "Cannibal" \
+                or _cannibal_ate(d, seat, phase) != "Alchemist":
+            continue
+        meal = _cannibal_meal(d, seat, phase)
+        key = d.alchemy.get(meal[0])
+        if key is None or key in CANNIBAL_ALCH_SKIPS:
+            continue
+        since = d.__dict__.setdefault("alchemy_since", {})
+        if d.alchemy.get(seat) != key or seat not in since:
+            d.alchemy[seat] = key
+            since[seat] = night
 
 
 def _alchemists(d, key, night):
