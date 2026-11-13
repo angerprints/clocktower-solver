@@ -1254,7 +1254,11 @@ def plague_holders(w, s, role, phase):
     marked = getattr(w, "_plagues_by_seat", None)
     if not marked or role is None:
         return []
-    return [seat for seat in sorted(k for k in marked if k is not None)
+    # And a Cannibal with the ability of the Alchemist it ate (stage 2b,
+    # 13.11.2026): the mark is on that Alchemist's seat, not its own.
+    seats = set(k for k in marked if k is not None) \
+        | set(cannibal_holders(w, s, "Alchemist", phase))
+    return [seat for seat in sorted(seats)
             if has_plague_ability(w, s, seat, role, phase)]
 
 

@@ -451,7 +451,12 @@ export function alchemistsWith(world, state, role, phase) {
 /** Every Minion with that ability through the Plague Doctor then. */
 export function plagueHolders(w, s, role, phase) {
   if (role === null || role === undefined || !w.plaguedSeats) return [];
-  return w.plaguedSeats().filter(seat => hasPlagueAbility(w, s, seat, role, phase));
+  // And a Cannibal with the ability of the Alchemist it ate (2b).
+  const seats = new Set(w.plaguedSeats());
+  if (!seats.size) return [];
+  for (const seat of cannibalHolders(w, s, "Alchemist", phase)) seats.add(seat);
+  return [...seats].sort((a, b) => a - b)
+    .filter(seat => hasPlagueAbility(w, s, seat, role, phase));
 }
 
 /** A Minion with the Spy's ability through the Plague Doctor then: it
