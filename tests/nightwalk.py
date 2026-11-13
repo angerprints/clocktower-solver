@@ -50,8 +50,11 @@ class Night:
         self.gained = {}                    # seat -> ability it took
         # A Hermit's Outsider abilities (07.11.2026): seat -> those.
         self.hermit = {}
-        # What a Cannibal ate (12.11.2026): seat -> character.
+        # What a Cannibal ate (12.11.2026): seat -> character. Having eaten
+        # the Philosopher and chosen, what it chose; having eaten the
+        # Hermit, its Outsiders besides (stage 2, 13.11.2026).
         self.cannibal = {}
+        self.cannibal_more = {}
         # The Boffin's (26.10.2026): the Demon's seat -> the good ability
         # it has tonight, and the Boffin whose sobriety it rests on.
         self.boffin = {}
@@ -114,7 +117,8 @@ class Night:
             self.roles.get(seat) == "Hermit"
             and role in self.hermit.get(seat, ())) or (
             self.roles.get(seat) == "Cannibal"
-            and self.cannibal.get(seat) == role) or (
+            and (self.cannibal.get(seat) == role
+                 or role in self.cannibal_more.get(seat, ()))) or (
             role in self.boffin_has.get(seat, ())
             and self.roles.get(seat) != "Philosopher")
 
@@ -527,8 +531,21 @@ def hidden_from(deal, night, heard):
     dusk = f"E{night - 1}" if night > 1 else phase
     ate = {p: simulate._cannibal_ate(deal, p, dusk) for p in range(deal.n)
            if deal.role_at(p, dusk) == "Cannibal"}
+    # Having eaten the Philosopher and chosen, it acts as what it chose;
+    # having eaten the Hermit, it has every Outsider's (stage 2).
+    more = {}
+    for p, r in list(ate.items()):
+        took = (getattr(deal, "philosophies", None) or {}).get(p)
+        if r == "Philosopher" and took \
+                and simulate._took(deal, p, took, dusk):
+            ate[p] = took
+        if r == "Hermit":
+            from botc.info import hermit_abilities as _hab
+            more[p] = set(_hab(deal.script))
     if any(ate.values()):
         out["cannibal"] = {p: r for p, r in ate.items() if r}
+    if more:
+        out["cannibal_more"] = more
     # A Hermit's Outsider abilities, tonight (07.11.2026).
     from botc.info import hermit_abilities as _ha
     got = _ha(deal.script)
@@ -1050,6 +1067,7 @@ def walk(deal, night, hidden):
     state.hermit = dict(hidden.get("hermit") or {})
     # And what each Cannibal ate (12.11.2026).
     state.cannibal = dict(hidden.get("cannibal") or {})
+    state.cannibal_more = dict(hidden.get("cannibal_more") or {})
     # And what the Boffin gave the Demon, tonight (26.10.2026).
     # A Philosopher's ability given (stage 2): it has both, and acts as
     # what it took at that character's turn.
