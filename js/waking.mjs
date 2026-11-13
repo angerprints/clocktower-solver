@@ -32,7 +32,8 @@ import {phaseIndex} from "./phases.mjs";
 import {alchemistSummoner, readingAt, teaMade} from "./worlds.mjs";
 import {actsAsAlchemist, backSince, babysitterAt, boffinAbilities, boffinGiftOf,
         alchemistBoffinGiftOf, cultSides, holdingNow, takenByAPhilosopher, tookIt,
-        hermitAbilities, hasHermitAbility, cannibalAte, cannibalHolders}
+        hermitAbilities, hasHermitAbility, cannibalAte, cannibalHolders,
+        cannibalMadeUp}
   from "./info.mjs";
 
 export const NEVER = "never";
@@ -562,6 +563,11 @@ export function uncertain(world, state, seat, night) {
   // return was whose nobody writes down (12.11.2026). See waking.py.
   if (acting === "Cannibal" && night > 1
       && cannibalAte(world, state, seat, phase) === "Professor")
+    return state.aliveSet(phase).has(seat);
+  // One that ate the Drunk or the Lunatic may have been woken or not
+  // (stage 2, A and B, 13.11.2026). See waking.py.
+  if (acting === "Cannibal" && night > 1
+      && cannibalMadeUp(world, state, seat, phase))
     return state.aliveSet(phase).has(seat);
   // One that took the Drunk or the Lunatic lives by a token it was shown,
   // which nobody wrote down: it may have woken (I, 14.10.2026).

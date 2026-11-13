@@ -173,6 +173,7 @@ const SOURCE_TURNS = {
   aVigormortisPoisonsBesideItsDeadMinions: "Vigormortis",
   aPhilosopherDrunksWhoeverHadIt: "Philosopher",
   aBoffinPhilosopherDrunksWhoeverHadIt: "Philosopher",
+  aCannibalPhilosopherDrunksWhoeverHadIt: "Philosopher",
   aPukkaPoisonsWhoeverItWillKill: "Pukka",
   aSailorDrunksOneOfTwo: "Sailor",
   aCourtierNamesACharacter: "Courtier",

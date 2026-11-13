@@ -42,6 +42,7 @@ from .info import (CourtierChoice, GameState, FortuneTeller,
                    storyteller_has, has_plague_ability, plague_holders,
                    hermit_holders, has_hermit_ability, hermit_abilities,
                    cannibal_ate, cannibal_meal, cannibal_poisoned,
+                   has_cannibal_ability, cannibal_has, cannibal_holders,
                    CANNIBAL_NOT_YET,
                    acts_as_alchemist, alchemy_holds,
                    alchemist_boffin_seat, alchemist_boffin_gift,
@@ -6490,6 +6491,20 @@ def a_princess_stops_the_demon(world, state, night, seat, kind):
         if not isinstance(info, PrincessNominated) or info.night != day:
             continue
         princess = info.player
+        # The Cannibal's jinx (claude/kannibale-2-lesarten.md, 13.11.2026):
+        # "If the Cannibal nominated, executed, & killed the Princess
+        # today, the Demon doesn't kill tonight." It has her ability by
+        # night, so it is asked as hers would be: alive and working then.
+        if "Cannibal" in state.script.keys \
+                and world.role_at(princess, f"D{day}") == "Cannibal" \
+                and state.execution_death(day) == info.target \
+                and world.role_at(info.target, f"D{day}") == "Princess":
+            if princess not in state.alive_set(f"N{night}") \
+                    or not has_cannibal_ability(world, state, princess,
+                                                "Princess", f"N{night}"):
+                continue
+            return [death_causes.Shield("Princess", needs=sober_seat(
+                        world, state, princess, "Princess", f"N{night}"))]
         if not _has_ability(world, state, princess, "Princess", f"D{day}"):
             continue
         if day > 1 and _has_ability(world, state, princess, "Princess",
@@ -7214,7 +7229,8 @@ def _philosopher_recluses(world, state, phase):
     Recluse's goes on after death."""
     return [who for who in sorted(state.philosophies() or {})
             if took_it(world, state, who, "Recluse", phase)] \
-        + hermit_holders(world, state, "Recluse", phase)
+        + hermit_holders(world, state, "Recluse", phase) \
+        + cannibal_holders(world, state, "Recluse", phase)
 
 
 def _plain_failures(world, state, outcome=None):
@@ -7668,6 +7684,12 @@ def _plain_failures(world, state, outcome=None):
             cands += [who for who in boffin_holders(
                 world, state, "Professor", phase)
                 if who != seat and who not in back and who not in cands]
+            # A Cannibal last: its raise is one a character (B), so one
+            # that chose the Professor as the Philosopher and later ate the
+            # Professor has one between them. Asked first, it took a raise
+            # the real Professor made (gate of stage 2, seed 2113).
+            cands.sort(key=lambda who: world.role_at(who, phase)
+                       == "Cannibal")
 
             def spent(who):
                 return who in used and not any(
@@ -7948,6 +7970,21 @@ def _plain_failures(world, state, outcome=None):
                     and has_hermit_ability(world, state, seat, role,
                                            given_at):
                 held = GENUINE
+            # A Cannibal that ate the Philosopher and chose this character
+            # (stage 2, C, 13.11.2026): its own, as a Philosopher's. Asked
+            # as it acted: one that swapped with the Demon as the Snake
+            # Charmer is no Cannibal by morning.
+            # A day's row (a shot, a guess) is dated at the day, so also
+            # asked of the night it names.
+            if held is ABSENT and seat is not None and role is not None \
+                    and role != "Philosopher" \
+                    and any(world.role_at(seat, at) == "Cannibal"
+                            and cannibal_ate(world, state, seat, at)
+                            == "Philosopher"
+                            and took_it(world, state, seat, role, at)
+                            for at in (given_at, phase)):
+                held = (INVERTED if vortoxed and TEAM[role] == "townsfolk"
+                        else GENUINE)
             # A Cannibal's row (12.11.2026): its own if it ate that
             # character; made up while an evil meal poisons it, or after
             # one stage 1 leaves out (D); and a world where it ate a good
@@ -7963,10 +8000,14 @@ def _plain_failures(world, state, outcome=None):
                 # yet. Whether it is the Cannibal, as it acted: one that
                 # swapped with the Demon tonight is not by morning.
                 meal = cannibal_meal(world, state, seat, phase)
+                # Its nomination of the Princess is a nomination everybody
+                # saw, whatever it had eaten (the jinx, 13.11.2026).
                 ate = (meal[1] if meal is not None and meal[2] == "good"
                        and TEAM.get(meal[1]) in ("townsfolk", "outsider")
                        and meal[1] not in CANNIBAL_NOT_YET else None)
-                if ate == role:
+                if isinstance(info, PrincessNominated):
+                    held = GENUINE
+                elif cannibal_has(state, ate, role):
                     held = (INVERTED if vortoxed
                             and TEAM[role] == "townsfolk" else GENUINE)
                 elif meal is not None and (
@@ -9095,7 +9136,9 @@ def a_spy_or_widow_poisons_the_hermit(world, state, night):
 def an_evil_meal_poisons_the_cannibal(world, state, night):
     """"If they are evil, you are poisoned until a good player dies by
     execution" (Kannibale, 12.11.2026). Certain while it lasts: offered
-    free for the whole reach, so the Mathematician counts it."""
+    free for the whole reach, so the Mathematician counts it. And one that
+    ate the Drunk, as drunk till the next execution (stage 2, A,
+    13.11.2026)."""
     if "Cannibal" not in state.script.keys:
         return []
     phase = f"N{night}"
@@ -9107,6 +9150,35 @@ def an_evil_meal_poisons_the_cannibal(world, state, night):
     return [impairment.Source("Cannibal (evil meal)", seats,
                               capacity=len(seats), cost=free,
                               repeat_cost=free)]
+
+
+@impairment.source_rule
+def a_cannibal_philosopher_drunks_whoever_had_it(world, state, night):
+    """A Cannibal that ate the Philosopher and chose drunks whoever holds
+    what it chose, while it lives and has the Philosopher's ability
+    (stage 2, C, 13.11.2026): until the next execution death. Free, as
+    the Philosopher's: the choice was declared."""
+    if "Cannibal" not in state.script.keys:
+        return []
+    phase = f"N{night}"
+    out = []
+    for who, (taken, _since) in sorted(state.philosophies().items()):
+        if taken == "Philosopher" or who not in state.alive_set(phase) \
+                or world.role_at(who, phase) != "Cannibal" \
+                or not took_it(world, state, who, taken, phase):
+            continue
+        had = frozenset(p for p in range(state.n_players)
+                        if p != who and world.role_at(p, phase) == taken)
+        # Dying tonight or coming back, it had it for part of the night
+        # only: on offer, as the Philosopher's (the gate, seed 1707).
+        went = any(at in state.died_at(who) for at in (phase, f"D{night}")) \
+            or who in _returned_at(state, phase)
+        free = (lambda seat: 1.0) if went else 1.0
+        if had:
+            out.append(impairment.Source("Philosopher", had,
+                                         capacity=len(had), cost=free,
+                                         repeat_cost=free, actor=who))
+    return out
 
 
 @impairment.source_rule

@@ -382,7 +382,8 @@ class GameState:
         # A Philosopher that took the Drunk claims the Townsfolk it was
         # shown; it was dealt the Philosopher (I and S, 14.10.2026).
         for seat, (taken, _since) in self.philosophies().items():
-            if taken == "Drunk" and seat in out and seat not in first:
+            if taken == "Drunk" and seat in out and seat not in first \
+                    and out[seat] != "Cannibal":
                 out[seat] = "Philosopher"
         self._dealt_claims = (key, out)
         return out
@@ -789,8 +790,16 @@ def side_open(w, s, seat, phase):
         return True
     # Not a Demon the Boffin gave it: it cannot turn good by it (their
     # jinx, 26.10.2026).
-    return s is not None and took_it(w, s, seat, "Goon", phase) \
-        and not has_boffin_ability(w, s, seat, "Goon", phase)
+    if s is not None and took_it(w, s, seat, "Goon", phase) \
+            and not has_boffin_ability(w, s, seat, "Goon", phase):
+        return True
+    # A Cannibal that had the Goon's ability, eaten or chosen as the
+    # Philosopher, keeps the side it turned to after a new meal (the gate
+    # of stage 2, seed 1443, 13.11.2026).
+    return s is not None and "Cannibal" in s.script.keys \
+        and w.role_at(seat, phase) == "Cannibal" \
+        and any(took_it(w, s, seat, "Goon", f"N{k}")
+                for k in range(2, int(phase[1:]) + 1))
 
 
 def faux_paw_lycanthrope(w, s, phase, living=True):
@@ -826,6 +835,16 @@ def took_it(w, s, seat, role, phase):
             and w.role_at(seat, phase) == "Philosopher" \
             and phase_index(phase) >= phase_index(taken[1]) \
             and not _back_since(s, seat, taken[1], phase):
+        return True
+    # A Cannibal that ate the Philosopher and chose (stage 2, C,
+    # 13.11.2026): what it chose is its own while it has the Philosopher's
+    # ability, until the next execution death takes it.
+    if taken and taken[0] == role and role != "Philosopher" \
+            and w.role_at(seat, phase) == "Cannibal" \
+            and phase_index(phase) >= phase_index(taken[1]) \
+            and not _back_since(s, seat, taken[1], phase) \
+            and cannibal_ate(w, s, seat, taken[1]) == "Philosopher" \
+            and cannibal_ate(w, s, seat, phase) == "Philosopher":
         return True
     return role is not None and (
         has_boffin_ability(w, s, seat, role, phase)
@@ -1032,7 +1051,11 @@ def has_hermit_ability(w, s, seat, role, phase):
 # world out, a poisoned Cannibal's fit anything; D these come in stage 2.
 # A Cannibal is no meal: an executed Cannibal has eaten itself, and its
 # ability has ended with it.
-CANNIBAL_NOT_YET = frozenset({"Philosopher", "Hermit", "Alchemist",
+# Stage 2 (13.11.2026, claude/kannibale-2-lesarten.md): the Philosopher's
+# choice (C) and the Hermit's Outsiders (D) are its own. After the Drunk
+# or the Lunatic (A, B) what it is told is made up, so their rows fit
+# anything, as here. The Alchemist comes in stage 2b (Patrick, 13.11.2026).
+CANNIBAL_NOT_YET = frozenset({"Alchemist",
                               "Drunk", "Lunatic", "Cannibal"})
 
 
@@ -1053,7 +1076,9 @@ def cannibal_meal(w, s, seat, phase):
             last = max(caps)
     for d in range(last, 0, -1):
         who = s.execution_death(d)
-        if who is not None:
+        # Its own execution eats nothing: what it had goes on, to fire at
+        # its death (a Sweetheart's, a Moonchild's), found 13.11.2026.
+        if who is not None and who != seat:
             side = w.alignment_at(who, f"D{d}")
             # A Cult Leader may have turned evil by then; the board does
             # not say, so the meal is either (12.11.2026).
@@ -1087,17 +1112,40 @@ def cannibal_ate(w, s, seat, phase):
 
 
 def cannibal_poisoned(w, s, seat, phase):
-    """Is the Cannibal here poisoned by an evil meal then?"""
+    """Is the Cannibal here poisoned by an evil meal then — or as drunk,
+    having eaten the Drunk (stage 2, A, 13.11.2026)?"""
     if w.role_at(seat, phase) != "Cannibal":
         return False
     meal = cannibal_meal(w, s, seat, phase)
-    return meal is not None and meal[2] != "good"
+    return meal is not None and (meal[2] != "good" or meal[1] == "Drunk")
+
+
+def cannibal_made_up(w, s, seat, phase):
+    """Has the Cannibal here eaten the Drunk or the Lunatic (stage 2, A and
+    B, 13.11.2026)? Then what it is told is made up, and the Storyteller
+    may wake it, as the Drunk's Townsfolk or as the Demon, or not."""
+    if w.role_at(seat, phase) != "Cannibal":
+        return False
+    meal = cannibal_meal(w, s, seat, phase)
+    return meal is not None and meal[2] == "good" \
+        and meal[1] in ("Drunk", "Lunatic")
+
+
+def cannibal_has(s, ate, role):
+    """Does a Cannibal that ate `ate` have that character's ability? The
+    character itself; and every Outsider's, having eaten the Hermit, as
+    the Hermit has them (stage 2, D, 13.11.2026). It believes nothing, so
+    none of them is barred."""
+    if ate is None or role is None:
+        return False
+    return ate == role or (ate == "Hermit"
+                           and role in hermit_abilities(s.script))
 
 
 def has_cannibal_ability(w, s, seat, role, phase):
     """Is this seat the Cannibal then, having eaten that character?"""
     return s is not None and role is not None and "Cannibal" in s.script.keys \
-        and cannibal_ate(w, s, seat, phase) == role
+        and cannibal_has(s, cannibal_ate(w, s, seat, phase), role)
 
 
 def cannibal_holders(w, s, role, phase):
@@ -1105,7 +1153,7 @@ def cannibal_holders(w, s, role, phase):
     if s is None or role is None or "Cannibal" not in s.script.keys:
         return []
     return [p for p in range(len(w.roles))
-            if cannibal_ate(w, s, p, phase) == role]
+            if cannibal_has(s, cannibal_ate(w, s, p, phase), role)]
 
 
 def hermit_holders(w, s, role, phase):

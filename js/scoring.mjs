@@ -45,7 +45,8 @@ import {actsAsCultLeader, alHadikhiaChosen, besideAlive, cultSides, eachRealSide
         alchemistsWith, alchemyHolds, ALCHEMY_GUESSES,
         alchemistBoffinSeat, alchemistBoffinGiftOf,
         hermitAbilities, hermitHolders, hasHermitAbility,
-        cannibalAte, cannibalMeal, CANNIBAL_NOT_YET}
+        cannibalAte, cannibalMeal, CANNIBAL_NOT_YET, cannibalHas,
+        cannibalHolders}
   from "./info.mjs";
 
 // What became of a recorded reading in one particular world. Four
@@ -3499,7 +3500,9 @@ function philosopherRecluses(world, state, phase) {
     .sort((a, b) => a - b)
     .filter(who => tookIt(world, state, who, "Recluse", phase))
     // And a Hermit with its ability (07.11.2026), dead or alive.
-    .concat(hermitHolders(world, state, "Recluse", phase));
+    .concat(hermitHolders(world, state, "Recluse", phase))
+    // And a Cannibal with it (13.11.2026). See solver.py.
+    .concat(cannibalHolders(world, state, "Recluse", phase));
 }
 
 /** Sort every ledger row into: fits, contradicts, or was invented.
@@ -3882,6 +3885,9 @@ function plainFailures(world, state, outcome = {}) {
         for (const who of boffinHolders(world, state, "Professor", phase))
           if (who !== seat && !back.has(who) && !cands.includes(who))
             cands.push(who);
+        // A Cannibal last (stage 2). See solver.py. Stable, as Python's.
+        const late = who => world.roleAt(who, phase) === "Cannibal" ? 1 : 0;
+        cands.sort((a, b) => late(a) - late(b));
         const spent = who => used.has(who) && !(
           (state.resurrections || {})[who] || []).some(at => {
             const k = parseInt(String(at).slice(1), 10);
@@ -4127,6 +4133,14 @@ function plainFailures(world, state, outcome = {}) {
     if (held === ABSENT && seat !== null && role !== null && role !== undefined
         && hasHermitAbility(world, state, seat, role, givenAt))
       held = GENUINE;
+    // A Cannibal that ate the Philosopher and chose this character (stage
+    // 2, C, 13.11.2026). See solver.py.
+    if (held === ABSENT && seat !== null && role !== null
+        && role !== "Philosopher"
+        && [givenAt, phase].some(at => world.roleAt(seat, at) === "Cannibal"
+          && cannibalAte(world, state, seat, at) === "Philosopher"
+          && tookIt(world, state, seat, role, at)))
+      held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
     // A Cannibal's row (12.11.2026): its own if it ate that character,
     // made up after an evil meal or one stage 1 leaves out, and a world
     // where it ate a good somebody else cannot have given it (C).
@@ -4142,7 +4156,9 @@ function plainFailures(world, state, outcome = {}) {
       const ate = meal && meal[2] === "good"
         && ["townsfolk", "outsider"].includes(TEAM[meal[1]])
         && !CANNIBAL_NOT_YET.has(meal[1]) ? meal[1] : null;
-      if (ate === role)
+      // Its nomination of the Princess is a fact (the jinx, 13.11.2026).
+      if (info.type === "PrincessNominated") held = GENUINE;
+      else if (cannibalHas(state, ate, role))
         held = vortoxed && TEAM[role] === "townsfolk" ? INVERTED : GENUINE;
       else if (meal && (meal[2] !== "good" || CANNIBAL_NOT_YET.has(meal[1])
                         || !["townsfolk", "outsider"].includes(TEAM[meal[1]])))

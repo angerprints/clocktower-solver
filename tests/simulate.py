@@ -1862,6 +1862,17 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
                 break
             # The Princess's nominee went up: the Demon kills nobody
             # tonight, if she has her ability then.
+            # The Cannibal's jinx (13.11.2026): it nominated the Princess,
+            # and she died of the execution.
+            if hanged is not None and "Cannibal" in script.keys \
+                    and d.deaths.get(hanged) == f"E{night}" \
+                    and d.role_at(hanged, f"D{night}") == "Princess":
+                eater = (d.nominated_by.get(night) or {}).get(hanged)
+                if eater is not None \
+                        and d.role_at(eater, f"D{night}") == "Cannibal":
+                    d.princess_stop[night + 1] = eater
+                    heard.append(PrincessNominated(night, eater,
+                                                   target=hanged))
             picked = d.princess_nominated.get(night)
             if hanged is not None and picked is not None \
                     and picked[1] == hanged:
@@ -2961,11 +2972,19 @@ def _cannibal_ate(d, seat, phase):
     return meal[1]
 
 
+# What a Cannibal that ate the Philosopher does not choose here: each comes
+# with more than its ability in this simulator (stage 2, C, 13.11.2026).
+CANNIBAL_PHIL_SKIPS = frozenset({"Alchemist", "Pixie", "Puzzlemaster",
+                                 "Drunk", "Lunatic", "Lycanthrope",
+                                 "Cannibal", "Preacher"})
+
+
 def _cannibal_poisoned(d, seat, phase):
     if d.role_at(seat, phase) != "Cannibal":
         return False
     meal = _cannibal_meal(d, seat, phase)
-    return meal is not None and meal[2] != "good"
+    # Or as drunk, having eaten the Drunk (stage 2, A, 13.11.2026).
+    return meal is not None and (meal[2] != "good" or meal[1] == "Drunk")
 
 
 def _reg_roles(d, seat, phase):
@@ -3019,9 +3038,26 @@ def _took(d, seat, role, phase):
         from botc.info import phase_index
         if lost is None or phase_index(phase) < phase_index(lost):
             return True
-    # A Cannibal that ate it (12.11.2026).
+    # A Cannibal that ate it (12.11.2026); every Outsider's, having eaten
+    # the Hermit (stage 2, D, 13.11.2026).
     if role is not None and role == _cannibal_ate(d, seat, phase):
         return True
+    if role is not None and _cannibal_ate(d, seat, phase) == "Hermit":
+        from botc.info import hermit_abilities
+        if role in hermit_abilities(d.script):
+            return True
+    # A Cannibal that ate the Philosopher and chose, while it has the
+    # Philosopher's ability (stage 2, C, 13.11.2026).
+    if role is not None and role != "Philosopher" \
+            and d.role_at(seat, phase) == "Cannibal" \
+            and (getattr(d, "philosophies", None) or {}).get(seat) == role \
+            and _cannibal_ate(d, seat, phase) == "Philosopher":
+        from botc.info import phase_index
+        since = getattr(d, "phil_night", {}).get(seat)
+        if since is not None \
+                and phase_index(phase) >= phase_index(f"N{since}") \
+                and _cannibal_ate(d, seat, f"N{since}") == "Philosopher":
+            return True
     # A Hermit with that Outsider's ability (07.11.2026), as the solver's
     # `info.has_hermit_ability`.
     # Not one it would have to choose with, if it thinks it is somebody
@@ -5022,6 +5058,18 @@ def _hold_a_day(d, day, rng):
             nominators = [princess] + [p for p in nominators if p != princess]
         else:
             princess = None
+    # The Cannibal's jinx with the Princess (13.11.2026): for a gate line
+    # (`SIM_CANNIBAL_FAVOUR`) a Cannibal now and then puts her up.
+    eats = None
+    if os.environ.get("SIM_CANNIBAL_FAVOUR") \
+            and "Cannibal" in d.script.keys and "Princess" in d.script.keys:
+        eater = next((p for p in living
+                      if d.role_at(p, phase) == "Cannibal"), None)
+        her = next((p for p in living
+                    if d.role_at(p, phase) == "Princess"), None)
+        if eater is not None and her is not None and rng.random() < 0.3:
+            eats = (eater, her)
+            nominators = [eater] + [p for p in nominators if p != eater]
     if "Golem" in d.script.keys:
         golem = next((p for p in living
                       if _acts_as(d, p, "Golem", phase)
@@ -5055,6 +5103,9 @@ def _hold_a_day(d, day, rng):
         nominee = rng.choice([p for p in living
                               if p != who and d.deaths.get(p) is None]
                              or [who])
+        if eats is not None and who == eats[0] \
+                and d.deaths.get(eats[1]) is None:
+            nominee = eats[1]
         if who == fear and d.deaths.get(fear_pick) is None:
             nominee = fear_pick
             d.fear_nominated[day] = fear_pick
@@ -5391,6 +5442,15 @@ def _execute(d, day, rng, allow_takeover=False):
             if backed and rng.random() < 0.3:
                 forced = rng.choice(backed)
                 d.vizier_forced[day] = forced
+    # For a gate line: the characters a Cannibal should eat are executed
+    # more often, while it lives (`SIM_CANNIBAL_MEAL`, a comma list).
+    meal = os.environ.get("SIM_CANNIBAL_MEAL")
+    if forced is None and meal and any(
+            d.role_at(p, phase) == "Cannibal" for p in d.alive_at(phase)):
+        wanted = [p for p in living
+                  if d.role_at(p, phase) in meal.split(",")]
+        if wanted and rng.random() < 0.5:
+            forced = rng.choice(wanted)
     if forced is not None:
         ranked = [forced]
     if ranked:
@@ -6883,8 +6943,22 @@ def _woke_for_own_ability(d, p, night, shown=False):
     # (12.11.2026).
     if d.role_at(p, f"N{night}") == "Cannibal":
         ate = _cannibal_ate(d, p, f"N{night}")
-        if ate and _woke_itself(d, p, night, shown, as_role=ate):
+        # As the Philosopher, on the night it chose (stage 2, C).
+        if ate == "Philosopher" \
+                and getattr(d, "phil_night", {}).get(p) == night:
             return True
+        if ate and ate != "Hermit" \
+                and _woke_itself(d, p, night, shown, as_role=ate):
+            return True
+        # Having eaten the Hermit, when an Outsider whose ability it has
+        # would (stage 2, D).
+        if ate == "Hermit":
+            from botc.catalogue import CHARACTERS
+            from botc.info import hermit_abilities
+            if any(not CHARACTERS[k].believes
+                   and _woke_itself(d, p, night, shown, as_role=k)
+                   for k in sorted(hermit_abilities(d.script))):
+                return True
     # A Hermit wakes when an Outsider whose ability it has would: the
     # Butler's every night, the Ogre's on the first (07.11.2026). And a
     # Marionette that thinks it is one, on its token.
@@ -7339,6 +7413,12 @@ def _in_night_order(d, night):
         # ability guards before the Gambler guesses (12.11.2026).
         if what == "Cannibal" and night > 1:
             what = _cannibal_ate(d, seat, f"N{night}") or what
+            # And one that ate the Philosopher, at the turn of what it
+            # chose (stage 2, C).
+            if what == "Philosopher" \
+                    and _took(d, seat, d.philosophies.get(seat),
+                              f"N{night}"):
+                what = d.philosophies[seat]
         got = getattr(CHARACTERS[what], field, 0) if what in CHARACTERS else 0
         return (got if got else 10_000, seat)
 
@@ -7473,9 +7553,25 @@ def early_choices(d, night, rng):
                 and _phil(d, seat, f"N{night}") in CHOOSES_EARLY:
             role = _phil(d, seat, f"N{night}")
         # So does a Cannibal that ate one (12.11.2026).
+        # A Cannibal that ate the Philosopher chooses at the Philosopher's
+        # turn, near the front of the night, before any Demon: whoever it
+        # drunk was drunk when killed (stage 2, C; the gate, seed 788).
+        if role == "Cannibal" and night > 1 \
+                and _cannibal_ate(d, seat, f"N{night}") == "Philosopher" \
+                and seat not in d.philosophies \
+                and seat in d.alive_at(f"N{night}"):
+            made = _for_role(d, seat, "Philosopher", night, rng)
+            if made is not None:
+                out.append(made)
+            continue
         if role == "Cannibal" \
                 and _cannibal_ate(d, seat, f"N{night}") in CHOOSES_EARLY:
             role = _cannibal_ate(d, seat, f"N{night}")
+        # And one that ate the Philosopher and took one (stage 2, C).
+        if role == "Cannibal" \
+                and d.philosophies.get(seat) in CHOOSES_EARLY \
+                and _took(d, seat, d.philosophies[seat], f"N{night}"):
+            role = d.philosophies[seat]
         # An Alchemist with the Pit-Hag's ability uses it at its turn
         # (group 3, 05.11.2026).
         if role in ("Alchemist", "Philosopher") and night > 1 \
@@ -7626,6 +7722,13 @@ def honest_info(d, night, rng):
         # it ate has acted in the early pass.
         if made is None and role == "Cannibal":
             ate = _cannibal_ate(d, seat, f"N{night}")
+            # Having eaten the Philosopher and chosen, it is told as what
+            # it chose (stage 2, C).
+            took = d.philosophies.get(seat)
+            if ate == "Philosopher" and took \
+                    and _took(d, seat, took, f"N{night}"):
+                chose = getattr(d, "phil_night", {}).get(seat, night)
+                ate = took if night > chose else None
             if ate and ate not in CHOOSES_EARLY:
                 made = _for_role(d, seat, ate, night, rng)
         # A Hermit with the Klutz's ability points on dying (07.11.2026).
@@ -7826,6 +7929,13 @@ def droisoned_at(d, night, by_day=False, _without_their_drunks=False):
     # Mathematician standing beside one counted nought where the answer
     # was one — and the solver, which does model it, refused the board.
     for seat, took in (getattr(d, "philosophies", None) or {}).items():
+        # A Cannibal that ate the Philosopher, while it has it (C).
+        if d.role_at(seat, phase) == "Cannibal" \
+                and _took(d, seat, took, phase):
+            if seat in (d.alive_at(f"D{night}") if by_day else living):
+                out |= {other for other in range(d.n) if other != seat
+                        and d.role_at(other, phase) == took}
+            continue
         if d.role_at(seat, phase) != "Philosopher":
             continue                      # no longer the one who took it
         # Dead tonight, sober tomorrow (Stelle 104).
@@ -8947,9 +9057,13 @@ def _for_role(d, seat, role, night, rng):
     # party — on its first night it can (Stelle 101, Patrick 02.11.2026:
     # "darf in der nächsten Nacht aktiv werden"): it is near the front of
     # the night, so one made at the Pit-Hag's 280 chooses the night after.
+    # A Cannibal that ate the Philosopher chooses once, the first night it
+    # has its ability (stage 2, C, 13.11.2026).
+    eater = d.role_at(seat, f"N{night}") == "Cannibal"
     if role == "Philosopher" and seat not in d.philosophies \
-            and (night == 1 or _a_made_philosopher_wakes(d, seat, night)) \
-            and not _made_after_its_place(d, seat, night):
+            and (night == 1 or eater
+                 or _a_made_philosopher_wakes(d, seat, night)) \
+            and (eater or not _made_after_its_place(d, seat, night)):
         # It takes a good character's ability, once a game. Not a change
         # of character — it stays the Philosopher and works two at once —
         # so this records the choice and nothing else. The gained
@@ -8957,6 +9071,11 @@ def _for_role(d, seat, role, night, rng):
         # Not the Hermit, for now (Eremit Stufe 1, my decision 3).
         pool = [k for k in d.script.townsfolk + d.script.outsiders
                 if k not in ("Philosopher", "Hermit")]
+        # Nor, for a Cannibal, what this simulator gives a Philosopher
+        # more than the ability: a token, a madness, a drunk, a Minion's
+        # ability, a faux paw (my decision, 13.11.2026).
+        if eater:
+            pool = [k for k in pool if k not in CANNIBAL_PHIL_SKIPS]
         if not pool:
             return None
         took = rng.choice(pool)
