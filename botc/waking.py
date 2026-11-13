@@ -677,7 +677,11 @@ def woke(world, state, seat, night):
     if world.team_at(seat, phase) == "minion" \
             or acts_as_alchemist(world, state, seat, phase):
         alchemist = world.team_at(seat, phase) != "minion"
-        for got in world.plague_at(seat, phase):
+        from .info import alchemy_gifts
+        # A Cannibal that ate the Alchemist, for the one it had (2b).
+        gifts = alchemy_gifts(world, state, seat, phase) if alchemist \
+            else world.plague_at(seat, phase)
+        for got in gifts:
             # Not for an ability its jinx says it has not, nor the
             # Boffin's, whose gift it does not learn (group 4).
             if alchemist and got in ALCHEMY_ASLEEP:
@@ -794,6 +798,12 @@ def uncertain(world, state, seat, night):
         # 13.11.2026), as a Philosopher that took them (I).
         from .info import cannibal_made_up
         if cannibal_made_up(world, state, seat, phase):
+            return seat in state.alive_set(phase)
+        # One that ate an Alchemist whose Minion ability the town cannot
+        # see, as that Alchemist (stage 2b, 13.11.2026).
+        from .info import acts_as_alchemist, alchemy_gifts
+        if acts_as_alchemist(world, state, seat, phase) \
+                and not alchemy_gifts(world, state, seat, phase):
             return seat in state.alive_set(phase)
     # One that took the Drunk or the Lunatic lives by a token it was
     # shown, which nobody wrote down: it may have woken (I, 14.10.2026).

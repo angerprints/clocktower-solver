@@ -99,14 +99,19 @@ class WhatItAte(SolverTest):
         self.assertEqual(I.cannibal_meal(world(), st, 5, "E2"),
                          (1, "Empath", "good"))
 
-    def test_the_alchemist_gives_nothing_yet(self):
-        # Stage 2b (Patrick, 13.11.2026).
+    def test_the_alchemist_gives_its_minion(self):
+        # Stage 2b (13.11.2026): the Minion ability that Alchemist had.
+        from botc.worlds import Timeline, alchemist_gift_change
         roles = R[:3] + ["Alchemist"] + R[4:]
         st = state(**executed(3))
-        self.assertIsNone(I.cannibal_ate(world(roles), st, 5, "N2"))
-        self.assertIn("Alchemist", I.CANNIBAL_NOT_YET)
-        self.assertNotIn("Philosopher", I.CANNIBAL_NOT_YET)
-        self.assertNotIn("Hermit", I.CANNIBAL_NOT_YET)
+        view = Timeline(world(roles), (alchemist_gift_change(3, "Poisoner"),))
+        self.assertEqual(I.cannibal_ate(view, st, 5, "N2"), "Alchemist")
+        self.assertTrue(I.acts_as_alchemist(view, st, 5, "N2"))
+        self.assertTrue(I.alchemy_holds(view, st, 5, "Poisoner", "N2"))
+        self.assertFalse(I.alchemy_holds(view, st, 5, "Poisoner", "N1"))
+        self.assertEqual(S.alchemists_with(view, st, "Poisoner", "N2"), [5])
+        for gone in ("Alchemist", "Philosopher", "Hermit"):
+            self.assertNotIn(gone, I.CANNIBAL_NOT_YET)
 
     def test_held_as_a_philosopher_holds_what_it_took(self):
         st = state(**executed(1))
