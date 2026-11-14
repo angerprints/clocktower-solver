@@ -86,7 +86,10 @@ SCENARIOS = {
                                       2: "Investigator", 3: "Chef", 4: "Empath"},
                            reads={5: 2}, wakes={6: "never"}),
         worlds=6206,
-        evil=[35.7, 35.7, 35.7, 35.7, 35.7, 15.1, 6.3],
+        # Moved with the bag weight (14.11.2026): the two seats without a
+        # Townsfolk claim may hold Outsiders, and a bag with more Outsiders
+        # has fewer ways to be drawn, so those worlds count a little more.
+        evil=[35.5, 35.5, 35.5, 35.5, 35.5, 15.8, 6.6],
     ),
 }
 

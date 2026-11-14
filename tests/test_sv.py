@@ -837,8 +837,11 @@ class TheMutantHides(SolverTest):
         hiding = World(("Clockmaker", "Dreamer", "Mutant", "Sage",
                         "Juggler", "Klutz", "Barber", "Witch", "Vortox"),
                        (None,) * 9)
-        self.assertEqual(S.prior_weight(hiding, state),
-                         S.prior_weight(honest, state))
+        # The bag itself differs (an Outsider in place of a Townsfolk), and
+        # the bag weight prices that; the cover story adds nothing on top.
+        self.assertAlmostEqual(
+            S.prior_weight(hiding, state) / S.bag_weight(hiding, state),
+            S.prior_weight(honest, state) / S.bag_weight(honest, state))
 
     def test_a_board_holds_worlds_with_the_mutant_in_them(self):
         valid = S.solve(self.board())[1]
@@ -1033,7 +1036,7 @@ class WhatMadnessLeavesBehind(SolverTest):
                     (None,) * 9)
         self.assertEqual(S._madness_nights(mad, state), 1)
         self.assertAlmostEqual(
-            S.prior_weight(mad, state),
+            S.prior_weight(mad, state) / S.bag_weight(mad, state),
             S.CERENOVUS_MADNESS_PENALTY * S.TOWNSFOLK_LIE_PENALTY)
 
 
