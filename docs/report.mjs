@@ -180,7 +180,34 @@ export function priorWeight(world, state) {
     if (isEvil(world.roles[p]))                              // nothing alone
       w *= nightDeathFactor(parseInt(phase.slice(1), 10));
   }
-  return w;
+  return w * bagWeight(world, state);
+}
+
+const comb = (n, k) => {
+  let out = 1;
+  for (let i = 1; i <= k; i++) out = out * (n - k + i) / i;
+  return out;
+};
+
+/** How likely this world's bag was to be drawn (13.11.2026). See
+ * solver.py `bag_weight`. */
+export function bagWeight(world, state) {
+  if (!PRIORS.BAG_PRIOR_POWER) return 1.0;
+  const keys = state.script.keys;
+  const T = keys.filter(k => TEAM[k] === "townsfolk").length;
+  const O = keys.filter(k => TEAM[k] === "outsider").length;
+  const bag = new Set(world.roles);
+  let t = 0, o = 0;
+  for (const r of bag) {
+    if (TEAM[r] === "townsfolk") t++;
+    else if (TEAM[r] === "outsider") o++;
+  }
+  let ways = t <= T && o <= O ? comb(T, t) * comb(O, o) : 1;
+  for (const role of bag) {
+    const options = CHARACTERS[role] ? (CHARACTERS[role].setup || []).length : 0;
+    if (options > 1) ways *= options;
+  }
+  return Math.pow(1.0 / ways, PRIORS.BAG_PRIOR_POWER);
 }
 
 export function worldWeight(world, state) {
