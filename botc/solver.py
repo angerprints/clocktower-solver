@@ -116,6 +116,16 @@ BLUFF_COLLISION_PENALTY = 0.3
 # Each point of social read multiplies the odds of that seat being evil.
 READ_ODDS_STEP = 2.0
 
+# How likely the bag was to be drawn (Patrick, 13.11.2026, A to C in
+# claude/hauptziel-tasche-lesarten.md). A Storyteller drawing t Townsfolk
+# and o Outsiders from the script has C(T, t) * C(O, o) bags to choose
+# from, so one of them is the likelier the fewer there are: a Baron's bag
+# (two Townsfolk fewer) is about four times as likely, world for world, as
+# one without. Where the Storyteller chooses ("-1 or +1 Outsider"), each
+# choice is as likely as the next. This is the power that weight is taken
+# to: 1 is the model, 0 is the old equal weighting.
+BAG_PRIOR_POWER = 1.0
+
 # Marking a seat as possibly unreliable multiplies the odds that they were
 # handed somebody else's token. It says nothing about their side — a
 # suspected Drunk is a good player being wrong, which is a different
@@ -10984,7 +10994,28 @@ def prior_weight(world, state):
             continue                      # executions say nothing by themselves
         if is_evil(world.roles[p]):
             w *= night_death_factor(int(phase[1:]))
-    return w
+    return w * bag_weight(world, state)
+
+
+def bag_weight(world, state):
+    """How likely this world's bag was to be drawn (13.11.2026): one in
+    C(T, t) * C(O, o) for its t Townsfolk and o Outsiders, each counted
+    once, out of the script's T and O — and one in as many choices as the
+    setup of any character in it leaves the Storyteller (B)."""
+    if not BAG_PRIOR_POWER:
+        return 1.0
+    keys = state.script.keys
+    T = sum(TEAM.get(k) == "townsfolk" for k in keys)
+    O = sum(TEAM.get(k) == "outsider" for k in keys)
+    bag = set(world.roles)
+    t = sum(TEAM.get(r) == "townsfolk" for r in bag)
+    o = sum(TEAM.get(r) == "outsider" for r in bag)
+    ways = math.comb(T, t) * math.comb(O, o) if t <= T and o <= O else 1
+    for role in bag:
+        options = len(CHARACTERS[role].setup) if role in CHARACTERS else 0
+        if options > 1:
+            ways *= options
+    return (1.0 / ways) ** BAG_PRIOR_POWER
 
 
 def world_weight(world, state):
@@ -11608,6 +11639,7 @@ PRIOR_RANGES = {
     "SUNK_KILL_PENALTY": (0.25, 0.70),
     "DEMON_POISONED_PENALTY": (0.02, 0.15),
     "READ_ODDS_STEP": (1.5, 3.0),
+    "BAG_PRIOR_POWER": (0.0, 1.0),
 }
 
 _HERE = sys.modules[__name__]
