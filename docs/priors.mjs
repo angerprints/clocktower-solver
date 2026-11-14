@@ -35,6 +35,10 @@ export const PRIORS = {
   // Each point of social read multiplies the odds of that seat being evil.
   READ_ODDS_STEP: 2.0,
 
+  // How likely the bag was to be drawn, to this power (13.11.2026): 1 is
+  // the model, 0 the old equal weighting. See solver.py.
+  BAG_PRIOR_POWER: 1.0,
+
   // Marking a seat as possibly unreliable multiplies the odds they were
   // handed somebody else's token.
   DRUNK_SUSPICION_STEP: 3.0,
@@ -102,6 +106,7 @@ export const PRIOR_RANGES = {
   SUNK_KILL_PENALTY: [0.25, 0.70],
   DEMON_POISONED_PENALTY: [0.02, 0.15],
   READ_ODDS_STEP: [1.5, 3.0],
+  BAG_PRIOR_POWER: [0.0, 1.0],
 };
 
 /** Run something with one prior moved, and put it back afterwards. */
