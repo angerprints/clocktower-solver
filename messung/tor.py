@@ -97,7 +97,9 @@ for seed in range(start, start + N):
     script = play_games.an_awkward_script(rng, must_have=NEW)
     n = [7, 8, 9, 10, 11][seed % 5]
     deal, heard = simulate.play(n, rng, nights=nights, script=script)
-    claims, wakes, _ = C.claims_for(deal, rng, script=script)
+    claims, wakes, notes = C.claims_for(deal, rng, script=script)
+    # The chaos liars keep quiet (15.11.2026, E Weg 1).
+    heard = C.heard_by_table(heard, notes)
 
     def cost(said):
         state = GameState(n_players=n, script=script, claims=claims,

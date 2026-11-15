@@ -252,6 +252,21 @@ def claims_for(deal, rng, script=None):
     return claims, wakes, notes
 
 
+def heard_by_table(heard, notes):
+    """What the table was told, once the chaos liars have kept quiet.
+
+    A good player claiming some other character for no reason does not go
+    on reporting the readings of the one it really has: it makes up
+    something for its claim, or says nothing (Patrick, 15.11.2026, E Weg
+    1). The simulator's evil bluffers report nothing either, so the liar
+    says nothing — otherwise it would stand out from them. Rows the whole
+    table saw (`hard`) stay: a Slayer's shot is not the shooter's to hide.
+    """
+    quiet = {seat for seat, why in notes.items() if "for no reason" in why}
+    return [row for row in heard
+            if getattr(row, "player", None) not in quiet or row.hard()]
+
+
 def confirm_readings(deal, heard, rng, chance=0.6):
     """Tick the readings a table could honestly have established.
 
