@@ -5,7 +5,7 @@
 // enough to push those worlds far down, and your own social read, which
 // multiplies the odds a seat is evil without ever forcing anything.
 
-import {CHARACTERS} from "./catalogue.mjs";
+import {CHARACTERS, SETUP} from "./catalogue.mjs";
 import {explainNight} from "./deaths.mjs";
 import {minionStillActs} from "./impairment.mjs";
 import {TEAM, believesAnother, believesHere, isEvil, mustHide, show, wakeFits} from "./roles.mjs";
@@ -204,10 +204,33 @@ export function bagWeight(world, state) {
   }
   let ways = t <= T && o <= O ? comb(T, t) * comb(O, o) : 1;
   for (const role of bag) {
-    const options = CHARACTERS[role] ? (CHARACTERS[role].setup || []).length : 0;
+    const options = setupChoices(role, bag, state.nPlayers, T, O);
     if (options > 1) ways *= options;
   }
   return Math.pow(1.0 / ways, PRIORS.BAG_PRIOR_POWER);
+}
+
+/** How many of this character's setup options the Storyteller really had
+ *  (15.11.2026, D Weg 1): those that leave a bag this table size and this
+ *  script can hold, from the standard split moved by every fixed shift in
+ *  the bag. Mirrors `setup_choices`. */
+export function setupChoices(role, bag, nPlayers, T, O) {
+  const options = CHARACTERS[role] ? (CHARACTERS[role].setup || []) : [];
+  if (options.length <= 1 || !SETUP[nPlayers]) return options.length;
+  let t0 = SETUP[nPlayers][0], o0 = SETUP[nPlayers][1];
+  for (const other of bag) {
+    const fixed = CHARACTERS[other] ? (CHARACTERS[other].setup || []) : [];
+    if (other !== role && fixed.length === 1) {
+      t0 += fixed[0].townsfolk || 0;
+      o0 += fixed[0].outsider || 0;
+    }
+  }
+  let fits = 0;
+  for (const m of options) {
+    const t = t0 + (m.townsfolk || 0), o = o0 + (m.outsider || 0);
+    if (t >= 0 && t <= T && o >= 0 && o <= O) fits++;
+  }
+  return Math.max(fits, 1);
 }
 
 export function worldWeight(world, state) {
