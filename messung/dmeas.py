@@ -24,7 +24,8 @@ for seed in range(first, last):
             lies.add("Chaos")
         elif "hiding behind" in t_ and simulate.TEAM[d.roles[s_]] not in ("minion", "demon"):
             lies.add("versteckt")
-    st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
+    st = GameState(n_players=n, script=sc, claims=cl, wakes=wk,
+                   infos=C.heard_by_table(h, notes),
                    votes=dict(d.votes), nominations=dict(d.nominations), **d.record(told=False))
     last_night = min(nights, d.game_ends_after or nights)
     end = f"D{last_night}"
