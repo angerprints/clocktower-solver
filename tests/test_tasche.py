@@ -48,6 +48,24 @@ class TheBag(SolverTest):
         self.assertAlmostEqual(S.bag_weight(a, state(script=bmr)) * 2,
                                S.bag_weight(b, state(script=bmr)))
 
+    def test_only_the_choices_the_table_allows_count(self):
+        # 15.11.2026, D Weg 1. Seven players have no Outsider to take away,
+        # so the Godfather had one choice there, not two.
+        bmr = scripts.BAD_MOON_RISING
+        a = world(["Chef", "Empath", "Monk", "Mayor", "Virgin",
+                   "Godfather", "Imp"])
+        b = world(["Chef", "Empath", "Monk", "Mayor", "Virgin",
+                   "Poisoner", "Imp"])
+        self.assertAlmostEqual(S.bag_weight(a, state(7, bmr)),
+                               S.bag_weight(b, state(7, bmr)))
+        # The Xaan's nine (-4 to +4 Outsiders) leave five at seven players,
+        # with or without a Baron's fixed +2 beside it.
+        self.assertEqual(S.setup_choices("Xaan", {"Xaan", "Imp"}, 7, 13, 4), 5)
+        self.assertEqual(
+            S.setup_choices("Xaan", {"Xaan", "Baron", "Imp"}, 7, 13, 4), 5)
+        self.assertEqual(S.setup_choices("Xaan", {"Xaan"}, 9, 13, 4), 5)
+        self.assertEqual(S.setup_choices("Baron", {"Baron"}, 7, 13, 4), 1)
+
     def test_off_it_is_equal_weighting(self):
         was = S.BAG_PRIOR_POWER
         try:
@@ -58,6 +76,22 @@ class TheBag(SolverTest):
 
 
 class BothLanguagesAgree(SolverTest):
+
+    def test_setup_choices(self):
+        cases = [("Xaan", ["Xaan", "Imp"], 7), ("Xaan", ["Xaan", "Baron"], 7),
+                 ("Godfather", ["Godfather"], 7), ("Godfather", ["Godfather"], 8),
+                 ("LordOfTyphon", ["LordOfTyphon"], 10),
+                 ("Kazali", ["Kazali", "Baron"], 12), ("Sentinel", ["Sentinel"], 5)]
+        script = ("import {setupChoices} from './js/report.mjs';"
+                  "const cs=JSON.parse(process.argv[1]);"
+                  "console.log(JSON.stringify(cs.map(([r,b,n]) =>"
+                  " setupChoices(r, new Set(b), n, 13, 4))));")
+        got = subprocess.run(["node", "--input-type=module", "-e", script,
+                              json.dumps(cases)], cwd=ROOT,
+                             capture_output=True, text=True, timeout=300)
+        self.assertEqual(got.returncode, 0, got.stderr)
+        py = [S.setup_choices(r, set(b), n, 13, 4) for r, b, n in cases]
+        self.assertEqual(json.loads(got.stdout), py)
 
     def test_three_outsider_claims(self):
         import app

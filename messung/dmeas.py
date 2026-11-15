@@ -15,7 +15,15 @@ out = open(sys.argv[2], "a")
 for seed in range(first, last):
     rng = random.Random(seed); n = [7, 8, 9, 10][seed % 4]
     d, h = simulate.play(n, rng, nights=nights, script=sc)
-    cl, wk, _ = C.claims_for(d, rng, script=sc)
+    cl, wk, notes = C.claims_for(d, rng, script=sc)
+    # Who among the good lied, and how (15.11.2026, B Weg 1): the result is
+    # reported for honest boards and boards with a lie apart.
+    lies = set()
+    for s_, t_ in notes.items():
+        if "for no reason" in t_:
+            lies.add("Chaos")
+        elif "hiding behind" in t_ and simulate.TEAM[d.roles[s_]] not in ("minion", "demon"):
+            lies.add("versteckt")
     st = GameState(n_players=n, script=sc, claims=cl, wakes=wk, infos=list(h),
                    votes=dict(d.votes), nominations=dict(d.nominations), **d.record(told=False))
     last_night = min(nights, d.game_ends_after or nights)
@@ -42,5 +50,6 @@ for seed in range(first, last):
                top=max(pcts) if pcts else None, ep=rows[demon]["evil_pct"] if rows else None,
                claim=cl.get(demon), roles=list(d.roles), claims={str(k): v for k, v in cl.items()},
                deaths={str(k): v for k, v in d.deaths.items()}, changes=[list(map(str, c)) for c in d.changes],
-               pcts=[round(p, 2) for p in pcts], t=round(dt, 1))
+               pcts=[round(p, 2) for p in pcts], t=round(dt, 1),
+               lie="+".join(sorted(lies)) or "keine")
     out.write(json.dumps(rec) + "\n"); out.flush()

@@ -11012,10 +11012,31 @@ def bag_weight(world, state):
     o = sum(TEAM.get(r) == "outsider" for r in bag)
     ways = math.comb(T, t) * math.comb(O, o) if t <= T and o <= O else 1
     for role in bag:
-        options = len(CHARACTERS[role].setup) if role in CHARACTERS else 0
+        options = setup_choices(role, bag, state.n_players, T, O)
         if options > 1:
             ways *= options
     return (1.0 / ways) ** BAG_PRIOR_POWER
+
+
+def setup_choices(role, bag, n_players, T, O):
+    """How many of this character's setup options the Storyteller really
+    had (15.11.2026, D Weg 1): those that leave a bag this table size and
+    this script can hold, from the standard split moved by every fixed
+    shift in the bag (a Baron's +2). Another character's own choice is
+    not reckoned in — it could have gone either way."""
+    options = CHARACTERS[role].setup if role in CHARACTERS else ()
+    if len(options) <= 1 or n_players not in SETUP:
+        return len(options)
+    t0, o0 = SETUP[n_players][0], SETUP[n_players][1]
+    for other in bag:
+        fixed = CHARACTERS[other].setup if other in CHARACTERS else ()
+        if other != role and len(fixed) == 1:
+            t0 += fixed[0].get("townsfolk", 0)
+            o0 += fixed[0].get("outsider", 0)
+    fits = sum(1 for m in options
+               if 0 <= t0 + m.get("townsfolk", 0) <= T
+               and 0 <= o0 + m.get("outsider", 0) <= O)
+    return max(fits, 1)
 
 
 def world_weight(world, state):
