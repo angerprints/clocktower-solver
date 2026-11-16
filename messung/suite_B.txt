@@ -66,3 +66,4 @@ test_conformance.PythonStillAgreesWithIt.test_what_killed_each_body_agrees_too
 test_cannibal
 test_tasche
 test_schweigen
+test_bluff

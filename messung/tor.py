@@ -98,8 +98,10 @@ for seed in range(start, start + N):
     n = [7, 8, 9, 10, 11][seed % 5]
     deal, heard = simulate.play(n, rng, nights=nights, script=script)
     claims, wakes, notes = C.claims_for(deal, rng, script=script)
-    # The chaos liars keep quiet (15.11.2026, E Weg 1).
-    heard = C.heard_by_table(heard, notes)
+    # The chaos liars keep quiet (15.11.2026, E Weg 1); the evil bluffers
+    # report as their character would (16.11.2026, B Weg 1).
+    heard = C.told_table(deal, heard, claims, notes,
+                         min(nights, deal.game_ends_after or nights), seed)
 
     def cost(said):
         state = GameState(n_players=n, script=script, claims=claims,
