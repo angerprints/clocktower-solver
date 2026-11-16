@@ -21,8 +21,8 @@ Gegen diese Dateien vergleichen, statt neu zu messen. Der Dateiname nennt Skript
 | Datei | Stand | Dämon vorn |
 |---|---|---|
 | `TB_600_d0a36ac.jsonl` | **main heute: böse Bluffer melden Zeilen** (16.11.2026) | 344 von 600 |
-| `BMR_450_d0a36ac.jsonl` | dito | siehe Bericht `claude/hauptziel-bluff.md` |
-| `SV_150_d0a36ac.jsonl` | dito | siehe Bericht `claude/hauptziel-bluff.md` |
+| `BMR_450_d0a36ac.jsonl` | dito | 215 von 450 |
+| `SV_150_d0a36ac.jsonl` | dito | 98 von 150 |
 | `TB_600_47b76b9.jsonl` | Lügner schweigt, Bluffer stumm | 405 von 600 |
 | `BMR_450_3fb6236.jsonl` | Lügner schweigt, Bluffer stumm | 270 von 450 |
 | `SV_150_3fb6236.jsonl` | Lügner schweigt, Bluffer stumm | 106 von 150 |
