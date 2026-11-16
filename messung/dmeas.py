@@ -24,10 +24,14 @@ for seed in range(first, last):
             lies.add("Chaos")
         elif "hiding behind" in t_ and simulate.TEAM[d.roles[s_]] not in ("minion", "demon"):
             lies.add("versteckt")
-    st = GameState(n_players=n, script=sc, claims=cl, wakes=wk,
-                   infos=C.heard_by_table(h, notes),
-                   votes=dict(d.votes), nominations=dict(d.nominations), **d.record(told=False))
+    # The evil bluffers report as their character would (16.11.2026, A and
+    # B Weg 1, claude/hauptziel-bluff-lesarten.md).
     last_night = min(nights, d.game_ends_after or nights)
+    told = C.told_table(d, h, cl, notes, last_night, seed)
+    bluffed = len(told) - len(C.heard_by_table(h, notes))
+    st = GameState(n_players=n, script=sc, claims=cl, wakes=wk,
+                   infos=told,
+                   votes=dict(d.votes), nominations=dict(d.nominations), **d.record(told=False))
     end = f"D{last_night}"
     demon = d.demon_at(end)
     if demon is None: demon = d.demon_at(f"N{last_night}")
@@ -52,5 +56,5 @@ for seed in range(first, last):
                claim=cl.get(demon), roles=list(d.roles), claims={str(k): v for k, v in cl.items()},
                deaths={str(k): v for k, v in d.deaths.items()}, changes=[list(map(str, c)) for c in d.changes],
                pcts=[round(p, 2) for p in pcts], t=round(dt, 1),
-               lie="+".join(sorted(lies)) or "keine")
+               lie="+".join(sorted(lies)) or "keine", bluffed=bluffed)
     out.write(json.dumps(rec) + "\n"); out.flush()
