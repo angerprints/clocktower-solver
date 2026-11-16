@@ -1,0 +1,30 @@
+# Auswerte-Skripte für das Hauptziel (Dämon finden)
+
+Alle Skripte lesen die Ausgabe von `messung/dmeas.py` (eine JSON-Zeile je Partie). Aufruf immer aus dem Repo-Wurzelordner.
+
+| Skript | Aufruf | Zeigt |
+|---|---|---|
+| `messung/dmeas_bericht.py` | `python3 messung/dmeas_bericht.py NEU.jsonl [ALT.jsonl]` | **Die Standard-Auswertung** (Patrick, 15.11.2026): alle Partien, ohne und mit Chaos-Lüge; mit zweiter Datei auch neu vorn / nicht mehr vorn |
+| `ana.py` | `python3 messung/hauptziel/ana.py DATEI` | Dämon vorn, unter den ersten 2/3, Durchschnitt, warum verfehlt |
+| `cmp.py` | `python3 messung/hauptziel/cmp.py ALT NEU` | Vergleich zweier Läufe, Partie für Partie (kürzere Länge zählt) |
+| `cal.py` | `python3 messung/hauptziel/cal.py DATEI` | Kalibrierung: erwartete gegen wirkliche Dämonen, nach Prozent-Stufe und nach Behauptung |
+| `byinfo.py` | `python3 messung/hauptziel/byinfo.py DATEI` | Kalibrierung nach Behauptungsgruppe (nachts / erste Nacht / ohne Info) und Partielänge. Gruppen nur für Trouble Brewing eingetragen |
+| `miss.py` | `python3 messung/hauptziel/miss.py DATEI` | Wo der Dämon verfehlt wird: Gruppe des Dämons gegen Gruppe des Vordersten. Gruppen nur für Trouble Brewing eingetragen |
+| `lies.py` | `python3 messung/hauptziel/lies.py SKRIPT DATEI` | Spielt die Partien nach und ordnet jede nach den Lügen der Guten (keine, versteckt, Chaos); schreibt `DATEI.kinds.json`. Nur für alte Dateien ohne Feld `lie` nötig |
+| `kv.py` | `python3 messung/hauptziel/kv.py ALT.json NEU.json` | Korpus-Vergleich: Weltenzahl, geänderte Prozente, anderer Sitz vorn, größte Verschiebungen |
+| `why2.py` | `python3 messung/hauptziel/why2.py BRETT…` | Für Korpus-Bretter: Welten gruppiert nach Dämon, Außenseiter-Zahl und Schergen, mit und ohne Taschen-Gewicht |
+
+## Grundmessungen in `messung/daten/hauptziel/`
+
+Gegen diese Dateien vergleichen, statt neu zu messen. Der Dateiname nennt Skript, Zahl der Partien (ab Seed 0, 7–10 Spieler, 4 Nächte) und den Commit.
+
+| Datei | Stand | Dämon vorn |
+|---|---|---|
+| `TB_600_47b76b9.jsonl` | main heute (Lügner schweigt) | 405 von 600 |
+| `TB_1500_9114cfc.jsonl` | Taschen-Gewicht, Lügner verrät noch seine Zeilen | 994 von 1.500 |
+| `BMR_450_de350b0.jsonl` | Taschen-Gewicht Stufe 2 | 269 von 450 |
+| `SV_150_9114cfc.jsonl` | Taschen-Gewicht | 108 von 150 |
+
+Seit 47b76b9 schweigt der grundlose Lügner. Für Bad Moon Rising und Sects & Violets gibt es dazu noch keine Grundmessung; in Trouble Brewing änderte es nur 1 von 600 Partien.
+
+Ein Lauf: `python3 messung/dmeas.py TB OUT.jsonl 0 600 4` (etwa 25 bis 60 Minuten, im Hintergrund starten).
