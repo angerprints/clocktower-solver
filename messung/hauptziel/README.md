@@ -20,11 +20,16 @@ Gegen diese Dateien vergleichen, statt neu zu messen. Der Dateiname nennt Skript
 
 | Datei | Stand | Dämon vorn |
 |---|---|---|
-| `TB_600_47b76b9.jsonl` | main heute (Lügner schweigt) | 405 von 600 |
+| `TB_600_d0a36ac.jsonl` | **main heute: böse Bluffer melden Zeilen** (16.11.2026) | 344 von 600 |
+| `BMR_450_d0a36ac.jsonl` | dito | siehe Bericht `claude/hauptziel-bluff.md` |
+| `SV_150_d0a36ac.jsonl` | dito | siehe Bericht `claude/hauptziel-bluff.md` |
+| `TB_600_47b76b9.jsonl` | Lügner schweigt, Bluffer stumm | 405 von 600 |
+| `BMR_450_3fb6236.jsonl` | Lügner schweigt, Bluffer stumm | 270 von 450 |
+| `SV_150_3fb6236.jsonl` | Lügner schweigt, Bluffer stumm | 106 von 150 |
 | `TB_1500_9114cfc.jsonl` | Taschen-Gewicht, Lügner verrät noch seine Zeilen | 994 von 1.500 |
 | `BMR_450_de350b0.jsonl` | Taschen-Gewicht Stufe 2 | 269 von 450 |
 | `SV_150_9114cfc.jsonl` | Taschen-Gewicht | 108 von 150 |
 
-Seit 47b76b9 schweigt der grundlose Lügner. Für Bad Moon Rising und Sects & Violets gibt es dazu noch keine Grundmessung; in Trouble Brewing änderte es nur 1 von 600 Partien.
+Seit 47b76b9 schweigt der grundlose Lügner. Seit d0a36ac melden böse Bluffer, was ihr behaupteter Charakter in der Welt der Behauptungen erführe (`tests/claims.py`, `told_table`); `dmeas.py` schreibt die Zahl dieser Zeilen ins Feld `bluffed`. Neue Solver-Änderungen gegen die d0a36ac-Dateien messen.
 
 Ein Lauf: `python3 messung/dmeas.py TB OUT.jsonl 0 600 4` (etwa 25 bis 60 Minuten, im Hintergrund starten).
