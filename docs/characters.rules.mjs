@@ -87,10 +87,6 @@ function holders(world, state, role, phase) {
   return out;
 }
 
-/** Whose recorded choice to read: anybody's with one holder, its own
- * with two (13.10.2026). */
-const byOf = (hs, seat) => (hs.length > 1 ? seat : null);
-
 /** Who came back to life at this moment. */
 /** Did this seat die after night `since` began and before `night` did?
  *
@@ -1232,13 +1228,13 @@ function aMoonchildsPick(world, state, night, child, name = "Moonchild") {
 causeRule(function anAcrobatMayFall(world, state, night) {
   if (!onBoard(state, "Acrobat") || night < 2) return [];
   const phase = `N${night}`;
-  // Each living holder with a pick recorded — its own, when a
-  // Philosopher took it too (13.10.2026). See solver.py.
+  // Each living holder with its own pick recorded. Another seat's row is
+  // a bluff's story and binds nobody (17.11.2026). See solver.py.
   const hs = holders(world, state, "Acrobat", phase);
   const seats = new Set(hs.filter(seat =>
     state.aliveSet(phase).has(seat) && state.infos.some(
       i => i.sourceRole === "Acrobat" && i.night === night
-           && (byOf(hs, seat) === null || byOf(hs, seat) === i.player))));
+           && i.player === seat)));
   if (!seats.size) return [];
   return [new Cause("Acrobat", OTHER, seats, {capacity: seats.size,
                                               mustFire: false})];
@@ -1850,7 +1846,7 @@ sourceRule(function aSailorDrunksOneOfTwo(world, state, night) {
   if (!onBoard(state, "Sailor")) return [];
   const hs = holders(world, state, "Sailor", `N${night}`);
   return hs.flatMap(seat => aSailorsDrunk(world, state, night, seat,
-                                          byOf(hs, seat)));
+                                          seat));
 });
 
 function aSailorsDrunk(world, state, night, seat, by) {
@@ -2343,7 +2339,7 @@ sourceRule(function anInnkeeperDrunksOneOfTheTwoItGuards(world, state, night) {
                        slotOf("Innkeeper", night) || 0,
                        () => holders(world, state, "Innkeeper", `N${night}`));
   return hs.flatMap(seat => anInnkeepersDrunk(world, state, night, seat,
-                                              byOf(hs, seat)));
+                                              seat));
 });
 
 function anInnkeepersDrunk(world, state, night, seat, by) {

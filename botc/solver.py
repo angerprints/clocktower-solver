@@ -5838,13 +5838,13 @@ def an_acrobat_may_fall(world, state, night):
     if not _on_board(state, "Acrobat") or night < 2:
         return []
     phase = f"N{night}"
-    # Each living holder with a pick recorded — its own, when a
-    # Philosopher took it too (13.10.2026).
+    # Each living holder with its own pick recorded. Another seat's row
+    # is a bluff's story and binds nobody (17.11.2026, A Weg 1).
     holders = _holders(world, state, "Acrobat", phase)
     seats = frozenset(
         seat for seat in holders if seat in state.alive_set(phase)
         and any(isinstance(info, AcrobatChoice) and info.night == night
-                and _by(holders, seat) in (None, info.player)
+                and info.player == seat
                 for info in state.infos))
     if not seats:
         return []                         # no pick recorded, no risk
@@ -5894,12 +5894,6 @@ def _holders(world, state, role, phase):
         if who not in out:
             out.append(who)
     return out
-
-
-def _by(holders, seat):
-    """Whose recorded choice to read: anybody's when there is one holder,
-    as always; its own when there are two (13.10.2026)."""
-    return seat if len(holders) > 1 else None
 
 
 def _whoever_works(world, state, role, phase):
@@ -8978,7 +8972,7 @@ def a_sailor_drunks_one_of_two(world, state, night):
     holders = _holders(world, state, "Sailor", phase)
     return [source for seat in holders
             for source in _a_sailors_drunk(world, state, night, seat,
-                                           _by(holders, seat))]
+                                           seat)]
 
 
 def _a_sailors_drunk(world, state, night, seat, by):
@@ -9609,7 +9603,7 @@ def an_innkeeper_drunks_one_of_the_two_it_guards(world, state, night):
         holders = _holders(world, state, "Innkeeper", phase)
     return [source for seat in holders
             for source in _an_innkeepers_drunk(world, state, night, seat,
-                                               _by(holders, seat))]
+                                               seat)]
 
 
 def _an_innkeepers_drunk(world, state, night, seat, by):
