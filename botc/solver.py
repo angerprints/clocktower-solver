@@ -230,6 +230,21 @@ INFO_TRUST_STEP = 2.0
 CONFIRMED_READING_STEP = 2.5
 
 
+def the_saint_ended_it(state, day):
+    """Is this day's execution the last thing on a finished board?
+
+    "If you die by execution, your team loses": the game ends there, so a
+    board that says the game is over and has nothing after that
+    execution may have a working Saint on the gallows."""
+    if not getattr(state, "game_over", False):
+        return False
+    if day in (state.days_done or ()):
+        return False
+    if phase_index(state.final_phase()) > phase_index(f"E{day}"):
+        return False
+    return all(info.night <= day for info in state.infos)
+
+
 def claim_world(state):
     """The table as it says it is: every seat the character it claims.
 
@@ -7639,8 +7654,12 @@ def _plain_failures(world, state, outcome=None):
         seat = state.execution_death(day)
         if seat is None:
             continue
-        # And a Philosopher that took her (group 6, D, 14.10.2026).
-        if _has_ability(world, state, seat, "Saint", f"D{day}"):
+        # And a Philosopher that took her (group 6, D, 14.10.2026). Unless
+        # this execution is where the game ended: then a working Saint is
+        # the end itself, evil's win (17.11.2026, found when the simulator
+        # first hanged one; a real game ending so was impossible too).
+        if _has_ability(world, state, seat, "Saint", f"D{day}") \
+                and not the_saint_ended_it(state, day):
             day_failures[day].add(sober_seat(world, state, seat, "Saint",
                                          f"D{day}"))
         # A Sailor cannot die, and that holds in daylight too — so a

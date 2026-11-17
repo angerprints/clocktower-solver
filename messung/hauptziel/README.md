@@ -20,7 +20,10 @@ Gegen diese Dateien vergleichen, statt neu zu messen. Der Dateiname nennt Skript
 
 | Datei | Stand | Dämon vorn |
 |---|---|---|
-| `TB_600_b67f464.jsonl` | **main heute: Preis nach der Behauptungswelt** (17.11.2026) | 375 von 600 |
+| `TB_600_933f915.jsonl` | **main heute: Heilige darf hängen, grundloser Lügner erfindet passend** (17.11.2026; andere Partien als vorher, Morgen mit 3 Lebenden: Dämon vorn 147 von 214) | 356 von 600 |
+| `BMR_450_933f915.jsonl` | dito (Morgen mit 3 Lebenden: 72 von 126) | 234 von 450 |
+| `SV_150_933f915.jsonl` | dito (Morgen mit 3 Lebenden: 38 von 65) | 98 von 150 |
+| `TB_600_b67f464.jsonl` | Preis nach der Behauptungswelt (17.11.2026) | 375 von 600 |
 | `BMR_450_b67f464.jsonl` | dito | 238 von 450 |
 | `SV_150_f2edd2f.jsonl` | dito (Stand f2edd2f; TB und BMR dort in Stichproben von 80 und 50 Partien gleich wie b67f464) | 98 von 150 |
 | `TB_600_d0a36ac.jsonl` | böse Bluffer melden Zeilen (16.11.2026) | 344 von 600 |
@@ -33,6 +36,6 @@ Gegen diese Dateien vergleichen, statt neu zu messen. Der Dateiname nennt Skript
 | `BMR_450_de350b0.jsonl` | Taschen-Gewicht Stufe 2 | 269 von 450 |
 | `SV_150_9114cfc.jsonl` | Taschen-Gewicht | 108 von 150 |
 
-Seit 47b76b9 schweigt der grundlose Lügner. Seit d0a36ac melden böse Bluffer, was ihr behaupteter Charakter in der Welt der Behauptungen erführe (`tests/claims.py`, `told_table`); `dmeas.py` schreibt die Zahl dieser Zeilen ins Feld `bluffed`. Seit b67f464 kostet eine erfundene Zeile 0,7, wenn sie zu den Behauptungen am Tisch passt, sonst 0,2; Entscheidungen kosten nichts, außer „wurde zu X“ und „war besessen“ (seit f2edd2f). Neue Solver-Änderungen gegen die b67f464-Dateien messen. Die Versuche zum Preis liegen in `versuche/` (`variante.py`, `vergleich.py`; sie stammen von vor b67f464).
+Seit 47b76b9 schweigt der grundlose Lügner. Seit d0a36ac melden böse Bluffer, was ihr behaupteter Charakter in der Welt der Behauptungen erführe (`tests/claims.py`, `told_table`); `dmeas.py` schreibt die Zahl dieser Zeilen ins Feld `bluffed`. Seit b67f464 kostet eine erfundene Zeile 0,7, wenn sie zu den Behauptungen am Tisch passt, sonst 0,2; Entscheidungen kosten nichts, außer „wurde zu X“ und „war besessen“ (seit f2edd2f). Seit 933f915 darf das Dorf eine echte Heilige hängen (die Partie endet dann), und der grundlose Lügner meldet die Zeilen seines behaupteten Charakters; damit sind die Partien andere als in den älteren Dateien. Neue Solver-Änderungen gegen die 933f915-Dateien messen, auch mit `final3.py` (Morgen mit genau 3 Lebenden). Die Versuche zum Preis liegen in `versuche/` (`variante.py`, `vergleich.py`; sie stammen von vor b67f464).
 
 Ein Lauf: `python3 messung/dmeas.py TB OUT.jsonl 0 600 4` (etwa 25 bis 60 Minuten, im Hintergrund starten).

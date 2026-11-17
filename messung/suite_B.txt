@@ -67,3 +67,4 @@ test_cannibal
 test_tasche
 test_schweigen
 test_bluff
+test_final3
