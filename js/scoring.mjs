@@ -19,7 +19,7 @@ import {LISTENING, beginReads, differOnlyUnasked, endReads, listenForSides,
         phaseIndex, replayReads} from "./phases.mjs";
 import {ABSENT, ARBITRARY, GENUINE, INVERTED, TEAM, abilityState, isEvil}
   from "./roles.mjs";
-import {SETUP_SLOT, readingAt} from "./worlds.mjs";
+import {SETUP_SLOT, World, readingAt} from "./worlds.mjs";
 import {BABYSAT_READS, SUMMON_READS, TEA_READS, Timeline, babysits, change,
         handedOn,
         changeAt, dealtRoles, lilMonstaWorld, notSummoned, summoned,
@@ -57,10 +57,59 @@ export const MADE_UP = "made up";  // wrong token, so it was never theirs
 export const INVENTED = "invented";  // nobody here could have produced it
 export const SPENT = "spent";      // already used, so it says nothing
 
-/** What a world pays for having made this reading up. */
-export const inventionCost = info =>
-  Math.min(1.0, PRIORS.FABRICATED_INFO_PENALTY /
-                Math.pow(PRIORS.INFO_TRUST_STEP, info.trust || 0));
+// The table as it says it is, and which rows would be true there — one
+// per board, and per row, because neither depends on the world. See
+// claim_world and fits_the_claims in solver.py (17.11.2026).
+const CLAIM_WORLDS = new WeakMap();
+
+export function claimWorld(state) {
+  const claims = state.claims || {};
+  const key = JSON.stringify(Object.entries(claims)
+    .map(([p, r]) => [Number(p), r]).sort((a, b) => a[0] - b[0]));
+  const got = CLAIM_WORLDS.get(state);
+  if (got && got.key === key) return got;
+  const taken = new Set(Object.values(claims));
+  const townsfolk = (state.script && state.script.townsfolk) || [];
+  const spare = townsfolk.filter(t => !taken.has(t));
+  const filler = spare.length ? spare[0] : (townsfolk.length ? townsfolk[0] : null);
+  const roles = [];
+  for (let p = 0; p < state.nPlayers; p++) roles.push(claims[p] || filler);
+  const made = {key, world: new World(roles, roles.map(() => null)),
+                fits: new Map()};
+  CLAIM_WORLDS.set(state, made);
+  return made;
+}
+
+/** Would this reading be true if every seat were what it claims? */
+export function fitsTheClaims(info, state) {
+  const made = claimWorld(state);
+  if (made.fits.has(info)) return made.fits.get(info);
+  const seat = info.player;
+  let fits;
+  try {
+    if (info.type === "FortuneTeller") {
+      fits = false;
+      for (let rh = 0; rh < state.nPlayers && !fits; rh++)
+        if (rh !== seat && info.holds(made.world, state, rh, seat)) fits = true;
+    } else {
+      fits = !!info.holds(made.world, state, null, seat);
+    }
+  } catch (e) {
+    fits = true;   // a claim no rule can read: nothing to tell them apart by
+  }
+  made.fits.set(info, fits);
+  return fits;
+}
+
+/** What a world pays for having made this reading up. A choice costs
+ *  nothing (17.11.2026, B Weg 1); a reading costs more when it does not
+ *  fit the table's claims (A Weg 1). */
+export const inventionCost = (info, state = null) => {
+  if (info.isAChoice) return 1.0;
+  const base = state && fitsTheClaims(info, state)
+    ? PRIORS.FABRICATED_FITS_CLAIMS : PRIORS.FABRICATED_INFO_PENALTY;
+  return Math.min(1.0, base / Math.pow(PRIORS.INFO_TRUST_STEP, info.trust || 0));
+};
 
 // --------------------------------------------------------------------
 // Consistency
@@ -3984,7 +4033,7 @@ function plainFailures(world, state, outcome = {}) {
     // anybody else (21.10.2026, C).
     if (info.type === "LilMonstaBabysat") {
       if (info.holds(world, state, null)) outcome[idx] = HELD;
-      else { invented *= inventionCost(info); outcome[idx] = INVENTED; }
+      else { invented *= inventionCost(info, state); outcome[idx] = INVENTED; }
       return;
     }
     if (info.hard()) {
@@ -4172,13 +4221,13 @@ function plainFailures(world, state, outcome = {}) {
     const witnessed = !!info.witnessed;
     if (witnessed && held === ARBITRARY) held = ABSENT;
     if (held === ABSENT) {
-      invented *= inventionCost(info);    // no such source in this world
+      invented *= inventionCost(info, state);    // no such source in this world
       outcome[idx] = INVENTED;
       return;
     }
     if (held === ARBITRARY) { outcome[idx] = MADE_UP; return; }
     if (seat !== info.player && world.evilAt(info.player, phase)) {
-      invented *= inventionCost(info);    // an evil messenger is none
+      invented *= inventionCost(info, state);    // an evil messenger is none
       outcome[idx] = INVENTED;
       return;
     }
@@ -4189,7 +4238,7 @@ function plainFailures(world, state, outcome = {}) {
       if (info.type === "FortuneTeller" || held === INVERTED
           || info.holds(world, state, null, seat)) outcome[idx] = HELD;
       else {
-        invented *= inventionCost(info);
+        invented *= inventionCost(info, state);
         outcome[idx] = INVENTED;
       }
       return;
@@ -4302,7 +4351,7 @@ function plainFailures(world, state, outcome = {}) {
     } else if (witnessed && !ok) {
       // Nothing excuses it: a droisoned source tells the other player
       // nothing at all, so the words did not come from the game.
-      invented *= inventionCost(info);
+      invented *= inventionCost(info, state);
       outcome[idx] = INVENTED;
     } else if (!ok) {
       // Poison has to land on whoever the information came from —

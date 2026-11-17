@@ -168,7 +168,13 @@ class EveryPriorIsWiredIn(SolverTest):
             Empath(1, 4, count=1), Empath(2, 4, count=3)])),
         "POISON_REPEAT_PENALTY": (1.0, lambda: game(9, infos=[
             Empath(1, 4, count=1), Empath(2, 4, count=3), Empath(3, 4, count=3)])),
+        # An Empath reading nobody claimed: a 1 among good claims does not
+        # fit them, a 0 does (17.11.2026, A Weg 1).
         "FABRICATED_INFO_PENALTY": (1.0, lambda: game(
+            7, claims={0: "Washerwoman", 1: "Librarian", 2: "Investigator",
+                       3: "Chef", 4: "Slayer"},
+            infos=[Empath(1, 0, count=1)])),
+        "FABRICATED_FITS_CLAIMS": (1.0, lambda: game(
             7, claims={0: "Washerwoman", 1: "Librarian", 2: "Investigator",
                        3: "Chef", 4: "Slayer"},
             infos=[Empath(1, 0, count=0)])),

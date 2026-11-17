@@ -195,7 +195,19 @@ YAGGABABBLE_BY_DAY_PENALTY = 0.25
 # unclaimed role fit itself onto the table: if someone calls Empath numbers
 # and no seat has claimed Empath, worlds where an Empath quietly exists
 # explain the call, and worlds with no Empath at all have to pay for it.
-FABRICATED_INFO_PENALTY = 0.4
+#
+# Since 17.11.2026 (Patrick, claude/hauptziel-bluff-preis-lesarten.md, A Weg
+# 1) the price depends on what the row says. An evil bluffer at his table
+# reports what its character would be told among the table's claims - a
+# false Empath says its neighbours are good. So a made-up row that holds in
+# the world of the claims (`fits_the_claims`) costs little: it is what a
+# bluffer says anyway. One that does not - an Empath's 1 beside somebody
+# who claims a good character - costs a lot, because no bluffer says that.
+# Measured on 300 games of Trouble Brewing: the Demon on top in 196 rather
+# than 182. A milder flat price did not help: it found the bluffing Demon
+# and lost the games where a real Empath stood out instead.
+FABRICATED_INFO_PENALTY = 0.2
+FABRICATED_FITS_CLAIMS = 0.7
 
 # What one step of "I believe this reading" is worth, as an odds
 # multiplier on the row being genuine. Trusting a reading makes inventing
@@ -218,10 +230,73 @@ INFO_TRUST_STEP = 2.0
 CONFIRMED_READING_STEP = 2.5
 
 
-def invention_cost(info):
-    """What a world pays for having made this reading up."""
+def claim_world(state):
+    """The table as it says it is: every seat the character it claims.
+
+    A seat with no claim is the first Townsfolk of the script nobody
+    claims - good, as the table takes it, and nothing anybody could read
+    a reading off. Built once per board.
+    """
+    claims = dict(state.claims or {})
+    key = tuple(sorted(claims.items()))
+    got = state.__dict__.get("_claim_world")
+    if got is not None and got[0] == key:
+        return got[1]
+    taken = set(claims.values())
+    townsfolk = list(getattr(state.script, "townsfolk", None) or [])
+    spare = [t for t in townsfolk if t not in taken]
+    filler = spare[0] if spare else (townsfolk[0] if townsfolk else None)
+    roles = tuple(claims.get(p) or filler for p in range(state.n_players))
+    world = World(roles, (None,) * state.n_players)
+    state.__dict__["_claim_world"] = (key, world)
+    state.__dict__["_claim_fits"] = {}
+    return world
+
+
+def fits_the_claims(info, state):
+    """Would this reading be true if every seat were what it claims?
+
+    What an evil bluffer says under Patrick's answer B of 16.11.2026: it
+    knows the claims, not the grimoire. A Fortune Teller's reading fits if
+    it holds with the red herring anywhere: nobody knows where it is. The
+    answer does not depend on the world, so each row is asked once.
+    """
+    world = claim_world(state)
+    seen = state.__dict__["_claim_fits"]
+    got = seen.get(id(info))
+    if got is not None and got[0] is info:
+        return got[1]
+    seat = info.player
+    try:
+        if isinstance(info, FortuneTeller):
+            fits = any(info.holds(world, state, rh, seat)
+                       for rh in range(state.n_players) if rh != seat)
+        else:
+            fits = bool(info.holds(world, state, None, seat))
+    except Exception:
+        # A claim no rule can read (a character the catalogue does not
+        # model): nothing to tell the bluffer from the real one by.
+        fits = True
+    seen[id(info)] = (info, fits)
+    return fits
+
+
+def invention_cost(info, state=None):
+    """What a world pays for having made this reading up.
+
+    A choice - "the Sailor chose X" - says nothing about the world, and a
+    bluffer has to name one as surely as the real character does: it
+    costs nothing (17.11.2026, B Weg 1). A reading costs
+    FABRICATED_FITS_CLAIMS if it fits the table's claims and
+    FABRICATED_INFO_PENALTY if not (A Weg 1).
+    """
+    if getattr(info, "is_a_choice", False):
+        return 1.0
     trust = getattr(info, "trust", 0) or 0
-    return min(1.0, FABRICATED_INFO_PENALTY / (INFO_TRUST_STEP ** trust))
+    base = FABRICATED_INFO_PENALTY
+    if state is not None and fits_the_claims(info, state):
+        base = FABRICATED_FITS_CLAIMS
+    return min(1.0, base / (INFO_TRUST_STEP ** trust))
 
 
 # --------------------------------------------------------------------------
@@ -7808,7 +7883,7 @@ def _plain_failures(world, state, outcome=None):
                 if info.holds(world, state, None):
                     outcome[idx] = HELD
                 else:
-                    invented *= invention_cost(info)
+                    invented *= invention_cost(info, state)
                     outcome[idx] = INVENTED
                 continue
             if info.hard():
@@ -8043,14 +8118,14 @@ def _plain_failures(world, state, outcome=None):
             if witnessed and held is ARBITRARY:
                 held = ABSENT
             if held is ABSENT:
-                invented *= invention_cost(info)   # no such source in this world
+                invented *= invention_cost(info, state)   # no such source in this world
                 outcome[idx] = INVENTED
                 continue
             if held is ARBITRARY:
                 outcome[idx] = MADE_UP        # the Drunk's answer was made up
                 continue
             if seat != info.player and world.evil_at(info.player, phase):
-                invented *= invention_cost(info)   # an evil messenger is none
+                invented *= invention_cost(info, state)   # an evil messenger is none
                 outcome[idx] = INVENTED
                 continue
 
@@ -8064,7 +8139,7 @@ def _plain_failures(world, state, outcome=None):
                         or info.holds(world, state, None, seat):
                     outcome[idx] = HELD
                 else:
-                    invented *= invention_cost(info)
+                    invented *= invention_cost(info, state)
                     outcome[idx] = INVENTED
                 continue
 
@@ -8212,7 +8287,7 @@ def _plain_failures(world, state, outcome=None):
                 # Nothing excuses it. A droisoned source does not tell the
                 # other player something false — it tells them nothing, they
                 # are never woken. So the words did not come from the game.
-                invented *= invention_cost(info)
+                invented *= invention_cost(info, state)
                 outcome[idx] = INVENTED
             elif not ok:
                 # Poison has to land on whoever the information came from -
@@ -11656,7 +11731,8 @@ PRIOR_RANGES = {
     "NIGHT_DEATH_EVIL_PENALTY": (0.02, 0.15),
     "POISON_HIT_PENALTY": (0.20, 0.55),
     "POISON_REPEAT_PENALTY": (0.50, 0.90),
-    "FABRICATED_INFO_PENALTY": (0.20, 0.70),
+    "FABRICATED_INFO_PENALTY": (0.10, 0.40),
+    "FABRICATED_FITS_CLAIMS": (0.40, 1.00),
     "SUNK_KILL_PENALTY": (0.25, 0.70),
     "DEMON_POISONED_PENALTY": (0.02, 0.15),
     "READ_ODDS_STEP": (1.5, 3.0),

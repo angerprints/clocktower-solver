@@ -92,9 +92,12 @@ class TheStreamedMarionetteGame(SolverTest):
     def test_only_the_poisoners_made_up_readings_cost_anything(self):
         """The Marionette's and the Drunk's readings are what they were
         shown, so they are free. Ekken invented two Undertaker readings,
-        and those are all the true world pays for."""
+        and those are all the true world pays for: the first names what
+        the executed player claimed and fits the table's claims, the
+        second calls one the Poisoner and does not (17.11.2026)."""
         cost = S.explanation_cost(self.truth, state_of(self.boards[-1]))
-        self.assertAlmostEqual(cost, S.FABRICATED_INFO_PENALTY ** 2)
+        self.assertAlmostEqual(
+            cost, S.FABRICATED_FITS_CLAIMS * S.FABRICATED_INFO_PENALTY)
 
 
 if __name__ == "__main__":

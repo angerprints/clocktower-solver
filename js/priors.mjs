@@ -55,8 +55,12 @@ export const PRIORS = {
 
   // Information with no genuine source anywhere in a world had to be
   // invented. That happens — people bluff detailed readings — but it is a
-  // deliberate risk.
-  FABRICATED_INFO_PENALTY: 0.4,
+  // deliberate risk. Since 17.11.2026 the price depends on what the row
+  // says: one that holds in the world of the table's claims is what a
+  // bluffer says anyway and costs little, one that does not costs a lot
+  // (claude/hauptziel-bluff-preis-lesarten.md, A Weg 1). See solver.py.
+  FABRICATED_INFO_PENALTY: 0.2,
+  FABRICATED_FITS_CLAIMS: 0.7,
   INFO_TRUST_STEP: 2.0,
   // What one confirmed reading is worth, as an odds multiplier on its
   // source really being that character. Evidence, not proof — a Spy
@@ -102,7 +106,8 @@ export const PRIOR_RANGES = {
   NIGHT_DEATH_EVIL_PENALTY: [0.02, 0.15],
   POISON_HIT_PENALTY: [0.20, 0.55],
   POISON_REPEAT_PENALTY: [0.50, 0.90],
-  FABRICATED_INFO_PENALTY: [0.20, 0.70],
+  FABRICATED_INFO_PENALTY: [0.10, 0.40],
+  FABRICATED_FITS_CLAIMS: [0.40, 1.00],
   SUNK_KILL_PENALTY: [0.25, 0.70],
   DEMON_POISONED_PENALTY: [0.02, 0.15],
   READ_ODDS_STEP: [1.5, 3.0],
