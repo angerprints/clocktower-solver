@@ -57,6 +57,15 @@ export const MADE_UP = "made up";  // wrong token, so it was never theirs
 export const INVENTED = "invented";  // nobody here could have produced it
 export const SPENT = "spent";      // already used, so it says nothing
 
+/** Is this day's execution the last thing on a finished board? A
+ *  working Saint on the gallows is then the end itself. See solver.py. */
+export function theSaintEndedIt(state, day) {
+  if (!state.gameOver) return false;
+  if (state.daysDone.has(day)) return false;
+  if (phaseIndex(state.finalPhase()) > phaseIndex(`E${day}`)) return false;
+  return state.infos.every(info => info.night <= day);
+}
+
 // The table as it says it is, and which rows would be true there — one
 // per board, and per row, because neither depends on the world. See
 // claim_world and fits_the_claims in solver.py (17.11.2026).
@@ -3817,7 +3826,10 @@ function plainFailures(world, state, outcome = {}) {
     const seat = state.executionDeath(day);
     if (seat === null) continue;
     // And a Philosopher that took her (group 6, D, 14.10.2026).
-    if (hasAbility(world, state, seat, "Saint", `D${day}`))
+    // Unless this execution is where the game ended (the_saint_ended_it
+    // in solver.py, 17.11.2026).
+    if (hasAbility(world, state, seat, "Saint", `D${day}`)
+        && !theSaintEndedIt(state, day))
       failByDay(day, soberSeat(world, state, seat, "Saint", `D${day}`));
     // A Sailor cannot die, and that holds in daylight — so a working one
     // walks away from its own execution.
