@@ -36,3 +36,4 @@ test_weights
 test_stelle_117
 test_alchemist_summoner
 test_hermit
+test_bluff_preis
