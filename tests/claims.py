@@ -293,10 +293,24 @@ def bluffers(deal, notes):
     passend oder schweigt"). It kept quiet while the evil bluffers did."""
     out = []
     for seat, why in notes.items():
+        if "for no reason" in why and _claims_its_own(why):
+            # The dice gave it its own character: no lie to keep up, and
+            # what it would make up could contradict what it was told.
+            continue
         if ("bluffing" in why or "double-claiming" in why
                 or "it was handed first" in why or "for no reason" in why):
             out.append(seat)
     return sorted(out)
+
+
+def _claims_its_own(why):
+    """"good Chef, claiming the Chef for no reason" — no lie at all."""
+    try:
+        role = why[len("good "):].split(",")[0]
+        said = why.split("claiming the ")[1].split(" for no reason")[0]
+    except IndexError:
+        return False
+    return role == said
 
 
 def _claim_world(deal, claims, frame=None):
