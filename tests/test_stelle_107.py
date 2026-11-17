@@ -64,8 +64,12 @@ class ABarberRaisedAndKilledAgain(SolverTest):
 
     def test_the_dead_barber_in_the_row_is_found(self):
         deal, _heard, st = game(2955)
+        # Night 3 only: since 17.11.2026 the village may hang the real
+        # Saint, and here it hangs the Monk the Barber made a Saint on
+        # day 3, so the game ends that evening and there is no night 4.
+        self.assertEqual(deal.ended_why, "saint")
         self.assertEqual(S.barber_raised_and_fell(deal.world(), st),
-                         [(5, "N3"), (5, "N4")])
+                         [(5, "N3")])
 
     def test_both_swaps_are_told_in_one_story(self):
         deal, _heard, st = game(2955)
