@@ -111,7 +111,10 @@ class TheChaosLiarMakesItUp(SolverTest):
         found = 0
         for seed in range(300):
             n, deal, heard, claims, wakes, notes = game(seed)
-            liars = [s for s, why in notes.items() if "for no reason" in why]
+            # One the dice gave its own character tells the truth about
+            # it and makes nothing up (933f915).
+            liars = [s for s, why in notes.items() if "for no reason" in why
+                     and not C._claims_its_own(why)]
             if not liars:
                 continue
             last = min(4, deal.game_ends_after or 4)
