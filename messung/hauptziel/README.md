@@ -20,7 +20,10 @@ Gegen diese Dateien vergleichen, statt neu zu messen. Der Dateiname nennt Skript
 
 | Datei | Stand | Dämon vorn |
 |---|---|---|
-| `TB_600_d0a36ac.jsonl` | **main heute: böse Bluffer melden Zeilen** (16.11.2026) | 344 von 600 |
+| `TB_600_b67f464.jsonl` | **main heute: Preis nach der Behauptungswelt** (17.11.2026) | 375 von 600 |
+| `BMR_450_b67f464.jsonl` | dito | 238 von 450 |
+| `SV_150_f2edd2f.jsonl` | dito (Stand f2edd2f; TB und BMR dort in Stichproben von 80 und 50 Partien gleich wie b67f464) | 98 von 150 |
+| `TB_600_d0a36ac.jsonl` | böse Bluffer melden Zeilen (16.11.2026) | 344 von 600 |
 | `BMR_450_d0a36ac.jsonl` | dito | 215 von 450 |
 | `SV_150_d0a36ac.jsonl` | dito | 98 von 150 |
 | `TB_600_47b76b9.jsonl` | Lügner schweigt, Bluffer stumm | 405 von 600 |
@@ -30,6 +33,6 @@ Gegen diese Dateien vergleichen, statt neu zu messen. Der Dateiname nennt Skript
 | `BMR_450_de350b0.jsonl` | Taschen-Gewicht Stufe 2 | 269 von 450 |
 | `SV_150_9114cfc.jsonl` | Taschen-Gewicht | 108 von 150 |
 
-Seit 47b76b9 schweigt der grundlose Lügner. Seit d0a36ac melden böse Bluffer, was ihr behaupteter Charakter in der Welt der Behauptungen erführe (`tests/claims.py`, `told_table`); `dmeas.py` schreibt die Zahl dieser Zeilen ins Feld `bluffed`. Neue Solver-Änderungen gegen die d0a36ac-Dateien messen.
+Seit 47b76b9 schweigt der grundlose Lügner. Seit d0a36ac melden böse Bluffer, was ihr behaupteter Charakter in der Welt der Behauptungen erführe (`tests/claims.py`, `told_table`); `dmeas.py` schreibt die Zahl dieser Zeilen ins Feld `bluffed`. Seit b67f464 kostet eine erfundene Zeile 0,7, wenn sie zu den Behauptungen am Tisch passt, sonst 0,2; Entscheidungen kosten nichts, außer „wurde zu X“ und „war besessen“ (seit f2edd2f). Neue Solver-Änderungen gegen die b67f464-Dateien messen. Die Versuche zum Preis liegen in `versuche/` (`variante.py`, `vergleich.py`; sie stammen von vor b67f464).
 
 Ein Lauf: `python3 messung/dmeas.py TB OUT.jsonl 0 600 4` (etwa 25 bis 60 Minuten, im Hintergrund starten).

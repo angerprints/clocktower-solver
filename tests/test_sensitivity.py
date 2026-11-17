@@ -69,6 +69,7 @@ class TheBands(SolverTest):
     def test_every_prior_has_a_range_to_move_across(self):
         for name in ("OUTSIDER_HIDING_PENALTY", "BLUFF_COLLISION_PENALTY",
                      "POISON_HIT_PENALTY", "FABRICATED_INFO_PENALTY",
+                     "FABRICATED_FITS_CLAIMS",
                      "NIGHT_DEATH_EVIL_PENALTY", "SUNK_KILL_PENALTY"):
             with self.subTest(prior=name):
                 low, high = S.PRIOR_RANGES[name]
@@ -76,7 +77,8 @@ class TheBands(SolverTest):
                 self.assertGreater(high, getattr(S, name))
 
     def test_the_constants_are_put_back_afterwards(self):
-        self.assertPct(S.FABRICATED_INFO_PENALTY, 0.4, 1e-9)
+        self.assertPct(S.FABRICATED_INFO_PENALTY, 0.2, 1e-9)
+        self.assertPct(S.FABRICATED_FITS_CLAIMS, 0.7, 1e-9)
         self.assertPct(S.POISON_HIT_PENALTY, 0.35, 1e-9)
 
 

@@ -432,7 +432,12 @@ class TheFlowergirlAndTheTownCrier(SolverTest):
             with self.subTest(voter=seat + 1):
                 self.assertGreater(said_yes[seat]["demon_pct"],
                                    said_no[seat]["demon_pct"])
-        for seat in (3, 5, 6):
+        # Seat 7 abstained and sits away from her. Seats 4 and 6 abstained
+        # too but are her neighbours: a No Dashii there poisons her for
+        # free, which is another way a "yes" comes about. Since a made-up
+        # "yes" costs more than it did (17.11.2026: it does not fit the
+        # table's claims), that way gains a little, and they are left out.
+        for seat in (6,):
             with self.subTest(abstained=seat + 1):
                 self.assertLess(said_yes[seat]["demon_pct"],
                                 said_no[seat]["demon_pct"])
@@ -512,13 +517,16 @@ class TheSecondBatch(SolverTest):
     # the direction a reading pushes rather than demanding certainty.
 
     def test_it_pushes_suspicion_onto_the_dead_seat(self):
+        # The Oracle (seat 3) alive, the Clockmaker (seat 1) dead. Until
+        # 17.11.2026 the dead seat here was the Oracle's own, so the row
+        # could only be made up and the test compared noise.
         from botc.info import OracleInfo
-        plain = self.board(deaths={2: "N2"}, days_done={2})
-        named = self.board(deaths={2: "N2"}, days_done={2},
+        plain = self.board(deaths={0: "N2"}, days_done={2})
+        named = self.board(deaths={0: "N2"}, days_done={2},
                            infos=[OracleInfo(3, 2, count=1)])
         was = S.summarize(S.solve(plain)[1], plain)
         now = S.summarize(S.solve(named)[1], named)
-        self.assertGreater(now[2]["evil_pct"], was[2]["evil_pct"])
+        self.assertGreater(now[0]["evil_pct"], was[0]["evil_pct"])
 
     # --- Seamstress -----------------------------------------------------
 
@@ -1399,8 +1407,11 @@ class TheSnakeCharmer(SolverTest):
         "who is the Demon"."""
         state = self.board(infos=[self.swap(target=4)], days_done={2})
         rows = S.analyze(state)["rows"]
-        self.assertGreater(rows[1]["demon_pct"], 60.0,
+        # 60 before 17.11.2026; a made-up choice costs nothing since, so
+        # the row vouches a little less. Still far ahead of every other.
+        self.assertGreater(rows[1]["demon_pct"], 50.0,
                            "whoever charmed now holds the star")
+        self.assertEqual(max(range(9), key=lambda s: rows[s]["demon_pct"]), 1)
         self.assertLess(rows[4]["evil_pct"], 3.0,
                         "and the one they charmed is now a good "
                         "Snake Charmer")

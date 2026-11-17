@@ -125,7 +125,7 @@ class WhatTheyDo(SolverTest):
 
     def test_a_nightwatchman_demon_shows_itself(self):
         # "I was shown that 6 is the Nightwatchman": nobody holds it, so
-        # the row is made up (0.4) — or the Demon has it, which needs
+        # the row is made up — or the Demon has it, which needs
         # nothing else. That story costs only what the gift costs.
         rows = [I.NightwatchmanSeen(2, 1, shown=6)]
         viable = []
@@ -136,7 +136,8 @@ class WhatTheyDo(SolverTest):
                 if isinstance(c, BoffinGift):
                     by_gift[c.gift] = cost
         shown = by_gift.pop("Nightwatchman")
-        self.assertAlmostEqual(by_gift[BOFFIN_UNSEEN], 0.4)   # made up
+        self.assertAlmostEqual(by_gift[BOFFIN_UNSEEN],      # made up
+                               S.invention_cost(rows[0], state(rows)))
         self.assertTrue(all(shown > c for g, c in by_gift.items()
                             if g != BOFFIN_UNSEEN))
 

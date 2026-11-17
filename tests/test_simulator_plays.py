@@ -466,8 +466,12 @@ class TwoOnTheBoardAndTheGameGoesOn(SolverTest):
                 for row in answer["rows"]:
                     if row["player"] in living:
                         self.assertAlmostEqual(row["demon_pct"], 0.0)
+                # 20 before 17.11.2026. The honest Sailor's, Courtier's and
+                # Gambler's choices on these boards no longer vouch for
+                # their seats (a made-up choice costs nothing), so some of
+                # the weight moves; the order of the seats does not.
                 self.assertGreater(
-                    answer["rows"][deal.zombuul_up]["demon_pct"], 20.0)
+                    answer["rows"][deal.zombuul_up]["demon_pct"], 15.0)
 
     def test_the_true_world_is_still_there(self):
         for seed in (44, 56, 124):
