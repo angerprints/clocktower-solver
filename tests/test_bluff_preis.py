@@ -84,6 +84,33 @@ class TheWorldOfTheClaims(SolverTest):
         # Without a board, the old reading of "made up": the higher price.
         self.assertAlmostEqual(S.invention_cost(misfit), 0.2)
 
+    def test_only_a_characters_own_choice_is_free(self):
+        from botc.info import BecameInfo, HarpyMadness
+        st = tb_state()
+        self.assertLess(S.invention_cost(
+            HarpyMadness(night=1, player=1, second=2), st), 1.0)
+        self.assertLess(S.invention_cost(
+            BecameInfo(night=2, player=1, role="Farmer"), st), 1.0)
+
+    def test_both_languages_free_the_same_choices(self):
+        script = ("import * as I from './js/info.mjs';"
+                  "import {OWN_CHOICES} from './js/scoring.mjs';"
+                  "const py = JSON.parse(process.argv[1]);"
+                  "const out = {};"
+                  "for (const n of OWN_CHOICES) {"
+                  "  const row = Object.create(I[n].prototype);"
+                  "  out[n] = row.type; }"
+                  "console.log(JSON.stringify(out));")
+        got = subprocess.run(["node", "--input-type=module", "-e", script,
+                              json.dumps(sorted(S.OWN_CHOICES))], cwd=ROOT,
+                             capture_output=True, text=True, timeout=120)
+        self.assertEqual(got.returncode, 0, got.stderr)
+        # The board names a few rows differently from the Python class;
+        # the corpus writer's table says how (AcrobatChoice -> Acrobat).
+        from make_fixtures import _KIND
+        self.assertEqual(sorted(json.loads(got.stdout).values()),
+                         sorted(_KIND.get(n, n) for n in S.OWN_CHOICES))
+
     def test_a_new_claim_builds_a_new_world(self):
         st = tb_state()
         row = Empath(night=1, player=1, count=1)

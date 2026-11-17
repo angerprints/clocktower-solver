@@ -37,12 +37,21 @@ SCENARIOS = {
             Empath(1, 4, count=1),
             FortuneTeller(1, 5, a=0, b=6, yes=False)]),
         worlds=33,
-        evil=[7.0, 24.5, 50.1, 11.0, 47.5, 32.5, 27.5],
+        # Re-recorded 17.11.2026 with the claim-world price: a made-up row
+        # that fits the claims (the Washerwoman naming the claimed Chef,
+        # the Fortune Teller's no) costs 0.7, one that does not (the
+        # Empath's 1, the Investigator's Minion) 0.2. The Empath and the
+        # Investigator look truer, the Washerwoman and the Fortune Teller
+        # less so.
+        evil=[16.5, 27.6, 35.8, 17.5, 24.3, 49.0, 29.4],
     ),
     "an Empath whose two nights disagree": dict(
         state=lambda: game(9, infos=[Empath(1, 4, count=1), Empath(2, 4, count=3)]),
         worlds=330,
-        evil=[15.7, 15.7, 15.7, 17.6, 13.1, 17.6, 15.7, 44.4, 44.4],
+        # 17.11.2026: neither the 1 nor the 3 fits a table of good claims,
+        # so inventing them costs 0.2 each, not 0.4 — the Empath is less
+        # likely to be lying than before.
+        evil=[16.8, 16.8, 16.8, 18.9, 3.6, 18.9, 16.8, 45.6, 45.6],
     ),
     "a Slayer shot that landed": dict(
         state=lambda: game(9, claims=nine([
@@ -79,7 +88,10 @@ SCENARIOS = {
         # them the Spy no longer settles it either, because a poisoned
         # Undertaker says whatever it was told.
         worlds=185,
-        evil=[17.4, 17.4, 17.4, 0.2, 17.4, 17.4, 18.2, 16.3, 78.2],
+        # 17.11.2026: the executed seat did not claim the Spy, so the
+        # reading does not fit the claims and costs 0.2 made up — the
+        # Undertaker looks truer.
+        evil=[19.0, 19.0, 19.0, 0.2, 19.0, 19.0, 10.0, 16.6, 78.4],
     ),
     "soft claims and a social read": dict(
         state=lambda: game(7, claims={0: "Washerwoman", 1: "Librarian",

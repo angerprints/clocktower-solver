@@ -281,16 +281,29 @@ def fits_the_claims(info, state):
     return fits
 
 
+# A character's own choice - "the Sailor chose X" - says nothing about the
+# world, and a bluffer has to name one as surely as the real character
+# does: made up, it costs nothing (17.11.2026, B Weg 1). Not every row the
+# solver files as a choice is one: "I was mad" and "I became X" say a
+# Harpy, a Cerenovus or a Pit-Hag is in play, a guess and the Goblin's
+# words are statements, and those are priced like any reading. The same
+# list stands in js/scoring.mjs, under the JavaScript class names.
+OWN_CHOICES = frozenset({
+    "AcrobatChoice", "AlHadikhiaChose", "CourtierChoice", "EngineerChoice",
+    "ExorcistChoice", "GamblerGuess", "HuntsmanChoice", "InnkeeperChoice",
+    "KlutzChoice", "LycanthropeChose", "MoonchildChoice",
+    "NightwatchmanChoice", "OgreChoice", "PhilosopherChoice", "PitHagChoice",
+    "PreacherChoice", "SailorChoice", "SnakeCharmerChoice"})
+
+
 def invention_cost(info, state=None):
     """What a world pays for having made this reading up.
 
-    A choice - "the Sailor chose X" - says nothing about the world, and a
-    bluffer has to name one as surely as the real character does: it
-    costs nothing (17.11.2026, B Weg 1). A reading costs
+    Nothing for a character's own choice (OWN_CHOICES). A reading costs
     FABRICATED_FITS_CLAIMS if it fits the table's claims and
-    FABRICATED_INFO_PENALTY if not (A Weg 1).
+    FABRICATED_INFO_PENALTY if not (17.11.2026, A Weg 1).
     """
-    if getattr(info, "is_a_choice", False):
+    if type(info).__name__ in OWN_CHOICES:
         return 1.0
     trust = getattr(info, "trust", 0) or 0
     base = FABRICATED_INFO_PENALTY
