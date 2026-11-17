@@ -1880,6 +1880,12 @@ def play(n, rng, nights=1, starpass_chance=0.0, allow_takeover=False,
             if hanged is not None and picked is not None \
                     and picked[1] == hanged:
                 d.princess_stop[night + 1] = picked[0]
+            # A working Saint died on the gallows: evil has won (17.11.2026,
+            # A Weg 1). Measured on the morning before, like every end.
+            if executed is not None and _saint_loses(d, night, executed):
+                d.ended_at, d.ended_why = f"E{night}", "saint"
+                d.game_ends_after = night
+                break
             if hanged is not None \
                     and _a_goblin_said_so(d, night, hanged, rng, heard):
                 d.ended_at, d.ended_why = f"E{night}", "goblin"
@@ -5226,6 +5232,19 @@ def _hold_a_day(d, day, rng):
         d.blind_days.add(day)
 
 
+def _saint_loses(d, day, executed):
+    """Did a working Saint just die by execution? "If you die by
+    execution, your team loses." A Philosopher with the Saint's ability
+    counts (13.10.2026, D); a drunk or poisoned one, and one that walked
+    away from the gallows, does not."""
+    phase = f"D{day}"
+    if d.deaths.get(executed) != f"E{day}":
+        return False
+    if not _acts_as(d, executed, "Saint", phase):
+        return False
+    return d.working(_sober(d, executed, "Saint", phase), day, by_day=True)
+
+
 def _a_goblin_said_so(d, day, executed, rng, heard):
     """Did a working Goblin just win the game by being executed?
 
@@ -5343,9 +5362,12 @@ def _walks_away(d, seat, day, rng):
 def _execute(d, day, rng, allow_takeover=False):
     """The town executes somebody.
 
-    Never the Saint — that ends the game, and a finished game is not what
-    we are testing. The Demon can go, but only when the Scarlet Woman is
-    standing by to take over; otherwise good would have won there.
+    The Saint can go up like anybody (Patrick, 17.11.2026,
+    claude/hauptziel-final3-lesarten.md, A Weg 1): the town does not know
+    which claim is the real one, and a working Saint on the gallows ends
+    the game for evil (`_saint_loses`). The Demon can go, but only when
+    the Scarlet Woman is standing by to take over; otherwise good would
+    have won there.
 
     Who goes up comes from the day's voting when there was one, so the
     execution is the *consequence* of the day rather than a coin flip.
@@ -5372,9 +5394,7 @@ def _execute(d, day, rng, allow_takeover=False):
     # And not somebody a Witch's curse has just dropped: dead since this
     # morning's nominations, though "alive today" still lists them.
     living = [p for p in d.alive_at(phase)
-              if d.role_at(p, phase) != "Saint"
-              and not _took(d, p, "Saint", phase)
-              and d.deaths.get(p) is None]
+              if d.deaths.get(p) is None]
     # Nor the good twin while the Evil Twin stands: evil wins on the spot,
     # the same as with the Saint, and the record would run on past the
     # end of the game.

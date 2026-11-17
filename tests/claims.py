@@ -258,9 +258,10 @@ def heard_by_table(heard, notes):
     A good player claiming some other character for no reason does not go
     on reporting the readings of the one it really has: it makes up
     something for its claim, or says nothing (Patrick, 15.11.2026, E Weg
-    1). The simulator's evil bluffers report nothing either, so the liar
-    says nothing — otherwise it would stand out from them. Rows the whole
-    table saw (`hard`) stay: a Slayer's shot is not the shooter's to hide.
+    1). Its own rows are kept back here; what it makes up for its claim is
+    added with the evil bluffers' (`bluffed_rows`, since 17.11.2026). Rows
+    the whole table saw (`hard`) stay: a Slayer's shot is not the
+    shooter's to hide.
     """
     quiet = {seat for seat, why in notes.items() if "for no reason" in why}
     return [row for row in heard
@@ -284,11 +285,16 @@ from botc.roles import TEAM as _TEAM  # noqa: E402
 
 
 def bluffers(deal, notes):
-    """The seats that walked in with a bluff and must keep it alive."""
+    """The seats that walked in with a bluff and must keep it alive.
+
+    A good player lying for no reason is one too since 17.11.2026 (Patrick,
+    claude/hauptziel-final3-lesarten.md, B Weg 1): it makes up what its
+    claim would be told, as his answer E of 15.11.2026 had it ("erfindet
+    passend oder schweigt"). It kept quiet while the evil bluffers did."""
     out = []
     for seat, why in notes.items():
         if ("bluffing" in why or "double-claiming" in why
-                or "it was handed first" in why):
+                or "it was handed first" in why or "for no reason" in why):
             out.append(seat)
     return sorted(out)
 
