@@ -84,32 +84,34 @@ class TheWorldOfTheClaims(SolverTest):
         # Without a board, the old reading of "made up": the higher price.
         self.assertAlmostEqual(S.invention_cost(misfit), 0.2)
 
-    def test_only_a_characters_own_choice_is_free(self):
-        from botc.info import BecameInfo, HarpyMadness
+    def test_a_row_that_says_a_character_is_in_play_is_no_choice(self):
+        from botc.info import BecameInfo, HarpyMadness, SlayerShot
         st = tb_state()
         self.assertLess(S.invention_cost(
             HarpyMadness(night=1, player=1, second=2), st), 1.0)
         self.assertLess(S.invention_cost(
             BecameInfo(night=2, player=1, role="Farmer"), st), 1.0)
+        # A shot that did nothing is the claimed Slayer's own choice.
+        self.assertEqual(S.invention_cost(
+            SlayerShot(night=2, player=1, target=3, died=False), st), 1.0)
 
-    def test_both_languages_free_the_same_choices(self):
+    def test_both_languages_name_the_same_three(self):
         script = ("import * as I from './js/info.mjs';"
-                  "import {OWN_CHOICES} from './js/scoring.mjs';"
-                  "const py = JSON.parse(process.argv[1]);"
-                  "const out = {};"
-                  "for (const n of OWN_CHOICES) {"
-                  "  const row = Object.create(I[n].prototype);"
-                  "  out[n] = row.type; }"
+                  "import {TOLD_NOT_CHOSEN} from './js/scoring.mjs';"
+                  "const out = [];"
+                  "for (const n of TOLD_NOT_CHOSEN) {"
+                  "  if (!I[n] || !I[n].isAChoice) throw new Error(n);"
+                  "  out.push(Object.create(I[n].prototype).type); }"
                   "console.log(JSON.stringify(out));")
-        got = subprocess.run(["node", "--input-type=module", "-e", script,
-                              json.dumps(sorted(S.OWN_CHOICES))], cwd=ROOT,
-                             capture_output=True, text=True, timeout=120)
+        got = subprocess.run(["node", "--input-type=module", "-e", script],
+                             cwd=ROOT, capture_output=True, text=True,
+                             timeout=120)
         self.assertEqual(got.returncode, 0, got.stderr)
-        # The board names a few rows differently from the Python class;
-        # the corpus writer's table says how (AcrobatChoice -> Acrobat).
+        # The board names BecameInfo "Became"; the corpus writer's table
+        # says how.
         from make_fixtures import _KIND
-        self.assertEqual(sorted(json.loads(got.stdout).values()),
-                         sorted(_KIND.get(n, n) for n in S.OWN_CHOICES))
+        self.assertEqual(sorted(json.loads(got.stdout)),
+                         sorted(_KIND.get(n, n) for n in S.TOLD_NOT_CHOSEN))
 
     def test_a_new_claim_builds_a_new_world(self):
         st = tb_state()

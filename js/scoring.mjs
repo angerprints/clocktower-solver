@@ -101,21 +101,17 @@ export function fitsTheClaims(info, state) {
   return fits;
 }
 
-// A character's own choice costs nothing made up (17.11.2026, B Weg 1).
-// The same list as OWN_CHOICES in solver.py, under the JavaScript class
-// names (Acrobat for AcrobatChoice).
-export const OWN_CHOICES = new Set([
-  "Acrobat", "AlHadikhiaChose", "CourtierChoice", "EngineerChoice",
-  "ExorcistChoice", "GamblerGuess", "HuntsmanChoice", "InnkeeperChoice",
-  "KlutzChoice", "LycanthropeChose", "MoonchildChoice",
-  "NightwatchmanChoice", "OgreChoice", "PhilosopherChoice", "PitHagChoice",
-  "PreacherChoice", "SailorChoice", "SnakeCharmerChoice"]);
+// A choice costs nothing made up (17.11.2026, B Weg 1), except the three
+// rows that say a character is in play — TOLD_NOT_CHOSEN in solver.py,
+// under the JavaScript class names (Became for BecameInfo).
+export const TOLD_NOT_CHOSEN = new Set(["Became", "CerenovusMadness",
+                                        "HarpyMadness"]);
 
 /** What a world pays for having made this reading up. Nothing for a
- *  character's own choice; a reading costs more when it does not fit the
- *  table's claims (A Weg 1). */
+ *  choice; a reading costs more when it does not fit the table's claims
+ *  (A Weg 1). */
 export const inventionCost = (info, state = null) => {
-  if (OWN_CHOICES.has(info.constructor.name)) return 1.0;
+  if (info.isAChoice && !TOLD_NOT_CHOSEN.has(info.constructor.name)) return 1.0;
   const base = state && fitsTheClaims(info, state)
     ? PRIORS.FABRICATED_FITS_CLAIMS : PRIORS.FABRICATED_INFO_PENALTY;
   return Math.min(1.0, base / Math.pow(PRIORS.INFO_TRUST_STEP, info.trust || 0));
