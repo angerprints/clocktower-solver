@@ -312,7 +312,9 @@ class TwoLivingDemons(SolverTest):
     true world is kept, the night-walk agrees, and nothing is left
     unreckoned."""
 
-    SEEDS = (48, 116, 157, 407, 466, 702)
+    # 157 became a hidden Hatter (softclaims "never", Lesart T) when
+    # chaos turned rare on 18.11.2026; 808 has two Demons and a claim.
+    SEEDS = (48, 116, 407, 466, 702, 808)
 
     def test_played(self):
         import claims as Cl
