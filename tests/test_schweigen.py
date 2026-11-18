@@ -24,9 +24,17 @@ def game(seed):
 class TheLiarKeepsQuiet(SolverTest):
 
     def test_its_readings_are_gone_and_nobody_elses(self):
-        # Seed 6: a good Librarian claiming the Chef for no reason.
-        n, deal, heard, claims, wakes, notes = game(6)
-        liar = next(s for s, why in notes.items() if "for no reason" in why)
+        # The first game with a liar that had readings: until 18.11.2026
+        # seed 6, a good Librarian claiming the Chef for no reason. Chaos
+        # is rare since (claude/hauptziel-chaos-2-lesarten.md).
+        for seed in range(400):
+            n, deal, heard, claims, wakes, notes = game(seed)
+            liars = [s for s, why in notes.items() if "for no reason" in why
+                     and not C._claims_its_own(why)
+                     and any(r.player == s for r in heard)]
+            if liars:
+                liar = liars[0]
+                break
         told = C.heard_by_table(heard, notes)
         self.assertTrue(any(r.player == liar for r in heard))
         self.assertFalse(any(getattr(r, "player", None) == liar

@@ -28,11 +28,30 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 BMR = scripts.BAD_MOON_RISING
 
 
+# The claims seed 175 drew until 18.11.2026, pinned: since then chaos is
+# rare (claude/hauptziel-chaos-2-lesarten.md, A Weg 1) and the dice no
+# longer give this table its two liars. The game itself is unchanged.
+CLAIMS = {0: "Gambler", 1: "Pacifist", 2: "Moonchild", 3: "Gossip",
+          4: "Innkeeper", 6: "Fool", 7: "TeaLady", 8: "Sailor",
+          9: "Grandmother"}
+WAKES = {5: "every"}
+NOTES = {0: "good Gambler, claiming honestly",
+         1: "good Pacifist, claiming honestly",
+         2: "evil, bluffing as the Moonchild",
+         3: "good Gossip, claiming honestly",
+         4: "good Chambermaid, claiming the Innkeeper for no reason",
+         5: "good Exorcist, softclaiming \u201cevery\u201d",
+         6: "good Innkeeper, claiming the Fool for no reason",
+         7: "evil, bluffing as the TeaLady",
+         8: "evil, bluffing as the Sailor",
+         9: "good Grandmother, claiming honestly"}
+
+
 def game(seed=175):
     rng = random.Random(seed)
     n = [7, 8, 9, 10][seed % 4]
     deal, heard = simulate.play(n, rng, nights=4, script=BMR)
-    claims, wakes, notes = C.claims_for(deal, rng, script=BMR)
+    claims, wakes, notes = dict(CLAIMS), dict(WAKES), dict(NOTES)
     told = C.told_table(deal, heard, claims, notes,
                         min(4, deal.game_ends_after or 4), seed)
     return n, deal, claims, wakes, notes, told

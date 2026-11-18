@@ -39,6 +39,9 @@ from botc.roles import (OUTSIDERS, TEAM, TOWNSFOLK, is_evil,
 # How often a good player says something untrue. Most tables have one.
 GOOD_LIE_CHANCE = 0.10
 # Of those lies, how many are an Outsider hiding rather than pure chaos.
+# The rest, 2 % of good players, claim anything for no reason; a
+# Townsfolk in the hiding share has nothing to hide behind and tells the
+# truth (18.11.2026).
 HIDING_SHARE = 0.8
 # How often somebody softclaims a wake pattern instead of a character.
 SOFTCLAIM_CHANCE = 0.15
@@ -205,7 +208,8 @@ def claims_for(deal, rng, script=None):
             continue
 
         if rng.random() < GOOD_LIE_CHANCE:
-            if TEAM[role] == "outsider" and rng.random() < HIDING_SHARE:
+            hides = rng.random() < HIDING_SHARE
+            if TEAM[role] == "outsider" and hides:
                 hidden = _hiding_claim(deal, seat, rng, script)
                 if hidden:
                     claims[seat] = hidden
@@ -213,11 +217,17 @@ def claims_for(deal, rng, script=None):
                                    f"{hidden}")
                     continue
             # Chaos: whatever came to mind. No logic to model, which is
-            # the point of having it.
-            claims[seat] = rng.choice(pool)
-            notes[seat] = (f"good {role}, claiming the {claims[seat]} for "
-                           f"no reason")
-            continue
+            # the point of having it. Rare, as this module's text always
+            # said: only the lies that are not an Outsider hiding, 2 % of
+            # good players. Until 18.11.2026 every Townsfolk lie was
+            # chaos, a third of all games (Patrick's answer A Weg 1,
+            # claude/hauptziel-chaos-2-lesarten.md); the Townsfolk that
+            # would have hidden tells the truth instead.
+            if not hides or TEAM[role] == "outsider":
+                claims[seat] = rng.choice(pool)
+                notes[seat] = (f"good {role}, claiming the {claims[seat]} "
+                               f"for no reason")
+                continue
 
         if rng.random() < SOFTCLAIM_CHANCE:
             # A softclaim: no character, only when they wake. The board
