@@ -109,7 +109,7 @@ class TheChaosLiarMakesItUp(SolverTest):
 
     def test_a_liar_with_an_info_claim_reports(self):
         found = 0
-        for seed in range(300):
+        for seed in range(1200):  # chaos is rare since 18.11.2026
             n, deal, heard, claims, wakes, notes = game(seed)
             # One the dice gave its own character tells the truth about
             # it and makes nothing up (933f915).
