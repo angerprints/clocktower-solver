@@ -561,7 +561,9 @@ class TheNightWalkReplaysThem(SolverTest):
 
 # sixty Bad Moon Rising games as the simulator played them before the
 # second five went in; see `test_no_other_script_plays_differently`.
-BMR_SIXTY = "3dfeee8e079eff4a"
+# New on 19.11.2026: the Demon rarely kills its own Minion
+# (claude/hauptziel-letzte3-lesarten.md, A Weg 1).
+BMR_SIXTY = "d220f26f3dffff15"
 
 
 if __name__ == "__main__":

@@ -252,7 +252,9 @@ class TheSimulator(SolverTest):
         self.keeps(738, ("Engineer", "Summoner"))
 
     def test_a_chambermaid_counts_the_night_it_chose(self):
-        deal, heard, st = _play(770, ("Engineer",))
+        # 701 since 19.11.2026: in 770 the Engineer no longer chooses once
+        # the Demon rarely kills its own Minion.
+        deal, heard, st = _play(701, ("Engineer",))
         self.assertTrue(any(isinstance(r, I.EngineerChoice) for r in heard))
         self.assertIsNotNone(S.explanation_cost(deal.world(), st))
 
