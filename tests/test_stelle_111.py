@@ -64,7 +64,9 @@ def game(seed, must):
         rng = random.Random(seed)
         script = play_games.an_awkward_script(rng, must_have=must)
         n = [7, 8, 9, 10, 11][seed % 5]
-        deal, heard = simulate.play(n, rng, nights=4, script=script)
+        import simulate as _sim     # the Demon as before 19.11.2026
+        with _sim.victims_as_before():
+            deal, heard = simulate.play(n, rng, nights=4, script=script)
         cl, wk, _ = C.claims_for(deal, rng, script=script)
     st = GameState(n_players=n, script=script, claims=cl, wakes=wk,
                    infos=list(heard), votes=dict(deal.votes),
@@ -140,8 +142,10 @@ class TheStarLeftBeforeThePitHagCame(SolverTest):
         with asked():
             rng = random.Random(729)
             script = play_games.an_awkward_script(rng, must_have=HS)
-            payload = played("s729", script, 729, [7, 8, 9, 10, 11][729 % 5],
-                             4, rng=rng)["payload"]
+            import simulate as _sim     # the Demon as before 19.11.2026
+            with _sim.victims_as_before():
+                payload = played("s729", script, 729, [7, 8, 9, 10, 11][729 % 5],
+                                 4, rng=rng)["payload"]
         js = ("import {readBoard} from './js/api.mjs';"
               "import {explanationCost} from './js/scoring.mjs';"
               "import {World} from './js/worlds.mjs';"

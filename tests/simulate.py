@@ -6642,11 +6642,27 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
 GOOD_VICTIM_SHARE = 0.95
 
 
+class victims_as_before:
+    """The Demon choosing among everybody, as before 19.11.2026, for a test
+    pinned to a game found then: with the share at 0 nothing is drawn, so
+    the seed plays exactly the game it was chosen for."""
+
+    def __enter__(self):
+        global GOOD_VICTIM_SHARE
+        self.was, GOOD_VICTIM_SHARE = GOOD_VICTIM_SHARE, 0
+        return self
+
+    def __exit__(self, *_exc):
+        global GOOD_VICTIM_SHARE
+        GOOD_VICTIM_SHARE = self.was
+        return False
+
+
 def _mostly_good(d, seats, phase, rng):
     """The seats a Demon chooses among tonight: the good ones, most
     nights; on the rest, anybody."""
     good = [p for p in seats if d.side_at(p, phase) == "good"]
-    if good and rng.random() < GOOD_VICTIM_SHARE:
+    if good and GOOD_VICTIM_SHARE and rng.random() < GOOD_VICTIM_SHARE:
         return good
     return seats
 
