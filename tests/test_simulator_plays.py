@@ -239,8 +239,11 @@ class OnBadMoonRising(SolverTest):
         the night before, and two that only the cap on accounts lost
         (04.10.2026). Named by seed, so they stand until the simulator
         learns something new."""
-        for seed, nights in ((3156, 4), (3566, 4), (5791, 4), (8596, 4),
-                             (7731, 4), (1028, 6), (11993, 6), (20742, 6)):
+        # New seeds on 19.11.2026, when the Demon stopped killing its own
+        # Minions: the first from 1000 on with a quiet night under a
+        # drunk or poisoned Demon.
+        for seed, nights in ((1007, 4), (1008, 4), (1009, 4), (1010, 4),
+                             (1021, 4), (1003, 6), (1007, 6), (1008, 6)):
             n = [7, 8, 9, 10, 11][seed % 5]
             rng = random.Random(seed)
             deal, heard = simulate.play(n, rng, nights=nights, script=BMR)
@@ -455,7 +458,7 @@ class TwoOnTheBoardAndTheGameGoesOn(SolverTest):
         return deal, state
 
     def test_every_bit_of_the_demon_is_on_the_dead(self):
-        for seed in (44, 56, 124):
+        for seed in (15, 23, 40):  # 44, 56, 124 until 19.11.2026
             deal, state = self.board(seed)
             self.assertIsNone(deal.ended_at)
             self.assertIsNotNone(deal.zombuul_up)
@@ -474,7 +477,7 @@ class TwoOnTheBoardAndTheGameGoesOn(SolverTest):
                     answer["rows"][deal.zombuul_up]["demon_pct"], 15.0)
 
     def test_the_true_world_is_still_there(self):
-        for seed in (44, 56, 124):
+        for seed in (15, 23, 40):  # 44, 56, 124 until 19.11.2026
             deal, state = self.board(seed)
             truth = deal.world()
             with self.subTest(seed=seed):
