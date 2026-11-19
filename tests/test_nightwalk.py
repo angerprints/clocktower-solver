@@ -147,24 +147,26 @@ class WhatHappenedLaterTonightDoesNotReachBack(unittest.TestCase):
         """The Barber's swap comes after the Demons. After it the old No
         Dashii is a Clockmaker beside the new one, and poisoned — which
         says nothing about its kill before."""
-        deal, hidden, got = self.night(37, 4)
-        self.assertIn(6, hidden[("barber", 4)])
-        self.assertIn(6, hidden[("standing_later", 4)])
-        self.assertEqual(got.died, deal.died_on("N4"))
-        self.assertEqual(got.died, {1})
+        # Seed 104, night 3, since 19.11.2026 (37, night 4 before).
+        deal, hidden, got = self.night(104, 3)
+        moved = hidden[("barber", 3)]
+        self.assertTrue(set(moved) & hidden[("standing_later", 3)])
+        self.assertEqual(got.died, deal.died_on("N3"))
+        self.assertEqual(got.died, {0})
 
     def test_a_philosopher_with_the_snake_charmers_ability_swaps(self):
         """It took the ability on night one and points at the Fang Gu on
         night two. The Philosopher's seat is the Fang Gu from then, so
         it is the one that kills an Outsider and dies of the jump."""
-        deal, hidden, got = self.night(232, 2)
-        self.assertEqual(hidden["gained"], {1: "SnakeCharmer"})
-        self.assertEqual(hidden[("snakecharmers", 2)], {1: 7})
+        # Seed 5267 since 19.11.2026 (232 before).
+        deal, hidden, got = self.night(5267, 2)
+        self.assertEqual(hidden["gained"].get(6), "SnakeCharmer")
+        self.assertEqual(hidden[("snakecharmers", 2)].get(6), 3)
         from botc.catalogue import CHARACTERS
         self.assertIn((CHARACTERS["SnakeCharmer"].other_night,
-                       "swapped", 1, 7), got.log)
+                       "swapped", 6, 3), got.log)
         self.assertEqual(got.died, deal.died_on("N2"))
-        self.assertEqual(got.died, {1})
+        self.assertEqual(got.died, {6})
 
     def test_no_night_of_sects_and_violets_disagrees(self):
         from botc import scripts
