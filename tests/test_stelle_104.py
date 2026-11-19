@@ -51,13 +51,16 @@ def game(seed, must=MUST):
 class TheInnkeeperDiesInTheNight(SolverTest):
 
     def test_the_true_world_is_kept(self):
-        deal, st = game(2517)
-        # The board as found: the Innkeeper (seat 0) dies in night 3,
-        # and on day 3 the Tea Lady's neighbour walks from the gallows.
-        self.assertEqual(deal.roles[0], "Innkeeper")
-        self.assertEqual(deal.roles[1], "TeaLady")
-        self.assertIn("N3", st.died_at(0))
-        self.assertIsNone(st.execution_death(3))
+        # Seed 106 since 20.11.2026 (2517 before, which the simulator
+        # whose Demon mostly kills good players plays otherwise). The
+        # Innkeeper (seat 2) dies in night 2, and on day 2 the Tea Lady's
+        # neighbour (seat 0) walks from the gallows.
+        deal, st = game(106)
+        self.assertEqual(deal.roles[2], "Innkeeper")
+        self.assertIn("TeaLady", (deal.roles[1], deal.roles[st.n_players - 1]))
+        self.assertIn("N2", st.died_at(2))
+        self.assertEqual(st.executions.get(2), 0)
+        self.assertIsNone(st.execution_death(2))
         self.assertIsNotNone(S.explanation_cost(deal.world(), st))
 
 
@@ -70,16 +73,18 @@ class ThePoisonerDiesInTheNight(SolverTest):
     Minstrel too."""
 
     def test_the_tea_lady_is_sober_by_day(self):
-        deal, st = game(1800, ("Innkeeper", "Poisoner", "TeaLady", "Sailor",
+        # Seed 9351 since 20.11.2026 (1800 before): a Demon that mostly
+        # kills good players seldom kills its Poisoner.
+        deal, st = game(9351, ("Innkeeper", "Poisoner", "TeaLady", "Sailor",
                                "Saint"))
-        self.assertEqual((deal.roles[4], deal.roles[5]),
+        self.assertEqual((deal.roles[5], deal.roles[0]),
                          ("Poisoner", "TeaLady"))
-        self.assertEqual(deal.poisoned_by.get(2), 4)
-        self.assertEqual(deal.poisoned.get(2), 5)
-        self.assertIn("N2", st.died_at(4))
-        # The Oracle beside her is executed on day 2 and walks away.
-        self.assertEqual(st.executions.get(2), 2)
-        self.assertIsNone(st.execution_death(2))
+        self.assertEqual(deal.poisoned_by.get(3), 5)
+        self.assertEqual(deal.poisoned.get(3), 0)
+        self.assertIn("N3", st.died_at(5))
+        # Her neighbour is executed on day 3 and walks away.
+        self.assertEqual(st.executions.get(3), 7)
+        self.assertIsNone(st.execution_death(3))
         self.assertIsNotNone(S.explanation_cost(deal.world(), st))
 
 
@@ -154,9 +159,10 @@ class BothLanguagesAgree(SolverTest):
         import app
         import play_games
         from make_fixtures import played
-        rng = random.Random(2517)
+        # 106 since 20.11.2026, the Innkeeper's game above.
+        rng = random.Random(106)
         script = play_games.an_awkward_script(rng, must_have=MUST)
-        payload = played("s2517", script, 2517, [7, 8, 9, 10, 11][2517 % 5],
+        payload = played("s106", script, 106, [7, 8, 9, 10, 11][106 % 5],
                          4, rng=rng)["payload"]
         js = ("import {solveBoard} from './js/api.mjs';"
               "const p=JSON.parse(process.argv[1]);"
