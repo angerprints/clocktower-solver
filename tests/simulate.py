@@ -2479,6 +2479,7 @@ def _witch_curses(d, night, rng):
             if len(d.alive_at(phase)) > 3 and len(others) >= 2:
                 d.cursed[night] = rng.choice(others)
                 d.cursed_by[night] = alch
+                _the_goon_answers(d, night, alch, d.cursed[night])
                 break
         return
     others = [p for p in d.alive_at(phase) if p != witch]
@@ -2486,6 +2487,11 @@ def _witch_curses(d, night, rng):
     if len(d.alive_at(phase)) > 3 and len(others) >= 2:
         d.cursed[night] = rng.choice(others)
         d.cursed_by[night] = witch
+        # A player choosing a player: the Goon answers, at the Witch's
+        # slot, before any Demon, and the curse fails (the Witch is
+        # drunk till dusk). It never did, so a Fang Gu after it read as
+        # the Goon's first chooser (19.11.2026, gate seed 1511).
+        _the_goon_answers(d, night, witch, d.cursed[night])
 
 
 def _has_its_ability(d, seat, phase):
