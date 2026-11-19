@@ -403,7 +403,7 @@ class ANightIsNotOneMoment(SolverTest):
     def test_a_gambler_is_judged_as_it_guessed(self):
         """Tenth in the night, a moment before the Snake Charmer at
         eleven swapped with the Demon it had just named rightly."""
-        deal, heard, state, world = game(1250)
+        deal, heard, state, world = game(210)  # 1250 until 19.11.2026
         guess = next(r for r in heard if isinstance(r, I.GamblerGuess)
                      and r.night > 1
                      and deal.role_at(r.target, f"D{r.night - 1}") == r.role
@@ -426,7 +426,7 @@ class ANightIsNotOneMoment(SolverTest):
     def test_an_exorcist_names_the_demon_as_its_turn_came(self):
         """Twenty-first, before any Demon acts: the Outsider a Fang Gu
         was about to jump into is not the Demon it sent to bed."""
-        deal, heard, state, world = game(1725)
+        deal, heard, state, world = game(1442)  # 1725 until 19.11.2026
         named = next(r for r in heard if isinstance(r, I.ExorcistChoice)
                      and (f"N{r.night}", r.target, "FangGu") in deal.changes)
         self.assertTrue(deal.died_on(f"N{named.night}"))
@@ -457,7 +457,7 @@ class TwoMayHoldOneAbility(SolverTest):
     def test_a_philosopher_with_the_gambler_dies_of_its_own_guess(self):
         """The rule looked at the seat holding the character, found the
         real Gambler — drunk and harmless — and stopped."""
-        deal, heard, state, world = game(9435)
+        deal, heard, state, world = game(656)  # 9435 until 19.11.2026
         seat = next(p for p, took in deal.philosophies.items()
                     if took == "Gambler")
         wrong = next(r for r in heard if isinstance(r, I.GamblerGuess)
@@ -520,6 +520,10 @@ STILL_LOST = {
         # into the Demon that night (open item 48 e): since a Philosopher
         # has the Moonchild's pick, 13.10.2026.
         204: "a Moonchild's pick that becomes the Demon that night",
+        # Since the Demon rarely kills its own Minion (19.11.2026): the
+        # hidden Barber dies and the Vortox swaps with the Drunk, not a
+        # Minion (Stelle 4, Weg 1).
+        147: "a Barber's swap nobody announced",
     },
     FIVE: {
         # 205 (an Innkeeper guarding a Fang Gu that jumps) and 461 left
