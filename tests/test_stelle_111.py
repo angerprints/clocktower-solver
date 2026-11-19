@@ -144,8 +144,9 @@ class TheStarLeftBeforeThePitHagCame(SolverTest):
             script = play_games.an_awkward_script(rng, must_have=HS)
             import simulate as _sim     # the Demon as before 19.11.2026
             with _sim.victims_as_before():
-                payload = played("s729", script, 729, [7, 8, 9, 10, 11][729 % 5],
-                                 4, rng=rng)["payload"]
+                payload = played("s729", script, 729,
+                                 [7, 8, 9, 10, 11][729 % 5], 4,
+                                 rng=rng)["payload"]
         js = ("import {readBoard} from './js/api.mjs';"
               "import {explanationCost} from './js/scoring.mjs';"
               "import {World} from './js/worlds.mjs';"

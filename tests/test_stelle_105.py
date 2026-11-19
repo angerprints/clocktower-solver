@@ -125,8 +125,9 @@ class BothLanguagesAgree(SolverTest):
         script = play_games.an_awkward_script(rng, must_have=PLAGUE)
         import simulate as _sim     # the Demon as before 19.11.2026
         with _sim.victims_as_before():
-            payload = played("s1439", script, 1439, [7, 8, 9, 10, 11][1439 % 5],
-                             4, rng=rng)["payload"]
+            payload = played("s1439", script, 1439,
+                             [7, 8, 9, 10, 11][1439 % 5], 4,
+                             rng=rng)["payload"]
         js = ("import {solveBoard} from './js/api.mjs';"
               "const p=JSON.parse(process.argv[1]);"
               "const r=solveBoard(p); console.log(JSON.stringify("
