@@ -159,10 +159,14 @@ class BothLanguagesAgree(SolverTest):
     def test_on_the_played_games(self):
         import app
         cases = _payloads()
+        # The server's exact limit, not the page's 40,000: seed 1209 has
+        # more legal worlds than that since 19.11.2026, and the page would
+        # sample it (Stelle 109).
         script = ("import {solveBoard} from './js/api.mjs';"
                   "const ps=JSON.parse(process.argv[1]);"
                   "console.log(JSON.stringify(ps.map(p => {"
-                  " const r = solveBoard(p); return r.error || r.valid; })));")
+                  f" const r = solveBoard(p, {{maxWorlds: {app.MAX_WORLDS}}});"
+                  " return r.error || r.valid; })));")
         got = subprocess.run(["node", "--input-type=module", "-e", script,
                               json.dumps(cases)], cwd=ROOT,
                              capture_output=True, text=True, timeout=600)
