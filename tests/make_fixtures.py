@@ -1854,10 +1854,11 @@ PLAYED_ENGINEER = ((0, 7), (6, 8), (15, 8), (17, 9))
 
 
 # Games with a tea party, each solved in seconds: a claimed Hatter
-# executed (56, 82, 256) and a Hatter nobody claimed (1, 62, 120, 175);
+# executed (56, 82, 256) and a Hatter nobody claimed (1, 323, 120, 175);
 # and a claimed Hatter dead at night, the party straight after the Demons'
-# turn (176, 195; Hatter stage 3c, 23.10.2026).
-PLAYED_HATTER = ((1, 8), (56, 8), (62, 9), (82, 9), (120, 7), (175, 7),
+# turn (176, 195; Hatter stage 3c, 23.10.2026). 323 took over from 62 on
+# 19.11.2026: with the Demon choosing good victims 62 became sampled.
+PLAYED_HATTER = ((1, 8), (56, 8), (323, 9), (82, 9), (120, 7), (175, 7),
                  (256, 8), (176, 8), (195, 7))
 
 # Games where a Minion chose the Summoner at a tea party and it summoned a

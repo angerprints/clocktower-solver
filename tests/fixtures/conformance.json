@@ -116834,100 +116834,13 @@
    }
   },
   {
-   "name": "x-hatter-played-62-9",
+   "name": "x-hatter-played-323-9",
    "payload": {
     "n_players": 9,
     "players": [
      {
       "name": "",
-      "claim": "",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "never",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "",
-      "events": [
-       "X3"
-      ],
-      "certainty": "",
-      "read": 0,
-      "wake": "first",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": [
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Mathematician",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Courtier",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       2
-      ],
-      "nominated": [
-       1,
-       2
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Soldier",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       2
-      ],
-      "nominated": [
-       1,
-       3
-      ]
-     },
-     {
-      "name": "",
-      "claim": "Preacher",
-      "events": [],
-      "certainty": "",
-      "read": 0,
-      "wake": "",
-      "voted": [
-       1,
-       3
-      ],
-      "nominated": []
-     },
-     {
-      "name": "",
-      "claim": "Hatter",
+      "claim": "Damsel",
       "events": [
        "X1"
       ],
@@ -116941,9 +116854,42 @@
      },
      {
       "name": "",
-      "claim": "Sweetheart",
+      "claim": "Huntsman",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       2,
+       3
+      ],
+      "nominated": [
+       3
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Pixie",
       "events": [
-       "X2"
+       "X3"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Oracle",
+      "events": [
+       "N3"
       ],
       "certainty": "",
       "read": 0,
@@ -116956,9 +116902,52 @@
      },
      {
       "name": "",
-      "claim": "Damsel",
+      "claim": "SnakeCharmer",
       "events": [
-       "N3"
+       "N2"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Grandmother",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       2
+      ],
+      "nominated": [
+       1,
+       2
+      ]
+     },
+     {
+      "name": "",
+      "claim": "Gambler",
+      "events": [],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Politician",
+      "events": [
+       "X2"
       ],
       "certainty": "",
       "read": 0,
@@ -116967,125 +116956,103 @@
        2
       ],
       "nominated": []
+     },
+     {
+      "name": "",
+      "claim": "Pixie",
+      "events": [
+       "N4"
+      ],
+      "certainty": "",
+      "read": 0,
+      "wake": "",
+      "voted": [
+       1,
+       3
+      ],
+      "nominated": []
      }
     ],
     "infos": [
      {
-      "type": "PreacherChoice",
+      "type": "SnakeCharmerChoice",
       "night": 1,
-      "player": 5,
-      "target": 3
+      "player": 4,
+      "target": 3,
+      "swapped": false
      },
      {
-      "type": "PhilosopherChoice",
-      "night": 1,
-      "player": 0,
-      "role": "Mathematician"
-     },
-     {
-      "type": "Balloonist",
-      "night": 1,
-      "player": 1,
-      "target": 2
-     },
-     {
-      "type": "PreacherChoice",
+      "type": "SnakeCharmerChoice",
       "night": 2,
-      "player": 5,
-      "target": 4
+      "player": 4,
+      "target": 2,
+      "swapped": false
      },
      {
-      "type": "FearmongerChose",
+      "type": "GamblerGuess",
       "night": 2,
-      "player": 2
+      "player": 6,
+      "target": 7,
+      "role": "Politician"
      },
      {
-      "type": "Balloonist",
+      "type": "OracleInfo",
       "night": 2,
-      "player": 1,
-      "target": 8
+      "player": 3,
+      "count": 8
      },
      {
-      "type": "MathematicianInfo",
-      "night": 2,
-      "player": 0,
-      "count": 0
-     },
-     {
-      "type": "PreacherChoice",
+      "type": "GamblerGuess",
       "night": 3,
-      "player": 5,
-      "target": 2
+      "player": 6,
+      "target": 2,
+      "role": "Chef"
      },
      {
-      "type": "FearmongerChose",
-      "night": 3,
-      "player": 2
-     },
-     {
-      "type": "Balloonist",
-      "night": 3,
-      "player": 1,
-      "target": 4
-     },
-     {
-      "type": "MathematicianInfo",
-      "night": 3,
-      "player": 0,
-      "count": 2
-     },
-     {
-      "type": "PreacherChoice",
+      "type": "HuntsmanChoice",
       "night": 4,
-      "player": 5,
-      "target": 7
+      "player": 1,
+      "target": 6
      },
      {
-      "type": "FearmongerChose",
+      "type": "GamblerGuess",
       "night": 4,
-      "player": 2
-     },
-     {
-      "type": "MathematicianInfo",
-      "night": 4,
-      "player": 0,
-      "count": 1
+      "player": 6,
+      "target": 5,
+      "role": "Vortox"
      }
     ],
     "script": {
      "name": "Mixed",
      "characters": [
       "hatter",
-      "xaan",
+      "poisoner",
       "snakecharmer",
       "philosopher",
-      "huntsman",
-      "soldier",
-      "sailor",
-      "mathematician",
+      "chef",
+      "gambler",
       "knight",
+      "pixie",
+      "grandmother",
+      "flowergirl",
+      "huntsman",
+      "sailor",
+      "sage",
       "oracle",
-      "alsaahir",
-      "courtier",
-      "balloonist",
-      "preacher",
-      "washerwoman",
-      "goon",
-      "sweetheart",
+      "farmer",
+      "politician",
+      "drunk",
       "damsel",
-      "poisoner",
-      "fearmonger",
-      "vizier",
-      "imp",
-      "fanggu",
-      "ojo",
-      "pukka"
+      "xaan",
+      "marionette",
+      "baron",
+      "vortox",
+      "vigormortis",
+      "po",
+      "zombuul"
      ]
     },
-    "quiet_nights": [
-     2,
-     4
-    ],
+    "quiet_nights": [],
     "days_done": [
      1,
      2,
@@ -117094,14 +117061,50 @@
     "game_over": false
    },
    "expect": {
-    "valid": 2459,
-    "sampled": true,
+    "valid": 101,
+    "sampled": false,
     "rows": [
      {
-      "evil_pct": 5.2029,
-      "demon_pct": 2.9641,
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
       "drunk_pct": 0.0,
-      "lying_pct": 3.9079
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 12.2591,
+      "demon_pct": 12.2591,
+      "drunk_pct": 26.2792,
+      "lying_pct": 12.2591
+     },
+     {
+      "evil_pct": 86.3301,
+      "demon_pct": 0.0,
+      "drunk_pct": 1.7543,
+      "lying_pct": 86.3301
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 22.0721,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 0.0,
+      "demon_pct": 0.0,
+      "drunk_pct": 13.1396,
+      "lying_pct": 0.0
+     },
+     {
+      "evil_pct": 35.3609,
+      "demon_pct": 35.3609,
+      "drunk_pct": 8.1052,
+      "lying_pct": 35.3609
+     },
+     {
+      "evil_pct": 52.3801,
+      "demon_pct": 52.3801,
+      "drunk_pct": 8.1052,
+      "lying_pct": 52.3801
      },
      {
       "evil_pct": 0.0,
@@ -117110,48 +117113,29 @@
       "lying_pct": 0.0
      },
      {
-      "evil_pct": 52.3811,
-      "demon_pct": 24.3014,
-      "drunk_pct": 0.0,
-      "lying_pct": 52.3811
-     },
-     {
-      "evil_pct": 44.4775,
-      "demon_pct": 21.2878,
-      "drunk_pct": 0.0,
-      "lying_pct": 44.4775
-     },
-     {
-      "evil_pct": 50.8013,
-      "demon_pct": 25.3932,
-      "drunk_pct": 0.0,
-      "lying_pct": 50.8013
-     },
-     {
-      "evil_pct": 47.1372,
-      "demon_pct": 26.0535,
-      "drunk_pct": 0.0,
-      "lying_pct": 47.1372
-     },
-     {
-      "evil_pct": 0.0,
+      "evil_pct": 13.6699,
       "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     },
-     {
-      "evil_pct": 0.0,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.0
-     },
-     {
-      "evil_pct": 0.2445,
-      "demon_pct": 0.0,
-      "drunk_pct": 0.0,
-      "lying_pct": 0.2445
+      "drunk_pct": 11.3853,
+      "lying_pct": 13.6699
      }
-    ]
+    ],
+    "blame": {
+     "3": {
+      "3": {
+       "Demon": 1.0
+      }
+     },
+     "2": {
+      "4": {
+       "Demon": 1.0
+      }
+     },
+     "4": {
+      "8": {
+       "Demon": 1.0
+      }
+     }
+    }
    }
   },
   {
