@@ -261,8 +261,11 @@ class RepairingABoardSomebodyLiedTo(SolverTest):
         # needing repair went from about one in six to one in forty, so a
         # search that scans to the end now plays nearly forty games where
         # it used to play six. Three of them together were 249 seconds.
+        # From 60 since 20.11.2026: with the Demon mostly killing good
+        # players none of the first sixty boards is cornered (the first
+        # is 95).
         cornered = 0
-        for seed in range(1, 60):
+        for seed in range(60, 160):
             deal, state, _notes = self.played(seed)
             _all, valid, liar = S.solve_or_repair(state)
             if liar is not None:
@@ -370,6 +373,12 @@ class TheDemonGetsEasierToFind(SolverTest):
         deal, heard = simulate.play(n, rng, nights=nights)
         claims, wakes, notes = C.claims_for(deal, rng)
         if any("no reason" in note for note in notes.values()):
+            return None
+        # Nor an Outsider hiding behind a Townsfolk claim: the search
+        # does not offer it unless the board is cornered, the limit
+        # written down under "a board can be confidently wrong" (seed 204
+        # since 20.11.2026, a Saint hiding behind the Washerwoman).
+        if any("hiding" in note for note in notes.values()):
             return None
 
         out = []
@@ -664,6 +673,12 @@ def a_confidently_wrong_game(among=range(900, 1000)):
         # missed through poison, since the simulator plays the Slayer
         # (14.10.2026), is a price and not the point here.
         if S.explanation_cost(truth, state) != 1.0:
+            continue
+        # And not one repair would open: the tests below read the board
+        # through solve_or_repair (20.11.2026, when the first board found
+        # here was cornered and repaired).
+        _all, repaired, liar = S.solve_or_repair(state)
+        if liar is not None:
             continue
         rows = S.summarize(valid, state)
         demon = deal.demon_at(state.final_phase())
