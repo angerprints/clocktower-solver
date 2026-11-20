@@ -39,7 +39,9 @@ class TheWholeSolverAgrees(SolverTest):
     def setUpClass(cls):
         got = subprocess.run(
             [NODE, str(ROOT / "js" / "dump_solve.mjs"), str(CORPUS)],
-            capture_output=True, text=True, timeout=1200)
+            # 2400 since 20.11.2026: the corpus takes about 1100 seconds
+            # beside one other test, and 1200 ran out twice.
+            capture_output=True, text=True, timeout=2400)
         if got.returncode:
             raise AssertionError(f"js/dump_solve.mjs failed:\n{got.stderr}")
         cls.js = json.loads(got.stdout)
