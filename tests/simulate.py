@@ -2479,6 +2479,7 @@ def _witch_curses(d, night, rng):
             if len(d.alive_at(phase)) > 3 and len(others) >= 2:
                 d.cursed[night] = rng.choice(others)
                 d.cursed_by[night] = alch
+                _the_goon_answers(d, night, alch, d.cursed[night])
                 break
         return
     others = [p for p in d.alive_at(phase) if p != witch]
@@ -2486,6 +2487,11 @@ def _witch_curses(d, night, rng):
     if len(d.alive_at(phase)) > 3 and len(others) >= 2:
         d.cursed[night] = rng.choice(others)
         d.cursed_by[night] = witch
+        # A player choosing a player: the Goon answers, at the Witch's
+        # slot, before any Demon, and the curse fails (the Witch is
+        # drunk till dusk). It never did, so a Fang Gu after it read as
+        # the Goon's first chooser (19.11.2026, gate seed 1511).
+        _the_goon_answers(d, night, witch, d.cursed[night])
 
 
 def _has_its_ability(d, seat, phase):
@@ -6629,6 +6635,38 @@ def _protected(d, night, target, by_exorcist=True, gone=()):
     return _a_fool_shrugs_it_off(d, target, phase)
 
 
+# How often the Demon picks among the good alone (Patrick, 19.11.2026,
+# claude/hauptziel-letzte3-lesarten.md, A Weg 1): at his table a Demon
+# rarely kills its own Minion. Until then it chose among everybody alive,
+# and one night death in six was a Minion.
+GOOD_VICTIM_SHARE = 0.95
+
+
+class victims_as_before:
+    """The Demon choosing among everybody, as before 19.11.2026, for a test
+    pinned to a game found then: with the share at 0 nothing is drawn, so
+    the seed plays exactly the game it was chosen for."""
+
+    def __enter__(self):
+        global GOOD_VICTIM_SHARE
+        self.was, GOOD_VICTIM_SHARE = GOOD_VICTIM_SHARE, 0
+        return self
+
+    def __exit__(self, *_exc):
+        global GOOD_VICTIM_SHARE
+        GOOD_VICTIM_SHARE = self.was
+        return False
+
+
+def _mostly_good(d, seats, phase, rng):
+    """The seats a Demon chooses among tonight: the good ones, most
+    nights; on the rest, anybody."""
+    good = [p for p in seats if d.side_at(p, phase) == "good"]
+    if good and GOOD_VICTIM_SHARE and rng.random() < GOOD_VICTIM_SHARE:
+        return good
+    return seats
+
+
 def _demon_kills(d, night, rng):
     """Who dies tonight, as a list, because not every Demon takes one.
 
@@ -6689,6 +6727,8 @@ def _demon_kills(d, night, rng):
             and kind not in ALCHEMY_OWN_WAY \
             and kind not in ("Pukka", "Shabaloth", "Po"):
         others = [forced]
+    elif forced is None:
+        others = _mostly_good(d, others, phase, rng)
 
     # The Monk guards, whoever is swinging — or a Philosopher that took
     # it, while the Monk it drunk does not (13.10.2026).
@@ -6968,7 +7008,7 @@ def _demon_kill(d, night, rng):
     targets = [p for p in living if p != demon]
     if not targets:
         return None
-    target = rng.choice(targets)
+    target = rng.choice(_mostly_good(d, targets, f"N{night}", rng))
 
     monk = _a_working_monk(d, night, living)
     if monk is not None and rng.random() < 0.3 and target != monk:

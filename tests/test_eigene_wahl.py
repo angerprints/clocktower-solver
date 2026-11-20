@@ -50,7 +50,9 @@ NOTES = {0: "good Gambler, claiming honestly",
 def game(seed=175):
     rng = random.Random(seed)
     n = [7, 8, 9, 10][seed % 4]
-    deal, heard = simulate.play(n, rng, nights=4, script=BMR)
+    import simulate as _sim     # the Demon as before 19.11.2026
+    with _sim.victims_as_before():
+        deal, heard = simulate.play(n, rng, nights=4, script=BMR)
     claims, wakes, notes = dict(CLAIMS), dict(WAKES), dict(NOTES)
     told = C.told_table(deal, heard, claims, notes,
                         min(4, deal.game_ends_after or 4), seed)

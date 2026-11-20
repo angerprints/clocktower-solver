@@ -25,10 +25,12 @@ from botc.info import GameState, PhilosopherChoice  # noqa: E402
 
 # seed: the characters its gate line asks for. Each has a Philosopher made
 # later that chose on a later night.
-PLAYED = {171: ("PitHag", "Philosopher"),
+# 319, 116 and 403 since 20.11.2026 (171, 54 and 152 before): the
+# simulator's Demon mostly kills good players now and plays them otherwise.
+PLAYED = {319: ("PitHag", "Philosopher"),
           32: ("PitHag", "Philosopher"),
-          54: ("Huntsman", "Damsel", "Philosopher"),
-          152: ("Barber", "Philosopher")}
+          116: ("Huntsman", "Damsel", "Philosopher"),
+          403: ("Barber", "Philosopher")}
 
 
 def game(seed, must):

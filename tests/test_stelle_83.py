@@ -71,7 +71,9 @@ def game(seed, must=("PitHag",)):
     rng = random.Random(seed)
     script = play_games.an_awkward_script(rng, must_have=must)
     n = [7, 8, 9, 10, 11][seed % 5]
-    deal, heard = simulate.play(n, rng, nights=4, script=script)
+    import simulate as _sim     # the Demon as before 19.11.2026
+    with _sim.victims_as_before():
+        deal, heard = simulate.play(n, rng, nights=4, script=script)
     cl, wk, _ = C.claims_for(deal, rng, script=script)
     st = GameState(n_players=n, script=script, claims=cl, wakes=wk,
                    infos=list(heard), votes=dict(deal.votes),
@@ -147,8 +149,10 @@ def _payloads():
             rng = random.Random(seed)
             script = play_games.an_awkward_script(rng, must_have=must)
             n = [7, 8, 9, 10, 11][seed % 5]
-            out.append(played(f"s{seed}", script, seed, n, 4,
-                              rng=rng)["payload"])
+            import simulate as _sim     # the Demon as before 19.11.2026
+            with _sim.victims_as_before():
+                out.append(played(f"s{seed}", script, seed, n, 4,
+                                  rng=rng)["payload"])
     return out
 
 

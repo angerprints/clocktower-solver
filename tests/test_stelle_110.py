@@ -41,7 +41,9 @@ def game(seed=1466, must=MUST):
         rng = random.Random(seed)
         script = play_games.an_awkward_script(rng, must_have=must)
         n = [7, 8, 9, 10, 11][seed % 5]
-        deal, heard = simulate.play(n, rng, nights=4, script=script)
+        import simulate as _sim     # the Demon as before 19.11.2026
+        with _sim.victims_as_before():
+            deal, heard = simulate.play(n, rng, nights=4, script=script)
         cl, wk, _ = C.claims_for(deal, rng, script=script)
     finally:
         simulate.PIT_HAG_DEMONS = was
@@ -102,9 +104,11 @@ class BothLanguagesAgree(SolverTest):
         try:
             rng = random.Random(1466)
             script = play_games.an_awkward_script(rng, must_have=MUST)
-            payload = played("s1466", script, 1466,
-                             [7, 8, 9, 10, 11][1466 % 5], 4,
-                             rng=rng)["payload"]
+            import simulate as _sim     # the Demon as before 19.11.2026
+            with _sim.victims_as_before():
+                payload = played("s1466", script, 1466,
+                                 [7, 8, 9, 10, 11][1466 % 5], 4,
+                                 rng=rng)["payload"]
         finally:
             simulate.PIT_HAG_DEMONS = was
         js = ("import {solveBoard} from './js/api.mjs';"

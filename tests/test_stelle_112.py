@@ -6,9 +6,10 @@ chooses. Choosing the Goon first that night, the Monk is drunk until dusk
 nimm das bitte auf, genau für den fall mit dem schläger"). The simulator
 let only a working Monk choose, so this never happened.
 
-Seed 390 of the line Monk, Goon, Poisoner: the Goon (seat 6) turned evil
-on night 2; on night 3 the droisoned Monk (seat 5) chooses it first, and
-the Goon is good again. The Monk guards nobody.
+Seed 89 of the line Monk, Goon, Poisoner (390 until 20.11.2026, which the
+simulator whose Demon mostly kills good players plays otherwise): the Goon
+(seat 5) turned evil on night 2; on night 3 the droisoned Monk (seat 6)
+chooses it first, and the Goon is good again. The Monk guards nobody.
 """
 import pathlib
 import random
@@ -26,7 +27,7 @@ from botc.info import GameState                   # noqa: E402
 MUST = ("Monk", "Goon", "Poisoner")
 
 
-def game(seed=390, must=MUST):
+def game(seed=89, must=MUST):
     import claims as C
     import play_games
     import simulate
@@ -45,15 +46,15 @@ class ADroisonedMonkChoosesTheGoon(SolverTest):
 
     def test_the_game(self):
         deal, _heard, _st = game()
-        self.assertEqual(deal.roles[5], "Monk")
-        self.assertEqual(deal.roles[6], "Goon")
-        self.assertFalse(deal.working(5, 3))
-        self.assertEqual(deal.goon_first[3], (5, 6))
+        self.assertEqual(deal.roles[6], "Monk")
+        self.assertEqual(deal.roles[5], "Goon")
+        self.assertFalse(deal.working(6, 3))
+        self.assertEqual(deal.goon_first[3], (6, 5))
 
     def test_the_goon_turns_good(self):
         deal, _heard, _st = game()
-        self.assertIn(("N2", 6, "Goon", "evil"), deal.side_changes)
-        self.assertIn(("N3", 6, "Goon", "good"), deal.side_changes)
+        self.assertIn(("N2", 5, "Goon", "evil"), deal.side_changes)
+        self.assertIn(("N3", 5, "Goon", "good"), deal.side_changes)
 
     def test_both_walks_agree(self):
         import nightwalk

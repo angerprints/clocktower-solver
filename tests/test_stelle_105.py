@@ -44,7 +44,9 @@ def game(seed, must):
     rng = random.Random(seed)
     script = play_games.an_awkward_script(rng, must_have=must)
     n = [7, 8, 9, 10, 11][seed % 5]
-    deal, heard = simulate.play(n, rng, nights=4, script=script)
+    import simulate as _sim     # the Demon as before 19.11.2026
+    with _sim.victims_as_before():
+        deal, heard = simulate.play(n, rng, nights=4, script=script)
     cl, wk, _ = C.claims_for(deal, rng, script=script)
     st = GameState(n_players=n, script=script, claims=cl, wakes=wk,
                    infos=list(heard), votes=dict(deal.votes),
@@ -121,8 +123,11 @@ class BothLanguagesAgree(SolverTest):
         from make_fixtures import played
         rng = random.Random(1439)
         script = play_games.an_awkward_script(rng, must_have=PLAGUE)
-        payload = played("s1439", script, 1439, [7, 8, 9, 10, 11][1439 % 5],
-                         4, rng=rng)["payload"]
+        import simulate as _sim     # the Demon as before 19.11.2026
+        with _sim.victims_as_before():
+            payload = played("s1439", script, 1439,
+                             [7, 8, 9, 10, 11][1439 % 5], 4,
+                             rng=rng)["payload"]
         js = ("import {solveBoard} from './js/api.mjs';"
               "const p=JSON.parse(process.argv[1]);"
               "const r=solveBoard(p); console.log(JSON.stringify("

@@ -30,6 +30,7 @@ import botc.solver as S                           # noqa: E402
 from botc import info as I, scripts               # noqa: E402
 from botc.info import GameState                   # noqa: E402
 from botc.worlds import Change, Timeline, World   # noqa: E402
+from botc.roles import TEAM                       # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 GROUP_5 = ("Philosopher", "Slayer", "Virgin", "Golem", "Alsaahir", "Zealot",
@@ -37,8 +38,10 @@ GROUP_5 = ("Philosopher", "Slayer", "Virgin", "Golem", "Alsaahir", "Zealot",
 OPEN = ("Philosopher", "Slayer", "Virgin")
 # name, seed, players, nights, must have
 PLAYED = (
-    ("charmer-takes-the-heir", 127, 9, 4, GROUP_5),
-    ("charmer-takes-the-heir", 2001, 8, 6, OPEN),
+    # 2502 and 2435 since 19.11.2026 (127 and 2001 before, which the
+    # simulator whose Demon mostly kills good players plays otherwise).
+    ("charmer-takes-the-heir", 2502, 8, 6, OPEN),
+    ("charmer-takes-the-heir", 2435, 8, 6, OPEN),
     ("savant-before-the-hit", 1209, 11, 4, GROUP_5),
     ("savant-cult-leader", 1747, 9, 4, ("Savant", "Vortox")),
     ("savant-cult-leader-vortox", 1791, 8, 4,
@@ -75,7 +78,9 @@ class ThePlayedGamesAreKept(SolverTest):
             with self.subTest(seed=seed):
                 # The Scarlet Woman took over in daylight, and a charmer
                 # later swapped with her.
-                self.assertTrue(any(p[0] == "D" and r == "Vigormortis"
+                self.assertTrue(any(p[0] == "D" and TEAM[r] == "demon"
+                                    for p, _s, r in deal.changes))
+                self.assertTrue(any(p[0] == "N" and r == "SnakeCharmer"
                                     for p, _s, r in deal.changes))
                 self.assertEqual(S._movers_in(deal.world(), st), 2)
 
@@ -159,10 +164,14 @@ class BothLanguagesAgree(SolverTest):
     def test_on_the_played_games(self):
         import app
         cases = _payloads()
+        # The server's exact limit, not the page's 40,000: seed 1209 has
+        # more legal worlds than that since 19.11.2026, and the page would
+        # sample it (Stelle 109).
         script = ("import {solveBoard} from './js/api.mjs';"
                   "const ps=JSON.parse(process.argv[1]);"
                   "console.log(JSON.stringify(ps.map(p => {"
-                  " const r = solveBoard(p); return r.error || r.valid; })));")
+                  f" const r = solveBoard(p, {{maxWorlds: {app.MAX_WORLDS}}});"
+                  " return r.error || r.valid; })));")
         got = subprocess.run(["node", "--input-type=module", "-e", script,
                               json.dumps(cases)], cwd=ROOT,
                              capture_output=True, text=True, timeout=600)
